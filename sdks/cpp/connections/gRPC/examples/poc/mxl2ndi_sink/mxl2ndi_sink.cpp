@@ -134,13 +134,27 @@ void ScanDomains() {
             }
             std::string flowId = path.stem().string();
             if (existingFlows.count({currentDomain, flowId})) {
-                LOG(INFO) << "Flow already in inputs, skipping: " << flowId << " in domain: " << currentDomain;
+                LOG(INFO) << "Flow already in inputs, skipping: " << flowId
+                          << " in domain: " << currentDomain;
                 continue;
             }
             LOG(INFO) << "Found new flow: " << flowId << " in domain: " << currentDomain;
-            existingFlows.emplace(currentDomain, flowId);
+            mxlInstance instance = mxlCreateInstance(currentDomain.c_str(), "");
+            if (instance == nullptr) {
+                LOG(ERROR) << "Failed to create MXL instance for domain: " << currentDomain;
+                continue;
+            }
             mxl2ndi_sink::Inputs_elem elem;
-            elem.name = "";
+            mxl2ndi_sink::Flow_def flowDef;
+            mxlcpp::fillFlowDef(instance, flowId, flowDef);
+
+            if (flowDef.format != "urn:x-nmos:format:video") {
+                LOG(INFO) << "Flow " << flowId << " in domain " << currentDomain << " is a " << flowDef.format
+                          << " flow, skipping";
+                continue;
+            }
+            existingFlows.emplace(currentDomain, flowId);
+            elem.name = flowDef.label;
             elem.domain = currentDomain;
             elem.flow_id = flowId;
             elem.live = 1;
@@ -156,7 +170,8 @@ void ScanDomains() {
         auto& inputsVec = inputs->get();
         auto newIt = newEntries.begin();
         for (auto& slot : inputsVec) {
-            if (newIt == newEntries.end()) break;
+            if (newIt == newEntries.end())
+                break;
             if (slot.flow_id.empty()) {
                 slot = std::move(*newIt);
                 ++newIt;
@@ -201,22 +216,24 @@ void RunVideoFlow() {
 
     int inputsCount = 0;
     std::vector<std::unique_ptr<mxlcpp::MxlReader>> readers;
-    for (auto& input : inputs->get()) {
-        if (!input.flow_id.empty()) {
-            inputsCount++;
+    while (inputsCount == 0) {
+        LOG(INFO) << "Waiting for inputs to be configured...";
+        {
+            std::lock_guard<std::mutex> lock(dm.mutex());
+            for (auto& input : inputs->get()) {
+                if (!input.flow_id.empty()) {
+                    inputsCount++;
+                }
+            }
+        }
+
+        if (inputsCount == 0) {
+            // sleep for a second before checking again
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 
-    if (inputsCount == 0) {
-        LOG(ERROR) << "No inputs configured";
-        return;
-    }
-
     statusErr = dm.getValue("/selected_index", value);
-    if (statusErr.status != catena::StatusCode::OK) {
-        LOG(ERROR) << "Failed to get selected index: " << statusErr.what();
-        return;
-    }
 
     value.set_string_value("Running");
     dm.setValue("/status", value);
@@ -256,24 +273,14 @@ void RunVideoFlow() {
         {
             std::lock_guard<std::mutex> lock(dm.mutex());
             // grow readers vector if ScanDomains appended new /inputs entries
-            bool change = false;
             for (size_t i = readers.size(); i < inputs->get().size(); ++i) {
                 auto& elem = inputs->get()[i];
                 if (elem.flow_id.empty()) {
                     continue;
                 }
-                readers.emplace_back(std::make_unique<mxlcpp::MxlReader>(elem.name, elem.domain, elem.flow_id));
-                if (elem.name.empty()) {
-                    mxl2ndi_sink::Flow_def flowDef;
-                    readers.back()->open(flowDef);
-                    readers.back()->setName(flowDef.label);
-                    elem.name = flowDef.label;
-                    change = true;
-                }
+                readers.emplace_back(
+                  std::make_unique<mxlcpp::MxlReader>(elem.name, elem.domain, elem.flow_id));
                 LOG(INFO) << "Added reader for flow: " << elem.flow_id;
-            }
-            if (change) {
-                dm.getValueSetByServer().emit("/inputs", inputsParam.get());
             }
             int liveIndex = liveIndexChanged.exchange(-1);
             if (liveIndex >= 0) {
@@ -344,12 +351,13 @@ void RunVideoFlow() {
                     inputs->get()[i].live = (i == static_cast<size_t>(readerIndex)) ? 0 : 1;
                 }
                 dm.getValueSetByServer().emit("/inputs", inputsParam.get());
+                readers[updateDisplayIndex]->fillFlowDef(flowDef->get());
+                dm.getValueSetByServer().emit("/flow_def", flowDefParam.get());
+                LOG(INFO) << "Updating flow def";
             }
-            readers[updateDisplayIndex]->fillFlowDef(flowDef->get());
-            dm.getValueSetByServer().emit("/flow_def", flowDefParam.get());
         }
 
-        if (!currentReader.open(flowDef->get())) {
+        if (!currentReader.open()) {
             LOG(INFO) << "No flow available for reader " << currentReader.getName() << ", retrying";
             mxlSleepForNs(500'000'000);  // 500ms
             continue;
@@ -426,21 +434,21 @@ void defineCommands() {
     scanCommand->defineCommand(
       [](const st2138::Value& value,
          const bool respond) -> std::unique_ptr<IParamDescriptor::ICommandResponder> {
-            return std::make_unique<ParamDescriptor::CommandResponder>(
-                [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
-                    st2138::CommandResponse response;
-                    if (isScanning) {
-                        response.mutable_exception()->set_type("Invalid Command");
-                        response.mutable_exception()->set_details("Already scanning domains");
-                        co_return response;
-                    }
-
-                    // just do it in this thread since it won't take long
-                    ScanDomains();
-
-                    response.mutable_no_response();
+          return std::make_unique<ParamDescriptor::CommandResponder>(
+            [](const st2138::Value& value, const bool respond) -> ParamDescriptor::CommandResponder {
+                st2138::CommandResponse response;
+                if (isScanning) {
+                    response.mutable_exception()->set_type("Invalid Command");
+                    response.mutable_exception()->set_details("Already scanning domains");
                     co_return response;
-                }(value, respond));
+                }
+
+                // just do it in this thread since it won't take long
+                ScanDomains();
+
+                response.mutable_no_response();
+                co_return response;
+            }(value, respond));
       });
 }
 
@@ -452,7 +460,7 @@ void valueChangedCallback(const std::string& fqoid, const catena::common::IParam
         flowIdChanged = true;
     } else if (fqoid.starts_with("/inputs/")) {
         // get the index from the OID
-        size_t nextSlash = fqoid.find('/', 8); // length of "/inputs/" is 8
+        size_t nextSlash = fqoid.find('/', 8);  // length of "/inputs/" is 8
         if (nextSlash != std::string::npos) {
             std::string indexStr = fqoid.substr(8, nextSlash - 8);
             try {
