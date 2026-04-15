@@ -75,7 +75,7 @@ int LogHelper::kernel_thread_id() {
 void catena_formatter(record_view const& rec, formatting_ostream &strm) {
     strm << rec[trivial::severity];
     
-    // Format timestamp asd HH::MM::SS.Microseconds
+    // Format timestamp as HH::MM::SS.Microseconds
     std::ostringstream oss;
     boost::posix_time::time_facet* facet = new boost::posix_time::time_facet();
     facet->format("%H:%M:%S.%f");
@@ -84,9 +84,9 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
     oss << *ts;
 
     strm << " " << oss.str()
-        << "  " << extract<int>("KernelThreadID", rec)
-        << " " << extract<std::string>("File", rec)
-        << ":" << extract<int>("Line", rec)
+        << "  " << rec[LogHelper::KernelThreadID]
+        << " " << rec[LogHelper::File]
+        << ":" << rec[LogHelper::Line]
         <<"]  " << rec[expr::message];
 }
 
