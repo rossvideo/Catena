@@ -390,9 +390,9 @@ menu_groups:
             en: Demo
         client_hints:
           oglml: eo://demo.grid
-      # control:
-      #   name:
-      #     display_strings:
-      #       en: Control
-      #   client_hints:
-      #     oglml: eo://control.grid
+      control:
+        name:
+          display_strings:
+            en: Control
+        client_hints:
+          oglml: eo://control.grid
