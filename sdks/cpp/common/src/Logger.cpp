@@ -37,6 +37,8 @@
  * @date 2026-03-20
  */
 
+#include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <regex>
 
@@ -45,6 +47,7 @@
 #include <Config.h>
 
 // boost
+#include <boost/filesystem/operations.hpp>
 #include <boost/core/null_deleter.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
@@ -59,6 +62,48 @@
 using namespace boost::log;
 using namespace catena::common;
 namespace expr = expressions;
+namespace sinks_file = boost::log::sinks::file;
+
+// Helper for log_count == 1: Active file only.
+class single_file_collector final : public sinks_file::collector {
+public:
+    single_file_collector(std::filesystem::path log_dir, std::string app_name)
+        : log_dir_(std::move(log_dir)), app_name_(std::move(app_name)) {}
+
+    // Deletes rotated file
+    void store_file(boost::filesystem::path const& src_path) override {
+        boost::filesystem::remove(src_path);
+    }
+
+    // Needs implementation, not used
+    bool is_in_storage(boost::filesystem::path const&) const override {
+        return false;
+    }
+
+    // Used on startup to delete old archived files matching the app
+    sinks_file::scan_result scan_for_files( sinks_file::scan_method method,
+        boost::filesystem::path const& pattern = boost::filesystem::path()) override {
+        (void)pattern;
+        sinks_file::scan_result result;
+
+        std::regex const log_regex(R"(^\d{8}_\d{6}_)" + app_name_ + R"(\.log$)");
+        for (const auto& entry : std::filesystem::directory_iterator(log_dir_)) {
+            if (!entry.is_regular_file()) {
+                continue;
+            }
+            std::string const filename = entry.path().filename().string();
+            if (std::regex_match(filename, log_regex)) {
+                std::filesystem::remove(entry.path());
+                ++result.found_count;
+            }
+        }
+        return result;
+    }
+
+private:
+    std::filesystem::path log_dir_;
+    std::string app_name_;
+};
 
 // Helper for LOG() macro to get basename of __FILE__
 const char* LogHelper::log_basename(const char* path) {
@@ -89,17 +134,6 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
         << " " << rec[LogHelper::File]
         << ":" << rec[LogHelper::Line]
         <<"]  " << rec[expr::message];
-}
-
-// Helper for log_count=1, removes matching files, ensures only active file is in directory
-void clean_directory(const std::filesystem::path& path, const std::string& appName) {
-    std::regex log_regex(R"(^\d{8}_\d{6}_)" + appName + R"(\.log$)");
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::string filename  = entry.path().filename();
-        if (std::regex_match(filename, log_regex)) {
-            std::filesystem::remove(entry.path());
-        }
-    }
 }
 
 // Helper filter for severity level
@@ -156,28 +190,31 @@ void Logger::init(const std::string& appName) {
             // Create file sink and set parameters
             instance().file_sink_ = boost::make_shared<file_sink_t>(
                 keywords::file_name = activeName,
-                keywords::target_file_name = config::log_count > 1 ? targetName : activeName,
+                keywords::target_file_name = targetName,
                 keywords::rotation_size = config::log_size * MB,
                 keywords::enable_final_rotation = config::log_final_rotation
             );
             auto& file_sink = instance().file_sink_;
 
-            // Set filtering, formatting, and file collecting
             if (config::log_count > 1) {
+                // Multi file (1 Active + x Archived)
                 file_sink->locked_backend()->set_file_collector(sinks::file::make_collector(
                     keywords::target = config::log_dir,
-                    keywords::max_files = config::log_count - 1 // The backend doesn't count the active file, so adjust down by 1
+                    keywords::max_files = config::log_count - 1 // Amount of archived files, collector doesn't recognize active files
                 ));
-
+                
                 // Force a rotation on startup to ensure old files are deleted
                 file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
                 BOOST_LOG_TRIVIAL(info);
                 instance().file_sink_->locked_backend()->rotate_file();
             } else {
-                // Single (only active) file doesn't work properly with a file collector, must manually clean directory
-                clean_directory(config::log_dir, appName);
+                // Single file (Active only)
+                file_sink->locked_backend()->set_file_collector(boost::make_shared<single_file_collector>(
+                    std::filesystem::path(config::log_dir), appName));
+                file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
             }
 
+            // Set filtering and formatting
             file_sink->locked_backend()->auto_flush();
             file_sink->set_formatter(&catena_formatter);
             file_sink->set_filter(&catena_filter);
