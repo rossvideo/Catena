@@ -202,23 +202,25 @@ void Logger::init(const std::string& appName) {
                     keywords::target = config::log_dir,
                     keywords::max_files = config::log_count - 1 // Amount of archived files, collector doesn't recognize active files
                 ));
-                
-                // Force a rotation on startup to ensure old files are deleted
-                file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
-                BOOST_LOG_TRIVIAL(info);
-                instance().file_sink_->locked_backend()->rotate_file();
             } else {
                 // Single file (Active only)
                 file_sink->locked_backend()->set_file_collector(boost::make_shared<single_file_collector>(
                     std::filesystem::path(config::log_dir), appName));
-                file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
             }
-
+            
             // Set filtering and formatting
             file_sink->locked_backend()->auto_flush();
             file_sink->set_formatter(&catena_formatter);
             file_sink->set_filter(&catena_filter);
             core->add_sink(file_sink);
+            
+            // Force a rotation on startup to ensure excess old files are deleted. Only necessary for multi, single's scan handles this.
+            auto old = file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
+            if (old >= config::log_count && config::log_count > 1) {
+                // Sink must be added before doing this
+                BOOST_LOG_TRIVIAL(info) << "Startup rotation";
+                instance().file_sink_->locked_backend()->rotate_file();
+            }
         }
         if (config::log_console) {
             // Create console sink and set filtering and formatting
