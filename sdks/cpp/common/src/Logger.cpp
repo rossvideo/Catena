@@ -192,7 +192,8 @@ void Logger::init(const std::string& appName) {
                 keywords::file_name = activeName,
                 keywords::target_file_name = targetName,
                 keywords::rotation_size = config::log_size * MB,
-                keywords::enable_final_rotation = config::log_final_rotation
+                keywords::enable_final_rotation = config::log_final_rotation,
+                keywords::open_mode = std::ios_base::out | (config::log_append? std::ios_base::app : std::ios_base::trunc)
             );
             auto& file_sink = instance().file_sink_;
 

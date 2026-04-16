@@ -38,6 +38,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files for this application before deleting old files. Includes the active file.")
             (LOG_MAX_SIZE_KEY.c_str(), po::value<int>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
             (LOG_FINAL_ROTATION_KEY.c_str(), po::value<bool>()->default_value(LOG_FINAL_ROTATION_DEFAULT)->implicit_value(true), "Use this to archive the active log file upon teardown. Number of archived files is 1 less than log count.")
+            (LOG_APPEND_KEY.c_str(), po::value<bool>()->default_value(LOG_APPEND_DEFAULT)->implicit_value(true), "Use this to append to an existing, non-archived log file")
             ;
             
         std::set<std::string> allowedOptions;
@@ -100,6 +101,12 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(LOG_SIZE_KEY)) config::log_size = vars[LOG_SIZE_KEY].as<double>();
         if (vars.count(LOG_COUNT_KEY)) config::log_count = vars[LOG_COUNT_KEY].as<int>();
         if (vars.count(LOG_FINAL_ROTATION_KEY)) config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
+        if (vars.count(LOG_APPEND_KEY)) {
+            config::log_append = vars[LOG_APPEND_KEY].as<bool>();
+            if (config::log_final_rotation == true && config::log_append == true) {
+                std::cout << "WARNING: log_final_rotation is true. No file will be left for subsequent runs to append to.";
+            }
+        };
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
             std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);

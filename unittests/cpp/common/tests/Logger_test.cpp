@@ -107,6 +107,7 @@ class LoggerTest : public ::testing::Test {
             config::log_size = 10;
             config::log_count = 1;
             config::silent = false;
+            config::log_append = true;
             Logger::init("LoggerTest");
         }
 
@@ -115,6 +116,9 @@ class LoggerTest : public ::testing::Test {
 // Test 1: Normal case
 TEST_F(LoggerTest, LogDefaultDir) {
     std::string activeFile = config::log_dir + "/LoggerTest.log";
+    if (std::filesystem::is_regular_file(activeFile)) {
+        std::filesystem::remove(activeFile);
+    }
     // Log test messages
     const std::string marker = "<<<CATENA_LOGGER_TEST: LogDefaultDir>>>";
     LOG(INFO) << marker;
@@ -258,6 +262,7 @@ TEST_F(LoggerTest, Rotate) {
     config::log_size = 0.00015; // ~0.15KB
     const uintmax_t max_bytes = config::log_size * 1024 * 1024;
     config::log_count = 3;
+    config::log_append = false;
     Logger::init("LoggerTest");
     if (CountFiles() >= 1) {
         std::filesystem::remove_all(config::log_dir); // Clear any old files
@@ -313,6 +318,7 @@ TEST_F(LoggerTest, RotateSingleFile) {
     config::log_size = 0.0001; // ~0.1KB
     const uintmax_t max_bytes = config::log_size * 1024 * 1024;
     config::log_count = 1;
+    config::log_append = false;
     Logger::init("LoggerTest");
 
     LOG(INFO) << std::string(50, '-'); // Padding to fill up the file
