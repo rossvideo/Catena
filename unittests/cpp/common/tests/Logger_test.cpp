@@ -56,21 +56,6 @@ using namespace catena::common;
 class LoggerTest : public ::testing::Test {
     protected:
 
-        static std::filesystem::path FindPath() {
-            constexpr std::string_view suffix = "_LoggerTest.log";
-            for (const auto& entry : std::filesystem::directory_iterator(config::log_dir)) {
-                if (!entry.is_regular_file()) {
-                    continue;
-                }
-                const std::string fn = entry.path().filename().string();
-                if (fn.size() >= suffix.size() &&
-                    fn.compare(fn.size() - suffix.size(), suffix.size(), suffix) == 0) {
-                    return entry.path();
-                }
-            }
-            return {};
-        }
-
         static std::string ReadFile(const std::filesystem::path& path) {
             std::ifstream f(path);
             return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
@@ -124,10 +109,12 @@ class LoggerTest : public ::testing::Test {
             config::silent = false;
             Logger::init("LoggerTest");
         }
+
 };
 
 // Test 1: Normal case
 TEST_F(LoggerTest, LogDefaultDir) {
+    std::string activeFile = config::log_dir + "/LoggerTest.log";
     // Log test messages
     const std::string marker = "<<<CATENA_LOGGER_TEST: LogDefaultDir>>>";
     LOG(INFO) << marker;
@@ -139,13 +126,9 @@ TEST_F(LoggerTest, LogDefaultDir) {
     LOG(FATAL) << "This is a fatal log message.";
 
     // Verify file created properly
-    const std::filesystem::path logPath = FindPath();
-    ASSERT_FALSE(logPath.empty());
-    EXPECT_TRUE(std::regex_match(logPath.filename().string(),
-                                 std::regex(R"(^\d{8}_\d{6}_LoggerTest[.]log$)")));
+    EXPECT_TRUE(std::filesystem::exists(activeFile));
 
-    const std::string fullLog = ReadFile(logPath);
-    const std::string slice = TestSlice(fullLog, marker);
+    const std::string slice = TestSlice(ReadFile(activeFile), marker);
     ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
     // Check messages were written correctly
     EXPECT_NE(slice.find("This is a trace log message."), std::string::npos);
@@ -160,6 +143,7 @@ TEST_F(LoggerTest, LogDefaultDir) {
 
 // Test 2: Severity filter only passes severity >= minimum
 TEST_F(LoggerTest, LogSeverityFilter) {
+    std::string activeFile = config::log_dir + "/LoggerTest.log";
     const std::string marker = "<<<CATENA_LOGGER_TEST: LogSeverityFilter>>>";
     LOG(INFO) << marker;
 
@@ -207,9 +191,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
 
-    const std::filesystem::path logPath = FindPath();
-    ASSERT_FALSE(logPath.empty());
-    const std::string slice = TestSlice(ReadFile(logPath), marker);
+    const std::string slice = TestSlice(ReadFile(activeFile), marker);
     ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
 
     // Check messages were written in the right quantity
@@ -248,6 +230,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
 
 // Test 3: Silence prevents all messages
 TEST_F(LoggerTest, LogSilence) {
+    std::string activeFile = config::log_dir + "/LoggerTest.log";
     const std::string marker = "<<<CATENA_LOGGER_TEST: LogSilence>>>";
     LOG(INFO) << marker;
 
@@ -255,9 +238,7 @@ TEST_F(LoggerTest, LogSilence) {
     config::silent = true;
     LOG(INFO) << "MESSAGE";
 
-    const std::filesystem::path logPath = FindPath();
-    ASSERT_FALSE(logPath.empty());
-    const std::string slice = TestSlice(ReadFile(logPath), marker);
+    const std::string slice = TestSlice(ReadFile(activeFile), marker);
     ASSERT_FALSE(slice.empty()) << "Test marker not found in log";
     // Check message not in file
     EXPECT_EQ(slice.find("MESSAGE"), std::string::npos);
@@ -272,6 +253,7 @@ TEST_F(LoggerTest, Rotate) {
     // so we must reset and reinitialize if we want to change them
     Logger::reset();
     config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/rotate");
+    std::string activeFile = config::log_dir + "/LoggerTest.log";
     std::filesystem::create_directory(config::log_dir);
     config::log_size = 0.00015; // ~0.15KB
     const uintmax_t max_bytes = config::log_size * 1024 * 1024;
@@ -286,41 +268,37 @@ TEST_F(LoggerTest, Rotate) {
     LOG(INFO) << std::string(60, '_'); // Padding to fill up the file
     std::this_thread::sleep_for(std::chrono::milliseconds(750));
     EXPECT_EQ(CountFiles(), 1);
-    auto file = NewestFile(config::log_dir);
-    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50); // Should be close to max (full file)
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), max_bytes, 50); // Should be close to max (full file)
     
     LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 2);
-    file = NewestFile(config::log_dir);
-    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65); // Should be close to zero (new file)
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65); // Should be close to zero (new file)
     
     // Second file
     LOG(INFO) << std::string(1, '/');
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 2);
-    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), max_bytes, 50);
     
     LOG(INFO) << "ROTATE 2";
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 3);
-    file = NewestFile(config::log_dir);
-    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65);
 
     // Third file
     LOG(INFO) << std::string(1, '|');
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 3);
-    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), max_bytes, 50);
     
     LOG(INFO) << "ROTATE 3";
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 3); // At max, oldest file is deleted upon rotation
-    file = NewestFile(config::log_dir);
-    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65);
     
     // Check contents of final file
-    std::string body = ReadFile(*file);
+    std::string body = ReadFile(activeFile);
     EXPECT_NE(body.find("ROTATE 3"), std::string::npos);
 }
 
@@ -330,6 +308,7 @@ TEST_F(LoggerTest, RotateSingleFile) {
     // so we must reset and reinitialize if we want to change them
     Logger::reset();
     config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/single");
+    std::string activeFile = config::log_dir + "/LoggerTest.log";
     std::filesystem::create_directory(config::log_dir);
     config::log_size = 0.0001; // ~0.1KB
     const uintmax_t max_bytes = config::log_size * 1024 * 1024;
@@ -338,14 +317,12 @@ TEST_F(LoggerTest, RotateSingleFile) {
 
     LOG(INFO) << std::string(50, '-'); // Padding to fill up the file
     EXPECT_EQ(CountFiles(), 1);
-    auto file = NewestFile(config::log_dir);
-    EXPECT_NEAR(std::filesystem::file_size(*file), max_bytes, 50);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), max_bytes, 50);
     LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
     EXPECT_EQ(CountFiles(), 1); // Number of files stays the same
-    file = NewestFile(config::log_dir);
-    EXPECT_NEAR(std::filesystem::file_size(*file), 0, 65);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65);
 
     // Check contents of rotated file
-    std::string body = ReadFile(*file);
+    std::string body = ReadFile(activeFile);
     EXPECT_NE(body.find("ROTATE 1"), std::string::npos);
 }

@@ -84,7 +84,8 @@ protected:
         catena::common::config::log_file = true;
         catena::common::config::log_level = "TRACE";
         catena::common::config::log_size = 10;
-        catena::common::config::log_count = 128;
+        catena::common::config::log_count = 3;
+        catena::common::config::log_final_rotation = true;
         Logger::init("EnumDecoratorTest");
     }
 

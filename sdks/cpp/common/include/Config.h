@@ -74,6 +74,7 @@ const std::string LOG_FILE_KEY = "log_file";
 const std::string LOG_SIZE_KEY = "log_size";
 const std::string LOG_COUNT_KEY = "log_count";
 const std::string LOG_MAX_SIZE_KEY = "log_max_size";
+const std::string LOG_FINAL_ROTATION_KEY = "log_final_rotation";
 
 
 /**
@@ -94,6 +95,7 @@ const bool LOG_FILE_DEFAULT = true;
 const double LOG_SIZE_DEFAULT = 10.0;
 const int LOG_COUNT_DEFAULT = 5;
 const double LOG_MAX_SIZE_DEFAULT = 50.0;
+const bool LOG_FINAL_ROTATION_DEFAULT = false;
 #ifdef NDEBUG
 const std::string LOG_LEVEL_DEFAULT = "info";
 #else
@@ -160,6 +162,8 @@ inline double log_size = 0;
 inline double log_max_size = 0;
 
 inline int log_count = 0;
+
+inline bool log_final_rotation = false;
 
 } // namespace config     
 } // namespace common

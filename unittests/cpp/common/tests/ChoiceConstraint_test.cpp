@@ -58,7 +58,8 @@ protected:
         config::log_file = true;
         config::log_level = "TRACE";
         config::log_size = 10;
-        config::log_count = 128;
+        config::log_count = 3;
+        config::log_final_rotation = true;
         Logger::init("ChoiceConstraintTest");
     }
 

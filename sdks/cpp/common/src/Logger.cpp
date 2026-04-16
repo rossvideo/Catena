@@ -38,6 +38,7 @@
  */
 
 #include <filesystem>
+#include <regex>
 
 // common
 #include <Logger.h>
@@ -90,10 +91,14 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
         <<"]  " << rec[expr::message];
 }
 
-// Helper for log_count=1, ensures only active file is in directory
-void clear_directory(const std::filesystem::path& path) {
+// Helper for log_count=1, removes matching files, ensures only active file is in directory
+void clean_directory(const std::filesystem::path& path, const std::string& appName) {
+    std::regex log_regex(R"(^\d{8}_\d{6}_)" + appName + R"(\.log$)");
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::filesystem::remove_all(entry.path());
+        std::string filename  = entry.path().filename();
+        if (std::regex_match(filename, log_regex)) {
+            std::filesystem::remove(entry.path());
+        }
     }
 }
 
@@ -141,7 +146,8 @@ void Logger::init(const std::string& appName) {
             std::filesystem::create_directories(config::log_dir);
         }
         
-        std::string fileName = config::log_dir + "/" + "%Y%m%d_%H%M%S_" + appName + ".log";
+        std::string activeName = config::log_dir + "/" + appName + ".log";
+        std::string targetName = config::log_dir + "/" + "%Y%m%d_%H%M%S_" + appName + ".log";
         const int MB = 1024 * 1024;
         
         boost::shared_ptr<core> core = core::get();
@@ -149,33 +155,36 @@ void Logger::init(const std::string& appName) {
         if (config::log_file) {
             // Create file sink and set parameters
             instance().file_sink_ = boost::make_shared<file_sink_t>(
-                keywords::file_name = fileName,
+                keywords::file_name = activeName,
+                keywords::target_file_name = config::log_count > 1 ? targetName : activeName,
                 keywords::rotation_size = config::log_size * MB,
-                keywords::enable_final_rotation = false
+                keywords::enable_final_rotation = config::log_final_rotation
             );
             auto& file_sink = instance().file_sink_;
+
             // Set filtering, formatting, and file collecting
             if (config::log_count > 1) {
                 file_sink->locked_backend()->set_file_collector(sinks::file::make_collector(
                     keywords::target = config::log_dir,
                     keywords::max_files = config::log_count - 1 // The backend doesn't count the active file, so adjust down by 1
                 ));
-                file_sink->locked_backend()->scan_for_files(sinks::file::scan_all);
+
+                // Force a rotation on startup to ensure old files are deleted
+                file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
+                BOOST_LOG_TRIVIAL(info);
+                instance().file_sink_->locked_backend()->rotate_file();
             } else {
-                file_sink->locked_backend()->set_target_file_name_pattern(fileName);
-                file_sink->locked_backend()->set_file_collector(nullptr);
-                clear_directory(config::log_dir);
+                // Single (only active) file doesn't work properly with a file collector, must manually clean directory
+                clean_directory(config::log_dir, appName);
             }
+
             file_sink->locked_backend()->auto_flush();
             file_sink->set_formatter(&catena_formatter);
             file_sink->set_filter(&catena_filter);
             core->add_sink(file_sink);
-            // Force a rotation on startup to ensure old files are deleted
-            BOOST_LOG_TRIVIAL(info);
-            instance().file_sink_->locked_backend()->rotate_file();
         }
         if (config::log_console) {
-            // Create console sink and set filtering, formatting, file collecting
+            // Create console sink and set filtering and formatting
             auto& console_sink = instance().console_sink_;
             console_sink = boost::make_shared<console_sink_t>();
             console_sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));

@@ -34,9 +34,10 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (LOG_LEVEL_KEY.c_str(), po::value<std::string>()->default_value(LOG_LEVEL_DEFAULT), "Minimum severity level of logs. Options are 'info', 'warning', and 'error'")
             (LOG_CONSOLE_KEY.c_str(), po::value<bool>()->default_value(LOG_CONSOLE_DEFAULT)->implicit_value(true), "Use console logging(stdout/stderr)")
             (LOG_FILE_KEY.c_str(), po::value<bool>()->default_value(LOG_FILE_DEFAULT)->implicit_value(true), "Use file logging")
-            (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max mb of log files before rotating")
-            (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files before rotating")
+            (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max MB of log files before rotating")
+            (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files for this application before deleting old files. Includes the active file.")
             (LOG_MAX_SIZE_KEY.c_str(), po::value<int>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
+            (LOG_FINAL_ROTATION_KEY.c_str(), po::value<bool>()->default_value(LOG_FINAL_ROTATION_DEFAULT)->implicit_value(true), "Use this to archive the active log file upon teardown. Number of archived files is 1 less than log count.")
             ;
             
         std::set<std::string> allowedOptions;
@@ -98,10 +99,11 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(LOG_FILE_KEY)) config::log_file = vars[LOG_FILE_KEY].as<bool>();
         if (vars.count(LOG_SIZE_KEY)) config::log_size = vars[LOG_SIZE_KEY].as<double>();
         if (vars.count(LOG_COUNT_KEY)) config::log_count = vars[LOG_COUNT_KEY].as<int>();
+        if (vars.count(LOG_FINAL_ROTATION_KEY)) config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
             std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);
-            if (log_level.compare("INFO") != 0 && log_level.compare("WARNING") != 0 && log_level.compare("ERROR") != 0) {
+            if (log_level.compare("TRACE") != 0 && log_level.compare("DEBUG") != 0 && log_level.compare("INFO") != 0 && log_level.compare("WARNING") != 0 && log_level.compare("ERROR") != 0 && log_level.compare("FATAL") != 0) {
                 std::cout << "WARNING: log_level {" << log_level << "} is invalid. ";
                 #ifdef NDEBUG 
                 std::cout << "Defaulting to INFO instead." << std::endl;
