@@ -556,7 +556,7 @@ TEST_F(ConfigTest, LogMaxSize) {
     std::vector<char*> argv;
     buildArgv(cmdArgs, argc, argv);
 
-    // Do call resulting in new default
+    // Set config variables
     const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
     EXPECT_FALSE(exit);
     EXPECT_EQ(code, 0);
@@ -567,7 +567,7 @@ TEST_F(ConfigTest, LogMaxSize) {
 }
 
 /**
- * TEST 9 - ignored log_max_size doesn't set log_count and log_size
+ * TEST 10 - ignored log_max_size doesn't set log_count and log_size
  */
 TEST_F(ConfigTest, IgnoredLogMaxSize) {
     // Create command line args
@@ -581,7 +581,7 @@ TEST_F(ConfigTest, IgnoredLogMaxSize) {
     std::vector<char*> argv;
     buildArgv(cmdArgs, argc, argv);
 
-    // Do call resulting in new default
+    // Set config variables
     const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
     EXPECT_FALSE(exit);
     EXPECT_EQ(code, 0);
@@ -589,4 +589,38 @@ TEST_F(ConfigTest, IgnoredLogMaxSize) {
     EXPECT_EQ(config::log_max_size, 100);
     EXPECT_EQ(config::log_count, 20);
     EXPECT_EQ(config::log_size, 50);
+}
+
+/**
+ * TEST 11 - Log options handle warnings properly
+ */
+TEST_F(ConfigTest, LogWarnings) {
+    // Create command line args
+    std::vector<std::string> cmdArgs = {
+        "./test",
+        "--log_max_size=100",
+        "--log_count=12",
+        "--log_size=40", // Count and size cannot be set along with max_size
+        "--log_level=BAD" // Invalid
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(cmdArgs, argc, argv);
+
+    // Set config variables
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
+
+    // All three are set, max_size doesn't influence count and size
+    EXPECT_EQ(config::log_max_size, 100);
+    EXPECT_EQ(config::log_count, 12);
+    EXPECT_EQ(config::log_size, 40);
+
+    // Log level defaults if invalid, differs based on Release or Debug build
+    #ifdef NDEBUG
+    EXPECT_EQ(config::log_level, "INFO");
+    #else
+    EXPECT_EQ(config::log_level, "TRACE");
+    #endif
 }

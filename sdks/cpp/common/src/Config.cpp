@@ -6,6 +6,15 @@
 namespace po = boost::program_options;
 using namespace catena::common;
 
+std::unordered_set<std::string> log_levels = {
+    "TRACE",
+    "DEBUG",
+    "INFO",
+    "WARNING",
+    "ERROR",
+    "FATAL"
+};
+
 std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::string prefix) {
     try {
         //Declare options
@@ -31,7 +40,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (MUTUAL_AUTHC_KEY.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to require client to authenticate")
             (AUTHZ_KEY.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use OAuth token authorization")
             (SILENT_KEY.c_str(), po::value<bool>()->default_value(false)->implicit_value(true), "Use this to suppress all log output.")
-            (LOG_LEVEL_KEY.c_str(), po::value<std::string>()->default_value(LOG_LEVEL_DEFAULT), "Minimum severity level of logs. Options are 'info', 'warning', and 'error'")
+            (LOG_LEVEL_KEY.c_str(), po::value<std::string>()->default_value(LOG_LEVEL_DEFAULT), "Minimum severity level of logs. Options are 'trace', 'debug', 'info', 'warning', 'error', and 'fatal'")
             (LOG_CONSOLE_KEY.c_str(), po::value<bool>()->default_value(LOG_CONSOLE_DEFAULT)->implicit_value(true), "Use console logging(stdout/stderr)")
             (LOG_FILE_KEY.c_str(), po::value<bool>()->default_value(LOG_FILE_DEFAULT)->implicit_value(true), "Use file logging")
             (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max MB of log files before rotating")
@@ -110,7 +119,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
             std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);
-            if (log_level.compare("TRACE") != 0 && log_level.compare("DEBUG") != 0 && log_level.compare("INFO") != 0 && log_level.compare("WARNING") != 0 && log_level.compare("ERROR") != 0 && log_level.compare("FATAL") != 0) {
+            if (!log_levels.contains(config::log_level.c_str())) {
                 std::cout << "WARNING: log_level {" << log_level << "} is invalid. ";
                 #ifdef NDEBUG 
                 std::cout << "Defaulting to INFO instead." << std::endl;
