@@ -68,7 +68,7 @@ boost::asio::awaitable<ReadResult> read_with_timeout(std::shared_ptr<tcp::socket
     }
 }
 
-boost::asio::awaitable<ReadResult> read_until_with_timeout(std::shared_ptr<tcp::socket> socket, int timeout) {
+boost::asio::awaitable<ReadResult> read_until_with_timeout(std::shared_ptr<tcp::socket> socket, std::string delim, int timeout) {
     using namespace boost::asio;
     using namespace experimental::awaitable_operators;
     auto buf = std::make_unique<boost::asio::streambuf>();
@@ -76,7 +76,7 @@ boost::asio::awaitable<ReadResult> read_until_with_timeout(std::shared_ptr<tcp::
 
 
     // Async_read and timer run simultaneously, the other cancels when one finishes
-    auto result = co_await (async_read_until(*socket, *buf, "\r\n\r\n", as_tuple(use_awaitable)) ||
+    auto result = co_await (async_read_until(*socket, *buf, delim, as_tuple(use_awaitable)) ||
         timer.async_wait(as_tuple(use_awaitable))
     );
 
@@ -145,7 +145,7 @@ void SocketReader::read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout) 
     bool hasContentType = false; // Used for enforcing Content-Type
 
     // Reading from the socket.
-    auto fut = boost::asio::co_spawn(socket->get_executor(), read_until_with_timeout(socket, timeout), boost::asio::use_future);
+    auto fut = boost::asio::co_spawn(socket->get_executor(), read_until_with_timeout(socket, "\r\n\r\n", timeout), boost::asio::use_future);
     ReadResult result = fut.get();
     if (result.ec == boost::asio::error::timed_out) {
         throw catena::exception_with_status("Timed out", catena::StatusCode::DEADLINE_EXCEEDED);
