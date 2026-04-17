@@ -123,7 +123,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
                 std::cout << "WARNING: log_level {" << log_level << "} is invalid. ";
                 #ifdef NDEBUG 
                 std::cout << "Defaulting to INFO instead." << std::endl;
-                config::log_level = "INFO"; 
+                config::log_level = "DEBUG"; 
                 #else
                 std::cout << "Defaulting to TRACE instead." << std::endl;
                 config::log_level = "TRACE"; 
