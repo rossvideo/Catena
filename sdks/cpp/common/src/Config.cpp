@@ -46,7 +46,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max MB of log files before rotating")
             (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files for this application before deleting old files. Includes the active file.")
             (LOG_MAX_SIZE_KEY.c_str(), po::value<int>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
-            (LOG_FINAL_ROTATION_KEY.c_str(), po::value<bool>()->default_value(LOG_FINAL_ROTATION_DEFAULT)->implicit_value(true), "Use this to archive the active log file upon teardown. Number of archived files is 1 less than log count.")
+            (LOG_FINAL_ROTATION_KEY.c_str(), po::value<bool>()->default_value(LOG_FINAL_ROTATION_DEFAULT)->implicit_value(true), "Use this to archive the active log file upon teardown. Max number of archived files is 1 less than log count.")
             (LOG_APPEND_KEY.c_str(), po::value<bool>()->default_value(LOG_APPEND_DEFAULT)->implicit_value(true), "Use this to append to an existing, non-archived log file")
             ;
             
