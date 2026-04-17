@@ -153,7 +153,9 @@ bool catena_severity_filter(boost::log::attribute_value_set const& attrs) {
     static trivial::severity_level filter_level = trivial::trace;
     static std::string current_config = "";
     if (current_config.compare(config::log_level) != 0) {
-        if (config::log_level.compare("DEBUG") == 0) {
+        if (config::log_level.compare("TRACE") == 0) {
+            filter_level = trivial::trace;
+        } else if (config::log_level.compare("DEBUG") == 0) {
             filter_level = trivial::debug;
         } else if (config::log_level.compare("INFO") == 0) {
             filter_level = trivial::info;
