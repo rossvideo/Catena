@@ -60,13 +60,7 @@ using boost::asio::ip::tcp;
 class ConnectionPropsTest : public testing::Test {
   protected:
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        config::log_file = true;
-        config::log_level = "TRACE";
-        config::log_size = 10;
-        config::log_count = 3;
-        config::log_final_rotation = true;
-        Logger::init("ConnectionPropsTest");
+        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "ConnectionPropsTest");
     }
 
     void SetUp() override {

@@ -49,13 +49,16 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/manipulators/add_value.hpp>
 
-// Helper functions used by the LOG() macro
+// Helper functions for logging used by Catena
 namespace LogHelper{
   // Helper to get basename of __FILE__
   const char* log_basename(const char* path);
 
   // Helper to get kernel id of thread
   int kernel_thread_id();
+
+  // Helper to initialize logging for unit tests
+  void set_up_test_logs(std::string directory, std::string appName);
 
   // Attributes used in log records
   BOOST_LOG_ATTRIBUTE_KEYWORD(File, "File", std::string)

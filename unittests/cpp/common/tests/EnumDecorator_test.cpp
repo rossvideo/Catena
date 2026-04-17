@@ -80,13 +80,7 @@ class EnumDecoratorTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        catena::common::config::log_dir = UNITTEST_LOG_DIR;
-        catena::common::config::log_file = true;
-        catena::common::config::log_level = "TRACE";
-        catena::common::config::log_size = 10;
-        catena::common::config::log_count = 3;
-        catena::common::config::log_final_rotation = true;
-        Logger::init("EnumDecoratorTest");
+        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "EnumDecoratorTest");
     }
 
     static void TearDownTestSuite() {

@@ -64,6 +64,30 @@ using namespace catena::common;
 namespace expr = expressions;
 namespace sinks_file = boost::log::sinks::file;
 
+// Helper for LOG() macro to get basename of __FILE__
+const char* LogHelper::log_basename(const char* path) {
+    const char* p = std::strrchr(path, '/');
+    if (!p) p = std::strrchr(path, '\\');
+    return p ? p + 1 : path;
+}
+
+// Helper for LOG() macro to get kernel id of thread
+int LogHelper::kernel_thread_id() {
+    return static_cast<int>(gettid());
+}
+
+// Helper to initialize logging for unit tests
+void LogHelper::set_up_test_logs(std::string directory, std::string appName) {
+    config::log_level = "TRACE"; 
+    config::log_console = true;
+    config::log_file = true;
+    config::log_dir = directory;
+    config::log_size = 10;
+    config::log_count = 3; // 1 active + 2 archived, final rotation is true so only 2 will remain after teardown 
+    config::log_final_rotation = true;
+    Logger::init(appName);
+}
+
 // Helper for log_count == 1: Active file only.
 class single_file_collector final : public sinks_file::collector {
 public:
@@ -104,18 +128,6 @@ private:
     std::filesystem::path log_dir_;
     std::string app_name_;
 };
-
-// Helper for LOG() macro to get basename of __FILE__
-const char* LogHelper::log_basename(const char* path) {
-    const char* p = std::strrchr(path, '/');
-    if (!p) p = std::strrchr(path, '\\');
-    return p ? p + 1 : path;
-}
-
-// Helper for LOG() macro to get kernel id of thread
-int LogHelper::kernel_thread_id() {
-    return static_cast<int>(gettid());
-}
 
 // Helper function dictating the format of a log record
 void catena_formatter(record_view const& rec, formatting_ostream &strm) {

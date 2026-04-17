@@ -106,7 +106,6 @@ class LoggerTest : public ::testing::Test {
             config::log_level = "TRACE";
             config::log_size = 10;
             config::log_count = 1;
-            config::silent = false;
             config::log_append = true;
             Logger::init("LoggerTest");
         }

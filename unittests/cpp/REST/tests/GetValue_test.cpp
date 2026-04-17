@@ -53,13 +53,7 @@ class RESTGetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        config::log_file = true;
-        config::log_level = "TRACE";
-        config::log_size = 10;
-        config::log_count = 3;
-        config::log_final_rotation = true;
-        Logger::init("RESTGetValueTest");
+        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTGetValueTest");
     }
 
     static void TearDownTestSuite() {
