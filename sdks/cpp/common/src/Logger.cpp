@@ -229,12 +229,16 @@ void Logger::init(const std::string& appName) {
             file_sink->set_filter(&catena_filter);
             core->add_sink(file_sink);
             
-            // Force a rotation on startup to ensure excess old files are deleted. Only necessary for multi, single's scan handles this.
-            auto old = file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
-            if (old >= config::log_count && config::log_count > 1) {
-                // Sink must be added before doing this
+            // Force a rotation on startup to ensure old active file is rotated. Only necessary for multi, single's scan handles this.
+            file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
+            if (std::filesystem::is_regular_file(config::log_dir + "/" + appName + ".log") && config::log_count > 1) {
+                // Swap to append to rotate old file, swap back if log_append=false
+                instance().file_sink_->locked_backend()->set_open_mode(std::ios_base::out | std::ios_base::app);
                 BOOST_LOG_TRIVIAL(info) << "Startup rotation";
                 instance().file_sink_->locked_backend()->rotate_file();
+                if (!config::log_append) {
+                    instance().file_sink_->locked_backend()->set_open_mode(std::ios_base::out | std::ios_base::trunc);
+                }
             }
         }
         if (config::log_console) {
