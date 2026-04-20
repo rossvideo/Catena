@@ -742,3 +742,52 @@ TEST_F(RESTSocketReaderTests, SocketReader_MissingEndHeaders){
     work.reset();
     runner.join();
 }
+
+/*
+ * Test 25 - read_until path: peer closes before "\r\n\r\n" (I/O error / EOF), not timeout.
+ * Uses a dedicated io_context and sockets so closing the client does not break the fixture.
+ * read() must run on a thread that is not running io_context::run() — same pattern as Test 24.
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_ReadErrors) {
+    boost::asio::io_context ioc;
+    tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 0));
+    tcp::socket client(ioc);
+    auto server = std::make_shared<tcp::socket>(ioc);
+    client.connect(acceptor.local_endpoint());
+    acceptor.accept(*server);
+
+    std::string request = RESTMethodMap().getForwardMap().at(Method_GET)
+        + " /st2138-api/v1/1/test-call/oid/"
+        + " HTTP/1.1\r\n"
+          "Origin: *\r\n"
+          "User-Agent: test_agent\r\n"
+          "Request-Start: 0\r\n"
+          "Detail-Level: NONE\r\n"
+          "Language: en\r\n"
+          "Content-Type: application/json\r\n"
+          "Content-Length: 100\r\n"; // Missing final blank line; delimiter never arrives
+    boost::asio::write(client, boost::asio::buffer(request));
+    boost::system::error_code close_ec;
+    client.close(close_ec);
+
+    MockSubscriptionManager sm_local;
+    MockServiceImpl service_local;
+    EXPECT_CALL(service_local, subscriptionManager()).WillRepeatedly(testing::ReturnRef(sm_local));
+    EXPECT_CALL(service_local, EOPath()).WillRepeatedly(testing::ReturnRef(EOPath_));
+    EXPECT_CALL(service_local, version()).WillRepeatedly(testing::ReturnRef(version_));
+    EXPECT_CALL(service_local, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+
+    SocketReader reader(&service_local);
+    auto work = boost::asio::make_work_guard(ioc);
+    std::thread runner([&ioc]() { ioc.run(); });
+
+    try {
+        reader.read(server, 60'000);
+        FAIL() << "expected exception_with_status";
+    } catch (const catena::exception_with_status& e) {
+        EXPECT_EQ(e.status, catena::StatusCode::UNKNOWN);
+    }
+
+    work.reset();
+    runner.join();
+}
