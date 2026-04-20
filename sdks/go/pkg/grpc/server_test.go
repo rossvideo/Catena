@@ -871,6 +871,106 @@ func TestServer_Connect_ClientDisconnect(t *testing.T) {
 }
 
 // =============================================================================
+// Test: Error Messages Dev vs Prod
+// =============================================================================
+
+func TestErrorMessages_DevVsProd(t *testing.T) {
+	tests := []struct {
+		name            string
+		env             catena.Environment
+		expectedMessage string
+	}{
+		{"dev mode shows details (unary)", catena.EnvDev, "param not supported"},
+		{"prod mode hides details (unary)", catena.EnvProd, "Unimplemented"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			original := catena.GetEnv()
+			defer catena.SetEnv(original)
+			catena.SetEnv(tt.env)
+
+			ctx := context.Background()
+			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			defer cleanup()
+
+			srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+				return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "param not supported")
+			})
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			_, err := makeGetValueRequest(t, client, ctx, 0, "device.param1")
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			st, ok := status.FromError(err)
+			if !ok {
+				t.Fatalf("expected gRPC status error, got %v", err)
+			}
+			if st.Message() != tt.expectedMessage {
+				t.Errorf("expected message %q, got %q", tt.expectedMessage, st.Message())
+			}
+		})
+	}
+}
+
+func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
+	tests := []struct {
+		name            string
+		env             catena.Environment
+		expectedMessage string
+	}{
+		{"dev mode shows details (streaming)", catena.EnvDev, "device not found"},
+		{"prod mode hides details (streaming)", catena.EnvProd, "NotFound"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			original := catena.GetEnv()
+			defer catena.SetEnv(original)
+			catena.SetEnv(tt.env)
+
+			ctx := context.Background()
+			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			defer cleanup()
+
+			srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
+				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+			})
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			stream, err := makeDeviceRequest(t, client, ctx, 0)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok {
+					t.Fatalf("expected gRPC status error, got %v", err)
+				}
+				if st.Message() != tt.expectedMessage {
+					t.Errorf("expected message %q, got %q", tt.expectedMessage, st.Message())
+				}
+				return
+			}
+
+			_, err = stream.Recv()
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			st, ok := status.FromError(err)
+			if !ok {
+				t.Fatalf("expected gRPC status error, got %v", err)
+			}
+			if st.Message() != tt.expectedMessage {
+				t.Errorf("expected message %q, got %q", tt.expectedMessage, st.Message())
+			}
+		})
+	}
+}
+
+// =============================================================================
 // Test: Unimplemented Endpoints
 // =============================================================================
 
