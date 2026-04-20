@@ -129,7 +129,7 @@ var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
 "Typelist_8h.html#a9b379aa0c72efd6cde9b975311265d13",
-"classcatena_1_1REST_1_1SocketReader.html#a4396dda4463a5ad392092c1efb8b08a5",
+"classcatena_1_1REST_1_1SocketReader.html#a4f19b30d378682e7f46c834e2ba745d9",
 "classcatena_1_1common_1_1Device.html#acc0eb46301cab4a128ff88b7543918ff",
 "classcatena_1_1common_1_1IMenu.html#aa6e9c7b37a780715d9f1d82718d796d6",
 "classcatena_1_1common_1_1NmosNode.html#a54ebd920fdcd55e982580abfc9650a81",

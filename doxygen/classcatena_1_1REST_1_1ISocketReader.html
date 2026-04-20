@@ -121,9 +121,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7392a7e99a6fbccbad470a0faafaac55" id="r_a7392a7e99a6fbccbad470a0faafaac55"><td class="memItemLeft" align="right" valign="top"><a id="a7392a7e99a6fbccbad470a0faafaac55" name="a7392a7e99a6fbccbad470a0faafaac55"></a>
 <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a7392a7e99a6fbccbad470a0faafaac55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42a291bd006c0156e071d07da0ec75fa" id="r_a42a291bd006c0156e071d07da0ec75fa"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a42a291bd006c0156e071d07da0ec75fa">read</a> (tcp::socket &amp;socket, uint32_t timeout=DEFAULT_TIMEOUT)=0</td></tr>
-<tr class="memdesc:a42a291bd006c0156e071d07da0ec75fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
-<tr class="separator:a42a291bd006c0156e071d07da0ec75fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adecc258f878e39ce8f9cd68c74acfddb" id="r_adecc258f878e39ce8f9cd68c74acfddb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#adecc258f878e39ce8f9cd68c74acfddb">read</a> (std::shared_ptr&lt; tcp::socket &gt; &amp;socket, uint32_t timeout=DEFAULT_TIMEOUT)=0</td></tr>
+<tr class="memdesc:adecc258f878e39ce8f9cd68c74acfddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
+<tr class="separator:adecc258f878e39ce8f9cd68c74acfddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2011e753a4f3f1fcc7932d91dafc8e3" id="r_ae2011e753a4f3f1fcc7932d91dafc8e3"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacecatena_1_1REST.html#a41324383cc28492c334974a51fe45b54">RESTMethod</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#ae2011e753a4f3f1fcc7932d91dafc8e3">method</a> () const =0</td></tr>
 <tr class="memdesc:ae2011e753a4f3f1fcc7932d91dafc8e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
 <tr class="separator:ae2011e753a4f3f1fcc7932d91dafc8e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -550,8 +550,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a42a291bd006c0156e071d07da0ec75fa" name="a42a291bd006c0156e071d07da0ec75fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a42a291bd006c0156e071d07da0ec75fa">&#9670;&#160;</a></span>read()</h2>
+<a id="adecc258f878e39ce8f9cd68c74acfddb" name="adecc258f878e39ce8f9cd68c74acfddb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adecc258f878e39ce8f9cd68c74acfddb">&#9670;&#160;</a></span>read()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -562,7 +562,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">virtual void catena::REST::ISocketReader::read </td>
           <td>(</td>
-          <td class="paramtype">tcp::socket &amp;&#160;</td>
+          <td class="paramtype">std::shared_ptr&lt; tcp::socket &gt; &amp;&#160;</td>
           <td class="paramname"><em>socket</em>, </td>
         </tr>
         <tr>
@@ -593,7 +593,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a31a87a254c0b5fdf897c0f3f6099e26f">catena::REST::SocketReader</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a9d387834df909b4e2db5869666c32784">catena::REST::SocketReader</a>.</p>
 
 </div>
 </div>
