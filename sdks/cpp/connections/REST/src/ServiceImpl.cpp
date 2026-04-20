@@ -87,8 +87,8 @@ void ServiceImpl::run() {
 
     while (!shutdown_) {
         // Waiting for a connection.
-        tcp::socket socket(io_context_);
-        acceptor_.accept(socket);
+        auto socket = std::make_shared<tcp::socket>(io_context_);
+        acceptor_.accept(*socket);
         // Once a connection is made, increment activeRequests and handle async.
         {
             std::lock_guard<std::mutex> lock(activeRequestMutex_);
@@ -105,13 +105,13 @@ void ServiceImpl::run() {
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
-                        SocketWriter(socket, context.origin()).sendResponse(rc);
+                        SocketWriter(*socket, context.origin()).sendResponse(rc);
                     // Sending an empty 200 OK response for health check.
                     } else if (context.method() == Method_GET && context.endpoint() == "/health") {
-                        SocketWriter(socket, context.origin()).sendResponse(rc);
+                        SocketWriter(*socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
-                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dms_);
+                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, *socket, context, dms_);
                         request->proceed();
                     // ERROR
                     } else { 
@@ -138,7 +138,7 @@ void ServiceImpl::run() {
             if (rc.status != catena::StatusCode::OK) {
                 // Try ensures that we don't fail to decrement active requests.
                 try {
-                    SocketWriter writer(socket);
+                    SocketWriter writer(*socket);
                     writer.sendResponse(rc);
                 } catch (...) {}
             }
