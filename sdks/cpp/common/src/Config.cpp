@@ -128,18 +128,6 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
                 config::log_count = 1;
             }
         }
-        if (vars.count(LOG_FINAL_ROTATION_KEY)) {
-            config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
-            if (config::log_count == 1 && config::log_final_rotation) {
-                std::cout << "WARNING: log_final_rotation is true and log_count == 1. No archiving will occur." << std::endl;
-            }
-        }
-        if (vars.count(LOG_APPEND_KEY)) {
-            config::log_append = vars[LOG_APPEND_KEY].as<bool>();
-            if (config::log_final_rotation == true && config::log_append == true) {
-                std::cout << "WARNING: log_final_rotation is true. No file will be left for subsequent runs to append to." << std::endl;
-            }
-        };
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
             std::transform(config::log_level.begin(), config::log_level.end(), config::log_level.begin(), toupper);
@@ -170,6 +158,18 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
                 }
             }
         }
+        if (vars.count(LOG_FINAL_ROTATION_KEY)) {
+            config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
+            if (config::log_count == 1 && config::log_final_rotation) {
+                std::cout << "WARNING: log_final_rotation is true and log_count == 1. No archiving will occur." << std::endl;
+            }
+        }
+        if (vars.count(LOG_APPEND_KEY)) {
+            config::log_append = vars[LOG_APPEND_KEY].as<bool>();
+            if (config::log_final_rotation == true && config::log_append == true) {
+                std::cout << "WARNING: log_final_rotation is true. No file will be left for subsequent runs to append to." << std::endl;
+            }
+        };
 
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
