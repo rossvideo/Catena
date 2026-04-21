@@ -129,8 +129,8 @@ private:
       auto core = boost::log::core::get();
       core->flush();
       core->remove_all_sinks();
-      instance().file_sink_.reset();
-      instance().console_sink_.reset();
+      this->file_sink_.reset();
+      this->console_sink_.reset();
   }
 
   boost::shared_ptr<file_sink_t> file_sink_;
