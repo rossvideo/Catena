@@ -153,35 +153,45 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
+    Logger::reset();
     config::log_level = "DEBUG";
+    Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
+    Logger::reset();
     config::log_level = "INFO";
+    Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
+    Logger::reset();
     config::log_level = "WARNING";
+    Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
+    Logger::reset();
     config::log_level = "ERROR";
+    Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
     LOG(WARNING) << "This is a warning log message.";
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
+    Logger::reset();
     config::log_level = "FATAL";
+    Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
@@ -223,7 +233,9 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     EXPECT_EQ(fatal_count, 6);
 
     EXPECT_EQ(CountFiles(), 1);
+    Logger::reset();
     config::log_level = "TRACE";
+    Logger::init("LoggerTest");
 }
 
 // Test 3: Silence prevents all messages
@@ -257,11 +269,11 @@ TEST_F(LoggerTest, Rotate) {
     const uintmax_t max_bytes = config::log_size * 1024 * 1024;
     config::log_count = 3;
     config::log_append = false;
-    Logger::init("LoggerTest");
     if (CountFiles() >= 1) {
         std::filesystem::remove_all(config::log_dir); // Clear any old files
         std::filesystem::create_directory(config::log_dir);
     }
+    Logger::init("LoggerTest");
 
     // First file
     LOG(INFO) << std::string(60, '_'); // Padding to fill up the file

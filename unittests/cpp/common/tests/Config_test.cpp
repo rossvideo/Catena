@@ -193,12 +193,16 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
-    EXPECT_EQ(config::log_level, "TRACE");
     EXPECT_EQ(config::log_console, config::LOG_CONSOLE_DEFAULT);
     EXPECT_EQ(config::log_file, config::LOG_FILE_DEFAULT);
     EXPECT_DOUBLE_EQ(config::log_size, config::LOG_SIZE_DEFAULT);
     EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
     EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
+    #ifdef NDEBUG
+    EXPECT_EQ(config::log_level, "DEBUG");
+    #else
+    EXPECT_EQ(config::log_level, "TRACE");
+    #endif
 }
 
 /**
@@ -372,12 +376,16 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::port, config::PORT_DEFAULT);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
-    EXPECT_EQ(config::log_level, "TRACE");
     EXPECT_EQ(config::log_console, config::LOG_CONSOLE_DEFAULT);
     EXPECT_EQ(config::log_file, config::LOG_FILE_DEFAULT);
     EXPECT_DOUBLE_EQ(config::log_size, config::LOG_SIZE_DEFAULT);
     EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
     EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
+    #ifdef NDEBUG
+    EXPECT_EQ(config::log_level, "DEBUG");
+    #else
+    EXPECT_EQ(config::log_level, "TRACE");
+    #endif
 }
 
 /**
@@ -619,7 +627,7 @@ TEST_F(ConfigTest, LogWarnings) {
 
     // Log level defaults if invalid, differs based on Release or Debug build
     #ifdef NDEBUG
-    EXPECT_EQ(config::log_level, "INFO");
+    EXPECT_EQ(config::log_level, "DEBUG");
     #else
     EXPECT_EQ(config::log_level, "TRACE");
     #endif

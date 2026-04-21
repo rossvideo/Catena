@@ -38,6 +38,13 @@
  */
 #include <filesystem>
 #include <regex>
+#include <cstring>
+#include <thread>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 // common
 #include <Logger.h>
@@ -70,7 +77,11 @@ const char* LogHelper::log_basename(const char* path) {
 
 // Helper for LOG() macro to get kernel id of thread
 int LogHelper::kernel_thread_id() {
+    #ifdef _WIN32
+    return static_cast<int>(GetCurrentThreadID()); // Needs testing on Windows build
+    #else
     return static_cast<int>(gettid());
+    #endif
 }
 
 // Helper to initialize logging for unit tests
@@ -145,27 +156,22 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
         <<"]  " << rec[expr::message];
 }
 
-// Helper filter for severity level
-bool catena_severity_filter(boost::log::attribute_value_set const& attrs) {
-    static trivial::severity_level filter_level = trivial::trace;
-    static std::string current_config = "";
-    if (current_config.compare(config::log_level) != 0) {
-        if (config::log_level.compare("TRACE") == 0) {
-            filter_level = trivial::trace;
-        } else if (config::log_level.compare("DEBUG") == 0) {
-            filter_level = trivial::debug;
-        } else if (config::log_level.compare("INFO") == 0) {
-            filter_level = trivial::info;
-        } else if (config::log_level.compare("WARNING") == 0) {
-            filter_level = trivial::warning;
-        } else if (config::log_level.compare("ERROR") == 0) {
-            filter_level = trivial::error;
-        } else if (config::log_level.compare("FATAL") == 0) {
-            filter_level = trivial::fatal;
-        }
-        current_config = config::log_level;
+// Helper for filter
+static trivial::severity_level filter_level = trivial::trace;
+void set_filter_level() {
+    if (config::log_level.compare("TRACE") == 0) {
+        filter_level = trivial::trace;
+    } else if (config::log_level.compare("DEBUG") == 0) {
+        filter_level = trivial::debug;
+    } else if (config::log_level.compare("INFO") == 0) {
+        filter_level = trivial::info;
+    } else if (config::log_level.compare("WARNING") == 0) {
+        filter_level = trivial::warning;
+    } else if (config::log_level.compare("ERROR") == 0) {
+        filter_level = trivial::error;
+    } else if (config::log_level.compare("FATAL") == 0) {
+        filter_level = trivial::fatal;
     }
-    return attrs[trivial::severity] >= filter_level;
 }
 
 // Main filter that calls the helpers
@@ -173,7 +179,7 @@ bool catena_filter(boost::log::attribute_value_set const& attrs) {
     if (config::silent) {
         return false;
     }
-    return catena_severity_filter(attrs);
+    return attrs[trivial::severity] >= filter_level;
 }
 
 //Initialize static member variables
@@ -197,6 +203,7 @@ void Logger::init(const std::string& appName) {
         
         boost::shared_ptr<core> core = core::get();
         add_common_attributes();  // Timestamps
+        set_filter_level();
         if (config::log_file) {
             // Create file sink and set parameters
             instance().file_sink_ = boost::make_shared<file_sink_t>(

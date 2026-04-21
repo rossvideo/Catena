@@ -1,6 +1,13 @@
+#include <boost/program_options.hpp>
+#include <unordered_set>
+#include <set>
+#include <algorithm>
+#include <cctype>
+#include <iostream>
+
+// Catena
 #include <Config.h>
 #include <Device.h>
-#include <boost/program_options.hpp>
 #include <Logger.h>
 
 namespace po = boost::program_options;
@@ -45,7 +52,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (LOG_FILE_KEY.c_str(), po::value<bool>()->default_value(LOG_FILE_DEFAULT)->implicit_value(true), "Use file logging")
             (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max MB of log files before rotating")
             (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files for this application before deleting old files. Includes the active file.")
-            (LOG_MAX_SIZE_KEY.c_str(), po::value<int>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
+            (LOG_MAX_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
             (LOG_FINAL_ROTATION_KEY.c_str(), po::value<bool>()->default_value(LOG_FINAL_ROTATION_DEFAULT)->implicit_value(true), "Use this to archive the active log file upon teardown. Max number of archived files is 1 less than log count.")
             (LOG_APPEND_KEY.c_str(), po::value<bool>()->default_value(LOG_APPEND_DEFAULT)->implicit_value(true), "Use this to append to an existing, non-archived log file")
             ;
@@ -118,11 +125,11 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         };
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
-            std::transform(log_level.begin(), log_level.end(), log_level.begin(), toupper);
+            std::transform(config::log_level.begin(), config::log_level.end(), config::log_level.begin(), toupper);
             if (!log_levels.contains(config::log_level.c_str())) {
-                std::cout << "WARNING: log_level {" << log_level << "} is invalid. ";
+                std::cout << "WARNING: log_level {" << config::log_level << "} is invalid. ";
                 #ifdef NDEBUG 
-                std::cout << "Defaulting to INFO instead." << std::endl;
+                std::cout << "Defaulting to DEBUG instead." << std::endl;
                 config::log_level = "DEBUG"; 
                 #else
                 std::cout << "Defaulting to TRACE instead." << std::endl;
@@ -131,7 +138,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             }
         }
         if (vars.count(LOG_MAX_SIZE_KEY)) {
-            config::log_max_size = vars[LOG_MAX_SIZE_KEY].as<int>();
+            config::log_max_size = vars[LOG_MAX_SIZE_KEY].as<double>();
             if (config::log_max_size < 10) {
                 std::cout << "WARNING: log_max_size is set below the minimum of 10. Ignoring log_max_size." << std::endl;
             }
