@@ -129,10 +129,10 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             }
         }
         if (vars.count(LOG_FINAL_ROTATION_KEY)) {
-            if (config::log_count <= 1) {
+            config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
+            if (config::log_count == 1 && config::log_final_rotation) {
                 std::cout << "WARNING: log_final_rotation is true and log_count == 1. No archiving will occur." << std::endl;
             }
-            config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
         }
         if (vars.count(LOG_APPEND_KEY)) {
             config::log_append = vars[LOG_APPEND_KEY].as<bool>();
