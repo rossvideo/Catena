@@ -116,7 +116,12 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(LOG_FILE_KEY)) config::log_file = vars[LOG_FILE_KEY].as<bool>();
         if (vars.count(LOG_SIZE_KEY)) config::log_size = vars[LOG_SIZE_KEY].as<double>();
         if (vars.count(LOG_COUNT_KEY)) config::log_count = vars[LOG_COUNT_KEY].as<int>();
-        if (vars.count(LOG_FINAL_ROTATION_KEY)) config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
+        if (vars.count(LOG_FINAL_ROTATION_KEY)) {
+            if (config::log_count <= 1) {
+                std::cout << "WARNING: log_final_rotation is true and log_count == 1. No archiving will occur.";
+            }
+            config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
+        }
         if (vars.count(LOG_APPEND_KEY)) {
             config::log_append = vars[LOG_APPEND_KEY].as<bool>();
             if (config::log_final_rotation == true && config::log_append == true) {
