@@ -131,10 +131,11 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
     
     // Format timestamp as HH::MM::SS.Microseconds
     std::ostringstream oss;
-    boost::posix_time::time_facet* facet = new boost::posix_time::time_facet();
+    static boost::posix_time::time_facet* facet = new boost::posix_time::time_facet();
     facet->format("%H:%M:%S.%f");
+    static std::locale loc = std::locale(oss.getloc(), facet);
+    oss.imbue(loc);
     auto ts = extract<boost::posix_time::ptime>("TimeStamp", rec);
-    oss.imbue(std::locale(oss.getloc(), facet));
     oss << *ts;
 
     strm << " " << oss.str()
