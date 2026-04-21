@@ -339,9 +339,9 @@ TEST_F(LoggerTest, RotateSingleFile) {
     EXPECT_NE(body.find("ROTATE 1"), std::string::npos);
 }
 
-// TEST 6: Append to old file
-TEST_F(LoggerTest, AppendToOld) {
-    config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/append");
+// TEST 6: Append to old file (Single File mode)
+TEST_F(LoggerTest, AppendToSingleOld) {
+    config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/SingleAppend");
     std::string activeFile = config::log_dir + "/LoggerTest.log";
     std::filesystem::create_directory(config::log_dir);
     if (std::filesystem::is_regular_file(activeFile)) {
@@ -355,11 +355,53 @@ TEST_F(LoggerTest, AppendToOld) {
         config::log_count = 1;
         config::log_append = true;
         Logger::init("LoggerTest");
-        
-        std::string message = "RUN " + std::to_string(i);
-        LOG(INFO) << "RUN " << i;
-        std::string body = ReadFile(activeFile);
 
-        EXPECT_NE(body.find(message), std::string::npos);
+        LOG(INFO) << "RUN " << i;
     }
+    
+    // Check files contents
+    std::string body = ReadFile(activeFile);
+    EXPECT_NE(body.find("RUN 1"), std::string::npos);
+    EXPECT_NE(body.find("RUN 2"), std::string::npos);
+    EXPECT_NE(body.find("RUN 3"), std::string::npos);
+}
+
+// TEST 7: Append to single old file (Multi File mode)
+TEST_F(LoggerTest, AppendToMultiOld) {
+    Logger::reset();
+    config::log_dir = UNITTEST_LOG_DIR + std::string("/logger/MultiAppend");
+    std::string activeFile = config::log_dir + "/LoggerTest.log";
+    std::filesystem::create_directory(config::log_dir);
+    config::log_size = 0.0001; // ~0.1KB
+    config::log_count = 3;
+    config::log_append = true;
+    if (CountFiles() >= 1) {
+        std::filesystem::remove_all(config::log_dir); // Clear any old files
+        std::filesystem::create_directory(config::log_dir);
+    }
+    Logger::init("LoggerTest");
+
+    // Populate directory
+    LOG(INFO) << std::string(60, '_'); // Padding to fill up the file
+    LOG(INFO) << "ROTATE"; // This will cause a rotation and be written to a new file
+    EXPECT_EQ(CountFiles(), 2);
+
+    // Do 3 runs, each appending to the same file
+    for (int i = 1; i < 4; i++) {
+        Logger::reset();
+        config::log_size = 1;
+        config::log_count = 3;
+        config::log_append = true;
+        Logger::init("LoggerTest");
+        LOG(INFO) << "RUN " << i;
+
+    }
+    EXPECT_EQ(CountFiles(), 2);
+
+    // Check files contents
+    std::string body = ReadFile(activeFile);
+    EXPECT_NE(body.find("ROTATE"), std::string::npos);
+    EXPECT_NE(body.find("RUN 1"), std::string::npos);
+    EXPECT_NE(body.find("RUN 2"), std::string::npos);
+    EXPECT_NE(body.find("RUN 3"), std::string::npos);
 }
