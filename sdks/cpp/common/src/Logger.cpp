@@ -78,7 +78,7 @@ const char* LogHelper::log_basename(const char* path) {
 // Helper for LOG() macro to get kernel id of thread
 int LogHelper::kernel_thread_id() {
     #ifdef _WIN32
-    return static_cast<int>(GetCurrentThreadID()); // Needs testing on Windows build
+    return static_cast<int>(GetCurrentThreadId()); // Needs testing on Windows build
     #else
     return static_cast<int>(gettid());
     #endif
