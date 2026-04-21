@@ -50,9 +50,9 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             (LOG_LEVEL_KEY.c_str(), po::value<std::string>()->default_value(LOG_LEVEL_DEFAULT), "Minimum severity level of logs. Options are 'trace', 'debug', 'info', 'warning', 'error', and 'fatal'")
             (LOG_CONSOLE_KEY.c_str(), po::value<bool>()->default_value(LOG_CONSOLE_DEFAULT)->implicit_value(true), "Use console logging(stdout/stderr)")
             (LOG_FILE_KEY.c_str(), po::value<bool>()->default_value(LOG_FILE_DEFAULT)->implicit_value(true), "Use file logging")
-            (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max MB of log files before rotating")
-            (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files for this application before deleting old files. Includes the active file.")
-            (LOG_MAX_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB.")
+            (LOG_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_SIZE_DEFAULT), "Max MB of log files before rotating. Must be greater than 0.")
+            (LOG_COUNT_KEY.c_str(), po::value<int>()->default_value(LOG_COUNT_DEFAULT), "Max number of log files for this application before deleting old files. Includes the active file. Minimum value of 1")
+            (LOG_MAX_SIZE_KEY.c_str(), po::value<double>()->default_value(LOG_MAX_SIZE_DEFAULT), "Convenience option. Derives count and size based on the max size in MB. Minimum value of 10.")
             (LOG_FINAL_ROTATION_KEY.c_str(), po::value<bool>()->default_value(LOG_FINAL_ROTATION_DEFAULT)->implicit_value(true), "Use this to archive the active log file upon teardown. Max number of archived files is 1 less than log count.")
             (LOG_APPEND_KEY.c_str(), po::value<bool>()->default_value(LOG_APPEND_DEFAULT)->implicit_value(true), "Use this to append to an existing, non-archived log file")
             ;
@@ -114,18 +114,30 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(SILENT_KEY)) config::silent = vars[SILENT_KEY].as<bool>();
         if (vars.count(LOG_CONSOLE_KEY)) config::log_console = vars[LOG_CONSOLE_KEY].as<bool>();
         if (vars.count(LOG_FILE_KEY)) config::log_file = vars[LOG_FILE_KEY].as<bool>();
-        if (vars.count(LOG_SIZE_KEY)) config::log_size = vars[LOG_SIZE_KEY].as<double>();
-        if (vars.count(LOG_COUNT_KEY)) config::log_count = vars[LOG_COUNT_KEY].as<int>();
+        if (vars.count(LOG_SIZE_KEY)) {
+            config::log_size = vars[LOG_SIZE_KEY].as<double>();
+            if (config::log_size <= 0) {
+                std::cout << "WARNING: log_size is set below minimum of 0. Defualting to 10.0." << std::endl;
+                config::log_size = config::LOG_SIZE_DEFAULT;
+            }
+        }
+        if (vars.count(LOG_COUNT_KEY)) {
+            config::log_count = vars[LOG_COUNT_KEY].as<int>();
+            if (config::log_count < 1) {
+                std::cout << "WARNING: log_count is set below the minimum of 1. Will be treated as log_count=1." << std::endl;
+                config::log_count = 1;
+            }
+        }
         if (vars.count(LOG_FINAL_ROTATION_KEY)) {
             if (config::log_count <= 1) {
-                std::cout << "WARNING: log_final_rotation is true and log_count == 1. No archiving will occur.";
+                std::cout << "WARNING: log_final_rotation is true and log_count == 1. No archiving will occur." << std::endl;
             }
             config::log_final_rotation = vars[LOG_FINAL_ROTATION_KEY].as<bool>();
         }
         if (vars.count(LOG_APPEND_KEY)) {
             config::log_append = vars[LOG_APPEND_KEY].as<bool>();
             if (config::log_final_rotation == true && config::log_append == true) {
-                std::cout << "WARNING: log_final_rotation is true. No file will be left for subsequent runs to append to.";
+                std::cout << "WARNING: log_final_rotation is true. No file will be left for subsequent runs to append to." << std::endl;
             }
         };
         if (vars.count(LOG_LEVEL_KEY)){ 

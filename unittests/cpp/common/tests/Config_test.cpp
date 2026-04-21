@@ -607,10 +607,10 @@ TEST_F(ConfigTest, LogWarnings) {
     // Create command line args
     std::vector<std::string> cmdArgs = {
         "./test",
-        "--log_max_size=100",
-        "--log_count=12",
-        "--log_size=40", // Count and size cannot be set along with max_size
-        "--log_level=BAD" // Invalid
+        "--log_max_size=100", // Count and size cannot be set along with max_size
+        "--log_count=-12", // <1 -> Invalid
+        "--log_size=-40", // <=0 -> Invalid
+        "--log_level=BAD", // Invalid
     };
     int argc;
     std::vector<char*> argv;
@@ -622,9 +622,9 @@ TEST_F(ConfigTest, LogWarnings) {
     EXPECT_EQ(code, 0);
 
     // All three are set, max_size doesn't influence count and size
-    EXPECT_EQ(config::log_max_size, 100);
-    EXPECT_EQ(config::log_count, 12);
-    EXPECT_EQ(config::log_size, 40);
+    EXPECT_DOUBLE_EQ(config::log_max_size, 100.0);
+    EXPECT_EQ(config::log_count, 1);
+    EXPECT_DOUBLE_EQ(config::log_size, 10.0);
 
     // Log level defaults if invalid, differs based on Release or Debug build
     #ifdef NDEBUG
