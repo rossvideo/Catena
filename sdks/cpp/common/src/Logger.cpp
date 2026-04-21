@@ -146,6 +146,7 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
 
 // Helper for filter
 static trivial::severity_level filter_level = trivial::trace;
+static bool silenced = false;
 void set_filter_level() {
     if (config::log_level.compare("TRACE") == 0) {
         filter_level = trivial::trace;
@@ -160,14 +161,12 @@ void set_filter_level() {
     } else if (config::log_level.compare("FATAL") == 0) {
         filter_level = trivial::fatal;
     }
+    silenced = config::silent;
 }
 
 // Main filter that calls the helpers
 bool catena_filter(boost::log::attribute_value_set const& attrs) {
-    if (config::silent) {
-        return false;
-    }
-    return attrs[trivial::severity] >= filter_level;
+    return (attrs[trivial::severity] >= filter_level) && !silenced;
 }
 
 //Initialize static member variables

@@ -245,7 +245,9 @@ TEST_F(LoggerTest, LogSilence) {
     LOG(INFO) << marker;
 
     // Log test message which shouldn't be written
+    Logger::reset();
     config::silent = true;
+    Logger::init("LoggerTest");
     LOG(INFO) << "MESSAGE";
 
     const std::string slice = TestSlice(ReadFile(activeFile), marker);
