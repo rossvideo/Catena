@@ -56,7 +56,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTExecuteCommandTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTExecuteCommandTest");
     }
 
     static void TearDownTestSuite() {

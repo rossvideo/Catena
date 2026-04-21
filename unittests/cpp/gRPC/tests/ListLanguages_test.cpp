@@ -39,6 +39,7 @@
 
 // Test helpers
 #include "GRPCTest.h"
+#include "CommonTestHelpers.h"
 
 // gRPC
 #include "controllers/ListLanguages.h"
@@ -51,7 +52,7 @@ class gRPCListLanguagesTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCListLanguagesTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCListLanguagesTest");
     }
 
     static void TearDownTestSuite() {

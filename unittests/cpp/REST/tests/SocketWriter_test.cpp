@@ -42,6 +42,7 @@
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "SocketWriter.h"
@@ -53,7 +54,7 @@ class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTSocketWriterTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTSocketWriterTest");
     }
 
     static void TearDownTestSuite() {

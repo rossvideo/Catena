@@ -45,6 +45,7 @@
 #include "LanguagePack.h"
 #include <Logger.h>
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 
@@ -54,7 +55,7 @@ class LanguagePackTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "LanguagePackTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "LanguagePackTest");
     }
 
     static void TearDownTestSuite() {

@@ -40,6 +40,7 @@
 #include <patterns/GenericFactory.h>
 #include <Logger.h>
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -58,7 +59,7 @@ class GenericFactoryTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "GenericFactoryTest");
+        catena::common::set_up_test_logs(UNITTEST_LOG_DIR, "GenericFactoryTest");
     }
 
     static void TearDownTestSuite() {

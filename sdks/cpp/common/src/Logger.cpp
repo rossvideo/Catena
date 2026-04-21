@@ -84,18 +84,6 @@ int LogHelper::kernel_thread_id() {
     #endif
 }
 
-// Helper to initialize logging for unit tests
-void LogHelper::set_up_test_logs(std::string directory, std::string appName) {
-    config::log_level = "TRACE"; 
-    config::log_console = true;
-    config::log_file = true;
-    config::log_dir = directory;
-    config::log_size = 10;
-    config::log_count = 3; // 1 active + 2 archived, final rotation is true so only 2 will remain after teardown 
-    config::log_final_rotation = true;
-    Logger::init(appName);
-}
-
 // Helper for log_count == 1: Active file only.
 class single_file_collector final : public sinks_file::collector {
 public:

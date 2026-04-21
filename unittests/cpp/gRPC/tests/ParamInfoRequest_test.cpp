@@ -57,7 +57,7 @@ protected:
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCParamInfoRequestTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCParamInfoRequestTest");
     }
 
     static void TearDownTestSuite() {

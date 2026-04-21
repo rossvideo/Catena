@@ -55,7 +55,7 @@ class RESTLanguagePackTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTLanguagePackTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTLanguagePackTest");
     }
 
     static void TearDownTestSuite() {

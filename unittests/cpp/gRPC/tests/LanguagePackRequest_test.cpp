@@ -39,6 +39,7 @@
 
 // Test helpers
 #include "GRPCTest.h"
+#include "CommonTestHelpers.h"
 
 // gRPC
 #include "controllers/LanguagePackRequest.h"
@@ -51,7 +52,7 @@ class gRPCLanguagePackRequestTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCLanguagePackRequestTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCLanguagePackRequestTest");
     }
 
     static void TearDownTestSuite() {

@@ -40,6 +40,7 @@
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/SetValue.h"
@@ -52,7 +53,7 @@ class RESTSetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTSetValueTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTSetValueTest");
     }
 
     static void TearDownTestSuite() {

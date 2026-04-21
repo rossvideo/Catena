@@ -43,6 +43,7 @@
 #include "StructInfo.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 // mocks
 #include "MockParamDescriptor.h"
@@ -65,7 +66,7 @@ class ParamTest : public ::testing::Test {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "ParamWithValueTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ParamWithValueTest");
     }
 
     static void TearDownTestSuite() {

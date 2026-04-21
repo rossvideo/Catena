@@ -44,6 +44,7 @@
 #include "PolyglotText.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 
@@ -52,7 +53,7 @@ class PolyglotTextTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "PolyglotTextTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "PolyglotTextTest");
     }
 
     static void TearDownTestSuite() {

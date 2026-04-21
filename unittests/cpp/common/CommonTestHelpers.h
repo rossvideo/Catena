@@ -44,8 +44,25 @@
 
 #include "StructInfo.h"
 
+#include <Config.h>
+#include <Logger.h>
+
 namespace catena {
 namespace common {
+
+/**
+ * @brief Configure and init logging for unit tests.
+ */
+inline void set_up_test_logs(std::string directory, std::string appName) {
+    config::log_level = "TRACE";
+    config::log_console = true;
+    config::log_file = true;
+    config::log_dir = directory;
+    config::log_size = 10;
+    config::log_count = 3; // 1 active + 2 archived; final rotation leaves up to 2 archives after teardown
+    config::log_final_rotation = true;
+    Logger::init(std::move(appName));
+}
 
 /*
  * A test CatenaStruct with two int fields.

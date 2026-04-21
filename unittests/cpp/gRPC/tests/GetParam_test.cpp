@@ -56,7 +56,7 @@ class gRPCGetParamTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCGetParamTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCGetParamTest");
     }
 
     static void TearDownTestSuite() {

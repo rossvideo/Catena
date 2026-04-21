@@ -53,7 +53,7 @@ class RESTMultiSetValueTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTMultiSetValueTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTMultiSetValueTest");
     }
 
     static void TearDownTestSuite() {

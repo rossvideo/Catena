@@ -42,6 +42,7 @@
 #include "Enums.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 #include "MockConstraint.h"
 #include "MockDevice.h"
@@ -58,7 +59,7 @@ class ParamDescriptorTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "ParamDescriptorTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ParamDescriptorTest");
     }
 
     static void TearDownTestSuite() {

@@ -66,7 +66,7 @@ class gRPCUpdateSubscriptionsTests : public GRPCTest {
 
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
-            LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCUpdateSubscriptionsTest");
+            set_up_test_logs(UNITTEST_LOG_DIR, "gRPCUpdateSubscriptionsTest");
         }
 
         static void TearDownTestSuite() {

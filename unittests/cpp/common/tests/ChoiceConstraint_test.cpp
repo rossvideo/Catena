@@ -44,6 +44,7 @@
 #include "MockDevice.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 #include "ChoiceConstraint.h"
 
@@ -54,7 +55,7 @@ class ChoiceConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "ChoiceConstraintTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ChoiceConstraintTest");
     }
 
     static void TearDownTestSuite() {

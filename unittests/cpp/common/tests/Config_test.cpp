@@ -43,6 +43,7 @@
  #include <Config.h>
  #include <Logger.h>
  #include <Device.h>
+ #include "CommonTestHelpers.h"
 
  using namespace catena::common;
 
@@ -51,7 +52,7 @@
     protected:
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
-            LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "ConfigTest");
+            set_up_test_logs(UNITTEST_LOG_DIR, "ConfigTest");
         }
 
         static void TearDownTestSuite() {

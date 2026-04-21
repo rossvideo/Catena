@@ -49,6 +49,7 @@
 #include "MenuGroup.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 
@@ -56,7 +57,7 @@ class MenuGroupTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "MenuGroupTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "MenuGroupTest");
     }
 
     static void TearDownTestSuite() {

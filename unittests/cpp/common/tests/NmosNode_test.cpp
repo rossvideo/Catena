@@ -47,6 +47,7 @@
 #include <unistd.h>
 #include "WrapAvahiClient.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 inline AvahiTestControl g_avahi_test_control;
 
@@ -174,7 +175,7 @@ protected:
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "NmosNodeTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "NmosNodeTest");
     }
 
     static void TearDownTestSuite() {

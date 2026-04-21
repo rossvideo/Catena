@@ -52,7 +52,7 @@ class gRPCAddLanguageTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCAddLanguageTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCAddLanguageTest");
     }
 
     static void TearDownTestSuite() {

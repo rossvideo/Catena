@@ -57,9 +57,6 @@ namespace LogHelper{
   // Helper to get kernel id of thread
   int kernel_thread_id();
 
-  // Helper to initialize logging for unit tests
-  void set_up_test_logs(std::string directory, std::string appName);
-
   // Attributes used in log records
   BOOST_LOG_ATTRIBUTE_KEYWORD(File, "File", std::string)
   BOOST_LOG_ATTRIBUTE_KEYWORD(Line, "Line", int)

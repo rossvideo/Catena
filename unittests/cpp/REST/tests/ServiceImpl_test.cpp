@@ -40,6 +40,7 @@
 // common
 #include <Config.h>
 #include <Logger.h>
+#include "CommonTestHelpers.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -62,7 +63,7 @@ class RESTServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTServiceImplTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTServiceImplTest");
     }
 
     static void TearDownTestSuite() {

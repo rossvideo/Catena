@@ -44,6 +44,7 @@
 #include "MockDevice.h"
 #include "Config.h"
 #include "Logger.h"
+#include "CommonTestHelpers.h"
 
 #include "RangeConstraint.h"
 
@@ -54,7 +55,7 @@ class RangeConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RangeConstraintTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RangeConstraintTest");
     }
 
     static void TearDownTestSuite() {

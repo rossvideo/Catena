@@ -38,6 +38,7 @@
 
 // Test helpers
 #include "GRPCTest.h"
+#include "CommonTestHelpers.h"
 
 // gRPC
 #include "controllers/GetPopulatedSlots.h"
@@ -54,7 +55,7 @@ class gRPCGetPopulatedSlotsTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCGetPopulatedSlotsTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCGetPopulatedSlotsTest");
     }
 
     static void TearDownTestSuite() {

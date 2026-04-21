@@ -43,6 +43,7 @@
 // common
 #include <Logger.h>
 #include <Config.h>
+#include "CommonTestHelpers.h"
 
 // boost
 #include <boost/asio.hpp>
@@ -60,7 +61,7 @@ using boost::asio::ip::tcp;
 class ConnectionPropsTest : public testing::Test {
   protected:
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "ConnectionPropsTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ConnectionPropsTest");
     }
 
     void SetUp() override {

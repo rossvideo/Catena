@@ -39,6 +39,7 @@
 #include <rpc/Heartbeat.h>
 #include <Logger.h>
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 #include <gtest/gtest.h>
 #include <atomic>
@@ -54,7 +55,7 @@ class HeartbeatTest : public ::testing::Test {
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "HeartbeatTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "HeartbeatTest");
     }
 
     static void TearDownTestSuite() {

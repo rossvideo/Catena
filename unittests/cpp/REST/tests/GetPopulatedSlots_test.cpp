@@ -39,6 +39,7 @@
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/GetPopulatedSlots.h"
@@ -51,7 +52,7 @@ class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "RESTGetPopulatedSlotsTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTGetPopulatedSlotsTest");
     }
 
     static void TearDownTestSuite() {

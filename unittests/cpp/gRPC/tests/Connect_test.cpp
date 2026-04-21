@@ -59,7 +59,7 @@ class gRPCConnectTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "gRPCConnectTests");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCConnectTests");
     }
 
     static void TearDownTestSuite() {

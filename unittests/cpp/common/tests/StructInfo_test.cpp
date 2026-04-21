@@ -59,7 +59,7 @@ class StructInfoTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "StructInfoTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "StructInfoTest");
     }
 
     static void TearDownTestSuite() {

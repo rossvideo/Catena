@@ -40,6 +40,7 @@
 #include <patterns/EnumDecorator.h>
 #include <Logger.h>
 #include <Config.h>
+#include "CommonTestHelpers.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -80,7 +81,7 @@ class EnumDecoratorTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "EnumDecoratorTest");
+        catena::common::set_up_test_logs(UNITTEST_LOG_DIR, "EnumDecoratorTest");
     }
 
     static void TearDownTestSuite() {

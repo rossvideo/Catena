@@ -55,7 +55,7 @@ class SubscriptionManagerTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "SubscriptionManagerTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "SubscriptionManagerTest");
     }
 
     static void TearDownTestSuite() {

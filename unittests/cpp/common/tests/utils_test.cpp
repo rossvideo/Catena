@@ -15,6 +15,7 @@
 #include <Logger.h>
 #include "../src/utils.cpp" // Include the file to test
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 namespace fs = std::filesystem;
 
@@ -22,7 +23,7 @@ class UtilsTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        LogHelper::set_up_test_logs(UNITTEST_LOG_DIR, "UtilsTest");
+        catena::common::set_up_test_logs(UNITTEST_LOG_DIR, "UtilsTest");
     }
 
     static void TearDownTestSuite() {
