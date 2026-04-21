@@ -223,7 +223,7 @@ void Logger::init(const std::string& appName) {
             
             // Force a rotation on startup to ensure old active file is rotated. Only necessary for multi, single's scan handles this.
             file_sink->locked_backend()->scan_for_files(sinks::file::scan_matching);
-            if (std::filesystem::is_regular_file(config::log_dir + "/" + appName + ".log") && config::log_count > 1) {
+            if (std::filesystem::is_regular_file(config::log_dir + "/" + appName + ".log") && config::log_count > 1 && !config::log_append) {
                 // Swap to append to rotate old file, swap back if log_append=false
                 instance().file_sink_->locked_backend()->set_open_mode(std::ios_base::out | std::ios_base::app);
                 BOOST_LOG_TRIVIAL(info) << "Startup rotation";

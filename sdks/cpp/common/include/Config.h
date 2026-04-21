@@ -97,7 +97,7 @@ const double LOG_SIZE_DEFAULT = 10.0;
 const int LOG_COUNT_DEFAULT = 5;
 const double LOG_MAX_SIZE_DEFAULT = 50.0;
 const bool LOG_FINAL_ROTATION_DEFAULT = false;
-const bool LOG_APPEND_DEFAULT = false;
+const bool LOG_APPEND_DEFAULT = true;
 #ifdef NDEBUG
 const std::string LOG_LEVEL_DEFAULT = "debug";
 #else

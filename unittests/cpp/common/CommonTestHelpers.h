@@ -61,6 +61,7 @@ inline void set_up_test_logs(std::string directory, std::string appName) {
     config::log_size = 10;
     config::log_count = 3; // 1 active + 2 archived; final rotation leaves up to 2 archives after teardown
     config::log_final_rotation = true;
+    config::log_append = false;
     Logger::init(std::move(appName));
 }
 
