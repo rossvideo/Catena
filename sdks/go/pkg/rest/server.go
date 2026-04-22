@@ -55,6 +55,8 @@ import (
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 
+var _ catena.CatenaServer = (*Server)(nil)
+
 // Server provides REST API endpoints for Catena devices
 type Server struct {
 	baseServer      *internal.BaseServer

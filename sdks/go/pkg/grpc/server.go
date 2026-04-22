@@ -54,6 +54,8 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
+var _ catena.CatenaServer = (*Server)(nil)
+
 // Server provides gRPC API endpoints for Catena devices
 type Server struct {
 	protos.UnimplementedCatenaServiceServer
