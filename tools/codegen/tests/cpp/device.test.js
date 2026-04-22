@@ -1,7 +1,7 @@
 import { describe, expect, test } from '@jest/globals';
+import Constraint from '../../cpp/constraint.js';
 import Device from '../../cpp/device.js';
 import Param from '../../cpp/param.js';
-import Constraint from '../../cpp/constraint.js';
 
 const MINIMAL_DESC = {
   slot: 7,

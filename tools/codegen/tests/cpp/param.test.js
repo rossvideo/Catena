@@ -1,12 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { expect, test, describe, beforeAll } from '@jest/globals';
-import Param, { getCppIdentifier } from '../../cpp/param.js';
+import { beforeAll, describe, expect, jest, test } from '@jest/globals';
 import { CPP_KEYWORDS } from '../../cpp/cpp-keywords.js';
 import CppGen from '../../cpp/cppgen.js';
-import Device from '../../cpp/device.js';
-import Constraint from '../../cpp/constraint.js';
+import Param, { getCppIdentifier } from '../../cpp/param.js';
+import { createMockDeviceWithParams } from './mocks/mock-device.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.join(__dirname, '..', 'output', 'cpp-test-output');
@@ -136,36 +135,21 @@ describe('getCppIdentifier', () => {
   });
 });
 
-/**
- * Builds a Device and populates device.constraints then device.params like CppGen.
- * @param {object} desc - device descriptor (params, constraints, slot, detail_level, etc.)
- * @param {string} deviceName - namespace/device name
- * @returns {{ device: Device, params: Record<string, Param> }}
- */
-function buildDeviceWithParams(desc, deviceName = 'Test') {
-  const deviceModel = { baseFilename: 'test.json', deviceName, desc };
-  const device = new Device(deviceModel);
-  if ('constraints' in device.desc) {
-    for (const oid of Object.keys(device.desc.constraints)) {
-      device.constraints[oid] = new Constraint(oid, device.desc.constraints[oid]);
-    }
-  }
-  if ('params' in device.desc) {
-    for (const oid of Object.keys(device.desc.params)) {
-      device.params[oid] = new Param(
-        oid,
-        device.desc.params[oid],
-        device.namespace,
-        device
-      );
-    }
-  }
-  return { device, params: device.params };
-}
+describe('mock device getParam/getConstraint during Param tree build', () => {
+  test('template_oid resolution calls device.getParam with fqoid', () => {
+    const { device } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    expect(device.getParam).toHaveBeenCalledWith('/item');
+  });
+
+  test('constraint ref_oid resolution calls device.getConstraint', () => {
+    const { device } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    expect(device.getConstraint).toHaveBeenCalledWith('shared_range');
+  });
+});
 
 describe('Param class', () => {
 
-  const { params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+  const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
 
   test('getFQOid returns correct path', () => {
     expect(params.product.getFQOid()).toBe('/product');
@@ -258,7 +242,7 @@ describe('Param class', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(NON_STRUCT_VALUES_DESCRIPTOR, 'NonStruct');
+    const { params } = createMockDeviceWithParams(NON_STRUCT_VALUES_DESCRIPTOR, 'NonStruct');
     const init = params.variables.initializeValue();
     expect(init).toMatch(/Variables\s+variables/);
     expect(init).toContain('"test"');
@@ -357,7 +341,7 @@ describe('Param class', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(STRUCT_VALUES_DESCRIPTOR, 'Struct');
+    const { params } = createMockDeviceWithParams(STRUCT_VALUES_DESCRIPTOR, 'Struct');
     const init = params.variables.initializeValue();
     expect(init).toMatch(/Variables\s+variables/);
     expect(init).toContain('.inner{"inner"}');
@@ -406,10 +390,10 @@ describe('Param class', () => {
 
   test('objectType throws for unknown param type', () => {
     const device = {
-      getParam: () => undefined,
-      getConstraint: () => {
+      getParam: jest.fn().mockReturnValue(undefined),
+      getConstraint: jest.fn().mockImplementation(() => {
         throw new Error('Invalid constraint');
-      }
+      })
     };
     const param = new Param('x', { type: 'UNKNOWN_TYPE' }, 'ns', device);
     expect(() => param.objectType()).toThrow(/Unknown type/);
@@ -432,10 +416,10 @@ describe('Param class', () => {
 
   test('valueInitializer int32_value produces numeric initializer', () => {
     const device = {
-      getParam: () => undefined,
-      getConstraint: () => {
+      getParam: jest.fn().mockReturnValue(undefined),
+      getConstraint: jest.fn().mockImplementation(() => {
         throw new Error('Invalid constraint');
-      }
+      })
     };
     const param = new Param('x', { type: 'INT32' }, 'ns', device);
     expect(param.valueInitializer({ int32_value: 42 }, 'INT32', param)).toBe('{42}');
@@ -443,10 +427,10 @@ describe('Param class', () => {
 
   test('valueInitializer empty_value produces empty initializer', () => {
     const device = {
-      getParam: () => undefined,
-      getConstraint: () => {
+      getParam: jest.fn().mockReturnValue(undefined),
+      getConstraint: jest.fn().mockImplementation(() => {
         throw new Error('Invalid constraint');
-      }
+      })
     };
     const param = new Param('x', { type: 'EMPTY' }, 'ns', device);
     expect(param.valueInitializer({ empty_value: {} }, 'EMPTY', param)).toBe('{}');
@@ -492,12 +476,12 @@ describe('Param class', () => {
 
 describe('objectType, objectNamespaceType, elementType, elementNamespaceType', () => {
   test('objectNamespaceType for simple type returns typeArg (no namespace)', () => {
-    const { params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
     expect(params.auto.objectNamespaceType()).toBe('std::string');
   });
 
   test('objectNamespaceType for struct returns namespace::Type', () => {
-    const { params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
     expect(params.product.objectNamespaceType()).toBe('keywords::Product');
   });
 
@@ -515,7 +499,7 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithStructArray, 'Test');
     expect(params.row.objectNamespaceType()).toBe('Test::Row');
   });
 
@@ -533,7 +517,7 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithStructArray, 'Test');
     expect(params.row.elementType()).toBe('Row_elem');
   });
 
@@ -551,12 +535,12 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithStructArray, 'Test');
     expect(params.row.elementNamespaceType()).toBe('Test::Row_elem');
   });
 
   test('elementNamespaceType throws for non-array param', () => {
-    const { params } = buildDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
     expect(() => params.product.elementNamespaceType()).toThrow(/does not have an element type/);
   });
 
@@ -581,22 +565,22 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
   };
 
   test('objectType for STRUCT_ARRAY templated on STRUCT returns param type (non-array template)', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
     expect(params.row_list.objectType()).toBe('Row_list');
   });
 
   test('objectNamespaceType for STRUCT_ARRAY templated on STRUCT returns namespace::param', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
     expect(params.row_list.objectNamespaceType()).toBe('Test::Row_list');
   });
 
   test('elementType for STRUCT_ARRAY templated on STRUCT returns template objectNamespaceType', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
     expect(params.row_list.elementType()).toBe('Test::Row');
   });
 
   test('elementNamespaceType for STRUCT_ARRAY templated on STRUCT returns template objectNamespaceType', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStruct, 'Test');
     expect(params.row_list.elementNamespaceType()).toBe('Test::Row');
   });
 
@@ -621,22 +605,22 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
   };
 
   test('objectType for STRUCT_ARRAY templated on STRUCT_ARRAY delegates to template', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
     expect(params.row2_list.objectType()).toBe('Row2');
   });
 
   test('objectNamespaceType for STRUCT_ARRAY templated on STRUCT_ARRAY delegates to template', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
     expect(params.row2_list.objectNamespaceType()).toBe('Test::Row2');
   });
 
   test('elementType for STRUCT_ARRAY templated on STRUCT_ARRAY returns template elementType', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
     expect(params.row2_list.elementType()).toBe('Row2_elem');
   });
 
   test('elementNamespaceType for STRUCT_ARRAY templated on STRUCT_ARRAY returns namespace::elementType', () => {
-    const { params } = buildDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorStructArrayOnStructArray, 'Test');
     expect(params.row2_list.elementNamespaceType()).toBe('Test::Row2_elem');
   });
 });
@@ -667,7 +651,7 @@ describe('valueInitializer struct and variant', () => {
   };
 
   test('valueInitializer struct_array_values produces list of struct initializers', () => {
-    const { params } = buildDeviceWithParams(descriptorWithStructArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithStructArray, 'Test');
     const result = params.row.valueInitializer(
       params.row.value,
       'STRUCT_ARRAY',
@@ -694,7 +678,7 @@ describe('valueInitializer struct and variant', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     const value = {
       struct_variant_value: {
         struct_variant_type: 'a',
@@ -723,7 +707,7 @@ describe('valueInitializer struct and variant', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     expect(() =>
       params.choice.valueInitializer(
         { struct_variant_value: { value: { string_value: 'x' } } },
@@ -750,7 +734,7 @@ describe('valueInitializer struct and variant', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     expect(() =>
       params.choice.valueInitializer(
         { struct_variant_value: { struct_variant_type: 'a' } },
@@ -777,7 +761,7 @@ describe('valueInitializer struct and variant', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     expect(() =>
       params.choice.valueInitializer(
         {
@@ -809,7 +793,7 @@ describe('valueInitializer struct and variant', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     const value = {
       struct_variants: {
         struct_variant_value: {
@@ -857,7 +841,7 @@ describe('valueInitializer struct and variant', () => {
         }
       }
     };
-    const { params } = buildDeviceWithParams(descriptorWithVariantArray, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariantArray, 'Test');
     const result = params.choice_list.valueInitializer(
       params.choice_list.value,
       'STRUCT_VARIANT_ARRAY',
@@ -887,21 +871,21 @@ describe('Param class STRUCT_VARIANT', () => {
   };
 
   test('getAlternativeTypes returns C++ types for variant alternatives', () => {
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     const types = params.choice.getAlternativeTypes();
     expect(types).toContain('std::string');
     expect(types).toContain('int32_t');
   });
 
   test('getAlternativeNames returns oids for variant', () => {
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     const names = params.choice.getAlternativeNames();
     expect(names).toContain('"a"');
     expect(names).toContain('"b"');
   });
 
   test('isVariantType true for STRUCT_VARIANT', () => {
-    const { params } = buildDeviceWithParams(descriptorWithVariant, 'Test');
+    const { params } = createMockDeviceWithParams(descriptorWithVariant, 'Test');
     expect(params.choice.isVariantType()).toBe(true);
     expect(params.choice.isStructType()).toBe(false);
   });
