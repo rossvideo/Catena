@@ -33,7 +33,6 @@ package catena
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 )
 
 // orderedObj is a JSON object that preserves key insertion/parse order.
@@ -132,92 +131,3 @@ func marshalOrderedValue(v any) ([]byte, error) {
 	}
 }
 
-// parseOrderedJSON parses a JSON object from bytes, preserving key order.
-func parseOrderedJSON(data []byte) (*orderedObj, error) {
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.UseNumber()
-	return parseOrderedObject(dec)
-}
-
-func parseOrderedObject(dec *json.Decoder) (*orderedObj, error) {
-	t, err := dec.Token()
-	if err != nil {
-		return nil, err
-	}
-	if d, ok := t.(json.Delim); !ok || d != '{' {
-		return nil, fmt.Errorf("expected '{', got %v", t)
-	}
-
-	obj := &orderedObj{}
-	for dec.More() {
-		keyTok, err := dec.Token()
-		if err != nil {
-			return nil, err
-		}
-		key := keyTok.(string)
-
-		val, err := parseOrderedValue(dec)
-		if err != nil {
-			return nil, fmt.Errorf("key %q: %w", key, err)
-		}
-		obj.pairs = append(obj.pairs, kv{key, val})
-	}
-	dec.Token() // consume closing '}'
-	return obj, nil
-}
-
-func parseOrderedValue(dec *json.Decoder) (any, error) {
-	t, err := dec.Token()
-	if err != nil {
-		return nil, err
-	}
-
-	switch v := t.(type) {
-	case json.Delim:
-		switch v {
-		case '{':
-			obj := &orderedObj{}
-			for dec.More() {
-				keyTok, err := dec.Token()
-				if err != nil {
-					return nil, err
-				}
-				key := keyTok.(string)
-				val, err := parseOrderedValue(dec)
-				if err != nil {
-					return nil, fmt.Errorf("key %q: %w", key, err)
-				}
-				obj.pairs = append(obj.pairs, kv{key, val})
-			}
-			dec.Token() // consume '}'
-			return obj, nil
-		case '[':
-			var arr []any
-			for dec.More() {
-				val, err := parseOrderedValue(dec)
-				if err != nil {
-					return nil, err
-				}
-				arr = append(arr, val)
-			}
-			dec.Token() // consume ']'
-			return arr, nil
-		}
-	case json.Number:
-		if i, err := v.Int64(); err == nil {
-			return i, nil
-		}
-		f, err := v.Float64()
-		if err != nil {
-			return nil, err
-		}
-		return f, nil
-	case string:
-		return v, nil
-	case bool:
-		return v, nil
-	case nil:
-		return nil, nil
-	}
-	return nil, fmt.Errorf("unexpected token: %v", t)
-}

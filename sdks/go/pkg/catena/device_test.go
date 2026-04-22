@@ -600,3 +600,387 @@ func TestToCatenaDevice_FloatRangeConstraint(t *testing.T) {
 		t.Errorf("expected max_value 12.0, got %v", floatRange.GetMaxValue())
 	}
 }
+
+// --- postProcessDeviceObj coverage via ToJSON ---
+
+func TestToJSON_SlotZeroInjected(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.HasPrefix(body, `{"slot":0`) {
+		t.Errorf("slot:0 should be the first field; got %s", body)
+	}
+}
+
+func TestToJSON_SlotNonZero(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(5),
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"slot":5`) {
+		t.Errorf("expected slot:5; got %s", body)
+	}
+}
+
+func TestToJSON_CommandResponseDefaultFalse(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"commands": map[string]any{
+			"reboot": map[string]any{
+				"type": ParamTypeEmpty,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"response":false`) {
+		t.Errorf("expected response:false injected for command; got %s", body)
+	}
+}
+
+func TestToJSON_CommandResponseTruePreserved(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"commands": map[string]any{
+			"query": map[string]any{
+				"type":     ParamTypeString,
+				"response": true,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"response":true`) {
+		t.Errorf("expected response:true preserved; got %s", body)
+	}
+	if strings.Contains(body, `"response":false`) {
+		t.Errorf("response:false should not appear; got %s", body)
+	}
+}
+
+func TestToJSON_MenuGroupOrderDefaultZero(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"menu_groups": map[string]any{
+			"video": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{"en": "Video"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"order":0`) {
+		t.Errorf("expected order:0 injected for menu_group; got %s", body)
+	}
+}
+
+func TestToJSON_MenuGroupOrderNonZeroPreserved(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"menu_groups": map[string]any{
+			"audio": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{"en": "Audio"},
+				},
+				"order": uint32(3),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"order":3`) {
+		t.Errorf("expected order:3 preserved; got %s", body)
+	}
+}
+
+func TestToJSON_Int32RangeDefaultBounds(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"constraints": map[string]any{
+			"vol": map[string]any{
+				"int32_range": map[string]any{
+					"step": int32(1),
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"min_value":0`) {
+		t.Errorf("expected min_value:0 injected for int32_range; got %s", body)
+	}
+	if !strings.Contains(body, `"max_value":0`) {
+		t.Errorf("expected max_value:0 injected for int32_range; got %s", body)
+	}
+}
+
+func TestToJSON_Int32RangeNonZeroPreserved(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"constraints": map[string]any{
+			"brightness_range": map[string]any{
+				"int32_range": map[string]any{
+					"min_value": int32(-10),
+					"max_value": int32(100),
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"min_value":-10`) {
+		t.Errorf("expected min_value:-10 preserved; got %s", body)
+	}
+	if !strings.Contains(body, `"max_value":100`) {
+		t.Errorf("expected max_value:100 preserved; got %s", body)
+	}
+}
+
+func TestToJSON_FloatRangeDefaultBounds(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"constraints": map[string]any{
+			"gain": map[string]any{
+				"float_range": map[string]any{
+					"step": float32(0.5),
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"min_value":0`) {
+		t.Errorf("expected min_value:0 injected for float_range; got %s", body)
+	}
+	if !strings.Contains(body, `"max_value":0`) {
+		t.Errorf("expected max_value:0 injected for float_range; got %s", body)
+	}
+}
+
+func TestToJSON_FloatRangeNonZeroPreserved(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"constraints": map[string]any{
+			"gain_range": map[string]any{
+				"float_range": map[string]any{
+					"min_value": float32(-60.0),
+					"max_value": float32(12.0),
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"min_value":-60`) {
+		t.Errorf("expected min_value:-60 preserved; got %s", body)
+	}
+	if !strings.Contains(body, `"max_value":12`) {
+		t.Errorf("expected max_value:12 preserved; got %s", body)
+	}
+}
+
+func TestToJSON_NoCommandsMenuGroupsConstraints(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot":         uint32(0),
+		"detail_level": DetailLevelFull,
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+	body := string(b)
+	if !strings.Contains(body, `"slot":0`) {
+		t.Errorf("expected slot:0; got %s", body)
+	}
+	if strings.Contains(body, `"commands"`) {
+		t.Errorf("commands should not appear; got %s", body)
+	}
+	if strings.Contains(body, `"menu_groups"`) {
+		t.Errorf("menu_groups should not appear; got %s", body)
+	}
+	if strings.Contains(body, `"constraints"`) {
+		t.Errorf("constraints should not appear; got %s", body)
+	}
+}
+
+func TestToJSON_AllPostProcessBranches(t *testing.T) {
+	cd, err := ToCatenaDevice(map[string]any{
+		"slot": uint32(0),
+		"commands": map[string]any{
+			"reboot": map[string]any{
+				"type": ParamTypeEmpty,
+			},
+			"query": map[string]any{
+				"type":     ParamTypeString,
+				"response": true,
+			},
+		},
+		"menu_groups": map[string]any{
+			"video": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{"en": "Video"},
+				},
+			},
+			"audio": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{"en": "Audio"},
+				},
+				"order": uint32(2),
+			},
+		},
+		"constraints": map[string]any{
+			"vol": map[string]any{
+				"int32_range": map[string]any{
+					"step": int32(1),
+				},
+			},
+			"gain": map[string]any{
+				"float_range": map[string]any{
+					"step": float32(0.1),
+				},
+			},
+			"brightness": map[string]any{
+				"int32_range": map[string]any{
+					"min_value": int32(0),
+					"max_value": int32(255),
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToCatenaDevice: %v", err)
+	}
+	b, err := cd.ToJSON()
+	if err != nil {
+		t.Fatalf("ToJSON: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(b, &result); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+
+	slot, ok := result["slot"]
+	if !ok {
+		t.Fatal("slot missing from output")
+	}
+	if slot.(float64) != 0 {
+		t.Errorf("expected slot 0, got %v", slot)
+	}
+
+	cmds := result["commands"].(map[string]any)
+	reboot := cmds["reboot"].(map[string]any)
+	if reboot["response"] != false {
+		t.Errorf("expected reboot.response=false, got %v", reboot["response"])
+	}
+	query := cmds["query"].(map[string]any)
+	if query["response"] != true {
+		t.Errorf("expected query.response=true, got %v", query["response"])
+	}
+
+	mgs := result["menu_groups"].(map[string]any)
+	video := mgs["video"].(map[string]any)
+	if video["order"].(float64) != 0 {
+		t.Errorf("expected video.order=0, got %v", video["order"])
+	}
+	audio := mgs["audio"].(map[string]any)
+	if audio["order"].(float64) != 2 {
+		t.Errorf("expected audio.order=2, got %v", audio["order"])
+	}
+
+	cs := result["constraints"].(map[string]any)
+	vol := cs["vol"].(map[string]any)
+	volRange := vol["int32_range"].(map[string]any)
+	if volRange["min_value"].(float64) != 0 {
+		t.Errorf("expected vol.int32_range.min_value=0, got %v", volRange["min_value"])
+	}
+	if volRange["max_value"].(float64) != 0 {
+		t.Errorf("expected vol.int32_range.max_value=0, got %v", volRange["max_value"])
+	}
+
+	gain := cs["gain"].(map[string]any)
+	gainRange := gain["float_range"].(map[string]any)
+	if gainRange["min_value"].(float64) != 0 {
+		t.Errorf("expected gain.float_range.min_value=0, got %v", gainRange["min_value"])
+	}
+	if gainRange["max_value"].(float64) != 0 {
+		t.Errorf("expected gain.float_range.max_value=0, got %v", gainRange["max_value"])
+	}
+
+	brightness := cs["brightness"].(map[string]any)
+	brightRange := brightness["int32_range"].(map[string]any)
+	if brightRange["min_value"].(float64) != 0 {
+		t.Errorf("expected brightness.int32_range.min_value=0, got %v", brightRange["min_value"])
+	}
+	if brightRange["max_value"].(float64) != 255 {
+		t.Errorf("expected brightness.int32_range.max_value=255, got %v", brightRange["max_value"])
+	}
+}

@@ -99,34 +99,23 @@ func (cd CatenaDevice) GetProtoDevice() *protos.Device {
 	return cd.device
 }
 
-// ToJSON converts CatenaDevice to JSON bytes using protojson.
-// Post-processes the JSON to inject schema-required fields that proto3
-// omits at their default values (slot, command response, menu_group order,
-// constraint range bounds). Preserves protojson's original field ordering.
+// ToJSON converts CatenaDevice to JSON bytes.
+// Walks the proto via reflection directly into an ordered map, then injects
+// SMPTE-schema-required fields that proto3 omits at default values (slot,
+// command response, menu_group order, constraint range bounds).
 func (cd CatenaDevice) ToJSON() ([]byte, error) {
 	if cd.device == nil {
 		return nil, nil
 	}
 
-	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(cd.device)
-	if err != nil {
-		return nil, err
-	}
-	return postProcessDeviceJSON(b, cd.device.GetSlot())
+	obj := protoToOrderedObj(cd.device.ProtoReflect())
+	postProcessDeviceObj(obj, cd.device.GetSlot())
+	return obj.MarshalJSON()
 }
 
-// postProcessDeviceJSON ensures all SMPTE-schema-required fields are present
-// in the Device JSON even when proto3 omits them at their default values.
-// Preserves the original field ordering from protojson.
-func postProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
-	obj, err := parseOrderedJSON(data)
-	if err != nil {
-		return nil, err
-	}
-
+// postProcessDeviceObj ensures all SMPTE-schema-required fields are present
+// in the Device orderedObj even when proto3 omits them at their default values.
+func postProcessDeviceObj(obj *orderedObj, slot uint32) {
 	obj.setFirst("slot", slot)
 
 	if v, ok := obj.get("commands"); ok {
@@ -143,7 +132,7 @@ func postProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
 		if mgs, ok := v.(*orderedObj); ok {
 			for _, p := range mgs.pairs {
 				if mg, ok := p.val.(*orderedObj); ok {
-					mg.setDefault("order", int64(0))
+					mg.setDefault("order", uint32(0))
 				}
 			}
 		}
@@ -155,20 +144,18 @@ func postProcessDeviceJSON(data []byte, slot uint32) ([]byte, error) {
 				if c, ok := p.val.(*orderedObj); ok {
 					if r, ok := c.get("int32_range"); ok {
 						if rObj, ok := r.(*orderedObj); ok {
-							rObj.setDefault("min_value", int64(0))
-							rObj.setDefault("max_value", int64(0))
+							rObj.setDefault("min_value", int32(0))
+							rObj.setDefault("max_value", int32(0))
 						}
 					}
 					if r, ok := c.get("float_range"); ok {
 						if rObj, ok := r.(*orderedObj); ok {
-							rObj.setDefault("min_value", 0.0)
-							rObj.setDefault("max_value", 0.0)
+							rObj.setDefault("min_value", float32(0))
+							rObj.setDefault("max_value", float32(0))
 						}
 					}
 				}
 			}
 		}
 	}
-
-	return obj.MarshalJSON()
 }
