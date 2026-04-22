@@ -8,12 +8,12 @@ LOG_DIR := ./logs
 GOBIN         := $(shell go env GOPATH)/bin
 PROTO_DIR     := $(abspath ../../smpte/interface/proto)
 OUT_DIR       := $(abspath pkg/protos)
-IMPORT_PATH   := github.com/rossvideo/catena/pkg/protos
+IMPORT_PATH   := github.com/rossvideo/catena/sdks/go/pkg/protos
 PROTO_FILES   := $(wildcard $(PROTO_DIR)/*.proto)
 GO_M_OPTS     := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 GO_GRPC_M_OPTS:= $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 
-.PHONY: proto-module proto-tools protos protos-grpc protos-all clean-protos
+.PHONY: proto-tools protos protos-grpc protos-all clean-protos
 
 all: protos-all $(CMDS)
 
@@ -42,7 +42,7 @@ protos: proto-tools
 		$(GO_M_OPTS) \
 		$(PROTO_FILES)
 
-protos-grpc: proto-module proto-tools
+protos-grpc: proto-tools
 	mkdir -p $(OUT_DIR)
 	PATH="$(PATH):$(GOBIN)" protoc -I "$(PROTO_DIR)" \
 		--go-grpc_out="$(OUT_DIR)" \
@@ -66,7 +66,7 @@ test:
 	go test -v ./...
 
 coverage: | $(COVERAGE_DIR) protos-all
-	go test -coverprofile=$(COVERAGE_OUT) -covermode=count $(TEST_PACKAGES) $(if $(filter 1,$(VERBOSE)),-v)
+	go test -coverprofile=$(COVERAGE_OUT) -covermode=count $(if $(filter 1,$(VERBOSE)),-v) $(TEST_PACKAGES)
 	@echo ""
 	@echo "Coverage Summary:"
 	@go tool cover -func=$(COVERAGE_OUT) | tail -1
