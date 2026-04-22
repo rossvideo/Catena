@@ -278,6 +278,20 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsStream) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
 }
 
+// Test 1.2: Unary response without fqoid is rejected.
+TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsUnary) {
+    stream_ = false;
+    fqoid_ = "";
+    expRc_ = catena::exception_with_status("Unary request must include fqoid", catena::StatusCode::INVALID_ARGUMENT);
+    endpoint_.reset(makeOne());
+
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_)).Times(0);
+
+    endpoint_->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(expRc_));
+}
+
 // Test 1.3: Get top-level parameters with error returned from getTopLevelParams
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsError) {
     expRc_ = catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
