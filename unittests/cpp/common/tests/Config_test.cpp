@@ -200,7 +200,7 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
     EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
     #ifdef NDEBUG
-    EXPECT_EQ(config::log_level, "DEBUG");
+    EXPECT_EQ(config::log_level, "INFO");
     #else
     EXPECT_EQ(config::log_level, "TRACE");
     #endif
@@ -383,7 +383,7 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
     EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
     #ifdef NDEBUG
-    EXPECT_EQ(config::log_level, "DEBUG");
+    EXPECT_EQ(config::log_level, "INFO");
     #else
     EXPECT_EQ(config::log_level, "TRACE");
     #endif
@@ -628,7 +628,7 @@ TEST_F(ConfigTest, LogWarnings) {
 
     // Log level defaults if invalid, differs based on Release or Debug build
     #ifdef NDEBUG
-    EXPECT_EQ(config::log_level, "DEBUG");
+    EXPECT_EQ(config::log_level, "INFO");
     #else
     EXPECT_EQ(config::log_level, "TRACE");
     #endif

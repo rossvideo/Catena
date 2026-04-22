@@ -134,8 +134,8 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
             if (!log_levels.contains(config::log_level.c_str())) {
                 std::cout << "WARNING: log_level {" << config::log_level << "} is invalid. ";
                 #ifdef NDEBUG 
-                std::cout << "Defaulting to DEBUG instead." << std::endl;
-                config::log_level = "DEBUG"; 
+                std::cout << "Defaulting to INFO instead." << std::endl;
+                config::log_level = "INFO"; 
                 #else
                 std::cout << "Defaulting to TRACE instead." << std::endl;
                 config::log_level = "TRACE"; 
