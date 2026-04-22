@@ -54,19 +54,39 @@ clean-protos:
 	rm -rf "$(OUT_DIR)"
 
 # Test coverage targets
-.PHONY: test coverage coverage-html coverage-lcov
+.PHONY: test coverage coverage-html coverage-lcov clean-coverage
+
+# Exclude generated protos from coverage
+TEST_PACKAGES := $(shell go list ./pkg/... | grep -v "github.com/rossvideo/catena/sdks/go/pkg/protos")
+COVERAGE_DIR := $(HOME)/Catena/coverage
+COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
+VERBOSE ?= 0
 
 test:
 	go test -v ./...
 
-coverage:
-	go test -v -coverprofile=coverage.out -covermode=atomic -coverpkg=./... ./...
+coverage: | $(COVERAGE_DIR) protos-all
+	go test -coverprofile=$(COVERAGE_OUT) -covermode=count $(TEST_PACKAGES) $(if $(filter 1,$(VERBOSE)),-v)
+	@echo ""
+	@echo "Coverage Summary:"
+	@go tool cover -func=$(COVERAGE_OUT) | tail -1
 
 coverage-html: coverage
-	go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report generated: coverage.html"
+	@echo "Generating HTML report with hit counts..."
+	gocov convert $(COVERAGE_OUT) | gocov-html > $(COVERAGE_DIR)/go_coverage.html
+	@echo "Go HTML coverage report (with hit counts): $(COVERAGE_DIR)/go_coverage.html"
 
 coverage-lcov: coverage
-	gcov2lcov -infile=coverage.out -outfile=coverage.lcov
-	@echo "LCOV coverage report generated: coverage.lcov"
+	@echo "Generating LCOV coverage file for VS Code Coverage Gutters..."
+	gcov2lcov -infile=$(COVERAGE_OUT) -outfile=$(COVERAGE_DIR)/go_coverage.lcov
+	@echo "LCOV coverage report generated: $(COVERAGE_DIR)/go_coverage.lcov"
 	@echo "You can now enable Coverage Gutters in VS Code to see coverage highlights"
+
+clean-coverage:
+	@echo "Cleaning Go build cache and coverage files..."
+	go clean -testcache
+	rm -f $(COVERAGE_OUT)
+	@echo "Go build cache cleaned."
+
+$(COVERAGE_DIR):
+	mkdir -p $(COVERAGE_DIR)
