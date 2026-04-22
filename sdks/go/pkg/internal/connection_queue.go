@@ -41,8 +41,8 @@ package internal
 import (
 	"sync"
 
-	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // Connection represents an active streaming connection (SSE or gRPC).

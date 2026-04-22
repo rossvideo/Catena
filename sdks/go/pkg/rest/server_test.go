@@ -50,8 +50,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {

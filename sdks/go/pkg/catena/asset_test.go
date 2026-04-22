@@ -53,7 +53,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestToCatenaAsset_WithPayload(t *testing.T) {

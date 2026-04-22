@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // Handlers now return (CatenaValue, StatusResult) so the server can respond consistently.

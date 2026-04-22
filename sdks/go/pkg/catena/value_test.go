@@ -43,7 +43,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestToCatenaValue(t *testing.T) {

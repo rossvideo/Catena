@@ -44,7 +44,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // DetailLevel represents how much of the device model to deliver

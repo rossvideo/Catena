@@ -45,8 +45,8 @@ import (
 	"mime"
 	"net/http"
 
-	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
