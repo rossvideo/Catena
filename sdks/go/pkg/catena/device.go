@@ -40,6 +40,7 @@
 package catena
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -99,63 +100,46 @@ func (cd CatenaDevice) GetProtoDevice() *protos.Device {
 	return cd.device
 }
 
+var deviceMarshalOpts = protojson.MarshalOptions{
+	UseProtoNames:   true,
+	EmitUnpopulated: true,
+}
+
+var emptyFieldsToStrip = []string{
+	"params", "constraints", "commands",
+	"menu_groups", "language_packs",
+}
+
 // ToJSON converts CatenaDevice to JSON bytes.
-// Walks the proto via reflection directly into an ordered map, then injects
-// SMPTE-schema-required fields that proto3 omits at default values (slot,
-// command response, menu_group order, constraint range bounds).
+// Uses EmitUnpopulated so proto3 default values (e.g. slot:0) are visible,
+// then strips top-level empty map fields that add no value.
 func (cd CatenaDevice) ToJSON() ([]byte, error) {
 	if cd.device == nil {
 		return nil, nil
 	}
-
-	obj := protoToOrderedObj(cd.device.ProtoReflect())
-	postProcessDeviceObj(obj, cd.device.GetSlot())
-	return obj.MarshalJSON()
+	data, err := deviceMarshalOpts.Marshal(cd.device)
+	if err != nil {
+		return nil, err
+	}
+	return stripEmptyFields(data, emptyFieldsToStrip), nil
 }
 
-// postProcessDeviceObj ensures all SMPTE-schema-required fields are present
-// in the Device orderedObj even when proto3 omits them at their default values.
-func postProcessDeviceObj(obj *orderedObj, slot uint32) {
-	obj.setFirst("slot", slot)
-
-	if v, ok := obj.get("commands"); ok {
-		if cmds, ok := v.(*orderedObj); ok {
-			for _, p := range cmds.pairs {
-				if cmd, ok := p.val.(*orderedObj); ok {
-					cmd.setDefault("response", false)
-				}
-			}
+// stripEmptyFields removes top-level JSON fields whose values are empty
+// objects ("{}") directly from the byte array, handling comma placement.
+func stripEmptyFields(data []byte, fields []string) []byte {
+	for _, field := range fields {
+		pattern := []byte(`"` + field + `":{}`)
+		idx := bytes.Index(data, pattern)
+		if idx == -1 {
+			continue
 		}
-	}
-
-	if v, ok := obj.get("menu_groups"); ok {
-		if mgs, ok := v.(*orderedObj); ok {
-			for _, p := range mgs.pairs {
-				if mg, ok := p.val.(*orderedObj); ok {
-					mg.setDefault("order", uint32(0))
-				}
-			}
+		start, end := idx, idx+len(pattern)
+		if start > 0 && data[start-1] == ',' {
+			start--
+		} else if end < len(data) && data[end] == ',' {
+			end++
 		}
+		data = append(data[:start], data[end:]...)
 	}
-
-	if v, ok := obj.get("constraints"); ok {
-		if cs, ok := v.(*orderedObj); ok {
-			for _, p := range cs.pairs {
-				if c, ok := p.val.(*orderedObj); ok {
-					if r, ok := c.get("int32_range"); ok {
-						if rObj, ok := r.(*orderedObj); ok {
-							rObj.setDefault("min_value", int32(0))
-							rObj.setDefault("max_value", int32(0))
-						}
-					}
-					if r, ok := c.get("float_range"); ok {
-						if rObj, ok := r.(*orderedObj); ok {
-							rObj.setDefault("min_value", float32(0))
-							rObj.setDefault("max_value", float32(0))
-						}
-					}
-				}
-			}
-		}
-	}
+	return data
 }
