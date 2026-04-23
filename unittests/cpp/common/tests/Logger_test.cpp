@@ -256,7 +256,9 @@ TEST_F(LoggerTest, LogSilence) {
     EXPECT_EQ(slice.find("MESSAGE"), std::string::npos);
 
     EXPECT_EQ(CountFiles(), 1);
+    Logger::reset();
     config::silent = false;
+    Logger::init("LoggerTest");
 }
 
 // Test 4: File Rotation
