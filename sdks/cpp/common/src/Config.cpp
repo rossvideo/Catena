@@ -14,12 +14,12 @@ namespace po = boost::program_options;
 using namespace catena::common;
 
 std::unordered_set<std::string> log_levels = {
-    "TRACE",
-    "DEBUG",
-    "INFO",
-    "WARNING",
-    "ERROR",
-    "FATAL"
+    "trace",
+    "debug",
+    "info",
+    "warning",
+    "error",
+    "fatal"
 };
 
 std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::string prefix) {
@@ -130,16 +130,11 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         }
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
-            std::transform(config::log_level.begin(), config::log_level.end(), config::log_level.begin(), toupper);
+            std::transform(config::log_level.begin(), config::log_level.end(), config::log_level.begin(), tolower);
             if (!log_levels.contains(config::log_level.c_str())) {
                 std::cout << "WARNING: log_level {" << config::log_level << "} is invalid. ";
-                #ifdef NDEBUG 
-                std::cout << "Defaulting to INFO instead." << std::endl;
-                config::log_level = "INFO"; 
-                #else
-                std::cout << "Defaulting to TRACE instead." << std::endl;
-                config::log_level = "TRACE"; 
-                #endif
+                std::cout << "Defaulting to " << config::LOG_LEVEL_DEFAULT << " instead." << std::endl;
+                config::log_level = config::LOG_LEVEL_DEFAULT; 
             }
         }
         if (vars.count(LOG_MAX_SIZE_KEY)) {

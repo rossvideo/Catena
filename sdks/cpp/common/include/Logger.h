@@ -54,9 +54,6 @@ namespace LogHelper{
   // Helper to get basename of __FILE__
   const char* log_basename(const char* path);
 
-  // Helper to get kernel id of thread
-  int kernel_thread_id();
-
   // Attributes used in log records
   BOOST_LOG_ATTRIBUTE_KEYWORD(File, "File", std::string)
   BOOST_LOG_ATTRIBUTE_KEYWORD(Line, "Line", int)
@@ -76,8 +73,7 @@ namespace LogHelper{
 #define LOG_IMPL(severity) \
   BOOST_LOG_TRIVIAL(severity) \
     << boost::log::add_value(LogHelper::File, LogHelper::log_basename(__FILE__)) \
-    << boost::log::add_value(LogHelper::Line, __LINE__) \
-    << boost::log::add_value(LogHelper::KernelThreadID, LogHelper::kernel_thread_id())
+    << boost::log::add_value(LogHelper::Line, __LINE__)
 
 #define LOG(severity) \
   LOG_IMPL(CATENA_SEV_(severity))

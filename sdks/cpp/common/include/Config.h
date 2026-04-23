@@ -103,9 +103,9 @@ const double LOG_MAX_SIZE_DEFAULT = 50.0;
 const bool LOG_FINAL_ROTATION_DEFAULT = false;
 const bool LOG_APPEND_DEFAULT = true;
 #ifdef NDEBUG
-const std::string LOG_LEVEL_DEFAULT = "INFO";
+const std::string LOG_LEVEL_DEFAULT = "info";
 #else
-const std::string LOG_LEVEL_DEFAULT = "TRACE";
+const std::string LOG_LEVEL_DEFAULT = "trace";
 #endif
 
 

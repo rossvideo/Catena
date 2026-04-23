@@ -75,15 +75,6 @@ const char* LogHelper::log_basename(const char* path) {
     return p ? p + 1 : path;
 }
 
-// Helper for LOG() macro to get kernel id of thread
-int LogHelper::kernel_thread_id() {
-    #ifdef _WIN32
-    return static_cast<int>(GetCurrentThreadId()); // Needs testing on Windows build
-    #else
-    return static_cast<int>(gettid());
-    #endif
-}
-
 // Helper for log_count == 1: Active file only.
 class single_file_collector final : public sinks_file::collector {
 public:
@@ -137,7 +128,7 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
     oss << *ts;
 
     strm << " " << oss.str()
-        << "  " << rec[LogHelper::KernelThreadID]
+        << "  " << extract<boost::log::thread_id>("ThreadID", rec)->native_id()
         << " " << rec[LogHelper::File]
         << ":" << rec[LogHelper::Line]
         <<"]  " << rec[expr::message];
@@ -147,19 +138,7 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
 static trivial::severity_level filter_level = trivial::trace;
 static bool silenced = false;
 void set_filter_level() {
-    if (config::log_level.compare("TRACE") == 0) {
-        filter_level = trivial::trace;
-    } else if (config::log_level.compare("DEBUG") == 0) {
-        filter_level = trivial::debug;
-    } else if (config::log_level.compare("INFO") == 0) {
-        filter_level = trivial::info;
-    } else if (config::log_level.compare("WARNING") == 0) {
-        filter_level = trivial::warning;
-    } else if (config::log_level.compare("ERROR") == 0) {
-        filter_level = trivial::error;
-    } else if (config::log_level.compare("FATAL") == 0) {
-        filter_level = trivial::fatal;
-    }
+    trivial::from_string(config::log_level.c_str(), config::log_level.size(), filter_level);
     silenced = config::silent;
 }
 

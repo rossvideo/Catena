@@ -146,7 +146,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(INFO) << marker;
 
     // Log test messages at different severity levels
-    config::log_level = "TRACE";
+    config::log_level = "trace";
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
     LOG(INFO) << "This is an info log message.";
@@ -154,7 +154,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
     Logger::reset();
-    config::log_level = "DEBUG";
+    config::log_level = "debug";
     Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
@@ -163,7 +163,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
     Logger::reset();
-    config::log_level = "INFO";
+    config::log_level = "info";
     Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
@@ -172,7 +172,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
     Logger::reset();
-    config::log_level = "WARNING";
+    config::log_level = "warning";
     Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
@@ -181,7 +181,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
     Logger::reset();
-    config::log_level = "ERROR";
+    config::log_level = "error";
     Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
@@ -190,7 +190,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
     LOG(ERROR) << "This is an error log message.";
     LOG(FATAL) << "This is a fatal log message.";
     Logger::reset();
-    config::log_level = "FATAL";
+    config::log_level = "fatal";
     Logger::init("LoggerTest");
     LOG(TRACE) << "This is a trace log message.";
     LOG(DEBUG) << "This is a debug log message.";
@@ -234,7 +234,7 @@ TEST_F(LoggerTest, LogSeverityFilter) {
 
     EXPECT_EQ(CountFiles(), 1);
     Logger::reset();
-    config::log_level = "TRACE";
+    config::log_level = "trace";
     Logger::init("LoggerTest");
 }
 
@@ -288,7 +288,7 @@ TEST_F(LoggerTest, Rotate) {
     LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 2);
-    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65); // Should be close to zero (new file)
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 75); // Should be close to zero (new file)
     
     // Second file
     LOG(INFO) << std::string(1, '/');
@@ -299,7 +299,7 @@ TEST_F(LoggerTest, Rotate) {
     LOG(INFO) << "ROTATE 2";
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 3);
-    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 75);
 
     // Third file
     LOG(INFO) << std::string(1, '|');
@@ -310,7 +310,7 @@ TEST_F(LoggerTest, Rotate) {
     LOG(INFO) << "ROTATE 3";
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     EXPECT_EQ(CountFiles(), 3); // At max, oldest file is deleted upon rotation
-    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 75);
     
     // Check contents of final file
     std::string body = ReadFile(activeFile);
@@ -336,7 +336,7 @@ TEST_F(LoggerTest, RotateSingleFile) {
     EXPECT_NEAR(std::filesystem::file_size(activeFile), max_bytes, 50);
     LOG(INFO) << "ROTATE 1"; // This will cause a rotation and be written to a new file
     EXPECT_EQ(CountFiles(), 1); // Number of files stays the same
-    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 65);
+    EXPECT_NEAR(std::filesystem::file_size(activeFile), 0, 75);
 
     // Check contents of rotated file
     std::string body = ReadFile(activeFile);
