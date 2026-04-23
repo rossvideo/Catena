@@ -33,6 +33,7 @@ void expandEnvVariables(std::string &str) {
         size_t len = 0;
         if (_dupenv_s(&buf, &len, match[1].str().c_str()) == 0 && buf != nullptr) {
             s = buf;
+            free(buf);
         } else {
             s = NULL;
         }

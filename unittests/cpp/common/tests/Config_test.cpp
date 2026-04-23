@@ -98,7 +98,7 @@
             // Reset "HOME" in case missing "HOME" test case couldn't
             if (home != nullptr) {
                 #ifdef _WIN32
-                _putenv_s("HOME", home);
+                _putenv_s("USERPROFILE", home);
                 #else
                 setenv("HOME", home, 0);
                 #endif
