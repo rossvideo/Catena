@@ -61,6 +61,19 @@ type Server struct {
 	grpcServer *grpc.Server
 }
 
+// sanitizeGRPCError replaces detailed error messages with generic status code
+// descriptions in production mode, matching the REST server's IsDev behavior.
+func sanitizeGRPCError(err error) error {
+	if err == nil || catena.IsDev() {
+		return err
+	}
+	st, ok := status.FromError(err)
+	if !ok {
+		return err
+	}
+	return status.Error(st.Code(), st.Code().String())
+}
+
 // unaryInterceptor logs all incoming unary RPC calls
 func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	logger.Debug("gRPC unary call received", "method", info.FullMethod)
@@ -68,7 +81,7 @@ func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServ
 	if err != nil {
 		logger.Error("gRPC unary call error", "method", info.FullMethod, "error", err)
 	}
-	return resp, err
+	return resp, sanitizeGRPCError(err)
 }
 
 // streamInterceptor logs all incoming streaming RPC calls
@@ -83,7 +96,7 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 			logger.Error("gRPC stream call error", "method", info.FullMethod, "error", err)
 		}
 	}
-	return err
+	return sanitizeGRPCError(err)
 }
 
 // NewServer creates a new gRPC server for the given device slots

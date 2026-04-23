@@ -871,6 +871,349 @@ func TestServer_Connect_ClientDisconnect(t *testing.T) {
 }
 
 // =============================================================================
+// Test: Error Messages Dev vs Prod
+// =============================================================================
+
+func TestErrorMessages_DevVsProd(t *testing.T) {
+	type endpoint struct {
+		name          string
+		devMessage    string
+		grpcCode      codes.Code
+		setupHandlers func(*Server)
+		callEndpoint  func(protos.CatenaServiceClient, context.Context) error
+	}
+
+	endpoints := []endpoint{
+		{
+			name:       "GetValue",
+			devMessage: "param not supported",
+			grpcCode:   codes.Unimplemented,
+			setupHandlers: func(srv *Server) {
+				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+					return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "param not supported")
+				})
+			},
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				_, err := client.GetValue(ctx, &protos.GetValuePayload{Slot: 0, Oid: "device.param1"})
+				return err
+			},
+		},
+		{
+			name:       "SetValue",
+			devMessage: "value out of range",
+			grpcCode:   codes.InvalidArgument,
+			setupHandlers: func(srv *Server) {
+				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+					return catena.StatusWithCode(catena.INVALID_ARGUMENT, "value out of range")
+				})
+			},
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				protoValue, _ := catena.ToProto(int32(100))
+				_, err := client.SetValue(ctx, &protos.SingleSetValuePayload{
+					Slot: 0,
+					Value: &protos.SetValuePayload{
+						Oid:   "device.param1",
+						Value: protoValue,
+					},
+				})
+				return err
+			},
+		},
+		{
+			name:       "MultiSetValue",
+			devMessage: "multi set failed",
+			grpcCode:   codes.FailedPrecondition,
+			setupHandlers: func(srv *Server) {
+				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+					return catena.StatusWithCode(catena.FAILED_PRECONDITION, "multi set failed")
+				})
+			},
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				protoValue, _ := catena.ToProto(int32(1))
+				_, err := client.MultiSetValue(ctx, &protos.MultiSetValuePayload{
+					Slot: 0,
+					Values: []*protos.SetValuePayload{
+						{Oid: "device.param1", Value: protoValue},
+					},
+				})
+				return err
+			},
+		},
+		{
+			name:       "GetParam",
+			devMessage: "GetParam not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "device.param1"})
+				return err
+			},
+		},
+		{
+			name:       "AddLanguage",
+			devMessage: "AddLanguage not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{Slot: 0})
+				return err
+			},
+		},
+		{
+			name:       "LanguagePackRequest",
+			devMessage: "LanguagePackRequest not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0})
+				return err
+			},
+		},
+		{
+			name:       "ListLanguages",
+			devMessage: "ListLanguages not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 0})
+				return err
+			},
+		},
+		{
+			name:       "RefreshToken",
+			devMessage: "RefreshToken not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				_, err := client.RefreshToken(ctx, &protos.RefreshTokenPayload{Reason: "test"})
+				return err
+			},
+		},
+		{
+			name:       "RevokeAccess",
+			devMessage: "RevokeAccess not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				_, err := client.RevokeAccess(ctx, &protos.RevokeAccessPayload{Subject: "test-subject"})
+				return err
+			},
+		},
+	}
+
+	for _, ep := range endpoints {
+		ep := ep
+		t.Run(ep.name+"/dev_shows_details", func(t *testing.T) {
+			original := catena.GetEnv()
+			defer catena.SetEnv(original)
+			catena.SetEnv(catena.EnvDev)
+
+			ctx := context.Background()
+			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			defer cleanup()
+
+			if ep.setupHandlers != nil {
+				ep.setupHandlers(srv)
+			}
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			err := ep.callEndpoint(client, ctx)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			st, ok := status.FromError(err)
+			if !ok {
+				t.Fatalf("expected gRPC status error, got %v", err)
+			}
+			if st.Message() != ep.devMessage {
+				t.Errorf("expected message %q, got %q", ep.devMessage, st.Message())
+			}
+		})
+
+		t.Run(ep.name+"/prod_hides_details", func(t *testing.T) {
+			original := catena.GetEnv()
+			defer catena.SetEnv(original)
+			catena.SetEnv(catena.EnvProd)
+
+			ctx := context.Background()
+			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			defer cleanup()
+
+			if ep.setupHandlers != nil {
+				ep.setupHandlers(srv)
+			}
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			err := ep.callEndpoint(client, ctx)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			st, ok := status.FromError(err)
+			if !ok {
+				t.Fatalf("expected gRPC status error, got %v", err)
+			}
+			expectedMessage := ep.grpcCode.String()
+			if st.Message() != expectedMessage {
+				t.Errorf("expected message %q, got %q", expectedMessage, st.Message())
+			}
+		})
+	}
+}
+
+func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
+	type endpoint struct {
+		name          string
+		devMessage    string
+		grpcCode      codes.Code
+		setupHandlers func(*Server)
+		callEndpoint  func(protos.CatenaServiceClient, context.Context) error
+	}
+
+	endpoints := []endpoint{
+		{
+			name:       "DeviceRequest",
+			devMessage: "device not found",
+			grpcCode:   codes.NotFound,
+			setupHandlers: func(srv *Server) {
+				srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
+					return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+				})
+			},
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				stream, err := client.DeviceRequest(ctx, &protos.DeviceRequestPayload{Slot: 0})
+				if err != nil {
+					return err
+				}
+				_, err = stream.Recv()
+				return err
+			},
+		},
+		{
+			name:       "ExternalObjectRequest",
+			devMessage: "asset not found",
+			grpcCode:   codes.NotFound,
+			setupHandlers: func(srv *Server) {
+				srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+					return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
+				})
+			},
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				stream, err := client.ExternalObjectRequest(ctx, &protos.ExternalObjectRequestPayload{Slot: 0, Oid: "device.image1"})
+				if err != nil {
+					return err
+				}
+				_, err = stream.Recv()
+				return err
+			},
+		},
+		{
+			name:       "ExecuteCommand",
+			devMessage: "command not supported",
+			grpcCode:   codes.Unimplemented,
+			setupHandlers: func(srv *Server) {
+				srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+					return catena.CommandError(catena.UNIMPLEMENTED, "command not supported")
+				})
+			},
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				stream, err := client.ExecuteCommand(ctx, &protos.ExecuteCommandPayload{Slot: 0, Oid: "device.command"})
+				if err != nil {
+					return err
+				}
+				_, err = stream.Recv()
+				return err
+			},
+		},
+		{
+			name:       "ParamInfoRequest",
+			devMessage: "ParamInfoRequest not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				stream, err := client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{Slot: 0, OidPrefix: "device"})
+				if err != nil {
+					return err
+				}
+				_, err = stream.Recv()
+				return err
+			},
+		},
+		{
+			name:       "UpdateSubscriptions",
+			devMessage: "UpdateSubscriptions not implemented",
+			grpcCode:   codes.Unimplemented,
+			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+				stream, err := client.UpdateSubscriptions(ctx, &protos.UpdateSubscriptionsPayload{Slot: 0})
+				if err != nil {
+					return err
+				}
+				_, err = stream.Recv()
+				return err
+			},
+		},
+	}
+
+	for _, ep := range endpoints {
+		ep := ep
+		t.Run(ep.name+"/dev_shows_details", func(t *testing.T) {
+			original := catena.GetEnv()
+			defer catena.SetEnv(original)
+			catena.SetEnv(catena.EnvDev)
+
+			ctx := context.Background()
+			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			defer cleanup()
+
+			if ep.setupHandlers != nil {
+				ep.setupHandlers(srv)
+			}
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			err := ep.callEndpoint(client, ctx)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			st, ok := status.FromError(err)
+			if !ok {
+				t.Fatalf("expected gRPC status error, got %v", err)
+			}
+			if st.Message() != ep.devMessage {
+				t.Errorf("expected message %q, got %q", ep.devMessage, st.Message())
+			}
+		})
+
+		t.Run(ep.name+"/prod_hides_details", func(t *testing.T) {
+			original := catena.GetEnv()
+			defer catena.SetEnv(original)
+			catena.SetEnv(catena.EnvProd)
+
+			ctx := context.Background()
+			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			defer cleanup()
+
+			if ep.setupHandlers != nil {
+				ep.setupHandlers(srv)
+			}
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			err := ep.callEndpoint(client, ctx)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			st, ok := status.FromError(err)
+			if !ok {
+				t.Fatalf("expected gRPC status error, got %v", err)
+			}
+			expectedMessage := ep.grpcCode.String()
+			if st.Message() != expectedMessage {
+				t.Errorf("expected message %q, got %q", expectedMessage, st.Message())
+			}
+		})
+	}
+}
+
+// =============================================================================
 // Test: Unimplemented Endpoints
 // =============================================================================
 

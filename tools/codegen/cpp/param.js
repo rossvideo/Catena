@@ -265,7 +265,7 @@ class Param {
    */
   getParam(path) {
     let front = path.shift();
-    if (!front in this.subParams) {
+    if (!(front in this.subParams)) {
       return undefined;
     }
 
