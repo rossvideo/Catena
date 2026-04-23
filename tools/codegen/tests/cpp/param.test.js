@@ -53,7 +53,7 @@ const MINIMAL_DESCRIPTOR_WITH_KEYWORDS = {
             name: { string_value: 'Keyword Test' },
             vendor: { string_value: 'Test' },
             version: { string_value: '1.0.0' },
-            catena_sdk: { string_value: 'https://example.com' },
+            catena_sdk_version: { string_value: 'https://example.com' },
             serial_number: { string_value: 'SN-001' }
           }
         }
@@ -61,7 +61,10 @@ const MINIMAL_DESCRIPTOR_WITH_KEYWORDS = {
       params: {
         name: { type: 'STRING' },
         vendor: { type: 'STRING' },
-        struct: { type: 'STRUCT', params: {nested: { type: 'STRING' }}},
+        version: { type: 'STRING' },
+        catena_sdk_version: { type: 'STRING' },
+        serial_number: { type: 'STRING' },
+        struct: { type: 'STRUCT', params: { nested: { type: 'STRING' } } },
         arr: { type: 'STRING_ARRAY' }
       }
     },
