@@ -687,49 +687,73 @@ func TestToJSON_PopulatedMapsKept(t *testing.T) {
 	}
 }
 
-func TestStripEmptyFields(t *testing.T) {
+func TestStripEmptyValues(t *testing.T) {
 	tests := []struct {
-		name   string
-		input  string
-		fields []string
-		want   string
+		name  string
+		input string
+		want  string
 	}{
 		{
-			name:   "strip middle field",
-			input:  `{"slot":0,"params":{},"detail_level":"FULL"}`,
-			fields: []string{"params"},
-			want:   `{"slot":0,"detail_level":"FULL"}`,
+			name:  "strip null compact",
+			input: `{"slot":0,"value":null,"type":"INT32"}`,
+			want:  `{"slot":0,"type":"INT32"}`,
 		},
 		{
-			name:   "strip last field",
-			input:  `{"slot":0,"params":{}}`,
-			fields: []string{"params"},
-			want:   `{"slot":0}`,
+			name:  "strip null spaced",
+			input: `{"slot":0, "value":null, "type":"INT32"}`,
+			want:  `{"slot":0, "type":"INT32"}`,
 		},
 		{
-			name:   "strip first field",
-			input:  `{"params":{},"slot":0}`,
-			fields: []string{"params"},
-			want:   `{"slot":0}`,
+			name:  "strip empty object",
+			input: `{"slot":0, "params":{}, "detail_level":"FULL"}`,
+			want:  `{"slot":0, "detail_level":"FULL"}`,
 		},
 		{
-			name:   "no match leaves data unchanged",
-			input:  `{"slot":0,"params":{"a":1}}`,
-			fields: []string{"params"},
-			want:   `{"slot":0,"params":{"a":1}}`,
+			name:  "strip empty array",
+			input: `{"slot":0, "oid_aliases":[], "type":"INT32"}`,
+			want:  `{"slot":0, "type":"INT32"}`,
 		},
 		{
-			name:   "strip multiple fields",
-			input:  `{"slot":0,"params":{},"commands":{},"detail_level":"FULL"}`,
-			fields: []string{"params", "commands"},
-			want:   `{"slot":0,"detail_level":"FULL"}`,
+			name:  "strip empty string",
+			input: `{"slot":0, "widget":"", "type":"INT32"}`,
+			want:  `{"slot":0, "type":"INT32"}`,
+		},
+		{
+			name:  "keep populated values",
+			input: `{"slot":0, "params":{"a":1}, "name":"test"}`,
+			want:  `{"slot":0, "params":{"a":1}, "name":"test"}`,
+		},
+		{
+			name:  "cascading strip",
+			input: `{"outer":{"inner":null}}`,
+			want:  `{}`,
+		},
+		{
+			name:  "strip first field spaced",
+			input: `{"value":null, "slot":0}`,
+			want:  `{"slot":0}`,
+		},
+		{
+			name:  "strip last field spaced",
+			input: `{"slot":0, "value":null}`,
+			want:  `{"slot":0}`,
+		},
+		{
+			name:  "strip multiple patterns",
+			input: `{"a":null, "b":{}, "c":[], "d":"", "e":1}`,
+			want:  `{"e":1}`,
+		},
+		{
+			name:  "nested null stripped",
+			input: `{"params":{"brightness":{"value":null, "type":"INT32"}}}`,
+			want:  `{"params":{"brightness":{"type":"INT32"}}}`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := string(stripEmptyFields([]byte(tt.input), tt.fields))
+			got := string(stripEmptyValues([]byte(tt.input)))
 			if got != tt.want {
-				t.Errorf("stripEmptyFields() = %s, want %s", got, tt.want)
+				t.Errorf("stripEmptyValues() = %s, want %s", got, tt.want)
 			}
 		})
 	}
