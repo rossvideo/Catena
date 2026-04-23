@@ -91,6 +91,10 @@ const std::string HOSTNAME_DEFAULT = "0.0.0.0";
 const uint16_t PORT_DEFAULT = 6254;
 const uint16_t DASHBOARD_PORT_DEFAULT = 8080;
 const bool DASHBOARD_TLS_ENABLED_DEFAULT = false;
+const bool PRIVATE_CA_DEFAULT = false;
+const bool AUTHZ_DEFAULT = false;
+const bool MUTUAL_AUTHC_DEFAULT = false;
+const bool SILENT_DEFAULT = false;
 const bool LOG_CONSOLE_DEFAULT = true;
 const bool LOG_FILE_DEFAULT = true;
 const double LOG_SIZE_DEFAULT = 10.0;
@@ -117,57 +121,57 @@ const std::string LOG_LEVEL_DEFAULT = "trace";
  */
 std::pair<bool, int> initConfigVariables(int argc, char* argv[], std::string prefix = "CATENA_");
 
-inline std::string certs = "";
+inline std::string certs = CERTS_DEFAULT;
 
-inline std::string secure_comms = "";
+inline std::string secure_comms = SECURE_COMMS_DEFAULT;
 
-inline std::string cert_file = "";
+inline std::string cert_file = CERT_FILE_DEFAULT;
 
-inline std::string key_file = "";
+inline std::string key_file = KEY_FILE_DEFAULT;
 
-inline std::string ca_file = "";
+inline std::string ca_file = CA_FILE_DEFAULT;
 
-inline std::string static_root = "";
+inline std::string static_root = STATIC_ROOT_DEFAULT;
 
-inline std::string log_dir = "";
+inline std::string log_dir = LOG_DIR;
 
 inline uint32_t default_max_array_size = 0;
 
 inline uint32_t default_total_array_size = 0;
 
-inline uint32_t max_connections = 0;
+inline uint32_t max_connections = DEFAULT_MAX_CONNECTIONS;
 
-inline std::string hostname = "";
+inline std::string hostname = HOSTNAME_DEFAULT;
 
-inline uint16_t port = 0;
+inline uint16_t port = PORT_DEFAULT;
 
-inline uint16_t dashboard_port = 0;
+inline uint16_t dashboard_port = DASHBOARD_PORT_DEFAULT;
 
-inline bool dashboard_tls_enabled = false;
+inline bool dashboard_tls_enabled = DASHBOARD_TLS_ENABLED_DEFAULT;
 
-inline bool private_ca = false;
+inline bool private_ca = PRIVATE_CA_DEFAULT;
 
-inline bool authz = false;
+inline bool authz = AUTHZ_DEFAULT;
 
-inline bool mutual_authc = false;
+inline bool mutual_authc = MUTUAL_AUTHC_DEFAULT;
 
-inline bool silent = false;
+inline bool silent = SILENT_DEFAULT;
 
-inline std::string log_level = "";
+inline std::string log_level = LOG_LEVEL_DEFAULT;
 
-inline bool log_console = false;
+inline bool log_console = LOG_CONSOLE_DEFAULT;
 
-inline bool log_file = false;
+inline bool log_file = LOG_FILE_DEFAULT;
 
-inline double log_size = 0;
+inline double log_size = LOG_SIZE_DEFAULT;
 
-inline double log_max_size = 0;
+inline double log_max_size = LOG_MAX_SIZE_DEFAULT;
 
-inline int log_count = 0;
+inline int log_count = LOG_COUNT_DEFAULT;
 
-inline bool log_final_rotation = false;
+inline bool log_final_rotation = LOG_FINAL_ROTATION_DEFAULT;
 
-inline bool log_append = false;
+inline bool log_append = LOG_APPEND_DEFAULT;
 
 } // namespace config     
 } // namespace common
