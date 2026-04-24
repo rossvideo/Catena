@@ -91,30 +91,25 @@ $(document).ready(function(){initNavTree('Logger_8h.html',''); initResizable(); 
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">Logger.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
 <p><a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a> class.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;absl/log/log.h&quot;</code><br />
-<code>#include &quot;absl/log/log_sink.h&quot;</code><br />
-<code>#include &quot;absl/log/log_sink_registry.h&quot;</code><br />
-<code>#include &quot;absl/log/log_entry.h&quot;</code><br />
-<code>#include &quot;absl/log/check.h&quot;</code><br />
-<code>#include &quot;absl/log/initialize.h&quot;</code><br />
-<code>#include &quot;absl/log/globals.h&quot;</code><br />
-<code>#include &quot;absl/flags/usage.h&quot;</code><br />
-<code>#include &lt;mutex&gt;</code><br />
-<code>#include &lt;iostream&gt;</code><br />
-<code>#include &lt;fstream&gt;</code><br />
-<code>#include &lt;sstream&gt;</code><br />
-<code>#include &lt;filesystem&gt;</code><br />
+<div class="textblock"><code>#include &lt;mutex&gt;</code><br />
+<code>#include &lt;boost/log/sinks/sync_frontend.hpp&gt;</code><br />
+<code>#include &lt;boost/log/sinks/text_file_backend.hpp&gt;</code><br />
+<code>#include &lt;boost/log/sinks/text_ostream_backend.hpp&gt;</code><br />
+<code>#include &lt;boost/log/trivial.hpp&gt;</code><br />
+<code>#include &lt;boost/log/utility/manipulators/add_value.hpp&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for Logger.h:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="Logger_8h__incl.svg" width="100%" height="404"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="Logger_8h__incl.svg" width="100%" height="415"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
@@ -126,18 +121,75 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFileLogSink.html">FileLogSink</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A log sink that writes log messages to a specified file.  <a href="classFileLogSink.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLogger.html">Logger</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a> class for logging messages to both console and file.  <a href="classLogger.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:ae876662bc0b7573bba5d8f7b8d74ec7d" id="r_ae876662bc0b7573bba5d8f7b8d74ec7d"><td class="memItemLeft" align="right" valign="top"><a id="ae876662bc0b7573bba5d8f7b8d74ec7d" name="ae876662bc0b7573bba5d8f7b8d74ec7d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CATENA_SEV_</b>(x)&#160;&#160;&#160;CATENA_SEV_##x</td></tr>
+<tr class="separator:ae876662bc0b7573bba5d8f7b8d74ec7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ce0067f1d377023306ee9fb98fe1ddb" id="r_a1ce0067f1d377023306ee9fb98fe1ddb"><td class="memItemLeft" align="right" valign="top"><a id="a1ce0067f1d377023306ee9fb98fe1ddb" name="a1ce0067f1d377023306ee9fb98fe1ddb"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CATENA_SEV_TRACE</b>&#160;&#160;&#160;trace</td></tr>
+<tr class="separator:a1ce0067f1d377023306ee9fb98fe1ddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc544f9e2b1cca397ceb5e2092a8e0fc" id="r_abc544f9e2b1cca397ceb5e2092a8e0fc"><td class="memItemLeft" align="right" valign="top"><a id="abc544f9e2b1cca397ceb5e2092a8e0fc" name="abc544f9e2b1cca397ceb5e2092a8e0fc"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CATENA_SEV_DEBUG</b>&#160;&#160;&#160;debug</td></tr>
+<tr class="separator:abc544f9e2b1cca397ceb5e2092a8e0fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2e8e0a9641ec8e3d69615734fd3aded" id="r_aa2e8e0a9641ec8e3d69615734fd3aded"><td class="memItemLeft" align="right" valign="top"><a id="aa2e8e0a9641ec8e3d69615734fd3aded" name="aa2e8e0a9641ec8e3d69615734fd3aded"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CATENA_SEV_INFO</b>&#160;&#160;&#160;info</td></tr>
+<tr class="separator:aa2e8e0a9641ec8e3d69615734fd3aded"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc39888a0c60b03372d63fdd49f474b5" id="r_abc39888a0c60b03372d63fdd49f474b5"><td class="memItemLeft" align="right" valign="top"><a id="abc39888a0c60b03372d63fdd49f474b5" name="abc39888a0c60b03372d63fdd49f474b5"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CATENA_SEV_WARNING</b>&#160;&#160;&#160;warning</td></tr>
+<tr class="separator:abc39888a0c60b03372d63fdd49f474b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa29a4b30b07f463c48b472987df12fcb" id="r_aa29a4b30b07f463c48b472987df12fcb"><td class="memItemLeft" align="right" valign="top"><a id="aa29a4b30b07f463c48b472987df12fcb" name="aa29a4b30b07f463c48b472987df12fcb"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CATENA_SEV_ERROR</b>&#160;&#160;&#160;error</td></tr>
+<tr class="separator:aa29a4b30b07f463c48b472987df12fcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14777d268f8c96a080e8f2589c3653f4" id="r_a14777d268f8c96a080e8f2589c3653f4"><td class="memItemLeft" align="right" valign="top"><a id="a14777d268f8c96a080e8f2589c3653f4" name="a14777d268f8c96a080e8f2589c3653f4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CATENA_SEV_FATAL</b>&#160;&#160;&#160;fatal</td></tr>
+<tr class="separator:a14777d268f8c96a080e8f2589c3653f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeedaed15fb9611627c43d14bb499732b" id="r_aeedaed15fb9611627c43d14bb499732b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Logger_8h.html#aeedaed15fb9611627c43d14bb499732b">LOG_IMPL</a>(severity)</td></tr>
+<tr class="separator:aeedaed15fb9611627c43d14bb499732b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accad43a85d781d53381cd53a9894b6ae" id="r_accad43a85d781d53381cd53a9894b6ae"><td class="memItemLeft" align="right" valign="top"><a id="accad43a85d781d53381cd53a9894b6ae" name="accad43a85d781d53381cd53a9894b6ae"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>LOG</b>(severity)&#160;&#160;&#160;  LOG_IMPL(CATENA_SEV_(severity))</td></tr>
+<tr class="separator:accad43a85d781d53381cd53a9894b6ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ace13e35c2207b6d247c6d1a23b73f94b" id="r_ace13e35c2207b6d247c6d1a23b73f94b"><td class="memItemLeft" align="right" valign="top"><a id="ace13e35c2207b6d247c6d1a23b73f94b" name="ace13e35c2207b6d247c6d1a23b73f94b"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>LogHelper::log_basename</b> (const char *path)</td></tr>
+<tr class="separator:ace13e35c2207b6d247c6d1a23b73f94b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a> class. </p>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright © 2025 Ross Video Ltd </dd></dl>
-<dl class="section author"><dt>Author</dt><dd>Christian Twarog (<a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'tia'+'n.'+'twa'+'ro'+'g@r'+'os'+'svi'+'de'+'o.c'+'om'; return false;">chris<span class="obfuscator">.nosp@m.</span>tian<span class="obfuscator">.nosp@m.</span>.twar<span class="obfuscator">.nosp@m.</span>og@r<span class="obfuscator">.nosp@m.</span>ossvi<span class="obfuscator">.nosp@m.</span>deo.<span class="obfuscator">.nosp@m.</span>com</a>) </dd></dl>
-</div></div><!-- contents -->
+<dl class="section author"><dt>Author</dt><dd>Christian Twarog (<a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'tia'+'n.'+'twa'+'ro'+'g@r'+'os'+'svi'+'de'+'o.c'+'om'; return false;">chris<span class="obfuscator">.nosp@m.</span>tian<span class="obfuscator">.nosp@m.</span>.twar<span class="obfuscator">.nosp@m.</span>og@r<span class="obfuscator">.nosp@m.</span>ossvi<span class="obfuscator">.nosp@m.</span>deo.<span class="obfuscator">.nosp@m.</span>com</a>) </dd>
+<dd>
+Keon Foster (<a href="#" onclick="location.href='mai'+'lto:'+'keo'+'n.'+'fos'+'te'+'r@r'+'os'+'svi'+'de'+'o.c'+'om'; return false;">keon.<span class="obfuscator">.nosp@m.</span>fost<span class="obfuscator">.nosp@m.</span>er@ro<span class="obfuscator">.nosp@m.</span>ssvi<span class="obfuscator">.nosp@m.</span>deo.c<span class="obfuscator">.nosp@m.</span>om</a>) </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2026-03-20 </dd></dl>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="aeedaed15fb9611627c43d14bb499732b" name="aeedaed15fb9611627c43d14bb499732b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeedaed15fb9611627c43d14bb499732b">&#9670;&#160;</a></span>LOG_IMPL</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define LOG_IMPL</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">severity</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">  BOOST_LOG_TRIVIAL(severity) \</div>
+<div class="line">    &lt;&lt; boost::log::add_value(LogHelper::File, LogHelper::log_basename(__FILE__)) \</div>
+<div class="line">    &lt;&lt; boost::log::add_value(LogHelper::Line, __LINE__)</div>
+</div><!-- fragment -->
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

@@ -115,6 +115,5 @@ var annotated_dup =
       ] ],
       [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ]
     ] ],
-    [ "FileLogSink", "classFileLogSink.html", null ],
     [ "Logger", "classLogger.html", null ]
 ];

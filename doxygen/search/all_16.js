@@ -6,9 +6,13 @@ var searchData=
   ['validfromproto_3',['validFromProto',['../namespacecatena_1_1common.html#aa1d6718b95661e20844462e2f044488a',1,'catena::common']]],
   ['value_4',['value',['../classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f',1,'catena::patterns::EnumDecorator']]],
   ['value_5f_5',['value_',['../classcatena_1_1common_1_1ParamWithValue.html#a21b34c426c75898cb577677805747aa6',1,'catena::common::ParamWithValue']]],
-  ['variant_2eh_6',['Variant.h',['../Variant_8h.html',1,'']]],
-  ['version_7',['version',['../classcatena_1_1REST_1_1IServiceImpl.html#adac3fa4e81b4520828ec28a2e73e9006',1,'catena::REST::IServiceImpl::version()'],['../classcatena_1_1REST_1_1ServiceImpl.html#add6ef57049e31d7836a305b27455aa92',1,'catena::REST::ServiceImpl::version()']]],
-  ['visit_8',['visit',['../classcatena_1_1common_1_1IParamVisitor.html#a79483a6748bdd35ca240d9766cd88add',1,'catena::common::IParamVisitor::visit()'],['../classcatena_1_1common_1_1ParamVisitor.html#a736b7bc4538cf9e3a7e7023b7aecf6fb',1,'catena::common::ParamVisitor::visit()']]],
-  ['visitarray_9',['visitarray',['../classcatena_1_1common_1_1IParamVisitor.html#a3f09be6b1bc15fd423f6ea1d985c11cf',1,'catena::common::IParamVisitor::visitArray()'],['../classcatena_1_1common_1_1ParamVisitor.html#ae302c4cc4c35b605f29226c54590288f',1,'catena::common::ParamVisitor::visitArray()']]],
-  ['vscode_10',['VSCode',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md13',1,'']]]
+  ['values_20environment_20variables_6',['Boolean Values (Environment Variables)',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2config.html#autotoc_md11',1,'']]],
+  ['variable_20configuration_7',['Environment Variable Configuration',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2config.html#autotoc_md4',1,'']]],
+  ['variable_20prefix_8',['Custom Environment Variable Prefix',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2config.html#autotoc_md8',1,'']]],
+  ['variables_9',['Boolean Values (Environment Variables)',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2config.html#autotoc_md11',1,'']]],
+  ['variant_2eh_10',['Variant.h',['../Variant_8h.html',1,'']]],
+  ['version_11',['version',['../classcatena_1_1REST_1_1IServiceImpl.html#adac3fa4e81b4520828ec28a2e73e9006',1,'catena::REST::IServiceImpl::version()'],['../classcatena_1_1REST_1_1ServiceImpl.html#add6ef57049e31d7836a305b27455aa92',1,'catena::REST::ServiceImpl::version()']]],
+  ['visit_12',['visit',['../classcatena_1_1common_1_1IParamVisitor.html#a79483a6748bdd35ca240d9766cd88add',1,'catena::common::IParamVisitor::visit()'],['../classcatena_1_1common_1_1ParamVisitor.html#a736b7bc4538cf9e3a7e7023b7aecf6fb',1,'catena::common::ParamVisitor::visit(IParam *param, const std::string &amp;path) override']]],
+  ['visitarray_13',['visitarray',['../classcatena_1_1common_1_1ParamVisitor.html#ae302c4cc4c35b605f29226c54590288f',1,'catena::common::ParamVisitor::visitArray()'],['../classcatena_1_1common_1_1IParamVisitor.html#a3f09be6b1bc15fd423f6ea1d985c11cf',1,'catena::common::IParamVisitor::visitArray()']]],
+  ['vscode_14',['VSCode',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md39',1,'']]]
 ];

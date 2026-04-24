@@ -1,0 +1,20 @@
+var NAVTREEINDEX9 =
+{
+"structcatena_1_1meta_1_1is__variant.html":[9,0,0,2,4],
+"structcatena_1_1meta_1_1is__variant_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1get_3_010_01ebdd46a9af85028d423a39579c8d1c53.html":[11,0,0,2,5],
+"structcatena_1_1meta_1_1is__variant_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1get_3_010_01ebdd46a9af85028d423a39579c8d1c53.html":[9,0,0,2,5],
+"structcatena_1_1patterns_1_1Singleton_1_1Protector.html":[11,0,0,3,3,0],
+"structcatena_1_1patterns_1_1Singleton_1_1Protector.html":[9,0,0,3,3,0],
+"todo.html":[8],
+"use_constraints_8cpp-example.html":[13,0],
+"utils_8h.html":[12,0,0,0,0,0,38],
+"utils_8h.html#a2582f57b919ba2da479cf6ed9711f755":[12,0,0,0,0,0,38,4],
+"utils_8h.html#a274b596fd164b9f6c1ec6dfe8c278efc":[12,0,0,0,0,0,38,3],
+"utils_8h.html#a56164747bca7e12ecf100596921c3f5b":[12,0,0,0,0,0,38,7],
+"utils_8h.html#a72711cdba4d85a76051ad05cd6c582fb":[12,0,0,0,0,0,38,5],
+"utils_8h.html#a7a354dca794dba3cfe0f3f4e3857434a":[12,0,0,0,0,0,38,2],
+"utils_8h.html#a8b1191a4a4eb434de72d023398ddc701":[12,0,0,0,0,0,38,0],
+"utils_8h.html#a9034cc95074df53a45e81ee00fa754ad":[12,0,0,0,0,0,38,6],
+"utils_8h.html#aad27d3bb1ed2bbaa2ceca7a06d0a04fd":[12,0,0,0,0,0,38,1],
+"utils_8h_source.html":[12,0,0,0,0,0,38]
+};

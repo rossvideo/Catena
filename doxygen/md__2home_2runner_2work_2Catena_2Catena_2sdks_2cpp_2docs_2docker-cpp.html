@@ -93,26 +93,26 @@ $(document).ready(function(){initNavTree('md__2home_2runner_2work_2Catena_2Caten
   <div class="headertitle"><div class="title">Using Docker With The Catena C++ SDK</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md10"></a> </p>
-<h1><a class="anchor" id="autotoc_md11"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md36"></a> </p>
+<h1><a class="anchor" id="autotoc_md37"></a>
 Terminal</h1>
-<h2><a class="anchor" id="autotoc_md12"></a>
+<h2><a class="anchor" id="autotoc_md38"></a>
 Requirements</h2>
 <ul>
 <li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> and add it to your system path.</li>
 <li>If on Linux, make sure to <a href="https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user">enable docker as non-root user</a>.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md13"></a>
+<h1><a class="anchor" id="autotoc_md39"></a>
 VSCode</h1>
-<h2><a class="anchor" id="autotoc_md14"></a>
+<h2><a class="anchor" id="autotoc_md40"></a>
 Recommended Extensions</h2>
 <ul>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker">Docker</a>. Additionally, follow the Docker software install instructions listed in the extension if not already set up.</li>
 <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools">Cmake Tools</a> for build setup.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md15"></a>
+<h1><a class="anchor" id="autotoc_md41"></a>
 Setting up and Running</h1>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md42"></a>
 Setting up Catena Service(s) with Docker</h2>
 <p>The diagram below outlines the Catena architecture for containers as well as JWS token authentication.</p>
 <div style="text-align: center"></div><div style="text-align: center"><div class="image">
@@ -130,7 +130,7 @@ Alt</div></div>
 <p>For an example of Catena services set up with a Docker image, see the <a href="https://github.com/rossvideo/Catena/tree/main/sdks/cpp/connections/docker">connections/docker</a> folder.</p>
 <p><em><b>Note:</b></em> If you wish to run your service without authentication/authorization, you can ignore the keycloak server and Envoy proxy container and simply connect your Catena sevice(s) to the public network. In this case, your service's should also be run with <code>--authz=false</code>.</p>
 <p><em><b>Note:</b></em> For setting authorization server and realm via the command line, you will need a dockerfile and entrypoint script for your envoy image which replaces the environment variables found in envoy.yaml. See example above for more info.</p>
-<h2><a class="anchor" id="autotoc_md17"></a>
+<h2><a class="anchor" id="autotoc_md43"></a>
 Steps to run</h2>
 <ol type="1">
 <li>Build Catena with <code>cmake -DDOCKER=on</code>.</li>

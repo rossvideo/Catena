@@ -107,6 +107,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a96c9761055a82ecf51dfbabdf6b1984c" id="r_a96c9761055a82ecf51dfbabdf6b1984c"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLogger.html#a96c9761055a82ecf51dfbabdf6b1984c">init</a> (const std::string &amp;appName)</td></tr>
 <tr class="memdesc:a96c9761055a82ecf51dfbabdf6b1984c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the logger.  <br /></td></tr>
 <tr class="separator:a96c9761055a82ecf51dfbabdf6b1984c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c3d79602b871b4c933366f82d4e469f" id="r_a5c3d79602b871b4c933366f82d4e469f"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classLogger.html#a5c3d79602b871b4c933366f82d4e469f">reset</a> ()</td></tr>
+<tr class="memdesc:a5c3d79602b871b4c933366f82d4e469f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset the logger.  <br /></td></tr>
+<tr class="separator:a5c3d79602b871b4c933366f82d4e469f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a> class for logging messages to both console and file. </p>
@@ -142,8 +145,36 @@ Static Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="enum_decorator_8cpp-example.html#a2">enum_decorator.cpp</a>, <a class="el" href="factory_8cpp-example.html#a2">factory.cpp</a>, <a class="el" href="hello_world_8cpp-example.html#a0">hello_world.cpp</a>, <a class="el" href="path_8cpp-example.html#a3">path.cpp</a>, and <a class="el" href="use_constraints_8cpp-example.html#a1">use_constraints.cpp</a>.</dd>
+<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="enum_decorator_8cpp-example.html#a2">enum_decorator.cpp</a>, <a class="el" href="factory_8cpp-example.html#a2">factory.cpp</a>, <a class="el" href="hello_world_8cpp-example.html#a0">hello_world.cpp</a>, <a class="el" href="path_8cpp-example.html#a2">path.cpp</a>, and <a class="el" href="use_constraints_8cpp-example.html#a1">use_constraints.cpp</a>.</dd>
 </dl>
+
+</div>
+</div>
+<a id="a5c3d79602b871b4c933366f82d4e469f" name="a5c3d79602b871b4c933366f82d4e469f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c3d79602b871b4c933366f82d4e469f">&#9670;&#160;</a></span>reset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void Logger::reset </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reset the logger. </p>
+<p>Must be called before re-initializing the <a class="el" href="classLogger.html" title="Logger class for logging messages to both console and file.">Logger</a>. Intended for use in the unit tests, shouldn't be needed for production. If used, ensure that no threads are currently logging or can log when called. </p>
 
 </div>
 </div>
