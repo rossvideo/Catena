@@ -117,7 +117,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(LOG_SIZE_KEY)) {
             config::log_size = vars[LOG_SIZE_KEY].as<double>();
             if (config::log_size <= 0) {
-                std::cout << "WARNING: log_size is set below minimum of 0. Defualting to 10.0." << std::endl;
+                std::cout << "WARNING: log_size is set below minimum of 0. Defaulting to 10.0." << std::endl;
                 config::log_size = config::LOG_SIZE_DEFAULT;
             }
         }
@@ -130,7 +130,8 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         }
         if (vars.count(LOG_LEVEL_KEY)){ 
             config::log_level = vars[LOG_LEVEL_KEY].as<std::string>();
-            std::transform(config::log_level.begin(), config::log_level.end(), config::log_level.begin(), tolower);
+            std::transform(config::log_level.begin(), config::log_level.end(), config::log_level.begin(),
+                           [](unsigned char c) { return std::tolower(c); });
             if (!log_levels.contains(config::log_level.c_str())) {
                 std::cout << "WARNING: log_level {" << config::log_level << "} is invalid. ";
                 std::cout << "Defaulting to " << config::LOG_LEVEL_DEFAULT << " instead." << std::endl;

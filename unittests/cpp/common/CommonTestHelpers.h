@@ -54,7 +54,7 @@ namespace common {
  * @brief Configure and init logging for unit tests.
  */
 inline void set_up_test_logs(std::string directory, std::string appName) {
-    config::log_level = "TRACE";
+    config::log_level = "trace";
     config::log_console = true;
     config::log_file = true;
     config::log_dir = directory;
