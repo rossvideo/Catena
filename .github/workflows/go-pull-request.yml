@@ -208,6 +208,7 @@ jobs:
         with:
           name: go-coverage-report
           path: |
+            sdks/go/go_coverage.txt
             sdks/go/go_coverage.out
             sdks/go/go_coverage.html
             sdks/go/go_detailed.html
