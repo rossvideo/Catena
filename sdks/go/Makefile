@@ -56,8 +56,13 @@ clean-protos:
 # Test coverage targets
 .PHONY: test coverage coverage-html coverage-lcov clean-coverage
 
-# Exclude generated protos from coverage
-TEST_PACKAGES := $(shell go list ./pkg/... | grep -v "github.com/rossvideo/catena/sdks/go/pkg/protos")
+# Exclude generated protos from tests + coverage accounting
+PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
+TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^$(PROTO_PKG)($$|/)')
+
+# coverpkg takes a comma-separated list
+COVER_PACKAGES := $(shell go list ./pkg/... | grep -vE '^$(PROTO_PKG)($$|/)' | paste -sd, -)
+
 COVERAGE_DIR := $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
 VERBOSE ?= 0
@@ -66,7 +71,12 @@ test:
 	go test -v ./...
 
 coverage: | $(COVERAGE_DIR) protos-all
-	go test -coverprofile=$(COVERAGE_OUT) -covermode=count $(if $(filter 1,$(VERBOSE)),-v) $(TEST_PACKAGES)
+	go test \
+		-coverprofile=$(COVERAGE_OUT) \
+		-covermode=count \
+		$(if $(filter 1,$(VERBOSE)),-v) \
+		-coverpkg=$(COVER_PACKAGES) \
+		$(TEST_PACKAGES)
 	@echo ""
 	@echo "Coverage Summary:"
 	@go tool cover -func=$(COVERAGE_OUT) | tail -1
