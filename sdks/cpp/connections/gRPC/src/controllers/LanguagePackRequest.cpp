@@ -44,7 +44,7 @@ LanguagePackRequest::LanguagePackRequest(IServiceImpl *service, SlotMap& dms, bo
 }
 
 void LanguagePackRequest::proceed(bool ok) {
-    VLOG(1) << "LanguagePackRequest::proceed[" << objectId_ << "]: "
+    LOG(DEBUG) << "LanguagePackRequest::proceed[" << objectId_ << "]: "
               << timeNow() << " status: " << static_cast<int>(status_)
               << ", ok: " << std::boolalpha << ok;
     

@@ -36,43 +36,47 @@
  * @file Logger.h
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-20
  */
 
-#include "absl/log/log.h"
-#include "absl/log/log_sink.h"
-#include "absl/log/log_sink_registry.h"
-#include "absl/log/log_entry.h"
-#include "absl/log/check.h"
-#include "absl/log/initialize.h"
-#include "absl/log/globals.h"
-#include "absl/flags/usage.h"
 #include <mutex>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
 
-/**
- * @brief A log sink that writes log messages to a specified file.
- */
-class FileLogSink : public absl::LogSink {
-public:
-  explicit FileLogSink(const std::string& filename) : log_file_(filename, std::ios_base::app) {
-    if (!log_file_.is_open()) {
-      std::cerr << "Error opening log file: " << filename << std::endl;
-    }
-  }
+//BOOST libraries
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
 
-  void Send(const absl::LogEntry& entry) override {
-    if (log_file_.is_open()) {
-      log_file_ << entry.text_message_with_prefix_and_newline();
-      log_file_.flush(); // Ensure immediate write to file
-    }
-  }
+// Helper functions for logging used by Catena
+namespace LogHelper{
+  // Helper to get basename of __FILE__
+  const char* log_basename(const char* path);
 
-private:
-  std::ofstream log_file_;
-};
+  // Attributes used in log records
+  BOOST_LOG_ATTRIBUTE_KEYWORD(File, "File", std::string)
+  BOOST_LOG_ATTRIBUTE_KEYWORD(Line, "Line", int)
+  BOOST_LOG_ATTRIBUTE_KEYWORD(KernelThreadID, "KernelThreadID", int)
+}
+
+
+// This map is to keep the boost system consistent with the old abseil system which uses all-caps for severity
+#define CATENA_SEV_(x)    CATENA_SEV_##x
+#define CATENA_SEV_TRACE   trace
+#define CATENA_SEV_DEBUG   debug
+#define CATENA_SEV_INFO   info
+#define CATENA_SEV_WARNING warning
+#define CATENA_SEV_ERROR  error
+#define CATENA_SEV_FATAL  fatal
+    
+#define LOG_IMPL(severity) \
+  BOOST_LOG_TRIVIAL(severity) \
+    << boost::log::add_value(LogHelper::File, LogHelper::log_basename(__FILE__)) \
+    << boost::log::add_value(LogHelper::Line, __LINE__)
+
+#define LOG(severity) \
+  LOG_IMPL(CATENA_SEV_(severity))
 
 /**
  * @brief Logger class for logging messages to both console and file.
@@ -85,10 +89,23 @@ public:
   */
   static void init(const std::string& appName);
 
-  ~Logger() {
-    if (fileLogSink_) {
-      absl::RemoveLogSink(fileLogSink_.get());
+  /**
+   * @brief Reset the logger
+   * 
+   * Must be called before re-initializing the Logger.
+   * Intended for use in the unit tests, shouldn't be needed for production.
+   * If used, ensure that no threads are currently logging or can log when called.
+   */
+  static void reset() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (initialized_) {
+      instance().teardown();
+      initialized_ = false;
     }
+  }
+
+  ~Logger() {
+    teardown();
   }
 
 private:
@@ -101,6 +118,20 @@ private:
   Logger(const Logger&) = delete;
   Logger& operator=(const Logger&) = delete;
 
-  std::ostringstream stream_;
-  std::unique_ptr<FileLogSink> fileLogSink_ = nullptr;
+  void teardown(){
+      auto core = boost::log::core::get();
+      core->flush();
+      core->remove_all_sinks();
+      this->file_sink_.reset();
+      this->console_sink_.reset();
+  }
+
+  using file_sink_t = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
+  using console_sink_t = boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>;
+
+  boost::shared_ptr<file_sink_t> file_sink_;
+  boost::shared_ptr<console_sink_t> console_sink_;
+
+  static bool initialized_;
+  static std::mutex mutex_;
 };

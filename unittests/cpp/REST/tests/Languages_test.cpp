@@ -33,13 +33,14 @@
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/Languages.h"
@@ -52,8 +53,7 @@ class RESTLanguagesTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("RESTLanguagesTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTLanguagesTest");
     }
 
     static void TearDownTestSuite() {

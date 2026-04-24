@@ -175,7 +175,7 @@ class AssetRequest : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      VLOG(1) << RESTMethodMap().getForwardMap().at(context_.method())
+      LOG(DEBUG) << RESTMethodMap().getForwardMap().at(context_.method())
                 << " Asset::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok;

@@ -33,12 +33,13 @@
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Test helpers
 #include "GRPCTest.h"
+#include "CommonTestHelpers.h"
 
 // gRPC
 #include "controllers/LanguagePackRequest.h"
@@ -51,8 +52,7 @@ class gRPCLanguagePackRequestTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("gRPCLanguagePackRequestTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCLanguagePackRequestTest");
     }
 
     static void TearDownTestSuite() {

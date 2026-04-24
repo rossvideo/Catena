@@ -32,7 +32,7 @@
  * @brief This file is for testing the Config.cpp file.
  * @author Keon Foster (keon.foster@rossvideo.com)
  * @author Nathan Rochon (nathan.rochon@rossvideo.com)
- * @date 2026-02-27
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -43,6 +43,7 @@
  #include <Config.h>
  #include <Logger.h>
  #include <Device.h>
+ #include "CommonTestHelpers.h"
 
  using namespace catena::common;
 
@@ -51,8 +52,7 @@
     protected:
         // Set up and tear down Google Logging
         static void SetUpTestSuite() {
-            config::log_dir = UNITTEST_LOG_DIR;
-            Logger::init("ConfigTest");
+            set_up_test_logs(UNITTEST_LOG_DIR, "ConfigTest");
         }
 
         static void TearDownTestSuite() {
@@ -75,6 +75,13 @@
             config::mutual_authc = false;
             config::private_ca = false;
             config::silent = false;
+            config::log_level = "";
+            config::log_console = false;
+            config::log_file = false;
+            config::log_size = 0;
+            config::log_max_size = 0;
+            config::log_count = 0;
+            config::log_final_rotation = false;
         }
 
         void TearDown() override {
@@ -94,6 +101,13 @@
             config::mutual_authc = false;
             config::private_ca = false;
             config::silent = false;
+            config::log_level = "";
+            config::log_console = false;
+            config::log_file = false;
+            config::log_size = 0;
+            config::log_max_size = 0;
+            config::log_count = 0;
+            config::log_final_rotation = false;
 
             // Reset "HOME" in case missing "HOME" test case couldn't
             if (home != nullptr) {
@@ -165,22 +179,31 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(code, 0);
 
     // Check values
-    EXPECT_EQ(config::ca_file, config::CATENA_CA_FILE);
-    EXPECT_EQ(config::cert_file, config::CATENA_CERT_FILE);
-    EXPECT_EQ(config::certs, config::CATENA_CERTS);
-    EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
+    EXPECT_EQ(config::ca_file, config::CA_FILE_DEFAULT);
+    EXPECT_EQ(config::cert_file, config::CERT_FILE_DEFAULT);
+    EXPECT_EQ(config::certs, config::CERTS_DEFAULT);
+    EXPECT_EQ(config::key_file, config::KEY_FILE_DEFAULT);
     EXPECT_EQ(config::log_dir, LOG_DIR);
-    EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
+    EXPECT_EQ(config::secure_comms, config::SECURE_COMMS_DEFAULT);
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::default_max_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::default_total_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, config::CATENA_PORT);
+    EXPECT_EQ(config::port, config::PORT_DEFAULT);
     EXPECT_EQ(config::authz, false);
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
-
+    EXPECT_EQ(config::log_console, config::LOG_CONSOLE_DEFAULT);
+    EXPECT_EQ(config::log_file, config::LOG_FILE_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_size, config::LOG_SIZE_DEFAULT);
+    EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
+    #ifdef NDEBUG
+    EXPECT_EQ(config::log_level, "info");
+    #else
+    EXPECT_EQ(config::log_level, "trace");
+    #endif
 }
 
 /**
@@ -204,7 +227,13 @@ TEST_F(ConfigTest, CommandLine) {
         "--authz",
         "--mutual_authc",
         "--private_ca",
-        "--silent"
+        "--silent",
+        "--log_level=warning",
+        "--log_console=false",
+        "--log_file=false",
+        "--log_size=3",
+        "--log_count=7",
+        "--log_max_size=100"
     };
     int argc;
     std::vector<char*> argv;
@@ -231,6 +260,12 @@ TEST_F(ConfigTest, CommandLine) {
     EXPECT_EQ(config::mutual_authc, true);
     EXPECT_EQ(config::private_ca, true);
     EXPECT_EQ(config::silent, true);
+    EXPECT_EQ(config::log_level, "warning");
+    EXPECT_EQ(config::log_console, false);
+    EXPECT_EQ(config::log_file, false);
+    EXPECT_DOUBLE_EQ(config::log_size, 3.0);
+    EXPECT_EQ(config::log_count, 7);
+    EXPECT_DOUBLE_EQ(config::log_max_size, 100.0);
 }
 
 /**
@@ -253,7 +288,12 @@ TEST_F(ConfigTest, EnvironmentVariables) {
         "CONFIGTEST_AUTHZ",
         "CONFIGTEST_MUTUAL_AUTHC",
         "CONFIGTEST_PRIVATE_CA",
-        "CONFIGTEST_SILENT"
+        "CONFIGTEST_SILENT",
+        "CONFIGTEST_LOG_LEVEL=error",
+        "CONFIGTEST_LOG_CONSOLE=false",
+        "CONFIGTEST_LOG_FILE=false",
+        "CONFIGTEST_LOG_SIZE=4",
+        "CONFIGTEST_LOG_COUNT=8"
     };
     setEnvVars(args);
 
@@ -283,6 +323,12 @@ TEST_F(ConfigTest, EnvironmentVariables) {
     EXPECT_EQ(config::mutual_authc, true);
     EXPECT_EQ(config::private_ca, true);
     EXPECT_EQ(config::silent, true);
+    EXPECT_EQ(config::log_level, "error");
+    EXPECT_EQ(config::log_console, false);
+    EXPECT_EQ(config::log_file, false);
+    EXPECT_DOUBLE_EQ(config::log_size, 4.0);
+    EXPECT_EQ(config::log_count, 8);
+    EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
 }
 
 /**
@@ -322,15 +368,25 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::default_total_array_size, 1);
     EXPECT_EQ(config::mutual_authc, true);
     // Check default values
-    EXPECT_EQ(config::certs, config::CATENA_CERTS);
-    EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
+    EXPECT_EQ(config::certs, config::CERTS_DEFAULT);
+    EXPECT_EQ(config::key_file, config::KEY_FILE_DEFAULT);
     EXPECT_EQ(config::log_dir, LOG_DIR);
-    EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
+    EXPECT_EQ(config::secure_comms, config::SECURE_COMMS_DEFAULT);
     EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
-    EXPECT_EQ(config::port, config::CATENA_PORT);
+    EXPECT_EQ(config::port, config::PORT_DEFAULT);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
+    EXPECT_EQ(config::log_console, config::LOG_CONSOLE_DEFAULT);
+    EXPECT_EQ(config::log_file, config::LOG_FILE_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_size, config::LOG_SIZE_DEFAULT);
+    EXPECT_EQ(config::log_count, config::LOG_COUNT_DEFAULT);
+    EXPECT_DOUBLE_EQ(config::log_max_size, config::LOG_MAX_SIZE_DEFAULT);
+    #ifdef NDEBUG
+    EXPECT_EQ(config::log_level, "info");
+    #else
+    EXPECT_EQ(config::log_level, "trace");
+    #endif
 }
 
 /**
@@ -353,7 +409,13 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
         "CONFIGTEST_AUTHZ",
         "CONFIGTEST_MUTUAL_AUTHC",
         "CONFIGTEST_PRIVATE_CA",
-        "CONFIGTEST_SILENT"
+        "CONFIGTEST_SILENT",
+        "CONFIGTEST_LOG_LEVEL=warning",
+        "CONFIGTEST_LOG_CONSOLE=true",
+        "CONFIGTEST_LOG_FILE=true",
+        "CONFIGTEST_LOG_SIZE=2",
+        "CONFIGTEST_LOG_COUNT=3",
+        "CONFIGTEST_LOG_MAX_SIZE=40"
     };
     setEnvVars(envArgs);
 
@@ -374,7 +436,13 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
         "--authz=false",
         "--mutual_authc=false",
         "--private_ca=false",
-        "--silent=false"
+        "--silent=false",
+        "--log_level=error",
+        "--log_console=false",
+        "--log_file=false",
+        "--log_size=9",
+        "--log_count=11",
+        "--log_max_size=120"
     };
     int argc;
     std::vector<char*> argv;
@@ -401,6 +469,12 @@ TEST_F(ConfigTest, CmdOverwritesEnv) {
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
+    EXPECT_EQ(config::log_level, "error");
+    EXPECT_EQ(config::log_console, false);
+    EXPECT_EQ(config::log_file, false);
+    EXPECT_DOUBLE_EQ(config::log_size, 9.0);
+    EXPECT_EQ(config::log_count, 11);
+    EXPECT_DOUBLE_EQ(config::log_max_size, 120.0);
 }
 
 /**
@@ -476,4 +550,86 @@ TEST_F(ConfigTest, InvalidOption) {
     const auto [exit2, code2] = config::initConfigVariables(argc, argv2, "CONFIGTEST_");
     EXPECT_FALSE(exit2);
     EXPECT_EQ(code2, 0);
+}
+
+/**
+ * TEST 9 - log_max_size sets log_count and log_size
+ */
+TEST_F(ConfigTest, LogMaxSize) {
+    // Create command line args
+    std::vector<std::string> cmdArgs = {
+        "./test",
+        "--log_max_size=100",
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(cmdArgs, argc, argv);
+
+    // Set config variables
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
+
+    EXPECT_EQ(config::log_max_size, 100);
+    EXPECT_EQ(config::log_count, 10);
+    EXPECT_EQ(config::log_size, 10);
+}
+
+/**
+ * TEST 10 - ignored log_max_size doesn't set log_count and log_size
+ */
+TEST_F(ConfigTest, IgnoredLogMaxSize) {
+    // Create command line args
+    std::vector<std::string> cmdArgs = {
+        "./test",
+        "--log_max_size=100",
+        "--log_count=20",
+        "--log_size=50"
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(cmdArgs, argc, argv);
+
+    // Set config variables
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
+
+    EXPECT_EQ(config::log_max_size, 100);
+    EXPECT_EQ(config::log_count, 20);
+    EXPECT_EQ(config::log_size, 50);
+}
+
+/**
+ * TEST 11 - Log options handle warnings properly
+ */
+TEST_F(ConfigTest, LogWarnings) {
+    // Create command line args
+    std::vector<std::string> cmdArgs = {
+        "./test",
+        "--log_max_size=100", // Count and size cannot be set along with max_size
+        "--log_count=-12", // <1 -> Invalid
+        "--log_size=-40", // <=0 -> Invalid
+        "--log_level=BAD", // Invalid
+    };
+    int argc;
+    std::vector<char*> argv;
+    buildArgv(cmdArgs, argc, argv);
+
+    // Set config variables
+    const auto [exit, code] = config::initConfigVariables(argc, argv.data(), "CONFIGTEST_");
+    EXPECT_FALSE(exit);
+    EXPECT_EQ(code, 0);
+
+    // All three are set, max_size doesn't influence count and size
+    EXPECT_DOUBLE_EQ(config::log_max_size, 100.0);
+    EXPECT_EQ(config::log_count, 1);
+    EXPECT_DOUBLE_EQ(config::log_size, 10.0);
+
+    // Log level defaults if invalid, differs based on Release or Debug build
+    #ifdef NDEBUG
+    EXPECT_EQ(config::log_level, "info");
+    #else
+    EXPECT_EQ(config::log_level, "trace");
+    #endif
 }

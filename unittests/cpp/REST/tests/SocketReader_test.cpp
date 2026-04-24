@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -43,6 +43,7 @@
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 #include "MockServiceImpl.h"
 #include "MockSubscriptionManager.h"
 
@@ -60,8 +61,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("RESTSocketReaderTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTSocketReaderTest");
     }
 
     static void TearDownTestSuite() {

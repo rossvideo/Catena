@@ -34,7 +34,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -57,8 +57,7 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("RESTDeviceRequestTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTDeviceRequestTest");
     }
 
     static void TearDownTestSuite() {

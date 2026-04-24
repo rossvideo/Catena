@@ -44,7 +44,7 @@ ListLanguages::ListLanguages(IServiceImpl *service, SlotMap& dms, bool ok)
 }
 
 void ListLanguages::proceed(bool ok) {
-    VLOG(1) << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(DEBUG) << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
     

@@ -32,13 +32,14 @@
  * @brief This file is for testing the Heartbeat.cpp file.
  * @author andrew.brown@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #include <rpc/Heartbeat.h>
 #include <Logger.h>
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 #include <gtest/gtest.h>
 #include <atomic>
@@ -54,8 +55,7 @@ class HeartbeatTest : public ::testing::Test {
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("HeartbeatTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "HeartbeatTest");
     }
 
     static void TearDownTestSuite() {

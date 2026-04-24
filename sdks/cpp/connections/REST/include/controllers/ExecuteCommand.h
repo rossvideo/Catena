@@ -111,7 +111,7 @@ class ExecuteCommand : public ICallData {
      * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      VLOG(1) << "ExecuteCommand::proceed[" << objectId_ << "]: "
+      LOG(DEBUG) << "ExecuteCommand::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok;
     }

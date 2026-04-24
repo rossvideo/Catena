@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author (Nelson Daniels) nelson.daniels@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -46,6 +46,7 @@
 #include "Status.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 
@@ -54,8 +55,7 @@ class PathTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("PathTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "PathTest");
     }
 
     static void TearDownTestSuite() {

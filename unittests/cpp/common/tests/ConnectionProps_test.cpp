@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the ConnectionProps class.
  * @author christian.twarog@rossvideo.com
- * @date 2026-02-05
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -43,6 +43,7 @@
 // common
 #include <Logger.h>
 #include <Config.h>
+#include "CommonTestHelpers.h"
 
 // boost
 #include <boost/asio.hpp>
@@ -60,8 +61,7 @@ using boost::asio::ip::tcp;
 class ConnectionPropsTest : public testing::Test {
   protected:
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("ConnectionPropsTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ConnectionPropsTest");
     }
 
     void SetUp() override {

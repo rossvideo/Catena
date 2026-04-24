@@ -67,7 +67,7 @@ ExternalObjectRequest::ExternalObjectRequest(IServiceImpl *service, SlotMap& dms
  * handling errors and responses accordingly 
  */
 void ExternalObjectRequest::proceed(bool ok) {
-    VLOG(1) << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
+    LOG(DEBUG) << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok;
     
     // If the process is cancelled, finish the process
@@ -119,7 +119,7 @@ void ExternalObjectRequest::proceed(bool ok) {
                     throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
                 }
                 
-                VLOG(1) << "sending external object " << req_.oid() <<"\n";
+                LOG(DEBUG) << "sending external object " << req_.oid() <<"\n";
                 std::string path = service_->EOPath();
                 path.append(req_.oid());
 
@@ -157,7 +157,7 @@ void ExternalObjectRequest::proceed(bool ok) {
                 obj.mutable_payload()->set_digest(digest, digest_len);
 
                 //For now we are sending the whole file in one go
-                VLOG(1) << "ExternalObjectRequest[" << objectId_ << "] sent";
+                LOG(DEBUG) << "ExternalObjectRequest[" << objectId_ << "] sent";
                 status_ = CallStatus::kPostWrite; 
                 writer_.Write(obj, this);
             // Exception occured, finish the process

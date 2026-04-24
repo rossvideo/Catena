@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author (Nelson Daniels) nelson.daniels@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -44,6 +44,7 @@
 #include "MockDevice.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 #include "ChoiceConstraint.h"
 
@@ -54,8 +55,7 @@ class ChoiceConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("ChoiceConstraintTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ChoiceConstraintTest");
     }
 
     static void TearDownTestSuite() {

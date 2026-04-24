@@ -52,10 +52,6 @@ foreach(test_file ${TEST_FILES})
     add_executable(common_${test_name} tests/${test_file})
     target_link_libraries(common_${test_name} PRIVATE
         ${GTEST_BOTH_LIBRARIES}
-        absl::log
-        absl::log_globals
-        absl::log_initialize
-        absl::log_severity
         GTest::GTest
         GTest::Main
         GTest::gmock

@@ -56,7 +56,7 @@ void MultiSetValue::create_(bool ok) {
 }
 
 void MultiSetValue::proceed(bool ok) { 
-    VLOG(1) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+    LOG(DEBUG) << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 

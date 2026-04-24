@@ -110,7 +110,7 @@ void statusUpdateExample(){
         {
             std::lock_guard lg(dm.mutex());
             counter.get()++;
-            VLOG(1) << counter.getOid() << " set to " << counter.get();
+            LOG(DEBUG) << counter.getOid() << " set to " << counter.get();
             dm.getValueSetByServer().emit("/counter", &counter);
         }
     }

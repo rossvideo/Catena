@@ -33,12 +33,13 @@
  * @author nelson.daniels@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Test helpers
 #include "GRPCTest.h"
+#include "CommonTestHelpers.h"
 #include "StreamReader.h"
 
 // gRPC
@@ -57,8 +58,7 @@ class gRPCExternalObjectRequestTests : public GRPCTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("gRPCExternalObjectRequestTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCExternalObjectRequestTest");
     }
 
     static void TearDownTestSuite() {

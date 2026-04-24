@@ -32,7 +32,7 @@
  * @brief This file is a parent fixture for testing the ParamWithValue class.
  * @author benjamin.whitten@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -43,6 +43,7 @@
 #include "StructInfo.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 // mocks
 #include "MockParamDescriptor.h"
@@ -65,8 +66,7 @@ class ParamTest : public ::testing::Test {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("ParamWithValueTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ParamWithValueTest");
     }
 
     static void TearDownTestSuite() {

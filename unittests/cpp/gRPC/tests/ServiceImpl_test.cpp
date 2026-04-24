@@ -32,7 +32,7 @@
  * @brief This file is for testing the ServiceImpl.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -58,6 +58,7 @@
 // common
 #include <Status.h>
 #include <Logger.h>
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 using namespace catena::gRPC;
@@ -67,8 +68,7 @@ class gRPCServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("gRPCServiceImplTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCServiceImplTest");
     }
 
     static void TearDownTestSuite() {

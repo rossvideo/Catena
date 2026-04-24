@@ -134,7 +134,7 @@ catena::exception_with_status Device::commitMultiSetValue (st2138::MultiSetValue
                 LOG(INFO) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(setValuePayload.value());
             }
             else {
-                VLOG(1) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(setValuePayload.value());
+                LOG(DEBUG) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(setValuePayload.value());
             }
 
             // Resetting trackers to match new value.

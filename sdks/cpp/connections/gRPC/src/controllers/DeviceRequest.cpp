@@ -53,7 +53,7 @@ DeviceRequest::DeviceRequest(IServiceImpl *service, SlotMap& dms, bool ok)
  * handling errors and responses accordingly 
  */
 void DeviceRequest::proceed(bool ok) {
-    VLOG(1) << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
+    LOG(DEBUG) << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok;
     
