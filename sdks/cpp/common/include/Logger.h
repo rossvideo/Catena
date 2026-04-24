@@ -78,9 +78,6 @@ namespace LogHelper{
 #define LOG(severity) \
   LOG_IMPL(CATENA_SEV_(severity))
 
-typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> file_sink_t;
-typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> console_sink_t;
-
 /**
  * @brief Logger class for logging messages to both console and file.
  */
@@ -128,6 +125,9 @@ private:
       this->file_sink_.reset();
       this->console_sink_.reset();
   }
+
+  using file_sink_t = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
+  using console_sink_t = boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>;
 
   boost::shared_ptr<file_sink_t> file_sink_;
   boost::shared_ptr<console_sink_t> console_sink_;
