@@ -165,11 +165,16 @@ void Logger::init(const std::string& appName) {
         std::string activeName = config::log_dir + "/" + appName + ".log";
         std::string targetName = config::log_dir + "/" + "%Y%m%d_%H%M%S_" + appName + ".log";
         const int MB = 1024 * 1024;
-        
+
+        // boost will log to console if no sinks are added
+        // so we track if any sinks are added and disable logging if not to avoid unwanted console logs when log_file and log_console are both false
+        bool loggingEnabled = false;
         boost::shared_ptr<core> core = core::get();
         add_common_attributes();  // Timestamps
         set_filter_level();
         if (config::log_file) {
+            // turn logging on
+            loggingEnabled = true;
             // Create file sink and set parameters
             instance().file_sink_ = boost::make_shared<file_sink_t>(
                 keywords::file_name = activeName,
@@ -211,6 +216,8 @@ void Logger::init(const std::string& appName) {
             }
         }
         if (config::log_console) {
+            // turn logging on
+            loggingEnabled = true;
             // Create console sink and set filtering and formatting
             auto& console_sink = instance().console_sink_;
             console_sink = boost::make_shared<console_sink_t>();
@@ -221,5 +228,8 @@ void Logger::init(const std::string& appName) {
             core->add_sink(console_sink);
         }
         initialized_ = true;
+
+        // if both console and file logging are disabled, disable logging entirely to avoid unwanted console logs
+        core->set_logging_enabled(loggingEnabled);
     }
 }
