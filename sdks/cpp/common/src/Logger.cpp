@@ -136,15 +136,13 @@ void catena_formatter(record_view const& rec, formatting_ostream &strm) {
 
 // Helper for filter
 static trivial::severity_level filter_level = trivial::trace;
-static bool silenced = false;
 void set_filter_level() {
     trivial::from_string(config::log_level.c_str(), config::log_level.size(), filter_level);
-    silenced = config::silent;
 }
 
 // Main filter that calls the helpers
 bool catena_filter(boost::log::attribute_value_set const& attrs) {
-    return (attrs[trivial::severity] >= filter_level) && !silenced;
+    return (attrs[trivial::severity] >= filter_level);
 }
 
 //Initialize static member variables
@@ -230,6 +228,7 @@ void Logger::init(const std::string& appName) {
         initialized_ = true;
 
         // if both console and file logging are disabled, disable logging entirely to avoid unwanted console logs
-        core->set_logging_enabled(loggingEnabled);
+        // or silent mode is enabled, which also disables all logging
+        core->set_logging_enabled(loggingEnabled && !config::silent);
     }
 }
