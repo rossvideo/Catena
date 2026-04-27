@@ -56,7 +56,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // Encoding represents a payload compression encoding.

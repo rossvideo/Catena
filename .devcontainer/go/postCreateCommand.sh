@@ -7,13 +7,7 @@ ROOT_DIR=$3
 cd ${ROOT_DIR}/sdks/go
 make protos-all
 
-cd ${ROOT_DIR}
-rm -rf ${ROOT_DIR}/go.work ${ROOT_DIR}/go.work.sum
-go work init ./sdks/go ./build/go
-go work edit -go=1.24
-go work edit -toolchain=go1.24.11
-go work sync
-
+mkdir -p ${BUILD_TARGET}
 sudo chown -R ${USER_NAME}:${USER_NAME} ${BUILD_TARGET}
 cd ${ROOT_DIR}/sdks/go
 go mod tidy

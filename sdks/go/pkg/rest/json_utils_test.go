@@ -45,8 +45,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rossvideo/catena/build/go/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestReadRequestJSON_ValidInt32(t *testing.T) {

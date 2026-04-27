@@ -39,7 +39,7 @@
 package catena
 
 import (
-	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // PolyglotText maps BCP-47 language codes to display strings.
