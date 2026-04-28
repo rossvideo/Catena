@@ -131,7 +131,7 @@ func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpSt
 		return
 	}
 
-	b, err := device.ToJSON()
+	b, err := MarshalDeviceJSON(device.GetProtoDevice())
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -154,9 +154,8 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 		return
 	}
 
-	// Convert asset to JSON
-	jsonData, res := asset.ToJSON()
-	if res.Code != catena.OK {
+	jsonData, err := MarshalAssetJSON(protoAsset)
+	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Asset payload is missing"})

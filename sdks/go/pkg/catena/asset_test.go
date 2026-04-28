@@ -44,7 +44,6 @@ import (
 	"compress/gzip"
 	"compress/zlib"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"io/fs"
 	"os"
@@ -187,50 +186,6 @@ func TestToCatenaAsset_WithDeflateEncoding(t *testing.T) {
 	payload := proto.GetPayload()
 	if Encoding(payload.GetPayloadEncoding()) != EncodingDeflate {
 		t.Errorf("expected DEFLATE encoding, got %v", payload.GetPayloadEncoding())
-	}
-}
-
-func TestCatenaAsset_ToJSON(t *testing.T) {
-	dp := DataPayload{
-		Metadata: map[string]string{
-			"content-type": "application/octet-stream",
-		},
-		Payload: []byte("binary data"),
-	}
-
-	asset, err := ToCatenaAsset(dp, true)
-	if err.Code != OK {
-		t.Fatalf("ToCatenaAsset error: %v", err.Error)
-	}
-
-	jsonData, err := asset.ToJSON()
-	if err.Code != OK {
-		t.Fatalf("ToJSON error: %v", err.Error)
-	}
-	if jsonData == nil {
-		t.Fatal("expected non-nil JSON data")
-	}
-
-	// Verify it's valid JSON
-	var result map[string]any
-	if err := json.Unmarshal(jsonData, &result); err != nil {
-		t.Fatalf("invalid JSON output: %v", err)
-	}
-
-	// Check cachable field
-	if result["cachable"] != true {
-		t.Errorf("expected cachable true in JSON, got %v", result["cachable"])
-	}
-}
-
-func TestCatenaAsset_ToJSON_Nil(t *testing.T) {
-	asset := CatenaAsset{asset: nil}
-	jsonData, err := asset.ToJSON()
-	if err.Code != OK {
-		t.Fatalf("ToJSON error: %v", err.Error)
-	}
-	if jsonData != nil {
-		t.Error("expected nil JSON data for nil asset")
 	}
 }
 
