@@ -1,6 +1,5 @@
-CMDS_REST := executeCommand_REST getAsset_REST getDevice_REST getSetValue_REST
-CMDS_GRPC := getDevice_GRPC getSetValue_GRPC
-CMDS := $(CMDS_REST) $(CMDS_GRPC)
+CMDS_PAIRED := getDevice getSetValue
+CMDS_REST_ONLY := executeCommand getAsset
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
@@ -15,11 +14,23 @@ GO_GRPC_M_OPTS:= $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_F
 
 .PHONY: proto-tools protos protos-grpc protos-all clean-protos
 
-all: protos-all $(CMDS)
+all: protos-all paired-examples rest-only-examples
 
-$(CMDS):
-	mkdir -p $(BIN_DIR)/$@
-	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
+paired-examples: $(foreach cmd,$(CMDS_PAIRED),$(cmd)_REST $(cmd)_GRPC)
+
+$(foreach cmd,$(CMDS_PAIRED),$(cmd)_REST): %_REST:
+	mkdir -p $(BIN_DIR)/$*_REST
+	go build -o $(BIN_DIR)/$*_REST/$*_REST ./examples/$*/rest
+
+$(foreach cmd,$(CMDS_PAIRED),$(cmd)_GRPC): %_GRPC:
+	mkdir -p $(BIN_DIR)/$*_GRPC
+	go build -o $(BIN_DIR)/$*_GRPC/$*_GRPC ./examples/$*/grpc
+
+rest-only-examples: $(foreach cmd,$(CMDS_REST_ONLY),$(cmd)_REST)
+
+$(foreach cmd,$(CMDS_REST_ONLY),$(cmd)_REST): %_REST:
+	mkdir -p $(BIN_DIR)/$*_REST
+	go build -o $(BIN_DIR)/$*_REST/$*_REST ./examples/$*/rest
 
 # Clean build artifacts and logs
 clean:

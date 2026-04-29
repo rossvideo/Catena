@@ -225,14 +225,14 @@
       "description": "Select Go program to debug",
       "type": "pickString",
       "options": [
-        "getDevice_REST",
-        "getDevice_GRPC",
-        "executeCommand_REST",
-        "getAsset_REST",
-        "getSetValue_REST",
-        "getSetValue_GRPC"
+        "getDevice/rest",
+        "getDevice/grpc",
+        "getSetValue/rest",
+        "getSetValue/grpc",
+        "executeCommand/rest",
+        "getAsset/rest"
       ],
-      "default": "getSetValue_REST"
+      "default": "getSetValue/rest"
     },
     {
       "id": "pickDeviceModel",

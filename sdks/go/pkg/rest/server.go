@@ -55,6 +55,8 @@ import (
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 
+var _ catena.CatenaServer = (*Server)(nil)
+
 // Server provides REST API endpoints for Catena devices
 type Server struct {
 	baseServer      *internal.BaseServer
@@ -539,43 +541,43 @@ func ToHTTPStatus(s catena.StatusCode) int {
 	}
 }
 
-func (s *Server) RegisterGetDeviceHandler(slot uint16, handler internal.DeviceHandler) {
+func (s *Server) RegisterGetDeviceHandler(slot uint16, handler catena.DeviceHandler) {
 	s.baseServer.RegisterGetDeviceHandler(slot, handler)
 }
 
-func (s *Server) RegisterGetValueHandler(slot uint16, handler internal.GetValueHandler) {
+func (s *Server) RegisterGetValueHandler(slot uint16, handler catena.GetValueHandler) {
 	s.baseServer.RegisterGetValueHandler(slot, handler)
 }
 
-func (s *Server) RegisterSetValueHandler(slot uint16, handler internal.SetValueHandler) {
+func (s *Server) RegisterSetValueHandler(slot uint16, handler catena.SetValueHandler) {
 	s.baseServer.RegisterSetValueHandler(slot, handler)
 }
 
-func (s *Server) RegisterGetAssetHandler(slot uint16, handler internal.GetAssetHandler) {
+func (s *Server) RegisterGetAssetHandler(slot uint16, handler catena.GetAssetHandler) {
 	s.baseServer.RegisterGetAssetHandler(slot, handler)
 }
 
-func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler internal.ExecuteCommandHandler) {
+func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler catena.ExecuteCommandHandler) {
 	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
 }
 
-func (s *Server) LookupGetDeviceHandler(slot uint16) internal.DeviceHandler {
+func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
 
-func (s *Server) LookupGetValueHandler(slot uint16) internal.GetValueHandler {
+func (s *Server) LookupGetValueHandler(slot uint16) catena.GetValueHandler {
 	return s.baseServer.LookupGetValueHandler(slot)
 }
 
-func (s *Server) LookupSetValueHandler(slot uint16) internal.SetValueHandler {
+func (s *Server) LookupSetValueHandler(slot uint16) catena.SetValueHandler {
 	return s.baseServer.LookupSetValueHandler(slot)
 }
 
-func (s *Server) LookupGetAssetHandler(slot uint16) internal.GetAssetHandler {
+func (s *Server) LookupGetAssetHandler(slot uint16) catena.GetAssetHandler {
 	return s.baseServer.LookupGetAssetHandler(slot)
 }
 
-func (s *Server) LookupExecuteCommandHandler(slot uint16) internal.ExecuteCommandHandler {
+func (s *Server) LookupExecuteCommandHandler(slot uint16) catena.ExecuteCommandHandler {
 	return s.baseServer.LookupExecuteCommandHandler(slot)
 }
 
