@@ -239,41 +239,11 @@ jobs:
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
-      - name: Create temp directory for generated protos
-        run: mkdir -p $RUNNER_TEMP/generated-protos
-
       - name: Generate Go protos from SMPTE submodule
         working-directory: sdks/go
         run: |
-          PROTO_DIR="${GITHUB_WORKSPACE}/smpte/interface/proto"
-          OUT_DIR=$RUNNER_TEMP/generated-protos
-          IMPORT_PATH="github.com/rossvideo/catena/sdks/go/pkg/protos"
-          
-          # Get proto files
-          PROTO_FILES=$(ls ${PROTO_DIR}/*.proto)
-          
-          # Build M opts for proper import mapping
-          GO_M_OPTS=""
-          GO_GRPC_M_OPTS=""
-          for f in ${PROTO_FILES}; do
-            fname=$(basename "$f")
-            GO_M_OPTS="${GO_M_OPTS} --go_opt=M${fname}=${IMPORT_PATH}"
-            GO_GRPC_M_OPTS="${GO_GRPC_M_OPTS} --go-grpc_opt=M${fname}=${IMPORT_PATH}"
-          done
-          
-          # Generate standard protos
-          protoc -I "${PROTO_DIR}" \
-            --go_out="${OUT_DIR}" \
-            --go_opt=paths=source_relative \
-            ${GO_M_OPTS} \
-            ${PROTO_FILES}
-          
-          # Generate gRPC protos
-          protoc -I "${PROTO_DIR}" \
-            --go-grpc_out="${OUT_DIR}" \
-            --go-grpc_opt=paths=source_relative \
-            ${GO_GRPC_M_OPTS} \
-            "${PROTO_DIR}/service.proto"
+          mkdir -p $RUNNER_TEMP/generated-protos
+          make OUT_DIR=$RUNNER_TEMP/generated-protos protos-all
 
       - name: Compare generated protos with committed protos
         run: |
