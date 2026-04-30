@@ -62,7 +62,7 @@ var webFS embed.FS
 var staticFS embed.FS
 
 // CommandHandler processes a command and returns a response
-type CommandHandler func(payload any) (catena.CatenaValue, catena.StatusResult)
+type CommandHandler func(payload any) (catena.CommandResult, catena.StatusResult)
 
 // Counter state with thread-safe operations
 type CounterState struct {
@@ -170,7 +170,7 @@ func main() {
 	// ==========================================================================
 	// Device Metadata (for GetDevice endpoint)
 	// ==========================================================================
-	devices := map[int]map[string]any{
+	devices := map[uint16]map[string]any{
 		0: {
 			"slot":              uint32(0),
 			"detail_level":      catena.DetailLevelFull,
@@ -326,7 +326,7 @@ func main() {
 	}
 
 	// Assign params to each slot
-	slotParams := map[int]*sync.Map{
+	slotParams := map[uint16]*sync.Map{
 		0: {},
 		1: {},
 		2: {},
@@ -357,8 +357,7 @@ func main() {
 	}
 
 	commands := map[string]CommandHandler{
-		// Counter commands
-		"start": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
 			} else {
@@ -368,10 +367,10 @@ func main() {
 			resp := buildCounterResponse()
 			srv.BroadcastUpdate(0, "counter", resp)
 			val, _ := catena.ToCatenaValue(resp)
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 
-		"stop": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"stop": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
 			} else {
@@ -381,25 +380,25 @@ func main() {
 			resp := buildCounterResponse()
 			srv.BroadcastUpdate(0, "counter", resp)
 			val, _ := catena.ToCatenaValue(resp)
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 
-		"add10": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
 			resp := buildCounterResponse()
 			srv.BroadcastUpdate(0, "counter", resp)
 			val, _ := catena.ToCatenaValue(resp)
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 
-		"reset": func(payload any) (catena.CatenaValue, catena.StatusResult) {
+		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
 			resp := buildCounterResponse()
 			srv.BroadcastUpdate(0, "counter", resp)
 			val, _ := catena.ToCatenaValue(resp)
-			return catena.Reply(val)
+			return catena.CommandReply(val)
 		},
 	}
 
@@ -421,8 +420,8 @@ func main() {
 	// ==========================================================================
 	// Server Setup
 	// ==========================================================================
-	slotList := []int{0, 1, 2}
-	srv = rest.NewServer(slotList)
+	slotList := []uint16{0, 1, 2}
+	srv = rest.NewServer(slotList, 100)
 
 	// --------------------------------------------------------------------------
 	// Register GetDevice handler for each slot
@@ -435,9 +434,9 @@ func main() {
 			if !ok {
 				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 			}
-			device, err := catena.ToCatenaDevice(deviceInfo)
-			if err != nil {
-				return catena.ReplyError[catena.CatenaDevice](catena.INVALID_ARGUMENT, "failed to create device info")
+			device, res := catena.ToCatenaDevice(deviceInfo)
+			if res.Code != catena.OK {
+				return catena.ReplyError[catena.CatenaDevice](res.Code, res.Error)
 			}
 			return catena.Reply(device)
 		})
@@ -450,7 +449,7 @@ func main() {
 		slot := slot
 		p := slotParams[slot]
 
-		srv.RegisterGetValueHandler(slot, func(slot int, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 			logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 			if slot == 0 && fqoid == "counter" {
@@ -462,8 +461,8 @@ func main() {
 			if !ok {
 				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
 			}
-			catenaVal, err := catena.ToCatenaValue(v)
-			if err != nil {
+			catenaVal, res := catena.ToCatenaValue(v)
+			if res.Code != catena.OK {
 				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
 			}
 			return catena.Reply(catenaVal)
@@ -477,7 +476,7 @@ func main() {
 		slot := slot
 		p := slotParams[slot]
 
-		srv.RegisterSetValueHandler(slot, func(value any, slot int, fqoid string) catena.StatusResult {
+		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
 			logger.Info("SetParam", "slot", slot, "fqoid", fqoid, "value", value)
 
 			if value == nil {
@@ -507,20 +506,13 @@ func main() {
 	// --------------------------------------------------------------------------
 	// Register ExecuteCommand handler
 	// --------------------------------------------------------------------------
-	srv.RegisterExecuteCommandHandler(0, func(w http.ResponseWriter, r *http.Request, slot int, commandFqoid string, payload any) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			exception := map[string]any{
-				"exception": map[string]any{
-					"type":    "Invalid Command",
-					"details": "Command not found: " + commandFqoid,
-				},
-			}
-			val, _ := catena.ToCatenaValue(exception)
-			return catena.Reply(val)
+			return catena.CommandExceptionResult("Invalid Command", "Command not found: "+commandFqoid, nil)
 		}
 
 		return handler(payload)
@@ -530,7 +522,7 @@ func main() {
 	// Register GetAsset handler for each slot
 	// --------------------------------------------------------------------------
 	for _, slot := range slotList {
-		srv.RegisterGetAssetHandler(slot, func(slot int, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 			val, ok := assets.Load(fqoid)
@@ -541,10 +533,10 @@ func main() {
 
 			payload := val.(catena.DataPayload)
 
-			catenaAsset, err := catena.ToCatenaAsset(payload, true)
-			if err != nil {
-				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
-				return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+err.Error())
+			catenaAsset, res := catena.ToCatenaAsset(payload, true)
+			if res.Code != catena.OK {
+				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
+				return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+res.Error)
 			}
 
 			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
