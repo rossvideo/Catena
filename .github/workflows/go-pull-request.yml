@@ -232,19 +232,21 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Install protoc Go plugins
+      - name: Install protoc and Go plugins
         run: |
+          sudo apt-get update && sudo apt-get install -y protobuf-compiler
           go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Create temp directory for generated protos
-        run: mkdir -p ${RUNNER_TEMP}/generated-protos
+        run: mkdir -p $RUNNER_TEMP/generated-protos
 
       - name: Generate Go protos from SMPTE submodule
         working-directory: sdks/go
         run: |
           PROTO_DIR="${GITHUB_WORKSPACE}/smpte/interface/proto"
-          OUT_DIR=${RUNNER_TEMP}/generated-protos
+          OUT_DIR=$RUNNER_TEMP/generated-protos
           IMPORT_PATH="github.com/rossvideo/catena/sdks/go/pkg/protos"
           
           # Get proto files
@@ -279,7 +281,7 @@ jobs:
           echo ""
           
           COMMITTED_DIR="${GITHUB_WORKSPACE}/sdks/go/pkg/protos"
-          GENERATED_DIR="${RUNNER_TEMP}/generated-protos"
+          GENERATED_DIR="$RUNNER_TEMP/generated-protos"
           
           # Check if directories exist
           if [ ! -d "${COMMITTED_DIR}" ]; then
