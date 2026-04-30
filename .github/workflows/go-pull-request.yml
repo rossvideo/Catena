@@ -251,7 +251,6 @@ jobs:
         run: |
           echo "Comparing generated protos with committed protos..."
           echo ""
-          echo $GENERATED_DIR
           
           COMMITTED_DIR="${GITHUB_WORKSPACE}/sdks/go/pkg/protos"
           

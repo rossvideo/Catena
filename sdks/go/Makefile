@@ -6,7 +6,7 @@ LOG_DIR := ./logs
 # Proto config
 GOBIN         := $(shell go env GOPATH)/bin
 PROTO_DIR     := $(abspath ../../smpte/interface/proto)
-OUT_DIR       := $(abspath pkg/protos)
+GENERATED_DIR := $(abspath pkg/protos)
 IMPORT_PATH   := github.com/rossvideo/catena/sdks/go/pkg/protos
 PROTO_FILES   := $(wildcard $(PROTO_DIR)/*.proto)
 GO_M_OPTS     := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
