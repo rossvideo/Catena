@@ -251,6 +251,7 @@ jobs:
         run: |
           echo "Comparing generated protos with committed protos..."
           echo ""
+          echo $GENERATED_DIR
           
           COMMITTED_DIR="${GITHUB_WORKSPACE}/sdks/go/pkg/protos"
           
@@ -295,7 +296,7 @@ jobs:
             echo ""
             echo "  cd sdks/go"
             echo "  make clean-protos"
-            echo "  make OUT_DIR=$OUT_DIR protos-all"
+            echo "  make GENERATED_DIR=$GENERATED_DIR protos-all"
             echo ""
             echo "Then commit the regenerated proto files."
             echo "=========================================="
