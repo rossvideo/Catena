@@ -193,27 +193,4 @@ var file_externalobject_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_externalobject_proto_init() }
-func file_externalobject_proto_init() {
-	if File_externalobject_proto != nil {
-		return
-	}
-	file_param_proto_init()
-	type x struct{}
-	out := protoimpl.TypeBuilder{
-		File: protoimpl.DescBuilder{
-			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_externalobject_proto_rawDesc), len(file_externalobject_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
-			NumExtensions: 0,
-			NumServices:   0,
-		},
-		GoTypes:           file_externalobject_proto_goTypes,
-		DependencyIndexes: file_externalobject_proto_depIdxs,
-		MessageInfos:      file_externalobject_proto_msgTypes,
-	}.Build()
-	File_externalobject_proto = out.File
-	file_externalobject_proto_goTypes = nil
-	file_externalobject_proto_depIdxs = nil
-}
+func init() {}
