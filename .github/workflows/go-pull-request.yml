@@ -242,8 +242,10 @@ jobs:
       - name: Generate Go protos from SMPTE submodule
         working-directory: sdks/go
         run: |
-          mkdir -p $RUNNER_TEMP/generated-protos
-          make OUT_DIR=$RUNNER_TEMP/generated-protos protos-all
+          GENERATED_DIR=$RUNNER_TEMP/generated-protos
+          echo "GENERATED_DIR=$GENERATED_DIR" >> $GITHUB_ENV
+          mkdir -p $GENERATED_DIR
+          make GENERATED_DIR=$GENERATED_DIR protos-all
 
       - name: Compare generated protos with committed protos
         run: |
@@ -251,7 +253,6 @@ jobs:
           echo ""
           
           COMMITTED_DIR="${GITHUB_WORKSPACE}/sdks/go/pkg/protos"
-          GENERATED_DIR="$RUNNER_TEMP/generated-protos"
           
           # Check if directories exist
           if [ ! -d "${COMMITTED_DIR}" ]; then
