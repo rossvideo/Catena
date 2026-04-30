@@ -6,13 +6,15 @@ on:
     branches: ["develop"]
     paths:
       - 'sdks/go/**'
-      - 'smpte/interface/proto/**'
+      # Submodule bumps update the gitlink at smpte only (nested paths are not parent-repo paths).
+      - 'smpte'
       #- 'unittests/go/**'
       #- 'tools/codegen/**'
   pull_request:
     paths:
       - 'sdks/go/**'
-      - 'smpte/interface/proto/**'
+      # Submodule bumps update the gitlink at smpte only (nested paths are not parent-repo paths).
+      - 'smpte'
       #- 'unittests/go/**'
       #- 'tools/codegen/**'
       - '.github/workflows/go-pull-request.yml'
@@ -220,23 +222,15 @@ jobs:
     name: Verify Go Protos Match SMPTE Definitions
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-          cache-dependency-path: sdks/go/go.sum
-
-      - name: Install protoc
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y protobuf-compiler
 
       - name: Install protoc Go plugins
         run: |
@@ -248,11 +242,9 @@ jobs:
 
       - name: Generate Go protos from SMPTE submodule
         working-directory: sdks/go
-        env:
-          GOBIN: ${{ github.workspace }}/go/bin
         run: |
           PROTO_DIR="${GITHUB_WORKSPACE}/smpte/interface/proto"
-          OUT_DIR="/tmp/generated-protos"
+          OUT_DIR=$RUNNER_TEMP/generated-protos
           IMPORT_PATH="github.com/rossvideo/catena/sdks/go/pkg/protos"
           
           # Get proto files
@@ -287,7 +279,7 @@ jobs:
           echo ""
           
           COMMITTED_DIR="${GITHUB_WORKSPACE}/sdks/go/pkg/protos"
-          GENERATED_DIR="/tmp/generated-protos"
+          GENERATED_DIR=$RUNNER_TEMP/generated-protos
           
           # Check if directories exist
           if [ ! -d "${COMMITTED_DIR}" ]; then
@@ -330,7 +322,7 @@ jobs:
             echo ""
             echo "  cd sdks/go"
             echo "  make clean-protos"
-            echo "  make protos-all"
+            echo "  make OUT_DIR=$OUT_DIR protos-all"
             echo ""
             echo "Then commit the regenerated proto files."
             echo "=========================================="
