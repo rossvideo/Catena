@@ -6,7 +6,7 @@ LOG_DIR := ./logs
 # Proto config
 GOBIN         := $(shell go env GOPATH)/bin
 PROTO_DIR     := $(abspath ../../smpte/interface/proto)
-OUT_DIR       := $(abspath pkg/protos)
+GENERATED_DIR := $(abspath pkg/protos)
 IMPORT_PATH   := github.com/rossvideo/catena/sdks/go/pkg/protos
 PROTO_FILES   := $(wildcard $(PROTO_DIR)/*.proto)
 GO_M_OPTS     := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
@@ -46,23 +46,23 @@ proto-tools:
 	@$(GOBIN)/protoc-gen-go-grpc -h >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 protos: proto-tools
-	mkdir -p $(OUT_DIR)
+	mkdir -p $(GENERATED_DIR)
 	PATH="$(PATH):$(GOBIN)" protoc -I "$(PROTO_DIR)" \
-		--go_out="$(OUT_DIR)" \
+		--go_out="$(GENERATED_DIR)" \
 		--go_opt=paths=source_relative \
 		$(GO_M_OPTS) \
 		$(PROTO_FILES)
 
 protos-grpc: proto-tools
-	mkdir -p $(OUT_DIR)
+	mkdir -p $(GENERATED_DIR)
 	PATH="$(PATH):$(GOBIN)" protoc -I "$(PROTO_DIR)" \
-		--go-grpc_out="$(OUT_DIR)" \
+		--go-grpc_out="$(GENERATED_DIR)" \
 		--go-grpc_opt=paths=source_relative \
 		$(GO_GRPC_M_OPTS) \
 		"$(PROTO_DIR)/service.proto"
 
 clean-protos:
-	rm -rf "$(OUT_DIR)"
+	rm -rf "$(GENERATED_DIR)"
 
 # Test coverage targets
 .PHONY: test coverage coverage-html coverage-lcov clean-coverage

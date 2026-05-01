@@ -6,11 +6,15 @@ on:
     branches: ["develop"]
     paths:
       - 'sdks/go/**'
+      # Submodule bumps update the gitlink at smpte only (nested paths are not parent-repo paths).
+      - 'smpte'
       #- 'unittests/go/**'
       #- 'tools/codegen/**'
   pull_request:
     paths:
       - 'sdks/go/**'
+      # Submodule bumps update the gitlink at smpte only (nested paths are not parent-repo paths).
+      - 'smpte'
       #- 'unittests/go/**'
       #- 'tools/codegen/**'
       - '.github/workflows/go-pull-request.yml'
@@ -213,3 +217,89 @@ jobs:
             sdks/go/go_coverage.html
             sdks/go/go_detailed.html
           retention-days: 30
+
+  Proto-Check:
+    name: Verify Go Protos Match SMPTE Definitions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Install protoc and Go plugins
+        run: |
+          sudo apt-get update && sudo apt-get install -y protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Generate Go protos from SMPTE submodule
+        working-directory: sdks/go
+        run: |
+          GENERATED_DIR=$RUNNER_TEMP/generated-protos
+          echo "GENERATED_DIR=$GENERATED_DIR" >> $GITHUB_ENV
+          mkdir -p $GENERATED_DIR
+          make GENERATED_DIR=$GENERATED_DIR protos-all
+
+      - name: Compare generated protos with committed protos
+        run: |
+          echo "Comparing generated protos with committed protos..."
+          echo ""
+          
+          COMMITTED_DIR="${GITHUB_WORKSPACE}/sdks/go/pkg/protos"
+          
+          # Check if directories exist
+          if [ ! -d "${COMMITTED_DIR}" ]; then
+            echo "ERROR: Committed protos directory does not exist: ${COMMITTED_DIR}"
+            exit 1
+          fi
+          
+          if [ ! -d "${GENERATED_DIR}" ]; then
+            echo "ERROR: Generated protos directory does not exist: ${GENERATED_DIR}"
+            exit 1
+          fi
+          
+          echo "Generated files:"
+          ls -la "${GENERATED_DIR}"
+          echo ""
+          echo "Committed files:"
+          ls -la "${COMMITTED_DIR}"
+          echo ""
+          
+          # Run diff and capture output
+          DIFF_OUTPUT=$(diff -rq "${GENERATED_DIR}" "${COMMITTED_DIR}" 2>&1) || true
+          
+          if [ -n "${DIFF_OUTPUT}" ]; then
+            echo "=========================================="
+            echo "PROTO MISMATCH DETECTED!"
+            echo "=========================================="
+            echo ""
+            echo "The generated Go protos do not match the committed protos."
+            echo "This means the SMPTE submodule proto definitions have changed"
+            echo "but the Go protos have not been regenerated."
+            echo ""
+            echo "Differences found:"
+            echo "${DIFF_OUTPUT}"
+            echo ""
+            echo "Detailed diff:"
+            diff -r "${GENERATED_DIR}" "${COMMITTED_DIR}" || true
+            echo ""
+            echo "=========================================="
+            echo "To fix this, run the following commands locally:"
+            echo ""
+            echo "  cd sdks/go"
+            echo "  make clean-protos"
+            echo "  make GENERATED_DIR=$GENERATED_DIR protos-all"
+            echo ""
+            echo "Then commit the regenerated proto files."
+            echo "=========================================="
+            exit 1
+          else
+            echo "SUCCESS: Generated protos match committed protos."
+          fi
