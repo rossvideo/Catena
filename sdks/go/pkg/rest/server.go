@@ -203,7 +203,7 @@ func (s *Server) Shutdown() {
 
 // For unit tests to override the default functions
 var marshalSSEFunc = MarshalProtoJSON
-var injectSSEFieldFunc = injectJSONField
+var injectSSEFieldFunc = injectJSONField[uint32]
 
 // sendSSEEvent writes a single SSE event to the response writer,
 // serializing the proto PushUpdates message via MarshalProtoJSON.
@@ -212,10 +212,7 @@ func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, updat
 	if err != nil {
 		return err
 	}
-	data, err = injectSSEFieldFunc(data, "slot", update.GetSlot())
-	if err != nil {
-		return err
-	}
+	data = injectSSEFieldFunc(data, "slot", update.GetSlot())
 	_, err = fmt.Fprintf(w, "data: %s\n\n", data)
 	if err != nil {
 		return err

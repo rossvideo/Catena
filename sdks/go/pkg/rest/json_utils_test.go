@@ -495,10 +495,7 @@ func TestInjectJSONField_AddsSlotZero(t *testing.T) {
 		t.Fatal("expected slot to be absent before injection")
 	}
 
-	b, err = injectJSONField(b, "slot", device.GetSlot())
-	if err != nil {
-		t.Fatalf("injectJSONField error: %v", err)
-	}
+	b = injectJSONField(b, "slot", device.GetSlot())
 
 	body := string(b)
 	if !strings.Contains(body, `"slot":0`) {
@@ -521,10 +518,7 @@ func TestInjectJSONField_PreservesExistingSlot(t *testing.T) {
 		t.Fatalf("MarshalProtoJSON error: %v", err)
 	}
 
-	b, err = injectJSONField(b, "slot", device.GetSlot())
-	if err != nil {
-		t.Fatalf("injectJSONField error: %v", err)
-	}
+	b = injectJSONField(b, "slot", device.GetSlot())
 
 	body := string(b)
 	if !strings.Contains(body, `"slot":5`) {
@@ -547,10 +541,7 @@ func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
 		t.Fatalf("MarshalProtoJSON error: %v", err)
 	}
 
-	b, err = injectJSONField(b, "slot", update.GetSlot())
-	if err != nil {
-		t.Fatalf("injectJSONField error: %v", err)
-	}
+	b = injectJSONField(b, "slot", update.GetSlot())
 
 	body := string(b)
 	if !strings.Contains(body, `"slot":0`) {

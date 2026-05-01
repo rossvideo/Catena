@@ -1318,25 +1318,6 @@ func TestSendSSEEvent_MarshalError(t *testing.T) {
 	}
 }
 
-func TestSendSSEEvent_InjectFieldError(t *testing.T) {
-	origInject := injectSSEFieldFunc
-	defer func() { injectSSEFieldFunc = origInject }()
-	injectSSEFieldFunc = func(data []byte, key string, value any) ([]byte, error) {
-		return nil, fmt.Errorf("inject failed")
-	}
-
-	srv := NewServer([]uint16{0}, 100)
-	rec := httptest.NewRecorder()
-	var w http.ResponseWriter = rec
-	flusher := w.(http.Flusher)
-	update := &protos.PushUpdates{Slot: 0}
-
-	err := srv.sendSSEEvent(rec, flusher, update)
-	if err == nil || err.Error() != "inject failed" {
-		t.Errorf("expected 'inject failed' error, got %v", err)
-	}
-}
-
 func TestSendSSEEvent_WriteFailure(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 	rec := httptest.NewRecorder()

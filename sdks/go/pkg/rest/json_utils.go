@@ -45,7 +45,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"strconv"
 
 	"github.com/valyala/fastjson"
 
@@ -100,27 +99,22 @@ func MarshalAssetJSON(asset *protos.ExternalObjectPayload) ([]byte, error) {
 	return protoMarshalOpts.Marshal(asset)
 }
 
+type jsonPrimitive interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+		~float32 | ~float64 | ~string | ~bool
+}
+
 // injectJSONField sets key:value in a JSON object using fastjson.
-func injectJSONField(data []byte, key string, value any) ([]byte, error) {
+// The type constraint ensures only JSON-compatible primitives are accepted.
+func injectJSONField[T jsonPrimitive](data []byte, key string, value T) []byte {
 	var p fastjson.Parser
 	v, err := p.ParseBytes(data)
 	if err != nil {
-		return nil, err
+		return data
 	}
 	var a fastjson.Arena
-	switch tv := value.(type) {
-	case int:
-		v.Set(key, a.NewNumberString(strconv.Itoa(tv)))
-	case int32:
-		v.Set(key, a.NewNumberString(strconv.FormatInt(int64(tv), 10)))
-	case uint32:
-		v.Set(key, a.NewNumberString(strconv.FormatUint(uint64(tv), 10)))
-	case int64:
-		v.Set(key, a.NewNumberString(strconv.FormatInt(tv, 10)))
-	case uint64:
-		v.Set(key, a.NewNumberString(strconv.FormatUint(tv, 10)))
-	case float64:
-		v.Set(key, a.NewNumberFloat64(tv))
+	switch tv := any(value).(type) {
 	case string:
 		v.Set(key, a.NewString(tv))
 	case bool:
@@ -130,9 +124,9 @@ func injectJSONField(data []byte, key string, value any) ([]byte, error) {
 			v.Set(key, a.NewFalse())
 		}
 	default:
-		return nil, fmt.Errorf("unsupported value type for injectJSONField: %T", value)
+		v.Set(key, a.NewNumberString(fmt.Sprint(value)))
 	}
-	return v.MarshalTo(nil), nil
+	return v.MarshalTo(nil)
 }
 
 // WriteCommandResponseJSON marshals a protos.CommandResponse to JSON and writes it
