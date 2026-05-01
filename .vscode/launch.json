@@ -231,7 +231,8 @@
         "getSetValue/grpc",
         "executeCommand/rest",
         "getAsset/rest",
-        "oneOfEverything/rest"
+        "oneOfEverything/rest",
+        "oneOfEverything/grpc"
       ],
       "default": "getSetValue/rest"
     },
