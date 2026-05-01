@@ -83,7 +83,7 @@ params:
     read_only: true
   count_to:
     type: INT32
-    value: {int32_value: 0}
+    value: {int32_value: 5}
     name:
       display_strings:
         en: "Count To"
@@ -207,7 +207,7 @@ commands:
         ja: "複数引数コマンド"
     type: STRUCT
     widget: button
-    read_only: true
+    read_only: false
     response: true
     params:
       arg1:
