@@ -15,11 +15,53 @@ params:
   state:
     type: STRING
     read_only: true
+    minimal_set: true
+    name:
+      display_strings:
+        en: "State"
+        fr: "État"
+        es: "Estado"
+        ja: "状態"
     value: {string_value: stopped}
     constraint:
-      type: STRING_CHOICE
-      string_choice:
-        choices: [stopped, playing, paused, rewinding, fast_forwarding]
+      type: STRING_STRING_CHOICE
+      string_string_choice:
+        choices:
+          - value: stopped
+            name:
+              display_strings:
+                en: "Stopped"
+                fr: "Arrêté"
+                es: "Detenido"
+                ja: "停止"
+          - value: playing
+            name:
+              display_strings:
+                en: "Playing"
+                fr: "Lecture"
+                es: "Reproduciendo"
+                ja: "再生中"
+          - value: paused
+            name:
+              display_strings:
+                en: "Paused"
+                fr: "En pause"
+                es: "Pausado"
+                ja: "一時停止"
+          - value: rewinding
+            name:
+              display_strings:
+                en: "Rewinding"
+                fr: "Rembobinage"
+                es: "Rebobinando"
+                ja: "巻き戻し"
+          - value: fast_forwarding
+            name:
+              display_strings:
+                en: "Fast Forwarding"
+                fr: "Avance rapide"
+                es: "Avance rápida"
+                ja: "早送り"
         strict: true
   video_file:
     type: STRING
@@ -39,6 +81,16 @@ params:
         max_value: 2.0
         step: 0.25
     read_only: true
+  count_to:
+    type: INT32
+    value: {int32_value: 0}
+    name:
+      display_strings:
+        en: "Count To"
+        fr: "Compter Jusqu'à"
+        es: "Contar Hasta"
+        ja: "カウントアップ"
+    widget: default
   product:
     type: STRUCT
     access_scope: st2138:mon
@@ -66,23 +118,135 @@ params:
         type: STRING
 commands:
   play:
+    name:
+      display_strings:
+        en: "Play"
+        fr: "Lecture"
+        es: "Reproducir"
+        ja: "再生"
     type: EMPTY
+    widget: button
     response: false
   pause:
+    name:
+      display_strings:
+        en: "Pause"
+        fr: "Pause"
+        es: "Pausa"
+        ja: "一時停止"
     type: EMPTY
+    widget: button
     response: false
   stop:
+    name:
+      display_strings:
+        en: "Stop"
+        fr: "Arrêter"
+        es: "Detener"
+        ja: "停止"
     type: EMPTY
+    widget: button
     response: false
   rewind:
+    name:
+      display_strings:
+        en: "Rewind"
+        fr: "Rembobinage"
+        es: "Rebobinando"
+        ja: "巻き戻し"
     type: EMPTY
+    widget: button
     response: false
   fast_forward:
+    name:
+      display_strings:
+        en: "Fast Forward"
+        fr: "Avance rapide"
+        es: "Avance rápida"
+        ja: "早送り"
     type: EMPTY
+    widget: button
     response: false
   load:
+    name:
+      display_strings:
+        en: "Load"
+        fr: "Charger"
+        es: "Cargar"
+        ja: "読み込み"
     type: STRING
+    widget: button
     response: false
   eject:
+    name:
+      display_strings:
+        en: "Eject"
+        fr: "Éjecter"
+        es: "Expulsar"
+        ja: "イジェクト"
     type: EMPTY
+    widget: button
     response: false
+  debug_counter:
+    name:
+      display_strings:
+        en: "Debug Counter"
+        fr: "Compteur de Débogage"
+        es: "Contador de Depuración"
+        ja: "デバッグカウンター"
+    type: INT32
+    widget: button
+    read_only: true
+    response: true
+  multi_arg_command:
+    name:
+      display_strings:
+        en: "Multi-Arg Command"
+        fr: "Commande Multi-Arg"
+        es: "Comando Multi-Arg"
+        ja: "複数引数コマンド"
+    type: STRUCT
+    widget: button
+    read_only: true
+    response: true
+    params:
+      arg1:
+        type: INT32
+      arg2:
+        type: INT32
+menu_groups:
+  status:
+    name:
+      display_strings:
+        en: "Status"
+        fr: "État"
+        es: "Estado"
+        ja: "ステータス"
+    menus:
+      state:
+        name:
+          display_strings:
+            en: "State"
+            fr: "État"
+            es: "Estado"
+            ja: "状態"
+        param_oids: ["/state"]
+    order: 0
+  config:
+    name:
+      display_strings:
+        en: "Configuration"
+        fr: "Configuration"
+        es: "Configuración"
+        ja: "設定"
+    menus:
+      commands:
+        name:
+          display_strings:
+            en: "Commands"
+            fr: "Commandes"
+            es: "Comandos"
+            ja: "コマンド"
+        param_oids: []
+        command_oids: ["/play", "/pause", "/stop", "/rewind", "/fast_forward", "/load", "/eject"]
+    order: 1
