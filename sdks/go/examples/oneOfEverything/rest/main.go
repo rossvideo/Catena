@@ -28,14 +28,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Example program containing one of everything.
- * @file main.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-01-13
- */
-
 package main
 
 import (
@@ -43,573 +35,77 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"os/signal"
-	"reflect"
 	"sync"
-	"syscall"
-	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/rest"
+
+	oneofeverything "github.com/rossvideo/catena/sdks/go/examples/oneOfEverything"
 )
 
 //go:embed webui/*
 var webFS embed.FS
 
-//go:embed static/*
-var staticFS embed.FS
-
-// CommandHandler processes a command and returns a response
-type CommandHandler func(payload any) (catena.CommandResult, catena.StatusResult)
-
-// Counter state with thread-safe operations
-type CounterState struct {
-	mu      sync.RWMutex
-	value   int32
-	running bool
-}
-
-func (c *CounterState) GetValue() int32 {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.value
-}
-
-func (c *CounterState) IsRunning() bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.running
-}
-
-func (c *CounterState) Start() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.running = true
-}
-
-func (c *CounterState) Stop() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.running = false
-}
-
-func (c *CounterState) Add(n int32) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.value += n
-}
-
-func (c *CounterState) Reset() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.value = 0
-}
-
-func (c *CounterState) Increment() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.running {
-		c.value++
-	}
-}
-
-// Global state for graceful shutdown
-var (
-	shutdownChan = make(chan struct{})
-	srv          *rest.Server
-)
-
 func main() {
-	// Initialize SDK with prefix and app name
-	cfg, err := catena.InitOptions(catena.Options{AppName: "oneOfEverything_REST"})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize SDK: %v\n", err)
-		os.Exit(1)
-	}
-	defer catena.Close()
-
-	// Handle signals for graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		sig := <-sigChan
-		logger.Info("Caught signal, shutting down", "signal", sig)
-		close(shutdownChan)
-	}()
-
-	// Port comes from the unified config (parsed from CATENA_PORT)
-	port := cfg.Port
-
-	// ==========================================================================
-	// Counter State
-	// ==========================================================================
-	counter := &CounterState{}
-
-	// Start counter goroutine - increments every second when running
-	go func() {
-		ticker := time.NewTicker(1 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				if counter.IsRunning() {
-					counter.Increment()
-					logger.Info("Counter tick", "value", counter.GetValue())
-					if srv != nil {
-						srv.BroadcastUpdate(0, "counter", counter.GetValue())
-					}
-				}
-			case <-shutdownChan:
-				return
-			}
-		}
-	}()
-
-	// ==========================================================================
-	// Device Metadata (for GetDevice endpoint)
-	// ==========================================================================
-	devices := map[uint16]map[string]any{
-		0: {
-			"slot":              uint32(0),
-			"detail_level":      catena.DetailLevelFull,
-			"multi_set_enabled": true,
-			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-			"params": map[string]any{
-				"counter": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Counter",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"value": map[string]any{
-						"int32_value": 0,
-					},
-				},
-			},
-			"commands": map[string]any{
-				"start": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Start Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty, // command with no args
-				},
-				"stop": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Stop Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-				"add10": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Add 10 to Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty, // command with no args
-				},
-				"reset": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Reset Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-			},
-		},
-		1: {
-			"slot":              uint32(1),
-			"detail_level":      catena.DetailLevelFull,
-			"multi_set_enabled": false,
-			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-			"params": map[string]any{
-				"resolution": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Resolution",
-						},
-					},
-					"type": catena.ParamTypeString,
-					"value": map[string]any{
-						"string_value": "1920x1080",
-					},
-				},
-				"brightness": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Brightness",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"value": map[string]any{
-						"int32_value": 50,
-					},
-				},
-				"contrast": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Contrast",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"value": map[string]any{
-						"int32_value": 50,
-					},
-				},
-				"saturation": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Saturation",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"value": map[string]any{
-						"int32_value": 50,
-					},
-				},
-			},
-		},
-		2: {
-			"slot":              uint32(2),
-			"detail_level":      catena.DetailLevelFull,
-			"multi_set_enabled": true,
-			"subscriptions":     false,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-			"params": map[string]any{
-				"volume": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Volume",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"value": map[string]any{
-						"int32_value": 75,
-					},
-				},
-				"muted": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Muted",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"value": map[string]any{
-						"int32_value": 0,
-					},
-				},
-				"device_name": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Device Name",
-						},
-					},
-					"type": catena.ParamTypeString,
-					"value": map[string]any{
-						"string_value": "Demo Device",
-					},
-				},
-			},
-		},
-	}
-
-	// Assign params to each slot
-	slotParams := map[uint16]*sync.Map{
-		0: {},
-		1: {},
-		2: {},
-	}
-	slotParams[0].Store("counter", int32(0))
-	slotParams[1].Store("resolution", "1920x1080")
-	slotParams[1].Store("brightness", int32(50))
-	slotParams[1].Store("contrast", int32(50))
-	slotParams[1].Store("saturation", int32(50))
-	slotParams[2].Store("volume", int32(75))
-	slotParams[2].Store("muted", int32(0))
-	slotParams[2].Store("device_name", "Demo Device")
-
-	// ==========================================================================
-	// Commands (for ExecuteCommand endpoint)
-	// ==========================================================================
-
-	// Helper to build counter response
-	buildCounterResponse := func() map[string]any {
-		var runningVal int32 = 0
-		if counter.IsRunning() {
-			runningVal = 1
-		}
-		return map[string]any{
-			"counter": int32(counter.GetValue()),
-			"running": runningVal,
-		}
-	}
-
-	commands := map[string]CommandHandler{
-		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			if counter.IsRunning() {
-				logger.Info("Start command - already running")
-			} else {
-				counter.Start()
-				logger.Info("Counter started", "value", counter.GetValue())
-			}
-			resp := buildCounterResponse()
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
-			return catena.CommandReply(val)
-		},
-
-		"stop": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			if !counter.IsRunning() {
-				logger.Info("Stop command - already stopped")
-			} else {
-				counter.Stop()
-				logger.Info("Counter stopped", "value", counter.GetValue())
-			}
-			resp := buildCounterResponse()
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
-			return catena.CommandReply(val)
-		},
-
-		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			counter.Add(10)
-			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			resp := buildCounterResponse()
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
-			return catena.CommandReply(val)
-		},
-
-		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			counter.Reset()
-			logger.Info("Counter reset", "value", counter.GetValue())
-			resp := buildCounterResponse()
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
-			return catena.CommandReply(val)
-		},
-	}
-
-	// ==========================================================================
-	// Assets (for GetAsset endpoint)
-	// ==========================================================================
 	assets := &sync.Map{}
-
-	// Load assets from embedded static directory using catena helper
-	payloads, err := catena.LoadPayloadsFromEmbed(staticFS, "static")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load embedded assets: %v\n", err)
-		os.Exit(1)
-	}
+	payloads, _ := catena.LoadPayloadsFromEmbed(oneofeverything.StaticFS, "static")
 	for id, payload := range payloads {
 		assets.Store(id, payload)
 	}
 
-	// ==========================================================================
-	// Server Setup
-	// ==========================================================================
-	slotList := []uint16{0, 1, 2}
-	srv = rest.NewServer(slotList, 100)
-
-	// --------------------------------------------------------------------------
-	// Register GetDevice handler for each slot
-	// --------------------------------------------------------------------------
-	for _, slot := range slotList {
-		slot := slot // capture loop variable
-		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
-			logger.Info("GetDevice", "slot", slot)
-			deviceInfo, ok := devices[slot]
-			if !ok {
-				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
-			}
-			device, res := catena.ToCatenaDevice(deviceInfo)
-			if res.Code != catena.OK {
-				return catena.ReplyError[catena.CatenaDevice](res.Code, res.Error)
-			}
-			return catena.Reply(device)
-		})
-	}
-
-	// --------------------------------------------------------------------------
-	// Register GetValue handler (GetParam) for each slot
-	// --------------------------------------------------------------------------
-	for _, slot := range slotList {
-		slot := slot
-		p := slotParams[slot]
-
-		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-			logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
-
-			if slot == 0 && fqoid == "counter" {
-				val, _ := catena.ToCatenaValue(buildCounterResponse())
-				return catena.Reply(val)
-			}
-
-			v, ok := p.Load(fqoid)
-			if !ok {
-				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
-			}
-			catenaVal, res := catena.ToCatenaValue(v)
-			if res.Code != catena.OK {
-				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
-			}
-			return catena.Reply(catenaVal)
-		})
-	}
-
-	// --------------------------------------------------------------------------
-	// Register SetValue handler (SetParam) for each slot
-	// --------------------------------------------------------------------------
-	for _, slot := range slotList {
-		slot := slot
-		p := slotParams[slot]
-
-		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
-			logger.Info("SetParam", "slot", slot, "fqoid", fqoid, "value", value)
-
-			if value == nil {
-				logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "nil value received")
-			}
-
-			val, ok := p.Load(fqoid)
-			if !ok {
-				logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
-			}
-
-			if reflect.TypeOf(val) != reflect.TypeOf(value) {
-				logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid,
-					"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
-				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
-			}
-
-			p.Store(fqoid, value)
-			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-			srv.BroadcastUpdate(slot, fqoid, value)
-			return catena.StatusWithCode(catena.NO_CONTENT, "")
-		})
-	}
-
-	// --------------------------------------------------------------------------
-	// Register ExecuteCommand handler
-	// --------------------------------------------------------------------------
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
-
-		handler, ok := commands[commandFqoid]
-		if !ok {
-			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.CommandExceptionResult("Invalid Command", "Command not found: "+commandFqoid, nil)
-		}
-
-		return handler(payload)
-	})
-
-	// --------------------------------------------------------------------------
-	// Register GetAsset handler for each slot
-	// --------------------------------------------------------------------------
-	for _, slot := range slotList {
-		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
-
-			val, ok := assets.Load(fqoid)
-			if !ok {
-				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-				return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
-			}
-
-			payload := val.(catena.DataPayload)
-
-			catenaAsset, res := catena.ToCatenaAsset(payload, true)
-			if res.Code != catena.OK {
-				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
-				return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+res.Error)
-			}
-
-			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
-			return catena.Reply(catenaAsset)
-		})
-	}
-
-	// --------------------------------------------------------------------------
-	// Register Fallback handler - serves web UI files and assets list
-	// --------------------------------------------------------------------------
-	srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-		// Serve assets list as JSON
-		if r.URL.Path == "/assets-list" {
-			var assetList []map[string]any
-			assets.Range(func(key, value any) bool {
-				payload := value.(catena.DataPayload)
-				assetList = append(assetList, map[string]any{
-					"id":           key.(string),
-					"content_type": payload.Metadata["content-type"],
-					"file_name":    payload.Metadata["file-name"],
-					"size":         len(payload.Payload),
+	oneofeverything.RunExample("oneOfEverything_REST", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
+		srv := rest.NewServer(slots, 100)
+		srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+			if r.URL.Path == "/assets-list" {
+				var assetList []map[string]any
+				assets.Range(func(key, value any) bool {
+					payload := value.(catena.DataPayload)
+					assetList = append(assetList, map[string]any{
+						"id":           key.(string),
+						"content_type": payload.Metadata["content-type"],
+						"file_name":    payload.Metadata["file-name"],
+						"size":         len(payload.Payload),
+					})
+					return true
 				})
-				return true
-			})
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(assetList)
-			return catena.Reply(catena.CatenaValue{})
-		}
-
-		// Map paths to files
-		fileMap := map[string]struct {
-			path        string
-			contentType string
-		}{
-			"/":           {"webui/index.htm", "text/html; charset=utf-8"},
-			"/styles.css": {"webui/styles.css", "text/css; charset=utf-8"},
-			"/script.js":  {"webui/script.js", "application/javascript; charset=utf-8"},
-		}
-
-		if file, ok := fileMap[r.URL.Path]; ok {
-			data, err := webFS.ReadFile(file.path)
-			if err != nil {
-				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "file not found: "+r.URL.Path)
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(assetList)
+				return catena.Reply(catena.CatenaValue{})
 			}
-			w.Header().Set("Content-Type", file.contentType)
-			w.Write(data)
-			return catena.Reply(catena.CatenaValue{})
-		}
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
-	})
 
-	// ==========================================================================
-	// Start Server
-	// ==========================================================================
-	logger.Info("=======================================================")
-	logger.Info("One of Everything REST Example")
-	logger.Info("=======================================================")
-	logger.Info("REST server starting", "port", port)
-	logger.Info("")
-	logger.Info("Web UI available at:")
-	logger.Info(fmt.Sprintf("  http://localhost:%d/", port))
-	logger.Info("")
-	logger.Info("=======================================================")
+			fileMap := map[string]struct {
+				path        string
+				contentType string
+			}{
+				"/":           {"webui/index.htm", "text/html; charset=utf-8"},
+				"/styles.css": {"webui/styles.css", "text/css; charset=utf-8"},
+				"/script.js":  {"webui/script.js", "application/javascript; charset=utf-8"},
+			}
 
-	// Start server in a goroutine so shutdown handling works
-	go func() {
-		if err := srv.Start(port); err != nil {
-			logger.Error("server failed", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	// Wait for shutdown signal
-	<-shutdownChan
-	logger.Info("Server shutdown complete")
+			if file, ok := fileMap[r.URL.Path]; ok {
+				data, err := webFS.ReadFile(file.path)
+				if err != nil {
+					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "file not found: "+r.URL.Path)
+				}
+				w.Header().Set("Content-Type", file.contentType)
+				w.Write(data)
+				return catena.Reply(catena.CatenaValue{})
+			}
+			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
+		})
+		return srv
+	},
+		func(port int) {
+			logger.Info("=======================================================")
+			logger.Info("One of Everything REST Example")
+			logger.Info("=======================================================")
+			logger.Info("REST server starting", "port", port)
+			logger.Info("")
+			logger.Info("Web UI available at:")
+			logger.Info(fmt.Sprintf("  http://localhost:%d/", port))
+			logger.Info("")
+			logger.Info("=======================================================")
+		},
+	)
 }
