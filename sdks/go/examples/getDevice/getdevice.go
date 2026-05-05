@@ -55,8 +55,14 @@ var Devices = map[uint16]map[string]any{
 		"subscriptions":     true,
 		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
 		"default_scope":     "st2138:op",
-		"version":           "1.0.0",
 		"params": map[string]any{
+			"version": map[string]any{
+				"name":      "Version",
+				"type":      catena.ParamTypeString,
+				"read_only": true,
+				"widget":    "TEXT",
+				"value":     "1.0.0",
+			},
 			"brightness": map[string]any{
 				"name": map[string]any{
 					"display_strings": map[string]string{

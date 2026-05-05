@@ -243,16 +243,27 @@ func (bs *BaseServer) BroadcastUpdate(slot uint16, oid string, value any) {
 // The valueFn is called on each tick to get the current value to broadcast.
 // If a heartbeat is already running, it is stopped before starting the new one.
 func (bs *BaseServer) StartHeartbeat(slot uint16, fqoid string, valueFn func() any, interval time.Duration) {
-	bs.StopHeartbeat()
-
 	hb := catena.NewHeartbeat()
 	hb.OnTick(func() {
 		bs.BroadcastUpdate(slot, fqoid, valueFn())
 	})
-	hb.Start(interval)
 
+	// Grab and clear the old heartbeat under the lock.
+	bs.Mu.Lock()
+	old := bs.heartbeat
+	bs.heartbeat = nil
+	bs.Mu.Unlock()
+
+	// Stop the old heartbeat outside the lock (blocks until its goroutine exits).
+	if old != nil {
+		old.Stop()
+	}
+
+	// Atomically store and start the new heartbeat so a concurrent StopHeartbeat
+	// cannot miss the new instance.
 	bs.Mu.Lock()
 	bs.heartbeat = hb
+	hb.Start(interval)
 	bs.Mu.Unlock()
 
 	logger.Info("Heartbeat started", "slot", slot, "fqoid", fqoid, "interval", interval)
