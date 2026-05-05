@@ -38,6 +38,8 @@
 package getdevice
 
 import (
+	"time"
+
 	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -53,6 +55,7 @@ var Devices = map[uint16]map[string]any{
 		"subscriptions":     true,
 		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
 		"default_scope":     "st2138:op",
+		"version":           "1.0.0",
 		"params": map[string]any{
 			"brightness": map[string]any{
 				"name": map[string]any{
@@ -425,6 +428,7 @@ var Devices = map[uint16]map[string]any{
 }
 
 // RegisterHandlers registers the GetDevice handler for each slot on the given server.
+// It also starts a heartbeat that broadcasts the version param every 5 seconds.
 func RegisterHandlers(srv catena.CatenaServer) {
 	for _, slot := range SlotList {
 		slot := slot
@@ -445,6 +449,12 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			return catena.Reply(device)
 		})
 	}
+
+	// Start heartbeat — broadcasts the version param on slot 0 every 5 seconds.
+	// This mirrors the C++ SDK pattern: dm.setHeartbeatParam("/product/version"); dm.startHeartbeat();
+	srv.StartHeartbeat(0, "/product/version", func() any {
+		return "1.0.0"
+	}, 5*time.Second)
 }
 
 // RunExample encapsulates the full example lifecycle:

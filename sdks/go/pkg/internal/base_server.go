@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -29,6 +30,7 @@ type BaseServer struct {
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	getParamInfoHandlers   map[uint16]GetParamInfoHandler
 	connectionQueue        *ConnectionQueue
+	heartbeat              *catena.Heartbeat
 }
 
 // Default handlers that return "not implemented"
@@ -235,4 +237,53 @@ func (bs *BaseServer) BroadcastUpdate(slot uint16, oid string, value any) {
 		},
 	}
 	bs.NotifyUpdate(update)
+}
+
+// StartHeartbeat begins periodic broadcasts of the given param value.
+// The valueFn is called on each tick to get the current value to broadcast.
+// If a heartbeat is already running, it is stopped before starting the new one.
+func (bs *BaseServer) StartHeartbeat(slot uint16, fqoid string, valueFn func() any, interval time.Duration) {
+	bs.StopHeartbeat()
+
+	hb := catena.NewHeartbeat()
+	hb.OnTick(func() {
+		bs.BroadcastUpdate(slot, fqoid, valueFn())
+	})
+	hb.Start(interval)
+
+	bs.Mu.Lock()
+	bs.heartbeat = hb
+	bs.Mu.Unlock()
+
+	logger.Info("Heartbeat started", "slot", slot, "fqoid", fqoid, "interval", interval)
+}
+
+// StopHeartbeat stops the heartbeat if one is running.
+func (bs *BaseServer) StopHeartbeat() {
+	bs.Mu.Lock()
+	hb := bs.heartbeat
+	bs.heartbeat = nil
+	bs.Mu.Unlock()
+
+	if hb != nil {
+		hb.Stop()
+		logger.Info("Heartbeat stopped")
+	}
+}
+
+// GetHeartbeat returns the current heartbeat instance, or nil if none is set.
+func (bs *BaseServer) GetHeartbeat() *catena.Heartbeat {
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	return bs.heartbeat
+}
+
+// SetHeartbeat sets a heartbeat instance on the server. The server will stop
+// it on Shutdown. If a heartbeat is already set, it is stopped first.
+// The caller is responsible for configuring and starting the heartbeat.
+func (bs *BaseServer) SetHeartbeat(hb *catena.Heartbeat) {
+	bs.StopHeartbeat()
+	bs.Mu.Lock()
+	bs.heartbeat = hb
+	bs.Mu.Unlock()
 }
