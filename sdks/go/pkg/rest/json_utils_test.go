@@ -839,6 +839,65 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 
 // --- MarshalAssetJSON tests (migrated from catena/asset_test.go) ---
 
+func TestInjectJSONField_String(t *testing.T) {
+	input := []byte(`{"type":"INT32"}`)
+	got := injectJSONField(input, "name", "brightness")
+	body := string(got)
+	if !strings.Contains(body, `"name":"brightness"`) {
+		t.Errorf("expected name:brightness after injection, got %s", body)
+	}
+	if !strings.Contains(body, `"type":"INT32"`) {
+		t.Errorf("expected original field preserved, got %s", body)
+	}
+}
+
+func TestInjectJSONField_BoolTrue(t *testing.T) {
+	input := []byte(`{"type":"INT32"}`)
+	got := injectJSONField(input, "read_only", true)
+	body := string(got)
+	if !strings.Contains(body, `"read_only":true`) {
+		t.Errorf("expected read_only:true after injection, got %s", body)
+	}
+}
+
+func TestInjectJSONField_BoolFalse(t *testing.T) {
+	input := []byte(`{"type":"INT32"}`)
+	got := injectJSONField(input, "read_only", false)
+	body := string(got)
+	if !strings.Contains(body, `"read_only":false`) {
+		t.Errorf("expected read_only:false after injection, got %s", body)
+	}
+}
+
+func TestInjectJSONField_InvalidJSON(t *testing.T) {
+	input := []byte(`not valid json`)
+	got := injectJSONField(input, "slot", uint32(0))
+	if string(got) != string(input) {
+		t.Errorf("expected original data returned on parse error, got %s", string(got))
+	}
+}
+
+func TestInjectJSONField_OverwritesExistingString(t *testing.T) {
+	input := []byte(`{"name":"old"}`)
+	got := injectJSONField(input, "name", "new")
+	body := string(got)
+	if !strings.Contains(body, `"name":"new"`) {
+		t.Errorf("expected name to be overwritten to 'new', got %s", body)
+	}
+	if strings.Contains(body, `"name":"old"`) {
+		t.Errorf("expected old name to be gone, got %s", body)
+	}
+}
+
+func TestInjectJSONField_Float64(t *testing.T) {
+	input := []byte(`{"type":"FLOAT64"}`)
+	got := injectJSONField(input, "value", 3.14)
+	body := string(got)
+	if !strings.Contains(body, `"value":3.14`) {
+		t.Errorf("expected value:3.14, got %s", body)
+	}
+}
+
 func TestMarshalAssetJSON(t *testing.T) {
 	dp := catena.DataPayload{
 		Metadata: map[string]string{
