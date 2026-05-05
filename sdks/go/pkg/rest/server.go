@@ -134,6 +134,7 @@ func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpSt
 	b, err := MarshalDeviceJSON(device.GetProtoDevice())
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "failed to marshal device response"})
 		return

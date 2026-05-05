@@ -45,6 +45,8 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"reflect"
+	"strconv"
 
 	"github.com/valyala/fastjson"
 
@@ -107,6 +109,9 @@ type jsonPrimitive interface {
 
 // injectJSONField sets key:value in a JSON object using fastjson.
 // The type constraint ensures only JSON-compatible primitives are accepted.
+// Dispatch is based on the underlying reflect.Kind so derived types
+// (e.g. `type MyStr string`) are handled correctly rather than falling
+// through to a numeric-string default that would emit invalid JSON.
 func injectJSONField[T jsonPrimitive](data []byte, key string, value T) []byte {
 	var p fastjson.Parser
 	v, err := p.ParseBytes(data)
@@ -114,15 +119,26 @@ func injectJSONField[T jsonPrimitive](data []byte, key string, value T) []byte {
 		return data
 	}
 	var a fastjson.Arena
-	switch tv := any(value).(type) {
-	case string:
-		v.Set(key, a.NewString(tv))
-	case bool:
-		if tv {
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.String:
+		v.Set(key, a.NewString(rv.String()))
+	case reflect.Bool:
+		if rv.Bool() {
 			v.Set(key, a.NewTrue())
 		} else {
 			v.Set(key, a.NewFalse())
 		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		v.Set(key, a.NewNumberString(strconv.FormatInt(rv.Int(), 10)))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		v.Set(key, a.NewNumberString(strconv.FormatUint(rv.Uint(), 10)))
+	case reflect.Float32, reflect.Float64:
+		bits := 64
+		if rv.Kind() == reflect.Float32 {
+			bits = 32
+		}
+		v.Set(key, a.NewNumberString(strconv.FormatFloat(rv.Float(), 'g', -1, bits)))
 	default:
 		v.Set(key, a.NewNumberString(fmt.Sprint(value)))
 	}

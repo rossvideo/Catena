@@ -898,6 +898,76 @@ func TestInjectJSONField_Float64(t *testing.T) {
 	}
 }
 
+// TestInjectJSONField_DerivedTypes verifies that derived primitive types
+// (allowed by the ~ tilde in the jsonPrimitive constraint) are dispatched
+// correctly. A naive `case string` / `case bool` switch on `any(value)`
+// matches exact types only and would route derived types to the numeric
+// default branch, producing invalid JSON like `"name":brightness` (no quotes).
+func TestInjectJSONField_DerivedTypes(t *testing.T) {
+	type myStr string
+	type myBool bool
+	type myInt int32
+	type myUint uint16
+	type myFloat float64
+
+	cases := []struct {
+		name  string
+		input []byte
+		run   func([]byte) []byte
+		want  string
+	}{
+		{
+			name:  "derived string is JSON-quoted",
+			input: []byte(`{}`),
+			run:   func(b []byte) []byte { return injectJSONField(b, "name", myStr("brightness")) },
+			want:  `"name":"brightness"`,
+		},
+		{
+			name:  "derived bool true",
+			input: []byte(`{}`),
+			run:   func(b []byte) []byte { return injectJSONField(b, "flag", myBool(true)) },
+			want:  `"flag":true`,
+		},
+		{
+			name:  "derived bool false",
+			input: []byte(`{}`),
+			run:   func(b []byte) []byte { return injectJSONField(b, "flag", myBool(false)) },
+			want:  `"flag":false`,
+		},
+		{
+			name:  "derived int",
+			input: []byte(`{}`),
+			run:   func(b []byte) []byte { return injectJSONField(b, "n", myInt(-7)) },
+			want:  `"n":-7`,
+		},
+		{
+			name:  "derived uint",
+			input: []byte(`{}`),
+			run:   func(b []byte) []byte { return injectJSONField(b, "n", myUint(42)) },
+			want:  `"n":42`,
+		},
+		{
+			name:  "derived float",
+			input: []byte(`{}`),
+			run:   func(b []byte) []byte { return injectJSONField(b, "v", myFloat(2.5)) },
+			want:  `"v":2.5`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := string(tc.run(tc.input))
+			if !strings.Contains(got, tc.want) {
+				t.Errorf("expected output to contain %s, got %s", tc.want, got)
+			}
+			var sink map[string]any
+			if err := json.Unmarshal([]byte(got), &sink); err != nil {
+				t.Errorf("output is not valid JSON: %v (got %s)", err, got)
+			}
+		})
+	}
+}
+
 func TestMarshalAssetJSON(t *testing.T) {
 	dp := catena.DataPayload{
 		Metadata: map[string]string{
