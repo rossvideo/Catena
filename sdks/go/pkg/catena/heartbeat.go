@@ -83,17 +83,17 @@ func (h *Heartbeat) OnTick(handler HeartbeatHandler) *Heartbeat {
 }
 
 // Start begins emitting tick events at the specified interval.
-// If the heartbeat is already running, this is a no-op.
-// The interval must be positive; zero or negative values are ignored.
-func (h *Heartbeat) Start(interval time.Duration) {
+// Returns true if the heartbeat was started, false if it was already running
+// or the interval is invalid (zero or negative).
+func (h *Heartbeat) Start(interval time.Duration) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	if h.running {
-		return
+		return false
 	}
 	if interval <= 0 {
-		return
+		return false
 	}
 
 	h.running = true
@@ -101,6 +101,7 @@ func (h *Heartbeat) Start(interval time.Duration) {
 
 	h.wg.Add(1)
 	go h.run(interval)
+	return true
 }
 
 // Stop halts the heartbeat. No further tick events will be emitted.

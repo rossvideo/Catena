@@ -242,7 +242,13 @@ func (bs *BaseServer) BroadcastUpdate(slot uint16, oid string, value any) {
 // StartHeartbeat begins periodic broadcasts of the given param value.
 // The valueFn is called on each tick to get the current value to broadcast.
 // If a heartbeat is already running, it is stopped before starting the new one.
+// If the interval is invalid (zero or negative), the existing heartbeat is preserved.
 func (bs *BaseServer) StartHeartbeat(slot uint16, fqoid string, valueFn func() any, interval time.Duration) {
+	if interval <= 0 {
+		logger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
+		return
+	}
+
 	hb := catena.NewHeartbeat()
 	hb.OnTick(func() {
 		bs.BroadcastUpdate(slot, fqoid, valueFn())
@@ -263,10 +269,14 @@ func (bs *BaseServer) StartHeartbeat(slot uint16, fqoid string, valueFn func() a
 	// cannot miss the new instance.
 	bs.Mu.Lock()
 	bs.heartbeat = hb
-	hb.Start(interval)
+	started := hb.Start(interval)
 	bs.Mu.Unlock()
 
-	logger.Info("Heartbeat started", "slot", slot, "fqoid", fqoid, "interval", interval)
+	if started {
+		logger.Info("Heartbeat started", "slot", slot, "fqoid", fqoid, "interval", interval)
+	} else {
+		logger.Error("Heartbeat failed to start", "slot", slot, "fqoid", fqoid, "interval", interval)
+	}
 }
 
 // StopHeartbeat stops the heartbeat if one is running.
