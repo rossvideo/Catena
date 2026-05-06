@@ -162,6 +162,44 @@ var Devices = map[uint16]map[string]any{
 				"type": catena.ParamTypeEmpty,
 			},
 		},
+		"menu_groups": map[string]any{
+			"status": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Status",
+					},
+				},
+				"order": 0,
+				"menus": map[string]any{
+					"status": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Status",
+							},
+						},
+						"param_oids": []string{"counter"},
+					},
+				},
+			},
+			"config": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Configuration",
+					},
+				},
+				"order": 1,
+				"menus": map[string]any{
+					"control": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Control",
+							},
+						},
+						"command_oids": []string{"start", "stop", "add10", "reset"},
+					},
+				},
+			},
+		},
 	},
 	1: {
 		"slot":              uint32(1),
@@ -216,6 +254,44 @@ var Devices = map[uint16]map[string]any{
 				},
 			},
 		},
+		"menu_groups": map[string]any{
+			"status": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Status",
+					},
+				},
+				"order": 0,
+				"menus": map[string]any{
+					"status": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Status",
+							},
+						},
+						"param_oids": []string{"resolution"},
+					},
+				},
+			},
+			"config": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Configuration",
+					},
+				},
+				"order": 1,
+				"menus": map[string]any{
+					"picture": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Picture",
+							},
+						},
+						"param_oids": []string{"brightness", "contrast", "saturation"},
+					},
+				},
+			},
+		},
 	},
 	2: {
 		"slot":              uint32(2),
@@ -256,6 +332,44 @@ var Devices = map[uint16]map[string]any{
 				"type": catena.ParamTypeString,
 				"value": map[string]any{
 					"string_value": "Demo Device",
+				},
+			},
+		},
+		"menu_groups": map[string]any{
+			"status": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Status",
+					},
+				},
+				"order": 0,
+				"menus": map[string]any{
+					"identity": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Identity",
+							},
+						},
+						"param_oids": []string{"device_name"},
+					},
+				},
+			},
+			"config": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Configuration",
+					},
+				},
+				"order": 1,
+				"menus": map[string]any{
+					"audio": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Audio",
+							},
+						},
+						"param_oids": []string{"volume", "muted"},
+					},
 				},
 			},
 		},
