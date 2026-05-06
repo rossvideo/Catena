@@ -546,7 +546,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			p.Store(fqoid, value)
 			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
 			srv.BroadcastUpdate(slot, fqoid, value)
-			return catena.StatusWithCode(catena.NO_CONTENT, "")
+			return catena.StatusWithCode(catena.OK, "")
 		})
 	}
 
