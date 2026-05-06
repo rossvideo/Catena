@@ -30,9 +30,9 @@ type BaseServer struct {
 }
 
 // Default handlers that return "not implemented"
-func DefaultDeviceHandler(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
-	logger.Warning("DefaultDeviceHandler called - no handler registered for this slot", "slot", slot)
-	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "No device defined at slot "+strconv.Itoa(int(slot)))
+func DefaultDeviceHandler() (catena.CatenaDevice, catena.StatusResult) {
+	logger.Warning("DefaultDeviceHandler called - no handler registered for this slot")
+	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "No device defined at slot")
 }
 
 func DefaultGetValueHandler(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
