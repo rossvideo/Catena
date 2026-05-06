@@ -30,29 +30,29 @@ type BaseServer struct {
 }
 
 // Default handlers that return "not implemented"
-func DefaultDeviceHandler() (catena.CatenaDevice, catena.StatusResult) {
-	logger.Warning("DefaultDeviceHandler called - no handler registered for this slot")
-	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "No device defined at slot")
+func DefaultDeviceHandler(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
+	logger.Warning("DefaultDeviceHandler called - no handler registered for this slot", "slot", slot)
+	return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "No device defined at slot "+strconv.Itoa(int(slot)))
 }
 
 func DefaultGetValueHandler(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 	logger.Warning("DefaultGetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "GetValue not implemented")
+	return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func DefaultSetValueHandler(value any, slot uint16, fqoid string) catena.StatusResult {
 	logger.Warning("DefaultSetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return catena.StatusWithCode(catena.NOT_FOUND, "SetValue not implemented")
+	return catena.StatusWithCode(catena.NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func DefaultGetAssetHandler(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 	logger.Warning("DefaultGetAssetHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "GetAsset not implemented")
+	return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func DefaultExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 	logger.Warning("DefaultExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
-	return catena.CommandError(catena.NOT_FOUND, "ExecuteCommand not implemented")
+	return catena.CommandError(catena.NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 // Handler registration methods
