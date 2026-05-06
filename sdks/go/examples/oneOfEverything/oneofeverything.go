@@ -42,6 +42,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -49,6 +50,13 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
+
+// normalizeFqoid strips the leading "/" so that handlers can be called from
+// either gRPC (where the dashboard sends fully-qualified OIDs like "/brightness")
+// or REST (where path-derived OIDs arrive without a leading slash, e.g. "brightness").
+func normalizeFqoid(fqoid string) string {
+	return strings.TrimPrefix(fqoid, "/")
+}
 
 //go:embed static/*
 var StaticFS embed.FS
@@ -501,13 +509,14 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 			logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
+			key := normalizeFqoid(fqoid)
 
-			if slot == 0 && fqoid == "counter" {
+			if slot == 0 && key == "counter" {
 				val, _ := catena.ToCatenaValue(BuildCounterResponse(counter))
 				return catena.Reply(val)
 			}
 
-			v, ok := p.Load(fqoid)
+			v, ok := p.Load(key)
 			if !ok {
 				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
 			}
@@ -525,13 +534,14 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
 			logger.Info("SetValue", "slot", slot, "fqoid", fqoid, "value", value)
+			key := normalizeFqoid(fqoid)
 
 			if value == nil {
 				logger.Error("SetValue nil value received", "slot", slot, "fqoid", fqoid)
 				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "nil value received")
 			}
 
-			val, ok := p.Load(fqoid)
+			val, ok := p.Load(key)
 			if !ok {
 				logger.Error("SetValue param not found", "slot", slot, "fqoid", fqoid)
 				return catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
@@ -543,7 +553,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
 			}
 
-			p.Store(fqoid, value)
+			p.Store(key, value)
 			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
 			srv.BroadcastUpdate(slot, fqoid, value)
 			return catena.StatusWithCode(catena.OK, "")
@@ -552,8 +562,9 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
+		key := normalizeFqoid(commandFqoid)
 
-		handler, ok := commands[commandFqoid]
+		handler, ok := commands[key]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
 			return catena.CommandExceptionResult("Invalid Command", "Command not found: "+commandFqoid, nil)
@@ -565,8 +576,9 @@ func RegisterHandlers(srv catena.CatenaServer) {
 	for _, slot := range SlotList {
 		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
+			key := normalizeFqoid(fqoid)
 
-			val, ok := assets.Load(fqoid)
+			val, ok := assets.Load(key)
 			if !ok {
 				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
 				return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
