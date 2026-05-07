@@ -760,6 +760,18 @@ func TestCleanDeviceJSON(t *testing.T) {
 			contains: []string{`"params"`, `"brightness"`, `"type":"INT32"`},
 			excludes: []string{`"value"`},
 		},
+		{
+			name:     "strip empty fields inside array element objects",
+			input:    `{"menu_groups":{"main":{"items":[{"name":"item1","description":"","metadata":null,"extras":{},"tags":[]}]}}}`,
+			contains: []string{`"items"`, `"name":"item1"`},
+			excludes: []string{`"description"`, `"metadata"`, `"extras"`, `"tags"`},
+		},
+		{
+			name:     "strip empty fields in nested array of arrays of objects",
+			input:    `{"matrix":[[{"a":1,"b":null}]]}`,
+			contains: []string{`"matrix"`, `"a":1`},
+			excludes: []string{`"b"`},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

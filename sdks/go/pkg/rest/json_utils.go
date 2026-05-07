@@ -323,8 +323,11 @@ func deleteResponseFalse(v *fastjson.Value) {
 }
 
 // deleteEmptyValues recursively removes keys whose values are null, {}, [],
-// or "". Returns true if the object itself became empty after deletions,
-// enabling cascading removal by the caller.
+// or "". Returns true if the value itself is considered empty after
+// deletions (object with no remaining keys, or empty array), enabling
+// cascading removal by the caller. Object elements within arrays are
+// cleaned in place; array elements are not removed even if they become
+// empty, to avoid shifting indices.
 func deleteEmptyValues(v *fastjson.Value) bool {
 	switch v.Type() {
 	case fastjson.TypeObject:
@@ -351,6 +354,9 @@ func deleteEmptyValues(v *fastjson.Value) bool {
 		return empty
 
 	case fastjson.TypeArray:
+		for _, elem := range v.GetArray() {
+			deleteEmptyValues(elem)
+		}
 		return len(v.GetArray()) == 0
 
 	default:
@@ -364,10 +370,8 @@ func shouldDeleteValue(val *fastjson.Value) bool {
 		return true
 	case fastjson.TypeString:
 		return len(val.GetStringBytes()) == 0
-	case fastjson.TypeObject:
+	case fastjson.TypeObject, fastjson.TypeArray:
 		return deleteEmptyValues(val)
-	case fastjson.TypeArray:
-		return len(val.GetArray()) == 0
 	default:
 		return false
 	}
