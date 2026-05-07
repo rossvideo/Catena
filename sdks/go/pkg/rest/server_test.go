@@ -52,6 +52,7 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {
@@ -1296,6 +1297,25 @@ func TestBroadcastUpdate_InvalidValue(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 	// bool is not supported by catena.ToProto; this exercises the error branch
 	srv.BroadcastUpdate(0, "test/param", true)
+}
+
+func TestSendSSEEvent_MarshalError(t *testing.T) {
+	origMarshal := marshalSSEFunc
+	defer func() { marshalSSEFunc = origMarshal }()
+	marshalSSEFunc = func(msg proto.Message) ([]byte, error) {
+		return nil, fmt.Errorf("marshal failed")
+	}
+
+	srv := NewServer([]uint16{0}, 100)
+	rec := httptest.NewRecorder()
+	var w http.ResponseWriter = rec
+	flusher := w.(http.Flusher)
+	update := &protos.PushUpdates{Slot: 0}
+
+	err := srv.sendSSEEvent(rec, flusher, update)
+	if err == nil || err.Error() != "marshal failed" {
+		t.Errorf("expected 'marshal failed' error, got %v", err)
+	}
 }
 
 func TestSendSSEEvent_WriteFailure(t *testing.T) {

@@ -495,9 +495,9 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			if !ok {
 				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 			}
-			device, res := catena.ToCatenaDevice(deviceInfo)
-			if res.Code != catena.OK {
-				return catena.ReplyError[catena.CatenaDevice](res.Code, res.Error)
+			device, err := catena.ToCatenaDevice(deviceInfo)
+			if err != nil {
+				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, err.Error())
 			}
 			return catena.Reply(device)
 		})
