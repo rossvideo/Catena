@@ -467,8 +467,8 @@ func TestServer_DefaultHandlers(t *testing.T) {
 
 	// Test default get value handler
 	value, status := srv.LookupGetValueHandler(0)(0, "test")
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("default get value handler should return UNIMPLEMENTED, got %v", status.Code)
+	if status.Code != catena.NOT_FOUND {
+		t.Errorf("default get value handler should return NOT_FOUND, got %v", status.Code)
 	}
 	if value.Value != nil {
 		t.Error("default get value handler should return nil value")
@@ -476,14 +476,14 @@ func TestServer_DefaultHandlers(t *testing.T) {
 
 	// Test default set value handler
 	status = srv.LookupSetValueHandler(0)(nil, 0, "test")
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("default set value handler should return UNIMPLEMENTED, got %v", status.Code)
+	if status.Code != catena.NOT_FOUND {
+		t.Errorf("default set value handler should return NOT_FOUND, got %v", status.Code)
 	}
 
 	// Test default get asset handler
 	asset, status := srv.LookupGetAssetHandler(0)(0, "test")
-	if status.Code != catena.UNIMPLEMENTED {
-		t.Errorf("default get asset handler should return UNIMPLEMENTED, got %v", status.Code)
+	if status.Code != catena.NOT_FOUND {
+		t.Errorf("default get asset handler should return NOT_FOUND, got %v", status.Code)
 	}
 	if asset.GetProtoAsset() != nil {
 		t.Error("default get asset handler should return nil asset")
@@ -491,8 +491,8 @@ func TestServer_DefaultHandlers(t *testing.T) {
 
 	// Test default execute command handler
 	_, cmdStatus := srv.LookupExecuteCommandHandler(0)(0, "test", nil)
-	if cmdStatus.Code != catena.UNIMPLEMENTED {
-		t.Errorf("default execute command handler should return UNIMPLEMENTED, got %v", cmdStatus.Code)
+	if cmdStatus.Code != catena.NOT_FOUND {
+		t.Errorf("default execute command handler should return NOT_FOUND, got %v", cmdStatus.Code)
 	}
 }
 
