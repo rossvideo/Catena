@@ -66,9 +66,20 @@ type connectionQueue struct {
 	shuttingDown   bool
 }
 
+type connectionQueueInterface interface {
+	setMaxConnections(max int)
+	registerConnection() (int, *Connection)
+	deregisterConnection(connID int)
+	notifyUpdate(update *protos.PushUpdates)
+	shutdown()
+	connectionCount() int
+}
+
+var _ connectionQueueInterface = (*connectionQueue)(nil)
+
 // newConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
-func newConnectionQueue(maxConnections int) *connectionQueue {
+func newConnectionQueue(maxConnections int) connectionQueueInterface {
 	return &connectionQueue{
 		connections:    make(map[int]*Connection),
 		maxConnections: maxConnections,

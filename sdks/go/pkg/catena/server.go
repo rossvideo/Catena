@@ -92,12 +92,12 @@ type Transport interface {
 	// The context signals when the transport should gracefully exit.
 	// Start should return quickly and may spawn background goroutines.
 	// Transports should monitor ctx.Done() and exit cleanly when signaled.
-	Start(ctx context.Context)
+	Start(ctx context.Context) error
 
 	// Shutdown closes the transport and waits for cleanup.
 	// The context provides a deadline; Shutdown must respect it and return
 	// promptly even if cleanup is incomplete.
-	Shutdown(ctx context.Context)
+	Shutdown(ctx context.Context) error
 }
 
 type Server struct {
@@ -105,13 +105,13 @@ type Server struct {
 	ctx                    context.Context
 	shutdown               bool
 	stopped                chan struct{}
-	slots                  []uint32
+	slots                  map[uint16]struct{}
 	getDeviceHandlers      map[uint16]DeviceHandler
 	getValueHandlers       map[uint16]GetValueHandler
 	setValueHandlers       map[uint16]SetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
-	connectionQueue        *connectionQueue
+	connectionQueue        connectionQueueInterface
 	transports             []Transport
 }
 
@@ -120,7 +120,7 @@ func NewServer(maxConnections int) *Server {
 		ctx:                    context.Background(),
 		shutdown:               false,
 		stopped:                make(chan struct{}),
-		slots:                  make([]uint32, 0),
+		slots:                  make(map[uint16]struct{}),
 		getDeviceHandlers:      make(map[uint16]DeviceHandler),
 		getValueHandlers:       make(map[uint16]GetValueHandler),
 		setValueHandlers:       make(map[uint16]SetValueHandler),
@@ -132,6 +132,10 @@ func NewServer(maxConnections int) *Server {
 }
 
 func (s *Server) RegisterTransport(transport Transport) error {
+	if transport == nil {
+		return fmt.Errorf("cannot register nil transport")
+	}
+
 	s.mu.Lock()
 	if s.shutdown {
 		s.mu.Unlock()
@@ -143,12 +147,10 @@ func (s *Server) RegisterTransport(transport Transport) error {
 
 	// Transport startup should be non-blocking and must not happen under the server lock.
 	// Pass server context so transport can derive its own child contexts if needed.
-	transport.Start(ctx)
-
-	return nil
+	return transport.Start(ctx)
 }
 
-func (s *Server) DeregisterTransport(transport Transport) {
+func (s *Server) DeregisterTransport(transport Transport) error {
 	s.mu.Lock()
 	idx := -1
 	for i, t := range s.transports {
@@ -160,14 +162,14 @@ func (s *Server) DeregisterTransport(transport Transport) {
 
 	if idx == -1 {
 		s.mu.Unlock()
-		return
+		return nil // Transport not found; could also return an error if desired
 	}
 
 	s.transports = append(s.transports[:idx], s.transports[idx+1:]...)
 	s.mu.Unlock()
 
 	// Shutdown may block while draining work; call it outside the server lock.
-	transport.Shutdown(context.Background())
+	return transport.Shutdown(context.Background())
 }
 
 func (s *Server) Wait() {
@@ -189,10 +191,23 @@ func (s *Server) Shutdown() {
 
 	// Shutdown all transports outside the lock.
 	for _, t := range transports {
-		t.Shutdown(context.Background())
+		err := t.Shutdown(context.Background())
+		if err != nil {
+			logger.Error("Error shutting down transport", "error", err)
+		}
 	}
 
 	close(s.stopped)
+}
+
+func (s *Server) GetSlots() []uint16 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	slots := make([]uint16, 0, len(s.slots))
+	for slot := range s.slots {
+		slots = append(slots, slot)
+	}
+	return slots
 }
 
 // Handler registration methods
@@ -200,30 +215,35 @@ func (s *Server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.getDeviceHandlers[slot] = handler
+	s.slots[slot] = struct{}{}
 }
 
 func (s *Server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.getValueHandlers[slot] = handler
+	s.slots[slot] = struct{}{}
 }
 
 func (s *Server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.setValueHandlers[slot] = handler
+	s.slots[slot] = struct{}{}
 }
 
 func (s *Server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.getAssetHandlers[slot] = handler
+	s.slots[slot] = struct{}{}
 }
 
 func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.executeCommandHandlers[slot] = handler
+	s.slots[slot] = struct{}{}
 }
 
 func (s *Server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
