@@ -53,7 +53,6 @@ import (
 	"strconv"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -216,22 +215,6 @@ func ToCatenaAsset(dp DataPayload, cachable bool) (CatenaAsset, StatusResult) {
 // GetProtoAsset returns the underlying protos.ExternalObjectPayload
 func (ca CatenaAsset) GetProtoAsset() *protos.ExternalObjectPayload {
 	return ca.asset
-}
-
-// ToJSON converts CatenaAsset to JSON bytes using protojson
-func (ca CatenaAsset) ToJSON() ([]byte, StatusResult) {
-	if ca.asset == nil {
-		return nil, StatusResult{Code: OK}
-	}
-
-	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(ca.asset)
-	if err != nil {
-		return nil, StatusResult{Code: INTERNAL, Error: fmt.Sprintf("failed to marshal asset to JSON: %v", err)}
-	}
-	return b, StatusResult{Code: OK}
 }
 
 func compressGzipTo(w io.Writer, data []byte) error {

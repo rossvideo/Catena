@@ -199,8 +199,8 @@ func TestServer_DeviceRequest_Success(t *testing.T) {
 			"detail_level": catena.DetailLevelFull,
 		}
 		device, err := catena.ToCatenaDevice(deviceMap)
-		if err.Code != catena.OK {
-			t.Fatalf("ToCatenaDevice failed: %v", err.Error)
+		if err != nil {
+			t.Fatalf("ToCatenaDevice failed: %v", err)
 		}
 		return catena.Reply(device)
 	})
@@ -373,7 +373,7 @@ func TestServer_GetValue_InvalidSlot(t *testing.T) {
 	defer cleanup()
 
 	_, err := makeGetValueRequest(t, client, ctx, 99, "device.param1")
-	assertGRPCCode(t, err, codes.Unimplemented, "No GetValue handler for invalid slot") // Note: server returns Unimplemented for slots without handlers
+	assertGRPCCode(t, err, codes.NotFound, "No GetValue handler for invalid slot") // Note: server returns NotFound for slots without handlers
 }
 
 func TestServer_GetValue_HandlerError(t *testing.T) {
@@ -382,14 +382,14 @@ func TestServer_GetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-		return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "param not supported")
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not supported")
 	})
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
 	_, err := makeGetValueRequest(t, client, ctx, 0, "device.param1")
-	assertGRPCCode(t, err, codes.Unimplemented, "handler error")
+	assertGRPCCode(t, err, codes.NotFound, "handler error")
 }
 
 // =============================================================================
@@ -437,7 +437,7 @@ func TestServer_SetValue_InvalidSlot(t *testing.T) {
 	defer cleanup()
 
 	_, err := makeSetValueRequest(t, client, ctx, 99, "device.param1", int32(100))
-	assertGRPCCode(t, err, codes.Unimplemented, "No SetValue handler for invalid slot") // Note: server returns Unimplemented for slots without handlers
+	assertGRPCCode(t, err, codes.NotFound, "No SetValue handler for invalid slot") // Note: server returns NotFound for slots without handlers
 }
 
 func TestServer_SetValue_NilValue(t *testing.T) {
@@ -513,7 +513,7 @@ func TestServer_MultiSetValue_InvalidSlot(t *testing.T) {
 	_, err := makeMultiSetValueRequest(t, client, ctx, 99, map[string]any{
 		"param1": int32(10),
 	})
-	assertGRPCCode(t, err, codes.Unimplemented, "No MultiSetValue handler for invalid slot") // Note: server returns Unimplemented for slots without handlers
+	assertGRPCCode(t, err, codes.NotFound, "No MultiSetValue handler for invalid slot") // Note: server returns NotFound for slots without handlers
 }
 
 func TestServer_MultiSetValue_HandlerError(t *testing.T) {
@@ -622,12 +622,12 @@ func TestServer_ExternalObjectRequest_InvalidSlot(t *testing.T) {
 
 	stream, err := makeExternalObjectRequest(t, client, ctx, 99, "device.image1")
 	if err != nil {
-		assertGRPCCode(t, err, codes.Unimplemented, "Unimplemented for invalid slot at stream creation") // Note: server returns Unimplemented for slots without handlers
+		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
 	}
 
 	_, err = stream.Recv()
-	assertGRPCCode(t, err, codes.Unimplemented, "Unimplemented for invalid slot at recv")
+	assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at recv")
 }
 
 func TestServer_ExternalObjectRequest_HandlerError(t *testing.T) {
@@ -750,12 +750,12 @@ func TestServer_ExecuteCommand_InvalidSlot(t *testing.T) {
 
 	stream, err := makeExecuteCommandRequest(t, client, ctx, 99, "device.command", nil)
 	if err != nil {
-		assertGRPCCode(t, err, codes.Unimplemented, "Unimplemented for invalid slot at stream creation") // Note: server returns Unimplemented for slots without handlers
+		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
 	}
 
 	_, err = stream.Recv()
-	assertGRPCCode(t, err, codes.Unimplemented, "Unimplemented for invalid slot at recv")
+	assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at recv")
 }
 
 func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
@@ -764,7 +764,7 @@ func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-		return catena.CommandError(catena.UNIMPLEMENTED, "command not supported")
+		return catena.CommandError(catena.NOT_FOUND, "command not supported")
 	})
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -772,12 +772,12 @@ func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
 
 	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
 	if err != nil {
-		assertGRPCCode(t, err, codes.Unimplemented, "handler error at stream creation")
+		assertGRPCCode(t, err, codes.NotFound, "handler error at stream creation")
 		return
 	}
 
 	_, err = stream.Recv()
-	assertGRPCCode(t, err, codes.Unimplemented, "handler error at recv")
+	assertGRPCCode(t, err, codes.NotFound, "handler error at recv")
 }
 
 // =============================================================================

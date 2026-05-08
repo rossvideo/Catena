@@ -45,8 +45,6 @@ import (
 	"net/http"
 	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/internal"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -128,24 +126,21 @@ func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatu
 
 // writeDeviceResult writes a CatenaDevice as JSON
 func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpStatus int) {
-	protoDevice := device.GetProtoDevice()
-	if protoDevice == nil {
+	if device.GetProtoDevice() == nil {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	b, err := (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(protoDevice)
+	b, err := MarshalDeviceJSON(device.GetProtoDevice())
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "failed to marshal device response"})
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
 	if _, writeErr := w.Write(b); writeErr != nil {
 		logger.Error("failed to write device response", "error", writeErr)
@@ -160,9 +155,8 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 		return
 	}
 
-	// Convert asset to JSON
-	jsonData, res := asset.ToJSON()
-	if res.Code != catena.OK {
+	jsonData, err := MarshalAssetJSON(protoAsset)
+	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Asset payload is missing"})
@@ -208,20 +202,17 @@ func (s *Server) Shutdown() {
 	s.baseServer.ShutdownConnections()
 }
 
-// sseMarshaler is the protojson marshaler used for SSE events.
-// UseProtoNames must be true so field names match the REST responses
-var sseMarshaler = protojson.MarshalOptions{
-	UseProtoNames:   true, // Must be true so field names match the REST responses
-	EmitUnpopulated: false,
-}
+// For unit tests to override the default functions
+var marshalSSEFunc = MarshalProtoJSON
 
 // sendSSEEvent writes a single SSE event to the response writer,
-// serializing the proto PushUpdates message with protojson.
+// serializing the proto PushUpdates message via MarshalProtoJSON.
 func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
-	data, err := sseMarshaler.Marshal(update)
+	data, err := marshalSSEFunc(update)
 	if err != nil {
 		return err
 	}
+	data = injectJSONField(data, "slot", update.GetSlot())
 	_, err = fmt.Fprintf(w, "data: %s\n\n", data)
 	if err != nil {
 		return err
