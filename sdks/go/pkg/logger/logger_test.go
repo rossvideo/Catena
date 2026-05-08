@@ -429,8 +429,8 @@ func TestDefaultSettings(t *testing.T) {
 	if settings.Silent != false {
 		t.Errorf("expected Silent false, got %v", settings.Silent)
 	}
-	if settings.Level != slog.LevelError {
-		t.Errorf("expected Level LevelError, got %v", settings.Level)
+	if settings.Level != slog.LevelInfo {
+		t.Errorf("expected Level LevelInfo, got %v", settings.Level)
 	}
 	if settings.WriteToFile != true {
 		t.Errorf("expected WriteToFile true, got %v", settings.WriteToFile)

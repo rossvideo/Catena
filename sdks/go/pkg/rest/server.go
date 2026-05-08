@@ -353,6 +353,9 @@ func (s *Server) RegisterRoutes() {
 	// Connect endpoint: GET /st2138-api/v1/connect (SSE streaming)
 	s.mux.HandleFunc("/st2138-api/v1/connect", s.handleConnect)
 
+	// Devices endpoint: GET /st2138-api/v1/devices (returns populated slots)
+	s.mux.HandleFunc("/st2138-api/v1/devices", s.handleGetPopulatedSlots)
+
 	// Catch-all for 404 - must be registered last
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Fallback handler", "path", r.URL.Path, "method", r.Method)
@@ -368,6 +371,29 @@ func (s *Server) RegisterRoutes() {
 	s.mux.HandleFunc("/st2138-api/v1", func(w http.ResponseWriter, r *http.Request) {
 		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, "endpoint not found"))
 	})
+}
+
+// handleGetPopulatedSlots handles GET /st2138-api/v1/devices
+// Returns the list of populated slots
+func (s *Server) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	logger.Info("GetPopulatedSlots")
+	slots := s.baseServer.Slots
+
+	response := map[string][]uint32{
+		"slots": slots,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		logger.Error("failed to write slots response", "error", err)
+	}
 }
 
 func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
