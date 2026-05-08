@@ -37,6 +37,31 @@ clean:
 	rm -rf $(BIN_DIR)
 	rm -rf $(LOG_DIR)
 
+# Static build settings (no external dependencies, portable binaries)
+STATIC_LDFLAGS := -ldflags="-s -w"
+STATIC_ENV := CGO_ENABLED=0
+STATIC_BIN_DIR := $(HOME)/Catena/build/go/static
+
+# Static build targets
+.PHONY: static-all static-paired static-rest-only
+
+static-all: static-paired static-rest-only
+
+static-paired: $(foreach cmd,$(CMDS_PAIRED),$(cmd)_REST_static $(cmd)_GRPC_static)
+
+$(foreach cmd,$(CMDS_PAIRED),$(cmd)_REST_static): %_REST_static:
+	mkdir -p $(STATIC_BIN_DIR)/$*_REST
+	$(STATIC_ENV) go build $(STATIC_LDFLAGS) -o $(STATIC_BIN_DIR)/$*_REST/$*_REST ./examples/$*/rest
+
+$(foreach cmd,$(CMDS_PAIRED),$(cmd)_GRPC_static): %_GRPC_static:
+	mkdir -p $(STATIC_BIN_DIR)/$*_GRPC
+	$(STATIC_ENV) go build $(STATIC_LDFLAGS) -o $(STATIC_BIN_DIR)/$*_GRPC/$*_GRPC ./examples/$*/grpc
+
+static-rest-only: $(foreach cmd,$(CMDS_REST_ONLY),$(cmd)_REST_static)
+
+$(foreach cmd,$(CMDS_REST_ONLY),$(cmd)_REST_static): %_REST_static:
+	mkdir -p $(STATIC_BIN_DIR)/$*_REST
+	$(STATIC_ENV) go build $(STATIC_LDFLAGS) -o $(STATIC_BIN_DIR)/$*_REST/$*_REST ./examples/$*/rest
 
 protos-all: protos protos-grpc
 
