@@ -93,16 +93,22 @@ async function cmd(name) {
 function updateCounter(value, running) {
     const el = document.getElementById('counterValue');
     const badge = document.getElementById('statusBadge');
-    el.textContent = value ?? 0;
-    // running is int32: 0 = false, 1 = true
-    if (running === 1) {
-        el.classList.add('running');
-        badge.className = 'status-badge running';
-        badge.textContent = 'Running';
-    } else {
-        el.classList.remove('running');
-        badge.className = 'status-badge stopped';
-        badge.textContent = 'Stopped';
+    if (value !== undefined && value !== null) {
+        el.textContent = value;
+    }
+    // running is int32 (0 = false, 1 = true). Skip if not provided so that
+    // counter-only updates (the "counter" param is a plain int32) leave the
+    // running badge untouched.
+    if (running !== undefined && running !== null) {
+        if (running === 1) {
+            el.classList.add('running');
+            badge.className = 'status-badge running';
+            badge.textContent = 'Running';
+        } else {
+            el.classList.remove('running');
+            badge.className = 'status-badge stopped';
+            badge.textContent = 'Stopped';
+        }
     }
 }
 
@@ -211,15 +217,14 @@ async function setParam(name, value, type) {
 async function poll() {
     const fetches = [];
 
-    // Fetch counter from slot 0
+    // Fetch counter from slot 0. The counter param is a plain int32; the
+    // running flag is only conveyed via command responses and SSE updates.
     fetches.push(
         fetch('/st2138-api/v1/0/value/counter')
             .then(r => r.json())
             .then(data => {
-                const fields = data.struct_value?.fields;
-                if (fields) {
-                    updateCounter(extractValue(fields.counter), extractValue(fields.running));
-                }
+                const value = extractValue(data);
+                if (value !== null) updateCounter(value);
             })
             .catch(e => console.error('poll counter error:', e))
     );
@@ -253,13 +258,8 @@ function connectSSE() {
                 const oid = data.value.oid;
                 const protoVal = data.value.value;
                 if (oid === 'counter') {
-                    if (protoVal.struct_value) {
-                        const fields = protoVal.struct_value.fields;
-                        updateCounter(extractValue(fields.counter), extractValue(fields.running));
-                    } else {
-                        const el = document.getElementById('counterValue');
-                        if (el) el.textContent = extractValue(protoVal) ?? 0;
-                    }
+                    const val = extractValue(protoVal);
+                    if (val !== null) updateCounter(val);
                 } else {
                     const val = extractValue(protoVal);
                     if (val !== null) updateParamInput(oid, val);

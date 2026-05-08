@@ -401,7 +401,12 @@ func InitSlotParams() map[uint16]*sync.Map {
 	return slotParams
 }
 
-func BuildCounterResponse(counter *CounterState) map[string]any {
+// BuildCounterCommandResponse builds the command-result payload that includes
+// both the current counter value and the running flag. It is used as the
+// response body for start/stop/add10/reset commands so callers can observe
+// the side effects of a command in a single round trip. The "counter" param
+// itself is a plain int32 — see the GetValue handler and the broadcasts below.
+func BuildCounterCommandResponse(counter *CounterState) map[string]any {
 	var runningVal int32 = 0
 	if counter.IsRunning() {
 		runningVal = 1
@@ -439,9 +444,8 @@ func RegisterHandlers(srv catena.CatenaServer) {
 				counter.Start()
 				logger.Info("Counter started", "value", counter.GetValue())
 			}
-			resp := BuildCounterResponse(counter)
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
 			return catena.CommandReply(val)
 		},
 
@@ -452,27 +456,24 @@ func RegisterHandlers(srv catena.CatenaServer) {
 				counter.Stop()
 				logger.Info("Counter stopped", "value", counter.GetValue())
 			}
-			resp := BuildCounterResponse(counter)
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
 			return catena.CommandReply(val)
 		},
 
 		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			resp := BuildCounterResponse(counter)
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
 			return catena.CommandReply(val)
 		},
 
 		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			resp := BuildCounterResponse(counter)
-			srv.BroadcastUpdate(0, "counter", resp)
-			val, _ := catena.ToCatenaValue(resp)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
 			return catena.CommandReply(val)
 		},
 	}
@@ -512,7 +513,10 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			key := normalizeFqoid(fqoid)
 
 			if slot == 0 && key == "counter" {
-				val, _ := catena.ToCatenaValue(BuildCounterResponse(counter))
+				val, res := catena.ToCatenaValue(counter.GetValue())
+				if res.Code != catena.OK {
+					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert counter value")
+				}
 				return catena.Reply(val)
 			}
 
