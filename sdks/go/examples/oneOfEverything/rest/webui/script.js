@@ -81,7 +81,7 @@ async function cmd(name) {
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await res.json();
-        const counter = extractValue(data.struct_value?.fields?.counter);
+        const counter = extractValue(data);
         if (counter !== null) updateCounter(counter);
     } catch (e) { console.error('cmd error:', e); }
 }
@@ -90,6 +90,20 @@ function updateCounter(value) {
     if (value === undefined || value === null) return;
     const el = document.getElementById('counterValue');
     if (el) el.textContent = value;
+}
+
+// Drives the green "running" highlight on the counter and the status badge.
+// Backed by the standalone "running" int32 param on slot 0.
+function updateRunning(running) {
+    if (running === undefined || running === null) return;
+    const counterEl = document.getElementById('counterValue');
+    const badge = document.getElementById('statusBadge');
+    const isRunning = running === 1;
+    if (counterEl) counterEl.classList.toggle('running', isRunning);
+    if (badge) {
+        badge.className = 'status-badge ' + (isRunning ? 'running' : 'stopped');
+        badge.textContent = isRunning ? 'Running' : 'Stopped';
+    }
 }
 
 // =====================================================================
@@ -197,8 +211,7 @@ async function setParam(name, value, type) {
 async function poll() {
     const fetches = [];
 
-    // Fetch counter from slot 0. The counter param is a plain int32; the
-    // running flag is only conveyed via command responses and SSE updates.
+    // Fetch counter and running flag from slot 0. Both are plain int32 params.
     fetches.push(
         fetch('/st2138-api/v1/0/value/counter')
             .then(r => r.json())
@@ -207,6 +220,15 @@ async function poll() {
                 if (value !== null) updateCounter(value);
             })
             .catch(e => console.error('poll counter error:', e))
+    );
+    fetches.push(
+        fetch('/st2138-api/v1/0/value/running')
+            .then(r => r.json())
+            .then(data => {
+                const value = extractValue(data);
+                if (value !== null) updateRunning(value);
+            })
+            .catch(e => console.error('poll running error:', e))
     );
 
     // Fetch each param from its proper slot
@@ -237,12 +259,14 @@ function connectSSE() {
             if (data.value) {
                 const oid = data.value.oid;
                 const protoVal = data.value.value;
+                const val = extractValue(protoVal);
+                if (val === null) return;
                 if (oid === 'counter') {
-                    const val = extractValue(protoVal);
-                    if (val !== null) updateCounter(val);
+                    updateCounter(val);
+                } else if (oid === 'running') {
+                    updateRunning(val);
                 } else {
-                    const val = extractValue(protoVal);
-                    if (val !== null) updateParamInput(oid, val);
+                    updateParamInput(oid, val);
                 }
             }
         } catch (e) {

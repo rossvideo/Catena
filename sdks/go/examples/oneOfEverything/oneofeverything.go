@@ -81,6 +81,15 @@ func (c *CounterState) IsRunning() bool {
 	return c.running
 }
 
+// RunningInt32 returns the running state as an int32 (1 = running, 0 = stopped),
+// matching the on-the-wire representation of the "running" param.
+func (c *CounterState) RunningInt32() int32 {
+	if c.IsRunning() {
+		return 1
+	}
+	return 0
+}
+
 func (c *CounterState) Start() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -128,6 +137,17 @@ var Devices = map[uint16]map[string]any{
 				"name": map[string]any{
 					"display_strings": map[string]string{
 						"en": "Counter",
+					},
+				},
+				"type": catena.ParamTypeInt32,
+				"value": map[string]any{
+					"int32_value": 0,
+				},
+			},
+			"running": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Running",
 					},
 				},
 				"type": catena.ParamTypeInt32,
@@ -185,7 +205,7 @@ var Devices = map[uint16]map[string]any{
 								"en": "Status",
 							},
 						},
-						"param_oids": []string{"counter"},
+						"param_oids": []string{"counter", "running"},
 					},
 				},
 			},
@@ -401,22 +421,6 @@ func InitSlotParams() map[uint16]*sync.Map {
 	return slotParams
 }
 
-// BuildCounterCommandResponse builds the command-result payload that includes
-// both the current counter value and the running flag. It is used as the
-// response body for start/stop/add10/reset commands so callers can observe
-// the side effects of a command in a single round trip. The "counter" param
-// itself is a plain int32 — see the GetValue handler and the broadcasts below.
-func BuildCounterCommandResponse(counter *CounterState) map[string]any {
-	var runningVal int32 = 0
-	if counter.IsRunning() {
-		runningVal = 1
-	}
-	return map[string]any{
-		"counter": int32(counter.GetValue()),
-		"running": runningVal,
-	}
-}
-
 // RegisterHandlers registers all GetDevice, GetValue, SetValue, ExecuteCommand,
 // and GetAsset handlers. It also starts a background goroutine that increments
 // the counter every second while running.
@@ -436,6 +440,12 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		}
 	}()
 
+	// broadcastRunning publishes the current running flag on the "running" param
+	// so subscribers (REST SSE / gRPC stream) see the state change live.
+	broadcastRunning := func() {
+		srv.BroadcastUpdate(0, "running", counter.RunningInt32())
+	}
+
 	commands := map[string]CommandHandler{
 		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if counter.IsRunning() {
@@ -443,9 +453,10 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			} else {
 				counter.Start()
 				logger.Info("Counter started", "value", counter.GetValue())
+				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
+			val, _ := catena.ToCatenaValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 
@@ -455,9 +466,10 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			} else {
 				counter.Stop()
 				logger.Info("Counter stopped", "value", counter.GetValue())
+				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
+			val, _ := catena.ToCatenaValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 
@@ -465,7 +477,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
+			val, _ := catena.ToCatenaValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 
@@ -473,7 +485,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(BuildCounterCommandResponse(counter))
+			val, _ := catena.ToCatenaValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 	}
@@ -520,6 +532,16 @@ func RegisterHandlers(srv catena.CatenaServer) {
 				return catena.Reply(val)
 			}
 
+			// "running" is a status param backed by CounterState; report the
+			// live state instead of any cached slot-param value.
+			if slot == 0 && key == "running" {
+				val, res := catena.ToCatenaValue(counter.RunningInt32())
+				if res.Code != catena.OK {
+					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert running value")
+				}
+				return catena.Reply(val)
+			}
+
 			v, ok := p.Load(key)
 			if !ok {
 				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
@@ -543,6 +565,14 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			if value == nil {
 				logger.Error("SetValue nil value received", "slot", slot, "fqoid", fqoid)
 				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "nil value received")
+			}
+
+			// "running" is driven by start/stop commands, not direct writes,
+			// so reject SetValue with a clear hint to avoid silent drift
+			// between CounterState and the slot-param cache.
+			if slot == 0 && key == "running" {
+				logger.Warning("SetValue rejected for running param", "slot", slot, "fqoid", fqoid)
+				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "use start/stop commands to change running state")
 			}
 
 			val, ok := p.Load(key)
