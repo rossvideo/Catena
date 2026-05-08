@@ -81,35 +81,15 @@ async function cmd(name) {
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await res.json();
-        const fields = data.struct_value?.fields;
-        if (fields) {
-            const counter = extractValue(fields.counter);
-            const running = extractValue(fields.running);
-            updateCounter(counter, running);
-        }
+        const counter = extractValue(data.struct_value?.fields?.counter);
+        if (counter !== null) updateCounter(counter);
     } catch (e) { console.error('cmd error:', e); }
 }
 
-function updateCounter(value, running) {
+function updateCounter(value) {
+    if (value === undefined || value === null) return;
     const el = document.getElementById('counterValue');
-    const badge = document.getElementById('statusBadge');
-    if (value !== undefined && value !== null) {
-        el.textContent = value;
-    }
-    // running is int32 (0 = false, 1 = true). Skip if not provided so that
-    // counter-only updates (the "counter" param is a plain int32) leave the
-    // running badge untouched.
-    if (running !== undefined && running !== null) {
-        if (running === 1) {
-            el.classList.add('running');
-            badge.className = 'status-badge running';
-            badge.textContent = 'Running';
-        } else {
-            el.classList.remove('running');
-            badge.className = 'status-badge stopped';
-            badge.textContent = 'Stopped';
-        }
-    }
+    if (el) el.textContent = value;
 }
 
 // =====================================================================

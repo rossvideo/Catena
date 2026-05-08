@@ -143,25 +143,6 @@ h1 {
     font-weight: 700;
 }
 
-.counter-value.running { color: var(--success); }
-
-.status-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 100px;
-    font-weight: 500;
-}
-
-.status-badge.running {
-    background: rgba(34, 197, 94, 0.15);
-    color: var(--success);
-}
-
-.status-badge.stopped {
-    background: var(--border);
-    color: var(--text-muted);
-}
-
 .counter-buttons {
     display: flex;
     gap: 0.5rem;
