@@ -56,6 +56,29 @@ var Devices = map[uint16]map[string]any{
 		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
 		"default_scope":     "st2138:op",
 		"params": map[string]any{
+			"product": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Product",
+					},
+				},
+				"type": catena.ParamTypeStruct,
+				"value": map[string]any{
+					"params": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Version",
+							},
+						},
+						"type":      catena.ParamTypeString,
+						"read_only": true,
+						"widget":    "TEXT",
+						"value": map[string]any{
+							"string_value": "1.0.0",
+						},
+					},
+				},
+			},
 			"version": map[string]any{
 				"name": map[string]any{
 					"display_strings": map[string]string{
@@ -462,11 +485,11 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		})
 	}
 
-	// Start heartbeat — broadcasts the version param on slot 0 every 5 seconds.
-	// This mirrors the C++ SDK pattern: dm.setHeartbeatParam("/product/version"); dm.startHeartbeat();
-	srv.StartHeartbeat(0, "/product/version", func() any {
-		return "1.0.0"
-	}, 5*time.Second)
+	// Start heartbeat — invokes all registered heartbeat handlers every 5 seconds.
+	srv.RegisterHeartbeatHandler(0, func() {
+		srv.BroadcastUpdate(0, "/product/version", "1.0.0")
+	})
+	srv.StartHeartbeat(5 * time.Second)
 }
 
 // RunExample encapsulates the full example lifecycle:

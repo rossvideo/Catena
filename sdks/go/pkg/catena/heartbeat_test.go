@@ -31,6 +31,7 @@
 package catena
 
 import (
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -49,7 +50,9 @@ func TestNewHeartbeat(t *testing.T) {
 func TestHeartbeat_StartStop(t *testing.T) {
 	hb := NewHeartbeat()
 
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	if !hb.IsRunning() {
 		t.Error("heartbeat should be running after Start")
 	}
@@ -63,8 +66,12 @@ func TestHeartbeat_StartStop(t *testing.T) {
 func TestHeartbeat_DoubleStart(t *testing.T) {
 	hb := NewHeartbeat()
 
-	hb.Start(10 * time.Millisecond)
-	hb.Start(10 * time.Millisecond) // should be no-op
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Error("double Start should return nil, not error")
+	}
 	if !hb.IsRunning() {
 		t.Error("heartbeat should still be running")
 	}
@@ -75,7 +82,9 @@ func TestHeartbeat_DoubleStart(t *testing.T) {
 func TestHeartbeat_DoubleStop(t *testing.T) {
 	hb := NewHeartbeat()
 
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	hb.Stop()
 	hb.Stop() // should be no-op, not panic
 	if hb.IsRunning() {
@@ -93,7 +102,12 @@ func TestHeartbeat_StopWhenNotRunning(t *testing.T) {
 
 func TestHeartbeat_ZeroInterval(t *testing.T) {
 	hb := NewHeartbeat()
-	hb.Start(0)
+	err := hb.Start(0)
+	if err == nil {
+		t.Error("Start with zero interval should return an error")
+	} else if !strings.Contains(err.Error(), "invalid heartbeat interval") {
+		t.Errorf("unexpected error message: %v", err)
+	}
 	if hb.IsRunning() {
 		t.Error("heartbeat should not start with zero interval")
 	}
@@ -101,7 +115,12 @@ func TestHeartbeat_ZeroInterval(t *testing.T) {
 
 func TestHeartbeat_NegativeInterval(t *testing.T) {
 	hb := NewHeartbeat()
-	hb.Start(-1 * time.Second)
+	err := hb.Start(-1 * time.Second)
+	if err == nil {
+		t.Error("Start with negative interval should return an error")
+	} else if !strings.Contains(err.Error(), "invalid heartbeat interval") {
+		t.Errorf("unexpected error message: %v", err)
+	}
 	if hb.IsRunning() {
 		t.Error("heartbeat should not start with negative interval")
 	}
@@ -115,7 +134,9 @@ func TestHeartbeat_OnTick(t *testing.T) {
 		tickCount.Add(1)
 	})
 
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 
 	// Wait for a few ticks
 	time.Sleep(55 * time.Millisecond)
@@ -145,7 +166,9 @@ func TestHeartbeat_MultipleHandlers(t *testing.T) {
 		t.Error("OnTick should return the same Heartbeat for chaining")
 	}
 
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	time.Sleep(35 * time.Millisecond)
 	hb.Stop()
 
@@ -173,7 +196,9 @@ func TestHeartbeat_HandlerPanicRecovery(t *testing.T) {
 		tickCount.Add(1)
 	})
 
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	time.Sleep(35 * time.Millisecond)
 	hb.Stop()
 
@@ -191,7 +216,9 @@ func TestHeartbeat_NoTicksAfterStop(t *testing.T) {
 		tickCount.Add(1)
 	})
 
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	time.Sleep(25 * time.Millisecond)
 	hb.Stop()
 
@@ -213,13 +240,17 @@ func TestHeartbeat_RestartAfterStop(t *testing.T) {
 	})
 
 	// First run
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	time.Sleep(25 * time.Millisecond)
 	hb.Stop()
 	firstRun := tickCount.Load()
 
 	// Second run
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Restart failed: %v", err)
+	}
 	time.Sleep(25 * time.Millisecond)
 	hb.Stop()
 	secondRun := tickCount.Load()
@@ -237,7 +268,9 @@ func TestHeartbeat_OnTickWhileRunning(t *testing.T) {
 		count1.Add(1)
 	})
 
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	time.Sleep(25 * time.Millisecond)
 
 	// Register a new handler while already running
@@ -260,7 +293,9 @@ func TestHeartbeat_OnTickWhileRunning(t *testing.T) {
 func TestHeartbeat_NoHandlers(t *testing.T) {
 	// Starting with no handlers should not panic
 	hb := NewHeartbeat()
-	hb.Start(10 * time.Millisecond)
+	if err := hb.Start(10 * time.Millisecond); err != nil {
+		t.Fatalf("Start failed: %v", err)
+	}
 	time.Sleep(25 * time.Millisecond)
 	hb.Stop()
 	// If we reach here without panic, test passes
@@ -278,7 +313,7 @@ func TestHeartbeat_ConcurrentStartStop(t *testing.T) {
 	go func() {
 		defer close(done)
 		for i := 0; i < 50; i++ {
-			hb.Start(1 * time.Millisecond)
+			_ = hb.Start(1 * time.Millisecond)
 			time.Sleep(2 * time.Millisecond)
 			hb.Stop()
 		}

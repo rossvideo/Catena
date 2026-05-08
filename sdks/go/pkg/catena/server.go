@@ -56,11 +56,10 @@ type CatenaServer interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler)
+	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	BroadcastUpdate(slot uint16, fqoid string, value any)
-	StartHeartbeat(slot uint16, fqoid string, value func() any, interval time.Duration)
+	StartHeartbeat(interval time.Duration)
 	StopHeartbeat()
-	GetHeartbeat() *Heartbeat
-	SetHeartbeat(hb *Heartbeat)
 	Start(port int) error
 	Shutdown()
 }

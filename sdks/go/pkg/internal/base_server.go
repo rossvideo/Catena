@@ -19,6 +19,7 @@ type SetValueHandler = catena.SetValueHandler
 type GetAssetHandler = catena.GetAssetHandler
 type ExecuteCommandHandler = catena.ExecuteCommandHandler
 type GetParamInfoHandler = catena.GetParamInfoHandler
+type HeartbeatHandler = catena.HeartbeatHandler
 
 type BaseServer struct {
 	Mu                     sync.Mutex
@@ -29,6 +30,7 @@ type BaseServer struct {
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	getParamInfoHandlers   map[uint16]GetParamInfoHandler
+	heartbeatHandlers      map[uint16]HeartbeatHandler
 	connectionQueue        *ConnectionQueue
 	heartbeat              *catena.Heartbeat
 }
@@ -101,6 +103,12 @@ func (bs *BaseServer) RegisterGetParamInfoHandler(slot uint16, handler GetParamI
 	bs.getParamInfoHandlers[slot] = handler
 }
 
+func (bs *BaseServer) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	bs.heartbeatHandlers[slot] = handler
+}
+
 // Lookup helper functions
 func (bs *BaseServer) LookupGetDeviceHandler(slot uint16) DeviceHandler {
 	if handler, ok := bs.getDeviceHandlers[slot]; ok {
@@ -144,6 +152,13 @@ func (bs *BaseServer) LookupGetParamInfoHandler(slot uint16) GetParamInfoHandler
 	return DefaultGetParamInfoHandler
 }
 
+func (bs *BaseServer) LookupHeartbeatHandler(slot uint16) HeartbeatHandler {
+	if handler, ok := bs.heartbeatHandlers[slot]; ok {
+		return handler
+	}
+	return nil
+}
+
 func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 	bs := &BaseServer{
 		Slots:                  make([]uint32, len(slots)),
@@ -153,6 +168,7 @@ func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		getParamInfoHandlers:   make(map[uint16]GetParamInfoHandler),
+		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
 		connectionQueue:        newConnectionQueue(maxConnections),
 	}
 
@@ -239,11 +255,10 @@ func (bs *BaseServer) BroadcastUpdate(slot uint16, oid string, value any) {
 	bs.NotifyUpdate(update)
 }
 
-// StartHeartbeat begins periodic broadcasts of the given param value.
-// The valueFn is called on each tick to get the current value to broadcast.
+// StartHeartbeat begins periodic invocation of all registered heartbeat handlers.
 // If a heartbeat is already running, it is stopped before starting the new one.
 // If the interval is invalid (zero or negative), the existing heartbeat is preserved.
-func (bs *BaseServer) StartHeartbeat(slot uint16, fqoid string, valueFn func() any, interval time.Duration) {
+func (bs *BaseServer) StartHeartbeat(interval time.Duration) {
 	if interval <= 0 {
 		logger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
 		return
@@ -251,7 +266,15 @@ func (bs *BaseServer) StartHeartbeat(slot uint16, fqoid string, valueFn func() a
 
 	hb := catena.NewHeartbeat()
 	hb.OnTick(func() {
-		bs.BroadcastUpdate(slot, fqoid, valueFn())
+		bs.Mu.Lock()
+		handlers := make(map[uint16]HeartbeatHandler, len(bs.heartbeatHandlers))
+		for k, v := range bs.heartbeatHandlers {
+			handlers[k] = v
+		}
+		bs.Mu.Unlock()
+		for _, handler := range handlers {
+			handler()
+		}
 	})
 
 	// Grab and clear the old heartbeat under the lock.
@@ -269,13 +292,13 @@ func (bs *BaseServer) StartHeartbeat(slot uint16, fqoid string, valueFn func() a
 	// cannot miss the new instance.
 	bs.Mu.Lock()
 	bs.heartbeat = hb
-	started := hb.Start(interval)
+	err := hb.Start(interval)
 	bs.Mu.Unlock()
 
-	if started {
-		logger.Info("Heartbeat started", "slot", slot, "fqoid", fqoid, "interval", interval)
+	if err != nil {
+		logger.Error("Heartbeat failed to start", "interval", interval, "error", err)
 	} else {
-		logger.Error("Heartbeat failed to start", "slot", slot, "fqoid", fqoid, "interval", interval)
+		logger.Info("Heartbeat started", "interval", interval)
 	}
 }
 
@@ -290,21 +313,4 @@ func (bs *BaseServer) StopHeartbeat() {
 		hb.Stop()
 		logger.Info("Heartbeat stopped")
 	}
-}
-
-// GetHeartbeat returns the current heartbeat instance, or nil if none is set.
-func (bs *BaseServer) GetHeartbeat() *catena.Heartbeat {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	return bs.heartbeat
-}
-
-// SetHeartbeat sets a heartbeat instance on the server. The server will stop
-// it on Shutdown. If a heartbeat is already set, it is stopped first.
-// The caller is responsible for configuring and starting the heartbeat.
-func (bs *BaseServer) SetHeartbeat(hb *catena.Heartbeat) {
-	bs.StopHeartbeat()
-	bs.Mu.Lock()
-	bs.heartbeat = hb
-	bs.Mu.Unlock()
 }

@@ -548,6 +548,10 @@ func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.GetPara
 	s.baseServer.RegisterGetParamInfoHandler(slot, handler)
 }
 
+func (s *Server) RegisterHeartbeatHandler(slot uint16, handler catena.HeartbeatHandler) {
+	s.baseServer.RegisterHeartbeatHandler(slot, handler)
+}
+
 func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
@@ -572,24 +576,20 @@ func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.GetParamInfoHandl
 	return s.baseServer.LookupGetParamInfoHandler(slot)
 }
 
+func (s *Server) LookupHeartbeatHandler(slot uint16) catena.HeartbeatHandler {
+	return s.baseServer.LookupHeartbeatHandler(slot)
+}
+
 func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
 	s.baseServer.BroadcastUpdate(slot, fqoid, value)
 }
 
-func (s *Server) StartHeartbeat(slot uint16, fqoid string, valueFn func() any, interval time.Duration) {
-	s.baseServer.StartHeartbeat(slot, fqoid, valueFn, interval)
+func (s *Server) StartHeartbeat(interval time.Duration) {
+	s.baseServer.StartHeartbeat(interval)
 }
 
 func (s *Server) StopHeartbeat() {
 	s.baseServer.StopHeartbeat()
-}
-
-func (s *Server) GetHeartbeat() *catena.Heartbeat {
-	return s.baseServer.GetHeartbeat()
-}
-
-func (s *Server) SetHeartbeat(hb *catena.Heartbeat) {
-	s.baseServer.SetHeartbeat(hb)
 }
 
 func (s *Server) SetMaxConnections(max int) {

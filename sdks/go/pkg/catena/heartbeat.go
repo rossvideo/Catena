@@ -31,9 +31,11 @@
 package catena
 
 import (
-	"log/slog"
+	"fmt"
 	"sync"
 	"time"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 //server.go has an api to control its instance of heartbeat
@@ -83,17 +85,18 @@ func (h *Heartbeat) OnTick(handler HeartbeatHandler) *Heartbeat {
 }
 
 // Start begins emitting tick events at the specified interval.
-// Returns true if the heartbeat was started, false if it was already running
-// or the interval is invalid (zero or negative).
-func (h *Heartbeat) Start(interval time.Duration) bool {
+// Returns an error if the interval is invalid (zero or negative).
+// Returns nil and logs if already running. Returns nil on success.
+func (h *Heartbeat) Start(interval time.Duration) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	if h.running {
-		return false
+		logger.Warning("Heartbeat already running, ignoring Start call")
+		return nil
 	}
 	if interval <= 0 {
-		return false
+		return fmt.Errorf("invalid heartbeat interval: %v", interval)
 	}
 
 	h.running = true
@@ -101,7 +104,7 @@ func (h *Heartbeat) Start(interval time.Duration) bool {
 
 	h.wg.Add(1)
 	go h.run(interval)
-	return true
+	return nil
 }
 
 // Stop halts the heartbeat. No further tick events will be emitted.
@@ -156,7 +159,7 @@ func (h *Heartbeat) emitTick() {
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
-					slog.Error("panic in heartbeat handler", "error", r)
+					logger.Error("panic in heartbeat handler", "error", r)
 				}
 			}()
 			handler()

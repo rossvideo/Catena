@@ -153,6 +153,34 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterHeartbeatHandler(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	handlerCalled := false
+	srv.RegisterHeartbeatHandler(0, func() {
+		handlerCalled = true
+	})
+
+	handler := srv.LookupHeartbeatHandler(0)
+	if handler == nil {
+		t.Fatal("expected heartbeat handler to be registered, got nil")
+	}
+	handler()
+
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+}
+
+func TestServer_LookupHeartbeatHandler_Unregistered(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	handler := srv.LookupHeartbeatHandler(0)
+	if handler != nil {
+		t.Error("expected nil handler for unregistered slot")
+	}
+}
+
 func TestServer_RegisterFallbackHandler(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
