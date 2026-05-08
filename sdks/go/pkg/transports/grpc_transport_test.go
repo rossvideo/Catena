@@ -2015,6 +2015,7 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		port = portListener.Addr().(*net.TCPAddr).Port
 		portListener.Close()
 	}
+	addr := fmt.Sprintf("localhost:%d", port)
 
 	transport := NewGrpcTransport(uint16(port), false)
 	runtime := makeStubServerRuntime(t)
@@ -2030,12 +2031,10 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		t.Fatalf("failed to start server: %v", err)
 	}
 
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
-
-	// Create client and establish streaming connection
+	// Create client and establish streaming connection.
+	// grpc.WithBlock() blocks until the listener accepts, so no startup sleep
+	// is required.
 	ctx := context.Background()
-	addr := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		transport.Shutdown(context.Background())
@@ -2202,12 +2201,17 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 		return catena.Reply(value)
 	}
 
-	// Use port 0 to let OS assign available port
-	port := 0
-	if portListener, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
-		port = portListener.Addr().(*net.TCPAddr).Port
-		portListener.Close()
+	// Bind to an OS-assigned port and hand the listener directly to the server,
+	// avoiding a TOCTOU race where another process could grab the port between
+	// Close() and rebind.
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
 	}
+	addr := lis.Addr().String()
+
+	port := lis.Addr().(*net.TCPAddr).Port
+	lis.Close()
 
 	transport := NewGrpcTransport(uint16(port), false)
 
@@ -2223,14 +2227,10 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 	}()
 	defer transport.Shutdown(context.Background())
 
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
-
-	// Launch multiple concurrent clients
+	// Launch multiple concurrent clients. grpc.WithBlock() in each dial below
+	// waits for the listener to be ready, so no startup sleep is required.
 	numClients := 5
 	results := make(chan error, numClients)
-
-	addr := fmt.Sprintf("localhost:%d", port)
 	for i := 0; i < numClients; i++ {
 		go func(clientID int) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
