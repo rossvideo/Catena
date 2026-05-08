@@ -438,6 +438,66 @@ func TestServer_Connect_MethodNotAllowed(t *testing.T) {
 	}
 }
 
+func TestServer_GetPopulatedSlots_Route(t *testing.T) {
+	srv := NewServer([]uint16{0, 1, 5}, 100)
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/devices", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+
+	response := parseJSONBody(t, rec)
+	slotsRaw, ok := response["slots"].([]any)
+	if !ok {
+		t.Fatalf("expected 'slots' field in JSON response, got %v", response)
+	}
+
+	// Verify the slots contain the expected values
+	expectedSlots := []uint32{0, 1, 5}
+	if len(slotsRaw) != len(expectedSlots) {
+		t.Fatalf("expected %d slots, got %d", len(expectedSlots), len(slotsRaw))
+	}
+
+	for i, slotRaw := range slotsRaw {
+		slot, ok := slotRaw.(float64) // JSON numbers are float64
+		if !ok {
+			t.Errorf("slot[%d]: expected number, got %T", i, slotRaw)
+			continue
+		}
+		if uint32(slot) != expectedSlots[i] {
+			t.Errorf("slot[%d]: expected %d, got %d", i, expectedSlots[i], uint32(slot))
+		}
+	}
+}
+
+func TestServer_GetPopulatedSlots_MethodNotAllowed(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/devices", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+	errMsg := assertHasError(t, rec)
+	if !strings.Contains(errMsg, "GET") {
+		t.Errorf("expected error to mention GET, got %s", errMsg)
+	}
+}
+
+func TestServer_GetPopulatedSlots_EmptySlots(t *testing.T) {
+	srv := NewServer([]uint16{}, 100)
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/devices", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+
+	response := parseJSONBody(t, rec)
+	slotsRaw, ok := response["slots"].([]any)
+	if !ok {
+		t.Fatalf("expected 'slots' field in JSON response, got %v", response)
+	}
+
+	if len(slotsRaw) != 0 {
+		t.Errorf("expected 0 slots, got %d", len(slotsRaw))
+	}
+}
+
 func TestServer_Fallback_Route(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
