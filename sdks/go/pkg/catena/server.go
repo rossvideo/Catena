@@ -40,7 +40,13 @@ package catena
 import (
 	"context"
 	"errors"
+	"fmt"
+	"math"
+	"strconv"
 	"sync"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // Handler function types used by both REST and gRPC servers.
@@ -65,6 +71,22 @@ type CatenaServer interface {
 	Shutdown()
 }
 
+func ValidateSlot(slot uint32) (uint16, StatusResult) {
+	if slot > uint32(math.MaxUint16) {
+		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot number: %d", slot))
+
+	}
+	return uint16(slot), StatusWithCode(OK, "")
+}
+
+func ValidateSlotString(slot string) (uint16, StatusResult) {
+	slotInt, err := strconv.ParseUint(slot, 10, 32)
+	if err != nil {
+		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot string: %s", slot))
+	}
+	return ValidateSlot(uint32(slotInt))
+}
+
 type Transport interface {
 	// Start begins transport operation with the given context.
 	// The context signals when the transport should gracefully exit.
@@ -83,22 +105,29 @@ type Server struct {
 	ctx                    context.Context
 	shutdown               bool
 	stopped                chan struct{}
-	Slots                  []uint32
+	slots                  []uint32
 	getDeviceHandlers      map[uint16]DeviceHandler
 	getValueHandlers       map[uint16]GetValueHandler
 	setValueHandlers       map[uint16]SetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
-	// connectionQueue        *ConnectionQueue
-	transports []Transport
+	connectionQueue        *connectionQueue
+	transports             []Transport
 }
 
-func NewServer() *Server {
+func NewServer(maxConnections int) *Server {
 	return &Server{
-		ctx:        context.Background(),
-		shutdown:   false,
-		stopped:    make(chan struct{}),
-		transports: []Transport{},
+		ctx:                    context.Background(),
+		shutdown:               false,
+		stopped:                make(chan struct{}),
+		slots:                  make([]uint32, 0),
+		getDeviceHandlers:      make(map[uint16]DeviceHandler),
+		getValueHandlers:       make(map[uint16]GetValueHandler),
+		setValueHandlers:       make(map[uint16]SetValueHandler),
+		getAssetHandlers:       make(map[uint16]GetAssetHandler),
+		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
+		connectionQueue:        newConnectionQueue(maxConnections),
+		transports:             []Transport{},
 	}
 }
 
@@ -141,14 +170,6 @@ func (s *Server) DeregisterTransport(transport Transport) {
 	transport.Shutdown(context.Background())
 }
 
-func (s *Server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)              {}
-func (s *Server) RegisterGetValueHandler(slot uint16, handler GetValueHandler)             {}
-func (s *Server) RegisterSetValueHandler(slot uint16, handler SetValueHandler)             {}
-func (s *Server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)             {}
-func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {}
-func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any)                     {}
-func (s *Server) Start(port int) error
-
 func (s *Server) Wait() {
 	<-s.stopped
 }
@@ -164,10 +185,149 @@ func (s *Server) Shutdown() {
 	s.transports = nil
 	s.mu.Unlock()
 
+	s.connectionQueue.shutdown()
+
 	// Shutdown all transports outside the lock.
 	for _, t := range transports {
 		t.Shutdown(context.Background())
 	}
 
 	close(s.stopped)
+}
+
+// Handler registration methods
+func (s *Server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.getDeviceHandlers[slot] = handler
+}
+
+func (s *Server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.getValueHandlers[slot] = handler
+}
+
+func (s *Server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.setValueHandlers[slot] = handler
+}
+
+func (s *Server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.getAssetHandlers[slot] = handler
+}
+
+func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.executeCommandHandlers[slot] = handler
+}
+
+func (s *Server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
+	s.mu.Lock()
+	handler, ok := s.getDeviceHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler()
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("GetDeviceHandler called - no handler registered for this slot")
+	return ReplyError[CatenaDevice](NOT_FOUND, "No device defined at slot")
+}
+
+func (s *Server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, StatusResult) {
+	s.mu.Lock()
+	handler, ok := s.getValueHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, fqoid)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("GetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
+	return ReplyError[CatenaValue](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *Server) InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult {
+	s.mu.Lock()
+	handler, ok := s.setValueHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(value, slot, fqoid)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
+	return StatusWithCode(NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *Server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult) {
+	s.mu.Lock()
+	handler, ok := s.getAssetHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, fqoid)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("GetAssetHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
+	return ReplyError[CatenaAsset](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *Server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult) {
+	s.mu.Lock()
+	handler, ok := s.executeCommandHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, commandFqoid, payload)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("ExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
+	return CommandError(NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+// RegisterConnection registers a new streaming connection
+func (s *Server) RegisterConnection() (int, *Connection) {
+	return s.connectionQueue.registerConnection()
+}
+
+// DeregisterConnection removes a streaming connection
+func (s *Server) DeregisterConnection(connID int) {
+	s.connectionQueue.deregisterConnection(connID)
+}
+
+// SetMaxConnections sets the maximum number of streaming connections
+func (s *Server) SetMaxConnections(max int) {
+	s.connectionQueue.setMaxConnections(max)
+}
+
+// ConnectionCount returns the number of active streaming connections
+func (s *Server) ConnectionCount() int {
+	return s.connectionQueue.connectionCount()
+}
+
+// BroadcastUpdate converts a native Go value into a proto PushUpdates message
+// and sends it to all connected streaming clients. Business logic calls this with
+// plain Go types; the proto serialization is handled internally.
+func (s *Server) BroadcastUpdate(slot uint16, oid string, value any) {
+	protoValue, res := ToProto(value)
+	if res.Code != OK {
+		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
+		return
+	}
+	update := &protos.PushUpdates{
+		Slot: uint32(slot),
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{
+				Oid:   oid,
+				Value: protoValue,
+			},
+		},
+	}
+	s.connectionQueue.notifyUpdate(update)
 }
