@@ -64,7 +64,7 @@ func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
 	return transport, stubRuntime
 }
 
-func TestServer_GetDevice_Route(t *testing.T) {
+func RestTransport_GetDevice_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -90,7 +90,7 @@ func TestServer_GetDevice_Route(t *testing.T) {
 	}
 }
 
-func TestServer_GetDevice_NotFound(t *testing.T) {
+func RestTransport_GetDevice_NotFound(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -111,7 +111,7 @@ func TestServer_GetDevice_NotFound(t *testing.T) {
 	}
 }
 
-func TestServer_GetDevice_InvalidSlot(t *testing.T) {
+func RestTransport_GetDevice_InvalidSlot(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -132,7 +132,7 @@ func TestServer_GetDevice_InvalidSlot(t *testing.T) {
 	}
 }
 
-func TestServer_GetValue_Route(t *testing.T) {
+func RestTransport_GetValue_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	value, _ := catena.ToCatenaValue(int32(42))
@@ -147,7 +147,7 @@ func TestServer_GetValue_Route(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestServer_SetValue_Route(t *testing.T) {
+func RestTransport_SetValue_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -169,7 +169,7 @@ func TestServer_SetValue_Route(t *testing.T) {
 	}
 }
 
-func TestServer_SetValue_InvalidContentType(t *testing.T) {
+func RestTransport_SetValue_InvalidContentType(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -190,7 +190,7 @@ func TestServer_SetValue_InvalidContentType(t *testing.T) {
 	}
 }
 
-func TestServer_GetAsset_Route(t *testing.T) {
+func RestTransport_GetAsset_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -207,7 +207,7 @@ func TestServer_GetAsset_Route(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestServer_GetAsset_MethodNotAllowed(t *testing.T) {
+func RestTransport_GetAsset_MethodNotAllowed(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -222,7 +222,7 @@ func TestServer_GetAsset_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-func TestServer_ExecuteCommand_Route(t *testing.T) {
+func RestTransport_ExecuteCommand_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -246,7 +246,7 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 	}
 }
 
-func TestServer_ExecuteCommand_WithPayload(t *testing.T) {
+func RestTransport_ExecuteCommand_WithPayload(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -270,7 +270,7 @@ func TestServer_ExecuteCommand_WithPayload(t *testing.T) {
 	}
 }
 
-func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
+func RestTransport_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -286,7 +286,7 @@ func TestServer_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-func TestServer_Connect_Route(t *testing.T) {
+func RestTransport_Connect_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	runtime.WithConnection(makeTestConnection(1))
@@ -331,7 +331,7 @@ func TestServer_Connect_Route(t *testing.T) {
 	}
 }
 
-func TestServer_Connect_MethodNotAllowed(t *testing.T) {
+func RestTransport_Connect_MethodNotAllowed(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/connect", "")
@@ -342,7 +342,7 @@ func TestServer_Connect_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-func TestServer_Fallback_Route(t *testing.T) {
+func RestTransport_Fallback_Route(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 
 	handlerCalled := false
@@ -358,7 +358,7 @@ func TestServer_Fallback_Route(t *testing.T) {
 	}
 }
 
-func TestServer_NestedValuePath(t *testing.T) {
+func RestTransport_NestedValuePath(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -373,25 +373,25 @@ func TestServer_NestedValuePath(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestServer_UnknownEndpoint(t *testing.T) {
+func RestTransport_UnknownEndpoint(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/unknown", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestServer_InvalidPath(t *testing.T) {
+func RestTransport_InvalidPath(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/kjhgjnghf", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestServer_InvalidPathNoSlash(t *testing.T) {
+func RestTransport_InvalidPathNoSlash(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestServer_NegativeSlot(t *testing.T) {
+func RestTransport_NegativeSlot(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/-1", "")
 	assertStatus(t, rec, http.StatusBadRequest)
@@ -547,7 +547,7 @@ func TestValueEndpoint_Methods(t *testing.T) {
 	}
 }
 
-func TestServer_Connect_TooManyConnections(t *testing.T) {
+func RestTransport_Connect_TooManyConnections(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	runtime.registerConnFn = func() (int, *catena.Connection) {
 		return -1, nil
@@ -748,7 +748,7 @@ func TestWriteHTTPStatusResult_WithError(t *testing.T) {
 	assertBodyContains(t, rec, "error")
 }
 
-func TestServer_sendSSEEvent(t *testing.T) {
+func RestTransport_sendSSEEvent(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 	rec := httptest.NewRecorder()
 	var w http.ResponseWriter = rec
@@ -787,7 +787,7 @@ func TestServer_sendSSEEvent(t *testing.T) {
 	}
 }
 
-func TestServer_Start(t *testing.T) {
+func RestTransport_Start(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -824,7 +824,7 @@ func TestWriteHTTPResult_DefaultType(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestServer_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
+func RestTransport_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -855,7 +855,7 @@ func TestServer_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	}
 }
 
-func TestServer_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
+func RestTransport_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -886,7 +886,7 @@ func TestServer_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	}
 }
 
-func TestServer_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
+func RestTransport_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	original := []byte("test asset data")
@@ -908,7 +908,7 @@ func TestServer_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestServer_Connect_StreamingNotSupported(t *testing.T) {
+func RestTransport_Connect_StreamingNotSupported(t *testing.T) {
 	original := catena.GetEnv()
 	defer catena.SetEnv(original)
 	catena.SetEnv(catena.EnvDev)
@@ -940,7 +940,7 @@ func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
 	assertBodyNotContains(t, rec, "detailed internal error")
 }
 
-func TestServer_Connect_WithOrigin(t *testing.T) {
+func RestTransport_Connect_WithOrigin(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -1057,7 +1057,7 @@ func TestHandleConnect_InitialEventWriteFailure(t *testing.T) {
 	}
 }
 
-func TestServer_Connect_PushUpdates(t *testing.T) {
+func RestTransport_Connect_PushUpdates(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	connection := makeTestConnection(1)
@@ -1084,7 +1084,7 @@ func TestServer_Connect_PushUpdates(t *testing.T) {
 	}
 }
 
-func TestServer_Connect_ServerShutdown(t *testing.T) {
+func RestTransport_Connect_ServerShutdown(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	connection := makeTestConnection(1)
@@ -1145,7 +1145,7 @@ func TestRouting_BasePathOnly(t *testing.T) {
 	assertHasError(t, rec)
 }
 
-func TestServer_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
+func RestTransport_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -1167,7 +1167,7 @@ func TestServer_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	}
 }
 
-func TestServer_GetAsset_NoCompressionParam(t *testing.T) {
+func RestTransport_GetAsset_NoCompressionParam(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -1189,7 +1189,7 @@ func TestServer_GetAsset_NoCompressionParam(t *testing.T) {
 	}
 }
 
-func TestServer_GetAsset_CompressionWithError(t *testing.T) {
+func RestTransport_GetAsset_CompressionWithError(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {

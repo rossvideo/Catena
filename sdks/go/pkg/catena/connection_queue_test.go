@@ -194,7 +194,7 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 }
 
 func TestBroadcastUpdate(t *testing.T) {
-	srv := Server{connectionQueue: newConnectionQueue(100)}
+	srv := &server{connectionQueue: newConnectionQueue(100)}
 
 	// Register a connection
 	connID, conn := srv.RegisterConnection()
@@ -228,7 +228,7 @@ func TestBroadcastUpdate(t *testing.T) {
 }
 
 func TestBroadcastUpdate_InvalidValue(t *testing.T) {
-	srv := Server{connectionQueue: newConnectionQueue(100)}
+	srv := &server{connectionQueue: newConnectionQueue(100)}
 
 	_, conn := srv.RegisterConnection()
 	defer srv.DeregisterConnection(conn.ID)

@@ -175,7 +175,7 @@ func TestServer_RegisterTransport_Normal(t *testing.T) {
 	// not really an error just testing that the Start function is called and
 	// its return value is passed through correctly
 	expectedError := fmt.Errorf("expected error")
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	// server starts with new transports
 	if len(srv.transports) != 0 {
@@ -204,7 +204,7 @@ func TestServer_RegisterTransport_Normal(t *testing.T) {
 }
 
 func TestServer_RegisterTransport_Nil(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	err := srv.RegisterTransport(nil)
 
@@ -214,7 +214,7 @@ func TestServer_RegisterTransport_Nil(t *testing.T) {
 }
 
 func TestServer_RegisterTransport_Shutdown(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	// Simulate server shutdown
 	srv.shutdown = true
@@ -231,7 +231,7 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 	// not really an error just testing that the Start function is called and
 	// its return value is passed through correctly
 	expectedError := fmt.Errorf("expected error")
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 	transport := &stubTransport{
 		tb: t,
 		shutdownFn: func(ctx context.Context) error {
@@ -256,7 +256,7 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 }
 
 func TestServer_DeregisterTransport_NotFound(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	// Simulate deregistering a transport that was never registered
 	err := srv.DeregisterTransport(&stubTransport{tb: t})
@@ -267,7 +267,7 @@ func TestServer_DeregisterTransport_NotFound(t *testing.T) {
 }
 
 func TestServer_DeregisterTransport_Shutdown(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	// Simulate server shutdown
 	srv.shutdown = true
@@ -281,7 +281,7 @@ func TestServer_DeregisterTransport_Shutdown(t *testing.T) {
 }
 
 func TestServer_Wait(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	// Wait should block until shutdown is called
 	done := make(chan struct{})
@@ -308,7 +308,7 @@ func TestServer_Wait(t *testing.T) {
 }
 
 func TestServer_Wait_MultipleCalls(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	// Call Wait multiple times; they should all return after shutdown
 	done1 := make(chan struct{})
@@ -340,7 +340,7 @@ func TestServer_Wait_MultipleCalls(t *testing.T) {
 }
 
 func TestServer_Shutdown_Idempotent(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	// register a transport that simulates a long shutdown to test that multiple calls to Shutdown don't cause issues
 	srv.RegisterTransport(&stubTransport{
@@ -360,7 +360,7 @@ func TestServer_Shutdown_Idempotent(t *testing.T) {
 }
 
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	expected := CatenaDevice{
 		device: &protos.Device{},
@@ -389,7 +389,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 }
 
 func TestServer_RegisterGetValueHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	expected := CatenaValue{}
 
@@ -421,7 +421,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 }
 
 func TestServer_RegisterSetValueHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	handlerCalled := false
 	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) StatusResult {
@@ -448,7 +448,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 }
 
 func TestServer_RegisterGetAssetHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	dp := DataPayload{
 		Metadata: map[string]string{"content-type": "image/png"},
@@ -478,7 +478,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 }
 
 func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	handlerCalled := false
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult) {
@@ -505,7 +505,7 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 }
 
 func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	if len(srv.GetSlots()) != 0 {
 		t.Errorf("expected 0 slots, got %d", len(srv.GetSlots()))
@@ -520,7 +520,7 @@ func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
 }
 
 func TestServer_InvokeGetValueHandler_NoHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	if len(srv.GetSlots()) != 0 {
 		t.Errorf("expected 0 slots, got %d", len(srv.GetSlots()))
@@ -535,7 +535,7 @@ func TestServer_InvokeGetValueHandler_NoHandler(t *testing.T) {
 }
 
 func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	if len(srv.GetSlots()) != 0 {
 		t.Errorf("expected 0 slots, got %d", len(srv.GetSlots()))
@@ -550,7 +550,7 @@ func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
 }
 
 func TestServer_InvokeGetAsset_NoHandler(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	if len(srv.GetSlots()) != 0 {
 		t.Errorf("expected 0 slots, got %d", len(srv.GetSlots()))
@@ -565,7 +565,7 @@ func TestServer_InvokeGetAsset_NoHandler(t *testing.T) {
 }
 
 func TestServer_ExecuteCommand_Route(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 
 	if len(srv.GetSlots()) != 0 {
 		t.Errorf("expected 0 slots, got %d", len(srv.GetSlots()))
@@ -641,7 +641,7 @@ func (s *stubConnectionQueue) connectionCount() int {
 
 func TestServer_RegisterConnection_Passthrough(t *testing.T) {
 	called := false
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		registerFn: func() (int, *Connection) {
@@ -666,7 +666,7 @@ func TestServer_RegisterConnection_Passthrough(t *testing.T) {
 func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 	called := false
 	lastConnID := 0
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		deregisterFn: func(connID int) {
@@ -688,7 +688,7 @@ func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 func TestServer_SetMaxConnections_Passthrough(t *testing.T) {
 	called := false
 	lastMax := 0
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		setMaxFn: func(max int) {
@@ -708,7 +708,7 @@ func TestServer_SetMaxConnections_Passthrough(t *testing.T) {
 }
 
 func TestServer_ConnectionCount_Passthrough(t *testing.T) {
-	srv := NewServer(100)
+	srv := NewServer(100).(*server)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		countFn: func() int {

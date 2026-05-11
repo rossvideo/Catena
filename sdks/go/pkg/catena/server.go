@@ -101,6 +101,25 @@ type Transport interface {
 	Shutdown(ctx context.Context) error
 }
 
+// Server is the public API for application code.
+// The concrete implementation is intentionally hidden.
+type Server interface {
+	RegisterTransport(transport Transport) error
+	DeregisterTransport(transport Transport) error
+	Wait()
+	Shutdown()
+
+	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
+	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
+	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
+	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
+	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
+
+	SetMaxConnections(max int)
+	ConnectionCount() int
+	BroadcastUpdate(slot uint16, oid string, value any)
+}
+
 // interface of funcs that Transports use to interact with the server without circular imports
 type ServerRuntime interface {
 	GetSlots() []uint16
@@ -113,9 +132,10 @@ type ServerRuntime interface {
 	DeregisterConnection(connID int)
 }
 
-var _ ServerRuntime = (*Server)(nil)
+var _ Server = (*server)(nil)
+var _ ServerRuntime = (*server)(nil)
 
-type Server struct {
+type server struct {
 	mu                     sync.Mutex
 	ctx                    context.Context
 	shutdown               bool
@@ -130,8 +150,8 @@ type Server struct {
 	transports             []Transport
 }
 
-func NewServer(maxConnections int) *Server {
-	return &Server{
+func NewServer(maxConnections int) Server {
+	return &server{
 		ctx:                    context.Background(),
 		shutdown:               false,
 		stopped:                make(chan struct{}),
@@ -146,7 +166,7 @@ func NewServer(maxConnections int) *Server {
 	}
 }
 
-func (s *Server) RegisterTransport(transport Transport) error {
+func (s *server) RegisterTransport(transport Transport) error {
 	if transport == nil {
 		return fmt.Errorf("cannot register nil transport")
 	}
@@ -165,7 +185,7 @@ func (s *Server) RegisterTransport(transport Transport) error {
 	return transport.Start(ctx, s)
 }
 
-func (s *Server) DeregisterTransport(transport Transport) error {
+func (s *server) DeregisterTransport(transport Transport) error {
 	s.mu.Lock()
 	idx := -1
 	for i, t := range s.transports {
@@ -187,11 +207,11 @@ func (s *Server) DeregisterTransport(transport Transport) error {
 	return transport.Shutdown(context.Background())
 }
 
-func (s *Server) Wait() {
+func (s *server) Wait() {
 	<-s.stopped
 }
 
-func (s *Server) Shutdown() {
+func (s *server) Shutdown() {
 	s.mu.Lock()
 	if s.shutdown {
 		s.mu.Unlock()
@@ -215,7 +235,7 @@ func (s *Server) Shutdown() {
 	close(s.stopped)
 }
 
-func (s *Server) GetSlots() []uint16 {
+func (s *server) GetSlots() []uint16 {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	slots := make([]uint16, 0, len(s.slots))
@@ -226,42 +246,42 @@ func (s *Server) GetSlots() []uint16 {
 }
 
 // Handler registration methods
-func (s *Server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
+func (s *server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.getDeviceHandlers[slot] = handler
 	s.slots[slot] = struct{}{}
 }
 
-func (s *Server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
+func (s *server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.getValueHandlers[slot] = handler
 	s.slots[slot] = struct{}{}
 }
 
-func (s *Server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
+func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.setValueHandlers[slot] = handler
 	s.slots[slot] = struct{}{}
 }
 
-func (s *Server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
+func (s *server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.getAssetHandlers[slot] = handler
 	s.slots[slot] = struct{}{}
 }
 
-func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
+func (s *server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.executeCommandHandlers[slot] = handler
 	s.slots[slot] = struct{}{}
 }
 
-func (s *Server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
+func (s *server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getDeviceHandlers[slot]
 	s.mu.Unlock()
@@ -274,7 +294,7 @@ func (s *Server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult
 	return ReplyError[CatenaDevice](NOT_FOUND, "No device defined at slot")
 }
 
-func (s *Server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, StatusResult) {
+func (s *server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getValueHandlers[slot]
 	s.mu.Unlock()
@@ -287,7 +307,7 @@ func (s *Server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, 
 	return ReplyError[CatenaValue](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *Server) InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult {
+func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult {
 	s.mu.Lock()
 	handler, ok := s.setValueHandlers[slot]
 	s.mu.Unlock()
@@ -300,7 +320,7 @@ func (s *Server) InvokeSetValueHandler(value any, slot uint16, fqoid string) Sta
 	return StatusWithCode(NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *Server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult) {
+func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getAssetHandlers[slot]
 	s.mu.Unlock()
@@ -313,7 +333,7 @@ func (s *Server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, 
 	return ReplyError[CatenaAsset](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *Server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult) {
+func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.executeCommandHandlers[slot]
 	s.mu.Unlock()
@@ -327,29 +347,29 @@ func (s *Server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 }
 
 // RegisterConnection registers a new streaming connection
-func (s *Server) RegisterConnection() (int, *Connection) {
+func (s *server) RegisterConnection() (int, *Connection) {
 	return s.connectionQueue.registerConnection()
 }
 
 // DeregisterConnection removes a streaming connection
-func (s *Server) DeregisterConnection(connID int) {
+func (s *server) DeregisterConnection(connID int) {
 	s.connectionQueue.deregisterConnection(connID)
 }
 
 // SetMaxConnections sets the maximum number of streaming connections
-func (s *Server) SetMaxConnections(max int) {
+func (s *server) SetMaxConnections(max int) {
 	s.connectionQueue.setMaxConnections(max)
 }
 
 // ConnectionCount returns the number of active streaming connections
-func (s *Server) ConnectionCount() int {
+func (s *server) ConnectionCount() int {
 	return s.connectionQueue.connectionCount()
 }
 
 // BroadcastUpdate converts a native Go value into a proto PushUpdates message
 // and sends it to all connected streaming clients. Business logic calls this with
 // plain Go types; the proto serialization is handled internally.
-func (s *Server) BroadcastUpdate(slot uint16, oid string, value any) {
+func (s *server) BroadcastUpdate(slot uint16, oid string, value any) {
 	protoValue, res := ToProto(value)
 	if res.Code != OK {
 		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
