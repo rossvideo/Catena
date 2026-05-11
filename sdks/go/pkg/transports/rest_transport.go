@@ -290,24 +290,6 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	// Send initial update with populated slots using proto PushUpdates format
-	populatedSlots := t.runtime.GetSlots()
-	slotsUint32 := make([]uint32, len(populatedSlots))
-	for i, slot := range populatedSlots {
-		slotsUint32[i] = uint32(slot)
-	}
-	initialEvent := &protos.PushUpdates{
-		Kind: &protos.PushUpdates_SlotsAdded{
-			SlotsAdded: &protos.SlotList{
-				Slots: slotsUint32,
-			},
-		},
-	}
-	if err := t.sendSSEEvent(w, flusher, initialEvent); err != nil {
-		logger.Error("failed to send initial SSE event", "error", err)
-		return
-	}
-
 	logger.Info("SSE Connect started", "connID", connID)
 
 	// Each connection's goroutine listens for setValue updates and server shutdown signals

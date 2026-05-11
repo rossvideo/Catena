@@ -310,8 +310,17 @@ func TestRestTransport_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 func TestRestTransport_Connect_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.WithConnection(makeTestConnection(1))
-	runtime.slots = []uint16{0, 1}
+	connection := makeTestConnection(1)
+	runtime.WithConnection(connection)
+
+	// push an update to the connection
+	connection.Updates <- &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: []uint32{0, 1},
+			},
+		},
+	}
 
 	rec, cancel := setupSSEConnection(t, transport)
 	cleanupSSE(cancel)
@@ -1063,21 +1072,6 @@ func TestSendSSEEvent_WriteFailure(t *testing.T) {
 	}
 }
 
-func TestHandleConnect_InitialEventWriteFailure(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	rec := httptest.NewRecorder()
-	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
-
-	runtime.WithConnection(makeTestConnection(1))
-
-	transport.handleConnect(w, req)
-
-	if runtime.registerCalls != runtime.deregisterCalls {
-		t.Errorf("expected deregister calls to match register calls after initial event failure, got %d deregister calls and %d register calls", runtime.deregisterCalls, runtime.registerCalls)
-	}
-}
-
 func TestRestTransport_Connect_PushUpdates(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
@@ -1138,7 +1132,8 @@ func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
 	}()
 	time.Sleep(100 * time.Millisecond)
 
-	connection.Updates <- &protos.PushUpdates{
+	// push an update multiple times to trigger the write failure in failFlusherWriter
+	update := &protos.PushUpdates{
 		Slot: 0,
 		Kind: &protos.PushUpdates_Value{
 			Value: &protos.PushUpdates_PushValue{
@@ -1147,6 +1142,8 @@ func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
 			},
 		},
 	}
+	connection.Updates <- update
+	connection.Updates <- update
 
 	select {
 	case <-done:

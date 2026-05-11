@@ -642,11 +642,18 @@ func (s *stubConnectionQueue) connectionCount() int {
 func TestServer_RegisterConnection_Passthrough(t *testing.T) {
 	called := false
 	srv := NewServer(100).(*server)
+	// pre-register some slots
+	srv.slots[0] = struct{}{}
+	srv.slots[2] = struct{}{}
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		registerFn: func() (int, *Connection) {
 			called = true
-			return 77, &Connection{ID: 77}
+			return 77, &Connection{
+				ID:      77,
+				Updates: make(chan *protos.PushUpdates, 10),
+				Done:    make(chan struct{}),
+			}
 		},
 	}
 
@@ -660,6 +667,22 @@ func TestServer_RegisterConnection_Passthrough(t *testing.T) {
 	}
 	if conn == nil || conn.ID != 77 {
 		t.Errorf("expected connection ID 77, got %+v", conn)
+	}
+	expected := &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: []uint32{0, 2},
+			},
+		},
+	}
+	select {
+	case update := <-conn.Updates:
+		// assert it is a slots_added
+		if !proto.Equal(update, expected) {
+			t.Errorf("expected initial slots update %v, got %v", expected, update)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("did not receive initial slots update")
 	}
 }
 

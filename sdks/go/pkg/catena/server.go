@@ -348,7 +348,22 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 
 // RegisterConnection registers a new streaming connection
 func (s *server) RegisterConnection() (int, *Connection) {
-	return s.connectionQueue.registerConnection()
+	id, connection := s.connectionQueue.registerConnection()
+	// send the initial slots_added message to the new connection
+	slots := s.GetSlots()
+	uint32Slots := make([]uint32, len(slots))
+	for i, slot := range slots {
+		uint32Slots[i] = uint32(slot)
+	}
+	connection.Updates <- &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: uint32Slots,
+			},
+		},
+	}
+
+	return id, connection
 }
 
 // DeregisterConnection removes a streaming connection
