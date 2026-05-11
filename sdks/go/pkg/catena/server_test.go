@@ -388,6 +388,35 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterGetDeviceHandler_SendsSlotsAdded(t *testing.T) {
+	srv := NewServer(100).(*server)
+	var updates []*protos.PushUpdates
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		notifyFn: func(update *protos.PushUpdates) {
+			updates = append(updates, update)
+		},
+	}
+
+	srv.RegisterGetDeviceHandler(0, func() (CatenaDevice, StatusResult) {
+		return CatenaDevice{}, StatusResult{Code: OK}
+	})
+
+	if len(updates) != 1 {
+		t.Fatalf("expected 1 slots_added update, got %d", len(updates))
+	}
+	expected := &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: []uint32{0},
+			},
+		},
+	}
+	if !proto.Equal(updates[0], expected) {
+		t.Errorf("expected slots_added update %v, got %v", expected, updates[0])
+	}
+}
+
 func TestServer_RegisterGetValueHandler(t *testing.T) {
 	srv := NewServer(100).(*server)
 

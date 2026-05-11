@@ -245,40 +245,77 @@ func (s *server) GetSlots() []uint16 {
 	return slots
 }
 
+// must be called from a locked context
+func (s *server) registerSlotLocked(slot uint16) bool {
+	_, found := s.slots[slot]
+	s.slots[slot] = struct{}{}
+	return !found
+}
+
+func (s *server) notifySlotsAdded(slot uint16) {
+	s.connectionQueue.notifyUpdate(&protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{
+				Slots: []uint32{uint32(slot)},
+			},
+		},
+	})
+}
+
 // Handler registration methods
 func (s *server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.getDeviceHandlers[slot] = handler
-	s.slots[slot] = struct{}{}
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
 }
 
 func (s *server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.getValueHandlers[slot] = handler
-	s.slots[slot] = struct{}{}
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
 }
 
 func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.setValueHandlers[slot] = handler
-	s.slots[slot] = struct{}{}
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
 }
 
 func (s *server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.getAssetHandlers[slot] = handler
-	s.slots[slot] = struct{}{}
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
 }
 
 func (s *server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.executeCommandHandlers[slot] = handler
-	s.slots[slot] = struct{}{}
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
 }
 
 func (s *server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
