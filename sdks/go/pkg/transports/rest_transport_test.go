@@ -64,6 +64,27 @@ func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
 	return transport, stubRuntime
 }
 
+func RestTransport_NewRestTransport(t *testing.T) {
+	expected := 1234
+	transport := NewRestTransport(expected)
+	if transport == nil {
+		t.Fatal("NewRestTransport returned nil")
+	}
+	if transport.port != expected {
+		t.Errorf("expected port %d, got %d", expected, transport.port)
+	}
+}
+
+func RestTransport_NewDefaultTransport(t *testing.T) {
+	transport := NewDefaultRestTransport()
+	if transport == nil {
+		t.Fatal("NewDefaultRestTransport returned nil")
+	}
+	if transport.port != 8080 {
+		t.Errorf("expected default port 8080, got %d", transport.port)
+	}
+}
+
 func RestTransport_GetDevice_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
