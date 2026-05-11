@@ -62,6 +62,8 @@ RUN . /root/toolchain.env \
     && apt-get install --no-install-recommends -y protobuf-compiler=${PROTOBUF_COMPILER_VERSION} \
     && apt-get clean
 
+ENV GOBIN=/usr/local/bin
+
 RUN go install golang.org/x/tools/gopls@v0.21.1 \
     && go install github.com/go-delve/delve/cmd/dlv@v1.26.2 \
     && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11 \
@@ -70,7 +72,7 @@ RUN go install golang.org/x/tools/gopls@v0.21.1 \
     && go install github.com/matm/gocov-html/cmd/gocov-html@v1.4.0 \
     && go install github.com/jandelgado/gcov2lcov@v1.1.1
 
-ENV PATH="/root/go/bin:${PATH}"
+ENV GOBIN=
 
 USER ubuntu
 WORKDIR /home/ubuntu
