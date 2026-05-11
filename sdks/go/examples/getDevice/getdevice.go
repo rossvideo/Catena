@@ -63,8 +63,8 @@ var Devices = map[uint16]map[string]any{
 					},
 				},
 				"type": catena.ParamTypeStruct,
-				"value": map[string]any{
-					"params": map[string]any{
+				"params": map[string]any{
+					"version": map[string]any{
 						"name": map[string]any{
 							"display_strings": map[string]string{
 								"en": "Version",
@@ -77,19 +77,6 @@ var Devices = map[uint16]map[string]any{
 							"string_value": "1.0.0",
 						},
 					},
-				},
-			},
-			"version": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Version",
-					},
-				},
-				"type":      catena.ParamTypeString,
-				"read_only": true,
-				"widget":    "TEXT",
-				"value": map[string]any{
-					"string_value": "1.0.0",
 				},
 			},
 			"brightness": map[string]any{
@@ -129,6 +116,9 @@ var Devices = map[uint16]map[string]any{
 				"constraint": map[string]any{
 					"ref_oid": "input_source_choice",
 				},
+				"value": map[string]any{
+					"string_value": "HDMI",
+				},
 				"read_only": false,
 				"widget":    "DROPDOWN",
 			},
@@ -147,10 +137,27 @@ var Devices = map[uint16]map[string]any{
 			},
 		},
 		"menu_groups": map[string]any{
-			"video": map[string]any{
+			"status": map[string]any{
 				"name": map[string]any{
 					"display_strings": map[string]string{
-						"en": "Video Settings",
+						"en": "Status",
+					},
+				},
+				"menus": map[string]any{
+					"info": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Device Info",
+							},
+						},
+						"param_oids": []string{"product/version"},
+					},
+				},
+			},
+			"config": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Config",
 					},
 				},
 				"menus": map[string]any{
@@ -169,23 +176,6 @@ var Devices = map[uint16]map[string]any{
 							},
 						},
 						"param_oids": []string{"input_source"},
-					},
-				},
-			},
-			"system": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "System",
-					},
-				},
-				"menus": map[string]any{
-					"info": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Device Info",
-							},
-						},
-						"param_oids": []string{},
 					},
 				},
 			},
