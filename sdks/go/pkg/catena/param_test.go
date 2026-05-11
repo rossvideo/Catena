@@ -28,6 +28,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @brief Param test for the Catena SDK.
+ * @file param_test.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2026-05-11
+ */
+
 package catena
 
 import (
