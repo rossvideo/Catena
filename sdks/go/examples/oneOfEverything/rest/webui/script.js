@@ -11,6 +11,11 @@ function extractValue(protoVal) {
 // =====================================================================
 // Device Section
 // =====================================================================
+// Cached so the "Expand" button can re-render the most recent fetch in a
+// modal without an extra round-trip.
+let lastDeviceData = null;
+let lastDeviceSlot = null;
+
 async function selectSlot(slot) {
     // Update active button
     document.querySelectorAll('.slot-btn').forEach(btn => {
@@ -34,11 +39,52 @@ async function fetchDevice(slot) {
             return;
         }
         const data = await res.json();
+        lastDeviceData = data;
+        lastDeviceSlot = slot;
         renderDevice(data);
     } catch (e) {
         console.error('fetchDevice error:', e);
         details.innerHTML = `<div class="device-loading">Error loading device</div>`;
     }
+}
+
+// Opens the cached device JSON in the asset-modal popup, re-fetching the
+// active slot first so the modal always reflects the latest server state.
+async function expandDevice() {
+    const slot = lastDeviceSlot ?? 0;
+    await fetchDevice(slot);
+    if (lastDeviceData === null) return;
+    showDeviceModal(lastDeviceData, slot);
+}
+
+// Renders the device JSON inside the same modal scaffold used by viewAsset,
+// just with the .wide content variant and a syntax-highlighted <pre> body.
+function showDeviceModal(deviceData, slot) {
+    const existing = document.getElementById('assetModal');
+    if (existing) existing.remove();
+
+    const highlighted = syntaxHighlight(deviceData);
+
+    const modal = document.createElement('div');
+    modal.id = 'assetModal';
+    modal.className = 'asset-modal';
+    modal.innerHTML = `
+        <div class="asset-modal-content wide">
+            <div class="asset-modal-header">
+                <span class="asset-modal-title">Device · Slot ${escapeHtml(String(slot))}</span>
+                <button class="asset-modal-close" onclick="closeAssetModal()">✕</button>
+            </div>
+            <div class="asset-modal-body">
+                <pre class="json-display">${highlighted}</pre>
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeAssetModal();
+    });
+
+    document.body.appendChild(modal);
 }
 
 function syntaxHighlight(json) {

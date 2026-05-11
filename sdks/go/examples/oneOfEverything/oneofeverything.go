@@ -124,284 +124,325 @@ func (c *CounterState) Increment() {
 
 var SlotList = []uint16{0, 1, 2}
 
-var Devices = map[uint16]map[string]any{
-	0: {
-		"slot":              uint32(0),
-		"detail_level":      catena.DetailLevelFull,
-		"multi_set_enabled": true,
-		"subscriptions":     true,
-		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-		"default_scope":     "st2138:op",
-		"params": map[string]any{
-			"counter": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Counter",
+// int32ParamValue returns a Catena value{} map containing the int32 currently
+// stored at key in p, or fallback if the key is missing or the wrong type.
+// Used by BuildDevices so slot descriptors serve current values at GetDevice
+// time rather than init-time constants.
+func int32ParamValue(p *sync.Map, key string, fallback int32) map[string]any {
+	v := fallback
+	if raw, ok := p.Load(key); ok {
+		if iv, ok := raw.(int32); ok {
+			v = iv
+		}
+	}
+	return map[string]any{"int32_value": v}
+}
+
+// stringParamValue is the string analogue of int32ParamValue.
+func stringParamValue(p *sync.Map, key string, fallback string) map[string]any {
+	v := fallback
+	if raw, ok := p.Load(key); ok {
+		if sv, ok := raw.(string); ok {
+			v = sv
+		}
+	}
+	return map[string]any{"string_value": v}
+}
+
+// BuildDevices returns the slot -> device-descriptor map. It is a function so
+// every param's "value" can be plugged in live at GetDevice time.
+func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[uint16]map[string]any {
+	s1 := slotParams[1]
+	s2 := slotParams[2]
+	return map[uint16]map[string]any{
+		0: {
+			"slot":              uint32(0),
+			"detail_level":      catena.DetailLevelFull,
+			"multi_set_enabled": true,
+			"subscriptions":     true,
+			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+			"default_scope":     "st2138:op",
+			"params": map[string]any{
+				"counter": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Counter",
+						},
+					},
+					"type": catena.ParamTypeInt32,
+					"value": map[string]any{
+						"int32_value": counter.GetValue(),
 					},
 				},
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 0,
-				},
-			},
-			"running": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Running",
+				"running": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Counter Running Status",
+						},
 					},
-				},
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 0,
-				},
-			},
-		},
-		"commands": map[string]any{
-			"start": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Start Counter",
+					"type":      catena.ParamTypeInt32,
+					"read_only": true,
+					"value": map[string]any{
+						"int32_value": counter.RunningInt32(),
 					},
-				},
-				"type": catena.ParamTypeEmpty,
-			},
-			"stop": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Stop Counter",
-					},
-				},
-				"type": catena.ParamTypeEmpty,
-			},
-			"add10": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Add 10 to Counter",
-					},
-				},
-				"type": catena.ParamTypeEmpty,
-			},
-			"reset": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Reset Counter",
-					},
-				},
-				"type": catena.ParamTypeEmpty,
-			},
-		},
-		"menu_groups": map[string]any{
-			"status": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Status",
-					},
-				},
-				"order": 0,
-				"menus": map[string]any{
-					"status": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Status",
+					"constraint": map[string]any{
+						"type": "INT_CHOICE",
+						"int32_choice": map[string]any{
+							"choices": []map[string]any{
+								{
+									"value": int32(0),
+									"name": map[string]any{
+										"display_strings": map[string]string{
+											"en": "Not Counting",
+										},
+									},
+								},
+								{
+									"value": int32(1),
+									"name": map[string]any{
+										"display_strings": map[string]string{
+											"en": "Counting",
+										},
+									},
+								},
 							},
 						},
-						"param_oids": []string{"counter", "running"},
 					},
 				},
 			},
-			"config": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Configuration",
+			"commands": map[string]any{
+				"start": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Start Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty,
+				},
+				"stop": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Stop Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty,
+				},
+				"add10": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Add 10 to Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty,
+				},
+				"reset": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Reset Counter",
+						},
+					},
+					"type": catena.ParamTypeEmpty,
+				},
+			},
+			"menu_groups": map[string]any{
+				"status": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Status",
+						},
+					},
+					"order": 0,
+					"menus": map[string]any{
+						"status": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Status",
+								},
+							},
+							"param_oids": []string{"counter", "running"},
+						},
 					},
 				},
-				"order": 1,
-				"menus": map[string]any{
-					"control": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Control",
-							},
+				"config": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Configuration",
 						},
-						"command_oids": []string{"start", "stop", "add10", "reset"},
+					},
+					"order": 1,
+					"menus": map[string]any{
+						"control": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Control",
+								},
+							},
+							"command_oids": []string{"start", "stop", "add10", "reset"},
+						},
 					},
 				},
 			},
 		},
-	},
-	1: {
-		"slot":              uint32(1),
-		"detail_level":      catena.DetailLevelFull,
-		"multi_set_enabled": false,
-		"subscriptions":     true,
-		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-		"default_scope":     "st2138:op",
-		"params": map[string]any{
-			"resolution": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Resolution",
-					},
-				},
-				"type": catena.ParamTypeString,
-				"value": map[string]any{
-					"string_value": "1920x1080",
-				},
-			},
-			"brightness": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Brightness",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 50,
-				},
-			},
-			"contrast": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Contrast",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 50,
-				},
-			},
-			"saturation": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Saturation",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 50,
-				},
-			},
-		},
-		"menu_groups": map[string]any{
-			"status": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Status",
-					},
-				},
-				"order": 0,
-				"menus": map[string]any{
-					"status": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Status",
-							},
+		1: {
+			"slot":              uint32(1),
+			"detail_level":      catena.DetailLevelFull,
+			"multi_set_enabled": false,
+			"subscriptions":     true,
+			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+			"default_scope":     "st2138:op",
+			"params": map[string]any{
+				"resolution": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Resolution",
 						},
-						"param_oids": []string{"resolution"},
 					},
+					"type":  catena.ParamTypeString,
+					"value": stringParamValue(s1, "resolution", "1920x1080"),
+				},
+				"brightness": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Brightness",
+						},
+					},
+					"type":  catena.ParamTypeInt32,
+					"value": int32ParamValue(s1, "brightness", 50),
+				},
+				"contrast": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Contrast",
+						},
+					},
+					"type":  catena.ParamTypeInt32,
+					"value": int32ParamValue(s1, "contrast", 50),
+				},
+				"saturation": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Saturation",
+						},
+					},
+					"type":  catena.ParamTypeInt32,
+					"value": int32ParamValue(s1, "saturation", 50),
 				},
 			},
-			"config": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Configuration",
+			"menu_groups": map[string]any{
+				"status": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Status",
+						},
+					},
+					"order": 0,
+					"menus": map[string]any{
+						"status": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Status",
+								},
+							},
+							"param_oids": []string{"resolution"},
+						},
 					},
 				},
-				"order": 1,
-				"menus": map[string]any{
-					"picture": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Picture",
-							},
+				"config": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Configuration",
 						},
-						"param_oids": []string{"brightness", "contrast", "saturation"},
+					},
+					"order": 1,
+					"menus": map[string]any{
+						"picture": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Picture",
+								},
+							},
+							"param_oids": []string{"brightness", "contrast", "saturation"},
+						},
 					},
 				},
 			},
 		},
-	},
-	2: {
-		"slot":              uint32(2),
-		"detail_level":      catena.DetailLevelFull,
-		"multi_set_enabled": true,
-		"subscriptions":     false,
-		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-		"default_scope":     "st2138:op",
-		"params": map[string]any{
-			"volume": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Volume",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 75,
-				},
-			},
-			"muted": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Muted",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 0,
-				},
-			},
-			"device_name": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Device Name",
-					},
-				},
-				"type": catena.ParamTypeString,
-				"value": map[string]any{
-					"string_value": "Demo Device",
-				},
-			},
-		},
-		"menu_groups": map[string]any{
-			"status": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Status",
-					},
-				},
-				"order": 0,
-				"menus": map[string]any{
-					"identity": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Identity",
-							},
+		2: {
+			"slot":              uint32(2),
+			"detail_level":      catena.DetailLevelFull,
+			"multi_set_enabled": true,
+			"subscriptions":     false,
+			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
+			"default_scope":     "st2138:op",
+			"params": map[string]any{
+				"volume": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Volume",
 						},
-						"param_oids": []string{"device_name"},
 					},
+					"type":  catena.ParamTypeInt32,
+					"value": int32ParamValue(s2, "volume", 75),
+				},
+				"muted": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Muted",
+						},
+					},
+					"type":  catena.ParamTypeInt32,
+					"value": int32ParamValue(s2, "muted", 0),
+				},
+				"device_name": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Device Name",
+						},
+					},
+					"type":  catena.ParamTypeString,
+					"value": stringParamValue(s2, "device_name", "Demo Device"),
 				},
 			},
-			"config": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Configuration",
+			"menu_groups": map[string]any{
+				"status": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Status",
+						},
+					},
+					"order": 0,
+					"menus": map[string]any{
+						"identity": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Identity",
+								},
+							},
+							"param_oids": []string{"device_name"},
+						},
 					},
 				},
-				"order": 1,
-				"menus": map[string]any{
-					"audio": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Audio",
-							},
+				"config": map[string]any{
+					"name": map[string]any{
+						"display_strings": map[string]string{
+							"en": "Configuration",
 						},
-						"param_oids": []string{"volume", "muted"},
+					},
+					"order": 1,
+					"menus": map[string]any{
+						"audio": map[string]any{
+							"name": map[string]any{
+								"display_strings": map[string]string{
+									"en": "Audio",
+								},
+							},
+							"param_oids": []string{"volume", "muted"},
+						},
 					},
 				},
 			},
 		},
-	},
+	}
 }
 
 func InitSlotParams() map[uint16]*sync.Map {
@@ -504,7 +545,9 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		slot := slot
 		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
-			deviceInfo, ok := Devices[slot]
+
+			// Build per-request so every param's value reflects current state:
+			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
 			if !ok {
 				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
 			}
