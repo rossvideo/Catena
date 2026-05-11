@@ -199,10 +199,20 @@ func TestWithPrecision(t *testing.T) {
 	}
 }
 
+// precision is part of the Catena protocol for both FLOAT32 and FLOAT32_ARRAY
+// params (see device.one_of_everything.yaml, which sets precision: 3 on a
+// FLOAT32_ARRAY).
+func TestWithPrecision_Float32Array(t *testing.T) {
+	p := NewParamFloat32Array([]float32{1.1, 2.2}).WithPrecision(3).Build()
+	if p.GetPrecision() != 3 {
+		t.Errorf("expected precision 3 on FLOAT32_ARRAY, got %d", p.GetPrecision())
+	}
+}
+
 func TestWithPrecision_WrongType(t *testing.T) {
 	p := NewParamInt32(0).WithPrecision(3).Build()
 	if p.GetPrecision() != 0 {
-		t.Error("expected precision to remain 0 for non-FLOAT32 param")
+		t.Error("expected precision to remain 0 for non-float param")
 	}
 }
 
@@ -213,10 +223,20 @@ func TestWithMaxLength(t *testing.T) {
 	}
 }
 
+// max_length is part of the Catena protocol for both STRING and STRING_ARRAY
+// params (see param.string_array_length.yaml, which sets max_length: 10 on a
+// STRING_ARRAY to cap the number of strings in the array).
+func TestWithMaxLength_StringArray(t *testing.T) {
+	p := NewParamStringArray([]string{"a", "b"}).WithMaxLength(10).Build()
+	if p.GetMaxLength() != 10 {
+		t.Errorf("expected max_length 10 on STRING_ARRAY, got %d", p.GetMaxLength())
+	}
+}
+
 func TestWithMaxLength_WrongType(t *testing.T) {
 	p := NewParamInt32(0).WithMaxLength(255).Build()
 	if p.GetMaxLength() != 0 {
-		t.Error("expected max_length to remain 0 for non-STRING param")
+		t.Error("expected max_length to remain 0 for param type that does not support max_length")
 	}
 }
 
@@ -485,6 +505,115 @@ func TestWithConstraint_Nil(t *testing.T) {
 	p := NewParamInt32(0).WithConstraint(nil).Build()
 	if p.GetConstraint() != nil {
 		t.Error("expected nil constraint to be a no-op")
+	}
+}
+
+// Scalar constraints must also be accepted on their corresponding array
+// param types, matching the Catena protocol (see param.int_array_range.yaml,
+// param.int_array_choice.yaml, param.int_array_alarm.yaml,
+// param.float_array_range.yaml, param.string_array_choice.yaml,
+// param.string_string_array_choice.yaml).
+
+func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
+	c := &protos.Constraint{
+		Type: protos.Constraint_INT_RANGE,
+		Kind: &protos.Constraint_Int32Range{
+			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 10, Step: 2},
+		},
+	}
+	p := NewParamInt32Array([]int32{0, 2, 4}).WithConstraint(c).Build()
+	if p.GetConstraint() == nil {
+		t.Fatal("expected int32 range constraint to be applied to INT32_ARRAY param")
+	}
+}
+
+func TestWithConstraint_ValidInt32ChoiceOnInt32Array(t *testing.T) {
+	c := &protos.Constraint{
+		Type: protos.Constraint_INT_CHOICE,
+		Kind: &protos.Constraint_Int32Choice{
+			Int32Choice: &protos.Int32ChoiceConstraint{
+				Choices: []*protos.Int32ChoiceConstraint_IntChoice{
+					{Value: 0, Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "Off"}}},
+					{Value: 1, Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "On"}}},
+				},
+			},
+		},
+	}
+	p := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).Build()
+	if p.GetConstraint() == nil {
+		t.Fatal("expected int32 choice constraint to be applied to INT32_ARRAY param")
+	}
+}
+
+func TestWithConstraint_ValidAlarmTableOnInt32Array(t *testing.T) {
+	c := &protos.Constraint{
+		Type: protos.Constraint_ALARM_TABLE,
+		Kind: &protos.Constraint_AlarmTable{
+			AlarmTable: &protos.AlarmTableConstraint{
+				Alarms: []*protos.Alarm{{BitValue: 0, Severity: protos.Alarm_INFO}},
+			},
+		},
+	}
+	p := NewParamInt32Array([]int32{0, 1, 2}).WithConstraint(c).Build()
+	if p.GetConstraint() == nil {
+		t.Fatal("expected alarm table constraint to be applied to INT32_ARRAY param")
+	}
+}
+
+func TestWithConstraint_ValidFloatRangeOnFloat32Array(t *testing.T) {
+	c := &protos.Constraint{
+		Type: protos.Constraint_FLOAT_RANGE,
+		Kind: &protos.Constraint_FloatRange{
+			FloatRange: &protos.FloatRangeConstraint{MinValue: 0, MaxValue: 100, Step: 0.5},
+		},
+	}
+	p := NewParamFloat32Array([]float32{1.0, 2.0}).WithConstraint(c).Build()
+	if p.GetConstraint() == nil {
+		t.Fatal("expected float range constraint to be applied to FLOAT32_ARRAY param")
+	}
+}
+
+func TestWithConstraint_ValidStringChoiceOnStringArray(t *testing.T) {
+	c := &protos.Constraint{
+		Type: protos.Constraint_STRING_CHOICE,
+		Kind: &protos.Constraint_StringChoice{
+			StringChoice: &protos.StringChoiceConstraint{Choices: []string{"a", "b"}, Strict: true},
+		},
+	}
+	p := NewParamStringArray([]string{"a", "b"}).WithConstraint(c).Build()
+	if p.GetConstraint() == nil {
+		t.Fatal("expected string choice constraint to be applied to STRING_ARRAY param")
+	}
+}
+
+func TestWithConstraint_ValidStringStringChoiceOnStringArray(t *testing.T) {
+	c := &protos.Constraint{
+		Type: protos.Constraint_STRING_STRING_CHOICE,
+		Kind: &protos.Constraint_StringStringChoice{
+			StringStringChoice: &protos.StringStringChoiceConstraint{
+				Choices: []*protos.StringStringChoiceConstraint_StringStringChoice{
+					{Value: "<#FF0000>", Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "Red"}}},
+				},
+				Strict: true,
+			},
+		},
+	}
+	p := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).Build()
+	if p.GetConstraint() == nil {
+		t.Fatal("expected string-string choice constraint to be applied to STRING_ARRAY param")
+	}
+}
+
+func TestWithConstraint_InvalidIntOnStringArray(t *testing.T) {
+	c := &protos.Constraint{
+		Type: protos.Constraint_INT_RANGE,
+		Kind: &protos.Constraint_Int32Range{
+			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 10, Step: 1},
+		},
+	}
+	p := NewParamStringArray([]string{"a"}).WithConstraint(c).Build()
+	if p.GetConstraint() != nil {
+		t.Error("expected int32 range constraint to be rejected on STRING_ARRAY param")
 	}
 }
 

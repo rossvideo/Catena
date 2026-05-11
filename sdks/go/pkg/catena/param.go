@@ -204,8 +204,8 @@ func (cp *CatenaParam) WithWidget(widget string) *CatenaParam {
 }
 
 func (cp *CatenaParam) WithPrecision(precision uint32) *CatenaParam {
-	if cp.param.Type != protos.ParamType_FLOAT32 {
-		logger.Warning("WithPrecision called on non-FLOAT32 param; ignoring",
+	if cp.param.Type != protos.ParamType_FLOAT32 && cp.param.Type != protos.ParamType_FLOAT32_ARRAY {
+		logger.Warning("WithPrecision called on non-float param; ignoring",
 			"param_type", cp.param.Type.String())
 		return cp
 	}
@@ -214,8 +214,8 @@ func (cp *CatenaParam) WithPrecision(precision uint32) *CatenaParam {
 }
 
 func (cp *CatenaParam) WithMaxLength(maxLength uint32) *CatenaParam {
-	if cp.param.Type != protos.ParamType_STRING {
-		logger.Warning("WithMaxLength called on non-STRING param; ignoring",
+	if cp.param.Type != protos.ParamType_STRING && cp.param.Type != protos.ParamType_STRING_ARRAY {
+		logger.Warning("WithMaxLength called on param type that does not support max_length; ignoring",
 			"param_type", cp.param.Type.String())
 		return cp
 	}
@@ -298,17 +298,19 @@ func (cp *CatenaParam) Build() *protos.Param {
 }
 
 // isConstraintValidForParam checks whether a constraint kind is compatible
-// with the given ParamType. RefOid constraints are always valid.
+// with the given ParamType. RefOid constraints are always valid. Scalar
+// constraints are also valid on their corresponding array param type
+// (e.g. Int32Range on INT32 or INT32_ARRAY).
 func isConstraintValidForParam(c *protos.Constraint, pt protos.ParamType) bool {
 	switch c.Kind.(type) {
 	case *protos.Constraint_RefOid:
 		return true
 	case *protos.Constraint_Int32Range, *protos.Constraint_Int32Choice, *protos.Constraint_AlarmTable:
-		return pt == protos.ParamType_INT32
+		return pt == protos.ParamType_INT32 || pt == protos.ParamType_INT32_ARRAY
 	case *protos.Constraint_FloatRange:
-		return pt == protos.ParamType_FLOAT32
+		return pt == protos.ParamType_FLOAT32 || pt == protos.ParamType_FLOAT32_ARRAY
 	case *protos.Constraint_StringChoice, *protos.Constraint_StringStringChoice:
-		return pt == protos.ParamType_STRING
+		return pt == protos.ParamType_STRING || pt == protos.ParamType_STRING_ARRAY
 	default:
 		return false
 	}
