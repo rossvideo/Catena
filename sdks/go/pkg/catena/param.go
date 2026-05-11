@@ -244,6 +244,12 @@ var paramTypesWithSubParams = map[protos.ParamType]bool{
 }
 
 func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
+	if param == nil {
+		logger.Warning("WithParam called with nil sub-param; ignoring",
+			"oid", oid,
+			"param_type", cp.param.Type.String())
+		return cp
+	}
 	if !paramTypesWithSubParams[cp.param.Type] {
 		logger.Warning("WithParam called on param type that does not support sub-params; ignoring",
 			"param_type", cp.param.Type.String())

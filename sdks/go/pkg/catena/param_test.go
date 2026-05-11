@@ -271,6 +271,23 @@ func TestWithParam_WrongType(t *testing.T) {
 	}
 }
 
+func TestWithParam_Nil(t *testing.T) {
+	// Passing a nil sub-param must not panic and must not add an entry,
+	// preserving the contract that method chaining is never interrupted
+	// by error handling.
+	cp := NewParamStruct().WithParam("x", nil)
+	p := cp.Build()
+	if len(p.GetParams()) != 0 {
+		t.Error("expected nil sub-param to be a no-op")
+	}
+	// Chaining must continue to work after the no-op.
+	child := NewParamInt32(7)
+	p = cp.WithParam("y", child).Build()
+	if p.GetParams()["y"].GetValue().GetInt32Value() != 7 {
+		t.Error("expected chaining to continue working after nil sub-param")
+	}
+}
+
 func TestWithResponse(t *testing.T) {
 	p := NewParamEmpty().WithResponse(true).Build()
 	if !p.GetResponse() {
