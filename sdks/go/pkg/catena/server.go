@@ -92,13 +92,28 @@ type Transport interface {
 	// The context signals when the transport should gracefully exit.
 	// Start should return quickly and may spawn background goroutines.
 	// Transports should monitor ctx.Done() and exit cleanly when signaled.
-	Start(ctx context.Context) error
+	// ServerRuntime is passed to allow transports to invoke handlers and register connections.
+	Start(ctx context.Context, runtime ServerRuntime) error
 
 	// Shutdown closes the transport and waits for cleanup.
 	// The context provides a deadline; Shutdown must respect it and return
 	// promptly even if cleanup is incomplete.
 	Shutdown(ctx context.Context) error
 }
+
+// interface of funcs that Transports use to interact with the server without circular imports
+type ServerRuntime interface {
+	GetSlots() []uint16
+	InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult)
+	InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, StatusResult)
+	InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult
+	InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult)
+	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
+	RegisterConnection() (int, *Connection)
+	DeregisterConnection(connID int)
+}
+
+var _ ServerRuntime = (*Server)(nil)
 
 type Server struct {
 	mu                     sync.Mutex
@@ -147,7 +162,7 @@ func (s *Server) RegisterTransport(transport Transport) error {
 
 	// Transport startup should be non-blocking and must not happen under the server lock.
 	// Pass server context so transport can derive its own child contexts if needed.
-	return transport.Start(ctx)
+	return transport.Start(ctx, s)
 }
 
 func (s *Server) DeregisterTransport(transport Transport) error {

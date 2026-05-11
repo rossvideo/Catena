@@ -147,24 +147,27 @@ func TestValidateSlotString_Invalid(t *testing.T) {
 }
 
 type stubTransport struct {
-	startFn    func(context.Context) error
+	tb         testing.TB
+	startFn    func(context.Context, ServerRuntime) error
 	shutdownFn func(context.Context) error
 }
 
 var _ Transport = (*stubTransport)(nil)
 
-func (s *stubTransport) Start(ctx context.Context) error {
+func (s *stubTransport) Start(ctx context.Context, runtime ServerRuntime) error {
 	if s.startFn != nil {
-		return s.startFn(ctx)
+		return s.startFn(ctx, runtime)
 	}
-	panic("Start called on stubTransport without startFn defined")
+	s.tb.Fatalf("Start called on stubTransport without startFn defined")
+	return nil
 }
 
 func (s *stubTransport) Shutdown(ctx context.Context) error {
 	if s.shutdownFn != nil {
 		return s.shutdownFn(ctx)
 	}
-	panic("Shutdown called on stubTransport without shutdownFn defined")
+	s.tb.Fatalf("Shutdown called on stubTransport without shutdownFn defined")
+	return nil
 }
 
 func TestServer_RegisterTransport_Normal(t *testing.T) {
@@ -180,7 +183,8 @@ func TestServer_RegisterTransport_Normal(t *testing.T) {
 	}
 
 	actual := srv.RegisterTransport(&stubTransport{
-		startFn: func(ctx context.Context) error {
+		tb: t,
+		startFn: func(ctx context.Context, runtime ServerRuntime) error {
 			called = true
 			return expectedError
 		},
@@ -229,6 +233,7 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 	expectedError := fmt.Errorf("expected error")
 	srv := NewServer(100)
 	transport := &stubTransport{
+		tb: t,
 		shutdownFn: func(ctx context.Context) error {
 			called = true
 			return expectedError
@@ -254,7 +259,7 @@ func TestServer_DeregisterTransport_NotFound(t *testing.T) {
 	srv := NewServer(100)
 
 	// Simulate deregistering a transport that was never registered
-	err := srv.DeregisterTransport(&stubTransport{})
+	err := srv.DeregisterTransport(&stubTransport{tb: t})
 
 	if err != nil {
 		t.Errorf("expected no error when deregistering non-existent transport, got %v", err)
@@ -267,7 +272,7 @@ func TestServer_DeregisterTransport_Shutdown(t *testing.T) {
 	// Simulate server shutdown
 	srv.shutdown = true
 
-	err := srv.DeregisterTransport(&stubTransport{})
+	err := srv.DeregisterTransport(&stubTransport{tb: t})
 
 	// this isn't an error
 	if err != nil {
@@ -339,7 +344,7 @@ func TestServer_Shutdown_Idempotent(t *testing.T) {
 
 	// register a transport that simulates a long shutdown to test that multiple calls to Shutdown don't cause issues
 	srv.RegisterTransport(&stubTransport{
-		startFn: func(ctx context.Context) error {
+		startFn: func(ctx context.Context, runtime ServerRuntime) error {
 			return nil
 		},
 		shutdownFn: func(ctx context.Context) error {
@@ -577,6 +582,7 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 var _ connectionQueueInterface = (*stubConnectionQueue)(nil)
 
 type stubConnectionQueue struct {
+	tb           testing.TB
 	setMaxFn     func(max int)
 	registerFn   func() (int, *Connection)
 	deregisterFn func(connID int)
@@ -589,7 +595,7 @@ func (s *stubConnectionQueue) setMaxConnections(max int) {
 	if s.setMaxFn != nil {
 		s.setMaxFn(max)
 	} else {
-		panic("setMaxConnections called on stubConnectionQueue without setMaxFn defined")
+		s.tb.Fatalf("setMaxConnections called on stubConnectionQueue without setMaxFn defined")
 	}
 }
 
@@ -597,14 +603,15 @@ func (s *stubConnectionQueue) registerConnection() (int, *Connection) {
 	if s.registerFn != nil {
 		return s.registerFn()
 	}
-	panic("registerConnection called on stubConnectionQueue without registerFn defined")
+	s.tb.Fatalf("registerConnection called on stubConnectionQueue without registerFn defined")
+	return 0, nil
 }
 
 func (s *stubConnectionQueue) deregisterConnection(connID int) {
 	if s.deregisterFn != nil {
 		s.deregisterFn(connID)
 	} else {
-		panic("deregisterConnection called on stubConnectionQueue without deregisterFn defined")
+		s.tb.Fatalf("deregisterConnection called on stubConnectionQueue without deregisterFn defined")
 	}
 }
 
@@ -612,7 +619,7 @@ func (s *stubConnectionQueue) notifyUpdate(update *protos.PushUpdates) {
 	if s.notifyFn != nil {
 		s.notifyFn(update)
 	} else {
-		panic("notifyUpdate called on stubConnectionQueue without notifyFn defined")
+		s.tb.Fatalf("notifyUpdate called on stubConnectionQueue without notifyFn defined")
 	}
 }
 
@@ -620,7 +627,7 @@ func (s *stubConnectionQueue) shutdown() {
 	if s.shutdownFn != nil {
 		s.shutdownFn()
 	} else {
-		panic("shutdown called on stubConnectionQueue without shutdownFn defined")
+		s.tb.Fatalf("shutdown called on stubConnectionQueue without shutdownFn defined")
 	}
 }
 
@@ -628,13 +635,15 @@ func (s *stubConnectionQueue) connectionCount() int {
 	if s.countFn != nil {
 		return s.countFn()
 	}
-	panic("connectionCount called on stubConnectionQueue without countFn defined")
+	s.tb.Fatalf("connectionCount called on stubConnectionQueue without countFn defined")
+	return 0
 }
 
 func TestServer_RegisterConnection_Passthrough(t *testing.T) {
 	called := false
 	srv := NewServer(100)
 	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
 		registerFn: func() (int, *Connection) {
 			called = true
 			return 77, &Connection{ID: 77}
@@ -659,6 +668,7 @@ func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 	lastConnID := 0
 	srv := NewServer(100)
 	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
 		deregisterFn: func(connID int) {
 			called = true
 			lastConnID = connID
@@ -680,6 +690,7 @@ func TestServer_SetMaxConnections_Passthrough(t *testing.T) {
 	lastMax := 0
 	srv := NewServer(100)
 	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
 		setMaxFn: func(max int) {
 			called = true
 			lastMax = max
@@ -699,6 +710,7 @@ func TestServer_SetMaxConnections_Passthrough(t *testing.T) {
 func TestServer_ConnectionCount_Passthrough(t *testing.T) {
 	srv := NewServer(100)
 	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
 		countFn: func() int {
 			return 5
 		},
