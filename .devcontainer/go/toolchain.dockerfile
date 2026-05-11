@@ -56,5 +56,21 @@ COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 WORKDIR /root/smpte
 RUN ./install-tooling.sh
 
+# Install protobuf compiler and Go tools
+RUN . /root/toolchain.env \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y protobuf-compiler=${PROTOBUF_COMPILER_VERSION} \
+    && apt-get clean
+
+RUN go install golang.org/x/tools/gopls@v0.21.1 \
+    && go install github.com/go-delve/delve/cmd/dlv@v1.26.2 \
+    && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11 \
+    && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2 \
+    && go install github.com/axw/gocov/gocov@v1.2.1 \
+    && go install github.com/matm/gocov-html/cmd/gocov-html@v1.4.0 \
+    && go install github.com/jandelgado/gcov2lcov@v1.1.1
+
+ENV PATH="/root/go/bin:${PATH}"
+
 USER ubuntu
 WORKDIR /home/ubuntu
