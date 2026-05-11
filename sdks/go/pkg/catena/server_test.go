@@ -722,3 +722,68 @@ func TestServer_ConnectionCount_Passthrough(t *testing.T) {
 		t.Errorf("expected connection count 5, got %d", count)
 	}
 }
+
+func TestServer_BroadcastUpdate_Normal(t *testing.T) {
+	srv := &server{connectionQueue: newConnectionQueue(100)}
+
+	// Register a connection
+	connID, conn := srv.RegisterConnection()
+	if connID < 0 {
+		t.Fatal("Failed to register connection")
+	}
+	defer srv.DeregisterConnection(connID)
+
+	select {
+	// read off the initial update
+	case _ = <-conn.Updates:
+	default:
+		t.Fatal("expected initial update on new connection")
+	}
+
+	// Broadcast an update
+	srv.BroadcastUpdate(0, "test/param", int32(42))
+
+	// Verify the update was received
+	select {
+	case update := <-conn.Updates:
+		if update.Slot != 0 {
+			t.Errorf("expected slot 0, got %d", update.Slot)
+		}
+		pv, ok := update.Kind.(*protos.PushUpdates_Value)
+		if !ok {
+			t.Fatal("expected PushUpdates_Value")
+		}
+		if pv.Value.GetOid() != "test/param" {
+			t.Errorf("expected oid 'test/param', got '%s'", pv.Value.GetOid())
+		}
+		if pv.Value.GetValue().GetInt32Value() != 42 {
+			t.Errorf("expected value 42, got %d", pv.Value.GetValue().GetInt32Value())
+		}
+	case <-time.After(time.Second):
+		t.Fatal("did not receive broadcast update")
+	}
+}
+
+func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
+	srv := &server{connectionQueue: newConnectionQueue(100)}
+
+	_, conn := srv.RegisterConnection()
+	defer srv.DeregisterConnection(conn.ID)
+
+	select {
+	// read off the initial update
+	case _ = <-conn.Updates:
+	default:
+		t.Fatal("expected initial update on new connection")
+	}
+
+	// Try to broadcast an invalid value (bool is not supported by ToProto)
+	srv.BroadcastUpdate(0, "test/param", true)
+
+	// Should not receive update (logged error instead)
+	select {
+	case <-conn.Updates:
+		t.Error("should not have received update for invalid value")
+	case <-time.After(100 * time.Millisecond):
+	}
+}
