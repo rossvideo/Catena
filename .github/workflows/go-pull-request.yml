@@ -214,10 +214,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Ensure Go tools are on PATH
-        run: |
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-
       - name: Generate Go protos from SMPTE submodule
         working-directory: sdks/go
         run: |

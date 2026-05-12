@@ -42,8 +42,8 @@ protos-all: protos protos-grpc
 
 proto-tools:
 	@echo "Ensuring protoc plugins..."
-	@$(GOBIN)/protoc-gen-go -h >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	@$(GOBIN)/protoc-gen-go-grpc -h >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	@which protoc-gen-go >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	@which protoc-gen-go-grpc >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 protos: proto-tools
 	mkdir -p $(GENERATED_DIR)
