@@ -68,7 +68,7 @@ type GrpcTransport struct {
 
 var _ catena.Transport = (*GrpcTransport)(nil)
 
-func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
+func NewGrpcTransport(port uint16, reflectionEnabled bool, isDev bool) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
 		grpcServer: grpc.NewServer(
@@ -91,6 +91,14 @@ func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
 		logger.Info("gRPC server created")
 	}
 	return transport
+}
+
+func NewDefaultGrpcTransport() *GrpcTransport {
+	return NewGrpcTransport(
+		6245,           // default port
+		false,          // reflection disabled by default for security
+		catena.IsDev(), // enable reflection in dev mode for easier debugging
+	)
 }
 
 func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRuntime) error {

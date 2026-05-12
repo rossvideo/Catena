@@ -60,12 +60,43 @@ import (
 
 const bufSize = 1024 * 1024
 
+type testGrpcTransportConfig struct {
+	port         uint16
+	reflection   bool
+	isDev        bool
+	startupDelay time.Duration
+}
+
+type testGrpcTransportOption func(*testGrpcTransportConfig)
+
+func withTestGrpcTransportDevMode(isDev bool) testGrpcTransportOption {
+	return func(cfg *testGrpcTransportConfig) {
+		cfg.isDev = isDev
+	}
+}
+
+func withTestGrpcTransportReflection(enabled bool) testGrpcTransportOption {
+	return func(cfg *testGrpcTransportConfig) {
+		cfg.reflection = enabled
+	}
+}
+
 // setupTestGrpcTransport creates an in-memory gRPC test server using bufconn
-func setupTestGrpcTransport(t *testing.T, slots []uint16, reflectionEnabled bool) (*GrpcTransport, *stubServerRuntime, *bufconn.Listener, func()) {
+func setupTestGrpcTransport(t *testing.T, slots []uint16, opts ...testGrpcTransportOption) (*GrpcTransport, *stubServerRuntime, *bufconn.Listener, func()) {
 	t.Helper()
 
+	cfg := testGrpcTransportConfig{
+		port:         1234,
+		reflection:   false,
+		isDev:        false,
+		startupDelay: 10 * time.Millisecond,
+	}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	lis := bufconn.Listen(bufSize)
-	transport := NewGrpcTransport(1234, reflectionEnabled)
+	transport := NewGrpcTransport(cfg.port, cfg.reflection, cfg.isDev)
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = slots
 	transport.catenaService.runtime = runtime
@@ -77,7 +108,9 @@ func setupTestGrpcTransport(t *testing.T, slots []uint16, reflectionEnabled bool
 	}()
 
 	// Give server a moment to start
-	time.Sleep(10 * time.Millisecond)
+	if cfg.startupDelay > 0 {
+		time.Sleep(cfg.startupDelay)
+	}
 
 	cleanup := func() {
 		// Use Stop() instead of GracefulStop() in tests to avoid hanging
@@ -119,7 +152,7 @@ func assertGRPCError(t *testing.T, err error, expectedCode codes.Code) {
 // =============================================================================
 
 func TestNewServer(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
+	transport := NewGrpcTransport(1234, false, false)
 
 	if transport == nil {
 		t.Fatal("NewServer returned nil")
@@ -162,7 +195,7 @@ func TestServer_GetPopulatedSlots(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			_, _, lis, cleanup := setupTestGrpcTransport(t, tt.slots, false)
+			_, _, lis, cleanup := setupTestGrpcTransport(t, tt.slots)
 			defer cleanup()
 
 			client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -181,7 +214,7 @@ func TestServer_GetPopulatedSlots(t *testing.T) {
 
 func TestServer_DeviceRequest_Success(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	// Register mock handler
@@ -237,7 +270,7 @@ func TestServer_DeviceRequest_InvalidSlot(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 			defer cleanup()
 
 			client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -257,7 +290,7 @@ func TestServer_DeviceRequest_InvalidSlot(t *testing.T) {
 
 func TestServer_DeviceRequest_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	// Register handler that returns error
@@ -333,7 +366,7 @@ func TestServer_GetValue_Success(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 			defer cleanup()
 
 			runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -356,7 +389,7 @@ func TestServer_GetValue_Success(t *testing.T) {
 
 func TestServer_GetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -368,7 +401,7 @@ func TestServer_GetValue_InvalidSlot(t *testing.T) {
 
 func TestServer_GetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -388,7 +421,7 @@ func TestServer_GetValue_HandlerError(t *testing.T) {
 
 func TestServer_SetValue_Success(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	receivedValue := any(nil)
@@ -420,7 +453,7 @@ func TestServer_SetValue_Success(t *testing.T) {
 
 func TestServer_SetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -432,7 +465,7 @@ func TestServer_SetValue_InvalidSlot(t *testing.T) {
 
 func TestServer_SetValue_NilValue(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -448,7 +481,7 @@ func TestServer_SetValue_NilValue(t *testing.T) {
 
 func TestServer_SetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
@@ -468,7 +501,7 @@ func TestServer_SetValue_HandlerError(t *testing.T) {
 
 func TestServer_MultiSetValue_Success(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	callCount := 0
@@ -494,7 +527,7 @@ func TestServer_MultiSetValue_Success(t *testing.T) {
 
 func TestServer_MultiSetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -508,7 +541,7 @@ func TestServer_MultiSetValue_InvalidSlot(t *testing.T) {
 
 func TestServer_MultiSetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	callCount := 0
@@ -539,7 +572,7 @@ func TestServer_MultiSetValue_HandlerError(t *testing.T) {
 
 func TestServer_MultiSetValue_EmptyValues(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	callCount := 0
@@ -571,7 +604,7 @@ func TestServer_MultiSetValue_EmptyValues(t *testing.T) {
 
 func TestServer_ExternalObjectRequest_Success(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	handlerCalled := false
@@ -604,7 +637,7 @@ func TestServer_ExternalObjectRequest_Success(t *testing.T) {
 
 func TestServer_ExternalObjectRequest_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -622,7 +655,7 @@ func TestServer_ExternalObjectRequest_InvalidSlot(t *testing.T) {
 
 func TestServer_ExternalObjectRequest_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
@@ -648,7 +681,7 @@ func TestServer_ExternalObjectRequest_HandlerError(t *testing.T) {
 
 func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	handlerCalled := false
@@ -684,7 +717,7 @@ func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
 
 func TestServer_ExecuteCommand_WithoutResponse(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
@@ -703,7 +736,7 @@ func TestServer_ExecuteCommand_WithoutResponse(t *testing.T) {
 
 func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	receivedPayload := "not nil"
@@ -732,7 +765,7 @@ func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
 
 func TestServer_ExecuteCommand_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -750,7 +783,7 @@ func TestServer_ExecuteCommand_InvalidSlot(t *testing.T) {
 
 func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
@@ -778,7 +811,7 @@ func TestServer_Connect_BroadcastUpdates(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -821,7 +854,7 @@ func TestServer_Connect_ClientDisconnect(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	runtime.WithConnection(makeTestConnection(1))
@@ -851,7 +884,7 @@ func TestServer_Connect_ClientDisconnect(t *testing.T) {
 
 func TestGrpcTransport_Connect_Rejected(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	// Register WithConnection handler that rejects connection
@@ -874,7 +907,7 @@ func TestGrpcTransport_Connect_Rejected(t *testing.T) {
 
 func TestGrpcTransport_Connect_Shutdown(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	connection := makeTestConnection(1)
@@ -1031,12 +1064,8 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 	for _, ep := range endpoints {
 		ep := ep
 		t.Run(ep.name+"/dev_shows_details", func(t *testing.T) {
-			original := catena.GetEnv()
-			defer catena.SetEnv(original)
-			catena.SetEnv(catena.EnvDev)
-
 			ctx := context.Background()
-			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(true))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
@@ -1065,7 +1094,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			catena.SetEnv(catena.EnvProd)
 
 			ctx := context.Background()
-			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(false))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
@@ -1191,7 +1220,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			catena.SetEnv(catena.EnvDev)
 
 			ctx := context.Background()
-			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(true))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
@@ -1220,7 +1249,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			catena.SetEnv(catena.EnvProd)
 
 			ctx := context.Background()
-			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(false))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
@@ -1342,7 +1371,7 @@ func TestServer_UnimplementedEndpoints(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 			defer cleanup()
 
 			client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -1360,7 +1389,7 @@ func TestServer_UnimplementedEndpoints(t *testing.T) {
 
 func TestServer_Reflection_Enabled(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, true)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportReflection(true))
 	defer cleanup()
 
 	conn, err := dialTestServer(ctx, lis)
@@ -1413,7 +1442,7 @@ func TestServer_Reflection_Enabled(t *testing.T) {
 
 func TestServer_Reflection_Disabled(t *testing.T) {
 	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	conn, err := dialTestServer(ctx, lis)
@@ -1452,7 +1481,7 @@ func TestServer_Reflection_Disabled(t *testing.T) {
 
 func TestServer_ConcurrentClients(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -1488,7 +1517,7 @@ func TestServer_ConcurrentClients(t *testing.T) {
 
 func TestServer_DifferentHandlersPerSlot(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0, 1}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0, 1})
 	defer cleanup()
 
 	// Register different handlers for each slot
@@ -1536,7 +1565,7 @@ func TestServer_Start_EndpointsReachable(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(uint16(port), false, false)
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = []uint16{0, 1}
 
@@ -1628,7 +1657,7 @@ func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(uint16(port), false, false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 
@@ -1694,7 +1723,7 @@ func TestServer_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(uint16(port), false, false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 
@@ -1733,7 +1762,7 @@ func TestServer_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 }
 
 func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
+	transport := NewGrpcTransport(1234, false, false)
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -1755,7 +1784,7 @@ func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
 }
 
 func TestGrpcTransport_Shutdown_ClosesOwnedConnections(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
+	transport := NewGrpcTransport(1234, false, false)
 	runtime := makeStubServerRuntime(t)
 	called := false
 	runtime.shutdownTransportConnectionsFn = func(owner any) {
@@ -1789,7 +1818,7 @@ func TestServer_Start_PortAlreadyInUse(t *testing.T) {
 	port := portListener.Addr().(*net.TCPAddr).Port
 	defer portListener.Close()
 
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(uint16(port), false, false)
 
 	// Try to start on the already-occupied port
 	err = transport.Start(context.Background(), makeStubServerRuntime(t))
@@ -1818,7 +1847,7 @@ func TestServer_MultipleClients_RealNetwork(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(uint16(port), false, false)
 
 	// Start server
 	go func() {
