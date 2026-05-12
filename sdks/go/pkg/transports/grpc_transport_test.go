@@ -849,6 +849,60 @@ func TestServer_Connect_ClientDisconnect(t *testing.T) {
 	}
 }
 
+func TestGrpcTransport_Connect_Rejected(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	defer cleanup()
+
+	// Register WithConnection handler that rejects connection
+	runtime.registerTransportConnFn = func(owner any) (int, *catena.Connection) {
+		return -1, nil // Reject connection
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeConnectRequest(t, client, ctx)
+	if err != nil {
+		t.Fatalf("Unexpected error making Connect request: %s", err)
+	}
+	_, err = stream.Recv()
+	if err == nil {
+		t.Fatal("expected error for rejected connection")
+	}
+}
+
+func TestGrpcTransport_Connect_Shutdown(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, false)
+	defer cleanup()
+
+	connection := makeTestConnection(1)
+	runtime.WithConnection(connection)
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeConnectRequest(t, client, ctx)
+	assertNoError(t, err)
+
+	// Simulate server shutdown by sending the Done signal on the connection
+	connection.Done <- struct{}{}
+
+	// Next Recv should fail with Unavailable error
+	_, err = stream.Recv()
+	if err == nil {
+		t.Fatal("expected error after server shutdown")
+	}
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got %v", err)
+	}
+	if st.Code() != codes.Unavailable {
+		t.Errorf("expected Unavailable code, got %v", st.Code())
+	}
+}
+
 // =============================================================================
 // Test: Error Messages Dev vs Prod
 // =============================================================================
