@@ -41,6 +41,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
@@ -117,11 +118,6 @@ func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Confi
 			logger.Info("=======================================================")
 			logger.Info("Listening", "port", port)
 			logger.Info("")
-			logger.Info("Available endpoint:")
-			logger.Info("  GET  /st2138-api/v1/0/asset/{oid}")
-			logger.Info("  GET  /st2138-api/v1/0/asset/{oid}?compression=GZIP")
-			logger.Info("  GET  /st2138-api/v1/0/asset/{oid}?compression=DEFLATE")
-			logger.Info("")
 			logger.Info("Available assets:")
 			assets.Range(func(key, _ any) bool {
 				logger.Info(fmt.Sprintf("  %s", key.(string)))
@@ -129,9 +125,21 @@ func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Confi
 			})
 			logger.Info("")
 			if firstAssetName != "" {
-				logger.Info("Example curl:")
-				logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s", port, firstAssetName))
-				logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s?compression=GZIP", port, firstAssetName))
+				if strings.Contains(appName, "GRPC") {
+					logger.Info("Test with grpcurl:")
+					logger.Info(fmt.Sprintf("  grpcurl -plaintext -d '{\"slot\": 0, \"oid\": \"%s\"}' localhost:%d st2138.CatenaService/ExternalObjectRequest", firstAssetName, port))
+					logger.Info(fmt.Sprintf("  grpcurl -plaintext localhost:%d list", port))
+					logger.Info(fmt.Sprintf("  grpcurl -plaintext localhost:%d st2138.CatenaService/GetPopulatedSlots", port))
+				} else {
+					logger.Info("Available endpoint:")
+					logger.Info("  GET  /st2138-api/v1/0/asset/{oid}")
+					logger.Info("  GET  /st2138-api/v1/0/asset/{oid}?compression=GZIP")
+					logger.Info("  GET  /st2138-api/v1/0/asset/{oid}?compression=DEFLATE")
+					logger.Info("")
+					logger.Info("Example curl:")
+					logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s", port, firstAssetName))
+					logger.Info(fmt.Sprintf("  curl http://localhost:%d/st2138-api/v1/0/asset/%s?compression=GZIP", port, firstAssetName))
+				}
 			}
 			logger.Info("=======================================================")
 		},
