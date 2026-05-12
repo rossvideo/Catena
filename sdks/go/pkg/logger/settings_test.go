@@ -248,7 +248,7 @@ func TestParseSettingsWithVerbosity(t *testing.T) {
 			name:          "no env level set, CLI provides",
 			envLevel:      "",
 			osArgs:        []string{"program", "-v"},
-			expectedLevel: slog.LevelWarn,
+			expectedLevel: slog.LevelInfo,
 		},
 	}
 

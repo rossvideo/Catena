@@ -374,11 +374,36 @@ h1 {
 
 .json-display {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    line-height: 1.5;
+    font-size: 0.85rem;
+    line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-word;
+    text-align: left;
     margin: 0;
+}
+
+/* Expand-to-modal trigger for the device JSON, sits at the right end of the
+   slot-list row (margin-left: auto pushes it past the slot buttons). */
+.expand-btn {
+    margin-left: auto;
+    padding: 0.5rem 0.875rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--section-device);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.expand-btn:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: var(--section-device);
+    color: var(--text);
 }
 
 .json-key { color: var(--section-device); }
@@ -477,6 +502,12 @@ h1 {
     border: 1px solid var(--border);
 }
 
+/* Wider variant used when the modal hosts the device JSON tree, which needs
+   more horizontal room than a typical asset preview. */
+.asset-modal-content.wide {
+    width: min(92vw, 1100px);
+}
+
 .asset-modal-header {
     display: flex;
     justify-content: space-between;
@@ -525,6 +556,20 @@ h1 {
 
 .asset-modal-body img {
     border-radius: 8px;
+}
+
+/* Larger, left-aligned JSON view used inside the device modal. */
+.asset-modal-body .json-display {
+    background: var(--bg);
+    padding: 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    text-align: left;
+    color: var(--text);
+    margin: 0;
+    max-height: calc(90vh - 8rem);
+    overflow: auto;
 }
 
 .asset-loading,

@@ -11,6 +11,11 @@ function extractValue(protoVal) {
 // =====================================================================
 // Device Section
 // =====================================================================
+// Cached so the "Expand" button can re-render the most recent fetch in a
+// modal without an extra round-trip.
+let lastDeviceData = null;
+let lastDeviceSlot = null;
+
 async function selectSlot(slot) {
     // Update active button
     document.querySelectorAll('.slot-btn').forEach(btn => {
@@ -34,11 +39,52 @@ async function fetchDevice(slot) {
             return;
         }
         const data = await res.json();
+        lastDeviceData = data;
+        lastDeviceSlot = slot;
         renderDevice(data);
     } catch (e) {
         console.error('fetchDevice error:', e);
         details.innerHTML = `<div class="device-loading">Error loading device</div>`;
     }
+}
+
+// Opens the cached device JSON in the asset-modal popup, re-fetching the
+// active slot first so the modal always reflects the latest server state.
+async function expandDevice() {
+    const slot = lastDeviceSlot ?? 0;
+    await fetchDevice(slot);
+    if (lastDeviceData === null) return;
+    showDeviceModal(lastDeviceData, slot);
+}
+
+// Renders the device JSON inside the same modal scaffold used by viewAsset,
+// just with the .wide content variant and a syntax-highlighted <pre> body.
+function showDeviceModal(deviceData, slot) {
+    const existing = document.getElementById('assetModal');
+    if (existing) existing.remove();
+
+    const highlighted = syntaxHighlight(deviceData);
+
+    const modal = document.createElement('div');
+    modal.id = 'assetModal';
+    modal.className = 'asset-modal';
+    modal.innerHTML = `
+        <div class="asset-modal-content wide">
+            <div class="asset-modal-header">
+                <span class="asset-modal-title">Device · Slot ${escapeHtml(String(slot))}</span>
+                <button class="asset-modal-close" onclick="closeAssetModal()">✕</button>
+            </div>
+            <div class="asset-modal-body">
+                <pre class="json-display">${highlighted}</pre>
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeAssetModal();
+    });
+
+    document.body.appendChild(modal);
 }
 
 function syntaxHighlight(json) {
@@ -81,28 +127,28 @@ async function cmd(name) {
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await res.json();
-        const fields = data.struct_value?.fields;
-        if (fields) {
-            const counter = extractValue(fields.counter);
-            const running = extractValue(fields.running);
-            updateCounter(counter, running);
-        }
+        const counter = extractValue(data);
+        if (counter !== null) updateCounter(counter);
     } catch (e) { console.error('cmd error:', e); }
 }
 
-function updateCounter(value, running) {
+function updateCounter(value) {
+    if (value === undefined || value === null) return;
     const el = document.getElementById('counterValue');
+    if (el) el.textContent = value;
+}
+
+// Drives the green "running" highlight on the counter and the status badge.
+// Backed by the standalone "running" int32 param on slot 0.
+function updateRunning(running) {
+    if (running === undefined || running === null) return;
+    const counterEl = document.getElementById('counterValue');
     const badge = document.getElementById('statusBadge');
-    el.textContent = value ?? 0;
-    // running is int32: 0 = false, 1 = true
-    if (running === 1) {
-        el.classList.add('running');
-        badge.className = 'status-badge running';
-        badge.textContent = 'Running';
-    } else {
-        el.classList.remove('running');
-        badge.className = 'status-badge stopped';
-        badge.textContent = 'Stopped';
+    const isRunning = running === 1;
+    if (counterEl) counterEl.classList.toggle('running', isRunning);
+    if (badge) {
+        badge.className = 'status-badge ' + (isRunning ? 'running' : 'stopped');
+        badge.textContent = isRunning ? 'Running' : 'Stopped';
     }
 }
 
@@ -211,17 +257,24 @@ async function setParam(name, value, type) {
 async function poll() {
     const fetches = [];
 
-    // Fetch counter from slot 0
+    // Fetch counter and running flag from slot 0. Both are plain int32 params.
     fetches.push(
         fetch('/st2138-api/v1/0/value/counter')
             .then(r => r.json())
             .then(data => {
-                const fields = data.struct_value?.fields;
-                if (fields) {
-                    updateCounter(extractValue(fields.counter), extractValue(fields.running));
-                }
+                const value = extractValue(data);
+                if (value !== null) updateCounter(value);
             })
             .catch(e => console.error('poll counter error:', e))
+    );
+    fetches.push(
+        fetch('/st2138-api/v1/0/value/running')
+            .then(r => r.json())
+            .then(data => {
+                const value = extractValue(data);
+                if (value !== null) updateRunning(value);
+            })
+            .catch(e => console.error('poll running error:', e))
     );
 
     // Fetch each param from its proper slot
@@ -252,17 +305,14 @@ function connectSSE() {
             if (data.value) {
                 const oid = data.value.oid;
                 const protoVal = data.value.value;
+                const val = extractValue(protoVal);
+                if (val === null) return;
                 if (oid === 'counter') {
-                    if (protoVal.struct_value) {
-                        const fields = protoVal.struct_value.fields;
-                        updateCounter(extractValue(fields.counter), extractValue(fields.running));
-                    } else {
-                        const el = document.getElementById('counterValue');
-                        if (el) el.textContent = extractValue(protoVal) ?? 0;
-                    }
+                    updateCounter(val);
+                } else if (oid === 'running') {
+                    updateRunning(val);
                 } else {
-                    const val = extractValue(protoVal);
-                    if (val !== null) updateParamInput(oid, val);
+                    updateParamInput(oid, val);
                 }
             }
         } catch (e) {

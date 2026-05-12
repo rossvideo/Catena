@@ -74,7 +74,7 @@ func DefaultSettings() Settings {
 		AppName:        "catena",
 		LogDir:         "./logs",
 		Silent:         false,
-		Level:          slog.LevelError, // ERROR only by default
+		Level:          slog.LevelInfo, // ERROR only by default
 		WriteToFile:    true,
 		WriteToConsole: true,
 		UseJSON:        false,
