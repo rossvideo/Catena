@@ -54,7 +54,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
-      options: --user root:root
     permissions:
       security-events: write
       actions: read
@@ -122,7 +121,6 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
-      options: --user root:root
     
     env:
       CMAKE_BUILD_TYPE: ''
@@ -153,15 +151,7 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          # Create non-root user for testing
-          useradd -m -s /bin/bash testuser 2>/dev/null || true
-          
-          # Ensure workspace is owned by testuser
-          chown -R testuser:testuser ${GITHUB_WORKSPACE}
-          
-          # Run tests as non-root to properly test permission errors
-          # Using runuser to preserve environment including PATH
-          runuser -u testuser -- bash -c "cd ${GITHUB_WORKSPACE}/sdks/go && make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html"
+          cd ${GITHUB_WORKSPACE}/sdks/go && make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html
 
       - name: Generate coverage report
         run: |
@@ -193,7 +183,6 @@ jobs:
     timeout-minutes: 10
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
-      options: --user root:root
 
     steps:
       - name: Checkout code

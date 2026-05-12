@@ -45,5 +45,4 @@ WORKDIR /home/${USER_NAME}/Catena
 
 USER ${USER_NAME}
 
-RUN export PATH="$PATH:$(go env GOPATH)/bin"
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]

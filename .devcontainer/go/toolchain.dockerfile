@@ -38,7 +38,7 @@ RUN . /root/toolchain.env \
     && sudo tar -C /usr/local -xzf ${GO_VERSION}.tar.gz \
     && rm ${GO_VERSION}.tar.gz
 
-ENV PATH="/usr/local/go/bin:${PATH}"
+ENV PATH=$PATH:/usr/local/go/bin
 
 # Install Docker & Docker Compose
 RUN . /root/toolchain.env \
@@ -64,13 +64,19 @@ RUN . /root/toolchain.env \
 
 ENV GOBIN=/usr/local/bin
 
-RUN go install golang.org/x/tools/gopls@v0.21.1 \
-    && go install github.com/go-delve/delve/cmd/dlv@v1.26.2 \
-    && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11 \
-    && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2 \
-    && go install github.com/axw/gocov/gocov@v1.2.1 \
-    && go install github.com/matm/gocov-html/cmd/gocov-html@v1.4.0 \
-    && go install github.com/jandelgado/gcov2lcov@v1.1.1
+WORKDIR /toolchain
+
+COPY .devcontainer/go/go.mod .devcontainer/go/go.sum ./
+
+RUN go mod download
+
+RUN go install golang.org/x/tools/gopls \
+    github.com/go-delve/delve/cmd/dlv \
+    google.golang.org/protobuf/cmd/protoc-gen-go \
+    google.golang.org/grpc/cmd/protoc-gen-go-grpc \
+    github.com/axw/gocov/gocov \
+    github.com/matm/gocov-html/cmd/gocov-html \
+    github.com/jandelgado/gcov2lcov
 
 ENV GOBIN=
 
