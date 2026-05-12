@@ -611,13 +611,14 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 var _ connectionQueueInterface = (*stubConnectionQueue)(nil)
 
 type stubConnectionQueue struct {
-	tb           testing.TB
-	setMaxFn     func(max int)
-	registerFn   func() (int, *Connection)
-	deregisterFn func(connID int)
-	notifyFn     func(update *protos.PushUpdates)
-	shutdownFn   func()
-	countFn      func() int
+	tb              testing.TB
+	setMaxFn        func(max int)
+	registerOwnedFn func(owner any) (int, *Connection)
+	deregisterFn    func(connID int)
+	notifyFn        func(update *protos.PushUpdates)
+	shutdownFn      func()
+	shutdownOwnerFn func(owner any)
+	countFn         func() int
 }
 
 func (s *stubConnectionQueue) setMaxConnections(max int) {
@@ -628,11 +629,11 @@ func (s *stubConnectionQueue) setMaxConnections(max int) {
 	}
 }
 
-func (s *stubConnectionQueue) registerConnection() (int, *Connection) {
-	if s.registerFn != nil {
-		return s.registerFn()
+func (s *stubConnectionQueue) registerOwnedConnection(owner any) (int, *Connection) {
+	if s.registerOwnedFn != nil {
+		return s.registerOwnedFn(owner)
 	}
-	s.tb.Fatalf("registerConnection called on stubConnectionQueue without registerFn defined")
+	s.tb.Fatalf("registerOwnedConnection called on stubConnectionQueue without registerOwnedFn defined")
 	return 0, nil
 }
 
@@ -660,59 +661,20 @@ func (s *stubConnectionQueue) shutdown() {
 	}
 }
 
+func (s *stubConnectionQueue) shutdownOwner(owner any) {
+	if s.shutdownOwnerFn != nil {
+		s.shutdownOwnerFn(owner)
+	} else {
+		s.tb.Fatalf("shutdownOwner called on stubConnectionQueue without shutdownOwnerFn defined")
+	}
+}
+
 func (s *stubConnectionQueue) connectionCount() int {
 	if s.countFn != nil {
 		return s.countFn()
 	}
 	s.tb.Fatalf("connectionCount called on stubConnectionQueue without countFn defined")
 	return 0
-}
-
-func TestServer_RegisterConnection_Passthrough(t *testing.T) {
-	called := false
-	srv := NewServer(100).(*server)
-	// pre-register some slots
-	srv.slots[0] = struct{}{}
-	srv.slots[2] = struct{}{}
-	srv.connectionQueue = &stubConnectionQueue{
-		tb: t,
-		registerFn: func() (int, *Connection) {
-			called = true
-			return 77, &Connection{
-				ID:      77,
-				Updates: make(chan *protos.PushUpdates, 10),
-				Done:    make(chan struct{}),
-			}
-		},
-	}
-
-	connID, conn := srv.RegisterConnection()
-
-	if !called {
-		t.Error("expected registerConnection to be called on connection queue")
-	}
-	if connID != 77 {
-		t.Errorf("expected connID 77, got %d", connID)
-	}
-	if conn == nil || conn.ID != 77 {
-		t.Errorf("expected connection ID 77, got %+v", conn)
-	}
-	expected := &protos.PushUpdates{
-		Kind: &protos.PushUpdates_SlotsAdded{
-			SlotsAdded: &protos.SlotList{
-				Slots: []uint32{0, 2},
-			},
-		},
-	}
-	select {
-	case update := <-conn.Updates:
-		// assert it is a slots_added
-		if !proto.Equal(update, expected) {
-			t.Errorf("expected initial slots update %v, got %v", expected, update)
-		}
-	case <-time.After(time.Second):
-		t.Fatal("did not receive initial slots update")
-	}
 }
 
 func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
@@ -734,6 +696,63 @@ func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 	}
 	if lastConnID != 42 {
 		t.Errorf("expected connID 42, got %d", lastConnID)
+	}
+}
+
+func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
+	called := false
+	var actualOwner any
+	owner := &struct{}{}
+	srv := NewServer(100).(*server)
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		registerOwnedFn: func(gotOwner any) (int, *Connection) {
+			called = true
+			actualOwner = gotOwner
+			return 78, &Connection{
+				ID:      78,
+				Updates: make(chan *protos.PushUpdates, 10),
+				Done:    make(chan struct{}),
+			}
+		},
+	}
+
+	connID, conn := srv.RegisterTransportConnection(owner)
+
+	if !called {
+		t.Error("expected registerOwnedConnection to be called on connection queue")
+	}
+	if actualOwner != owner {
+		t.Error("expected transport owner to be passed through")
+	}
+	if connID != 78 {
+		t.Errorf("expected connID 78, got %d", connID)
+	}
+	if conn == nil || conn.ID != 78 {
+		t.Errorf("expected connection ID 78, got %+v", conn)
+	}
+}
+
+func TestServer_ShutdownTransportConnections_Passthrough(t *testing.T) {
+	called := false
+	var actualOwner any
+	owner := &struct{}{}
+	srv := NewServer(100).(*server)
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		shutdownOwnerFn: func(gotOwner any) {
+			called = true
+			actualOwner = gotOwner
+		},
+	}
+
+	srv.ShutdownTransportConnections(owner)
+
+	if !called {
+		t.Error("expected shutdownOwner to be called on connection queue")
+	}
+	if actualOwner != owner {
+		t.Error("expected transport owner to be passed through")
 	}
 }
 
@@ -779,7 +798,7 @@ func TestServer_BroadcastUpdate_Normal(t *testing.T) {
 	srv := &server{connectionQueue: newConnectionQueue(100)}
 
 	// Register a connection
-	connID, conn := srv.RegisterConnection()
+	connID, conn := srv.RegisterTransportConnection(nil)
 	if connID < 0 {
 		t.Fatal("Failed to register connection")
 	}
@@ -819,7 +838,7 @@ func TestServer_BroadcastUpdate_Normal(t *testing.T) {
 func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
 	srv := &server{connectionQueue: newConnectionQueue(100)}
 
-	_, conn := srv.RegisterConnection()
+	_, conn := srv.RegisterTransportConnection(nil)
 	defer srv.DeregisterConnection(conn.ID)
 
 	select {

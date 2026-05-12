@@ -106,6 +106,9 @@ func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime)
 }
 
 func (t *RestTransport) Shutdown(ctx context.Context) error {
+	if t.runtime != nil {
+		t.runtime.ShutdownTransportConnections(t)
+	}
 	if t.server != nil {
 		return t.server.Shutdown(ctx)
 	}
@@ -268,7 +271,7 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	_ = r.Header.Get("Authorization")
 
 	// Register this connection in the connectionQueue
-	connID, conn := t.runtime.RegisterConnection()
+	connID, conn := t.runtime.RegisterTransportConnection(t)
 	if connID < 0 {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)

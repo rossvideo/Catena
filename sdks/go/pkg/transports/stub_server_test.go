@@ -52,12 +52,15 @@ type stubServerRuntime struct {
 	setValueFn       func(value any, slot uint16, fqoid string) catena.StatusResult
 	getAssetFn       func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
 	commandFn        func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
-	registerConnFn   func() (int, *catena.Connection)
+	registerTransportConnFn        func(owner any) (int, *catena.Connection)
 	deregisterConnFn func(connID int)
+	shutdownTransportConnectionsFn func(owner any)
 	registerCalls    int
 	deregisterCalls  int
 	lastRegisterID   int
 	lastDeregisterID int
+	lastRegisterOwner any
+	lastShutdownOwner any
 }
 
 func makeStubServerRuntime(tb testing.TB) *stubServerRuntime {
@@ -112,14 +115,15 @@ func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoi
 	return catena.CommandResult{}, catena.StatusResult{Code: catena.INTERNAL}
 }
 
-func (s *stubServerRuntime) RegisterConnection() (int, *catena.Connection) {
-	if s.registerConnFn != nil {
-		connID, conn := s.registerConnFn()
+func (s *stubServerRuntime) RegisterTransportConnection(owner any) (int, *catena.Connection) {
+	if s.registerTransportConnFn != nil {
+		connID, conn := s.registerTransportConnFn(owner)
 		s.registerCalls++
 		s.lastRegisterID = connID
+		s.lastRegisterOwner = owner
 		return connID, conn
 	}
-	s.tb.Fatalf("RegisterConnection not implemented in stubServerRuntime")
+	s.tb.Fatalf("RegisterTransportConnection not implemented in stubServerRuntime")
 	return -1, nil
 }
 
@@ -133,13 +137,22 @@ func (s *stubServerRuntime) DeregisterConnection(connID int) {
 	s.tb.Fatalf("DeregisterConnection not implemented in stubServerRuntime")
 }
 
+func (s *stubServerRuntime) ShutdownTransportConnections(owner any) {
+	if s.shutdownTransportConnectionsFn != nil {
+		s.lastShutdownOwner = owner
+		s.shutdownTransportConnectionsFn(owner)
+		return
+	}
+	s.lastShutdownOwner = owner
+}
+
 // WithConnection wires register/deregister behavior for a single fixed connection.
 func (s *stubServerRuntime) WithConnection(
 	connection *catena.Connection,
 ) {
 	s.tb.Helper()
 
-	s.registerConnFn = func() (int, *catena.Connection) {
+	s.registerTransportConnFn = func(owner any) (int, *catena.Connection) {
 		return connection.ID, connection
 	}
 

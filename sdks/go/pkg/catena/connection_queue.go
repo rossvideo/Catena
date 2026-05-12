@@ -53,6 +53,7 @@ type Connection struct {
 	ID      int
 	Updates chan *protos.PushUpdates
 	Done    chan struct{}
+	owner   any
 }
 
 // connectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
@@ -64,14 +65,16 @@ type connectionQueue struct {
 	maxConnections int
 	wg             sync.WaitGroup
 	shuttingDown   bool
+	cond           *sync.Cond
 }
 
 type connectionQueueInterface interface {
 	setMaxConnections(max int)
-	registerConnection() (int, *Connection)
+	registerOwnedConnection(owner any) (int, *Connection)
 	deregisterConnection(connID int)
 	notifyUpdate(update *protos.PushUpdates)
 	shutdown()
+	shutdownOwner(owner any)
 	connectionCount() int
 }
 
@@ -80,10 +83,12 @@ var _ connectionQueueInterface = (*connectionQueue)(nil)
 // newConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
 func newConnectionQueue(maxConnections int) connectionQueueInterface {
-	return &connectionQueue{
+	cq := &connectionQueue{
 		connections:    make(map[int]*Connection),
 		maxConnections: maxConnections,
 	}
+	cq.cond = sync.NewCond(&cq.mu)
+	return cq
 }
 
 // setMaxConnections updates the maximum number of connections allowed (0 = unlimited).
@@ -95,7 +100,7 @@ func (cq *connectionQueue) setMaxConnections(max int) {
 
 // registerConnection creates a new connection and returns its ID and connection.
 // Returns (-1, nil) if server is shutting down or max connections reached.
-func (cq *connectionQueue) registerConnection() (int, *Connection) {
+func (cq *connectionQueue) registerOwnedConnection(owner any) (int, *Connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -112,6 +117,7 @@ func (cq *connectionQueue) registerConnection() (int, *Connection) {
 		ID:      cq.nextConnID,
 		Updates: make(chan *protos.PushUpdates, 100),
 		Done:    make(chan struct{}),
+		owner:   owner,
 	}
 	cq.connections[cq.nextConnID] = conn
 	cq.wg.Add(1)
@@ -128,6 +134,7 @@ func (cq *connectionQueue) deregisterConnection(connID int) {
 	if _, ok := cq.connections[connID]; ok {
 		delete(cq.connections, connID)
 		cq.wg.Done()
+		cq.cond.Broadcast()
 		logger.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
 	}
 }
@@ -165,6 +172,34 @@ func (cq *connectionQueue) shutdown() {
 
 	cq.wg.Wait()
 	logger.Info("All streaming connections shut down")
+}
+
+func (cq *connectionQueue) shutdownOwner(owner any) {
+	cq.mu.Lock()
+	for _, conn := range cq.connections {
+		if conn.owner != owner {
+			continue
+		}
+		select {
+		case <-conn.Done:
+		default:
+			close(conn.Done)
+		}
+	}
+
+	for cq.hasOwnerConnectionsLocked(owner) {
+		cq.cond.Wait()
+	}
+	cq.mu.Unlock()
+}
+
+func (cq *connectionQueue) hasOwnerConnectionsLocked(owner any) bool {
+	for _, conn := range cq.connections {
+		if conn.owner == owner {
+			return true
+		}
+	}
+	return false
 }
 
 // connectionCount returns the number of active connections.

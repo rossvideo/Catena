@@ -128,8 +128,9 @@ type ServerRuntime interface {
 	InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-	RegisterConnection() (int, *Connection)
+	RegisterTransportConnection(owner any) (int, *Connection)
 	DeregisterConnection(connID int)
+	ShutdownTransportConnections(owner any)
 }
 
 var _ Server = (*server)(nil)
@@ -383,9 +384,11 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	return CommandError(NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-// RegisterConnection registers a new streaming connection
-func (s *server) RegisterConnection() (int, *Connection) {
-	id, connection := s.connectionQueue.registerConnection()
+func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
+	id, connection := s.connectionQueue.registerOwnedConnection(owner)
+	if id < 0 || connection == nil {
+		return id, connection
+	}
 	// send the initial slots_added message to the new connection
 	slots := s.GetSlots()
 	uint32Slots := make([]uint32, len(slots))
@@ -406,6 +409,10 @@ func (s *server) RegisterConnection() (int, *Connection) {
 // DeregisterConnection removes a streaming connection
 func (s *server) DeregisterConnection(connID int) {
 	s.connectionQueue.deregisterConnection(connID)
+}
+
+func (s *server) ShutdownTransportConnections(owner any) {
+	s.connectionQueue.shutdownOwner(owner)
 }
 
 // SetMaxConnections sets the maximum number of streaming connections

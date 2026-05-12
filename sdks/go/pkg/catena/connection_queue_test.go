@@ -50,8 +50,9 @@ func TestNewConnectionQueue(t *testing.T) {
 
 func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 	cq := newConnectionQueue(0)
+	owner := struct{ name string }{name: "test-owner"}
 
-	connID, conn := cq.registerConnection()
+	connID, conn := cq.registerOwnedConnection(&owner)
 	if connID <= 0 {
 		t.Fatal("RegisterConnection returned negative ID")
 	}
@@ -76,18 +77,19 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 
 func TestConnectionQueue_MaxConnections(t *testing.T) {
 	cq := newConnectionQueue(2)
+	owner := struct{ name string }{name: "test-owner"}
 
-	id1, conn1 := cq.registerConnection()
+	id1, conn1 := cq.registerOwnedConnection(&owner)
 	if id1 < 0 || conn1 == nil {
 		t.Fatal("first connection should succeed")
 	}
 
-	id2, conn2 := cq.registerConnection()
+	id2, conn2 := cq.registerOwnedConnection(&owner)
 	if id2 < 0 || conn2 == nil {
 		t.Fatal("second connection should succeed")
 	}
 
-	id3, conn3 := cq.registerConnection()
+	id3, conn3 := cq.registerOwnedConnection(&owner)
 	if id3 >= 0 || conn3 != nil {
 		t.Error("third connection should be rejected (max 2)")
 	}
@@ -97,7 +99,7 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 	}
 
 	cq.deregisterConnection(id1)
-	id4, conn4 := cq.registerConnection()
+	id4, conn4 := cq.registerOwnedConnection(&owner)
 	if id4 < 0 || conn4 == nil {
 		t.Error("should be able to connect after one disconnects")
 	}
@@ -105,15 +107,16 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 
 func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 	cq := newConnectionQueue(1)
+	owner := struct{ name string }{name: "test-owner"}
 
-	cq.registerConnection()
-	id2, _ := cq.registerConnection()
+	cq.registerOwnedConnection(&owner)
+	id2, _ := cq.registerOwnedConnection(&owner)
 	if id2 >= 0 {
 		t.Error("second connection should be rejected")
 	}
 
 	cq.setMaxConnections(2)
-	id3, conn3 := cq.registerConnection()
+	id3, conn3 := cq.registerOwnedConnection(&owner)
 	if id3 < 0 || conn3 == nil {
 		t.Error("should succeed after increasing limit")
 	}
@@ -122,8 +125,10 @@ func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 	cq := newConnectionQueue(0)
 
-	_, conn1 := cq.registerConnection()
-	_, conn2 := cq.registerConnection()
+	owner := struct{ name string }{name: "test-owner"}
+
+	_, conn1 := cq.registerOwnedConnection(&owner)
+	_, conn2 := cq.registerOwnedConnection(&owner)
 
 	update := &protos.PushUpdates{
 		Slot: 0,
@@ -154,9 +159,10 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 
 func TestConnectionQueue_Shutdown(t *testing.T) {
 	cq := newConnectionQueue(0)
+	owner := struct{ name string }{name: "test-owner"}
 
-	_, conn1 := cq.registerConnection()
-	_, conn2 := cq.registerConnection()
+	_, conn1 := cq.registerOwnedConnection(&owner)
+	_, conn2 := cq.registerOwnedConnection(&owner)
 
 	go func() {
 		<-conn1.Done
@@ -177,8 +183,9 @@ func TestConnectionQueue_Shutdown(t *testing.T) {
 
 func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 	cq := newConnectionQueue(0)
+	owner := struct{ name string }{name: "test-owner"}
 
-	_, conn := cq.registerConnection()
+	_, conn := cq.registerOwnedConnection(owner)
 
 	go func() {
 		<-conn.Done
@@ -187,8 +194,42 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 
 	cq.shutdown()
 
-	id, c := cq.registerConnection()
+	id, c := cq.registerOwnedConnection(owner)
 	if id >= 0 || c != nil {
 		t.Error("should reject new connections after shutdown")
 	}
+}
+
+func TestConnectionQueue_ShutdownOwner(t *testing.T) {
+	cq := newConnectionQueue(0)
+	ownerA := struct{ name string }{name: "owner-a"}
+	ownerB := struct{ name string }{name: "owner-b"}
+
+	_, connA := cq.registerOwnedConnection(ownerA)
+	_, connB := cq.registerOwnedConnection(ownerB)
+
+	go func() {
+		<-connA.Done
+		cq.deregisterConnection(connA.ID)
+	}()
+
+	select {
+	case <-connB.Done:
+		t.Fatal("unexpected shutdown signal for unrelated owner")
+	default:
+	}
+
+	cq.shutdownOwner(ownerA)
+
+	if cq.connectionCount() != 1 {
+		t.Fatalf("expected one remaining connection after owner shutdown, got %d", cq.connectionCount())
+	}
+
+	select {
+	case <-connB.Done:
+		t.Fatal("unexpected shutdown signal for unrelated owner")
+	default:
+	}
+
+	cq.deregisterConnection(connB.ID)
 }

@@ -451,7 +451,7 @@ func TestWriteHTTPStatusResult(t *testing.T) {
 	assertStatus(t, rec, http.StatusCreated)
 }
 
-func TestErrorMessages_DevVsProd(t *testing.T) {
+func TestRestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 	tests := []struct {
 		name     string
 		env      catena.Environment
@@ -579,7 +579,7 @@ func TestValueEndpoint_Methods(t *testing.T) {
 
 func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
-	runtime.registerConnFn = func() (int, *catena.Connection) {
+	runtime.registerTransportConnFn = func(owner any) (int, *catena.Connection) {
 		return -1, nil
 	}
 
@@ -1220,5 +1220,27 @@ func TestRestTransport_GetAsset_CompressionWithError(t *testing.T) {
 
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRestTransport_Shutdown_ClosesOwnedConnections(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	called := false
+	runtime.shutdownTransportConnectionsFn = func(owner any) {
+		called = true
+		if owner != transport {
+			t.Fatalf("expected shutdown owner %p, got %p", transport, owner)
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	if err := transport.Shutdown(ctx); err != nil {
+		t.Fatalf("expected shutdown to succeed, got %v", err)
+	}
+
+	if !called {
+		t.Fatal("expected transport shutdown to close owned connections")
 	}
 }
