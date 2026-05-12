@@ -40,8 +40,6 @@ RUN groupadd -g $USER_GID $USER_NAME && \
 # Add user to sudoers
 RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-RUN sudo apt-get update && sudo apt-get install -y git
-
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 

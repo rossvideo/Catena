@@ -135,19 +135,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Setup shared go tools
-        run: |
-          # go install will go here
-          TOOLS_DIR=$RUNNER_TEMP/tools
-          mkdir -p $TOOLS_DIR
-          chmod 755 $TOOLS_DIR
-
-          # if we tell go to use it
-          echo "GOBIN=$TOOLS_DIR" >> $GITHUB_ENV
-
-          # and add it to the path
-          echo "$TOOLS_DIR" >> $GITHUB_PATH
-
       - name: Build OpenAPI and Go Dependencies
         run: |
           echo "Building OpenAPI"
