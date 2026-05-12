@@ -38,9 +38,11 @@
 
 package catena
 
-// StatusCode represents both gRPC and HTTP status codes.
-// Codes 0-16 are compatible with gRPC status codes.
-// Codes 200+ are HTTP-specific and should not be used in gRPC contexts.
+// StatusCode is a transport-neutral outcome for handlers. Values 0–16 match
+// gRPC's canonical code space and map 1:1 in the gRPC transport. Values 200+
+// are legacy HTTP-shaped codes; prefer 0–16 in new handler code—see the
+// package doc (Phase B) for which constants to use and how REST chooses 200 vs
+// 204 vs 201.
 //
 // Based on Google's gRPC project (Apache 2.0 license):
 // https://github.com/grpc/grpc
@@ -107,18 +109,22 @@ const (
 	// UNAUTHENTICATED indicates the request does not have valid authentication credentials.
 	UNAUTHENTICATED StatusCode = 16
 
-	// REST-specific status codes (do not use in gRPC contexts)
+	// REST-specific status codes (legacy; see package doc Phase B)
 
 	// CREATED indicates the request has succeeded and a new resource has been created.
+	// Prefer OK in handlers; let the REST transport emit 201 when appropriate.
 	CREATED StatusCode = 201
 
 	// ACCEPTED indicates the request has been accepted for processing.
+	// Prefer OK in handlers; let the REST transport emit 202 when appropriate.
 	ACCEPTED StatusCode = 202
 
-	// NO_CONTENT indicates the server successfully processed the request with no content.
+	// NO_CONTENT indicates success with no response body.
+	// Prefer OK in handlers; let the REST transport emit 204 when appropriate.
 	NO_CONTENT StatusCode = 204
 
 	// BAD_REQUEST indicates the request was malformed.
+	// Prefer INVALID_ARGUMENT for new code so gRPC and REST map consistently.
 	BAD_REQUEST StatusCode = 400
 
 	// METHOD_NOT_ALLOWED indicates the method is not allowed for the requested resource.
