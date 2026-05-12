@@ -1503,3 +1503,184 @@ func TestServer_GetAsset_CompressionWithError(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusNotFound, rec.Code)
 	}
 }
+
+// =============================================================================
+// Test: ParamInfo endpoint
+// =============================================================================
+
+func TestServer_RegisterGetParamInfoHandler(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	handlerCalled := false
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		handlerCalled = true
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
+		}
+		if oidPrefix != "text_box" {
+			t.Errorf("expected oidPrefix 'text_box', got %s", oidPrefix)
+		}
+		if recursive {
+			t.Error("expected recursive=false")
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("text_box", catena.NewPolyglotText("en", "Text Box"), catena.ParamTypeString, "", 0),
+		}, catena.StatusWithCode(catena.OK, "")
+	})
+
+	handler := srv.LookupGetParamInfoHandler(0)
+	infos, _ := handler(0, "text_box", false)
+
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+	if len(infos) != 1 {
+		t.Fatalf("expected 1 ParamInfo, got %d", len(infos))
+	}
+	if infos[0].GetOid() != "text_box" {
+		t.Errorf("expected oid 'text_box', got %s", infos[0].GetOid())
+	}
+}
+
+func TestServer_ParamInfo_UnaryRoute(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	handlerCalled := false
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		handlerCalled = true
+		if oidPrefix != "text_box" {
+			t.Errorf("expected oidPrefix 'text_box', got %s", oidPrefix)
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("text_box", catena.NewPolyglotText("en", "Text Box"), catena.ParamTypeString, "", 0),
+		}, catena.StatusWithCode(catena.OK, "")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "")
+
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+
+	response := parseJSONBody(t, rec)
+	info, ok := response["info"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected 'info' object in response, got %v", response)
+	}
+	if info["oid"] != "text_box" {
+		t.Errorf("expected info.oid='text_box', got %v", info["oid"])
+	}
+	if info["type"] != "STRING" {
+		t.Errorf("expected info.type='STRING', got %v", info["type"])
+	}
+}
+
+func TestServer_ParamInfo_NestedFqoid(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	receivedOidPrefix := ""
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		receivedOidPrefix = oidPrefix
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo(oidPrefix, nil, catena.ParamTypeInt32, "", 0),
+		}, catena.StatusWithCode(catena.OK, "")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/parent/child", "")
+	assertStatus(t, rec, http.StatusOK)
+	if receivedOidPrefix != "parent/child" {
+		t.Errorf("expected oidPrefix 'parent/child', got %s", receivedOidPrefix)
+	}
+}
+
+func TestServer_ParamInfo_NotFound(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.OK, "")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/missing", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}
+
+func TestServer_ParamInfo_HandlerError(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.NOT_FOUND, "param not found")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}
+
+func TestServer_ParamInfo_MethodNotAllowed(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	rec := makeRequest(t, srv, http.MethodPost, "/st2138-api/v1/0/param-info/text_box", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+}
+
+func TestServer_ParamInfo_StreamRoute(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		if oidPrefix != "parent" {
+			t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
+		}
+		if !recursive {
+			t.Error("expected recursive=true")
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("parent", nil, catena.ParamTypeStruct, "", 0),
+			catena.NewParamInfo("parent/child1", nil, catena.ParamTypeInt32, "", 0),
+			catena.NewParamInfo("parent/child2", nil, catena.ParamTypeStringArray, "", 3),
+		}, catena.StatusWithCode(catena.OK, "")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/parent/stream?recursive=true", "")
+
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "text/event-stream")
+
+	body := rec.Body.String()
+	dataCount := strings.Count(body, "data:")
+	if dataCount != 3 {
+		t.Errorf("expected 3 SSE data events, got %d\nbody:\n%s", dataCount, body)
+	}
+	if !strings.Contains(body, `"oid":"parent/child2"`) {
+		t.Errorf("expected child2 entry in stream, got body:\n%s", body)
+	}
+}
+
+func TestServer_ParamInfo_TopLevelStreamRoute(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		if oidPrefix != "" {
+			t.Errorf("expected empty oidPrefix for top-level stream, got %q", oidPrefix)
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
+			catena.NewParamInfo("b", nil, catena.ParamTypeFloat32, "", 0),
+		}, catena.StatusWithCode(catena.OK, "")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/stream", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "text/event-stream")
+
+	body := rec.Body.String()
+	if strings.Count(body, "data:") != 2 {
+		t.Errorf("expected 2 SSE data events for top-level stream, got body:\n%s", body)
+	}
+}
+
+func TestServer_ParamInfo_DefaultHandler(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}

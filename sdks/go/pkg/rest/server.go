@@ -339,6 +339,8 @@ func (s *Server) RegisterRoutes() {
 				s.handleAssetEndpoint(w, r, slot, parts[4:])
 			case "command":
 				s.handleCommandEndpoint(w, r, slot, parts[4:])
+			case "param-info":
+				s.handleParamInfoEndpoint(w, r, slot, parts[4:])
 			default:
 				val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "unknown endpoint")
 				writeHTTPResult(w, res, val)
@@ -464,6 +466,97 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 	writeHTTPResult(w, res, asset)
 }
 
+// handleParamInfoEndpoint dispatches /st2138-api/v1/{slot}/param-info/... requests.
+// Supported routes:
+//   - GET /{slot}/param-info/{fqoid}         -> unary: returns a single ParamInfoResponse JSON
+//   - GET /{slot}/param-info/{fqoid}/stream  -> SSE stream rooted at fqoid; ?recursive=true to recurse
+//   - GET /{slot}/param-info/stream          -> SSE stream of all top-level params; ?recursive=true to recurse
+func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if r.Method != http.MethodGet {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	// Per the OpenAPI spec the presence of `recursive` enables recursion
+	// regardless of its value, but accept "false" as an opt-out for symmetry
+	// with the command endpoint's `respond` flag.
+	recursive := false
+	if r.URL.Query().Has("recursive") {
+		recursive = r.URL.Query().Get("recursive") != "false"
+	}
+
+	// Parse trailing path segments. The "stream" suffix selects SSE.
+	streaming := false
+	fqoidParts := pathParts
+	if len(fqoidParts) > 0 && fqoidParts[len(fqoidParts)-1] == "stream" {
+		streaming = true
+		fqoidParts = fqoidParts[:len(fqoidParts)-1]
+	}
+	oidPrefix := strings.Join(fqoidParts, "/")
+
+	handler := s.baseServer.LookupGetParamInfoHandler(slot)
+	infos, res := handler(slot, oidPrefix, recursive)
+	if res.Code != catena.OK {
+		writeHTTPStatusResult(w, res)
+		return
+	}
+
+	if streaming {
+		s.writeParamInfoStream(w, r, infos)
+		return
+	}
+
+	// Unary mode: return the first response as a JSON object.
+	if len(infos) == 0 {
+		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, "no param info found for oid "+oidPrefix))
+		return
+	}
+	if err := WriteParamInfoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
+		logger.Error("failed to write param info response", "error", err)
+	}
+}
+
+// writeParamInfoStream streams the param info entries to the client as Server-Sent Events.
+func (s *Server) writeParamInfoStream(w http.ResponseWriter, r *http.Request, infos []catena.CatenaParamInfo) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "streaming not supported")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	ctx := r.Context()
+	for _, info := range infos {
+		select {
+		case <-ctx.Done():
+			logger.Info("param-info stream client disconnected")
+			return
+		default:
+		}
+		protoResp := info.GetProtoResponse()
+		if protoResp == nil {
+			continue
+		}
+		data, err := MarshalProtoJSON(protoResp)
+		if err != nil {
+			logger.Error("failed to marshal param info entry", "error", err)
+			return
+		}
+		if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+			logger.Error("failed to write param info SSE event", "error", err)
+			return
+		}
+		flusher.Flush()
+	}
+}
+
 func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodPost {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only POST allowed")
@@ -580,6 +673,10 @@ func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler catena.Execu
 	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
 }
 
+func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.GetParamInfoHandler) {
+	s.baseServer.RegisterGetParamInfoHandler(slot, handler)
+}
+
 func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
@@ -598,6 +695,10 @@ func (s *Server) LookupGetAssetHandler(slot uint16) catena.GetAssetHandler {
 
 func (s *Server) LookupExecuteCommandHandler(slot uint16) catena.ExecuteCommandHandler {
 	return s.baseServer.LookupExecuteCommandHandler(slot)
+}
+
+func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.GetParamInfoHandler {
+	return s.baseServer.LookupGetParamInfoHandler(slot)
 }
 
 func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {

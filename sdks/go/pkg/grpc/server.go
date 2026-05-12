@@ -329,10 +329,39 @@ func (s *Server) GetParam(ctx context.Context, req *protos.GetParamPayload) (*pr
 	return nil, status.Error(codes.Unimplemented, "GetParam not implemented")
 }
 
-// ParamInfoRequest streams parameter information
+// ParamInfoRequest streams parameter information for the given slot and OID prefix.
+// An empty oid_prefix selects all top-level parameters. When recursive is true,
+// child parameters of matching params are also included in the stream.
 func (s *Server) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
-	// This would need additional handler support in BaseServer for param info
-	return status.Error(codes.Unimplemented, "ParamInfoRequest not implemented")
+	slot, err := s.baseServer.ValidateSlot(req.GetSlot())
+	if err.Code != catena.OK {
+		return status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	oidPrefix := req.GetOidPrefix()
+	recursive := req.GetRecursive()
+	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
+
+	handler := s.baseServer.LookupGetParamInfoHandler(slot)
+	infos, res := handler(slot, oidPrefix, recursive)
+	if res.Error != "" {
+		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
+		return status.Error(ToGRPCCode(res.Code), res.Error)
+	}
+
+	for _, info := range infos {
+		protoResp := info.GetProtoResponse()
+		if protoResp == nil {
+			logger.Error("ParamInfoRequest handler returned nil response entry", "slot", slot, "oid_prefix", oidPrefix)
+			return status.Error(codes.Internal, "param info entry is nil")
+		}
+		if err := stream.Send(protoResp); err != nil {
+			logger.Error("ParamInfoRequest send error", "slot", slot, "oid_prefix", oidPrefix, "error", err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateSubscriptions handles parameter subscription updates
@@ -507,6 +536,10 @@ func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler catena.Execu
 	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
 }
 
+func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.GetParamInfoHandler) {
+	s.baseServer.RegisterGetParamInfoHandler(slot, handler)
+}
+
 func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
@@ -525,6 +558,10 @@ func (s *Server) LookupGetAssetHandler(slot uint16) catena.GetAssetHandler {
 
 func (s *Server) LookupExecuteCommandHandler(slot uint16) catena.ExecuteCommandHandler {
 	return s.baseServer.LookupExecuteCommandHandler(slot)
+}
+
+func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.GetParamInfoHandler {
+	return s.baseServer.LookupGetParamInfoHandler(slot)
 }
 
 func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {

@@ -44,6 +44,11 @@ type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
 
+// GetParamInfoHandler returns parameter info entries matching oidPrefix at the
+// given slot. If oidPrefix is "", all top-level parameters should be returned.
+// If recursive is true, child parameters should also be included.
+type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+
 // CatenaServer is the transport-agnostic interface satisfied by both
 // rest.Server and grpc.Server, enabling shared handler registration code.
 type CatenaServer interface {
@@ -52,6 +57,7 @@ type CatenaServer interface {
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
+	RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler)
 	BroadcastUpdate(slot uint16, fqoid string, value any)
 	Start(port int) error
 	Shutdown()

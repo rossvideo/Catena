@@ -201,6 +201,31 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 	return v, catena.StatusResult{Code: catena.OK}
 }
 
+// WriteParamInfoJSON marshals a protos.ParamInfoResponse to JSON and writes it
+// to the HTTP response with the specified status code. If resp is nil, only the
+// status code is written.
+func WriteParamInfoJSON(w http.ResponseWriter, resp *protos.ParamInfoResponse, statusCode int) error {
+	w.Header().Set("Content-Type", "application/json")
+
+	if resp == nil {
+		w.WriteHeader(statusCode)
+		return nil
+	}
+
+	b, err := MarshalProtoJSON(resp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"error": "failed to marshal param info response",
+		})
+		return fmt.Errorf("failed to marshal param info response: %w", err)
+	}
+
+	w.WriteHeader(statusCode)
+	_, writeErr := w.Write(b)
+	return writeErr
+}
+
 // WriteResponseJSON marshals a protos.Value to JSON and writes it to the HTTP response
 // with the specified status code. If the value is nil, only the status code is written.
 func WriteResponseJSON(w http.ResponseWriter, value *protos.Value, statusCode int) error {
