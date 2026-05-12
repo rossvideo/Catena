@@ -46,6 +46,7 @@ type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
 type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+type HeartbeatHandler func(slot uint16)
 
 // CatenaServer is the transport-agnostic interface satisfied by both
 // rest.Server and grpc.Server, enabling shared handler registration code.

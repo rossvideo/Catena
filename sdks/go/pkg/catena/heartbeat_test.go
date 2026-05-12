@@ -148,52 +148,18 @@ func TestHeartbeat_OnTick(t *testing.T) {
 	}
 }
 
-func TestHeartbeat_MultipleHandlers(t *testing.T) {
+func TestHeartbeat_OnTickReplacesPrevious(t *testing.T) {
 	hb := NewHeartbeat()
 
-	var count1, count2, count3 atomic.Int32
+	var count1, count2 atomic.Int32
 
-	// Also verifies method chaining returns same instance
-	result := hb.OnTick(func() {
+	hb.OnTick(func() {
 		count1.Add(1)
-	}).OnTick(func() {
+	})
+
+	// Replace the callback
+	hb.OnTick(func() {
 		count2.Add(1)
-	}).OnTick(func() {
-		count3.Add(1)
-	})
-
-	if result != hb {
-		t.Error("OnTick should return the same Heartbeat for chaining")
-	}
-
-	if err := hb.Start(10 * time.Millisecond); err != nil {
-		t.Fatalf("Start failed: %v", err)
-	}
-	time.Sleep(35 * time.Millisecond)
-	hb.Stop()
-
-	c1, c2, c3 := count1.Load(), count2.Load(), count3.Load()
-	if c1 < 2 || c2 < 2 || c3 < 2 {
-		t.Errorf("expected at least 2 ticks each, got %d, %d, %d", c1, c2, c3)
-	}
-	if c1 != c2 || c2 != c3 {
-		t.Errorf("handlers should have same tick count, got %d, %d, %d", c1, c2, c3)
-	}
-}
-
-func TestHeartbeat_HandlerPanicRecovery(t *testing.T) {
-	hb := NewHeartbeat()
-
-	var tickCount atomic.Int32
-
-	// First handler panics
-	hb.OnTick(func() {
-		panic("test panic")
-	})
-
-	// Second handler should still be called
-	hb.OnTick(func() {
-		tickCount.Add(1)
 	})
 
 	if err := hb.Start(10 * time.Millisecond); err != nil {
@@ -202,9 +168,12 @@ func TestHeartbeat_HandlerPanicRecovery(t *testing.T) {
 	time.Sleep(35 * time.Millisecond)
 	hb.Stop()
 
-	count := tickCount.Load()
-	if count < 2 {
-		t.Errorf("expected at least 2 ticks despite panic, got %d", count)
+	c1, c2 := count1.Load(), count2.Load()
+	if c1 != 0 {
+		t.Errorf("first callback should not have been called, got %d ticks", c1)
+	}
+	if c2 < 2 {
+		t.Errorf("replacement callback should have ticked, got %d", c2)
 	}
 }
 
@@ -247,7 +216,7 @@ func TestHeartbeat_RestartAfterStop(t *testing.T) {
 	hb.Stop()
 	firstRun := tickCount.Load()
 
-	// Second run
+	// Second run — callback persists across restart
 	if err := hb.Start(10 * time.Millisecond); err != nil {
 		t.Fatalf("Restart failed: %v", err)
 	}
@@ -273,7 +242,7 @@ func TestHeartbeat_OnTickWhileRunning(t *testing.T) {
 	}
 	time.Sleep(25 * time.Millisecond)
 
-	// Register a new handler while already running
+	// Replace the callback while running
 	hb.OnTick(func() {
 		count2.Add(1)
 	})
@@ -281,17 +250,14 @@ func TestHeartbeat_OnTickWhileRunning(t *testing.T) {
 	time.Sleep(35 * time.Millisecond)
 	hb.Stop()
 
-	c1, c2 := count1.Load(), count2.Load()
-	if c1 < 4 {
-		t.Errorf("first handler should have ticked throughout, got %d", c1)
-	}
+	c2 := count2.Load()
 	if c2 < 2 {
-		t.Errorf("handler added while running should have ticked, got %d", c2)
+		t.Errorf("replacement callback should have ticked, got %d", c2)
 	}
 }
 
-func TestHeartbeat_NoHandlers(t *testing.T) {
-	// Starting with no handlers should not panic
+func TestHeartbeat_NoCallback(t *testing.T) {
+	// Starting with no callback should not panic
 	hb := NewHeartbeat()
 	if err := hb.Start(10 * time.Millisecond); err != nil {
 		t.Fatalf("Start failed: %v", err)

@@ -272,8 +272,15 @@ func (bs *BaseServer) StartHeartbeat(interval time.Duration) {
 			handlers[k] = v
 		}
 		bs.Mu.Unlock()
-		for _, handler := range handlers {
-			handler()
+		for slot, handler := range handlers {
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Error("panic in heartbeat handler", "slot", slot, "error", r)
+					}
+				}()
+				handler(slot)
+			}()
 		}
 	})
 

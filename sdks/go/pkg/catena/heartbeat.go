@@ -38,50 +38,28 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
-//server.go has an api to control its instance of heartbeat
-//for more manual control, the user can interact with it directly via GetHeartbeat() and call Start/Stop/OnTick as needed
-/*
-hb := catena.NewHeartbeat()
-hb.OnTick(func() {
-    srv.BroadcastUpdate(0, "/product/version", "1.0.0")
-})
-srv.SetHeartbeat(hb)
-hb.Start(5 * time.Second)
-// ... later ...
-hb.Stop()
-*/
-
-// HeartbeatHandler is called on each heartbeat tick.
-// Handlers should return quickly to avoid blocking the heartbeat goroutine.
-type HeartbeatHandler func()
-
-// Heartbeat emits periodic tick events at a configurable interval.
-// It is safe for concurrent use; multiple handlers can be registered
-// and will be called sequentially on each tick.
+// Heartbeat is a periodic timer that invokes a single callback on each tick.
+// It is safe for concurrent use. The callback is set via OnTick and is not
+// stored internally — the caller owns handler lifecycle and panic recovery.
 type Heartbeat struct {
-	mu       sync.Mutex
-	running  bool
-	stopCh   chan struct{}
-	handlers []HeartbeatHandler
-	wg       sync.WaitGroup
+	mu      sync.Mutex
+	running bool
+	stopCh  chan struct{}
+	onTick  func()
+	wg      sync.WaitGroup
 }
 
 // NewHeartbeat creates a new Heartbeat instance.
 func NewHeartbeat() *Heartbeat {
-	return &Heartbeat{
-		handlers: make([]HeartbeatHandler, 0),
-	}
+	return &Heartbeat{}
 }
 
-// OnTick registers a handler to be called on each heartbeat tick.
-// Multiple handlers can be registered and will be called in order.
-// Handlers should not block for long periods.
-// Returns the Heartbeat for method chaining.
-func (h *Heartbeat) OnTick(handler HeartbeatHandler) *Heartbeat {
+// OnTick sets the callback to be invoked on each heartbeat tick.
+// Only one callback is supported; subsequent calls replace the previous one.
+func (h *Heartbeat) OnTick(fnTick func()) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.handlers = append(h.handlers, handler)
-	return h
+	h.onTick = fnTick
 }
 
 // Start begins emitting tick events at the specified interval.
@@ -143,26 +121,12 @@ func (h *Heartbeat) run(interval time.Duration) {
 		case <-h.stopCh:
 			return
 		case <-ticker.C:
-			h.emitTick()
+			h.mu.Lock()
+			fn := h.onTick
+			h.mu.Unlock()
+			if fn != nil {
+				fn()
+			}
 		}
-	}
-}
-
-// emitTick calls all registered handlers, recovering from panics.
-func (h *Heartbeat) emitTick() {
-	h.mu.Lock()
-	handlers := make([]HeartbeatHandler, len(h.handlers))
-	copy(handlers, h.handlers)
-	h.mu.Unlock()
-
-	for _, handler := range handlers {
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					logger.Error("panic in heartbeat handler", "error", r)
-				}
-			}()
-			handler()
-		}()
 	}
 }

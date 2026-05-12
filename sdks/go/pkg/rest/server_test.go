@@ -157,18 +157,23 @@ func TestServer_RegisterHeartbeatHandler(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
 	handlerCalled := false
-	srv.RegisterHeartbeatHandler(0, func() {
+	var receivedSlot uint16
+	srv.RegisterHeartbeatHandler(0, func(slot uint16) {
 		handlerCalled = true
+		receivedSlot = slot
 	})
 
 	handler := srv.LookupHeartbeatHandler(0)
 	if handler == nil {
 		t.Fatal("expected heartbeat handler to be registered, got nil")
 	}
-	handler()
+	handler(0)
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
+	}
+	if receivedSlot != 0 {
+		t.Errorf("expected slot 0, got %d", receivedSlot)
 	}
 }
 
