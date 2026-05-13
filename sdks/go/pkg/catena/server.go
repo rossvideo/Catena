@@ -105,9 +105,9 @@ type Transport interface {
 // The concrete implementation is intentionally hidden.
 type Server interface {
 	RegisterTransport(transport Transport) error
-	DeregisterTransport(transport Transport) error
+	DeregisterTransport(ctx context.Context, transport Transport) error
 	Wait()
-	Shutdown()
+	Shutdown(ctx context.Context)
 
 	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
@@ -186,7 +186,7 @@ func (s *server) RegisterTransport(transport Transport) error {
 	return transport.Start(ctx, s)
 }
 
-func (s *server) DeregisterTransport(transport Transport) error {
+func (s *server) DeregisterTransport(ctx context.Context, transport Transport) error {
 	s.mu.Lock()
 	idx := -1
 	for i, t := range s.transports {
@@ -205,14 +205,14 @@ func (s *server) DeregisterTransport(transport Transport) error {
 	s.mu.Unlock()
 
 	// Shutdown may block while draining work; call it outside the server lock.
-	return transport.Shutdown(context.Background())
+	return transport.Shutdown(ctx)
 }
 
 func (s *server) Wait() {
 	<-s.stopped
 }
 
-func (s *server) Shutdown() {
+func (s *server) Shutdown(ctx context.Context) {
 	s.mu.Lock()
 	if s.shutdown {
 		s.mu.Unlock()
@@ -227,7 +227,7 @@ func (s *server) Shutdown() {
 
 	// Shutdown all transports outside the lock.
 	for _, t := range transports {
-		err := t.Shutdown(context.Background())
+		err := t.Shutdown(ctx)
 		if err != nil {
 			logger.Error("Error shutting down transport", "error", err)
 		}

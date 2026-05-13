@@ -242,7 +242,7 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 
 	srv.transports = append(srv.transports, transport)
 
-	err := srv.DeregisterTransport(transport)
+	err := srv.DeregisterTransport(context.Background(), transport)
 
 	if err != expectedError {
 		t.Errorf("expected error %v from transport shutdown, got %v", expectedError, err)
@@ -259,7 +259,7 @@ func TestServer_DeregisterTransport_NotFound(t *testing.T) {
 	srv := NewServer(100).(*server)
 
 	// Simulate deregistering a transport that was never registered
-	err := srv.DeregisterTransport(&stubTransport{tb: t})
+	err := srv.DeregisterTransport(context.Background(), &stubTransport{tb: t})
 
 	if err != nil {
 		t.Errorf("expected no error when deregistering non-existent transport, got %v", err)
@@ -272,7 +272,7 @@ func TestServer_DeregisterTransport_Shutdown(t *testing.T) {
 	// Simulate server shutdown
 	srv.shutdown = true
 
-	err := srv.DeregisterTransport(&stubTransport{tb: t})
+	err := srv.DeregisterTransport(context.Background(), &stubTransport{tb: t})
 
 	// this isn't an error
 	if err != nil {
@@ -297,7 +297,7 @@ func TestServer_Wait(t *testing.T) {
 	default:
 	}
 
-	srv.Shutdown()
+	srv.Shutdown(context.Background())
 
 	select {
 	case <-done:
@@ -322,7 +322,7 @@ func TestServer_Wait_MultipleCalls(t *testing.T) {
 		close(done2)
 	}()
 
-	srv.Shutdown()
+	srv.Shutdown(context.Background())
 
 	select {
 	case <-done1:
@@ -353,8 +353,8 @@ func TestServer_Shutdown_Idempotent(t *testing.T) {
 	})
 
 	// Call Shutdown multiple times; it should not cause errors
-	srv.Shutdown()
-	srv.Shutdown()
+	srv.Shutdown(context.Background())
+	srv.Shutdown(context.Background())
 
 	// If we reach this point without panicking or erroring, the test passes
 }
