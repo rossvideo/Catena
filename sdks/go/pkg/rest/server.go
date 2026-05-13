@@ -118,7 +118,7 @@ func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatu
 		return
 	}
 
-	if err := WriteResponseJSON(w, protoValue, httpStatus); err != nil {
+	if err := WriteProtoJSON(w, protoValue, httpStatus); err != nil {
 		logger.Error("failed to write value response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -523,7 +523,7 @@ func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if err := WriteParamInfoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
+	if err := WriteProtoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
 	}
 }
@@ -613,7 +613,7 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		cmdResult, _ = catena.CommandNoResponse()
 	}
 
-	_ = WriteCommandResponseJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
+	_ = WriteProtoJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
 }
 
 // ToHTTPStatus converts a StatusCode to an HTTP status code.
