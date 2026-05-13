@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -18,6 +19,7 @@ type SetValueHandler = catena.SetValueHandler
 type GetAssetHandler = catena.GetAssetHandler
 type ExecuteCommandHandler = catena.ExecuteCommandHandler
 type GetParamInfoHandler = catena.GetParamInfoHandler
+type HeartbeatHandler = catena.HeartbeatHandler
 
 type BaseServer struct {
 	Mu                     sync.Mutex
@@ -28,7 +30,9 @@ type BaseServer struct {
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	getParamInfoHandlers   map[uint16]GetParamInfoHandler
+	heartbeatHandlers      map[uint16]HeartbeatHandler
 	connectionQueue        *ConnectionQueue
+	heartbeat              *catena.Heartbeat
 }
 
 // Default handlers that return "not implemented"
@@ -99,6 +103,12 @@ func (bs *BaseServer) RegisterGetParamInfoHandler(slot uint16, handler GetParamI
 	bs.getParamInfoHandlers[slot] = handler
 }
 
+func (bs *BaseServer) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	bs.heartbeatHandlers[slot] = handler
+}
+
 // Lookup helper functions
 func (bs *BaseServer) LookupGetDeviceHandler(slot uint16) DeviceHandler {
 	if handler, ok := bs.getDeviceHandlers[slot]; ok {
@@ -142,6 +152,13 @@ func (bs *BaseServer) LookupGetParamInfoHandler(slot uint16) GetParamInfoHandler
 	return DefaultGetParamInfoHandler
 }
 
+func (bs *BaseServer) LookupHeartbeatHandler(slot uint16) HeartbeatHandler {
+	if handler, ok := bs.heartbeatHandlers[slot]; ok {
+		return handler
+	}
+	return nil
+}
+
 func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 	bs := &BaseServer{
 		Slots:                  make([]uint32, len(slots)),
@@ -151,6 +168,7 @@ func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		getParamInfoHandlers:   make(map[uint16]GetParamInfoHandler),
+		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
 		connectionQueue:        newConnectionQueue(maxConnections),
 	}
 
@@ -235,4 +253,71 @@ func (bs *BaseServer) BroadcastUpdate(slot uint16, oid string, value any) {
 		},
 	}
 	bs.NotifyUpdate(update)
+}
+
+// StartHeartbeat begins periodic invocation of all registered heartbeat handlers.
+// If a heartbeat is already running, it is stopped before starting the new one.
+// If the interval is invalid (zero or negative), the existing heartbeat is preserved.
+func (bs *BaseServer) StartHeartbeat(interval time.Duration) {
+	if interval <= 0 {
+		logger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
+		return
+	}
+
+	hb := catena.NewHeartbeat()
+	hb.OnTick(func() {
+		bs.Mu.Lock()
+		handlers := make(map[uint16]HeartbeatHandler, len(bs.heartbeatHandlers))
+		for k, v := range bs.heartbeatHandlers {
+			handlers[k] = v
+		}
+		bs.Mu.Unlock()
+		for slot, handler := range handlers {
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Error("panic in heartbeat handler", "slot", slot, "error", r)
+					}
+				}()
+				handler(slot)
+			}()
+		}
+	})
+
+	// Grab and clear the old heartbeat under the lock.
+	bs.Mu.Lock()
+	old := bs.heartbeat
+	bs.heartbeat = nil
+	bs.Mu.Unlock()
+
+	// Stop the old heartbeat outside the lock (blocks until its goroutine exits).
+	if old != nil {
+		old.Stop()
+	}
+
+	// Atomically store and start the new heartbeat so a concurrent StopHeartbeat
+	// cannot miss the new instance.
+	bs.Mu.Lock()
+	bs.heartbeat = hb
+	err := hb.Start(interval)
+	bs.Mu.Unlock()
+
+	if err != nil {
+		logger.Error("Heartbeat failed to start", "interval", interval, "error", err)
+	} else {
+		logger.Info("Heartbeat started", "interval", interval)
+	}
+}
+
+// StopHeartbeat stops the heartbeat if one is running.
+func (bs *BaseServer) StopHeartbeat() {
+	bs.Mu.Lock()
+	hb := bs.heartbeat
+	bs.heartbeat = nil
+	bs.Mu.Unlock()
+
+	if hb != nil {
+		hb.Stop()
+		logger.Info("Heartbeat stopped")
+	}
 }

@@ -44,6 +44,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/internal"
@@ -199,6 +200,7 @@ func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
 // Shutdown gracefully shuts down the server by closing all SSE connections
 // and waiting for their goroutines to finish.
 func (s *Server) Shutdown() {
+	s.baseServer.StopHeartbeat()
 	s.baseServer.ShutdownConnections()
 }
 
@@ -688,6 +690,10 @@ func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.GetPara
 	s.baseServer.RegisterGetParamInfoHandler(slot, handler)
 }
 
+func (s *Server) RegisterHeartbeatHandler(slot uint16, handler catena.HeartbeatHandler) {
+	s.baseServer.RegisterHeartbeatHandler(slot, handler)
+}
+
 func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
@@ -712,8 +718,20 @@ func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.GetParamInfoHandl
 	return s.baseServer.LookupGetParamInfoHandler(slot)
 }
 
+func (s *Server) LookupHeartbeatHandler(slot uint16) catena.HeartbeatHandler {
+	return s.baseServer.LookupHeartbeatHandler(slot)
+}
+
 func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
 	s.baseServer.BroadcastUpdate(slot, fqoid, value)
+}
+
+func (s *Server) StartHeartbeat(interval time.Duration) {
+	s.baseServer.StartHeartbeat(interval)
+}
+
+func (s *Server) StopHeartbeat() {
+	s.baseServer.StopHeartbeat()
 }
 
 func (s *Server) SetMaxConnections(max int) {

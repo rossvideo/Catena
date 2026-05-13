@@ -37,6 +37,8 @@
 
 package catena
 
+import "time"
+
 // Handler function types used by both REST and gRPC servers.
 type DeviceHandler func() (CatenaDevice, StatusResult)
 type GetValueHandler func(slot uint16, fqoid string) (CatenaValue, StatusResult)
@@ -44,6 +46,7 @@ type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
 type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+type HeartbeatHandler func(slot uint16)
 
 // CatenaServer is the transport-agnostic interface satisfied by both
 // rest.Server and grpc.Server, enabling shared handler registration code.
@@ -54,7 +57,10 @@ type CatenaServer interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler)
+	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	BroadcastUpdate(slot uint16, fqoid string, value any)
+	StartHeartbeat(interval time.Duration)
+	StopHeartbeat()
 	Start(port int) error
 	Shutdown()
 }
