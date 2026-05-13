@@ -92,18 +92,10 @@ jobs:
           echo "Done building OpenAPI"
           mkdir -p ${BUILD_TARGET} 
 
-          # Install Go Dependencies
+          # Setup Go environment
           cd ${GITHUB_WORKSPACE}/sdks/go
           git config --global --add safe.directory /__w/Catena/Catena
-          go install golang.org/x/tools/gopls@latest
-          go install github.com/go-delve/delve/cmd/dlv@latest
           
-          # Ensure protoc and plugins are available
-          sudo apt-get update && sudo apt-get install -y protobuf-compiler || true
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-          
-          # Setup Go environment
           ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh root ${BUILD_TARGET} ${GITHUB_WORKSPACE}
           cd ${GITHUB_WORKSPACE}/sdks/go
           make
@@ -130,7 +122,6 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
-      options: --user root:root
     
     env:
       CMAKE_BUILD_TYPE: ''
@@ -143,19 +134,6 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Setup shared go tools
-        run: |
-          # go install will go here
-          TOOLS_DIR=$RUNNER_TEMP/tools
-          mkdir -p $TOOLS_DIR
-          chmod 755 $TOOLS_DIR
-
-          # if we tell go to use it
-          echo "GOBIN=$TOOLS_DIR" >> $GITHUB_ENV
-
-          # and add it to the path
-          echo "$TOOLS_DIR" >> $GITHUB_PATH
-
       - name: Build OpenAPI and Go Dependencies
         run: |
           echo "Building OpenAPI"
@@ -164,35 +142,18 @@ jobs:
           echo "Done building OpenAPI"
           mkdir -p ${BUILD_TARGET} 
 
-          # Install Go Dependencies
+          # Setup Go environment
           cd ${GITHUB_WORKSPACE}/sdks/go
           git config --global --add safe.directory /__w/Catena/Catena
-          go install golang.org/x/tools/gopls@latest
-          go install github.com/go-delve/delve/cmd/dlv@latest
-          
-          # Ensure protoc and plugins are available
-          sudo apt-get update && sudo apt-get install -y protobuf-compiler || true
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-          go install github.com/axw/gocov/gocov@latest
-          go install github.com/matm/gocov-html/cmd/gocov-html@latest
 
-          # Setup Go environment
           ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh root ${BUILD_TARGET} ${GITHUB_WORKSPACE}
           cd ${GITHUB_WORKSPACE}/sdks/go
           make
 
       - name: Run unit tests with coverage
         run: |
-          # Create non-root user for testing
-          useradd -m -s /bin/bash testuser 2>/dev/null || true
-          
-          # Ensure workspace is owned by testuser
-          chown -R testuser:testuser ${GITHUB_WORKSPACE}
-          
-          # Run tests as non-root to properly test permission errors
-          # Using runuser to preserve environment including PATH
-          runuser -u testuser -- bash -c "cd ${GITHUB_WORKSPACE}/sdks/go && make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html"
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html
 
       - name: Generate coverage report
         run: |
@@ -224,20 +185,12 @@ jobs:
     timeout-minutes: 10
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
-      options: --user root:root
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-
-      - name: Install protoc and Go plugins
-        run: |
-          sudo apt-get update && sudo apt-get install -y protobuf-compiler
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Generate Go protos from SMPTE submodule
         working-directory: sdks/go

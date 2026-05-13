@@ -1,8 +1,8 @@
 module github.com/rossvideo/catena/sdks/go
 
-go 1.24.0
+go 1.25.0
 
-toolchain go1.24.13
+toolchain go1.25.10
 
 require (
 	github.com/valyala/fastjson v1.6.10
