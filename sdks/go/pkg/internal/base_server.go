@@ -17,7 +17,7 @@ type GetValueHandler = catena.GetValueHandler
 type SetValueHandler = catena.SetValueHandler
 type GetAssetHandler = catena.GetAssetHandler
 type ExecuteCommandHandler = catena.ExecuteCommandHandler
-type GetParamInfoHandler = catena.GetParamInfoHandler
+type GetParamInfoHandler = catena.ParamInfoHandler
 
 type BaseServer struct {
 	Mu                     sync.Mutex

@@ -55,7 +55,7 @@ type GetValueHandler func(slot uint16, fqoid string) (CatenaValue, StatusResult)
 type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
 
 var ErrServerStopped = errors.New("server is stopped")
 
@@ -67,7 +67,7 @@ type CatenaServer interface {
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
-	RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler)
+	RegisterGetParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	BroadcastUpdate(slot uint16, fqoid string, value any)
 	Start(port int) error
 	Shutdown()
@@ -116,6 +116,7 @@ type Server interface {
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
+	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 
 	SetMaxConnections(max int)
 	ConnectionCount() int
@@ -130,6 +131,7 @@ type ServerRuntime interface {
 	InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
+	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
 	RegisterTransportConnection(owner any) (int, *Connection)
 	DeregisterConnection(connID int)
 	ShutdownTransportConnections(owner any)
@@ -149,6 +151,7 @@ type server struct {
 	setValueHandlers       map[uint16]SetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
+	paramInfoHandlers      map[uint16]ParamInfoHandler
 	connectionQueue        connectionQueueInterface
 	transports             []Transport
 }
@@ -164,6 +167,7 @@ func NewServer(maxConnections int) Server {
 		setValueHandlers:       make(map[uint16]SetValueHandler),
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
+		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		connectionQueue:        newConnectionQueue(maxConnections),
 		transports:             []Transport{},
 	}
@@ -321,6 +325,17 @@ func (s *server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteComma
 	}
 }
 
+func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler) {
+	s.mu.Lock()
+	s.paramInfoHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
 func (s *server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getDeviceHandlers[slot]
@@ -384,6 +399,19 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	// TODO: lookup default handler for slot
 	logger.Warning("ExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
 	return CommandError(NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult) {
+	s.mu.Lock()
+	handler, ok := s.paramInfoHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, oidPrefix, recursive)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
+	return nil, StatusWithCode(NOT_FOUND, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {

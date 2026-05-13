@@ -542,7 +542,7 @@ func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler catena.Execu
 	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
 }
 
-func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.GetParamInfoHandler) {
+func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.ParamInfoHandler) {
 	s.baseServer.RegisterGetParamInfoHandler(slot, handler)
 }
 
@@ -566,7 +566,7 @@ func (s *Server) LookupExecuteCommandHandler(slot uint16) catena.ExecuteCommandH
 	return s.baseServer.LookupExecuteCommandHandler(slot)
 }
 
-func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.GetParamInfoHandler {
+func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.ParamInfoHandler {
 	return s.baseServer.LookupGetParamInfoHandler(slot)
 }
 

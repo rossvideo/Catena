@@ -695,6 +695,185 @@ func TestGrpcTransport_ExternalObjectRequest_HandlerError(t *testing.T) {
 }
 
 // =============================================================================
+// Test: ParamInfoRequest
+// =============================================================================
+
+func TestGrpcTransport_ParamInfoRequest_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		handlerCalled = true
+		if oidPrefix != "parent" {
+			t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
+		}
+		if !recursive {
+			t.Error("expected recursive=true")
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("parent", catena.NewPolyglotText("en", "Parent"), catena.ParamTypeStruct, "", 0),
+			catena.NewParamInfo("parent/child", nil, catena.ParamTypeInt32, "", 0),
+			catena.NewParamInfo("parent/arr", nil, catena.ParamTypeStringArray, "", 5),
+		}, catena.StatusWithCode(catena.OK, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 0, "parent", true)
+	assertNoError(t, err)
+
+	count := 0
+	var lastEntry *protos.ParamInfoResponse
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		assertNoError(t, err)
+		count++
+		lastEntry = msg
+	}
+
+	if count != 3 {
+		t.Errorf("expected 3 entries, got %d", count)
+	}
+	if lastEntry == nil || lastEntry.GetInfo() == nil {
+		t.Fatal("expected last entry to have populated Info")
+	}
+	if lastEntry.GetArrayLength() != 5 {
+		t.Errorf("expected last entry array_length=5, got %d", lastEntry.GetArrayLength())
+	}
+	if !handlerCalled {
+		t.Error("handler was not called")
+	}
+}
+
+func TestGrpcTransport_ParamInfoRequest_TopLevel(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		if oidPrefix != "" {
+			t.Errorf("expected empty oidPrefix, got %q", oidPrefix)
+		}
+		if recursive {
+			t.Error("expected recursive=false")
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
+			catena.NewParamInfo("b", nil, catena.ParamTypeFloat32, "", 0),
+		}, catena.StatusWithCode(catena.OK, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 0, "", false)
+	assertNoError(t, err)
+
+	count := 0
+	for {
+		_, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		assertNoError(t, err)
+		count++
+	}
+	if count != 2 {
+		t.Errorf("expected 2 entries, got %d", count)
+	}
+}
+
+func TestGrpcTransport_ParamInfoRequest_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.NOT_FOUND, "param not found")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 0, "missing", false)
+	if err != nil {
+		assertGRPCCode(t, err, codes.NotFound, "handler error at stream creation")
+		return
+	}
+	_, err = stream.Recv()
+	assertGRPCCode(t, err, codes.NotFound, "handler error at recv")
+}
+
+// TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound verifies that the gRPC
+// transport promotes an OK + empty result to NOT_FOUND.
+func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
+	t.Run("specific oid empty", func(t *testing.T) {
+		ctx := context.Background()
+		_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+		defer cleanup()
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.OK, "")
+		}
+
+		client, cleanup := setupGRPCClient(t, ctx, lis)
+		defer cleanup()
+
+		stream, err := makeParamInfoRequest(t, client, ctx, 0, "missing", false)
+		if err != nil {
+			assertGRPCCode(t, err, codes.NotFound, "empty result at stream creation")
+			return
+		}
+		_, err = stream.Recv()
+		assertGRPCCode(t, err, codes.NotFound, "empty result at recv")
+	})
+
+	t.Run("top-level empty", func(t *testing.T) {
+		ctx := context.Background()
+		_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+		defer cleanup()
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.OK, "")
+		}
+
+		client, cleanup := setupGRPCClient(t, ctx, lis)
+		defer cleanup()
+
+		stream, err := makeParamInfoRequest(t, client, ctx, 0, "", false)
+		if err != nil {
+			assertGRPCCode(t, err, codes.NotFound, "empty top-level at stream creation")
+			return
+		}
+		_, err = stream.Recv()
+		assertGRPCCode(t, err, codes.NotFound, "empty top-level at recv")
+	})
+}
+
+func TestGrpcTransport_ParamInfoRequest_SlotExceedsMax(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 70000, "x", false)
+	if err != nil {
+		assertGRPCCode(t, err, codes.InvalidArgument, "slot exceeds uint16 max at stream creation")
+		return
+	}
+	_, err = stream.Recv()
+	assertGRPCCode(t, err, codes.InvalidArgument, "slot exceeds uint16 max at recv")
+}
+
+// =============================================================================
 // Test: ExecuteCommand
 // =============================================================================
 
@@ -1205,8 +1384,13 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 		},
 		{
 			name:       "ParamInfoRequest",
-			devMessage: "ParamInfoRequest not implemented",
-			grpcCode:   codes.Unimplemented,
+			devMessage: "param not found",
+			grpcCode:   codes.NotFound,
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+					return nil, catena.StatusResult{Code: catena.NOT_FOUND, Error: "param not found"}
+				}
+			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{Slot: 0, OidPrefix: "device"})
 				if err != nil {
@@ -1310,20 +1494,6 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 					Slot: 0,
 					Oid:  "device.param1",
 				})
-				return err
-			},
-		},
-		{
-			name: "ParamInfoRequest",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				stream, err := client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{
-					Slot:      0,
-					OidPrefix: "device",
-				})
-				if err != nil {
-					return err
-				}
-				_, err = stream.Recv()
 				return err
 			},
 		},

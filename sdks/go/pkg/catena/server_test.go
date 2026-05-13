@@ -533,6 +533,33 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterParamInfoHandler(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	handlerCalled := false
+	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult) {
+		handlerCalled = true
+		if oidPrefix != "test/param" {
+			t.Errorf("expected oidPrefix 'test/param', got %s", oidPrefix)
+		}
+		return []CatenaParamInfo{}, StatusResult{Code: OK}
+	})
+
+	actual, _ := srv.InvokeParamInfoHandler(0, "test/param", false)
+
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+	if len(actual) != 0 {
+		t.Errorf("expected 0 param info entries, got %d", len(actual))
+	}
+
+	// check that the slot is registered
+	if !slices.Contains(srv.GetSlots(), uint16(0)) {
+		t.Error("slot 0 should be registered in server slots")
+	}
+}
+
 func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
 	srv := NewServer(100).(*server)
 
@@ -601,6 +628,21 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 	}
 
 	_, status := srv.InvokeExecuteCommandHandler(0, "test/command", nil)
+
+	// no handler should return NOT_FOUND status
+	if status.Code != NOT_FOUND {
+		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	}
+}
+
+func TestServer_ParamInfo_NoHandler(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	if len(srv.GetSlots()) != 0 {
+		t.Errorf("expected 0 slots, got %d", len(srv.GetSlots()))
+	}
+
+	_, status := srv.InvokeParamInfoHandler(0, "test/param", false)
 
 	// no handler should return NOT_FOUND status
 	if status.Code != NOT_FOUND {

@@ -173,6 +173,16 @@ func makeConnectRequest(t *testing.T, client protos.CatenaServiceClient, ctx con
 	return client.Connect(ctx, &protos.ConnectPayload{})
 }
 
+// makeParamInfoRequest initiates a ParamInfoRequest stream for parameter info entries.
+func makeParamInfoRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oidPrefix string, recursive bool) (grpc.ServerStreamingClient[protos.ParamInfoResponse], error) {
+	t.Helper()
+	return client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{
+		Slot:      slot,
+		OidPrefix: oidPrefix,
+		Recursive: recursive,
+	})
+}
+
 // --- Stream reading helpers ---
 
 // receiveDeviceComponent reads one DeviceComponent from a stream and returns it.

@@ -392,10 +392,44 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 	return nil, status.Error(codes.Unimplemented, "GetParam not implemented")
 }
 
-// ParamInfoRequest streams parameter information
+// ParamInfoRequest streams parameter information for the given slot and OID prefix.
 func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
-	// This would need additional handler support in BaseServer for param info
-	return status.Error(codes.Unimplemented, "ParamInfoRequest not implemented")
+	slot, err := catena.ValidateSlot(req.GetSlot())
+	if err.Code != catena.OK {
+		return status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	oidPrefix := req.GetOidPrefix()
+	recursive := req.GetRecursive()
+	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
+
+	infos, res := s.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
+	if res.Error != "" {
+		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
+		return status.Error(ToGRPCCode(res.Code), res.Error)
+	}
+
+	if len(infos) == 0 {
+		msg := "Parameter not found: " + oidPrefix
+		if oidPrefix == "" {
+			msg = "No top-level parameters found"
+		}
+		return status.Error(codes.NotFound, msg)
+	}
+
+	for _, info := range infos {
+		protoResp := info.GetProtoResponse()
+		if protoResp == nil {
+			logger.Error("ParamInfoRequest handler returned nil response entry", "slot", slot, "oid_prefix", oidPrefix)
+			return status.Error(codes.Internal, "param info entry is nil")
+		}
+		if err := stream.Send(protoResp); err != nil {
+			logger.Error("ParamInfoRequest send error", "slot", slot, "oid_prefix", oidPrefix, "error", err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateSubscriptions handles parameter subscription updates
