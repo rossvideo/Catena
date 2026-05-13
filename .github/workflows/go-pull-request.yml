@@ -152,7 +152,8 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          cd ${GITHUB_WORKSPACE}/sdks/go && make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html
 
       - name: Generate coverage report
         run: |
