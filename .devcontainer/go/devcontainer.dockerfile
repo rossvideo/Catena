@@ -1,4 +1,4 @@
-FROM ghcr.io/rossvideo/catena-go-toolchain:latest
+FROM catena-go-toolchain:local
 
 # Declare build arguments
 ARG USER_UID=1000
