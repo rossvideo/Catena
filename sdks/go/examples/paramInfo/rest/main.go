@@ -28,33 +28,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Server interface and handler types for the Catena SDK.
- * @file server.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- */
+package main
 
-package catena
+import (
+	"net/http"
 
-// Handler function types used by both REST and gRPC servers.
-type DeviceHandler func() (CatenaDevice, StatusResult)
-type GetValueHandler func(slot uint16, fqoid string) (CatenaValue, StatusResult)
-type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
-type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/rest"
 
-// CatenaServer is the transport-agnostic interface satisfied by both
-// rest.Server and grpc.Server, enabling shared handler registration code.
-type CatenaServer interface {
-	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
-	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
-	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
-	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
-	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
-	RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler)
-	BroadcastUpdate(slot uint16, fqoid string, value any)
-	Start(port int) error
-	Shutdown()
+	paraminfo "github.com/rossvideo/catena/sdks/go/examples/paramInfo"
+)
+
+func main() {
+	paraminfo.RunExample("paramInfo_REST", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
+		srv := rest.NewServer(slots, 100)
+		srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
+		})
+		return srv
+	})
 }

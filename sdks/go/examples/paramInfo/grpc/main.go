@@ -28,33 +28,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Server interface and handler types for the Catena SDK.
- * @file server.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- */
+package main
 
-package catena
+import (
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
 
-// Handler function types used by both REST and gRPC servers.
-type DeviceHandler func() (CatenaDevice, StatusResult)
-type GetValueHandler func(slot uint16, fqoid string) (CatenaValue, StatusResult)
-type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
-type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+	paraminfo "github.com/rossvideo/catena/sdks/go/examples/paramInfo"
+)
 
-// CatenaServer is the transport-agnostic interface satisfied by both
-// rest.Server and grpc.Server, enabling shared handler registration code.
-type CatenaServer interface {
-	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
-	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
-	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
-	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
-	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
-	RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler)
-	BroadcastUpdate(slot uint16, fqoid string, value any)
-	Start(port int) error
-	Shutdown()
+func main() {
+	paraminfo.RunExample("paramInfo_GRPC", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
+		return grpcServer.NewServer(slots, 100, cfg)
+	})
 }

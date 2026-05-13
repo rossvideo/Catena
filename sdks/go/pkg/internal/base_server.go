@@ -17,6 +17,7 @@ type GetValueHandler = catena.GetValueHandler
 type SetValueHandler = catena.SetValueHandler
 type GetAssetHandler = catena.GetAssetHandler
 type ExecuteCommandHandler = catena.ExecuteCommandHandler
+type GetParamInfoHandler = catena.GetParamInfoHandler
 
 type BaseServer struct {
 	Mu                     sync.Mutex
@@ -26,6 +27,7 @@ type BaseServer struct {
 	setValueHandlers       map[uint16]SetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
+	getParamInfoHandlers   map[uint16]GetParamInfoHandler
 	connectionQueue        *ConnectionQueue
 }
 
@@ -53,6 +55,11 @@ func DefaultGetAssetHandler(slot uint16, fqoid string) (catena.CatenaAsset, cate
 func DefaultExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 	logger.Warning("DefaultExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
 	return catena.CommandError(catena.NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func DefaultGetParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	logger.Warning("DefaultGetParamInfoHandler called - no handler registered for this slot", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
+	return nil, catena.StatusWithCode(catena.NOT_FOUND, "no param info handler registered for slot "+strconv.Itoa(int(slot)))
 }
 
 // Handler registration methods
@@ -84,6 +91,12 @@ func (bs *BaseServer) RegisterExecuteCommandHandler(slot uint16, handler Execute
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.executeCommandHandlers[slot] = handler
+}
+
+func (bs *BaseServer) RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler) {
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	bs.getParamInfoHandlers[slot] = handler
 }
 
 // Lookup helper functions
@@ -122,6 +135,13 @@ func (bs *BaseServer) LookupExecuteCommandHandler(slot uint16) ExecuteCommandHan
 	return DefaultExecuteCommandHandler
 }
 
+func (bs *BaseServer) LookupGetParamInfoHandler(slot uint16) GetParamInfoHandler {
+	if handler, ok := bs.getParamInfoHandlers[slot]; ok {
+		return handler
+	}
+	return DefaultGetParamInfoHandler
+}
+
 func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 	bs := &BaseServer{
 		Slots:                  make([]uint32, len(slots)),
@@ -130,6 +150,7 @@ func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 		setValueHandlers:       make(map[uint16]SetValueHandler),
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
+		getParamInfoHandlers:   make(map[uint16]GetParamInfoHandler),
 		connectionQueue:        newConnectionQueue(maxConnections),
 	}
 
@@ -143,6 +164,7 @@ func NewBaseServer(slots []uint16, maxConnections int) *BaseServer {
 		bs.RegisterSetValueHandler(slot, DefaultSetValueHandler)
 		bs.RegisterGetAssetHandler(slot, DefaultGetAssetHandler)
 		bs.RegisterExecuteCommandHandler(slot, DefaultExecuteCommandHandler)
+		bs.RegisterGetParamInfoHandler(slot, DefaultGetParamInfoHandler)
 	}
 
 	return bs

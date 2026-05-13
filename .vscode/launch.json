@@ -233,7 +233,9 @@
         "getAsset/rest",
         "getAsset/grpc",
         "oneOfEverything/rest",
-        "oneOfEverything/grpc"
+        "oneOfEverything/grpc",
+        "paramInfo/rest",
+        "paramInfo/grpc"
       ],
       "default": "getSetValue/rest"
     },
