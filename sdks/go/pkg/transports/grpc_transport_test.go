@@ -148,14 +148,14 @@ func assertGRPCError(t *testing.T, err error, expectedCode codes.Code) {
 }
 
 // =============================================================================
-// Test: NewServer
+// Test: NewGrpcTransport
 // =============================================================================
 
-func TestNewServer(t *testing.T) {
+func TestNewGrpcTransport(t *testing.T) {
 	transport := NewGrpcTransport(1234, false, false)
 
 	if transport == nil {
-		t.Fatal("NewServer returned nil")
+		t.Fatal("NewGrpcTransport returned nil")
 	}
 	if transport.catenaService == nil {
 		t.Error("catenaService is nil")
@@ -169,7 +169,7 @@ func TestNewServer(t *testing.T) {
 // Test: GetPopulatedSlots
 // =============================================================================
 
-func TestServer_GetPopulatedSlots(t *testing.T) {
+func TestGrpcTransport_GetPopulatedSlots(t *testing.T) {
 	tests := []struct {
 		name          string
 		slots         []uint16
@@ -212,7 +212,7 @@ func TestServer_GetPopulatedSlots(t *testing.T) {
 // Test: DeviceRequest
 // =============================================================================
 
-func TestServer_DeviceRequest_Success(t *testing.T) {
+func TestGrpcTransport_DeviceRequest_Success(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -253,7 +253,7 @@ func TestServer_DeviceRequest_Success(t *testing.T) {
 	}
 }
 
-func TestServer_DeviceRequest_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_DeviceRequest_InvalidSlot(t *testing.T) {
 	tests := []struct {
 		name         string
 		slot         uint32
@@ -288,7 +288,7 @@ func TestServer_DeviceRequest_InvalidSlot(t *testing.T) {
 	}
 }
 
-func TestServer_DeviceRequest_HandlerError(t *testing.T) {
+func TestGrpcTransport_DeviceRequest_HandlerError(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -315,7 +315,7 @@ func TestServer_DeviceRequest_HandlerError(t *testing.T) {
 // Test: GetValue
 // =============================================================================
 
-func TestServer_GetValue_Success(t *testing.T) {
+func TestGrpcTransport_GetValue_Success(t *testing.T) {
 	tests := []struct {
 		name          string
 		handlerValue  any
@@ -387,7 +387,7 @@ func TestServer_GetValue_Success(t *testing.T) {
 	}
 }
 
-func TestServer_GetValue_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_GetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -399,7 +399,7 @@ func TestServer_GetValue_InvalidSlot(t *testing.T) {
 	assertGRPCCode(t, err, codes.InvalidArgument, "") // Note: server returns NotFound for slots without handlers
 }
 
-func TestServer_GetValue_HandlerError(t *testing.T) {
+func TestGrpcTransport_GetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -419,7 +419,7 @@ func TestServer_GetValue_HandlerError(t *testing.T) {
 // Test: SetValue
 // =============================================================================
 
-func TestServer_SetValue_Success(t *testing.T) {
+func TestGrpcTransport_SetValue_Success(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -451,7 +451,7 @@ func TestServer_SetValue_Success(t *testing.T) {
 	}
 }
 
-func TestServer_SetValue_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_SetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -463,7 +463,7 @@ func TestServer_SetValue_InvalidSlot(t *testing.T) {
 	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_SetValue_NilValue(t *testing.T) {
+func TestGrpcTransport_SetValue_NilValue(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -479,7 +479,7 @@ func TestServer_SetValue_NilValue(t *testing.T) {
 	assertGRPCCode(t, err, codes.InvalidArgument, "nil value")
 }
 
-func TestServer_SetValue_HandlerError(t *testing.T) {
+func TestGrpcTransport_SetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -499,7 +499,7 @@ func TestServer_SetValue_HandlerError(t *testing.T) {
 // Test: MultiSetValue
 // =============================================================================
 
-func TestServer_MultiSetValue_Success(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -525,7 +525,7 @@ func TestServer_MultiSetValue_Success(t *testing.T) {
 	}
 }
 
-func TestServer_MultiSetValue_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -539,7 +539,7 @@ func TestServer_MultiSetValue_InvalidSlot(t *testing.T) {
 	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_MultiSetValue_HandlerError(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -570,7 +570,7 @@ func TestServer_MultiSetValue_HandlerError(t *testing.T) {
 	}
 }
 
-func TestServer_MultiSetValue_EmptyValues(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -602,7 +602,7 @@ func TestServer_MultiSetValue_EmptyValues(t *testing.T) {
 // Test: ExternalObjectRequest
 // =============================================================================
 
-func TestServer_ExternalObjectRequest_Success(t *testing.T) {
+func TestGrpcTransport_ExternalObjectRequest_Success(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -635,7 +635,7 @@ func TestServer_ExternalObjectRequest_Success(t *testing.T) {
 	assertStreamEOF(t, stream)
 }
 
-func TestServer_ExternalObjectRequest_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_ExternalObjectRequest_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -653,7 +653,7 @@ func TestServer_ExternalObjectRequest_InvalidSlot(t *testing.T) {
 	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_ExternalObjectRequest_HandlerError(t *testing.T) {
+func TestGrpcTransport_ExternalObjectRequest_HandlerError(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -679,7 +679,7 @@ func TestServer_ExternalObjectRequest_HandlerError(t *testing.T) {
 // Test: ExecuteCommand
 // =============================================================================
 
-func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -715,7 +715,7 @@ func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
 	assertStreamEOF(t, stream)
 }
 
-func TestServer_ExecuteCommand_WithoutResponse(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -734,7 +734,7 @@ func TestServer_ExecuteCommand_WithoutResponse(t *testing.T) {
 	assertCommandNoResponse(t, resp)
 }
 
-func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_NilPayload(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -763,7 +763,7 @@ func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
 	}
 }
 
-func TestServer_ExecuteCommand_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -781,7 +781,7 @@ func TestServer_ExecuteCommand_InvalidSlot(t *testing.T) {
 	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -807,7 +807,7 @@ func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
 // Test: Connect
 // =============================================================================
 
-func TestServer_Connect_BroadcastUpdates(t *testing.T) {
+func TestGrpcTransport_Connect_BroadcastUpdates(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -850,7 +850,7 @@ func TestServer_Connect_BroadcastUpdates(t *testing.T) {
 	cancel()
 }
 
-func TestServer_Connect_ClientDisconnect(t *testing.T) {
+func TestGrpcTransport_Connect_ClientDisconnect(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -1279,7 +1279,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 // Test: Unimplemented Endpoints
 // =============================================================================
 
-func TestServer_UnimplementedEndpoints(t *testing.T) {
+func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 	tests := []struct {
 		name     string
 		callFunc func(protos.CatenaServiceClient, context.Context) error
@@ -1387,7 +1387,7 @@ func TestServer_UnimplementedEndpoints(t *testing.T) {
 // Test: gRPC Reflection
 // =============================================================================
 
-func TestServer_Reflection_Enabled(t *testing.T) {
+func TestGrpcTransport_Reflection_Enabled(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportReflection(true))
 	defer cleanup()
@@ -1440,7 +1440,7 @@ func TestServer_Reflection_Enabled(t *testing.T) {
 	// Note: cleanup() handles shutdown automatically via defer
 }
 
-func TestServer_Reflection_Disabled(t *testing.T) {
+func TestGrpcTransport_Reflection_Disabled(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -1479,7 +1479,7 @@ func TestServer_Reflection_Disabled(t *testing.T) {
 // Test: Concurrent Clients
 // =============================================================================
 
-func TestServer_ConcurrentClients(t *testing.T) {
+func TestGrpcTransport_ConcurrentClients(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -1515,7 +1515,7 @@ func TestServer_ConcurrentClients(t *testing.T) {
 // Test: Handler per Slot
 // =============================================================================
 
-func TestServer_DifferentHandlersPerSlot(t *testing.T) {
+func TestGrpcTransport_DifferentHandlersPerSlot(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0, 1})
 	defer cleanup()
@@ -1553,7 +1553,7 @@ func TestServer_DifferentHandlersPerSlot(t *testing.T) {
 
 // TestServer_Start_EndpointsReachable tests that the server starts successfully
 // and endpoints are reachable over real TCP connections
-func TestServer_Start_EndpointsReachable(t *testing.T) {
+func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -1645,7 +1645,7 @@ func TestServer_Start_EndpointsReachable(t *testing.T) {
 
 // TestServer_Shutdown_GracefulConnectionClose tests that Shutdown() properly
 // closes active connections
-func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
+func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -1712,7 +1712,7 @@ func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
 
 }
 
-func TestServer_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
+func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -1805,7 +1805,7 @@ func TestGrpcTransport_Shutdown_ClosesOwnedConnections(t *testing.T) {
 }
 
 // TestServer_Start_PortAlreadyInUse tests that Start() handles port conflicts
-func TestServer_Start_PortAlreadyInUse(t *testing.T) {
+func TestGrpcTransport_Start_PortAlreadyInUse(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -1829,7 +1829,7 @@ func TestServer_Start_PortAlreadyInUse(t *testing.T) {
 }
 
 // TestServer_MultipleClients_RealNetwork tests concurrent clients over real TCP
-func TestServer_MultipleClients_RealNetwork(t *testing.T) {
+func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
