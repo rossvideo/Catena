@@ -73,8 +73,14 @@ var Devices = map[uint16]map[string]any{
 						"type":      catena.ParamTypeString,
 						"read_only": true,
 						"widget":    "TEXT",
-						"value": map[string]any{
-							"string_value": "1.0.0",
+					},
+				},
+				"value": map[string]any{
+					"struct_value": map[string]any{
+						"fields": map[string]any{
+							"version": map[string]any{
+								"string_value": "1.0.0",
+							},
 						},
 					},
 				},
