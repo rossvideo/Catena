@@ -95,7 +95,7 @@ func NewGrpcTransport(port uint16, reflectionEnabled bool, isDev bool) *GrpcTran
 
 func NewDefaultGrpcTransport() *GrpcTransport {
 	return NewGrpcTransport(
-		6245,           // default port
+		6254,           // default port
 		false,          // reflection disabled by default for security
 		catena.IsDev(), // enable reflection in dev mode for easier debugging
 	)
