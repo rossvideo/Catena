@@ -74,7 +74,7 @@ func NewRestTransport(port int) *RestTransport {
 		port: port,
 		mux:  http.NewServeMux(),
 	}
-	t.RegisterRoutes()
+	t.registerRoutes()
 	return t
 }
 
@@ -314,8 +314,8 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RegisterRoutes sets up all HTTP routes
-func (t *RestTransport) RegisterRoutes() {
+// registerRoutes sets up all HTTP routes
+func (t *RestTransport) registerRoutes() {
 	// Device endpoint: GET /st2138-api/v1/{slot}
 	t.mux.HandleFunc("/st2138-api/v1/", func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Device endpoint", "path", r.URL.Path, "method", r.Method)
@@ -365,6 +365,9 @@ func (t *RestTransport) RegisterRoutes() {
 	// Connect endpoint: GET /st2138-api/v1/connect (SSE streaming)
 	t.mux.HandleFunc("/st2138-api/v1/connect", t.handleConnect)
 
+	// Devices endpoint: GET /st2138-api/v1/devices (returns populated slots)
+	t.mux.HandleFunc("/st2138-api/v1/devices", t.handleGetPopulatedSlots)
+
 	// Catch-all for 404 - must be registered last
 	t.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Fallback handler", "path", r.URL.Path, "method", r.Method)
@@ -380,6 +383,33 @@ func (t *RestTransport) RegisterRoutes() {
 	t.mux.HandleFunc("/st2138-api/v1", func(w http.ResponseWriter, r *http.Request) {
 		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, "endpoint not found"))
 	})
+}
+
+// handleGetPopulatedSlots handles GET /st2138-api/v1/devices
+// Returns the list of populated slots
+func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	logger.Info("GetPopulatedSlots")
+	slots := t.runtime.GetSlots()
+	uint32Slots := make([]uint32, len(slots))
+	for i, slot := range slots {
+		uint32Slots[i] = uint32(slot)
+	}
+
+	response := map[string][]uint32{
+		"slots": uint32Slots,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		logger.Error("failed to write slots response", "error", err)
+	}
 }
 
 func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
