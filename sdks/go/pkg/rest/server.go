@@ -466,15 +466,7 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 	writeHTTPResult(w, res, asset)
 }
 
-// handleParamInfoEndpoint dispatches /st2138-api/v1/{slot}/param-info/... requests.
-// Supported routes (mirroring the C++ REST controller):
-//   - GET /{slot}/param-info/{fqoid}         -> unary: returns a single ParamInfoResponse JSON
-//   - GET /{slot}/param-info/{fqoid}/stream  -> SSE stream rooted at fqoid; ?recursive to recurse
-//   - GET /{slot}/param-info/stream          -> SSE stream of all top-level params; ?recursive to recurse
-//
-// Per the OpenAPI spec and the C++ reference, the recursive flag is determined
-// by presence of the `recursive` query parameter alone — any value (including
-// "false") enables recursion.
+// handleParamInfoEndpoint handles param info requests and streaming (SSE).
 func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
@@ -484,7 +476,7 @@ func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request,
 
 	recursive := r.URL.Query().Has("recursive")
 
-	// Parse trailing path segments. The "stream" suffix selects SSE.
+	// Check for "stream" suffix to enable SSE.
 	streaming := false
 	fqoidParts := pathParts
 	if len(fqoidParts) > 0 && fqoidParts[len(fqoidParts)-1] == "stream" {
@@ -492,15 +484,13 @@ func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request,
 		fqoidParts = fqoidParts[:len(fqoidParts)-1]
 	}
 
-	// Match the C++ REST controller: the fqoid is built by prepending "/" to
-	// every path segment after the endpoint, yielding e.g. "/parent/child".
-	// An empty fqoid means "all top-level parameters".
+	// Build OID prefix from path segments.
 	oidPrefix := ""
 	for _, p := range fqoidParts {
 		oidPrefix += "/" + p
 	}
 
-	// Validate unary-mode invariants up front, mirroring the C++ controller.
+	// Unary requests must include fqoid and cannot be recursive.
 	if !streaming {
 		if recursive {
 			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "Recursive parameter info request is not supported with unary response"))

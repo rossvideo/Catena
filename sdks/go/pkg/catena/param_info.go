@@ -76,7 +76,6 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 
 // ToCatenaParamInfo converts a Go map to a CatenaParamInfo by marshalling
 // through protojson. The map keys mirror the protos.ParamInfoResponse schema
-// (e.g. "info": { "oid", "name", "type", "template_oid" }, "array_length").
 func ToCatenaParamInfo(m map[string]any) (CatenaParamInfo, error) {
 	jsonData, err := json.Marshal(m)
 	if err != nil {

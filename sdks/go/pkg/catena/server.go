@@ -43,10 +43,6 @@ type GetValueHandler func(slot uint16, fqoid string) (CatenaValue, StatusResult)
 type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-
-// GetParamInfoHandler returns parameter info entries matching oidPrefix at the
-// given slot. If oidPrefix is "", all top-level parameters should be returned.
-// If recursive is true, child parameters should also be included.
 type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
 
 // CatenaServer is the transport-agnostic interface satisfied by both

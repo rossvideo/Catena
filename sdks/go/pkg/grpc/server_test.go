@@ -786,8 +786,7 @@ func TestServer_ParamInfoRequest_HandlerError(t *testing.T) {
 }
 
 // TestServer_ParamInfoRequest_EmptyResult_NotFound verifies that the gRPC
-// server promotes an OK + empty result to NOT_FOUND, matching the C++
-// ParamInfoRequest behavior.
+// server promotes an OK + empty result to NOT_FOUND.
 func TestServer_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
 	t.Run("specific oid empty", func(t *testing.T) {
 		ctx := context.Background()
