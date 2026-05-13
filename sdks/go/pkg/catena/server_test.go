@@ -44,6 +44,8 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -560,6 +562,17 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterHeartbeatHandler(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	srv.RegisterHeartbeatHandler(0, func(slot uint16) {})
+
+	if srv.heartbeatHandlers[0] == nil {
+		t.Error("expected heartbeat handler to be registered for slot 0")
+	}
+	// there's no invoke function for heartbeat handlers since they're just called by the server on a timer, so we'll just call it directly to test that it works
+}
+
 func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
 	srv := NewServer(100).(*server)
 
@@ -947,5 +960,232 @@ func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
 	case <-conn.Updates:
 		t.Error("should not have received update for invalid value")
 	case <-time.After(100 * time.Millisecond):
+	}
+}
+
+func TestServer_StartHeartbeat_InvalidInterval(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	// Zero interval should be rejected and heartbeat should remain nil
+	srv.StartHeartbeat(0)
+	if srv.heartbeat != nil {
+		t.Error("heartbeat should remain nil after invalid interval")
+	}
+
+	// Negative interval should also be rejected
+	srv.StartHeartbeat(-1 * time.Second)
+	if srv.heartbeat != nil {
+		t.Error("heartbeat should remain nil after negative interval")
+	}
+}
+
+func TestServer_StartHeartbeat_StartsHeartbeat(t *testing.T) {
+	srv := NewServer(100).(*server)
+	defer srv.StopHeartbeat()
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+
+	srv.mu.Lock()
+	hb := srv.heartbeat
+	srv.mu.Unlock()
+
+	if hb == nil {
+		t.Fatal("heartbeat should be set after StartHeartbeat")
+	}
+	if !hb.IsRunning() {
+		t.Error("heartbeat should be running after StartHeartbeat")
+	}
+}
+
+func TestServer_StartHeartbeat_InvokesHandlers(t *testing.T) {
+	srv := NewServer(100).(*server)
+	defer srv.StopHeartbeat()
+
+	var slot0Called, slot1Called atomic.Int32
+	srv.RegisterHeartbeatHandler(0, func(slot uint16) { slot0Called.Add(1) })
+	srv.RegisterHeartbeatHandler(1, func(slot uint16) { slot1Called.Add(1) })
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	time.Sleep(55 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	if slot0Called.Load() < 3 {
+		t.Errorf("expected slot 0 handler to be called at least 3 times, got %d", slot0Called.Load())
+	}
+	if slot1Called.Load() < 3 {
+		t.Errorf("expected slot 1 handler to be called at least 3 times, got %d", slot1Called.Load())
+	}
+}
+
+func TestServer_StartHeartbeat_HandlerReceivesCorrectSlot(t *testing.T) {
+	srv := NewServer(100).(*server)
+	defer srv.StopHeartbeat()
+
+	var receivedSlots sync.Map
+	srv.RegisterHeartbeatHandler(5, func(slot uint16) {
+		receivedSlots.Store(slot, true)
+	})
+	srv.RegisterHeartbeatHandler(7, func(slot uint16) {
+		receivedSlots.Store(slot, true)
+	})
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	time.Sleep(35 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	if _, ok := receivedSlots.Load(uint16(5)); !ok {
+		t.Error("slot 5 handler should have been called with slot 5")
+	}
+	if _, ok := receivedSlots.Load(uint16(7)); !ok {
+		t.Error("slot 7 handler should have been called with slot 7")
+	}
+}
+
+func TestServer_StartHeartbeat_ReplacesExisting(t *testing.T) {
+	srv := NewServer(100).(*server)
+	defer srv.StopHeartbeat()
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+
+	srv.mu.Lock()
+	first := srv.heartbeat
+	srv.mu.Unlock()
+
+	srv.StartHeartbeat(20 * time.Millisecond)
+
+	srv.mu.Lock()
+	second := srv.heartbeat
+	srv.mu.Unlock()
+
+	if second == first {
+		t.Error("StartHeartbeat should replace the existing heartbeat with a new instance")
+	}
+	if !second.IsRunning() {
+		t.Error("new heartbeat should be running")
+	}
+	if first.IsRunning() {
+		t.Error("old heartbeat should have been stopped")
+	}
+}
+
+func TestServer_StartHeartbeat_InvalidIntervalPreservesExisting(t *testing.T) {
+	srv := NewServer(100).(*server)
+	defer srv.StopHeartbeat()
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+
+	srv.mu.Lock()
+	original := srv.heartbeat
+	srv.mu.Unlock()
+
+	// Invalid interval should not replace the running heartbeat
+	srv.StartHeartbeat(0)
+
+	srv.mu.Lock()
+	current := srv.heartbeat
+	srv.mu.Unlock()
+
+	if current != original {
+		t.Error("invalid interval should not replace the existing heartbeat")
+	}
+	if !current.IsRunning() {
+		t.Error("existing heartbeat should still be running")
+	}
+}
+
+func TestServer_StartHeartbeat_HandlerPanicRecovered(t *testing.T) {
+	srv := NewServer(100).(*server)
+	defer srv.StopHeartbeat()
+
+	var afterPanic atomic.Int32
+	srv.RegisterHeartbeatHandler(0, func(slot uint16) {
+		afterPanic.Add(1)
+		panic("test panic in heartbeat handler")
+	})
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	time.Sleep(55 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	// Handler should have been called multiple times; panics should be recovered
+	if afterPanic.Load() < 2 {
+		t.Errorf("expected multiple calls despite panics, got %d", afterPanic.Load())
+	}
+}
+
+func TestServer_StopHeartbeat_WhenRunning(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+
+	srv.mu.Lock()
+	hb := srv.heartbeat
+	srv.mu.Unlock()
+
+	srv.StopHeartbeat()
+
+	srv.mu.Lock()
+	current := srv.heartbeat
+	srv.mu.Unlock()
+
+	if current != nil {
+		t.Error("heartbeat field should be nil after StopHeartbeat")
+	}
+	if hb.IsRunning() {
+		t.Error("heartbeat should not be running after StopHeartbeat")
+	}
+}
+
+func TestServer_StopHeartbeat_WhenNotRunning(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	// Should not panic or error when no heartbeat is running
+	srv.StopHeartbeat()
+
+	srv.mu.Lock()
+	hb := srv.heartbeat
+	srv.mu.Unlock()
+
+	if hb != nil {
+		t.Error("heartbeat should remain nil")
+	}
+}
+
+func TestServer_StopHeartbeat_NoTicksAfterStop(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	var tickCount atomic.Int32
+	srv.RegisterHeartbeatHandler(0, func(slot uint16) { tickCount.Add(1) })
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	time.Sleep(35 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	countAtStop := tickCount.Load()
+	time.Sleep(30 * time.Millisecond)
+
+	if tickCount.Load() != countAtStop {
+		t.Errorf("ticks continued after StopHeartbeat: %d vs %d", countAtStop, tickCount.Load())
+	}
+}
+
+func TestServer_StartHeartbeat_RestartAfterStop(t *testing.T) {
+	srv := NewServer(100).(*server)
+
+	var tickCount atomic.Int32
+	srv.RegisterHeartbeatHandler(0, func(slot uint16) { tickCount.Add(1) })
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	time.Sleep(25 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	tickCount.Store(0)
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	time.Sleep(35 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	if tickCount.Load() < 2 {
+		t.Errorf("expected ticks after restart, got %d", tickCount.Load())
 	}
 }

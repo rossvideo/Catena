@@ -41,6 +41,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"strconv"
 	"sync"
@@ -122,10 +123,14 @@ type Server interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
+	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 
 	SetMaxConnections(max int)
 	ConnectionCount() int
 	BroadcastUpdate(slot uint16, oid string, value any)
+
+	StartHeartbeat(interval time.Duration)
+	StopHeartbeat()
 }
 
 // interface of funcs that Transports use to interact with the server without circular imports
@@ -157,7 +162,9 @@ type server struct {
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
+	heartbeatHandlers      map[uint16]HeartbeatHandler
 	connectionQueue        connectionQueueInterface
+	heartbeat              *Heartbeat
 	transports             []Transport
 }
 
@@ -173,6 +180,7 @@ func NewServer(maxConnections int) Server {
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
+		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
 		connectionQueue:        newConnectionQueue(maxConnections),
 		transports:             []Transport{},
 	}
@@ -341,6 +349,17 @@ func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	}
 }
 
+func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
+	s.mu.Lock()
+	s.heartbeatHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
 func (s *server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getDeviceHandlers[slot]
@@ -479,4 +498,69 @@ func (s *server) BroadcastUpdate(slot uint16, oid string, value any) {
 		},
 	}
 	s.connectionQueue.notifyUpdate(update)
+}
+
+// StartHeartbeat begins periodic invocation of all registered heartbeat handlers.
+// If a heartbeat is already running, it is stopped before starting the new one.
+// If the interval is invalid (zero or negative), the existing heartbeat is preserved.
+func (s *server) StartHeartbeat(interval time.Duration) {
+	if interval <= 0 {
+		logger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
+		return
+	}
+
+	hb := NewHeartbeat()
+	hb.OnTick(func() {
+		s.mu.Lock()
+		handlers := make(map[uint16]HeartbeatHandler, len(s.heartbeatHandlers))
+		maps.Copy(handlers, s.heartbeatHandlers)
+		s.mu.Unlock()
+		for slot, handler := range handlers {
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Error("panic in heartbeat handler", "slot", slot, "error", r)
+					}
+				}()
+				handler(slot)
+			}()
+		}
+	})
+
+	// Grab and clear the old heartbeat under the lock.
+	s.mu.Lock()
+	old := s.heartbeat
+	s.heartbeat = nil
+	s.mu.Unlock()
+
+	// Stop the old heartbeat outside the lock (blocks until its goroutine exits).
+	if old != nil {
+		old.Stop()
+	}
+
+	// Atomically store and start the new heartbeat so a concurrent StopHeartbeat
+	// cannot miss the new instance.
+	s.mu.Lock()
+	s.heartbeat = hb
+	err := hb.Start(interval)
+	s.mu.Unlock()
+
+	if err != nil {
+		logger.Error("Heartbeat failed to start", "interval", interval, "error", err)
+	} else {
+		logger.Info("Heartbeat started", "interval", interval)
+	}
+}
+
+// StopHeartbeat stops the heartbeat if one is running.
+func (s *server) StopHeartbeat() {
+	s.mu.Lock()
+	hb := s.heartbeat
+	s.heartbeat = nil
+	s.mu.Unlock()
+
+	if hb != nil {
+		hb.Stop()
+		logger.Info("Heartbeat stopped")
+	}
 }
