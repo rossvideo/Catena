@@ -122,6 +122,7 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
     
     env:
       CMAKE_BUILD_TYPE: ''
@@ -185,6 +186,7 @@ jobs:
     timeout-minutes: 10
     container:
       image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
 
     steps:
       - name: Checkout code
