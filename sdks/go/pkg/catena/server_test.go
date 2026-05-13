@@ -733,6 +733,36 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterTransportConnection_InitialUpdate(t *testing.T) {
+	srv := NewServer(100).(*server)
+	srv.slots = map[uint16]struct{}{0: {}, 4: {}, 8: {}} // pre-populate with a slot to test that the initial update is sent
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		registerOwnedFn: func(gotOwner any) (int, *Connection) {
+			return 1, &Connection{
+				ID:      1,
+				Updates: make(chan *protos.PushUpdates, 10),
+				Done:    make(chan struct{}),
+			}
+		},
+	}
+
+	_, conn := srv.RegisterTransportConnection(nil)
+
+	select {
+	case update := <-conn.Updates:
+		proto.Equal(&protos.PushUpdates{
+			Kind: &protos.PushUpdates_SlotsAdded{
+				SlotsAdded: &protos.SlotList{
+					Slots: []uint32{0, 4, 8},
+				},
+			},
+		}, update)
+	case <-time.After(time.Second):
+		t.Fatal("expected initial slots_added update on new connection, but timed out")
+	}
+}
+
 func TestServer_ShutdownTransportConnections_Passthrough(t *testing.T) {
 	called := false
 	var actualOwner any
