@@ -42,6 +42,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -491,6 +492,7 @@ func ToGRPCCode(s catena.StatusCode) codes.Code {
 // Shutdown gracefully shuts down the gRPC server and all streaming connections
 func (s *Server) Shutdown() {
 	logger.Info("Shutting down gRPC server")
+	s.baseServer.StopHeartbeat()
 	s.baseServer.ShutdownConnections()
 	s.grpcServer.GracefulStop()
 }
@@ -546,6 +548,10 @@ func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.ParamIn
 	s.baseServer.RegisterGetParamInfoHandler(slot, handler)
 }
 
+func (s *Server) RegisterHeartbeatHandler(slot uint16, handler catena.HeartbeatHandler) {
+	s.baseServer.RegisterHeartbeatHandler(slot, handler)
+}
+
 func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
@@ -570,8 +576,20 @@ func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.ParamInfoHandler 
 	return s.baseServer.LookupGetParamInfoHandler(slot)
 }
 
+func (s *Server) LookupHeartbeatHandler(slot uint16) catena.HeartbeatHandler {
+	return s.baseServer.LookupHeartbeatHandler(slot)
+}
+
 func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
 	s.baseServer.BroadcastUpdate(slot, fqoid, value)
+}
+
+func (s *Server) StartHeartbeat(interval time.Duration) {
+	s.baseServer.StartHeartbeat(interval)
+}
+
+func (s *Server) StopHeartbeat() {
+	s.baseServer.StopHeartbeat()
 }
 
 func (s *Server) SetMaxConnections(max int) {

@@ -44,6 +44,7 @@ import (
 	"math"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -56,6 +57,7 @@ type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+type HeartbeatHandler func(slot uint16)
 
 var ErrServerStopped = errors.New("server is stopped")
 
@@ -68,7 +70,10 @@ type CatenaServer interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterGetParamInfoHandler(slot uint16, handler ParamInfoHandler)
+	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	BroadcastUpdate(slot uint16, fqoid string, value any)
+	StartHeartbeat(interval time.Duration)
+	StopHeartbeat()
 	Start(port int) error
 	Shutdown()
 }
