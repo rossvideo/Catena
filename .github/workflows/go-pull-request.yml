@@ -153,8 +153,15 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          cd ${GITHUB_WORKSPACE}/sdks/go
-          make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html
+          # Create non-root user for testing
+          useradd -m -s /bin/bash testuser 2>/dev/null || true
+          
+          # Ensure workspace is owned by testuser
+          chown -R testuser:testuser ${GITHUB_WORKSPACE}
+          
+          # Run tests as non-root to properly test permission errors
+          # Using runuser to preserve environment including PATH
+          runuser -u testuser -- bash -c "cd ${GITHUB_WORKSPACE}/sdks/go && make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html"
 
       - name: Generate coverage report
         run: |
