@@ -299,6 +299,54 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
 			"default_scope":     "st2138:op",
 			"params": map[string]any{
+				"product": map[string]any{
+					"type":      catena.ParamTypeStruct,
+					"read_only": true,
+					"params": map[string]any{
+						"name": map[string]any{
+							"type": catena.ParamTypeString,
+						},
+						"vendor": map[string]any{
+							"type": catena.ParamTypeString,
+						},
+						"version": map[string]any{
+							"type": catena.ParamTypeString,
+						},
+						"catena_sdk": map[string]any{
+							"type": catena.ParamTypeString,
+						},
+						"catana_sdk_version": map[string]any{
+							"type": catena.ParamTypeString,
+						},
+						"serial_number": map[string]any{
+							"type": catena.ParamTypeString,
+						},
+					},
+					"value": map[string]any{
+						"struct_value": map[string]any{
+							"fields": map[string]any{
+								"name": map[string]any{
+									"string_value": "One of Everything Demo",
+								},
+								"vendor": map[string]any{
+									"string_value": "Ross Video",
+								},
+								"version": map[string]any{
+									"string_value": "1.0.0",
+								},
+								"catena_sdk": map[string]any{
+									"string_value": "github.com/rossvideo/catena/sdks/go",
+								},
+								"catana_sdk_version": map[string]any{
+									"string_value": "v0.1.0", // TODO: SDK should expose
+								},
+								"serial_number": map[string]any{
+									"string_value": "SN12345678",
+								},
+							},
+						},
+					},
+				},
 				"resolution": map[string]any{
 					"name": map[string]any{
 						"display_strings": map[string]string{
@@ -672,6 +720,21 @@ func main() {
 			return catena.Reply(catenaAsset)
 		})
 	}
+
+	// counter ticks often enough in slot 0 that a heartbeat isn't needed.
+
+	srv.RegisterHeartbeatHandler(1, func(slot uint16) {
+		// example ticking on the cannonical "product/version" param
+		srv.BroadcastUpdate(1, "product/version", "1.0.0")
+	})
+	srv.RegisterHeartbeatHandler(2, func(slot uint16) {
+		// example ticking on a different param to show any can be used for heartbeats.
+		if val, ok := slotParams[2].Load("volume"); ok {
+			srv.BroadcastUpdate(2, "volume", val)
+		} else {
+			logger.Warning("Volume param missing at heartbeat", "slot", slot)
+		}
+	})
 
 	config, err := catena.InitOptions()
 	if err != nil {
