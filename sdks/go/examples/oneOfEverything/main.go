@@ -33,22 +33,27 @@
  * @file oneofeverything.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
  */
 
-package oneofeverything
+package main
 
 import (
+	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
 // normalizeFqoid strips the leading "/" so that handlers can be called from
@@ -60,6 +65,9 @@ func normalizeFqoid(fqoid string) string {
 
 //go:embed static/*
 var StaticFS embed.FS
+
+//go:embed webui/*
+var webFS embed.FS
 
 type CommandHandler func(payload any) (catena.CommandResult, catena.StatusResult)
 
@@ -122,7 +130,7 @@ func (c *CounterState) Increment() {
 	}
 }
 
-var SlotList = []uint16{0, 1, 2}
+var slotList = []uint16{0, 1, 2}
 
 // int32ParamValue returns a Catena value{} map containing the int32 currently
 // stored at key in p, or fallback if the key is missing or the wrong type.
@@ -445,7 +453,9 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 	}
 }
 
-func InitSlotParams() map[uint16]*sync.Map {
+func main() {
+	srv := catena.NewServer(100)
+	counter := &CounterState{}
 	slotParams := map[uint16]*sync.Map{
 		0: {},
 		1: {},
@@ -459,15 +469,6 @@ func InitSlotParams() map[uint16]*sync.Map {
 	slotParams[2].Store("volume", int32(75))
 	slotParams[2].Store("muted", int32(0))
 	slotParams[2].Store("device_name", "Demo Device")
-	return slotParams
-}
-
-// RegisterHandlers registers all GetDevice, GetValue, SetValue, ExecuteCommand,
-// and GetAsset handlers. It also starts a background goroutine that increments
-// the counter every second while running.
-func RegisterHandlers(srv catena.CatenaServer) {
-	counter := &CounterState{}
-	slotParams := InitSlotParams()
 
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
@@ -480,6 +481,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			}
 		}
 	}()
+	counter.Start()
 
 	// broadcastRunning publishes the current running flag on the "running" param
 	// so subscribers (REST SSE / gRPC stream) see the state change live.
@@ -541,8 +543,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		assets.Store(id, payload)
 	}
 
-	for _, slot := range SlotList {
-		slot := slot
+	for _, slot := range slotList {
 		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 
@@ -559,8 +560,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		})
 	}
 
-	for _, slot := range SlotList {
-		slot := slot
+	for _, slot := range slotList {
 		p := slotParams[slot]
 
 		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -597,8 +597,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		})
 	}
 
-	for _, slot := range SlotList {
-		slot := slot
+	for _, slot := range slotList {
 		p := slotParams[slot]
 
 		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
@@ -650,7 +649,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		return handler(payload)
 	})
 
-	for _, slot := range SlotList {
+	for _, slot := range slotList {
 		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
@@ -673,16 +672,104 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			return catena.Reply(catenaAsset)
 		})
 	}
-}
 
-// RunExample encapsulates the full example lifecycle:
-// SDK init, signal handling, server creation, handler registration, and graceful shutdown.
-func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer, onReady func(port int)) {
-	exampleutil.RunExample(exampleutil.RunConfig{
-		AppName:          appName,
-		Slots:            SlotList,
-		MakeServer:       makeServer,
-		RegisterHandlers: RegisterHandlers,
-		OnReady:          onReady,
-	})
+	config, err := catena.InitOptions()
+	if err != nil {
+		logger.Error("Failed to initialize Catena SDK", "error", err)
+		os.Exit(1)
+	}
+
+	if !config.UseGrpc && !config.UseRest {
+		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
+		os.Exit(1)
+	}
+
+	logger.Info("=======================================================")
+	logger.Info("One of Everything gRPC Example")
+	logger.Info("=======================================================")
+
+	// register the transports we want to serve on.
+	if config.UseGrpc {
+		logger.Info("gRPC transport starting")
+		logger.Info("")
+		// Register gRPC transport if enabled in config
+		if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
+			logger.Error("Failed to register gRPC transport", "error", err)
+			os.Exit(1)
+		}
+		logger.Info("Use grpcurl or a gRPC client to interact with the server:")
+		logger.Info("  grpcurl -plaintext localhost:6254 list")
+	} else {
+		logger.Info("gRPC transport disabled by config")
+	}
+	logger.Info("")
+	logger.Info("=======================================================")
+
+	if config.UseRest {
+		logger.Info("REST transport starting")
+		logger.Info("")
+		restTransport := transports.NewDefaultRestTransport()
+		if err := srv.RegisterTransport(restTransport); err != nil {
+			logger.Error("Failed to register REST transport", "error", err)
+			os.Exit(1)
+		}
+
+		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+			if r.URL.Path == "/assets-list" {
+				var assetList []map[string]any
+				assets.Range(func(key, value any) bool {
+					payload := value.(catena.DataPayload)
+					assetList = append(assetList, map[string]any{
+						"id":           key.(string),
+						"content_type": payload.Metadata["content-type"],
+						"file_name":    payload.Metadata["file-name"],
+						"size":         len(payload.Payload),
+					})
+					return true
+				})
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(assetList)
+				return catena.Reply(catena.CatenaValue{})
+			}
+
+			fileMap := map[string]struct {
+				path        string
+				contentType string
+			}{
+				"/":           {"webui/index.htm", "text/html; charset=utf-8"},
+				"/styles.css": {"webui/styles.css", "text/css; charset=utf-8"},
+				"/script.js":  {"webui/script.js", "application/javascript; charset=utf-8"},
+			}
+
+			if file, ok := fileMap[r.URL.Path]; ok {
+				data, err := webFS.ReadFile(file.path)
+				if err != nil {
+					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "file not found: "+r.URL.Path)
+				}
+				w.Header().Set("Content-Type", file.contentType)
+				w.Write(data)
+				return catena.Reply(catena.CatenaValue{})
+			}
+			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
+		})
+
+		logger.Info("Web UI available at:")
+		logger.Info("  http://localhost:8080/")
+	} else {
+		logger.Info("REST transport disabled by config")
+	}
+	logger.Info("")
+	logger.Info("=======================================================")
+
+	// setup
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	<-ctx.Done()
+	logger.Info("Shutting down server...")
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second)
+	defer shutdownCancel()
+	srv.Shutdown(shutdownCtx)
+	logger.Info("Server shutdown complete")
 }

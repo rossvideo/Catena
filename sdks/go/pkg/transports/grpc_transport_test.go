@@ -96,7 +96,7 @@ func setupTestGrpcTransport(t *testing.T, slots []uint16, opts ...testGrpcTransp
 	}
 
 	lis := bufconn.Listen(bufSize)
-	transport := NewGrpcTransport(cfg.port, cfg.reflection, cfg.isDev)
+	transport := NewGrpcTransport(cfg.port, cfg.reflection)
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = slots
 	transport.catenaService.runtime = runtime
@@ -152,10 +152,29 @@ func assertGRPCError(t *testing.T, err error, expectedCode codes.Code) {
 // =============================================================================
 
 func TestNewGrpcTransport(t *testing.T) {
-	transport := NewGrpcTransport(1234, false, false)
+	transport := NewGrpcTransport(1234, false)
 
 	if transport == nil {
 		t.Fatal("NewGrpcTransport returned nil")
+	}
+	if transport.catenaService == nil {
+		t.Error("catenaService is nil")
+	}
+	if transport.grpcServer == nil {
+		t.Error("grpcServer is nil")
+	}
+	if transport.port != 1234 {
+		t.Errorf("expected port 1234, got %d", transport.port)
+	}
+	if transport.reflection != false {
+		t.Errorf("expected reflection false, got %v", transport.reflection)
+	}
+}
+
+func TestNewDefaultGrpcTransport(t *testing.T) {
+	transport := NewDefaultGrpcTransport()
+	if transport == nil {
+		t.Fatal("NewDefaultGrpcTransport returned nil")
 	}
 	if transport.catenaService == nil {
 		t.Error("catenaService is nil")
@@ -1565,7 +1584,7 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false, false)
+	transport := NewGrpcTransport(uint16(port), false)
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = []uint16{0, 1}
 
@@ -1657,7 +1676,7 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false, false)
+	transport := NewGrpcTransport(uint16(port), false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 
@@ -1723,7 +1742,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false, false)
+	transport := NewGrpcTransport(uint16(port), false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 
@@ -1762,7 +1781,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 }
 
 func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
-	transport := NewGrpcTransport(1234, false, false)
+	transport := NewGrpcTransport(1234, false)
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -1784,7 +1803,7 @@ func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
 }
 
 func TestGrpcTransport_Shutdown_ClosesOwnedConnections(t *testing.T) {
-	transport := NewGrpcTransport(1234, false, false)
+	transport := NewGrpcTransport(1234, false)
 	runtime := makeStubServerRuntime(t)
 	called := false
 	runtime.shutdownTransportConnectionsFn = func(owner any) {
@@ -1818,7 +1837,7 @@ func TestGrpcTransport_Start_PortAlreadyInUse(t *testing.T) {
 	port := portListener.Addr().(*net.TCPAddr).Port
 	defer portListener.Close()
 
-	transport := NewGrpcTransport(uint16(port), false, false)
+	transport := NewGrpcTransport(uint16(port), false)
 
 	// Try to start on the already-occupied port
 	err = transport.Start(context.Background(), makeStubServerRuntime(t))
@@ -1847,7 +1866,7 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 		portListener.Close()
 	}
 
-	transport := NewGrpcTransport(uint16(port), false, false)
+	transport := NewGrpcTransport(uint16(port), false)
 
 	// Start server
 	go func() {

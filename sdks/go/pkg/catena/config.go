@@ -96,6 +96,8 @@ type Config struct {
 	Logger         logger.Settings // Logger configuration
 	Port           int             // HTTP server port (default: 6254)
 	GRPCReflection bool            // Enable gRPC reflection (default: false)
+	UseGrpc        bool            // Enable gRPC transport (default: false)
+	UseRest        bool            // Enable REST transport (default: true)
 }
 
 // DefaultConfig returns sensible defaults with the given prefix.
@@ -109,6 +111,8 @@ func DefaultConfig(prefix string) Config {
 		Logger:         logger.DefaultSettings(),
 		Port:           6254,
 		GRPCReflection: false,
+		UseGrpc:        false,
+		UseRest:        true,
 	}
 }
 
@@ -143,6 +147,14 @@ func parseConfig(prefix string) Config {
 	// Parse gRPC reflection
 	if v := os.Getenv(prefix + "_GRPC_REFLECTION"); v != "" {
 		cfg.GRPCReflection = v == "true"
+	}
+
+	if v := os.Getenv(prefix + "_USE_GRPC"); v != "" {
+		cfg.UseGrpc = v == "true"
+	}
+
+	if v := os.Getenv(prefix + "_USE_REST"); v != "" {
+		cfg.UseRest = v == "true"
 	}
 
 	return cfg
