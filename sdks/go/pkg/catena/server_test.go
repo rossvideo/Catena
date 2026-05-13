@@ -733,6 +733,25 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterTransportConnection_Failed(t *testing.T) {
+	srv := NewServer(100).(*server)
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		registerOwnedFn: func(gotOwner any) (int, *Connection) {
+			return -1, nil // simulate failure to register connection
+		},
+	}
+
+	connID, conn := srv.RegisterTransportConnection(nil)
+
+	if connID != -1 {
+		t.Errorf("expected connID -1 on registration failure, got %d", connID)
+	}
+	if conn != nil {
+		t.Errorf("expected nil connection on registration failure, got %+v", conn)
+	}
+}
+
 func TestServer_RegisterTransportConnection_InitialUpdate(t *testing.T) {
 	srv := NewServer(100).(*server)
 	srv.slots = map[uint16]struct{}{0: {}, 4: {}, 8: {}} // pre-populate with a slot to test that the initial update is sent
