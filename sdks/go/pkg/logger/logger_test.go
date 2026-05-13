@@ -105,6 +105,11 @@ func TestInit(t *testing.T) {
 	})
 
 	t.Run("handles invalid log directory", func(t *testing.T) {
+
+		if os.Geteuid() == 0 {
+			t.Skip("skipping permission error test when running as root")
+		}
+
 		Close()
 		// Try to create a log directory in a non-existent parent with no permissions
 		err := Init(Settings{
