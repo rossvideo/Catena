@@ -55,6 +55,7 @@ type GetValueHandler func(slot uint16, fqoid string) (CatenaValue, StatusResult)
 type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
+type GetParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
 
 var ErrServerStopped = errors.New("server is stopped")
 
@@ -66,6 +67,7 @@ type CatenaServer interface {
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
+	RegisterGetParamInfoHandler(slot uint16, handler GetParamInfoHandler)
 	BroadcastUpdate(slot uint16, fqoid string, value any)
 	Start(port int) error
 	Shutdown()

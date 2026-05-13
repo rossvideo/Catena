@@ -118,7 +118,7 @@ func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatu
 		return
 	}
 
-	if err := WriteResponseJSON(w, protoValue, httpStatus); err != nil {
+	if err := WriteProtoJSON(w, protoValue, httpStatus); err != nil {
 		logger.Error("failed to write value response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -339,6 +339,8 @@ func (s *Server) RegisterRoutes() {
 				s.handleAssetEndpoint(w, r, slot, parts[4:])
 			case "command":
 				s.handleCommandEndpoint(w, r, slot, parts[4:])
+			case "param-info":
+				s.handleParamInfoEndpoint(w, r, slot, parts[4:])
 			default:
 				val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "unknown endpoint")
 				writeHTTPResult(w, res, val)
@@ -464,6 +466,108 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 	writeHTTPResult(w, res, asset)
 }
 
+// handleParamInfoEndpoint handles param info requests and streaming (SSE).
+func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if r.Method != http.MethodGet {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	recursive := r.URL.Query().Has("recursive")
+
+	// Check for "stream" suffix to enable SSE.
+	streaming := false
+	fqoidParts := pathParts
+	if len(fqoidParts) > 0 && fqoidParts[len(fqoidParts)-1] == "stream" {
+		streaming = true
+		fqoidParts = fqoidParts[:len(fqoidParts)-1]
+	}
+
+	// Build OID prefix from path segments.
+	oidPrefix := ""
+	for _, p := range fqoidParts {
+		oidPrefix += "/" + p
+	}
+
+	// Unary requests must include fqoid and cannot be recursive.
+	if !streaming {
+		if recursive {
+			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "Recursive parameter info request is not supported with unary response"))
+			return
+		}
+		if oidPrefix == "" {
+			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "Unary request must include fqoid"))
+			return
+		}
+	}
+
+	handler := s.baseServer.LookupGetParamInfoHandler(slot)
+	infos, res := handler(slot, oidPrefix, recursive)
+	if res.Code != catena.OK {
+		writeHTTPStatusResult(w, res)
+		return
+	}
+
+	if len(infos) == 0 {
+		msg := "Parameter not found: " + oidPrefix
+		if oidPrefix == "" {
+			msg = "No top-level parameters found"
+		}
+		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, msg))
+		return
+	}
+
+	if streaming {
+		s.writeParamInfoStream(w, r, infos)
+		return
+	}
+
+	if err := WriteProtoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
+		logger.Error("failed to write param info response", "error", err)
+	}
+}
+
+// writeParamInfoStream streams the param info entries to the client as Server-Sent Events.
+func (s *Server) writeParamInfoStream(w http.ResponseWriter, r *http.Request, infos []catena.CatenaParamInfo) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "streaming not supported")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	ctx := r.Context()
+	for _, info := range infos {
+		select {
+		case <-ctx.Done():
+			logger.Info("param-info stream client disconnected")
+			return
+		default:
+		}
+		protoResp := info.GetProtoResponse()
+		if protoResp == nil {
+			continue
+		}
+		data, err := MarshalProtoJSON(protoResp)
+		if err != nil {
+			logger.Error("failed to marshal param info entry", "error", err)
+			return
+		}
+		if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+			logger.Error("failed to write param info SSE event", "error", err)
+			return
+		}
+		flusher.Flush()
+	}
+}
+
 func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodPost {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only POST allowed")
@@ -509,7 +613,7 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		cmdResult, _ = catena.CommandNoResponse()
 	}
 
-	_ = WriteCommandResponseJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
+	_ = WriteProtoJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
 }
 
 // ToHTTPStatus converts a StatusCode to an HTTP status code.
@@ -580,6 +684,10 @@ func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler catena.Execu
 	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
 }
 
+func (s *Server) RegisterGetParamInfoHandler(slot uint16, handler catena.GetParamInfoHandler) {
+	s.baseServer.RegisterGetParamInfoHandler(slot, handler)
+}
+
 func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
 	return s.baseServer.LookupGetDeviceHandler(slot)
 }
@@ -598,6 +706,10 @@ func (s *Server) LookupGetAssetHandler(slot uint16) catena.GetAssetHandler {
 
 func (s *Server) LookupExecuteCommandHandler(slot uint16) catena.ExecuteCommandHandler {
 	return s.baseServer.LookupExecuteCommandHandler(slot)
+}
+
+func (s *Server) LookupGetParamInfoHandler(slot uint16) catena.GetParamInfoHandler {
+	return s.baseServer.LookupGetParamInfoHandler(slot)
 }
 
 func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
