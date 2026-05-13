@@ -467,10 +467,14 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 }
 
 // handleParamInfoEndpoint dispatches /st2138-api/v1/{slot}/param-info/... requests.
-// Supported routes:
+// Supported routes (mirroring the C++ REST controller):
 //   - GET /{slot}/param-info/{fqoid}         -> unary: returns a single ParamInfoResponse JSON
-//   - GET /{slot}/param-info/{fqoid}/stream  -> SSE stream rooted at fqoid; ?recursive=true to recurse
-//   - GET /{slot}/param-info/stream          -> SSE stream of all top-level params; ?recursive=true to recurse
+//   - GET /{slot}/param-info/{fqoid}/stream  -> SSE stream rooted at fqoid; ?recursive to recurse
+//   - GET /{slot}/param-info/stream          -> SSE stream of all top-level params; ?recursive to recurse
+//
+// Per the OpenAPI spec and the C++ reference, the recursive flag is determined
+// by presence of the `recursive` query parameter alone — any value (including
+// "false") enables recursion.
 func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
@@ -478,13 +482,7 @@ func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	// Per the OpenAPI spec the presence of `recursive` enables recursion
-	// regardless of its value, but accept "false" as an opt-out for symmetry
-	// with the command endpoint's `respond` flag.
-	recursive := false
-	if r.URL.Query().Has("recursive") {
-		recursive = r.URL.Query().Get("recursive") != "false"
-	}
+	recursive := r.URL.Query().Has("recursive")
 
 	// Parse trailing path segments. The "stream" suffix selects SSE.
 	streaming := false
@@ -493,7 +491,26 @@ func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request,
 		streaming = true
 		fqoidParts = fqoidParts[:len(fqoidParts)-1]
 	}
-	oidPrefix := strings.Join(fqoidParts, "/")
+
+	// Match the C++ REST controller: the fqoid is built by prepending "/" to
+	// every path segment after the endpoint, yielding e.g. "/parent/child".
+	// An empty fqoid means "all top-level parameters".
+	oidPrefix := ""
+	for _, p := range fqoidParts {
+		oidPrefix += "/" + p
+	}
+
+	// Validate unary-mode invariants up front, mirroring the C++ controller.
+	if !streaming {
+		if recursive {
+			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "Recursive parameter info request is not supported with unary response"))
+			return
+		}
+		if oidPrefix == "" {
+			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "Unary request must include fqoid"))
+			return
+		}
+	}
 
 	handler := s.baseServer.LookupGetParamInfoHandler(slot)
 	infos, res := handler(slot, oidPrefix, recursive)
@@ -502,16 +519,20 @@ func (s *Server) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	if len(infos) == 0 {
+		msg := "Parameter not found: " + oidPrefix
+		if oidPrefix == "" {
+			msg = "No top-level parameters found"
+		}
+		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, msg))
+		return
+	}
+
 	if streaming {
 		s.writeParamInfoStream(w, r, infos)
 		return
 	}
 
-	// Unary mode: return the first response as a JSON object.
-	if len(infos) == 0 {
-		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, "no param info found for oid "+oidPrefix))
-		return
-	}
 	if err := WriteParamInfoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
 	}

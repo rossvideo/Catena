@@ -332,6 +332,8 @@ func (s *Server) GetParam(ctx context.Context, req *protos.GetParamPayload) (*pr
 // ParamInfoRequest streams parameter information for the given slot and OID prefix.
 // An empty oid_prefix selects all top-level parameters. When recursive is true,
 // child parameters of matching params are also included in the stream.
+// Behavior mirrors the C++ ParamInfoRequest controller: if the handler returns
+// an empty result with OK status, NOT_FOUND is returned to the client.
 func (s *Server) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
 	slot, err := s.baseServer.ValidateSlot(req.GetSlot())
 	if err.Code != catena.OK {
@@ -347,6 +349,14 @@ func (s *Server) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream gr
 	if res.Error != "" {
 		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
+	}
+
+	if len(infos) == 0 {
+		msg := "Parameter not found: " + oidPrefix
+		if oidPrefix == "" {
+			msg = "No top-level parameters found"
+		}
+		return status.Error(codes.NotFound, msg)
 	}
 
 	for _, info := range infos {

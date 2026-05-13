@@ -619,8 +619,9 @@ func TestServer_MultipleSlots(t *testing.T) {
 }
 
 func TestWriteHTTPResult_Error(t *testing.T) {
+	original := catena.GetEnv()
+	defer catena.SetEnv(original)
 	catena.SetEnv(catena.EnvDev)
-	defer catena.SetEnv(catena.EnvProd)
 
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{
@@ -1548,8 +1549,13 @@ func TestServer_ParamInfo_UnaryRoute(t *testing.T) {
 	handlerCalled := false
 	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
 		handlerCalled = true
-		if oidPrefix != "text_box" {
-			t.Errorf("expected oidPrefix 'text_box', got %s", oidPrefix)
+		// Mirroring the C++ controller, REST builds the fqoid by prepending "/"
+		// to each path segment after the endpoint.
+		if oidPrefix != "/text_box" {
+			t.Errorf("expected oidPrefix '/text_box', got %s", oidPrefix)
+		}
+		if recursive {
+			t.Error("expected recursive=false for unary call")
 		}
 		return []catena.CatenaParamInfo{
 			catena.NewParamInfo("text_box", catena.NewPolyglotText("en", "Text Box"), catena.ParamTypeString, "", 0),
@@ -1590,8 +1596,8 @@ func TestServer_ParamInfo_NestedFqoid(t *testing.T) {
 
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/parent/child", "")
 	assertStatus(t, rec, http.StatusOK)
-	if receivedOidPrefix != "parent/child" {
-		t.Errorf("expected oidPrefix 'parent/child', got %s", receivedOidPrefix)
+	if receivedOidPrefix != "/parent/child" {
+		t.Errorf("expected oidPrefix '/parent/child', got %s", receivedOidPrefix)
 	}
 }
 
@@ -1604,6 +1610,9 @@ func TestServer_ParamInfo_NotFound(t *testing.T) {
 
 	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/missing", "")
 	assertStatus(t, rec, http.StatusNotFound)
+	if err := assertHasError(t, rec); !strings.Contains(err, "Parameter not found") {
+		t.Errorf("expected 'Parameter not found' message, got %q", err)
+	}
 }
 
 func TestServer_ParamInfo_HandlerError(t *testing.T) {
@@ -1624,12 +1633,89 @@ func TestServer_ParamInfo_MethodNotAllowed(t *testing.T) {
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
+// TestServer_ParamInfo_UnaryRecursiveRejected verifies the C++ rule that
+// recursive cannot be combined with a unary response.
+func TestServer_ParamInfo_UnaryRecursiveRejected(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+
+	handlerCalled := false
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		handlerCalled = true
+		return nil, catena.StatusWithCode(catena.OK, "")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/text_box?recursive=true", "")
+	assertStatus(t, rec, http.StatusBadRequest)
+	if err := assertHasError(t, rec); !strings.Contains(err, "Recursive") {
+		t.Errorf("expected 'Recursive ...' error message, got %q", err)
+	}
+	if handlerCalled {
+		t.Error("handler should not be called when validation fails")
+	}
+}
+
+// TestServer_ParamInfo_UnaryMissingFqoidRejected verifies the C++ rule that
+// a unary request must include an fqoid.
+func TestServer_ParamInfo_UnaryMissingFqoidRejected(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	handlerCalled := false
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		handlerCalled = true
+		return nil, catena.StatusWithCode(catena.OK, "")
+	})
+
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info", "")
+	assertStatus(t, rec, http.StatusBadRequest)
+	if err := assertHasError(t, rec); !strings.Contains(err, "Unary request must include fqoid") {
+		t.Errorf("expected 'Unary request must include fqoid' error, got %q", err)
+	}
+	if handlerCalled {
+		t.Error("handler should not be called when validation fails")
+	}
+}
+
+// TestServer_ParamInfo_RecursivePresenceOnly verifies the C++ semantics where
+// the presence of the `recursive` query parameter enables recursion regardless
+// of its value (so ?recursive=false STILL enables recursion).
+func TestServer_ParamInfo_RecursivePresenceOnly(t *testing.T) {
+	cases := []struct {
+		name  string
+		query string
+		want  bool
+	}{
+		{name: "no flag", query: "", want: false},
+		{name: "recursive=true", query: "?recursive=true", want: true},
+		{name: "recursive=false still enables", query: "?recursive=false", want: true},
+		{name: "recursive with no value", query: "?recursive", want: true},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			srv := NewServer([]uint16{0}, 100)
+			var gotRecursive bool
+			srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+				gotRecursive = recursive
+				return []catena.CatenaParamInfo{
+					catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
+				}, catena.StatusWithCode(catena.OK, "")
+			})
+
+			rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/stream"+tc.query, "")
+			assertStatus(t, rec, http.StatusOK)
+			if gotRecursive != tc.want {
+				t.Errorf("recursive: got %v, want %v", gotRecursive, tc.want)
+			}
+		})
+	}
+}
+
 func TestServer_ParamInfo_StreamRoute(t *testing.T) {
 	srv := NewServer([]uint16{0}, 100)
 
 	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
-		if oidPrefix != "parent" {
-			t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
+		if oidPrefix != "/parent" {
+			t.Errorf("expected oidPrefix '/parent', got %s", oidPrefix)
 		}
 		if !recursive {
 			t.Error("expected recursive=true")
@@ -1676,6 +1762,20 @@ func TestServer_ParamInfo_TopLevelStreamRoute(t *testing.T) {
 	body := rec.Body.String()
 	if strings.Count(body, "data:") != 2 {
 		t.Errorf("expected 2 SSE data events for top-level stream, got body:\n%s", body)
+	}
+}
+
+// TestServer_ParamInfo_TopLevelStream_Empty verifies that an empty top-level
+// result becomes NOT_FOUND, matching the C++ controller.
+func TestServer_ParamInfo_TopLevelStream_Empty(t *testing.T) {
+	srv := NewServer([]uint16{0}, 100)
+	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.OK, "")
+	})
+	rec := makeRequest(t, srv, http.MethodGet, "/st2138-api/v1/0/param-info/stream", "")
+	assertStatus(t, rec, http.StatusNotFound)
+	if err := assertHasError(t, rec); !strings.Contains(err, "No top-level parameters found") {
+		t.Errorf("expected 'No top-level parameters found' error, got %q", err)
 	}
 }
 

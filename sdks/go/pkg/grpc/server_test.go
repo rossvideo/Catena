@@ -785,6 +785,53 @@ func TestServer_ParamInfoRequest_HandlerError(t *testing.T) {
 	assertGRPCCode(t, err, codes.NotFound, "handler error at recv")
 }
 
+// TestServer_ParamInfoRequest_EmptyResult_NotFound verifies that the gRPC
+// server promotes an OK + empty result to NOT_FOUND, matching the C++
+// ParamInfoRequest behavior.
+func TestServer_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
+	t.Run("specific oid empty", func(t *testing.T) {
+		ctx := context.Background()
+		srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+		defer cleanup()
+
+		srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.OK, "")
+		})
+
+		client, cleanup := setupGRPCClient(t, ctx, lis)
+		defer cleanup()
+
+		stream, err := makeParamInfoRequest(t, client, ctx, 0, "missing", false)
+		if err != nil {
+			assertGRPCCode(t, err, codes.NotFound, "empty result at stream creation")
+			return
+		}
+		_, err = stream.Recv()
+		assertGRPCCode(t, err, codes.NotFound, "empty result at recv")
+	})
+
+	t.Run("top-level empty", func(t *testing.T) {
+		ctx := context.Background()
+		srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+		defer cleanup()
+
+		srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.OK, "")
+		})
+
+		client, cleanup := setupGRPCClient(t, ctx, lis)
+		defer cleanup()
+
+		stream, err := makeParamInfoRequest(t, client, ctx, 0, "", false)
+		if err != nil {
+			assertGRPCCode(t, err, codes.NotFound, "empty top-level at stream creation")
+			return
+		}
+		_, err = stream.Recv()
+		assertGRPCCode(t, err, codes.NotFound, "empty top-level at recv")
+	})
+}
+
 func TestServer_ParamInfoRequest_SlotExceedsMax(t *testing.T) {
 	ctx := context.Background()
 	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
