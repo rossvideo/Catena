@@ -796,6 +796,8 @@ func main() {
 		}
 	})
 
+	srv.StartHeartbeat(5 * time.Second)
+
 	config, err := catena.InitOptions()
 	if err != nil {
 		logger.Error("Failed to initialize Catena SDK", "error", err)
