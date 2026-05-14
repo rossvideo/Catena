@@ -104,8 +104,8 @@ type Transport interface {
 	Start(ctx context.Context, runtime ServerRuntime) error
 
 	// Shutdown closes the transport and waits for cleanup.
-	// The context provides a deadline; Shutdown must respect it and return
-	// promptly even if cleanup is incomplete.
+	// The context provides a deadline/cancellation boundary; Shutdown must
+	// respect it and return by that deadline.
 	Shutdown(ctx context.Context) error
 }
 

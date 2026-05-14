@@ -270,7 +270,9 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	_ = r.Header.Get("User-Agent")
 	_ = r.Header.Get("Authorization")
 
-	// Register this connection in the connectionQueue
+	// Register this connection with the runtime using this transport as owner.
+	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
+	// so one transport can shut down without impacting streams owned by others.
 	connID, conn := t.runtime.RegisterTransportConnection(t)
 	if connID < 0 {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")

@@ -440,7 +440,9 @@ func (s *catenaService) UpdateSubscriptions(req *protos.UpdateSubscriptionsPaylo
 
 // Connect establishes a streaming connection for push updates
 func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerStreamingServer[protos.PushUpdates]) error {
-	// Register this connection in the connectionQueue
+	// Register this connection with the runtime using this transport as owner.
+	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
+	// so one transport can shut down without impacting streams owned by others.
 	connID, conn := s.runtime.RegisterTransportConnection(s.transport)
 	if connID < 0 {
 		logger.Error("gRPC connection rejected - server shutting down")
