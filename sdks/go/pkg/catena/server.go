@@ -253,9 +253,6 @@ func (s *server) Shutdown(ctx context.Context) {
 	// stop the heartbeat if its running
 	s.StopHeartbeat()
 
-	// tell the connection queue to drain all connections
-	s.connectionQueue.shutdown(ctx)
-
 	// Shutdown all transports outside the lock.
 	for _, t := range transports {
 		err := t.Shutdown(ctx)
@@ -263,6 +260,9 @@ func (s *server) Shutdown(ctx context.Context) {
 			logger.Error("Error shutting down transport", "error", err)
 		}
 	}
+
+	// tell the connection queue to drain any remaining connections
+	s.connectionQueue.shutdown(ctx)
 
 	close(s.stopped)
 }
