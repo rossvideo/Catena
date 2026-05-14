@@ -364,6 +364,16 @@ func (t *RestTransport) registerRoutes() {
 		writeHTTPResult(w, res, val)
 	})
 
+	// Health endpoint: GET /st2138-api/v1/health
+	t.mux.HandleFunc("/st2138-api/v1/health", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+			writeHTTPResult(w, res, val)
+			return
+		}
+		writeHTTPStatusResult(w, catena.StatusWithCode(catena.OK, ""))
+	})
+
 	// Connect endpoint: GET /st2138-api/v1/connect (SSE streaming)
 	t.mux.HandleFunc("/st2138-api/v1/connect", t.handleConnect)
 

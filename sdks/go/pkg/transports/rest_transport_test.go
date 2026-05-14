@@ -307,6 +307,24 @@ func TestRestTransport_ExecuteCommand_MethodNotAllowed(t *testing.T) {
 	}
 }
 
+func TestRestTransport_Health_Route(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/health", "")
+	assertStatus(t, rec, http.StatusOK)
+
+	// assert empty body
+	if rec.Body.Len() != 0 {
+		t.Errorf("expected empty body, got %q", rec.Body.String())
+	}
+}
+
+func TestRestTransport_Health_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/health", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+}
+
 func TestRestTransport_Connect_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
