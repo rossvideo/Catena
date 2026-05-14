@@ -137,6 +137,7 @@ var _ ServerRuntime = (*server)(nil)
 type server struct {
 	mu                     sync.Mutex
 	ctx                    context.Context
+	ctxCancel              context.CancelFunc
 	shutdown               bool
 	stopped                chan struct{}
 	slots                  map[uint16]struct{}
@@ -153,8 +154,10 @@ type server struct {
 }
 
 func NewServer(maxConnections int) Server {
+	ctx, cancel := context.WithCancel(context.Background())
 	return &server{
-		ctx:                    context.Background(),
+		ctx:                    ctx,
+		ctxCancel:              cancel,
 		shutdown:               false,
 		stopped:                make(chan struct{}),
 		slots:                  make(map[uint16]struct{}),
@@ -229,6 +232,9 @@ func (s *server) Shutdown(ctx context.Context) {
 	transports := s.transports
 	s.transports = nil
 	s.mu.Unlock()
+
+	// cancel the server context to signal transports to stop accepting new work
+	s.ctxCancel()
 
 	// stop the heartbeat if its running
 	s.StopHeartbeat()
