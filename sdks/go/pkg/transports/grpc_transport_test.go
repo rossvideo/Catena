@@ -1972,27 +1972,6 @@ func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
 	}
 }
 
-func TestGrpcTransport_Shutdown_ClosesOwnedConnections(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
-	runtime := makeStubServerRuntime(t)
-	called := false
-	runtime.shutdownTransportConnectionsFn = func(owner any) {
-		called = true
-		if owner != transport {
-			t.Fatalf("expected shutdown owner %p, got %p", transport, owner)
-		}
-	}
-	transport.runtime = runtime
-
-	if err := transport.Shutdown(context.Background()); err != nil {
-		t.Fatalf("expected shutdown to succeed, got %v", err)
-	}
-
-	if !called {
-		t.Fatal("expected transport shutdown to close owned connections")
-	}
-}
-
 // TestServer_Start_PortAlreadyInUse tests that Start() handles port conflicts
 func TestGrpcTransport_Start_PortAlreadyInUse(t *testing.T) {
 	if testing.Short() {

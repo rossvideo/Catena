@@ -127,7 +127,6 @@ type ServerRuntime interface {
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
 	RegisterTransportConnection(owner any) (int, *Connection)
 	DeregisterConnection(connID int)
-	ShutdownTransportConnections(owner any)
 }
 
 var _ Server = (*server)(nil)
@@ -206,6 +205,10 @@ func (s *server) DeregisterTransport(ctx context.Context, transport Transport) e
 	s.transports = append(s.transports[:idx], s.transports[idx+1:]...)
 	s.mu.Unlock()
 
+	// Shutdown the connections associated with this transport's owner (if any).
+	// makes sure the transport doesn't leave behind orphaned connections in the server after it's gone.
+	s.connectionQueue.shutdownOwner(ctx, transport)
+
 	// Shutdown may block while draining work; call it outside the server lock.
 	return transport.Shutdown(ctx)
 }
@@ -225,7 +228,7 @@ func (s *server) Shutdown(ctx context.Context) {
 	s.transports = nil
 	s.mu.Unlock()
 
-	s.connectionQueue.shutdown()
+	s.connectionQueue.shutdown(ctx)
 
 	// Shutdown all transports outside the lock.
 	for _, t := range transports {
@@ -446,10 +449,6 @@ func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
 // DeregisterConnection removes a streaming connection
 func (s *server) DeregisterConnection(connID int) {
 	s.connectionQueue.deregisterConnection(connID)
-}
-
-func (s *server) ShutdownTransportConnections(owner any) {
-	s.connectionQueue.shutdownOwner(owner)
 }
 
 // SetMaxConnections sets the maximum number of streaming connections

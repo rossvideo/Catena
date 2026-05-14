@@ -106,9 +106,6 @@ func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime)
 }
 
 func (t *RestTransport) Shutdown(ctx context.Context) error {
-	if t.runtime != nil {
-		t.runtime.ShutdownTransportConnections(t)
-	}
 	if t.server != nil {
 		return t.server.Shutdown(ctx)
 	}

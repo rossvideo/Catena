@@ -172,6 +172,25 @@ func (s *stubTransport) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+func TestServer_Shutdown_CallsShutdown(t *testing.T) {
+	called := false
+
+	srv := NewServer(100).(*server)
+	srv.connectionQueue = &stubConnectionQueue{
+		shutdownFn: func(ctx context.Context) {
+			called = true
+			if ctx != context.Background() {
+				t.Errorf("expected context.Background(), got %v", ctx)
+			}
+		},
+	}
+
+	srv.Shutdown(context.Background())
+	if !called {
+		t.Error("expected shutdown to call shutdown on connection queue")
+	}
+}
+
 func TestServer_RegisterTransport_Normal(t *testing.T) {
 	called := false
 	// not really an error just testing that the Start function is called and
@@ -230,6 +249,7 @@ func TestServer_RegisterTransport_Shutdown(t *testing.T) {
 
 func TestServer_DeregisterTransport_Normal(t *testing.T) {
 	called := false
+	shutdownCalled := false
 	// not really an error just testing that the Start function is called and
 	// its return value is passed through correctly
 	expectedError := fmt.Errorf("expected error")
@@ -239,6 +259,18 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 		shutdownFn: func(ctx context.Context) error {
 			called = true
 			return expectedError
+		},
+	}
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		shutdownOwnerFn: func(ctx context.Context, gotOwner any) {
+			shutdownCalled = true
+			if gotOwner != transport {
+				t.Errorf("expected shutdownOwner to be called with the transport as owner, got %v", gotOwner)
+			}
+			if ctx != context.Background() {
+				t.Errorf("expected context.Background(), got %v", ctx)
+			}
 		},
 	}
 
@@ -254,6 +286,9 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 	}
 	if len(srv.transports) != 0 {
 		t.Errorf("expected 0 transports after deregistration, got %d", len(srv.transports))
+	}
+	if !shutdownCalled {
+		t.Error("expected shutdownOwner to be called on connection queue")
 	}
 }
 
@@ -671,8 +706,9 @@ type stubConnectionQueue struct {
 	registerOwnedFn func(owner any) (int, *Connection)
 	deregisterFn    func(connID int)
 	notifyFn        func(update *protos.PushUpdates)
-	shutdownFn      func()
-	shutdownOwnerFn func(owner any)
+	shutdownFn      func(ctx context.Context)
+	shutdownOwnerFn func(ctx context.Context, owner any)
+	shutdownConnFn  func(ctx context.Context, conn *Connection)
 	countFn         func() int
 }
 
@@ -708,19 +744,27 @@ func (s *stubConnectionQueue) notifyUpdate(update *protos.PushUpdates) {
 	}
 }
 
-func (s *stubConnectionQueue) shutdown() {
+func (s *stubConnectionQueue) shutdown(ctx context.Context) {
 	if s.shutdownFn != nil {
-		s.shutdownFn()
+		s.shutdownFn(ctx)
 	} else {
 		s.tb.Fatalf("shutdown called on stubConnectionQueue without shutdownFn defined")
 	}
 }
 
-func (s *stubConnectionQueue) shutdownOwner(owner any) {
+func (s *stubConnectionQueue) shutdownOwner(ctx context.Context, owner any) {
 	if s.shutdownOwnerFn != nil {
-		s.shutdownOwnerFn(owner)
+		s.shutdownOwnerFn(ctx, owner)
 	} else {
 		s.tb.Fatalf("shutdownOwner called on stubConnectionQueue without shutdownOwnerFn defined")
+	}
+}
+
+func (s *stubConnectionQueue) shutdownConnection(ctx context.Context, conn *Connection) {
+	if s.shutdownConnFn != nil {
+		s.shutdownConnFn(ctx, conn)
+	} else {
+		s.tb.Fatalf("shutdownConnection called on stubConnectionQueue without shutdownConnFn defined")
 	}
 }
 
@@ -834,29 +878,6 @@ func TestServer_RegisterTransportConnection_InitialUpdate(t *testing.T) {
 		}, update)
 	case <-time.After(time.Second):
 		t.Fatal("expected initial slots_added update on new connection, but timed out")
-	}
-}
-
-func TestServer_ShutdownTransportConnections_Passthrough(t *testing.T) {
-	called := false
-	var actualOwner any
-	owner := &struct{}{}
-	srv := NewServer(100).(*server)
-	srv.connectionQueue = &stubConnectionQueue{
-		tb: t,
-		shutdownOwnerFn: func(gotOwner any) {
-			called = true
-			actualOwner = gotOwner
-		},
-	}
-
-	srv.ShutdownTransportConnections(owner)
-
-	if !called {
-		t.Error("expected shutdownOwner to be called on connection queue")
-	}
-	if actualOwner != owner {
-		t.Error("expected transport owner to be passed through")
 	}
 }
 

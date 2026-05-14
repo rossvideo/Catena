@@ -39,6 +39,7 @@
 package catena
 
 import (
+	"context"
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -63,7 +64,6 @@ type connectionQueue struct {
 	connections    map[int]*Connection
 	nextConnID     int
 	maxConnections int
-	wg             sync.WaitGroup
 	shuttingDown   bool
 	cond           *sync.Cond
 }
@@ -73,8 +73,9 @@ type connectionQueueInterface interface {
 	registerOwnedConnection(owner any) (int, *Connection)
 	deregisterConnection(connID int)
 	notifyUpdate(update *protos.PushUpdates)
-	shutdown()
-	shutdownOwner(owner any)
+	shutdown(ctx context.Context)
+	shutdownOwner(ctx context.Context, owner any)
+	shutdownConnection(ctx context.Context, connection *Connection)
 	connectionCount() int
 }
 
@@ -120,7 +121,6 @@ func (cq *connectionQueue) registerOwnedConnection(owner any) (int, *Connection)
 		owner:   owner,
 	}
 	cq.connections[cq.nextConnID] = conn
-	cq.wg.Add(1)
 	logger.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
 	return cq.nextConnID, conn
 }
@@ -133,7 +133,6 @@ func (cq *connectionQueue) deregisterConnection(connID int) {
 
 	if _, ok := cq.connections[connID]; ok {
 		delete(cq.connections, connID)
-		cq.wg.Done()
 		cq.cond.Broadcast()
 		logger.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
 	}
@@ -158,48 +157,84 @@ func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates) {
 // shutdown signals all connections to stop and waits for them to deregister.
 // Each connection's goroutine will receive the signal via the Done channel,
 // exit its event loop, and deregister itself.
-func (cq *connectionQueue) shutdown() {
+func (cq *connectionQueue) shutdown(ctx context.Context) {
 	cq.mu.Lock()
 	cq.shuttingDown = true
+	conns := make([]*Connection, 0, len(cq.connections))
 	for _, conn := range cq.connections {
-		select {
-		case <-conn.Done:
-		default:
-			close(conn.Done)
-		}
+		conns = append(conns, conn)
 	}
 	cq.mu.Unlock()
 
-	cq.wg.Wait()
+	var wg sync.WaitGroup
+	for _, conn := range conns {
+		wg.Add(1)
+		go func(c *Connection) {
+			defer wg.Done()
+			cq.shutdownConnection(ctx, c)
+		}(conn)
+	}
+	wg.Wait()
+
 	logger.Info("All streaming connections shut down")
 }
 
-func (cq *connectionQueue) shutdownOwner(owner any) {
+// shutdownOwner signals all connections owned by the specified owner to stop and waits for them to deregister.
+func (cq *connectionQueue) shutdownOwner(ctx context.Context, owner any) {
 	cq.mu.Lock()
-	for _, conn := range cq.connections {
-		if conn.owner != owner {
-			continue
-		}
-		select {
-		case <-conn.Done:
-		default:
-			close(conn.Done)
-		}
-	}
-
-	for cq.hasOwnerConnectionsLocked(owner) {
-		cq.cond.Wait()
-	}
-	cq.mu.Unlock()
-}
-
-func (cq *connectionQueue) hasOwnerConnectionsLocked(owner any) bool {
+	var ownerConns []*Connection
 	for _, conn := range cq.connections {
 		if conn.owner == owner {
-			return true
+			ownerConns = append(ownerConns, conn)
 		}
 	}
-	return false
+	cq.mu.Unlock()
+
+	var wg sync.WaitGroup
+	for _, conn := range ownerConns {
+		wg.Add(1)
+		go func(c *Connection) {
+			defer wg.Done()
+			cq.shutdownConnection(ctx, c)
+		}(conn)
+	}
+	wg.Wait()
+}
+
+func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *Connection) {
+	cq.mu.Lock()
+	defer cq.mu.Unlock()
+
+	// notify the connection to shut down by closing its Done channel
+	select {
+	case <-connection.Done:
+	default:
+		close(connection.Done)
+	}
+
+	// make a watchdog goroutine to force close the connection if it doesn't shut down gracefully within the context deadline
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			cq.mu.Lock()
+			defer cq.mu.Unlock()
+			logger.Warning("Connection did not shut down gracefully, forcing close", "connID", connection.ID)
+			delete(cq.connections, connection.ID)
+			cq.cond.Broadcast()
+		case <-done:
+		}
+	}()
+
+	// wait for the connection to deregister itself
+	for {
+		if _, ok := cq.connections[connection.ID]; !ok {
+			close(done)
+			break
+		}
+		// friendly reminder that cond.Wait releases the lock while waiting and re-acquires it when signaled, so this loop will wake up whenever a connection is deregistered and check if it's this one
+		cq.cond.Wait()
+	}
 }
 
 // connectionCount returns the number of active connections.

@@ -128,9 +128,6 @@ func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRunt
 
 func (t *GrpcTransport) Shutdown(ctx context.Context) error {
 	logger.Info("Shutting down gRPC transport")
-	if t.runtime != nil {
-		t.runtime.ShutdownTransportConnections(t)
-	}
 
 	// Gracefully stop the gRPC server, allowing in-flight requests to complete
 	// in a goroutine so we can also listen for context cancellation

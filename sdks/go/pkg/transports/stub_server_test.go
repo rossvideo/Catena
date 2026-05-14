@@ -46,23 +46,22 @@ import (
 )
 
 type stubServerRuntime struct {
-	tb                             testing.TB
-	slots                          []uint16
-	getDeviceFn                    func(slot uint16) (catena.CatenaDevice, catena.StatusResult)
-	getValueFn                     func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult)
-	setValueFn                     func(value any, slot uint16, fqoid string) catena.StatusResult
-	getAssetFn                     func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
-	commandFn                      func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
-	paramInfoFn                    func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult)
-	registerTransportConnFn        func(owner any) (int, *catena.Connection)
-	deregisterConnFn               func(connID int)
-	shutdownTransportConnectionsFn func(owner any)
-	registerCalls                  int
-	deregisterCalls                int
-	lastRegisterID                 int
-	lastDeregisterID               int
-	lastRegisterOwner              any
-	lastShutdownOwner              any
+	tb                      testing.TB
+	slots                   []uint16
+	getDeviceFn             func(slot uint16) (catena.CatenaDevice, catena.StatusResult)
+	getValueFn              func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult)
+	setValueFn              func(value any, slot uint16, fqoid string) catena.StatusResult
+	getAssetFn              func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
+	commandFn               func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
+	paramInfoFn             func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult)
+	registerTransportConnFn func(owner any) (int, *catena.Connection)
+	deregisterConnFn        func(connID int)
+	registerCalls           int
+	deregisterCalls         int
+	lastRegisterID          int
+	lastDeregisterID        int
+	lastRegisterOwner       any
+	lastShutdownOwner       any
 }
 
 func makeStubServerRuntime(tb testing.TB) *stubServerRuntime {
@@ -149,15 +148,6 @@ func (s *stubServerRuntime) DeregisterConnection(connID int) {
 		return
 	}
 	s.panicf("DeregisterConnection not implemented in stubServerRuntime")
-}
-
-func (s *stubServerRuntime) ShutdownTransportConnections(owner any) {
-	if s.shutdownTransportConnectionsFn != nil {
-		s.lastShutdownOwner = owner
-		s.shutdownTransportConnectionsFn(owner)
-		return
-	}
-	s.lastShutdownOwner = owner
 }
 
 // WithConnection wires register/deregister behavior for a single fixed connection.

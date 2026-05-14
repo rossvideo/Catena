@@ -31,6 +31,7 @@
 package catena
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -174,7 +175,7 @@ func TestConnectionQueue_Shutdown(t *testing.T) {
 		cq.deregisterConnection(conn2.ID)
 	}()
 
-	cq.shutdown()
+	cq.shutdown(context.Background())
 
 	if cq.connectionCount() != 0 {
 		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
@@ -192,7 +193,7 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 		cq.deregisterConnection(conn.ID)
 	}()
 
-	cq.shutdown()
+	cq.shutdown(context.Background())
 
 	id, c := cq.registerOwnedConnection(owner)
 	if id >= 0 || c != nil {
@@ -219,7 +220,7 @@ func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 	default:
 	}
 
-	cq.shutdownOwner(ownerA)
+	cq.shutdownOwner(context.Background(), ownerA)
 
 	if cq.connectionCount() != 1 {
 		t.Fatalf("expected one remaining connection after owner shutdown, got %d", cq.connectionCount())
@@ -232,4 +233,84 @@ func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 	}
 
 	cq.deregisterConnection(connB.ID)
+}
+
+func TestConnectionQueue_ShutdownConnection_Graceful(t *testing.T) {
+	cq := newConnectionQueue(0)
+	owner := struct{ name string }{name: "test-owner"}
+
+	_, conn := cq.registerOwnedConnection(owner)
+
+	go func() {
+		<-conn.Done
+		cq.deregisterConnection(conn.ID)
+	}()
+
+	cq.shutdownConnection(context.Background(), conn)
+
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
+	}
+}
+
+func TestConnectionQueue_ShutdownConnection_AlreadyClosed(t *testing.T) {
+	cq := newConnectionQueue(0)
+	owner := struct{ name string }{name: "test-owner"}
+
+	_, conn := cq.registerOwnedConnection(owner)
+
+	go func() {
+		<-conn.Done
+		cq.deregisterConnection(conn.ID)
+	}()
+
+	close(conn.Done) // simulate connection already closed
+
+	cq.shutdownConnection(context.Background(), conn)
+
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
+	}
+}
+
+func TestConectionQueue_ShutdownConnection_Deadline(t *testing.T) {
+	cq := newConnectionQueue(0)
+	owner := struct{ name string }{name: "test-owner"}
+
+	_, conn := cq.registerOwnedConnection(owner)
+
+	// don't deregister
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	cq.shutdownConnection(ctx, conn)
+
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
+	}
+}
+
+func TestConnectionQueue_ShutdownConnection_OneDeadline(t *testing.T) {
+	cq := newConnectionQueue(0)
+	ownerA := struct{ name string }{name: "test-owner"}
+	ownerB := struct{ name string }{name: "other-owner"}
+
+	_, connA := cq.registerOwnedConnection(ownerA)
+	_, connB := cq.registerOwnedConnection(ownerB)
+
+	// only properly deregsiter connA, leave connB hanging
+
+	go func() {
+		<-connA.Done
+		cq.deregisterConnection(connA.ID)
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	cq.shutdownConnection(ctx, connA)
+	cq.shutdownConnection(ctx, connB)
+
+	if cq.connectionCount() != 0 {
+		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
+	}
 }

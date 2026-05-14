@@ -1304,28 +1304,6 @@ func TestRestTransport_GetAsset_CompressionWithError(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Shutdown_ClosesOwnedConnections(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	called := false
-	runtime.shutdownTransportConnectionsFn = func(owner any) {
-		called = true
-		if owner != transport {
-			t.Fatalf("expected shutdown owner %p, got %p", transport, owner)
-		}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	if err := transport.Shutdown(ctx); err != nil {
-		t.Fatalf("expected shutdown to succeed, got %v", err)
-	}
-
-	if !called {
-		t.Fatal("expected transport shutdown to close owned connections")
-	}
-}
-
 // =============================================================================
 // Test: ParamInfo endpoint
 // =============================================================================
