@@ -62,23 +62,6 @@ type HeartbeatHandler func(slot uint16)
 
 var ErrServerStopped = errors.New("server is stopped")
 
-// CatenaServer is the transport-agnostic interface satisfied by both
-// rest.Server and grpc.Server, enabling shared handler registration code.
-type CatenaServer interface {
-	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
-	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
-	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
-	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
-	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
-	RegisterGetParamInfoHandler(slot uint16, handler ParamInfoHandler)
-	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
-	BroadcastUpdate(slot uint16, fqoid string, value any)
-	StartHeartbeat(interval time.Duration)
-	StopHeartbeat()
-	Start(port int) error
-	Shutdown()
-}
-
 func ValidateSlot(slot uint32) (uint16, StatusResult) {
 	if slot > uint32(math.MaxUint16) {
 		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot number: %d", slot))
