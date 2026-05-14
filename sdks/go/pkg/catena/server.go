@@ -474,6 +474,8 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 }
 
 func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	// build the initial update with the current slots
 	slots := s.GetSlots()
 	uint32Slots := make([]uint32, len(slots))
