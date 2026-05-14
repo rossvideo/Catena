@@ -315,7 +315,7 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 						"catena_sdk": map[string]any{
 							"type": catena.ParamTypeString,
 						},
-						"catana_sdk_version": map[string]any{
+						"catena_sdk_version": map[string]any{
 							"type": catena.ParamTypeString,
 						},
 						"serial_number": map[string]any{
@@ -337,7 +337,7 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 								"catena_sdk": map[string]any{
 									"string_value": "github.com/rossvideo/catena/sdks/go",
 								},
-								"catana_sdk_version": map[string]any{
+								"catena_sdk_version": map[string]any{
 									"string_value": "v0.1.0", // TODO: SDK should expose
 								},
 								"serial_number": map[string]any{
@@ -803,6 +803,7 @@ func main() {
 		logger.Error("Failed to initialize Catena SDK", "error", err)
 		os.Exit(1)
 	}
+	defer catena.Close()
 
 	if !config.UseGrpc && !config.UseRest {
 		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
