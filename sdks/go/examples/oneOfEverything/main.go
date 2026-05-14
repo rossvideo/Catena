@@ -721,6 +721,66 @@ func main() {
 		})
 	}
 
+	for _, slot := range slotList {
+		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			if recursive {
+				// TODO: implement recursive param info retrieval in example
+				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.UNIMPLEMENTED, "recursive param info not implemented in example")
+			}
+			logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid)
+			key := normalizeFqoid(fqoid)
+			pathParts := strings.Split(key, "/")
+
+			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
+			if !ok {
+				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "device not found")
+			}
+
+			params, ok := deviceInfo["params"].(map[string]any)
+			if !ok {
+				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.INTERNAL, "invalid device params structure")
+			}
+
+			var paramInfo map[string]any
+			found := false
+			for _, part := range pathParts {
+				if params == nil {
+					return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+				}
+				nextParam, exists := params[part]
+				if !exists {
+					return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+				}
+
+				paramInfo, ok = nextParam.(map[string]any)
+				if !ok {
+					return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+				}
+				found = true
+
+				if nested, hasNested := paramInfo["params"]; hasNested {
+					params, _ = nested.(map[string]any)
+				} else {
+					params = nil
+				}
+			}
+
+			if !found {
+				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+			}
+
+			oid := pathParts[len(pathParts)-1]
+			name := catena.PolyglotText{}
+			if paramInfo["name"] != nil {
+				for lang, text := range paramInfo["name"].(map[string]any)["display_strings"].(map[string]string) {
+					name.With(lang, text)
+				}
+			}
+			catenaParamInfo := catena.NewParamInfo(oid, name, paramInfo["type"].(catena.ParamType), "", 0)
+			return []catena.CatenaParamInfo{catenaParamInfo}, catena.StatusWithCode(catena.OK, "")
+		})
+	}
+
 	// counter ticks often enough in slot 0 that a heartbeat isn't needed.
 
 	srv.RegisterHeartbeatHandler(1, func(slot uint16) {
