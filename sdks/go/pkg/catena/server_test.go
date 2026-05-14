@@ -34,7 +34,8 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-02-04
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-14
  */
 
 package catena
