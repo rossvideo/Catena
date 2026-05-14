@@ -210,12 +210,18 @@ func (s *server) DeregisterTransport(ctx context.Context, transport Transport) e
 	s.transports = append(s.transports[:idx], s.transports[idx+1:]...)
 	s.mu.Unlock()
 
-	// Shutdown the connections associated with this transport's owner (if any).
-	// makes sure the transport doesn't leave behind orphaned connections in the server after it's gone.
+	// Shutdown may block while draining work; call it outside the server lock.
+	err := transport.Shutdown(ctx)
+	if err != nil {
+		logger.Error("Error shutting down transport", "error", err)
+	}
+
+	// drain any remaining connections owned by this transport
+	// shutdown also used the same internal cq shutdownConnection method,
+	// this will catch any connections that arrived after the transport's Shutdown was called but before it returned
 	s.connectionQueue.shutdownOwner(ctx, transport)
 
-	// Shutdown may block while draining work; call it outside the server lock.
-	return transport.Shutdown(ctx)
+	return err
 }
 
 func (s *server) Wait() {
