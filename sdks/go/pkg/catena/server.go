@@ -178,18 +178,24 @@ func (s *server) RegisterTransport(transport Transport) error {
 		return fmt.Errorf("cannot register nil transport")
 	}
 
+	// can lock because transport.Start is expected to return quickly and do its work in background goroutines
 	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.shutdown {
-		s.mu.Unlock()
 		return ErrServerStopped
 	}
-	s.transports = append(s.transports, transport)
-	ctx := s.ctx
-	s.mu.Unlock()
-
 	// Transport startup should be non-blocking and must not happen under the server lock.
 	// Pass server context so transport can derive its own child contexts if needed.
-	return transport.Start(ctx, s)
+	err := transport.Start(s.ctx, s)
+	if err != nil {
+		return fmt.Errorf("failed to start transport: %w", err)
+	}
+
+	// after transport has started, add it to the list
+	s.transports = append(s.transports, transport)
+
+	return nil
 }
 
 func (s *server) DeregisterTransport(ctx context.Context, transport Transport) error {
