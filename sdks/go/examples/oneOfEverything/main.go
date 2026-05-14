@@ -502,6 +502,13 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 }
 
 func main() {
+	config, err := catena.InitOptions()
+	if err != nil {
+		logger.Error("Failed to initialize Catena SDK", "error", err)
+		os.Exit(1)
+	}
+	defer catena.Close()
+
 	srv := catena.NewServer(100)
 	counter := &CounterState{}
 	slotParams := map[uint16]*sync.Map{
@@ -797,13 +804,6 @@ func main() {
 	})
 
 	srv.StartHeartbeat(5 * time.Second)
-
-	config, err := catena.InitOptions()
-	if err != nil {
-		logger.Error("Failed to initialize Catena SDK", "error", err)
-		os.Exit(1)
-	}
-	defer catena.Close()
 
 	if !config.UseGrpc && !config.UseRest {
 		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
