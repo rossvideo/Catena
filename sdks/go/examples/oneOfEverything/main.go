@@ -834,10 +834,6 @@ func main() {
 		logger.Info("REST transport starting")
 		logger.Info("")
 		restTransport := transports.NewDefaultRestTransport()
-		if err := srv.RegisterTransport(restTransport); err != nil {
-			logger.Error("Failed to register REST transport", "error", err)
-			os.Exit(1)
-		}
 
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
 			if r.URL.Path == "/assets-list" {
@@ -877,6 +873,11 @@ func main() {
 			}
 			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
 		})
+
+		if err := srv.RegisterTransport(restTransport); err != nil {
+			logger.Error("Failed to register REST transport", "error", err)
+			os.Exit(1)
+		}
 
 		logger.Info("Web UI available at:")
 		logger.Info("  http://localhost:8080/")
