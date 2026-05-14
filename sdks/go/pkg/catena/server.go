@@ -189,7 +189,7 @@ func (s *server) RegisterTransport(transport Transport) error {
 	// Pass server context so transport can derive its own child contexts if needed.
 	err := transport.Start(s.ctx, s)
 	if err != nil {
-		return fmt.Errorf("failed to start transport: %w", err)
+		return err
 	}
 
 	// after transport has started, add it to the list

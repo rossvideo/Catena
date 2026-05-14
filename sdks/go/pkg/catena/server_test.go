@@ -194,9 +194,6 @@ func TestServer_Shutdown_CallsShutdown(t *testing.T) {
 
 func TestServer_RegisterTransport_Normal(t *testing.T) {
 	called := false
-	// not really an error just testing that the Start function is called and
-	// its return value is passed through correctly
-	expectedError := fmt.Errorf("expected error")
 	srv := NewServer(100).(*server)
 
 	// server starts with new transports
@@ -204,11 +201,17 @@ func TestServer_RegisterTransport_Normal(t *testing.T) {
 		t.Errorf("expected 0 transports, got %d", len(srv.transports))
 	}
 
-	actual := srv.RegisterTransport(&stubTransport{
+	err := srv.RegisterTransport(&stubTransport{
 		tb: t,
 		startFn: func(ctx context.Context, runtime ServerRuntime) error {
 			called = true
-			return expectedError
+			if ctx == nil {
+				t.Error("expected non-nil context")
+			}
+			if runtime != srv {
+				t.Errorf("expected runtime to be the server, got %v", runtime)
+			}
+			return nil
 		},
 	})
 
@@ -220,8 +223,8 @@ func TestServer_RegisterTransport_Normal(t *testing.T) {
 	if !called {
 		t.Error("expected Start to be called on transport")
 	}
-	if actual != expectedError {
-		t.Errorf("expected error %v, got %v", expectedError, actual)
+	if err != nil {
+		t.Errorf("expected no error from RegisterTransport, got %v", err)
 	}
 }
 
@@ -232,6 +235,24 @@ func TestServer_RegisterTransport_Nil(t *testing.T) {
 
 	if err == nil {
 		t.Error("expected error when registering nil transport, got nil")
+	}
+}
+
+func TestServer_RegisterTransport_StartupError(t *testing.T) {
+	expectedError := fmt.Errorf("expected startup error")
+	srv := NewServer(100).(*server)
+	err := srv.RegisterTransport(&stubTransport{
+		tb: t,
+		startFn: func(ctx context.Context, runtime ServerRuntime) error {
+			return expectedError
+		},
+	})
+
+	if err != expectedError {
+		t.Errorf("expected error %v from transport startup, got %v", expectedError, err)
+	}
+	if len(srv.transports) != 0 {
+		t.Errorf("expected 0 transports to be registered on startup error, got %d", len(srv.transports))
 	}
 }
 
