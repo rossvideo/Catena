@@ -236,11 +236,11 @@ func (cp *CatenaParam) WithClientHint(key, value string) *CatenaParam {
 	return cp
 }
 
-var paramTypesWithSubParams = map[protos.ParamType]bool{
-	protos.ParamType_STRUCT:               true,
-	protos.ParamType_STRUCT_VARIANT:       true,
-	protos.ParamType_STRUCT_ARRAY:         true,
-	protos.ParamType_STRUCT_VARIANT_ARRAY: true,
+var paramTypesWithSubParams = map[protos.ParamType]struct{}{
+	protos.ParamType_STRUCT:               {},
+	protos.ParamType_STRUCT_VARIANT:       {},
+	protos.ParamType_STRUCT_ARRAY:         {},
+	protos.ParamType_STRUCT_VARIANT_ARRAY: {},
 }
 
 func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
@@ -250,7 +250,7 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 			"param_type", cp.param.Type.String())
 		return cp
 	}
-	if !paramTypesWithSubParams[cp.param.Type] {
+	if _, ok := paramTypesWithSubParams[cp.param.Type]; !ok {
 		logger.Warning("WithParam called on param type that does not support sub-params; ignoring",
 			"param_type", cp.param.Type.String())
 		return cp
@@ -262,6 +262,9 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 	return cp
 }
 
+// TODO: WithResponse only applies to commands. When we add a CatenaCommand helper,
+// move this there. Consider an unexported baseParam that both CatenaParam and
+// CatenaCommand compose from, since other fields may also be command-specific.
 func (cp *CatenaParam) WithResponse(response bool) *CatenaParam {
 	cp.param.Response = response
 	return cp
@@ -287,6 +290,11 @@ func (cp *CatenaParam) WithStateless(stateless bool) *CatenaParam {
 	return cp
 }
 
+// TODO: Ideally this would accept a *CatenaParam reference instead of a raw
+// string, but CatenaParam doesn't track its own OID path (the OID is only
+// assigned externally via WithParam). Auto-linking would require params to
+// know their full mounted path, which adds significant complexity. Revisit if
+// we ever add path tracking to the param tree.
 func (cp *CatenaParam) WithTemplateOid(oid string) *CatenaParam {
 	cp.param.TemplateOid = oid
 	return cp
