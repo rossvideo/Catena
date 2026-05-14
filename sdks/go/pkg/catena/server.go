@@ -181,6 +181,7 @@ func (s *server) RegisterTransport(transport Transport) error {
 	// can lock because transport.Start is expected to return quickly and do its work in background goroutines
 	s.mu.Lock()
 	if s.shutdown {
+		s.mu.Unlock()
 		return ErrServerStopped
 	}
 	s.mu.Unlock()
