@@ -64,6 +64,10 @@ type HeartbeatHandler func(slot uint16)
 
 var ErrServerStopped = errors.New("server is stopped")
 
+// defaultServerMaxShutdownWait is a fallback safety cap for shutdown paths when
+// callers pass an unbounded context. Caller-provided earlier deadlines still win.
+const defaultServerMaxShutdownWait = 10 * time.Second
+
 func ValidateSlot(slot uint32) (uint16, StatusResult) {
 	if slot > uint32(math.MaxUint16) {
 		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot number: %d", slot))
@@ -138,6 +142,7 @@ type server struct {
 	mu                     sync.Mutex
 	ctx                    context.Context
 	ctxCancel              context.CancelFunc
+	maxShutdownWait        time.Duration
 	shutdown               bool
 	stopped                chan struct{}
 	slots                  map[uint16]struct{}
@@ -158,6 +163,7 @@ func NewServer(maxConnections int) Server {
 	return &server{
 		ctx:                    ctx,
 		ctxCancel:              cancel,
+		maxShutdownWait:        defaultServerMaxShutdownWait, // override in unittests if needed
 		shutdown:               false,
 		stopped:                make(chan struct{}),
 		slots:                  make(map[uint16]struct{}),
@@ -171,6 +177,17 @@ func NewServer(maxConnections int) Server {
 		connectionQueue:        newConnectionQueue(maxConnections),
 		transports:             []Transport{},
 	}
+}
+
+func (s *server) boundedShutdownContext(parent context.Context) (context.Context, context.CancelFunc) {
+	// also defend against nil parent contexts
+	if parent == nil {
+		parent = context.Background()
+	}
+	if s.maxShutdownWait <= 0 {
+		return parent, func() {}
+	}
+	return context.WithTimeout(parent, s.maxShutdownWait)
 }
 
 func (s *server) RegisterTransport(transport Transport) error {
@@ -218,8 +235,11 @@ func (s *server) DeregisterTransport(ctx context.Context, transport Transport) e
 	s.transports = append(s.transports[:idx], s.transports[idx+1:]...)
 	s.mu.Unlock()
 
+	shutdownCtx, cancel := s.boundedShutdownContext(ctx)
+	defer cancel()
+
 	// Shutdown may block while draining work; call it outside the server lock.
-	err := transport.Shutdown(ctx)
+	err := transport.Shutdown(shutdownCtx)
 	if err != nil {
 		logger.Error("Error shutting down transport", "error", err)
 	}
@@ -227,7 +247,7 @@ func (s *server) DeregisterTransport(ctx context.Context, transport Transport) e
 	// drain any remaining connections owned by this transport
 	// shutdown also used the same internal cq shutdownConnection method,
 	// this will catch any connections that arrived after the transport's Shutdown was called but before it returned
-	s.connectionQueue.shutdownOwner(ctx, transport)
+	s.connectionQueue.shutdownOwner(shutdownCtx, transport)
 
 	return err
 }
@@ -253,16 +273,19 @@ func (s *server) Shutdown(ctx context.Context) {
 	// stop the heartbeat if its running
 	s.StopHeartbeat()
 
+	shutdownCtx, cancel := s.boundedShutdownContext(ctx)
+	defer cancel()
+
 	// Shutdown all transports outside the lock.
 	for _, t := range transports {
-		err := t.Shutdown(ctx)
+		err := t.Shutdown(shutdownCtx)
 		if err != nil {
 			logger.Error("Error shutting down transport", "error", err)
 		}
 	}
 
 	// tell the connection queue to drain any remaining connections
-	s.connectionQueue.shutdown(ctx)
+	s.connectionQueue.shutdown(shutdownCtx)
 
 	close(s.stopped)
 }

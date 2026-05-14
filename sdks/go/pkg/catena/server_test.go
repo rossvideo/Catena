@@ -173,16 +173,69 @@ func (s *stubTransport) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+func assertContextDeadlineWithin(t *testing.T, ctx context.Context, maxWait time.Duration) {
+	t.Helper()
+
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		t.Fatal("expected shutdown context with deadline")
+	}
+
+	remaining := time.Until(deadline)
+	if remaining <= 0 {
+		t.Fatalf("expected shutdown context deadline in the future, got %v", remaining)
+	}
+	if remaining > maxWait+250*time.Millisecond {
+		t.Fatalf("expected shutdown deadline within %v, got %v remaining", maxWait, remaining)
+	}
+}
+
+func TestServer_BoundedShutdownContext_NilParent(t *testing.T) {
+	srv := NewServer(100).(*server)
+	srv.maxShutdownWait = 100 * time.Millisecond
+
+	// make a nil context so we don't get warnings from editors about passing nil
+	// contexts. The server should handle this gracefully and not panic.
+	// Very cool that editors can do that, but we want to test it here.
+	var nilCtx context.Context
+	ctx, cancel := srv.boundedShutdownContext(nilCtx)
+	defer cancel()
+
+	if ctx == nil {
+		t.Fatal("expected non-nil shutdown context")
+	}
+
+	assertContextDeadlineWithin(t, ctx, srv.maxShutdownWait)
+	if err := ctx.Err(); err != nil {
+		t.Fatalf("expected active shutdown context, got %v", err)
+	}
+}
+
+func TestServer_BoundedShutdownContext_NoWait(t *testing.T) {
+	srv := NewServer(100).(*server)
+	srv.maxShutdownWait = 0 // disabled
+
+	parent := context.Background()
+	ctx, cancel := srv.boundedShutdownContext(parent)
+	defer cancel()
+
+	if ctx != parent {
+		t.Fatal("expected parent context to be returned unchanged when maxShutdownWait <= 0")
+	}
+	if _, ok := ctx.Deadline(); ok {
+		t.Fatal("expected no deadline on returned context when maxShutdownWait <= 0")
+	}
+}
+
 func TestServer_Shutdown_CallsShutdown(t *testing.T) {
 	called := false
 
 	srv := NewServer(100).(*server)
+	srv.maxShutdownWait = 100 * time.Millisecond
 	srv.connectionQueue = &stubConnectionQueue{
 		shutdownFn: func(ctx context.Context) {
 			called = true
-			if ctx != context.Background() {
-				t.Errorf("expected context.Background(), got %v", ctx)
-			}
+			assertContextDeadlineWithin(t, ctx, srv.maxShutdownWait)
 		},
 	}
 
@@ -276,10 +329,12 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 	// its return value is passed through correctly
 	expectedError := fmt.Errorf("expected error")
 	srv := NewServer(100).(*server)
+	srv.maxShutdownWait = 100 * time.Millisecond
 	transport := &stubTransport{
 		tb: t,
 		shutdownFn: func(ctx context.Context) error {
 			called = true
+			assertContextDeadlineWithin(t, ctx, srv.maxShutdownWait)
 			return expectedError
 		},
 	}
@@ -290,9 +345,7 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 			if gotOwner != transport {
 				t.Errorf("expected shutdownOwner to be called with the transport as owner, got %v", gotOwner)
 			}
-			if ctx != context.Background() {
-				t.Errorf("expected context.Background(), got %v", ctx)
-			}
+			assertContextDeadlineWithin(t, ctx, srv.maxShutdownWait)
 		},
 	}
 
