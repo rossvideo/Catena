@@ -293,6 +293,11 @@ func (s *server) Shutdown(ctx context.Context) {
 func (s *server) GetSlots() []uint16 {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.getSlotsLocked()
+}
+
+// call this within a locked s.mu context
+func (s *server) getSlotsLocked() []uint16 {
 	slots := make([]uint16, 0, len(s.slots))
 	for slot := range s.slots {
 		slots = append(slots, slot)
@@ -477,7 +482,7 @@ func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	// build the initial update with the current slots
-	slots := s.GetSlots()
+	slots := s.getSlotsLocked()
 	uint32Slots := make([]uint32, len(slots))
 	for i, slot := range slots {
 		uint32Slots[i] = uint32(slot)
