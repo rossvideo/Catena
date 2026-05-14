@@ -200,6 +200,9 @@ func assertBodyNotContains(t *testing.T, rec *httptest.ResponseRecorder, substr 
 // function to tear down the connection.
 func setupSSEConnection(t *testing.T, transport *RestTransport) (*httptest.ResponseRecorder, func()) {
 	t.Helper()
+
+	countBefore := srv.ConnectionCount()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
 	rec := httptest.NewRecorder()
