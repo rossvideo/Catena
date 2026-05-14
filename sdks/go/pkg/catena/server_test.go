@@ -944,13 +944,15 @@ func TestServer_RegisterTransportConnection_InitialUpdate(t *testing.T) {
 
 	select {
 	case update := <-conn.Updates:
-		proto.Equal(&protos.PushUpdates{
+		if !proto.Equal(&protos.PushUpdates{
 			Kind: &protos.PushUpdates_SlotsAdded{
 				SlotsAdded: &protos.SlotList{
 					Slots: []uint32{0, 4, 8},
 				},
 			},
-		}, update)
+		}, update) {
+			t.Errorf("expected initial slots_added update with slots 0,4,8, got %v", update)
+		}
 	case <-time.After(time.Second):
 		t.Fatal("expected initial slots_added update on new connection, but timed out")
 	}
