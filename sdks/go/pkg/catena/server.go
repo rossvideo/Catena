@@ -230,6 +230,10 @@ func (s *server) Shutdown(ctx context.Context) {
 	s.transports = nil
 	s.mu.Unlock()
 
+	// stop the heartbeat if its running
+	s.StopHeartbeat()
+
+	// tell the connection queue to drain all connections
 	s.connectionQueue.shutdown(ctx)
 
 	// Shutdown all transports outside the lock.
