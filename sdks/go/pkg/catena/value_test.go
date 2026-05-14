@@ -46,7 +46,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-func TestToCatenaValue(t *testing.T) {
+func TestToValue(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   any
@@ -68,19 +68,19 @@ func TestToCatenaValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cv, err := ToCatenaValue(tt.input)
+			cv, err := ToValue(tt.input)
 			if tt.wantErr {
 				if err.Code == OK {
-					t.Errorf("ToCatenaValue(%v) expected error, got nil", tt.input)
+					t.Errorf("ToValue(%v) expected error, got nil", tt.input)
 				}
 				return
 			}
 			if err.Code != OK {
-				t.Errorf("ToCatenaValue(%v) unexpected error: %v", tt.input, err.Error)
+				t.Errorf("ToValue(%v) unexpected error: %v", tt.input, err.Error)
 				return
 			}
 			if cv.Value == nil {
-				t.Errorf("ToCatenaValue(%v) returned nil Value", tt.input)
+				t.Errorf("ToValue(%v) returned nil Value", tt.input)
 			}
 		})
 	}

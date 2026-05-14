@@ -53,7 +53,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
+type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult)
 
 type RestTransport struct {
 	mu              sync.Mutex
@@ -175,11 +175,11 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 
 	// Handle different value types (no error case)
 	switch v := value.(type) {
-	case catena.CatenaValue:
+	case catena.Value:
 		writeValueResult(w, v, httpStatus)
-	case catena.CatenaDevice:
+	case catena.Device:
 		writeDeviceResult(w, v, httpStatus)
-	case catena.CatenaAsset:
+	case catena.Asset:
 		writeAssetResult(w, v, httpStatus)
 	default:
 		w.WriteHeader(httpStatus)
@@ -204,8 +204,8 @@ func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	}
 }
 
-// writeValueResult writes a CatenaValue as JSON
-func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatus int) {
+// writeValueResult writes a Value as JSON
+func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int) {
 	protoValue := value.Value
 	if protoValue == nil {
 		w.WriteHeader(httpStatus)
@@ -218,8 +218,8 @@ func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatu
 	}
 }
 
-// writeDeviceResult writes a CatenaDevice as JSON
-func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpStatus int) {
+// writeDeviceResult writes a Device as JSON
+func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus int) {
 	if device.GetProtoDevice() == nil {
 		w.WriteHeader(httpStatus)
 		return
@@ -241,8 +241,8 @@ func writeDeviceResult(w http.ResponseWriter, device catena.CatenaDevice, httpSt
 	}
 }
 
-// writeAssetResult writes a CatenaAsset as JSON-encoded ExternalObjectPayload
-func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatus int) {
+// writeAssetResult writes an Asset as JSON-encoded ExternalObjectPayload
+func writeAssetResult(w http.ResponseWriter, asset catena.Asset, httpStatus int) {
 	protoAsset := asset.GetProtoAsset()
 	if protoAsset == nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -287,7 +287,7 @@ func (t *RestTransport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher
 func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is GET
 	if r.Method != http.MethodGet {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		val, res := catena.ReplyError[catena.Value](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -295,7 +295,7 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if SSE streaming is supported
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "streaming not supported")
+		val, res := catena.ReplyError[catena.Value](catena.INTERNAL, "streaming not supported")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -310,7 +310,7 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// so one transport can shut down without impacting streams owned by others.
 	connID, conn := t.runtime.RegisterTransportConnection(t)
 	if connID < 0 {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
+		val, res := catena.ReplyError[catena.Value](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -358,7 +358,7 @@ func (t *RestTransport) registerRoutes() {
 		logger.Info("Device endpoint", "path", r.URL.Path, "method", r.Method)
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
-			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid path format")
+			val, res := catena.ReplyError[catena.Value](catena.INVALID_ARGUMENT, "invalid path format")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -366,7 +366,7 @@ func (t *RestTransport) registerRoutes() {
 		slotStr := parts[2]
 		slot, err := catena.ValidateSlotString(slotStr)
 		if err.Code != catena.OK {
-			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid slot number")
+			val, res := catena.ReplyError[catena.Value](catena.INVALID_ARGUMENT, "invalid slot number")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -391,20 +391,20 @@ func (t *RestTransport) registerRoutes() {
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
 			default:
-				val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "unknown endpoint")
+				val, res := catena.ReplyError[catena.Value](catena.NOT_FOUND, "unknown endpoint")
 				writeHTTPResult(w, res, val)
 			}
 			return
 		}
 
-		val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
+		val, res := catena.ReplyError[catena.Value](catena.NOT_FOUND, "endpoint not found")
 		writeHTTPResult(w, res, val)
 	})
 
 	// Health endpoint: GET /st2138-api/v1/health
 	t.mux.HandleFunc("/st2138-api/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+			val, res := catena.ReplyError[catena.Value](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -425,7 +425,7 @@ func (t *RestTransport) registerRoutes() {
 			writeHTTPResult(w, res, val)
 			return
 		}
-		val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
+		val, res := catena.ReplyError[catena.Value](catena.NOT_FOUND, "endpoint not found")
 		writeHTTPResult(w, res, val)
 	})
 
@@ -438,7 +438,7 @@ func (t *RestTransport) registerRoutes() {
 // Returns the list of populated slots
 func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		val, res := catena.ReplyError[catena.Value](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -482,7 +482,7 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 		nativeValue, errProto := catena.FromProto(reqValue)
 		if errProto.Code != catena.OK {
 			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
-			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid request body")
+			val, res := catena.ReplyError[catena.Value](catena.INVALID_ARGUMENT, "invalid request body")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -491,14 +491,14 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 		writeHTTPStatusResult(w, res)
 
 	default:
-		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET, PUT, PATCH allowed")
+		val, res := catena.ReplyError[catena.Value](catena.METHOD_NOT_ALLOWED, "only GET, PUT, PATCH allowed")
 		writeHTTPResult(w, res, val)
 	}
 }
 
 func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		val, res := catena.ReplyError[catena.Value](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -510,14 +510,14 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
 			targetEncoding, encRes := catena.ParsePayloadEncoding(compressionStr)
 			if encRes.Code != catena.OK {
-				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, encRes.Error)
-				writeHTTPResult(w, errRes, catena.CatenaValue{})
+				_, errRes := catena.ReplyError[catena.Value](catena.INVALID_ARGUMENT, encRes.Error)
+				writeHTTPResult(w, errRes, catena.Value{})
 				return
 			}
 			if tcRes := catena.TranscodeAssetPayload(&asset, targetEncoding); tcRes.Code != catena.OK {
 				logger.Error("failed to transcode asset payload", "error", tcRes.Error)
-				_, errRes := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to transcode payload: "+tcRes.Error)
-				writeHTTPResult(w, errRes, catena.CatenaValue{})
+				_, errRes := catena.ReplyError[catena.Value](catena.INTERNAL, "failed to transcode payload: "+tcRes.Error)
+				writeHTTPResult(w, errRes, catena.Value{})
 				return
 			}
 		}
@@ -529,7 +529,7 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 // handleParamInfoEndpoint handles param info requests and streaming (SSE).
 func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		val, res := catena.ReplyError[catena.Value](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -588,10 +588,10 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 }
 
 // writeParamInfoStream streams the param info entries to the client as Server-Sent Events.
-func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Request, infos []catena.CatenaParamInfo) {
+func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Request, infos []catena.ParamInfo) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "streaming not supported")
+		val, res := catena.ReplyError[catena.Value](catena.INTERNAL, "streaming not supported")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -629,7 +629,7 @@ func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Requ
 
 func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodPost {
-		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only POST allowed")
+		val, res := catena.ReplyError[catena.Value](catena.METHOD_NOT_ALLOWED, "only POST allowed")
 		writeHTTPResult(w, res, val)
 		return
 	}
@@ -647,7 +647,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		reqValue, err := ReadRequestJSON(r)
 		if err.Code != catena.OK {
 			logger.Error("failed to read command payload", "error", err)
-			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid command payload")
+			val, res := catena.ReplyError[catena.Value](catena.INVALID_ARGUMENT, "invalid command payload")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -655,7 +655,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		payload, errProto = catena.FromProto(reqValue)
 		if errProto.Code != catena.OK {
 			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
-			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid command payload")
+			val, res := catena.ReplyError[catena.Value](catena.INVALID_ARGUMENT, "invalid command payload")
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -663,7 +663,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 
 	cmdResult, res := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
 	if res.Code != catena.OK {
-		writeHTTPResult(w, res, catena.CatenaValue{})
+		writeHTTPResult(w, res, catena.Value{})
 		return
 	}
 

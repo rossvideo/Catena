@@ -94,9 +94,9 @@ func TestRestTransport_GetDevice_Route(t *testing.T) {
 		"slot":         uint32(0),
 		"detail_level": catena.DetailLevelFull,
 	}
-	device, _ := catena.ToCatenaDevice(deviceMap)
+	device, _ := catena.ToDevice(deviceMap)
 
-	runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
+	runtime.getDeviceFn = func(slot uint16) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -116,12 +116,12 @@ func TestRestTransport_GetDevice_NotFound(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
+	runtime.getDeviceFn = func(slot uint16) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 99 {
 			t.Errorf("expected slot 99, got %d", slot)
 		}
-		return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+		return catena.ReplyError[catena.Device](catena.NOT_FOUND, "device not found")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/99", "")
@@ -137,12 +137,12 @@ func TestRestTransport_GetDevice_InvalidSlot(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
+	runtime.getDeviceFn = func(slot uint16) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
 		}
-		return catena.ReplyError[catena.CatenaDevice](catena.INVALID_ARGUMENT, "invalid slot")
+		return catena.ReplyError[catena.Device](catena.INVALID_ARGUMENT, "invalid slot")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/invalid", "")
@@ -157,8 +157,8 @@ func TestRestTransport_GetDevice_InvalidSlot(t *testing.T) {
 func TestRestTransport_GetValue_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	value, _ := catena.ToCatenaValue(int32(42))
-	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	value, _ := catena.ToValue(int32(42))
+	runtime.getValueFn = func(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
 		if fqoid != "brightness" {
 			t.Errorf("expected fqoid 'brightness', got %s", fqoid)
 		}
@@ -219,9 +219,9 @@ func TestRestTransport_GetAsset_Route(t *testing.T) {
 		Metadata: map[string]string{"content-type": "image/png"},
 		Payload:  []byte("fake image"),
 	}
-	asset, _ := catena.ToCatenaAsset(dp, true)
+	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -233,9 +233,9 @@ func TestRestTransport_GetAsset_MethodNotAllowed(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		handlerCalled = true
-		return catena.Reply(catena.CatenaAsset{})
+		return catena.Reply(catena.Asset{})
 	}
 
 	makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", "")
@@ -277,7 +277,7 @@ func TestRestTransport_ExecuteCommand_WithPayload(t *testing.T) {
 		if payload == nil {
 			t.Error("expected payload to be non-nil")
 		}
-		val, _ := catena.ToCatenaValue(payload)
+		val, _ := catena.ToValue(payload)
 		return catena.CommandReply(val)
 	}
 
@@ -457,9 +457,9 @@ func TestRestTransport_Fallback_Route(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
 
 	handlerCalled := false
-	transport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+	transport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
 		handlerCalled = true
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "custom not found")
+		return catena.ReplyError[catena.Value](catena.NOT_FOUND, "custom not found")
 	})
 
 	rec := makeRequest(t, transport, http.MethodGet, "/unknown/path", "")
@@ -472,11 +472,11 @@ func TestRestTransport_Fallback_Route(t *testing.T) {
 func TestRestTransport_NestedValuePath(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	runtime.getValueFn = func(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
 		if fqoid != "nested/path/to/param" {
 			t.Errorf("expected fqoid 'nested/path/to/param', got %s", fqoid)
 		}
-		value, _ := catena.ToCatenaValue(int32(1))
+		value, _ := catena.ToValue(int32(1))
 		return catena.Reply(value)
 	}
 
@@ -518,7 +518,7 @@ func TestWriteHTTPResult_Error(t *testing.T) {
 		Code:  catena.NOT_FOUND,
 		Error: "test error message",
 	}
-	writeHTTPResult(rec, result, catena.CatenaValue{})
+	writeHTTPResult(rec, result, catena.Value{})
 
 	errMsg := assertHasError(t, rec)
 	if errMsg != "test error message" {
@@ -551,7 +551,7 @@ func TestRestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 
 			rec := httptest.NewRecorder()
 			result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "detailed error"}
-			writeHTTPResult(rec, result, catena.CatenaValue{})
+			writeHTTPResult(rec, result, catena.Value{})
 
 			assertBodyContains(t, rec, tt.expected)
 		})
@@ -564,9 +564,9 @@ func TestWriteFunctions_NilValues(t *testing.T) {
 		fn             func(http.ResponseWriter)
 		expectedStatus int
 	}{
-		{"nil value", func(w http.ResponseWriter) { writeValueResult(w, catena.CatenaValue{}, http.StatusOK) }, http.StatusOK},
-		{"nil device", func(w http.ResponseWriter) { writeDeviceResult(w, catena.CatenaDevice{}, http.StatusOK) }, http.StatusOK},
-		{"nil asset", func(w http.ResponseWriter) { writeAssetResult(w, catena.CatenaAsset{}, http.StatusOK) }, http.StatusInternalServerError},
+		{"nil value", func(w http.ResponseWriter) { writeValueResult(w, catena.Value{}, http.StatusOK) }, http.StatusOK},
+		{"nil device", func(w http.ResponseWriter) { writeDeviceResult(w, catena.Device{}, http.StatusOK) }, http.StatusOK},
+		{"nil asset", func(w http.ResponseWriter) { writeAssetResult(w, catena.Asset{}, http.StatusOK) }, http.StatusInternalServerError},
 	}
 
 	for _, tt := range tests {
@@ -678,13 +678,13 @@ func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
-	device, _ := catena.ToCatenaDevice(map[string]any{"slot": int32(0)})
+	device, _ := catena.ToDevice(map[string]any{"slot": int32(0)})
 	rec := httptest.NewRecorder()
 	writeDeviceResult(rec, device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
 	assertContentType(t, rec, "application/json")
 
-	asset, _ := catena.ToCatenaAsset(catena.DataPayload{Payload: []byte("data")}, false)
+	asset, _ := catena.ToAsset(catena.DataPayload{Payload: []byte("data")}, false)
 	rec = httptest.NewRecorder()
 	writeAssetResult(rec, asset, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
@@ -711,7 +711,7 @@ func TestCommandEndpoint_FromProtoError(t *testing.T) {
 func TestCommandEndpoint_ResponseValue(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-		val, _ := catena.ToCatenaValue("command executed")
+		val, _ := catena.ToValue("command executed")
 		return catena.CommandReply(val)
 	}
 
@@ -781,7 +781,7 @@ func TestCommandEndpoint_RespondFalse(t *testing.T) {
 	handlerCalled := false
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
-		val, _ := catena.ToCatenaValue("should be thrown away")
+		val, _ := catena.ToValue("should be thrown away")
 		return catena.CommandReply(val)
 	}
 
@@ -805,7 +805,7 @@ func TestCommandEndpoint_RespondFalse(t *testing.T) {
 func TestCommandEndpoint_RespondTrue(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-		val, _ := catena.ToCatenaValue(int32(42))
+		val, _ := catena.ToValue(int32(42))
 		return catena.CommandReply(val)
 	}
 
@@ -821,7 +821,7 @@ func TestCommandEndpoint_RespondTrue(t *testing.T) {
 func TestCommandEndpoint_RespondDefaultIsTrue(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-		val, _ := catena.ToCatenaValue(int32(42))
+		val, _ := catena.ToValue(int32(42))
 		return catena.CommandReply(val)
 	}
 
@@ -1032,9 +1032,9 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 		Metadata: map[string]string{"content-type": "text/plain"},
 		Payload:  []byte("test asset data for compression"),
 	}
-	asset, _ := catena.ToCatenaAsset(dp, true)
+	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -1063,9 +1063,9 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 		Metadata: map[string]string{"content-type": "text/plain"},
 		Payload:  []byte("test asset data for compression"),
 	}
-	asset, _ := catena.ToCatenaAsset(dp, true)
+	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -1097,9 +1097,9 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T)
 		Payload:         gzData,
 		PayloadEncoding: catena.EncodingGzip,
 	}
-	asset, _ := catena.ToCatenaAsset(dp, true)
+	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -1161,7 +1161,7 @@ func TestRestTransport_Connect_WithOrigin(t *testing.T) {
 }
 
 func TestWriteValueResult_WriteError(t *testing.T) {
-	value, _ := catena.ToCatenaValue(int32(1))
+	value, _ := catena.ToValue(int32(1))
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
@@ -1173,7 +1173,7 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 }
 
 func TestWriteDeviceResult_WriteError(t *testing.T) {
-	device, _ := catena.ToCatenaDevice(map[string]any{"slot": int32(0)})
+	device, _ := catena.ToDevice(map[string]any{"slot": int32(0)})
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
@@ -1183,7 +1183,7 @@ func TestWriteDeviceResult_WriteError(t *testing.T) {
 }
 
 func TestWriteAssetResult_WriteError(t *testing.T) {
-	asset, _ := catena.ToCatenaAsset(catena.DataPayload{Payload: []byte("x")}, false)
+	asset, _ := catena.ToAsset(catena.DataPayload{Payload: []byte("x")}, false)
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
@@ -1199,7 +1199,7 @@ func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.NOT_FOUND, Error: "internal detail"}
-	writeHTTPResult(rec, result, catena.CatenaValue{})
+	writeHTTPResult(rec, result, catena.Value{})
 
 	assertBodyNotContains(t, rec, "internal detail")
 }
@@ -1341,9 +1341,9 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
 		Metadata: map[string]string{"content-type": "text/plain"},
 		Payload:  []byte("test data"),
 	}
-	asset, _ := catena.ToCatenaAsset(dp, true)
+	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -1363,9 +1363,9 @@ func TestRestTransport_GetAsset_NoCompressionParam(t *testing.T) {
 		Metadata: map[string]string{"content-type": "text/plain"},
 		Payload:  []byte("uncompressed data"),
 	}
-	asset, _ := catena.ToCatenaAsset(dp, true)
+	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -1381,8 +1381,8 @@ func TestRestTransport_GetAsset_NoCompressionParam(t *testing.T) {
 func TestRestTransport_GetAsset_CompressionWithError(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-		return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
+		return catena.ReplyError[catena.Asset](catena.NOT_FOUND, "asset not found")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/missing?compression=GZIP", nil)
@@ -1402,7 +1402,7 @@ func TestRestTransport_ParamInfo_UnaryRoute(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		handlerCalled = true
 		// Mirroring the C++ controller, REST builds the fqoid by prepending "/"
 		// to each path segment after the endpoint.
@@ -1412,7 +1412,7 @@ func TestRestTransport_ParamInfo_UnaryRoute(t *testing.T) {
 		if recursive {
 			t.Error("expected recursive=false for unary call")
 		}
-		return []catena.CatenaParamInfo{
+		return []catena.ParamInfo{
 			catena.NewParamInfo("text_box", catena.NewPolyglotText("en", "Text Box"), catena.ParamTypeString, "", 0),
 		}, catena.StatusWithCode(catena.OK, "")
 	}
@@ -1442,9 +1442,9 @@ func TestRestTransport_ParamInfo_NestedFqoid(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	receivedOidPrefix := ""
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		receivedOidPrefix = oidPrefix
-		return []catena.CatenaParamInfo{
+		return []catena.ParamInfo{
 			catena.NewParamInfo(oidPrefix, nil, catena.ParamTypeInt32, "", 0),
 		}, catena.StatusWithCode(catena.OK, "")
 	}
@@ -1459,7 +1459,7 @@ func TestRestTransport_ParamInfo_NestedFqoid(t *testing.T) {
 func TestRestTransport_ParamInfo_NotFound(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.OK, "")
 	}
 
@@ -1473,7 +1473,7 @@ func TestRestTransport_ParamInfo_NotFound(t *testing.T) {
 func TestRestTransport_ParamInfo_HandlerError(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.NOT_FOUND, "param not found")
 	}
 
@@ -1494,7 +1494,7 @@ func TestRestTransport_ParamInfo_UnaryRecursiveRejected(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		handlerCalled = true
 		return nil, catena.StatusWithCode(catena.OK, "")
 	}
@@ -1514,7 +1514,7 @@ func TestRestTransport_ParamInfo_UnaryRecursiveRejected(t *testing.T) {
 func TestRestTransport_ParamInfo_UnaryMissingFqoidRejected(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	handlerCalled := false
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		handlerCalled = true
 		return nil, catena.StatusWithCode(catena.OK, "")
 	}
@@ -1549,9 +1549,9 @@ func TestRestTransport_ParamInfo_RecursivePresenceOnly(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			transport, runtime := makeTestRestTransport(t)
 			var gotRecursive bool
-			runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 				gotRecursive = recursive
-				return []catena.CatenaParamInfo{
+				return []catena.ParamInfo{
 					catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
 				}, catena.StatusWithCode(catena.OK, "")
 			}
@@ -1568,14 +1568,14 @@ func TestRestTransport_ParamInfo_RecursivePresenceOnly(t *testing.T) {
 func TestRestTransport_ParamInfo_StreamRoute(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		if oidPrefix != "/parent" {
 			t.Errorf("expected oidPrefix '/parent', got %s", oidPrefix)
 		}
 		if !recursive {
 			t.Error("expected recursive=true")
 		}
-		return []catena.CatenaParamInfo{
+		return []catena.ParamInfo{
 			catena.NewParamInfo("parent", nil, catena.ParamTypeStruct, "", 0),
 			catena.NewParamInfo("parent/child1", nil, catena.ParamTypeInt32, "", 0),
 			catena.NewParamInfo("parent/child2", nil, catena.ParamTypeStringArray, "", 3),
@@ -1600,11 +1600,11 @@ func TestRestTransport_ParamInfo_StreamRoute(t *testing.T) {
 func TestRestTransport_ParamInfo_TopLevelStreamRoute(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		if oidPrefix != "" {
 			t.Errorf("expected empty oidPrefix for top-level stream, got %q", oidPrefix)
 		}
-		return []catena.CatenaParamInfo{
+		return []catena.ParamInfo{
 			catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
 			catena.NewParamInfo("b", nil, catena.ParamTypeFloat32, "", 0),
 		}, catena.StatusWithCode(catena.OK, "")
@@ -1625,7 +1625,7 @@ func TestRestTransport_ParamInfo_TopLevelStreamRoute(t *testing.T) {
 func TestRestTransport_ParamInfo_TopLevelStream_Empty(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.OK, "")
 	}
 
