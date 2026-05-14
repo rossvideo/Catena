@@ -180,20 +180,22 @@ func (s *server) RegisterTransport(transport Transport) error {
 
 	// can lock because transport.Start is expected to return quickly and do its work in background goroutines
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	if s.shutdown {
 		return ErrServerStopped
 	}
-	// Transport startup should be non-blocking and must not happen under the server lock.
+	s.mu.Unlock()
+
+	// start transport outside the lock in case they do any significant work in Start
 	// Pass server context so transport can derive its own child contexts if needed.
 	err := transport.Start(s.ctx, s)
 	if err != nil {
 		return err
 	}
 
+	s.mu.Lock()
 	// after transport has started, add it to the list
 	s.transports = append(s.transports, transport)
+	s.mu.Unlock()
 
 	return nil
 }
