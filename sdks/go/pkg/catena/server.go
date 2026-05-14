@@ -474,17 +474,13 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 }
 
 func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
-	id, connection := s.connectionQueue.registerOwnedConnection(owner)
-	if id < 0 || connection == nil {
-		return id, connection
-	}
-	// send the initial slots_added message to the new connection
+	// build the initial update with the current slots
 	slots := s.GetSlots()
 	uint32Slots := make([]uint32, len(slots))
 	for i, slot := range slots {
 		uint32Slots[i] = uint32(slot)
 	}
-	connection.Updates <- &protos.PushUpdates{
+	initialUpdate := &protos.PushUpdates{
 		Kind: &protos.PushUpdates_SlotsAdded{
 			SlotsAdded: &protos.SlotList{
 				Slots: uint32Slots,
@@ -492,7 +488,9 @@ func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
 		},
 	}
 
-	return id, connection
+	// register and it will send the initial update to the new connection before returning it
+	// this ensures the transport receives the initial update before it starts processing the connection
+	return s.connectionQueue.registerOwnedConnection(owner, initialUpdate)
 }
 
 // DeregisterConnection removes a streaming connection

@@ -71,7 +71,7 @@ type connectionQueue struct {
 
 type connectionQueueInterface interface {
 	setMaxConnections(max int)
-	registerOwnedConnection(owner any) (int, *Connection)
+	registerOwnedConnection(owner any, initialUpdate *protos.PushUpdates) (int, *Connection)
 	deregisterConnection(connID int)
 	notifyUpdate(update *protos.PushUpdates)
 	shutdown(ctx context.Context)
@@ -102,7 +102,7 @@ func (cq *connectionQueue) setMaxConnections(max int) {
 
 // registerConnection creates a new connection and returns its ID and connection.
 // Returns (-1, nil) if server is shutting down or max connections reached.
-func (cq *connectionQueue) registerOwnedConnection(owner any) (int, *Connection) {
+func (cq *connectionQueue) registerOwnedConnection(owner any, initialUpdate *protos.PushUpdates) (int, *Connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -122,6 +122,15 @@ func (cq *connectionQueue) registerOwnedConnection(owner any) (int, *Connection)
 		owner:   owner,
 	}
 	cq.connections[cq.nextConnID] = conn
+
+	// send the initial update if provided
+	if initialUpdate != nil {
+		select {
+		case conn.Updates <- initialUpdate:
+		default:
+			logger.Warning("Streaming channel full, dropping initial update", "connID", cq.nextConnID)
+		}
+	}
 	logger.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
 	return cq.nextConnID, conn
 }

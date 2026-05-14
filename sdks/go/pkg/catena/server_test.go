@@ -778,7 +778,7 @@ var _ connectionQueueInterface = (*stubConnectionQueue)(nil)
 type stubConnectionQueue struct {
 	tb              testing.TB
 	setMaxFn        func(max int)
-	registerOwnedFn func(owner any) (int, *Connection)
+	registerOwnedFn func(owner any, initialUpdate *protos.PushUpdates) (int, *Connection)
 	deregisterFn    func(connID int)
 	notifyFn        func(update *protos.PushUpdates)
 	shutdownFn      func(ctx context.Context)
@@ -795,9 +795,9 @@ func (s *stubConnectionQueue) setMaxConnections(max int) {
 	}
 }
 
-func (s *stubConnectionQueue) registerOwnedConnection(owner any) (int, *Connection) {
+func (s *stubConnectionQueue) registerOwnedConnection(owner any, initialUpdate *protos.PushUpdates) (int, *Connection) {
 	if s.registerOwnedFn != nil {
-		return s.registerOwnedFn(owner)
+		return s.registerOwnedFn(owner, initialUpdate)
 	}
 	s.tb.Fatalf("registerOwnedConnection called on stubConnectionQueue without registerOwnedFn defined")
 	return 0, nil
@@ -875,14 +875,26 @@ func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 
 func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	called := false
-	var actualOwner any
-	owner := &struct{}{}
+	owner := &struct{ name string }{name: "owner"}
 	srv := NewServer(100).(*server)
+	srv.slots[0] = struct{}{}
+	srv.slots[5] = struct{}{}
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
-		registerOwnedFn: func(gotOwner any) (int, *Connection) {
+		registerOwnedFn: func(gotOwner any, initialUpdate *protos.PushUpdates) (int, *Connection) {
 			called = true
-			actualOwner = gotOwner
+			if gotOwner != owner {
+				t.Error("expected transport owner to be passed through")
+			}
+			if !proto.Equal(initialUpdate, &protos.PushUpdates{
+				Kind: &protos.PushUpdates_SlotsAdded{
+					SlotsAdded: &protos.SlotList{
+						Slots: []uint32{0, 5},
+					},
+				},
+			}) {
+				t.Errorf("Got wrong intial update: %v", initialUpdate)
+			}
 			return 78, &Connection{
 				ID:      78,
 				Updates: make(chan *protos.PushUpdates, 10),
@@ -896,9 +908,6 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	if !called {
 		t.Error("expected registerOwnedConnection to be called on connection queue")
 	}
-	if actualOwner != owner {
-		t.Error("expected transport owner to be passed through")
-	}
 	if connID != 78 {
 		t.Errorf("expected connID 78, got %d", connID)
 	}
@@ -911,7 +920,7 @@ func TestServer_RegisterTransportConnection_Failed(t *testing.T) {
 	srv := NewServer(100).(*server)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
-		registerOwnedFn: func(gotOwner any) (int, *Connection) {
+		registerOwnedFn: func(gotOwner any, initialUpdate *protos.PushUpdates) (int, *Connection) {
 			return -1, nil // simulate failure to register connection
 		},
 	}
@@ -923,38 +932,6 @@ func TestServer_RegisterTransportConnection_Failed(t *testing.T) {
 	}
 	if conn != nil {
 		t.Errorf("expected nil connection on registration failure, got %+v", conn)
-	}
-}
-
-func TestServer_RegisterTransportConnection_InitialUpdate(t *testing.T) {
-	srv := NewServer(100).(*server)
-	srv.slots = map[uint16]struct{}{0: {}, 4: {}, 8: {}} // pre-populate with a slot to test that the initial update is sent
-	srv.connectionQueue = &stubConnectionQueue{
-		tb: t,
-		registerOwnedFn: func(gotOwner any) (int, *Connection) {
-			return 1, &Connection{
-				ID:      1,
-				Updates: make(chan *protos.PushUpdates, 10),
-				Done:    make(chan struct{}),
-			}
-		},
-	}
-
-	_, conn := srv.RegisterTransportConnection(nil)
-
-	select {
-	case update := <-conn.Updates:
-		if !proto.Equal(&protos.PushUpdates{
-			Kind: &protos.PushUpdates_SlotsAdded{
-				SlotsAdded: &protos.SlotList{
-					Slots: []uint32{0, 4, 8},
-				},
-			},
-		}, update) {
-			t.Errorf("expected initial slots_added update with slots 0,4,8, got %v", update)
-		}
-	case <-time.After(time.Second):
-		t.Fatal("expected initial slots_added update on new connection, but timed out")
 	}
 }
 
