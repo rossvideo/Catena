@@ -886,14 +886,16 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 			if gotOwner != owner {
 				t.Error("expected transport owner to be passed through")
 			}
-			if !proto.Equal(initialUpdate, &protos.PushUpdates{
-				Kind: &protos.PushUpdates_SlotsAdded{
-					SlotsAdded: &protos.SlotList{
-						Slots: []uint32{0, 5},
-					},
-				},
-			}) {
-				t.Errorf("Got wrong intial update: %v", initialUpdate)
+			if initialUpdate == nil {
+				t.Fatal("expected initial update, got nil")
+			}
+			if initialUpdate.GetSlotsAdded() == nil {
+				t.Fatal("expected SlotsAdded update to have SlotsAdded field, got nil")
+			}
+			slots := initialUpdate.GetSlotsAdded().GetSlots()
+			slices.Sort(slots)
+			if !slices.Equal(slots, []uint32{0, 5}) {
+				t.Errorf("expected slots [0, 5], got %v", slots)
 			}
 			return 78, &Connection{
 				ID:      78,
