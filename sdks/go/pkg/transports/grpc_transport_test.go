@@ -1087,7 +1087,7 @@ func TestGrpcTransport_Connect_Rejected(t *testing.T) {
 	defer cleanup()
 
 	// Register WithConnection handler that rejects connection
-	runtime.registerTransportConnFn = func(owner any) (int, *catena.Connection) {
+	runtime.registerTransportConnFn = func(transport catena.Transport) (int, *catena.Connection) {
 		return -1, nil // Reject connection
 	}
 
@@ -1755,9 +1755,16 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 		portListener.Close()
 	}
 
+	shutdownCalled := false
 	transport := NewGrpcTransport(uint16(port), false)
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = []uint16{0, 1}
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		shutdownCalled = true
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
 
 	// Register handlers
 	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -1831,6 +1838,9 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	if err := transport.Shutdown(shutdownCtx); err != nil {
 		t.Fatalf("failed to shutdown server: %v", err)
 	}
+	if !shutdownCalled {
+		t.Error("expected shutdown transports callback to be called, but it was not")
+	}
 }
 
 // TestServer_Shutdown_GracefulConnectionClose tests that Shutdown() properly
@@ -1850,6 +1860,11 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 	transport := NewGrpcTransport(uint16(port), false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
 
 	// Start server in background
 	if err := transport.Start(context.Background(), runtime); err != nil {
@@ -1916,6 +1931,11 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 	transport := NewGrpcTransport(uint16(port), false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
 
 	if err := transport.Start(context.Background(), runtime); err != nil {
 		t.Fatalf("failed to start server: %v", err)
@@ -1958,7 +1978,14 @@ func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create listener: %v", err)
 	}
+	runtime := makeStubServerRuntime(t)
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
 	transport.listener = listener
+	transport.runtime = runtime
 
 	if err := listener.Close(); err != nil {
 		t.Fatalf("failed to pre-close listener: %v", err)
@@ -1989,8 +2016,15 @@ func TestGrpcTransport_Start_PortAlreadyInUse(t *testing.T) {
 
 	transport := NewGrpcTransport(uint16(port), false)
 
+	runtime := makeStubServerRuntime(t)
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
 	// Try to start on the already-occupied port
-	err = transport.Start(context.Background(), makeStubServerRuntime(t))
+	err = transport.Start(context.Background(), runtime)
 	if err == nil {
 		transport.Shutdown(context.Background())
 		t.Error("expected Start() to fail on occupied port, but it succeeded")
@@ -2017,6 +2051,12 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 	}
 
 	transport := NewGrpcTransport(uint16(port), false)
+
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
 
 	// Start server
 	go func() {

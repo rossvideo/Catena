@@ -39,6 +39,7 @@
 package transports
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -46,22 +47,24 @@ import (
 )
 
 type stubServerRuntime struct {
-	tb                      testing.TB
-	slots                   []uint16
-	getDeviceFn             func(slot uint16) (catena.CatenaDevice, catena.StatusResult)
-	getValueFn              func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult)
-	setValueFn              func(value any, slot uint16, fqoid string) catena.StatusResult
-	getAssetFn              func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
-	commandFn               func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
-	paramInfoFn             func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult)
-	registerTransportConnFn func(owner any) (int, *catena.Connection)
-	deregisterConnFn        func(connID int)
-	registerCalls           int
-	deregisterCalls         int
-	lastRegisterID          int
-	lastDeregisterID        int
-	lastRegisterOwner       any
-	lastShutdownOwner       any
+	tb                       testing.TB
+	slots                    []uint16
+	getDeviceFn              func(slot uint16) (catena.CatenaDevice, catena.StatusResult)
+	getValueFn               func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult)
+	setValueFn               func(value any, slot uint16, fqoid string) catena.StatusResult
+	getAssetFn               func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult)
+	commandFn                func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
+	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult)
+	registerTransportConnFn  func(transport catena.Transport) (int, *catena.Connection)
+	deregisterConnFn         func(connID int)
+	shutdownTransportConnsFn func(ctx context.Context, transport catena.Transport)
+	registerCalls            int
+	deregisterCalls          int
+	shutdownCalls            int
+	lastRegisterID           int
+	lastDeregisterID         int
+	lastRegisterOwner        any
+	lastShutdownOwner        any
 }
 
 func makeStubServerRuntime(tb testing.TB) *stubServerRuntime {
@@ -128,12 +131,12 @@ func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string
 	return nil, catena.StatusResult{Code: catena.INTERNAL}
 }
 
-func (s *stubServerRuntime) RegisterTransportConnection(owner any) (int, *catena.Connection) {
+func (s *stubServerRuntime) RegisterTransportConnection(transport catena.Transport) (int, *catena.Connection) {
 	if s.registerTransportConnFn != nil {
-		connID, conn := s.registerTransportConnFn(owner)
+		connID, conn := s.registerTransportConnFn(transport)
 		s.registerCalls++
 		s.lastRegisterID = connID
-		s.lastRegisterOwner = owner
+		s.lastRegisterOwner = transport
 		return connID, conn
 	}
 	s.panicf("RegisterTransportConnection not implemented in stubServerRuntime")
@@ -150,13 +153,23 @@ func (s *stubServerRuntime) DeregisterConnection(connID int) {
 	s.panicf("DeregisterConnection not implemented in stubServerRuntime")
 }
 
+func (s *stubServerRuntime) ShutdownTransportConnections(ctx context.Context, transport catena.Transport) {
+	if s.shutdownTransportConnsFn != nil {
+		s.lastShutdownOwner = transport
+		s.shutdownCalls++
+		s.shutdownTransportConnsFn(ctx, transport)
+		return
+	}
+	s.panicf("ShutdownTransportConnections not implemented in stubServerRuntime")
+}
+
 // WithConnection wires register/deregister behavior for a single fixed connection.
 func (s *stubServerRuntime) WithConnection(
 	connection *catena.Connection,
 ) {
 	s.tb.Helper()
 
-	s.registerTransportConnFn = func(owner any) (int, *catena.Connection) {
+	s.registerTransportConnFn = func(transport catena.Transport) (int, *catena.Connection) {
 		return connection.ID, connection
 	}
 
@@ -164,5 +177,13 @@ func (s *stubServerRuntime) WithConnection(
 		if connID != connection.ID {
 			s.tb.Errorf("expected to deregister connection with id %d, got %d", connection.ID, connID)
 		}
+	}
+
+	s.shutdownTransportConnsFn = func(ctx context.Context, transport catena.Transport) {
+		if transport != s.lastRegisterOwner {
+			s.tb.Errorf("expected to shutdown connections for transport %v, got %v", s.lastRegisterOwner, transport)
+		}
+		// notify any waiters that the connection has been "closed"
+		connection.Done <- struct{}{}
 	}
 }

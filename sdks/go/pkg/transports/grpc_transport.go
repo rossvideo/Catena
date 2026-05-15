@@ -129,13 +129,20 @@ func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRunt
 func (t *GrpcTransport) Shutdown(ctx context.Context) error {
 	logger.Info("Shutting down gRPC transport")
 
-	// Gracefully stop the gRPC server, allowing in-flight requests to complete
-	// in a goroutine so we can also listen for context cancellation
+	// Gracefully stop the gRPC server in a goroutine so we can also listen for context
+	// cancellation. GracefulStop will wait for existing RPCs to finish but will stop
+	// accepting new connections. If the context is cancelled before it finishes, we force
+	// stop the server to avoid hanging indefinitely.
 	done := make(chan struct{})
 	go func() {
 		t.grpcServer.GracefulStop()
 		close(done)
 	}()
+
+	// While waiting for the gRPC server to stop in the goroutine, signal the runtime
+	// to shut down any active connections owned by this transport. This allows
+	// GracefulStop to actually stop, gracefully.
+	t.runtime.ShutdownTransportConnections(ctx, t)
 
 	var shutdownErr error
 	select {

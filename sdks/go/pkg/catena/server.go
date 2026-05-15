@@ -131,7 +131,8 @@ type ServerRuntime interface {
 	InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
-	RegisterTransportConnection(owner any) (int, *Connection)
+	RegisterTransportConnection(transport Transport) (int, *Connection)
+	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
 }
 
@@ -478,7 +479,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	return nil, StatusWithCode(NOT_FOUND, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
+func (s *server) RegisterTransportConnection(transport Transport) (int, *Connection) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	// build the initial update with the current slots
@@ -497,7 +498,16 @@ func (s *server) RegisterTransportConnection(owner any) (int, *Connection) {
 
 	// register and it will send the initial update to the new connection before returning it
 	// this ensures the transport receives the initial update before it starts processing the connection
-	return s.connectionQueue.registerOwnedConnection(owner, initialUpdate)
+	return s.connectionQueue.registerOwnedConnection(transport, initialUpdate)
+}
+
+// ShutdownTransportConnections allows transports to signal
+// Useful if their graceful shutdown requires closing connections before the transport
+// itself is shutdown
+func (s *server) ShutdownTransportConnections(ctx context.Context, owner Transport) {
+	shutdownCtx, cancel := s.boundedShutdownContext(ctx)
+	defer cancel()
+	s.connectionQueue.shutdownOwner(shutdownCtx, owner)
 }
 
 // DeregisterConnection removes a streaming connection

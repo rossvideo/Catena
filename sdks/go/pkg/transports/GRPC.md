@@ -104,6 +104,13 @@ When enabled, tools such as `grpcurl` can discover services and methods dynamica
 
 `GrpcTransport.Shutdown(ctx)` performs graceful stop first, then forces stop if context expires.
 
+Because `grpc.Server.GracefulStop()` waits for active streams to finish, gRPC shutdown should also request owner-scoped runtime stream signaling:
+
+- gRPC starts graceful stop so no new RPCs are accepted.
+- gRPC requests `ShutdownTransportConnections(ctx, owner)` so active `Connect` streams receive `connection.Done` and exit.
+- gRPC waits for graceful completion and falls back to forced stop on context timeout.
+- Server-level shutdown still provides a final force-drain safety net.
+
 Context contract:
 
 - `Start(ctx, runtime)` accepts `ctx` for future-proof transport lifetime control, even when current startup paths do not fully depend on it.

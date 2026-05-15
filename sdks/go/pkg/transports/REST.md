@@ -120,6 +120,12 @@ You can deregister REST independently:
 _ = srv.DeregisterTransport(ctx, rest)
 ```
 
+REST shutdown behavior:
+
+- REST starts HTTP server shutdown and also requests `ShutdownTransportConnections(ctx, owner)` to signal REST-owned SSE connections to exit.
+- Transports that do not use runtime-managed streams can skip this step.
+- Server-level shutdown still acts as a final force-drain safety net.
+
 Context contract:
 
 - `Start(ctx, runtime)` includes `ctx` for future-proof, context-aware transport lifetime management.

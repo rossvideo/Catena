@@ -107,10 +107,47 @@ func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime)
 }
 
 func (t *RestTransport) Shutdown(ctx context.Context) error {
-	if t.server != nil {
-		return t.server.Shutdown(ctx)
+	// Ordering is intentional:
+	// 1) start HTTP shutdown first so the listener stops accepting new requests/connections,
+	// 2) then signal runtime-owned streaming connections (SSE) to drain,
+	// 3) finally return the HTTP shutdown result.
+	//
+	// For HTTP, server.Shutdown(ctx) is context-aware and could be called synchronously.
+	// We still run it in a goroutine so we can overlap "stop accepting new traffic" with
+	// runtime connection draining. This mirrors the broader transport shutdown pattern where
+	// the transport begins its own graceful stop and then requests stream shutdown.
+
+	errCh := make(chan error, 1)
+	go func() {
+		if t.server == nil {
+			errCh <- nil
+			return
+		}
+		err := t.server.Shutdown(ctx)
+		if err != nil && ctx.Err() != nil {
+			// Graceful shutdown timed out/cancelled; force close as a best-effort fallback
+			// to ensure this transport does not leave active HTTP connections behind.
+			logger.Warning("HTTP server shutdown timed out, forcing close", "error", err)
+			closeErr := t.server.Close()
+			if closeErr != nil {
+				logger.Error("failed to force close HTTP server", "error", closeErr)
+			}
+		}
+		// Return the graceful shutdown result as the primary status. Any force-close
+		// error is logged for diagnostics, but does not replace the main shutdown result.
+		errCh <- err
+	}()
+
+	if t.runtime != nil {
+		// Drain runtime-managed streams after HTTP starts draining, so long-lived SSE
+		// handlers are signaled to exit and Shutdown can complete.
+		t.runtime.ShutdownTransportConnections(ctx, t)
 	}
-	return nil
+
+	// Wait for HTTP shutdown to complete and return its result. By this point, the runtime
+	// should have signaled all active connections to shut down, so this should complete in
+	// a timely manner.
+	return <-errCh
 }
 
 func (t *RestTransport) RegisterFallbackHandler(handler FallbackHandler) {

@@ -100,8 +100,16 @@ Transport behavior:
 Why `owner` is required:
 
 - Each connection is associated with the transport instance that registered it.
-- During deregistration/shutdown of a single transport, the runtime can call `ShutdownTransportConnections(owner)` and close only that transport's active connections.
+- During deregistration/shutdown of a single transport, the transport can optionally request runtime cleanup via `ShutdownTransportConnections(ctx, owner)` to close only that transport's active connections.
 - This prevents one transport from accidentally disrupting another transport's client streams and ensures targeted cleanup.
+
+Shutdown model across transports:
+
+- Transports handle protocol-specific graceful drain in their own `Shutdown(ctx)` implementation.
+- Requesting owner-scoped cleanup through `ShutdownTransportConnections(ctx, owner)` is optional in the API contract, but is often important in practice for transports with long-lived streams.
+- gRPC and REST both use this owner-scoped runtime drain to help active stream handlers exit promptly during graceful shutdown.
+- A transport that truly has no runtime-managed streams may skip the request.
+- The parent server still performs final shutdown cleanup as a safety net if a transport does not finish cleanup by itself.
 
 ## Transport Context Contract
 
@@ -115,11 +123,11 @@ The `catena.Transport` interface requires contexts for both lifecycle functions:
     - `ctx` is the shutdown deadline/cancellation boundary.
     - Transport implementations MUST respect `ctx` and return by the context deadline/cancellation.
     - Graceful drain is preferred, but implementations must not block indefinitely.
+    - Implementations may optionally request runtime-owned stream signaling; for transports with long-lived runtime-managed streams this is typically part of graceful completion.
 
 Caller guidance:
 
 - Callers are strongly encouraged to pass a timeout-bounded context (for example, `context.WithTimeout`) to `Shutdown`.
-- This is especially important for gRPC, where graceful stop can hang if no deadline is provided.
 
 ## Choosing Transports
 

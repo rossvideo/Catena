@@ -43,6 +43,7 @@ package transports
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -660,7 +661,7 @@ func TestValueEndpoint_Methods(t *testing.T) {
 
 func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
-	runtime.registerTransportConnFn = func(owner any) (int, *catena.Connection) {
+	runtime.registerTransportConnFn = func(transport catena.Transport) (int, *catena.Connection) {
 		return -1, nil
 	}
 
@@ -900,6 +901,11 @@ func TestRestTransport_sendSSEEvent(t *testing.T) {
 
 func TestRestTransport_Start(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
+	runtime.shutdownTransportConnsFn = func(ctx context.Context, transport catena.Transport) {
+		if transport != transport {
+			t.Errorf("expected transport %v, got %v", transport, transport)
+		}
+	}
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		t.Fatalf("net.Listen: %v", err)
@@ -926,6 +932,90 @@ func TestRestTransport_Start(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	transport.Shutdown(ctx)
+}
+
+func TestRestTransport_Shutdown_NotStarted(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.shutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	err := transport.Shutdown(ctx)
+	if err != nil {
+		t.Errorf("Shutdown not started: %v", err)
+	}
+}
+
+func TestRestTransport_Shutdown_Deadline(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.shutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
+	// Use a dedicated server with a handler that blocks to ensure Shutdown has
+	// active in-flight work and must wait until the context deadline.
+	// The handler waits on request context cancellation so test cleanup relies on
+	// server shutdown/close behavior, not a manual release channel.
+	handlerStarted := make(chan struct{})
+	transport.server = &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close(handlerStarted)
+		<-r.Context().Done()
+		w.WriteHeader(http.StatusOK)
+	})}
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
+	}
+	defer listener.Close()
+
+	// start server in background
+	serveDone := make(chan struct{})
+	go func() {
+		defer close(serveDone)
+		_ = transport.server.Serve(listener)
+	}()
+
+	// Ensure one request is in-flight before shutdown.
+	requestDone := make(chan struct{})
+	go func() {
+		defer close(requestDone)
+		_, _ = http.Get("http://" + listener.Addr().String())
+	}()
+
+	select {
+	case <-handlerStarted:
+	case <-time.After(time.Second):
+		t.Fatal("handler did not start in time")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+
+	err = transport.Shutdown(ctx)
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("expected DeadlineExceeded error, got %v", err)
+	}
+
+	// request should be released by shutdown/force-close behavior
+	// via request context cancellation.
+	select {
+	case <-requestDone:
+	case <-time.After(time.Second):
+		t.Error("expected request to be released after context deadline, but it was not")
+	}
+
+	// make sure server stops and goroutine exits
+	select {
+	case <-serveDone:
+	case <-time.After(time.Second):
+		t.Error("expected server to shut down after context deadline, but it did not")
+	}
 }
 
 func TestWriteHTTPResult_DefaultType(t *testing.T) {

@@ -875,15 +875,15 @@ func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 
 func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	called := false
-	owner := &struct{ name string }{name: "owner"}
+	transport := &stubTransport{tb: t}
 	srv := NewServer(100).(*server)
 	srv.slots[0] = struct{}{}
 	srv.slots[5] = struct{}{}
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
-		registerOwnedFn: func(gotOwner any, initialUpdate *protos.PushUpdates) (int, *Connection) {
+		registerOwnedFn: func(gotTransport any, initialUpdate *protos.PushUpdates) (int, *Connection) {
 			called = true
-			if gotOwner != owner {
+			if gotTransport != transport {
 				t.Error("expected transport owner to be passed through")
 			}
 			if initialUpdate == nil {
@@ -905,7 +905,7 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 		},
 	}
 
-	connID, conn := srv.RegisterTransportConnection(owner)
+	connID, conn := srv.RegisterTransportConnection(transport)
 
 	if !called {
 		t.Error("expected registerOwnedConnection to be called on connection queue")
@@ -956,6 +956,29 @@ func TestServer_SetMaxConnections_Passthrough(t *testing.T) {
 	}
 	if lastMax != 321 {
 		t.Errorf("expected max 321, got %d", lastMax)
+	}
+}
+
+func TestServer_ShutdownTransportConnections_Passthrough(t *testing.T) {
+	called := false
+	transport := &stubTransport{tb: t}
+	srv := NewServer(100).(*server)
+	srv.maxShutdownWait = 100 * time.Millisecond
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		shutdownOwnerFn: func(ctx context.Context, gotOwner any) {
+			called = true
+			assertContextDeadlineWithin(t, ctx, srv.maxShutdownWait)
+			if gotOwner != transport {
+				t.Errorf("expected transport %v, got %v", transport, gotOwner)
+			}
+		},
+	}
+
+	srv.ShutdownTransportConnections(context.Background(), transport)
+
+	if !called {
+		t.Error("expected shutdown to be called on connection queue")
 	}
 }
 
