@@ -39,10 +39,10 @@
 package catena
 
 // StatusCode is a transport-neutral outcome for handlers. Values 0–16 match
-// gRPC's canonical code space and map 1:1 in the gRPC transport. Values 200+
-// are legacy HTTP-shaped codes; prefer 0–16 in new handler code—see the
-// package doc (Phase B) for which constants to use and how REST chooses 200 vs
-// 204 vs 201.
+// gRPC's canonical code space (ST 2138-11 §6.2 Table 2) and map 1:1 in the
+// gRPC transport. Values 200+ are legacy HTTP-shaped codes; prefer 0–16 in
+// new handler code—see the package doc (Phase B) for which constants to use
+// and how the REST transport chooses 200 vs 204 per ST 2138-12.
 //
 // Based on Google's gRPC project (Apache 2.0 license):
 // https://github.com/grpc/grpc
@@ -112,40 +112,67 @@ const (
 	// REST-specific status codes (legacy; see package doc Phase B)
 
 	// CREATED indicates the request has succeeded and a new resource has been created.
-	// Prefer OK in handlers; let the REST transport emit 201 when appropriate.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Use OK in handlers and let the REST transport choose the wire status.
 	CREATED StatusCode = 201
 
 	// ACCEPTED indicates the request has been accepted for processing.
-	// Prefer OK in handlers; let the REST transport emit 202 when appropriate.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Use OK in handlers and let the REST transport choose the wire status.
 	ACCEPTED StatusCode = 202
 
 	// NO_CONTENT indicates success with no response body.
-	// Prefer OK in handlers; let the REST transport emit 204 when appropriate.
+	// Prefer OK in handlers; let the REST transport emit 204 when the route
+	// (per ST 2138-12 §7.7–§7.11) calls for it.
 	NO_CONTENT StatusCode = 204
 
 	// BAD_REQUEST indicates the request was malformed.
 	// Prefer INVALID_ARGUMENT for new code so gRPC and REST map consistently.
+	// Note: 400 is not in the ST 2138-12 §7.3 default failure set; emit it
+	// only from a per-route mapping that opts into it.
 	BAD_REQUEST StatusCode = 400
 
 	// METHOD_NOT_ALLOWED indicates the method is not allowed for the requested resource.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Routing/method enforcement is a transport concern; do not use in handlers.
 	METHOD_NOT_ALLOWED StatusCode = 405
 
 	// CONFLICT indicates the request could not be completed due to a conflict.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Use ALREADY_EXISTS (duplicate create) or ABORTED (concurrency) instead.
 	CONFLICT StatusCode = 409
 
 	// UNPROCESSABLE_ENTITY indicates the request was well-formed but semantically erroneous.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Use INVALID_ARGUMENT or FAILED_PRECONDITION instead.
 	UNPROCESSABLE_ENTITY StatusCode = 422
 
 	// TOO_MANY_REQUESTS indicates the user has sent too many requests.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Use RESOURCE_EXHAUSTED instead.
 	TOO_MANY_REQUESTS StatusCode = 429
 
 	// BAD_GATEWAY indicates the server received an invalid response from upstream.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Proxy/gateway conditions are a transport concern; do not use in handlers.
 	BAD_GATEWAY StatusCode = 502
 
 	// SERVICE_UNAVAILABLE indicates the server is not ready to handle the request.
+	// Prefer UNAVAILABLE in handlers (same HTTP 503 / gRPC Unavailable result,
+	// gRPC-aligned name).
 	SERVICE_UNAVAILABLE StatusCode = 503
 
 	// GATEWAY_TIMEOUT indicates the server did not receive a timely response from upstream.
+	//
+	// Deprecated: not present in ST 2138-12; scheduled for removal in Phase D.
+	// Use DEADLINE_EXCEEDED instead.
 	GATEWAY_TIMEOUT StatusCode = 504
 )
 
@@ -161,7 +188,7 @@ func Reply[T ResponseType](value T) (T, StatusResult) {
 }
 
 // ReplyWithCode returns a response with the given value and status code.
-// Usage: catena.ReplyWithCode(value, catena.CREATED)
+// Usage: catena.ReplyWithCode(value, catena.OK)
 func ReplyWithCode[T ResponseType](value T, code StatusCode) (T, StatusResult) {
 	return value, StatusResult{Code: code}
 }
@@ -175,7 +202,6 @@ func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 }
 
 // StatusWithCode returns a StatusResult with the given StatusCode and optional message.
-
 func StatusWithCode(code StatusCode, msg string) StatusResult {
 	return StatusResult{Code: code, Error: msg}
 }
