@@ -11,6 +11,16 @@ name: "Orchestrator CI"
         required: false
         type: boolean
         default: false
+      force_cpp_tests:
+        description: Force the C++ build and unit tests to run.
+        required: false
+        type: boolean
+        default: false
+      force_go_tests:
+        description: Force the Go build and unit tests to run.
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   stage1_toolchain_delta:
@@ -43,6 +53,8 @@ jobs:
     with:
       cpp_image: ${{ needs.stage1_toolchain_delta.outputs.cpp_image }}
       go_image: ${{ needs.stage1_toolchain_delta.outputs.go_image }}
+      force_cpp_tests: ${{ needs.stage1_toolchain_delta.outputs.cpp_changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_cpp_tests) }}
+      force_go_tests: ${{ needs.stage1_toolchain_delta.outputs.go_changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_go_tests) }}
 
   stage5_docs:
     name: "5 - Update Docs"
@@ -114,5 +126,7 @@ jobs:
             gh api "repos/$REPOSITORY/actions/workflows/orchestrator.yml/dispatches" \
               --method POST \
               -f ref="$pr_ref" \
-              -F inputs[force_toolchain_update]=false
+              -F inputs[force_toolchain_update]=false \
+              -F inputs[force_cpp_tests]=false \
+              -F inputs[force_go_tests]=false
           done
