@@ -89,6 +89,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
@@ -120,6 +122,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
