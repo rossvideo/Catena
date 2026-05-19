@@ -245,6 +245,7 @@ jobs:
                   tests = int(root.attrib.get('tests', 0))
                   failures = int(root.attrib.get('failures', 0))
                   errors = int(root.attrib.get('errors', 0))
+                skipped = int(root.attrib.get('skipped', 0))
               else:
                   tests = int(root.attrib.get('tests', 0))
                   failures = int(root.attrib.get('failures', 0))
