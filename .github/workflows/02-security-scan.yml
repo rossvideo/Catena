@@ -1,0 +1,45 @@
+name: "02 Security Scan"
+
+on:
+  workflow_call:
+
+jobs:
+  verify_dependabot:
+    name: Verify Dependabot Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require dependabot config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .github/dependabot.yml
+
+  trivy:
+    name: Trivy vulnerability scanner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          skip-dirs: .git,build,coverage,docs,unittests
+          skip-files: pom.xml
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results.sarif
+          category: Trivy Scan Results

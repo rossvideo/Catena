@@ -24,13 +24,6 @@
 name: "CodeQL-CPP"
 
 on:
-  push:
-    branches: [ "main"]
-    paths:
-      - 'sdks/cpp/**'
-      - 'unittests/cpp/**'
-  schedule:
-    - cron: '25 16 * * 2'
   workflow_dispatch:
 
 jobs:

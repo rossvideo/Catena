@@ -1,0 +1,50 @@
+name: "05 Docs Update"
+
+"on":
+  workflow_call:
+
+jobs:
+  build_docs:
+    name: Build Catena docs and Doxygen
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install doc toolchain
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y -qq wget doxygen graphviz ninja-build libavahi-client-dev libavahi-common-dev pkg-config libcurl4-openssl-dev
+          wget https://github.com/jgm/pandoc/releases/download/3.1.2/pandoc-3.1.2-linux-amd64.tar.gz
+          tar -xvf pandoc-3.1.2-linux-amd64.tar.gz
+          sudo mv pandoc-3.1.2/bin/pandoc /usr/local/bin/
+
+      - name: Build Doxygen
+        run: |
+          mkdir -p build/cpp
+          cd build/cpp
+          cmake -DONLY_DOCS=ON -G Ninja -DLOG_DIR=${HOME}/Catena/logs -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
+          ninja doxygen
+
+      - name: Build HTML from Markdown
+        run: |
+          mkdir -p build/cpp/github-pages/doxygen
+          cp -r build/cpp/doxygen/html/* build/cpp/github-pages/doxygen
+
+          for file in docs/*.md; do
+            filename=$(basename "$file" .md)
+            pandoc "$file" -o "build/cpp/github-pages/$filename.html"
+          done
+
+          for file in docs/gRPC/*.md; do
+            filename=$(basename "$file" .md)
+            pandoc "$file" -o "build/cpp/github-pages/$filename.html"
+          done
+
+          mkdir -p build/cpp/github-pages/images
+          for file in docs/images/*; do
+            cp "$file" "build/cpp/github-pages/images"
+          done

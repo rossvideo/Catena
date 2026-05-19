@@ -2,17 +2,6 @@ name: C++ Code Analysis
 # this runs the workflow on PR and make sure that the code is tested and analyzed
 
 on:
-  push:
-    branches: ["develop"]
-    paths:
-      - 'sdks/cpp/**'
-      - 'unittests/cpp/**'
-  pull_request:
-    paths:
-      - 'sdks/cpp/**'
-      - 'tools/codegen/**'
-      - 'unittests/cpp/**'
-      - '.github/workflows/cpp-pull-request.yml'
   workflow_dispatch:
 
 jobs:

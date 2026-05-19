@@ -1,0 +1,124 @@
+name: "03 CodeQL Analysis"
+
+on:
+  workflow_call:
+
+jobs:
+  codeql_cpp:
+    name: CodeQL C/C++
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: c-cpp
+
+      - name: Build C++
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          export CONNECTIONS="gRPC"
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cmake -G Ninja \
+            -DUNIT_TESTING=OFF \
+            -DBUILD_DOC=OFF \
+            -DCATENA_MODEL=lite \
+            -DCONNECTIONS="${CONNECTIONS}" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DLOG_DIR="${HOME}/Catena/logs" \
+            -B "${BUILD_TARGET}" \
+            -S "${GITHUB_WORKSPACE}/sdks/cpp"
+          ninja -C "${BUILD_TARGET}"
+
+      - name: Analyze C/C++
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:c-cpp
+
+  codeql_go:
+    name: CodeQL Go
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install file utility
+        run: sudo apt-get update && sudo apt-get install -y file
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: go
+
+      - name: Build Go
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cd "${GITHUB_WORKSPACE}/sdks/go"
+          git config --global --add safe.directory /__w/Catena/Catena
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+          make
+
+      - name: Analyze Go
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:go
+
+  codeql_js:
+    name: CodeQL JavaScript
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript
+
+      - name: Analyze JavaScript
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:javascript

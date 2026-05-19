@@ -1,0 +1,134 @@
+name: "04 Build and Unit Tests"
+
+on:
+  workflow_call:
+
+jobs:
+  detect_changes:
+    name: Detect language changes
+    runs-on: ubuntu-latest
+    outputs:
+      cpp_changed: ${{ steps.filter.outputs.cpp }}
+      go_changed: ${{ steps.filter.outputs.go }}
+      js_changed: ${{ steps.filter.outputs.js }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            cpp:
+              - 'sdks/cpp/**'
+              - 'unittests/cpp/**'
+            go:
+              - 'sdks/go/**'
+              - 'smpte'
+            js:
+              - 'tools/codegen/**'
+
+  test_cpp:
+    name: C++ Build and Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.cpp_changed == 'true'
+    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
+      options: --user root:root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build and test C++
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          export CMAKE_BUILD_TYPE=Debug
+          export CONNECTIONS='gRPC;REST'
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cmake -G Ninja \
+            -DBUILD_DOC=OFF \
+            -DBARE_EXAMPLES=ON \
+            -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+            -DCONNECTIONS="${CONNECTIONS}" \
+            -DCOVERAGE=ON \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DLOG_DIR="${HOME}/Catena/logs" \
+            -B "${BUILD_TARGET}" \
+            -S "${GITHUB_WORKSPACE}/sdks/cpp"
+
+          ninja -C "${BUILD_TARGET}"
+          ctest --output-on-failure --test-dir "${BUILD_TARGET}" -R '^common\.'
+          ctest --output-on-failure --test-dir "${BUILD_TARGET}" -R '^gRPC\.'
+          ctest --output-on-failure --test-dir "${BUILD_TARGET}" -R '^REST\.'
+
+  test_go:
+    name: Go Build and Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.go_changed == 'true'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build and test Go
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cd "${GITHUB_WORKSPACE}/sdks/go"
+          git config --global --add safe.directory /__w/Catena/Catena
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+          make
+          make test
+
+  test_js:
+    name: Codegen JS Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.js_changed == 'true'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build SMPTE artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./install-tooling.sh
+          npm install
+          ./build-openapi.sh
+
+      - name: Run codegen tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/tools/codegen"
+          npm install
+          npm test -- --ci
