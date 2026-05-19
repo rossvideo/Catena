@@ -111,8 +111,32 @@ jobs:
               echo "Promoting $PR_IMAGE to $DEVELOP_IMAGE"
               docker buildx imagetools create --tag "$DEVELOP_IMAGE" "$PR_IMAGE"
             else
-              echo "Removing $PR_IMAGE"
-              docker buildx imagetools rm "$PR_IMAGE" || true
+                echo "Removing $PR_IMAGE"
+
+                PACKAGE_NAME="catena-${lang}-toolchain"
+                TAG="${PR_TAG}"
+
+                VERSION_ID=$(
+                gh api \
+                    -H "Accept: application/vnd.github+json" \
+                    "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions" \
+                    --paginate \
+                    --jq ".[] | select(.metadata.container.tags[]? == \"${TAG}\") | .id" \
+                    | head -n1
+                )
+
+                if [[ -n "${VERSION_ID}" ]]; then
+                echo "Deleting package version ${VERSION_ID} for tag ${TAG}"
+
+                gh api \
+                    --method DELETE \
+                    -H "Accept: application/vnd.github+json" \
+                    "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions/${VERSION_ID}"
+
+                echo "Deleted ${PACKAGE_NAME}:${TAG}"
+                else
+                echo "No package version found for ${PACKAGE_NAME}:${TAG}"
+                fi
             fi
           done
 
