@@ -1,7 +1,16 @@
 name: "04 Build and Unit Tests"
 
-on:
+"on":
   workflow_call:
+    inputs:
+      cpp_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      go_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-go-toolchain:develop
 
 jobs:
   detect_changes:
@@ -35,8 +44,10 @@ jobs:
     if: needs.detect_changes.outputs.cpp_changed == 'true'
     timeout-minutes: 25
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
-      image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
+      image: ${{ inputs.cpp_image }}
       options: --user root:root
     steps:
       - name: Checkout
@@ -45,6 +56,7 @@ jobs:
           submodules: recursive
 
       - name: Build and test C++
+        id: run_cpp_tests
         shell: bash
         run: |
           set -euo pipefail
@@ -69,9 +81,46 @@ jobs:
             -S "${GITHUB_WORKSPACE}/sdks/cpp"
 
           ninja -C "${BUILD_TARGET}"
-          ctest --output-on-failure --test-dir "${BUILD_TARGET}" -R '^common\.'
-          ctest --output-on-failure --test-dir "${BUILD_TARGET}" -R '^gRPC\.'
-          ctest --output-on-failure --test-dir "${BUILD_TARGET}" -R '^REST\.'
+          ctest --output-on-failure --output-junit "${BUILD_TARGET}/ctest.xml" --test-dir "${BUILD_TARGET}" -R '^(common|gRPC|REST)\.'
+
+      - name: Summarize C++ tests
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          output_path = os.path.join(os.environ['GITHUB_WORKSPACE'], 'cpp-test-summary.md')
+          xml_path = os.path.join(os.environ['BUILD_TARGET'], 'ctest.xml')
+          outcome = '${{ steps.run_cpp_tests.outcome }}'
+
+          tests = failures = errors = skipped = 0
+          if os.path.exists(xml_path):
+              root = ET.parse(xml_path).getroot()
+              tests = int(root.attrib.get('tests', 0))
+              failures = int(root.attrib.get('failures', 0))
+              errors = int(root.attrib.get('errors', 0))
+              skipped = int(root.attrib.get('skipped', 0))
+
+          with open(output_path, 'w', encoding='utf-8') as handle:
+              handle.write('### C++ Build and Tests\n')
+              handle.write(f'- Result: {outcome}\n')
+              handle.write(f'- Tests: {tests}\n')
+              handle.write(f'- Failures: {failures}\n')
+              handle.write(f'- Errors: {errors}\n')
+              handle.write(f'- Skipped: {skipped}\n')
+          PY
+
+      - name: Upload C++ test summary
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-summary-cpp
+          path: cpp-test-summary.md
+          if-no-files-found: error
 
   test_go:
     name: Go Build and Tests
@@ -79,8 +128,10 @@ jobs:
     if: needs.detect_changes.outputs.go_changed == 'true'
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
-      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      image: ${{ inputs.go_image }}
       options: --user root:root
     steps:
       - name: Checkout
@@ -89,6 +140,7 @@ jobs:
           submodules: recursive
 
       - name: Build and test Go
+        id: run_go_tests
         shell: bash
         run: |
           set -euo pipefail
@@ -102,7 +154,36 @@ jobs:
           git config --global --add safe.directory /__w/Catena/Catena
           "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
           make
-          make test
+          set -o pipefail
+          go test -v ./... 2>&1 | tee "${BUILD_TARGET}/go-test.log"
+
+      - name: Summarize Go tests
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
+          LOG_FILE="${BUILD_TARGET}/go-test.log"
+          PASS_COUNT=0
+          FAIL_COUNT=0
+          if [[ -f "$LOG_FILE" ]]; then
+            PASS_COUNT=$(grep -c '^--- PASS:' "$LOG_FILE" || true)
+            FAIL_COUNT=$(grep -c '^--- FAIL:' "$LOG_FILE" || true)
+          fi
+          {
+            echo '### Go Build and Tests'
+            echo '- Result: ${{ steps.run_go_tests.outcome }}'
+            echo "- Passed tests: ${PASS_COUNT}"
+            echo "- Failed tests: ${FAIL_COUNT}"
+          } > go-test-summary.md
+
+      - name: Upload Go test summary
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-summary-go
+          path: go-test-summary.md
+          if-no-files-found: error
 
   test_js:
     name: Codegen JS Tests
@@ -110,6 +191,8 @@ jobs:
     if: needs.detect_changes.outputs.js_changed == 'true'
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -126,9 +209,127 @@ jobs:
           ./build-openapi.sh
 
       - name: Run codegen tests
+        id: run_js_tests
         shell: bash
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}/tools/codegen"
           npm install
           npm test -- --ci
+
+      - name: Summarize JS tests
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          output_path = os.path.join(os.environ['GITHUB_WORKSPACE'], 'js-test-summary.md')
+          xml_path = os.path.join(os.environ['GITHUB_WORKSPACE'], 'tools', 'codegen', 'junit.xml')
+          outcome = '${{ steps.run_js_tests.outcome }}'
+
+          tests = failures = errors = skipped = 0
+          if os.path.exists(xml_path):
+              root = ET.parse(xml_path).getroot()
+              if root.tag == 'testsuites':
+                  tests = int(root.attrib.get('tests', 0))
+                  failures = int(root.attrib.get('failures', 0))
+                  errors = int(root.attrib.get('errors', 0))
+              else:
+                  tests = int(root.attrib.get('tests', 0))
+                  failures = int(root.attrib.get('failures', 0))
+                  errors = int(root.attrib.get('errors', 0))
+                  skipped = int(root.attrib.get('skipped', 0))
+
+          with open(output_path, 'w', encoding='utf-8') as handle:
+              handle.write('### JS Codegen Tests\n')
+              handle.write(f'- Result: {outcome}\n')
+              handle.write(f'- Tests: {tests}\n')
+              handle.write(f'- Failures: {failures}\n')
+              handle.write(f'- Errors: {errors}\n')
+              handle.write(f'- Skipped: {skipped}\n')
+          PY
+
+      - name: Upload JS test summary
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-summary-js
+          path: js-test-summary.md
+          if-no-files-found: error
+
+  report_unit_tests:
+    name: Report Unit Test Results
+    needs: [detect_changes, test_cpp, test_go, test_js]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Download unit test summaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: unit-test-summary-*
+          path: unit-test-summaries
+          merge-multiple: true
+
+      - name: Build unit test PR comment
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo '<!-- ci-comment:unit-tests -->'
+            echo '## Unit Test Results'
+            echo ''
+            if [[ '${{ needs.detect_changes.outputs.cpp_changed }}' == 'true' ]]; then
+              cat unit-test-summaries/cpp-test-summary.md
+              echo ''
+            else
+              echo '### C++ Build and Tests'
+              echo '- Result: not run'
+              echo ''
+            fi
+
+            if [[ '${{ needs.detect_changes.outputs.go_changed }}' == 'true' ]]; then
+              cat unit-test-summaries/go-test-summary.md
+              echo ''
+            else
+              echo '### Go Build and Tests'
+              echo '- Result: not run'
+              echo ''
+            fi
+
+            if [[ '${{ needs.detect_changes.outputs.js_changed }}' == 'true' ]]; then
+              cat unit-test-summaries/js-test-summary.md
+              echo ''
+            else
+              echo '### JS Codegen Tests'
+              echo '- Result: not run'
+              echo ''
+            fi
+          } > unit-test-comment.md
+
+      - name: Comment on unit test results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- ci-comment:unit-tests -->';
+            const body = fs.readFileSync('unit-test-comment.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

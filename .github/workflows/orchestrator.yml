@@ -2,6 +2,7 @@ name: "Orchestrator CI"
 
 "on":
   pull_request:
+    types: [opened, synchronize, reopened, closed]
     branches: ["develop"]
   workflow_dispatch:
     inputs:
@@ -14,6 +15,7 @@ name: "Orchestrator CI"
 jobs:
   stage1_toolchain_delta:
     name: "1 - Delta Toolchains"
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
     uses: ./.github/workflows/01-toolchain-delta.yml
     with:
       run_mode: ${{ github.event_name == 'workflow_dispatch' && (inputs.force_toolchain_update && 'force' || 'manual') || 'pr' }}
@@ -21,23 +23,96 @@ jobs:
   stage2_security:
     name: "2 - Security Scanning"
     needs: stage1_toolchain_delta
-    if: needs.stage1_toolchain_delta.outputs.toolchain_changed != 'true'
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
     uses: ./.github/workflows/02-security-scan.yml
 
   stage3_codeql:
     name: "3 - Code Analysis"
     needs: stage1_toolchain_delta
-    if: needs.stage1_toolchain_delta.outputs.toolchain_changed != 'true'
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
     uses: ./.github/workflows/03-codeql-analysis.yml
+    with:
+      cpp_image: ${{ needs.stage1_toolchain_delta.outputs.cpp_image }}
+      go_image: ${{ needs.stage1_toolchain_delta.outputs.go_image }}
 
   stage4_build_tests:
     name: "4 - Build and Unit Tests"
     needs: stage1_toolchain_delta
-    if: needs.stage1_toolchain_delta.outputs.toolchain_changed != 'true'
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
     uses: ./.github/workflows/04-build-unit-tests.yml
+    with:
+      cpp_image: ${{ needs.stage1_toolchain_delta.outputs.cpp_image }}
+      go_image: ${{ needs.stage1_toolchain_delta.outputs.go_image }}
 
   stage5_docs:
     name: "5 - Update Docs"
     needs: [stage2_security, stage3_codeql, stage4_build_tests]
-    if: always() && needs.stage2_security.result == 'success' && needs.stage3_codeql.result == 'success' && needs.stage4_build_tests.result == 'success'
+    if: ${{ always() && (github.event_name != 'pull_request' || github.event.action != 'closed') && needs.stage2_security.result == 'success' && needs.stage3_codeql.result == 'success' && needs.stage4_build_tests.result == 'success' }}
     uses: ./.github/workflows/05-docs-update.yml
+
+  stage6_finalize_toolchain_tags:
+    name: "6 - Finalize Toolchain Tags"
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+      pull-requests: read
+    steps:
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Finalize PR toolchain tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_exists() {
+            docker buildx imagetools inspect "$1" >/dev/null 2>&1
+          }
+
+          PR_TAG="pr-${HEAD_SHA:0:12}"
+
+          for lang in cpp go; do
+            PR_IMAGE="ghcr.io/rossvideo/catena-${lang}-toolchain:${PR_TAG}"
+            DEVELOP_IMAGE="ghcr.io/rossvideo/catena-${lang}-toolchain:develop"
+
+            if ! image_exists "$PR_IMAGE"; then
+              echo "No PR image found for $lang at $PR_IMAGE"
+              continue
+            fi
+
+            if [[ "$MERGED" == "true" ]]; then
+              echo "Promoting $PR_IMAGE to $DEVELOP_IMAGE"
+              docker buildx imagetools create --tag "$DEVELOP_IMAGE" "$PR_IMAGE"
+            else
+              echo "Removing $PR_IMAGE"
+              docker buildx imagetools rm "$PR_IMAGE" || true
+            fi
+          done
+
+          if [[ "$MERGED" != "true" ]]; then
+            exit 0
+          fi
+
+          gh api "repos/$REPOSITORY/pulls" -f state=open -f base=develop --paginate --jq '.[] | select(.head.repo.full_name == "'"$REPOSITORY"'") | [.number, .head.ref] | @tsv' |
+          while IFS=$'\t' read -r pr_number pr_ref; do
+            echo "Dispatching orchestrator for PR #${pr_number} on ${pr_ref}"
+            gh api "repos/$REPOSITORY/actions/workflows/orchestrator.yml/dispatches" \
+              --method POST \
+              -f ref="$pr_ref" \
+              -F inputs[force_toolchain_update]=false
+          done

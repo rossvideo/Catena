@@ -1,7 +1,16 @@
 name: "03 CodeQL Analysis"
 
-on:
+"on":
   workflow_call:
+    inputs:
+      cpp_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      go_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-go-toolchain:develop
 
 jobs:
   codeql_cpp:
@@ -9,12 +18,13 @@ jobs:
     timeout-minutes: 35
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/rossvideo/catena-cpp-toolchain:latest
+      image: ${{ inputs.cpp_image }}
       options: --user root:root
     permissions:
       security-events: write
       actions: read
       contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,12 +69,13 @@ jobs:
     timeout-minutes: 35
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      image: ${{ inputs.go_image }}
       options: --user root:root
     permissions:
       security-events: write
       actions: read
       contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -107,6 +118,7 @@ jobs:
       security-events: write
       actions: read
       contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -122,3 +134,46 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: /language:javascript
+
+  report_codeql:
+    name: Report CodeQL Results
+    needs: [codeql_cpp, codeql_go, codeql_js]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment on CodeQL failures
+        if: ${{ needs.codeql_cpp.result != 'success' || needs.codeql_go.result != 'success' || needs.codeql_js.result != 'success' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- ci-comment:codeql -->';
+            const lines = [
+              marker,
+              '## CodeQL Issues',
+              '',
+              '| Language | Result |',
+              '| --- | --- |',
+              `| C/C++ | ${JSON.stringify('${{ needs.codeql_cpp.result }}')} |`,
+              `| Go | ${JSON.stringify('${{ needs.codeql_go.result }}')} |`,
+              `| JavaScript | ${JSON.stringify('${{ needs.codeql_js.result }}')} |`,
+              '',
+              'Review the failed CodeQL jobs in this workflow run for details.'
+            ];
+            const body = lines.join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
