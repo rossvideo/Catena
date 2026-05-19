@@ -7,7 +7,7 @@ name: "Orchestrator CI"
   workflow_dispatch:
     inputs:
       force_toolchain_update:
-        description: Force toolchain rebuild/update and skip stages 2-5.
+        description: Force toolchain rebuild/update.
         required: false
         type: boolean
         default: false
