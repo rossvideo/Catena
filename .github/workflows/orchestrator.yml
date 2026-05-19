@@ -72,6 +72,12 @@ jobs:
       actions: write
       pull-requests: read
     steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: recursive
+
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -87,7 +93,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
           MERGED: ${{ github.event.pull_request.merged }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         shell: bash
         run: |
           set -euo pipefail
@@ -96,9 +102,46 @@ jobs:
             docker buildx imagetools inspect "$1" >/dev/null 2>&1
           }
 
-          PR_TAG="pr-${HEAD_SHA:0:12}"
+          hash_files() {
+            sha256sum "$@" | sha256sum | cut -c1-12
+          }
+
+          CPP_HASH=$(hash_files \
+            .devcontainer/cpp/toolchain.dockerfile \
+            .devcontainer/cpp/toolchain.env \
+            smpte/install-tooling.sh)
+          GO_HASH=$(hash_files \
+            .devcontainer/go/toolchain.dockerfile \
+            .devcontainer/go/toolchain.env \
+            smpte/install-tooling.sh)
+
+          delete_matching_pr_tags() {
+            local package_name="$1"
+            local tag_prefix="$2"
+
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              "/orgs/rossvideo/packages/container/${package_name}/versions" \
+              --paginate | jq -r \
+              --arg prefix "$tag_prefix" \
+              '.[] | select(any(.metadata.container.tags[]?; startswith($prefix))) | .id' |
+            while read -r version_id; do
+              [[ -n "$version_id" ]] || continue
+              echo "Deleting package version ${version_id} for ${package_name} matching ${tag_prefix}*"
+              gh api \
+                --method DELETE \
+                -H "Accept: application/vnd.github+json" \
+                "/orgs/rossvideo/packages/container/${package_name}/versions/${version_id}"
+            done
+          }
 
           for lang in cpp go; do
+            if [[ "$lang" == "cpp" ]]; then
+              PR_TAG="pr-${PR_NUMBER}-${CPP_HASH}"
+            else
+              PR_TAG="pr-${PR_NUMBER}-${GO_HASH}"
+            fi
+
             PR_IMAGE="ghcr.io/rossvideo/catena-${lang}-toolchain:${PR_TAG}"
             DEVELOP_IMAGE="ghcr.io/rossvideo/catena-${lang}-toolchain:develop"
 
@@ -110,33 +153,9 @@ jobs:
             if [[ "$MERGED" == "true" ]]; then
               echo "Promoting $PR_IMAGE to $DEVELOP_IMAGE"
               docker buildx imagetools create --tag "$DEVELOP_IMAGE" "$PR_IMAGE"
+              delete_matching_pr_tags "catena-${lang}-toolchain" "pr-${PR_NUMBER}-"
             else
-                echo "Removing $PR_IMAGE"
-
-                PACKAGE_NAME="catena-${lang}-toolchain"
-                TAG="${PR_TAG}"
-
-                VERSION_ID=$(
-                gh api \
-                    -H "Accept: application/vnd.github+json" \
-                    "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions" \
-                    --paginate \
-                    --jq ".[] | select(.metadata.container.tags[]? == \"${TAG}\") | .id" \
-                    | head -n1
-                )
-
-                if [[ -n "${VERSION_ID}" ]]; then
-                echo "Deleting package version ${VERSION_ID} for tag ${TAG}"
-
-                gh api \
-                    --method DELETE \
-                    -H "Accept: application/vnd.github+json" \
-                    "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions/${VERSION_ID}"
-
-                echo "Deleted ${PACKAGE_NAME}:${TAG}"
-                else
-                echo "No package version found for ${PACKAGE_NAME}:${TAG}"
-                fi
+              delete_matching_pr_tags "catena-${lang}-toolchain" "pr-${PR_NUMBER}-"
             fi
           done
 
