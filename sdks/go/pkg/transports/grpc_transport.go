@@ -101,7 +101,6 @@ func NewDefaultGrpcTransport() *GrpcTransport {
 }
 
 func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRuntime) error {
-	t.catenaService.runtime = runtime
 	t.runtime = runtime
 
 	addr := fmt.Sprintf(":%d", t.port)
@@ -210,14 +209,13 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
 type catenaService struct {
-	runtime   catena.ServerRuntime
 	transport *GrpcTransport
 	protos.UnimplementedCatenaServiceServer
 }
 
 func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
 	logger.Info("GetPopulatedSlots")
-	slots := s.runtime.GetSlots()
+	slots := s.transport.runtime.GetSlots()
 	uint32slots := make([]uint32, len(slots))
 	for i, slot := range slots {
 		uint32slots[i] = uint32(slot)
@@ -234,7 +232,7 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 
 	logger.Info("DeviceRequest", "slot", slot)
 
-	device, res := s.runtime.InvokeGetDeviceHandler(slot)
+	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot)
 	if res.Error != "" {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -266,7 +264,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 	fqoid := req.Oid
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
-	value, result := s.runtime.InvokeGetValueHandler(slot, fqoid)
+	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -297,7 +295,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto.Error))
 	}
 
-	result := s.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
+	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -326,7 +324,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
 		}
 
-		result := s.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
+		result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
 		if result.Error != "" {
 			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 			return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -346,7 +344,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 	fqoid := req.Oid
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
-	asset, result := s.runtime.InvokeGetAssetHandler(slot, fqoid)
+	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -381,7 +379,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 		}
 	}
 
-	cmdResult, result := s.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
+	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -407,7 +405,7 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 	recursive := req.GetRecursive()
 	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
 
-	infos, res := s.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
+	infos, res := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
 	if res.Error != "" {
 		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -447,12 +445,12 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 	// Register this connection with the runtime using this transport as owner.
 	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
 	// so one transport can shut down without impacting streams owned by others.
-	connID, conn := s.runtime.RegisterTransportConnection(s.transport)
+	connID, conn := s.transport.runtime.RegisterTransportConnection(s.transport)
 	if connID < 0 {
 		logger.Error("gRPC connection rejected - server shutting down")
 		return status.Error(codes.Unavailable, "server shutting down")
 	}
-	defer s.runtime.DeregisterConnection(connID)
+	defer s.transport.runtime.DeregisterConnection(connID)
 
 	logger.Info("gRPC Connect started", "connID", connID)
 

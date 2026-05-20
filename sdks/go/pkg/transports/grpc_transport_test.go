@@ -100,7 +100,7 @@ func setupTestGrpcTransport(t *testing.T, slots []uint16, opts ...testGrpcTransp
 	transport := NewGrpcTransport(cfg.port, cfg.reflection)
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = slots
-	transport.catenaService.runtime = runtime
+	transport.runtime = runtime
 
 	go func() {
 		if err := transport.grpcServer.Serve(lis); err != nil {
