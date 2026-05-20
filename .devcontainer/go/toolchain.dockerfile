@@ -38,7 +38,7 @@ RUN . /root/toolchain.env \
     && sudo tar -C /usr/local -xzf ${GO_VERSION}.tar.gz \
     && rm ${GO_VERSION}.tar.gz
 
-ENV PATH="/usr/local/go/bin:${PATH}"
+ENV PATH=$PATH:/usr/local/go/bin
 
 # Install Docker & Docker Compose
 RUN . /root/toolchain.env \
@@ -55,6 +55,30 @@ RUN . /root/toolchain.env \
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 WORKDIR /root/smpte
 RUN ./install-tooling.sh
+
+# Install protobuf compiler and Go tools
+RUN . /root/toolchain.env \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y protobuf-compiler=${PROTOBUF_COMPILER_VERSION} \
+    && apt-get clean
+
+ENV GOBIN=/usr/local/bin
+
+WORKDIR /toolchain
+
+COPY .devcontainer/go/go.mod .devcontainer/go/go.sum ./
+
+RUN go mod download
+
+RUN go install \
+    github.com/go-delve/delve/cmd/dlv \
+    google.golang.org/protobuf/cmd/protoc-gen-go \
+    google.golang.org/grpc/cmd/protoc-gen-go-grpc \
+    github.com/axw/gocov/gocov \
+    github.com/matm/gocov-html/cmd/gocov-html \
+    github.com/jandelgado/gcov2lcov
+
+ENV GOBIN=
 
 USER ubuntu
 WORKDIR /home/ubuntu

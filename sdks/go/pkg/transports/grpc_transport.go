@@ -29,38 +29,144 @@
  */
 
 /**
- * @brief gRPC server for the Catena SDK.
- * @file server.go
+ * @brief gRPC transport for the Catena SDK.
+ * @file grpc_transport.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2026-02-25
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-11
  */
 
-package grpc
+package transports
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/internal"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-var _ catena.CatenaServer = (*Server)(nil)
+type GrpcTransport struct {
+	catenaService *catenaService
+	grpcServer    *grpc.Server
+	listener      net.Listener
+	runtime       catena.ServerRuntime
 
-// Server provides gRPC API endpoints for Catena devices
-type Server struct {
-	protos.UnimplementedCatenaServiceServer
-	baseServer *internal.BaseServer
-	grpcServer *grpc.Server
+	// configs maybe becomes a struct
+	port       uint16
+	reflection bool
+}
+
+var _ catena.Transport = (*GrpcTransport)(nil)
+
+func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
+	transport := &GrpcTransport{
+		catenaService: &catenaService{},
+		grpcServer: grpc.NewServer(
+			grpc.UnaryInterceptor(unaryInterceptor),
+			grpc.StreamInterceptor(streamInterceptor),
+		),
+		port:       port,
+		reflection: reflectionEnabled,
+	}
+	transport.catenaService.transport = transport
+
+	// Register the CatenaService with the gRPC server
+	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
+
+	// Register reflection service on gRPC server if enabled
+	if reflectionEnabled {
+		reflection.Register(transport.grpcServer)
+		logger.Info("gRPC server created with reflection enabled")
+	} else {
+		logger.Info("gRPC server created")
+	}
+	return transport
+}
+
+func NewDefaultGrpcTransport() *GrpcTransport {
+	return NewGrpcTransport(
+		6254,  // default port
+		false, // reflection disabled by default for security
+	)
+}
+
+func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRuntime) error {
+	t.runtime = runtime
+
+	addr := fmt.Sprintf(":%d", t.port)
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		logger.Error("Failed to create listener", "address", addr, "error", err)
+		return fmt.Errorf("failed to listen on %s: %w", addr, err)
+	}
+	t.listener = listener
+
+	logger.Info("Starting gRPC transport", "address", addr)
+	logger.Info("grpc listening and ready to accept connections")
+
+	go func() {
+		if err := t.grpcServer.Serve(t.listener); err != nil {
+			// already closed is not an error condition worth logging as an error
+			if !errors.Is(err, net.ErrClosed) {
+				logger.Error("gRPC server error", "error", err)
+			}
+		}
+	}()
+	return nil
+}
+
+func (t *GrpcTransport) Shutdown(ctx context.Context) error {
+	logger.Info("Shutting down gRPC transport")
+
+	// Gracefully stop the gRPC server in a goroutine so we can also listen for context
+	// cancellation. GracefulStop will wait for existing RPCs to finish but will stop
+	// accepting new connections. If the context is cancelled before it finishes, we force
+	// stop the server to avoid hanging indefinitely.
+	done := make(chan struct{})
+	go func() {
+		t.grpcServer.GracefulStop()
+		close(done)
+	}()
+
+	// While waiting for the gRPC server to stop in the goroutine, signal the runtime
+	// to shut down any active connections owned by this transport. This allows
+	// GracefulStop to actually stop, gracefully.
+	t.runtime.ShutdownTransportConnections(ctx, t)
+
+	var shutdownErr error
+	select {
+	case <-done:
+		logger.Info("gRPC server stopped gracefully")
+	case <-ctx.Done():
+		logger.Warning("gRPC shutdown timed out, forcing stop")
+		shutdownErr = ctx.Err()
+		t.grpcServer.Stop()
+		<-done
+	}
+
+	// Close the listener if it's still open
+	if t.listener != nil {
+		if err := t.listener.Close(); err != nil {
+			if !errors.Is(err, net.ErrClosed) {
+				logger.Error("Failed to close gRPC listener", "error", err)
+				return fmt.Errorf("failed to close listener: %w", err)
+			}
+		} else {
+			logger.Info("gRPC listener closed")
+		}
+		t.listener = nil
+	}
+	return shutdownErr
 }
 
 // sanitizeGRPCError replaces detailed error messages with generic status code
@@ -101,70 +207,32 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 	return sanitizeGRPCError(err)
 }
 
-// NewServer creates a new gRPC server for the given device slots
-func NewServer(slots []uint16, maxConnections int, cfg catena.Config) *Server {
-	// Create gRPC server with interceptors for logging
-	s := &Server{
-		baseServer: internal.NewBaseServer(slots, maxConnections),
-		grpcServer: grpc.NewServer(
-			grpc.UnaryInterceptor(unaryInterceptor),
-			grpc.StreamInterceptor(streamInterceptor),
-		),
-	}
-
-	// Register this server with the gRPC server
-	protos.RegisterCatenaServiceServer(s.grpcServer, s)
-
-	// Register reflection service for grpcurl, grpc_cli, and other tools
-	if cfg.GRPCReflection {
-		reflection.Register(s.grpcServer)
-		logger.Info("gRPC server created with reflection enabled", "slots", slots)
-	} else {
-		logger.Info("gRPC server created", "slots", slots)
-	}
-
-	return s
+// struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
+type catenaService struct {
+	transport *GrpcTransport
+	protos.UnimplementedCatenaServiceServer
 }
 
-// Start starts the gRPC server on the specified port
-func (s *Server) Start(port int) error {
-	addr := fmt.Sprintf(":%d", port)
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		logger.Error("Failed to create listener", "address", addr, "error", err)
-		return fmt.Errorf("failed to listen on %s: %w", addr, err)
-	}
-	defer listener.Close()
-
-	logger.Info("Starting gRPC server", "address", addr, "slots", s.baseServer.Slots)
-	logger.Info("Server listening and ready to accept connections")
-
-	if err := s.grpcServer.Serve(listener); err != nil {
-		logger.Error("gRPC server failed", "error", err)
-		return err
-	}
-
-	return nil
-}
-
-// GetPopulatedSlots returns the list of populated slots
-func (s *Server) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
+func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
 	logger.Info("GetPopulatedSlots")
-	slots := s.baseServer.Slots
-	return &protos.SlotList{Slots: slots}, nil
+	slots := s.transport.runtime.GetSlots()
+	uint32slots := make([]uint32, len(slots))
+	for i, slot := range slots {
+		uint32slots[i] = uint32(slot)
+	}
+	return &protos.SlotList{Slots: uint32slots}, nil
 }
 
 // DeviceRequest streams the device information for a slot
-func (s *Server) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.ServerStreamingServer[protos.DeviceComponent]) error {
-	slot, err := s.baseServer.ValidateSlot(req.Slot)
+func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.ServerStreamingServer[protos.DeviceComponent]) error {
+	slot, err := catena.ValidateSlot(req.Slot)
 	if err.Code != catena.OK {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
 	logger.Info("DeviceRequest", "slot", slot)
 
-	handler := s.baseServer.LookupGetDeviceHandler(slot)
-	device, res := handler()
+	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot)
 	if res.Error != "" {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -187,8 +255,8 @@ func (s *Server) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.Ser
 }
 
 // GetValue returns the value of a parameter
-func (s *Server) GetValue(ctx context.Context, req *protos.GetValuePayload) (*protos.Value, error) {
-	slot, err := s.baseServer.ValidateSlot(req.Slot)
+func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayload) (*protos.Value, error) {
+	slot, err := catena.ValidateSlot(req.Slot)
 	if err.Code != catena.OK {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
@@ -196,8 +264,7 @@ func (s *Server) GetValue(ctx context.Context, req *protos.GetValuePayload) (*pr
 	fqoid := req.Oid
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
-	handler := s.baseServer.LookupGetValueHandler(slot)
-	value, result := handler(slot, fqoid)
+	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -207,8 +274,8 @@ func (s *Server) GetValue(ctx context.Context, req *protos.GetValuePayload) (*pr
 }
 
 // SetValue sets the value of a parameter
-func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload) (*protos.Empty, error) {
-	slot, err := s.baseServer.ValidateSlot(req.Slot)
+func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValuePayload) (*protos.Empty, error) {
+	slot, err := catena.ValidateSlot(req.Slot)
 	if err.Code != catena.OK {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
@@ -228,8 +295,7 @@ func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto.Error))
 	}
 
-	handler := s.baseServer.LookupSetValueHandler(slot)
-	result := handler(nativeValue, slot, fqoid)
+	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -239,15 +305,16 @@ func (s *Server) SetValue(ctx context.Context, req *protos.SingleSetValuePayload
 }
 
 // MultiSetValue sets multiple parameter values
-func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePayload) (*protos.Empty, error) {
-	slot, err := s.baseServer.ValidateSlot(req.Slot)
+func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePayload) (*protos.Empty, error) {
+	slot, err := catena.ValidateSlot(req.Slot)
 	if err.Code != catena.OK {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
+	// TODO server should get a direct handler for this to make it a atomic operation, rather than looping and invoking the single set handler multiple times
+
 	logger.Info("MultiSetValue", "slot", slot, "count", len(req.Values))
 
-	handler := s.baseServer.LookupSetValueHandler(slot)
 	for _, setValue := range req.Values {
 		fqoid := setValue.Oid
 
@@ -257,7 +324,7 @@ func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePay
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
 		}
 
-		result := handler(nativeValue, slot, fqoid)
+		result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
 		if result.Error != "" {
 			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 			return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -268,8 +335,8 @@ func (s *Server) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePay
 }
 
 // ExternalObjectRequest streams external object (asset) data
-func (s *Server) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload, stream grpc.ServerStreamingServer[protos.ExternalObjectPayload]) error {
-	slot, err := s.baseServer.ValidateSlot(req.Slot)
+func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload, stream grpc.ServerStreamingServer[protos.ExternalObjectPayload]) error {
+	slot, err := catena.ValidateSlot(req.Slot)
 	if err.Code != catena.OK {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
@@ -277,8 +344,7 @@ func (s *Server) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload,
 	fqoid := req.Oid
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
-	handler := s.baseServer.LookupGetAssetHandler(slot)
-	asset, result := handler(slot, fqoid)
+	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid)
 	if result.Error != "" {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -294,8 +360,8 @@ func (s *Server) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload,
 }
 
 // ExecuteCommand executes a command and streams the response
-func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.ServerStreamingServer[protos.CommandResponse]) error {
-	slot, err := s.baseServer.ValidateSlot(req.Slot)
+func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.ServerStreamingServer[protos.CommandResponse]) error {
+	slot, err := catena.ValidateSlot(req.Slot)
 	if err.Code != catena.OK {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
@@ -313,8 +379,7 @@ func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.S
 		}
 	}
 
-	handler := s.baseServer.LookupExecuteCommandHandler(slot)
-	cmdResult, result := handler(slot, commandFqoid, payload)
+	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -324,53 +389,70 @@ func (s *Server) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.S
 }
 
 // GetParam returns a single parameter's metadata
-func (s *Server) GetParam(ctx context.Context, req *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error) {
+func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error) {
 	// This would need additional handler support in BaseServer for param metadata
 	return nil, status.Error(codes.Unimplemented, "GetParam not implemented")
 }
 
-// ParamInfoRequest streams parameter information
-func (s *Server) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
-	// This would need additional handler support in BaseServer for param info
-	return status.Error(codes.Unimplemented, "ParamInfoRequest not implemented")
+// ParamInfoRequest streams parameter information for the given slot and OID prefix.
+func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
+	slot, err := catena.ValidateSlot(req.GetSlot())
+	if err.Code != catena.OK {
+		return status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	oidPrefix := req.GetOidPrefix()
+	recursive := req.GetRecursive()
+	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
+
+	infos, res := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
+	if res.Error != "" {
+		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
+		return status.Error(ToGRPCCode(res.Code), res.Error)
+	}
+
+	if len(infos) == 0 {
+		msg := "Parameter not found: " + oidPrefix
+		if oidPrefix == "" {
+			msg = "No top-level parameters found"
+		}
+		return status.Error(codes.NotFound, msg)
+	}
+
+	for _, info := range infos {
+		protoResp := info.GetProtoResponse()
+		if protoResp == nil {
+			logger.Error("ParamInfoRequest handler returned nil response entry", "slot", slot, "oid_prefix", oidPrefix)
+			return status.Error(codes.Internal, "param info entry is nil")
+		}
+		if err := stream.Send(protoResp); err != nil {
+			logger.Error("ParamInfoRequest send error", "slot", slot, "oid_prefix", oidPrefix, "error", err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateSubscriptions handles parameter subscription updates
-func (s *Server) UpdateSubscriptions(req *protos.UpdateSubscriptionsPayload, stream grpc.ServerStreamingServer[protos.DeviceComponent_ComponentParam]) error {
+func (s *catenaService) UpdateSubscriptions(req *protos.UpdateSubscriptionsPayload, stream grpc.ServerStreamingServer[protos.DeviceComponent_ComponentParam]) error {
 	// This would need additional handler support in BaseServer for subscriptions
 	return status.Error(codes.Unimplemented, "UpdateSubscriptions not implemented")
 }
 
 // Connect establishes a streaming connection for push updates
-func (s *Server) Connect(req *protos.ConnectPayload, stream grpc.ServerStreamingServer[protos.PushUpdates]) error {
-	// Register this connection in the connectionQueue
-	connID, conn := s.baseServer.RegisterConnection()
+func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerStreamingServer[protos.PushUpdates]) error {
+	// Register this connection with the runtime using this transport as owner.
+	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
+	// so one transport can shut down without impacting streams owned by others.
+	connID, conn := s.transport.runtime.RegisterTransportConnection(s.transport)
 	if connID < 0 {
 		logger.Error("gRPC connection rejected - server shutting down")
 		return status.Error(codes.Unavailable, "server shutting down")
 	}
-	defer s.baseServer.DeregisterConnection(connID)
+	defer s.transport.runtime.DeregisterConnection(connID)
 
 	logger.Info("gRPC Connect started", "connID", connID)
-
-	// Send initial populated slots
-	slots := make([]uint32, len(s.baseServer.Slots))
-	for i, slot := range s.baseServer.Slots {
-		slots[i] = uint32(slot)
-	}
-
-	initialUpdate := &protos.PushUpdates{
-		Kind: &protos.PushUpdates_SlotsAdded{
-			SlotsAdded: &protos.SlotList{
-				Slots: slots,
-			},
-		},
-	}
-
-	if err := stream.Send(initialUpdate); err != nil {
-		logger.Error("failed to send initial update", "connID", connID, "error", err)
-		return status.Error(codes.Internal, "failed to send initial update")
-	}
 
 	// Listen for updates and client disconnect
 	ctx := stream.Context()
@@ -453,88 +535,27 @@ func ToGRPCCode(s catena.StatusCode) codes.Code {
 	}
 }
 
-// Shutdown gracefully shuts down the gRPC server and all streaming connections
-func (s *Server) Shutdown() {
-	logger.Info("Shutting down gRPC server")
-	s.baseServer.ShutdownConnections()
-	s.grpcServer.GracefulStop()
-}
-
 // AddLanguage adds a language pack (optional capability)
-func (s *Server) AddLanguage(ctx context.Context, req *protos.AddLanguagePayload) (*protos.Empty, error) {
+func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguagePayload) (*protos.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "AddLanguage not implemented")
 }
 
 // LanguagePackRequest returns a language pack
-func (s *Server) LanguagePackRequest(ctx context.Context, req *protos.LanguagePackRequestPayload) (*protos.DeviceComponent_ComponentLanguagePack, error) {
+func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.LanguagePackRequestPayload) (*protos.DeviceComponent_ComponentLanguagePack, error) {
 	return nil, status.Error(codes.Unimplemented, "LanguagePackRequest not implemented")
 }
 
 // ListLanguages returns the list of available languages
-func (s *Server) ListLanguages(ctx context.Context, req *protos.Slot) (*protos.LanguageList, error) {
+func (s *catenaService) ListLanguages(ctx context.Context, req *protos.Slot) (*protos.LanguageList, error) {
 	return nil, status.Error(codes.Unimplemented, "ListLanguages not implemented")
 }
 
 // RefreshToken refreshes an authentication token
-func (s *Server) RefreshToken(ctx context.Context, req *protos.RefreshTokenPayload) (*protos.ConnectionStatus, error) {
+func (s *catenaService) RefreshToken(ctx context.Context, req *protos.RefreshTokenPayload) (*protos.ConnectionStatus, error) {
 	return nil, status.Error(codes.Unimplemented, "RefreshToken not implemented")
 }
 
 // RevokeAccess revokes access for a token
-func (s *Server) RevokeAccess(ctx context.Context, req *protos.RevokeAccessPayload) (*protos.RevocationResponse, error) {
+func (s *catenaService) RevokeAccess(ctx context.Context, req *protos.RevokeAccessPayload) (*protos.RevocationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "RevokeAccess not implemented")
-}
-
-// Handler registration methods (delegate to baseServer)
-
-func (s *Server) RegisterGetDeviceHandler(slot uint16, handler catena.DeviceHandler) {
-	s.baseServer.RegisterGetDeviceHandler(slot, handler)
-}
-
-func (s *Server) RegisterGetValueHandler(slot uint16, handler catena.GetValueHandler) {
-	s.baseServer.RegisterGetValueHandler(slot, handler)
-}
-
-func (s *Server) RegisterSetValueHandler(slot uint16, handler catena.SetValueHandler) {
-	s.baseServer.RegisterSetValueHandler(slot, handler)
-}
-
-func (s *Server) RegisterGetAssetHandler(slot uint16, handler catena.GetAssetHandler) {
-	s.baseServer.RegisterGetAssetHandler(slot, handler)
-}
-
-func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler catena.ExecuteCommandHandler) {
-	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
-}
-
-func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
-	return s.baseServer.LookupGetDeviceHandler(slot)
-}
-
-func (s *Server) LookupGetValueHandler(slot uint16) catena.GetValueHandler {
-	return s.baseServer.LookupGetValueHandler(slot)
-}
-
-func (s *Server) LookupSetValueHandler(slot uint16) catena.SetValueHandler {
-	return s.baseServer.LookupSetValueHandler(slot)
-}
-
-func (s *Server) LookupGetAssetHandler(slot uint16) catena.GetAssetHandler {
-	return s.baseServer.LookupGetAssetHandler(slot)
-}
-
-func (s *Server) LookupExecuteCommandHandler(slot uint16) catena.ExecuteCommandHandler {
-	return s.baseServer.LookupExecuteCommandHandler(slot)
-}
-
-func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
-	s.baseServer.BroadcastUpdate(slot, fqoid, value)
-}
-
-func (s *Server) SetMaxConnections(max int) {
-	s.baseServer.SetMaxConnections(max)
-}
-
-func (s *Server) ConnectionCount() int {
-	return s.baseServer.ConnectionCount()
 }

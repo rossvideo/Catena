@@ -33,12 +33,14 @@
  * @file connection_queue.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2026-02-26
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-14
  */
 
-package internal
+package catena
 
 import (
+	"context"
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -53,30 +55,46 @@ type Connection struct {
 	ID      int
 	Updates chan *protos.PushUpdates
 	Done    chan struct{}
+	owner   Transport
 }
 
-// ConnectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
+// connectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
 // It provides thread-safe connection registration, broadcast updates, and graceful shutdown.
-type ConnectionQueue struct {
+type connectionQueue struct {
 	mu             sync.Mutex
 	connections    map[int]*Connection
 	nextConnID     int
 	maxConnections int
-	wg             sync.WaitGroup
 	shuttingDown   bool
+	cond           *sync.Cond
 }
 
-// NewConnectionQueue creates a new connection queue for streaming connections.
+type connectionQueueInterface interface {
+	setMaxConnections(max int)
+	registerOwnedConnection(owner Transport, initialUpdate *protos.PushUpdates) (int, *Connection)
+	deregisterConnection(connID int)
+	notifyUpdate(update *protos.PushUpdates)
+	shutdown(ctx context.Context)
+	shutdownOwner(ctx context.Context, owner Transport)
+	shutdownConnection(ctx context.Context, connection *Connection)
+	connectionCount() int
+}
+
+var _ connectionQueueInterface = (*connectionQueue)(nil)
+
+// newConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
-func newConnectionQueue(maxConnections int) *ConnectionQueue {
-	return &ConnectionQueue{
+func newConnectionQueue(maxConnections int) connectionQueueInterface {
+	cq := &connectionQueue{
 		connections:    make(map[int]*Connection),
 		maxConnections: maxConnections,
 	}
+	cq.cond = sync.NewCond(&cq.mu)
+	return cq
 }
 
-// SetMaxConnections updates the maximum number of connections allowed (0 = unlimited).
-func (cq *ConnectionQueue) SetMaxConnections(max int) {
+// setMaxConnections updates the maximum number of connections allowed (0 = unlimited).
+func (cq *connectionQueue) setMaxConnections(max int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 	cq.maxConnections = max
@@ -84,7 +102,7 @@ func (cq *ConnectionQueue) SetMaxConnections(max int) {
 
 // registerConnection creates a new connection and returns its ID and connection.
 // Returns (-1, nil) if server is shutting down or max connections reached.
-func (cq *ConnectionQueue) registerConnection() (int, *Connection) {
+func (cq *connectionQueue) registerOwnedConnection(owner Transport, initialUpdate *protos.PushUpdates) (int, *Connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -101,22 +119,31 @@ func (cq *ConnectionQueue) registerConnection() (int, *Connection) {
 		ID:      cq.nextConnID,
 		Updates: make(chan *protos.PushUpdates, 100),
 		Done:    make(chan struct{}),
+		owner:   owner,
 	}
 	cq.connections[cq.nextConnID] = conn
-	cq.wg.Add(1)
+
+	// send the initial update if provided
+	if initialUpdate != nil {
+		select {
+		case conn.Updates <- initialUpdate:
+		default:
+			logger.Warning("Streaming channel full, dropping initial update", "connID", cq.nextConnID)
+		}
+	}
 	logger.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
 	return cq.nextConnID, conn
 }
 
 // deregisterConnection removes a connection from the queue.
 // Safe to call multiple times for the same connID.
-func (cq *ConnectionQueue) deregisterConnection(connID int) {
+func (cq *connectionQueue) deregisterConnection(connID int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
 	if _, ok := cq.connections[connID]; ok {
 		delete(cq.connections, connID)
-		cq.wg.Done()
+		cq.cond.Broadcast()
 		logger.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
 	}
 }
@@ -124,7 +151,7 @@ func (cq *ConnectionQueue) deregisterConnection(connID int) {
 // notifyUpdate sends a PushUpdates message to all connected clients.
 // Called when a value changes (by client or server) to propagate
 // the update to all streaming subscribers.
-func (cq *ConnectionQueue) NotifyUpdate(update *protos.PushUpdates) {
+func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -140,24 +167,88 @@ func (cq *ConnectionQueue) NotifyUpdate(update *protos.PushUpdates) {
 // shutdown signals all connections to stop and waits for them to deregister.
 // Each connection's goroutine will receive the signal via the Done channel,
 // exit its event loop, and deregister itself.
-func (cq *ConnectionQueue) shutdown() {
+func (cq *connectionQueue) shutdown(ctx context.Context) {
 	cq.mu.Lock()
 	cq.shuttingDown = true
+	conns := make([]*Connection, 0, len(cq.connections))
 	for _, conn := range cq.connections {
-		select {
-		case <-conn.Done:
-		default:
-			close(conn.Done)
+		conns = append(conns, conn)
+	}
+	cq.mu.Unlock()
+
+	var wg sync.WaitGroup
+	for _, conn := range conns {
+		wg.Add(1)
+		go func(c *Connection) {
+			defer wg.Done()
+			cq.shutdownConnection(ctx, c)
+		}(conn)
+	}
+	wg.Wait()
+
+	logger.Info("All streaming connections shut down")
+}
+
+// shutdownOwner signals all connections owned by the specified owner to stop and waits for them to deregister.
+func (cq *connectionQueue) shutdownOwner(ctx context.Context, owner Transport) {
+	cq.mu.Lock()
+	var ownerConns []*Connection
+	for _, conn := range cq.connections {
+		if conn.owner == owner {
+			ownerConns = append(ownerConns, conn)
 		}
 	}
 	cq.mu.Unlock()
 
-	cq.wg.Wait()
-	logger.Info("All streaming connections shut down")
+	var wg sync.WaitGroup
+	for _, conn := range ownerConns {
+		wg.Add(1)
+		go func(c *Connection) {
+			defer wg.Done()
+			cq.shutdownConnection(ctx, c)
+		}(conn)
+	}
+	wg.Wait()
 }
 
-// ConnectionCount returns the number of active connections.
-func (cq *ConnectionQueue) ConnectionCount() int {
+func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *Connection) {
+	cq.mu.Lock()
+	defer cq.mu.Unlock()
+
+	// notify the connection to shut down by closing its Done channel
+	select {
+	case <-connection.Done:
+	default:
+		close(connection.Done)
+	}
+
+	// make a watchdog goroutine to force close the connection if it doesn't shut down gracefully within the context deadline
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			cq.mu.Lock()
+			defer cq.mu.Unlock()
+			logger.Warning("Connection did not shut down gracefully, forcing close", "connID", connection.ID)
+			delete(cq.connections, connection.ID)
+			cq.cond.Broadcast()
+		case <-done:
+		}
+	}()
+
+	// wait for the connection to deregister itself
+	for {
+		if _, ok := cq.connections[connection.ID]; !ok {
+			close(done)
+			break
+		}
+		// friendly reminder that cond.Wait releases the lock while waiting and re-acquires it when signaled, so this loop will wake up whenever a connection is deregistered and check if it's this one
+		cq.cond.Wait()
+	}
+}
+
+// connectionCount returns the number of active connections.
+func (cq *connectionQueue) connectionCount() int {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 	return len(cq.connections)

@@ -1,5 +1,4 @@
-CMDS_PAIRED := getDevice getSetValue oneOfEverything
-CMDS_REST_ONLY := executeCommand getAsset
+CMDS := oneOfEverything
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
@@ -14,23 +13,13 @@ GO_GRPC_M_OPTS:= $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_F
 
 .PHONY: proto-tools protos protos-grpc protos-all clean-protos
 
-all: protos-all paired-examples rest-only-examples
+all: protos-all examples
 
-paired-examples: $(foreach cmd,$(CMDS_PAIRED),$(cmd)_REST $(cmd)_GRPC)
+examples: $(CMDS)
 
-$(foreach cmd,$(CMDS_PAIRED),$(cmd)_REST): %_REST:
-	mkdir -p $(BIN_DIR)/$*_REST
-	go build -o $(BIN_DIR)/$*_REST/$*_REST ./examples/$*/rest
-
-$(foreach cmd,$(CMDS_PAIRED),$(cmd)_GRPC): %_GRPC:
-	mkdir -p $(BIN_DIR)/$*_GRPC
-	go build -o $(BIN_DIR)/$*_GRPC/$*_GRPC ./examples/$*/grpc
-
-rest-only-examples: $(foreach cmd,$(CMDS_REST_ONLY),$(cmd)_REST)
-
-$(foreach cmd,$(CMDS_REST_ONLY),$(cmd)_REST): %_REST:
-	mkdir -p $(BIN_DIR)/$*_REST
-	go build -o $(BIN_DIR)/$*_REST/$*_REST ./examples/$*/rest
+$(CMDS):
+	mkdir -p $(BIN_DIR)/$@
+	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
 
 # Clean build artifacts and logs
 clean:
@@ -42,8 +31,8 @@ protos-all: protos protos-grpc
 
 proto-tools:
 	@echo "Ensuring protoc plugins..."
-	@$(GOBIN)/protoc-gen-go -h >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	@$(GOBIN)/protoc-gen-go-grpc -h >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	@which protoc-gen-go >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	@which protoc-gen-go-grpc >/dev/null 2>&1 || GOBIN=$(GOBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 protos: proto-tools
 	mkdir -p $(GENERATED_DIR)

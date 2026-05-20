@@ -36,7 +36,7 @@
  * @date 2026-02-25
  */
 
-package rest
+package transports
 
 import (
 	"bytes"
@@ -50,6 +50,7 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // TestMain sets up test environment for all tests in this package.
@@ -103,7 +104,7 @@ func (f *failFlusherWriter) Flush() {
 
 // makeRequest creates an HTTP request, serves it through the server mux, and
 // returns the response recorder. Non-empty bodies get Content-Type: application/json.
-func makeRequest(t *testing.T, srv *Server, method, path, body string) *httptest.ResponseRecorder {
+func makeRequest(t *testing.T, transport *RestTransport, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	var req *http.Request
 	if body != "" {
@@ -113,13 +114,13 @@ func makeRequest(t *testing.T, srv *Server, method, path, body string) *httptest
 		req = httptest.NewRequest(method, path, nil)
 	}
 	rec := httptest.NewRecorder()
-	srv.mux.ServeHTTP(rec, req)
+	transport.mux.ServeHTTP(rec, req)
 	return rec
 }
 
 // makeRequestWithHeaders is like makeRequest but sets explicit headers instead
 // of the default Content-Type.
-func makeRequestWithHeaders(t *testing.T, srv *Server, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
+func makeRequestWithHeaders(t *testing.T, transport *RestTransport, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
 	t.Helper()
 	var req *http.Request
 	if body != "" {
@@ -131,7 +132,7 @@ func makeRequestWithHeaders(t *testing.T, srv *Server, method, path, body string
 		req.Header.Set(k, v)
 	}
 	rec := httptest.NewRecorder()
-	srv.mux.ServeHTTP(rec, req)
+	transport.mux.ServeHTTP(rec, req)
 	return rec
 }
 
@@ -197,12 +198,12 @@ func assertBodyNotContains(t *testing.T, rec *httptest.ResponseRecorder, substr 
 // setupSSEConnection starts a background SSE connection to /st2138-api/v1/connect
 // and waits for the handler to be established. Returns the recorder and a cancel
 // function to tear down the connection.
-func setupSSEConnection(t *testing.T, srv *Server) (*httptest.ResponseRecorder, context.CancelFunc) {
+func setupSSEConnection(t *testing.T, transport *RestTransport) (*httptest.ResponseRecorder, context.CancelFunc) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
 	rec := httptest.NewRecorder()
-	go srv.mux.ServeHTTP(rec, req)
+	go transport.mux.ServeHTTP(rec, req)
 	time.Sleep(150 * time.Millisecond)
 	return rec, cancel
 }
@@ -211,4 +212,12 @@ func setupSSEConnection(t *testing.T, srv *Server) (*httptest.ResponseRecorder, 
 func cleanupSSE(cancel context.CancelFunc) {
 	cancel()
 	time.Sleep(50 * time.Millisecond)
+}
+
+func makeTestConnection(id int) *catena.Connection {
+	return &catena.Connection{
+		ID:      id,
+		Updates: make(chan *protos.PushUpdates, 10),
+		Done:    make(chan struct{}),
+	}
 }

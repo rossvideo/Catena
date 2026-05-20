@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package rest
+package transports
 
 import (
 	"net/http"

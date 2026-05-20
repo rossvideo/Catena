@@ -34,32 +34,126 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-02-04
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-14
  */
 
-package rest
+package transports
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/internal"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult)
 
-var _ catena.CatenaServer = (*Server)(nil)
-
-// Server provides REST API endpoints for Catena devices
-type Server struct {
-	baseServer      *internal.BaseServer
+type RestTransport struct {
+	mu              sync.Mutex
+	server          *http.Server
 	mux             *http.ServeMux
+	runtime         catena.ServerRuntime
 	fallbackHandler FallbackHandler
+
+	port int
+
+	// future configs
+	// tls: TlsConfig etc.
+}
+
+var _ catena.Transport = (*RestTransport)(nil)
+
+func NewRestTransport(port int) *RestTransport {
+	t := &RestTransport{
+		port: port,
+		mux:  http.NewServeMux(),
+	}
+	t.registerRoutes()
+	return t
+}
+
+func NewDefaultRestTransport() *RestTransport {
+	return NewRestTransport(
+		8080, // port
+	)
+}
+
+// Start starts the HTTP server on the specified port using this server's mux
+func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
+	addr := fmt.Sprintf(":%d", t.port)
+	t.server = &http.Server{
+		Addr:    addr,
+		Handler: t.mux,
+	}
+	t.runtime = runtime
+
+	// http server does not use context
+	// listen and serve blocks so do it in a goroutine
+	go func() {
+		logger.Info("REST Transport listening", "address", addr)
+		err := t.server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error("HTTP server error", "error", err)
+		}
+	}()
+	return nil
+}
+
+func (t *RestTransport) Shutdown(ctx context.Context) error {
+	// Ordering is intentional:
+	// 1) start HTTP shutdown first so the listener stops accepting new requests/connections,
+	// 2) then signal runtime-owned streaming connections (SSE) to drain,
+	// 3) finally return the HTTP shutdown result.
+	//
+	// For HTTP, server.Shutdown(ctx) is context-aware and could be called synchronously.
+	// We still run it in a goroutine so we can overlap "stop accepting new traffic" with
+	// runtime connection draining. This mirrors the broader transport shutdown pattern where
+	// the transport begins its own graceful stop and then requests stream shutdown.
+
+	errCh := make(chan error, 1)
+	go func() {
+		if t.server == nil {
+			errCh <- nil
+			return
+		}
+		err := t.server.Shutdown(ctx)
+		if err != nil && ctx.Err() != nil {
+			// Graceful shutdown timed out/cancelled; force close as a best-effort fallback
+			// to ensure this transport does not leave active HTTP connections behind.
+			logger.Warning("HTTP server shutdown timed out, forcing close", "error", err)
+			closeErr := t.server.Close()
+			if closeErr != nil {
+				logger.Error("failed to force close HTTP server", "error", closeErr)
+			}
+		}
+		// Return the graceful shutdown result as the primary status. Any force-close
+		// error is logged for diagnostics, but does not replace the main shutdown result.
+		errCh <- err
+	}()
+
+	if t.runtime != nil {
+		// Drain runtime-managed streams after HTTP starts draining, so long-lived SSE
+		// handlers are signaled to exit and Shutdown can complete.
+		t.runtime.ShutdownTransportConnections(ctx, t)
+	}
+
+	// Wait for HTTP shutdown to complete and return its result. By this point, the runtime
+	// should have signaled all active connections to shut down, so this should complete in
+	// a timely manner.
+	return <-errCh
+}
+
+func (t *RestTransport) RegisterFallbackHandler(handler FallbackHandler) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.fallbackHandler = handler
 }
 
 // writeHTTPResult is a unified function that handles writing different response types
@@ -118,7 +212,7 @@ func writeValueResult(w http.ResponseWriter, value catena.CatenaValue, httpStatu
 		return
 	}
 
-	if err := WriteResponseJSON(w, protoValue, httpStatus); err != nil {
+	if err := WriteProtoJSON(w, protoValue, httpStatus); err != nil {
 		logger.Error("failed to write value response", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -170,44 +264,12 @@ func writeAssetResult(w http.ResponseWriter, asset catena.CatenaAsset, httpStatu
 	}
 }
 
-// NewServer creates a new REST server for the given device slots
-func NewServer(slots []uint16, maxConnections int) *Server {
-	s := &Server{
-		baseServer: internal.NewBaseServer(slots, maxConnections),
-		mux:        http.NewServeMux(),
-	}
-
-	// Register routes
-	s.RegisterRoutes()
-
-	return s
-}
-
-// Start starts the HTTP server on the specified port using this server's mux
-func (s *Server) Start(port int) error {
-	addr := fmt.Sprintf(":%d", port)
-	logger.Info("Starting HTTP server", "address", addr)
-	return http.ListenAndServe(addr, s.mux)
-}
-
-func (s *Server) RegisterFallbackHandler(handler FallbackHandler) {
-	s.baseServer.Mu.Lock()
-	defer s.baseServer.Mu.Unlock()
-	s.fallbackHandler = handler
-}
-
-// Shutdown gracefully shuts down the server by closing all SSE connections
-// and waiting for their goroutines to finish.
-func (s *Server) Shutdown() {
-	s.baseServer.ShutdownConnections()
-}
-
 // For unit tests to override the default functions
 var marshalSSEFunc = MarshalProtoJSON
 
 // sendSSEEvent writes a single SSE event to the response writer,
 // serializing the proto PushUpdates message via MarshalProtoJSON.
-func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
+func (t *RestTransport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
 	data, err := marshalSSEFunc(update)
 	if err != nil {
 		return err
@@ -222,7 +284,7 @@ func (s *Server) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, updat
 }
 
 // handleConnect handles GET /st2138-api/v1/connect (SSE streaming)
-func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
+func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is GET
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
@@ -243,14 +305,16 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	_ = r.Header.Get("User-Agent")
 	_ = r.Header.Get("Authorization")
 
-	// Register this connection in the connectionQueue
-	connID, conn := s.baseServer.RegisterConnection()
+	// Register this connection with the runtime using this transport as owner.
+	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
+	// so one transport can shut down without impacting streams owned by others.
+	connID, conn := t.runtime.RegisterTransportConnection(t)
 	if connID < 0 {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
 		writeHTTPResult(w, res, val)
 		return
 	}
-	defer s.baseServer.DeregisterConnection(connID)
+	defer t.runtime.DeregisterConnection(connID)
 
 	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -266,20 +330,6 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	// Send initial update with populated slots using proto PushUpdates format
-	populatedSlots := s.baseServer.Slots
-	initialEvent := &protos.PushUpdates{
-		Kind: &protos.PushUpdates_SlotsAdded{
-			SlotsAdded: &protos.SlotList{
-				Slots: populatedSlots,
-			},
-		},
-	}
-	if err := s.sendSSEEvent(w, flusher, initialEvent); err != nil {
-		logger.Error("failed to send initial SSE event", "error", err)
-		return
-	}
-
 	logger.Info("SSE Connect started", "connID", connID)
 
 	// Each connection's goroutine listens for setValue updates and server shutdown signals
@@ -293,7 +343,7 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 			logger.Info("SSE connection shut down by server", "connID", connID)
 			return
 		case update := <-conn.Updates:
-			if err := s.sendSSEEvent(w, flusher, update); err != nil {
+			if err := t.sendSSEEvent(w, flusher, update); err != nil {
 				logger.Error("failed to send SSE event", "connID", connID, "error", err)
 				return
 			}
@@ -301,10 +351,10 @@ func (s *Server) handleConnect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RegisterRoutes sets up all HTTP routes
-func (s *Server) RegisterRoutes() {
+// registerRoutes sets up all HTTP routes
+func (t *RestTransport) registerRoutes() {
 	// Device endpoint: GET /st2138-api/v1/{slot}
-	s.mux.HandleFunc("/st2138-api/v1/", func(w http.ResponseWriter, r *http.Request) {
+	t.mux.HandleFunc("/st2138-api/v1/", func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Device endpoint", "path", r.URL.Path, "method", r.Method)
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
@@ -314,7 +364,7 @@ func (s *Server) RegisterRoutes() {
 		}
 
 		slotStr := parts[2]
-		slot, err := s.baseServer.ValidateSlotString(slotStr)
+		slot, err := catena.ValidateSlotString(slotStr)
 		if err.Code != catena.OK {
 			val, res := catena.ReplyError[catena.CatenaValue](catena.INVALID_ARGUMENT, "invalid slot number")
 			writeHTTPResult(w, res, val)
@@ -324,8 +374,7 @@ func (s *Server) RegisterRoutes() {
 		// Route based on path structure
 		if len(parts) == 3 && r.Method == http.MethodGet {
 			// GET /st2138-api/v1/{slot} - Get device info
-			handler := s.baseServer.LookupGetDeviceHandler(slot)
-			device, res := handler()
+			device, res := t.runtime.InvokeGetDeviceHandler(slot)
 			writeHTTPResult(w, res, device)
 			return
 		}
@@ -334,11 +383,13 @@ func (s *Server) RegisterRoutes() {
 			endpoint := parts[3]
 			switch endpoint {
 			case "value":
-				s.handleValueEndpoint(w, r, slot, parts[4:])
+				t.handleValueEndpoint(w, r, slot, parts[4:])
 			case "asset":
-				s.handleAssetEndpoint(w, r, slot, parts[4:])
+				t.handleAssetEndpoint(w, r, slot, parts[4:])
 			case "command":
-				s.handleCommandEndpoint(w, r, slot, parts[4:])
+				t.handleCommandEndpoint(w, r, slot, parts[4:])
+			case "param-info":
+				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
 			default:
 				val, res := catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "unknown endpoint")
 				writeHTTPResult(w, res, val)
@@ -350,17 +401,27 @@ func (s *Server) RegisterRoutes() {
 		writeHTTPResult(w, res, val)
 	})
 
+	// Health endpoint: GET /st2138-api/v1/health
+	t.mux.HandleFunc("/st2138-api/v1/health", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+			writeHTTPResult(w, res, val)
+			return
+		}
+		writeHTTPStatusResult(w, catena.StatusWithCode(catena.OK, ""))
+	})
+
 	// Connect endpoint: GET /st2138-api/v1/connect (SSE streaming)
-	s.mux.HandleFunc("/st2138-api/v1/connect", s.handleConnect)
+	t.mux.HandleFunc("/st2138-api/v1/connect", t.handleConnect)
 
 	// Devices endpoint: GET /st2138-api/v1/devices (returns populated slots)
-	s.mux.HandleFunc("/st2138-api/v1/devices", s.handleGetPopulatedSlots)
+	t.mux.HandleFunc("/st2138-api/v1/devices", t.handleGetPopulatedSlots)
 
 	// Catch-all for 404 - must be registered last
-	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	t.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Fallback handler", "path", r.URL.Path, "method", r.Method)
-		if s.fallbackHandler != nil {
-			val, res := s.fallbackHandler(w, r)
+		if t.fallbackHandler != nil {
+			val, res := t.fallbackHandler(w, r)
 			writeHTTPResult(w, res, val)
 			return
 		}
@@ -368,14 +429,14 @@ func (s *Server) RegisterRoutes() {
 		writeHTTPResult(w, res, val)
 	})
 
-	s.mux.HandleFunc("/st2138-api/v1", func(w http.ResponseWriter, r *http.Request) {
+	t.mux.HandleFunc("/st2138-api/v1", func(w http.ResponseWriter, r *http.Request) {
 		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, "endpoint not found"))
 	})
 }
 
 // handleGetPopulatedSlots handles GET /st2138-api/v1/devices
 // Returns the list of populated slots
-func (s *Server) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request) {
+func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
@@ -383,10 +444,14 @@ func (s *Server) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request)
 	}
 
 	logger.Info("GetPopulatedSlots")
-	slots := s.baseServer.Slots
+	slots := t.runtime.GetSlots()
+	uint32Slots := make([]uint32, len(slots))
+	for i, slot := range slots {
+		uint32Slots[i] = uint32(slot)
+	}
 
 	response := map[string][]uint32{
-		"slots": slots,
+		"slots": uint32Slots,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -396,13 +461,12 @@ func (s *Server) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	fqoid := strings.Join(pathParts, "/")
 
 	switch r.Method {
 	case http.MethodGet:
-		handler := s.baseServer.LookupGetValueHandler(slot)
-		val, res := handler(slot, fqoid)
+		val, res := t.runtime.InvokeGetValueHandler(slot, fqoid)
 		writeHTTPResult(w, res, val)
 
 	case http.MethodPut:
@@ -423,8 +487,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 			return
 		}
 
-		handler := s.baseServer.LookupSetValueHandler(slot)
-		res := handler(nativeValue, slot, fqoid)
+		res := t.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
 		writeHTTPStatusResult(w, res)
 
 	default:
@@ -433,7 +496,7 @@ func (s *Server) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slo
 	}
 }
 
-func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
 		writeHTTPResult(w, res, val)
@@ -441,8 +504,7 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 	}
 
 	fqoid := strings.Join(pathParts, "/")
-	handler := s.baseServer.LookupGetAssetHandler(slot)
-	asset, res := handler(slot, fqoid)
+	asset, res := t.runtime.InvokeGetAssetHandler(slot, fqoid)
 
 	if res.Error == "" {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
@@ -464,7 +526,108 @@ func (s *Server) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slo
 	writeHTTPResult(w, res, asset)
 }
 
-func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+// handleParamInfoEndpoint handles param info requests and streaming (SSE).
+func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if r.Method != http.MethodGet {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only GET allowed")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	recursive := r.URL.Query().Has("recursive")
+
+	// Check for "stream" suffix to enable SSE.
+	streaming := false
+	fqoidParts := pathParts
+	if len(fqoidParts) > 0 && fqoidParts[len(fqoidParts)-1] == "stream" {
+		streaming = true
+		fqoidParts = fqoidParts[:len(fqoidParts)-1]
+	}
+
+	// Build OID prefix from path segments.
+	oidPrefix := ""
+	for _, p := range fqoidParts {
+		oidPrefix += "/" + p
+	}
+
+	// Unary requests must include fqoid and cannot be recursive.
+	if !streaming {
+		if recursive {
+			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "Recursive parameter info request is not supported with unary response"))
+			return
+		}
+		if oidPrefix == "" {
+			writeHTTPStatusResult(w, catena.StatusWithCode(catena.INVALID_ARGUMENT, "Unary request must include fqoid"))
+			return
+		}
+	}
+
+	infos, res := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
+	if res.Code != catena.OK {
+		writeHTTPStatusResult(w, res)
+		return
+	}
+
+	if len(infos) == 0 {
+		msg := "Parameter not found: " + oidPrefix
+		if oidPrefix == "" {
+			msg = "No top-level parameters found"
+		}
+		writeHTTPStatusResult(w, catena.StatusWithCode(catena.NOT_FOUND, msg))
+		return
+	}
+
+	if streaming {
+		t.writeParamInfoStream(w, r, infos)
+		return
+	}
+
+	if err := WriteProtoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
+		logger.Error("failed to write param info response", "error", err)
+	}
+}
+
+// writeParamInfoStream streams the param info entries to the client as Server-Sent Events.
+func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Request, infos []catena.CatenaParamInfo) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		val, res := catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "streaming not supported")
+		writeHTTPResult(w, res, val)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	ctx := r.Context()
+	for _, info := range infos {
+		select {
+		case <-ctx.Done():
+			logger.Info("param-info stream client disconnected")
+			return
+		default:
+		}
+		protoResp := info.GetProtoResponse()
+		if protoResp == nil {
+			continue
+		}
+		data, err := MarshalProtoJSON(protoResp)
+		if err != nil {
+			logger.Error("failed to marshal param info entry", "error", err)
+			return
+		}
+		if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
+			logger.Error("failed to write param info SSE event", "error", err)
+			return
+		}
+		flusher.Flush()
+	}
+}
+
+func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodPost {
 		val, res := catena.ReplyError[catena.CatenaValue](catena.METHOD_NOT_ALLOWED, "only POST allowed")
 		writeHTTPResult(w, res, val)
@@ -498,8 +661,7 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		}
 	}
 
-	handler := s.baseServer.LookupExecuteCommandHandler(slot)
-	cmdResult, res := handler(slot, commandFqoid, payload)
+	cmdResult, res := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
 	if res.Code != catena.OK {
 		writeHTTPResult(w, res, catena.CatenaValue{})
 		return
@@ -509,7 +671,7 @@ func (s *Server) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, s
 		cmdResult, _ = catena.CommandNoResponse()
 	}
 
-	_ = WriteCommandResponseJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
+	_ = WriteProtoJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
 }
 
 // ToHTTPStatus converts a StatusCode to an HTTP status code.
@@ -558,56 +720,4 @@ func ToHTTPStatus(s catena.StatusCode) int {
 	default:
 		return http.StatusInternalServerError
 	}
-}
-
-func (s *Server) RegisterGetDeviceHandler(slot uint16, handler catena.DeviceHandler) {
-	s.baseServer.RegisterGetDeviceHandler(slot, handler)
-}
-
-func (s *Server) RegisterGetValueHandler(slot uint16, handler catena.GetValueHandler) {
-	s.baseServer.RegisterGetValueHandler(slot, handler)
-}
-
-func (s *Server) RegisterSetValueHandler(slot uint16, handler catena.SetValueHandler) {
-	s.baseServer.RegisterSetValueHandler(slot, handler)
-}
-
-func (s *Server) RegisterGetAssetHandler(slot uint16, handler catena.GetAssetHandler) {
-	s.baseServer.RegisterGetAssetHandler(slot, handler)
-}
-
-func (s *Server) RegisterExecuteCommandHandler(slot uint16, handler catena.ExecuteCommandHandler) {
-	s.baseServer.RegisterExecuteCommandHandler(slot, handler)
-}
-
-func (s *Server) LookupGetDeviceHandler(slot uint16) catena.DeviceHandler {
-	return s.baseServer.LookupGetDeviceHandler(slot)
-}
-
-func (s *Server) LookupGetValueHandler(slot uint16) catena.GetValueHandler {
-	return s.baseServer.LookupGetValueHandler(slot)
-}
-
-func (s *Server) LookupSetValueHandler(slot uint16) catena.SetValueHandler {
-	return s.baseServer.LookupSetValueHandler(slot)
-}
-
-func (s *Server) LookupGetAssetHandler(slot uint16) catena.GetAssetHandler {
-	return s.baseServer.LookupGetAssetHandler(slot)
-}
-
-func (s *Server) LookupExecuteCommandHandler(slot uint16) catena.ExecuteCommandHandler {
-	return s.baseServer.LookupExecuteCommandHandler(slot)
-}
-
-func (s *Server) BroadcastUpdate(slot uint16, fqoid string, value any) {
-	s.baseServer.BroadcastUpdate(slot, fqoid, value)
-}
-
-func (s *Server) SetMaxConnections(max int) {
-	s.baseServer.SetMaxConnections(max)
-}
-
-func (s *Server) ConnectionCount() int {
-	return s.baseServer.ConnectionCount()
 }

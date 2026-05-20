@@ -38,6 +38,8 @@
 package getdevice
 
 import (
+	"time"
+
 	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -54,6 +56,35 @@ var Devices = map[uint16]map[string]any{
 		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
 		"default_scope":     "st2138:op",
 		"params": map[string]any{
+			"product": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Product",
+					},
+				},
+				"type": catena.ParamTypeStruct,
+				"params": map[string]any{
+					"version": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Version",
+							},
+						},
+						"type":      catena.ParamTypeString,
+						"read_only": true,
+						"widget":    "TEXT",
+					},
+				},
+				"value": map[string]any{
+					"struct_value": map[string]any{
+						"fields": map[string]any{
+							"version": map[string]any{
+								"string_value": "1.0.0",
+							},
+						},
+					},
+				},
+			},
 			"brightness": map[string]any{
 				"name": map[string]any{
 					"display_strings": map[string]string{
@@ -91,6 +122,9 @@ var Devices = map[uint16]map[string]any{
 				"constraint": map[string]any{
 					"ref_oid": "input_source_choice",
 				},
+				"value": map[string]any{
+					"string_value": "HDMI",
+				},
 				"read_only": false,
 				"widget":    "DROPDOWN",
 			},
@@ -109,10 +143,27 @@ var Devices = map[uint16]map[string]any{
 			},
 		},
 		"menu_groups": map[string]any{
-			"video": map[string]any{
+			"status": map[string]any{
 				"name": map[string]any{
 					"display_strings": map[string]string{
-						"en": "Video Settings",
+						"en": "Status",
+					},
+				},
+				"menus": map[string]any{
+					"info": map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{
+								"en": "Device Info",
+							},
+						},
+						"param_oids": []string{"product/version"},
+					},
+				},
+			},
+			"config": map[string]any{
+				"name": map[string]any{
+					"display_strings": map[string]string{
+						"en": "Config",
 					},
 				},
 				"menus": map[string]any{
@@ -131,23 +182,6 @@ var Devices = map[uint16]map[string]any{
 							},
 						},
 						"param_oids": []string{"input_source"},
-					},
-				},
-			},
-			"system": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "System",
-					},
-				},
-				"menus": map[string]any{
-					"info": map[string]any{
-						"name": map[string]any{
-							"display_strings": map[string]string{
-								"en": "Device Info",
-							},
-						},
-						"param_oids": []string{},
 					},
 				},
 			},
@@ -180,10 +214,10 @@ var Devices = map[uint16]map[string]any{
 						"brightness":   "Brightness",
 						"contrast":     "Contrast",
 						"input_source": "Input Source",
-						"video":        "Video Settings",
+						"status":       "Status",
+						"config":       "Config",
 						"basic":        "Basic",
 						"input":        "Input Configuration",
-						"system":       "System",
 						"info":         "Device Info",
 						"reboot":       "Reboot Device",
 						"reset":        "Reset to Defaults",
@@ -195,6 +229,8 @@ var Devices = map[uint16]map[string]any{
 						"brightness":   "Luminosité",
 						"contrast":     "Contraste",
 						"input_source": "Source d'entrée",
+						"status":       "Statut",
+						"config":       "Configuration",
 						"reboot":       "Redémarrer l'appareil",
 						"reset":        "Réinitialiser aux valeurs par défaut",
 					},
@@ -425,6 +461,7 @@ var Devices = map[uint16]map[string]any{
 }
 
 // RegisterHandlers registers the GetDevice handler for each slot on the given server.
+// It also starts a heartbeat that broadcasts the version param every 5 seconds.
 func RegisterHandlers(srv catena.CatenaServer) {
 	for _, slot := range SlotList {
 		slot := slot
@@ -445,6 +482,12 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			return catena.Reply(device)
 		})
 	}
+
+	// Start heartbeat — invokes all registered heartbeat handlers every 5 seconds.
+	srv.RegisterHeartbeatHandler(0, func(slot uint16) {
+		srv.BroadcastUpdate(slot, "product/version", "1.0.0")
+	})
+	srv.StartHeartbeat(5 * time.Second)
 }
 
 // RunExample encapsulates the full example lifecycle:

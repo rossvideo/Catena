@@ -37,7 +37,7 @@
  * @date 2026-02-04
  */
 
-package rest
+package transports
 
 import (
 	"encoding/json"
@@ -145,23 +145,24 @@ func injectJSONField[T jsonPrimitive](data []byte, key string, value T) []byte {
 	return v.MarshalTo(nil)
 }
 
-// WriteCommandResponseJSON marshals a protos.CommandResponse to JSON and writes it
-// to the HTTP response with the specified status code.
-func WriteCommandResponseJSON(w http.ResponseWriter, cmdResp *protos.CommandResponse, statusCode int) error {
+// WriteProtoJSON marshals any proto.Message to JSON and writes it to the HTTP
+// response with the specified status code. If msg is nil (interface nil or nil
+// concrete pointer), only the status code is written.
+func WriteProtoJSON(w http.ResponseWriter, msg proto.Message, statusCode int) error {
 	w.Header().Set("Content-Type", "application/json")
 
-	if cmdResp == nil {
+	if msg == nil || reflect.ValueOf(msg).IsNil() {
 		w.WriteHeader(statusCode)
 		return nil
 	}
 
-	b, err := MarshalProtoJSON(cmdResp)
+	b, err := MarshalProtoJSON(msg)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(map[string]string{
-			"error": "failed to marshal command response",
+			"error": "failed to marshal response",
 		})
-		return fmt.Errorf("failed to marshal command response: %w", err)
+		return fmt.Errorf("failed to marshal response: %w", err)
 	}
 
 	w.WriteHeader(statusCode)
@@ -199,30 +200,6 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 		return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: fmt.Sprintf("failed to unmarshal request body: %v", err)}
 	}
 	return v, catena.StatusResult{Code: catena.OK}
-}
-
-// WriteResponseJSON marshals a protos.Value to JSON and writes it to the HTTP response
-// with the specified status code. If the value is nil, only the status code is written.
-func WriteResponseJSON(w http.ResponseWriter, value *protos.Value, statusCode int) error {
-	w.Header().Set("Content-Type", "application/json")
-
-	if value == nil {
-		w.WriteHeader(statusCode)
-		return nil
-	}
-
-	b, err := MarshalProtoJSON(value)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(map[string]string{
-			"error": "failed to marshal response payload",
-		})
-		return fmt.Errorf("failed to marshal response: %w", err)
-	}
-
-	w.WriteHeader(statusCode)
-	_, writeErr := w.Write(b)
-	return writeErr
 }
 
 // --- Device JSON cleanup via fastjson AST ---

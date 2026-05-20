@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package grpc
+package transports
 
 import (
 	"testing"

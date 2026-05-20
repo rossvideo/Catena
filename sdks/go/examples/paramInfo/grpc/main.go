@@ -31,29 +31,14 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	// grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
 
-	oneofeverything "github.com/rossvideo/catena/sdks/go/examples/oneOfEverything"
+	paraminfo "github.com/rossvideo/catena/sdks/go/examples/paramInfo"
 )
 
 func main() {
-	oneofeverything.RunExample("oneOfEverything_GRPC", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
+	paraminfo.RunExample("paramInfo_GRPC", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
 		return grpcServer.NewServer(slots, 100, cfg)
-	},
-		func(port int) {
-			logger.Info("=======================================================")
-			logger.Info("One of Everything gRPC Example")
-			logger.Info("=======================================================")
-			logger.Info("gRPC server starting", "port", port)
-			logger.Info("")
-			logger.Info("Use grpcurl or a gRPC client to interact with the server:")
-			logger.Info(fmt.Sprintf("  grpcurl -plaintext localhost:%d list", port))
-			logger.Info("")
-			logger.Info("=======================================================")
-		},
-	)
+	})
 }

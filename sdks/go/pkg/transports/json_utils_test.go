@@ -37,7 +37,7 @@
  * @date 2026-02-04
  */
 
-package rest
+package transports
 
 import (
 	"bytes"
@@ -176,13 +176,13 @@ func TestReadRequestJSON_EmptyBody(t *testing.T) {
 	}
 }
 
-func TestWriteResponseJSON_ValidValue(t *testing.T) {
+func TestWriteProtoJSON_ValidValue(t *testing.T) {
 	w := httptest.NewRecorder()
 	val := &protos.Value{
 		Kind: &protos.Value_Int32Value{Int32Value: 42},
 	}
 
-	err := WriteResponseJSON(w, val, http.StatusOK)
+	err := WriteProtoJSON(w, val, http.StatusOK)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -198,10 +198,10 @@ func TestWriteResponseJSON_ValidValue(t *testing.T) {
 	}
 }
 
-func TestWriteResponseJSON_NilValue(t *testing.T) {
+func TestWriteProtoJSON_NilValue(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	err := WriteResponseJSON(w, nil, http.StatusNoContent)
+	err := WriteProtoJSON(w, nil, http.StatusNoContent)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -214,13 +214,13 @@ func TestWriteResponseJSON_NilValue(t *testing.T) {
 	}
 }
 
-func TestWriteResponseJSON_StringValue(t *testing.T) {
+func TestWriteProtoJSON_StringValue(t *testing.T) {
 	w := httptest.NewRecorder()
 	val := &protos.Value{
 		Kind: &protos.Value_StringValue{StringValue: "test string"},
 	}
 
-	err := WriteResponseJSON(w, val, http.StatusOK)
+	err := WriteProtoJSON(w, val, http.StatusOK)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -230,13 +230,13 @@ func TestWriteResponseJSON_StringValue(t *testing.T) {
 	}
 }
 
-func TestWriteResponseJSON_Float32Value(t *testing.T) {
+func TestWriteProtoJSON_Float32Value(t *testing.T) {
 	w := httptest.NewRecorder()
 	val := &protos.Value{
 		Kind: &protos.Value_Float32Value{Float32Value: 3.14159},
 	}
 
-	err := WriteResponseJSON(w, val, http.StatusOK)
+	err := WriteProtoJSON(w, val, http.StatusOK)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -246,7 +246,7 @@ func TestWriteResponseJSON_Float32Value(t *testing.T) {
 	}
 }
 
-func TestWriteResponseJSON_DifferentStatusCodes(t *testing.T) {
+func TestWriteProtoJSON_DifferentStatusCodes(t *testing.T) {
 	tests := []struct {
 		name       string
 		statusCode int
@@ -266,7 +266,7 @@ func TestWriteResponseJSON_DifferentStatusCodes(t *testing.T) {
 				Kind: &protos.Value_Int32Value{Int32Value: 1},
 			}
 
-			err := WriteResponseJSON(w, val, tt.statusCode)
+			err := WriteProtoJSON(w, val, tt.statusCode)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -278,7 +278,7 @@ func TestWriteResponseJSON_DifferentStatusCodes(t *testing.T) {
 	}
 }
 
-func TestWriteResponseJSON_EmitsDefaultValues(t *testing.T) {
+func TestWriteProtoJSON_EmitsDefaultValues(t *testing.T) {
 	tests := []struct {
 		name     string
 		value    *protos.Value
@@ -304,7 +304,7 @@ func TestWriteResponseJSON_EmitsDefaultValues(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			err := WriteResponseJSON(w, tt.value, http.StatusOK)
+			err := WriteProtoJSON(w, tt.value, http.StatusOK)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -315,13 +315,13 @@ func TestWriteResponseJSON_EmitsDefaultValues(t *testing.T) {
 	}
 }
 
-func TestWriteResponseJSON_BoolValue(t *testing.T) {
+func TestWriteProtoJSON_BoolValue(t *testing.T) {
 	w := httptest.NewRecorder()
 	val := &protos.Value{
 		Kind: &protos.Value_Int32Value{Int32Value: 1}, // bool represented as int
 	}
 
-	err := WriteResponseJSON(w, val, http.StatusOK)
+	err := WriteProtoJSON(w, val, http.StatusOK)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -352,22 +352,22 @@ func (e *errorWriter) WriteHeader(code int) {
 	e.code = code
 }
 
-func TestWriteResponseJSON_WriteError(t *testing.T) {
+func TestWriteProtoJSON_WriteError(t *testing.T) {
 	w := &errorWriter{}
 	val := &protos.Value{
 		Kind: &protos.Value_Int32Value{Int32Value: 42},
 	}
 
-	err := WriteResponseJSON(w, val, http.StatusOK)
+	err := WriteProtoJSON(w, val, http.StatusOK)
 	if err == nil {
 		t.Fatal("expected error when Write fails")
 	}
 }
 
-func TestWriteCommandResponseJSON_NilResponse(t *testing.T) {
+func TestWriteProtoJSON_NilResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	err := WriteCommandResponseJSON(w, nil, http.StatusOK)
+	err := WriteProtoJSON(w, nil, http.StatusOK)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -382,13 +382,13 @@ func TestWriteCommandResponseJSON_NilResponse(t *testing.T) {
 	}
 }
 
-func TestWriteCommandResponseJSON_ValidNoResponse(t *testing.T) {
+func TestWriteProtoJSON_ValidNoResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	cmdResp := &protos.CommandResponse{
 		Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
 	}
 
-	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	err := WriteProtoJSON(w, cmdResp, http.StatusOK)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -400,7 +400,7 @@ func TestWriteCommandResponseJSON_ValidNoResponse(t *testing.T) {
 	}
 }
 
-func TestWriteCommandResponseJSON_ValidResponse(t *testing.T) {
+func TestWriteProtoJSON_ValidResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	cmdResp := &protos.CommandResponse{
 		Kind: &protos.CommandResponse_Response{
@@ -408,7 +408,7 @@ func TestWriteCommandResponseJSON_ValidResponse(t *testing.T) {
 		},
 	}
 
-	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	err := WriteProtoJSON(w, cmdResp, http.StatusOK)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -417,7 +417,7 @@ func TestWriteCommandResponseJSON_ValidResponse(t *testing.T) {
 	}
 }
 
-func TestWriteCommandResponseJSON_MarshalError(t *testing.T) {
+func TestWriteProtoJSON_MarshalError(t *testing.T) {
 	w := httptest.NewRecorder()
 	cmdResp := &protos.CommandResponse{
 		Kind: &protos.CommandResponse_Response{
@@ -425,25 +425,25 @@ func TestWriteCommandResponseJSON_MarshalError(t *testing.T) {
 		},
 	}
 
-	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	err := WriteProtoJSON(w, cmdResp, http.StatusOK)
 	if err == nil {
 		t.Fatal("expected error for invalid UTF-8 string")
 	}
 	if w.Code != http.StatusInternalServerError {
 		t.Errorf("expected status 500, got %d", w.Code)
 	}
-	if !strings.Contains(w.Body.String(), "failed to marshal command response") {
+	if !strings.Contains(w.Body.String(), "failed to marshal response") {
 		t.Errorf("expected error body, got %q", w.Body.String())
 	}
 }
 
-func TestWriteCommandResponseJSON_WriteError(t *testing.T) {
+func TestWriteProtoJSON_WriteErrorCommandResponse(t *testing.T) {
 	w := &errorWriter{}
 	cmdResp := &protos.CommandResponse{
 		Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
 	}
 
-	err := WriteCommandResponseJSON(w, cmdResp, http.StatusOK)
+	err := WriteProtoJSON(w, cmdResp, http.StatusOK)
 	if err == nil {
 		t.Fatal("expected error when Write fails")
 	}
@@ -1019,4 +1019,3 @@ func TestMarshalAssetJSON_Nil(t *testing.T) {
 		t.Error("expected nil JSON data for nil asset")
 	}
 }
-

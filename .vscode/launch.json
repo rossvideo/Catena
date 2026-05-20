@@ -6,13 +6,15 @@
         "name": "Debug Go example",
         "request": "launch",
         "mode": "debug",
-        "program": "${workspaceFolder}/sdks/go/examples/${input:pickGoService}",
+        "program": "${workspaceFolder}/sdks/go/examples/oneOfEverything",
         "preLaunchTask": "Generate Protobufs",
         "cwd": "${workspaceFolder}",
         "args": [],
         "env": {
           "CATENA_LOG_LEVEL": "DEBUG", // Set log level to DEBUG
           "CATENA_ENV": "dev",
+          "CATENA_USE_GRPC": "true",
+          "CATENA_USE_REST": "true",
         }
       },
       {
@@ -231,8 +233,11 @@
         "getSetValue/grpc",
         "executeCommand/rest",
         "getAsset/rest",
+        "getAsset/grpc",
         "oneOfEverything/rest",
-        "oneOfEverything/grpc"
+        "oneOfEverything/grpc",
+        "paramInfo/rest",
+        "paramInfo/grpc"
       ],
       "default": "getSetValue/rest"
     },

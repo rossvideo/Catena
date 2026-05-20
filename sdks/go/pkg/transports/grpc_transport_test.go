@@ -33,17 +33,18 @@
  * @file server_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2026-03-13
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-14
  */
 
-package grpc
+package transports
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"testing"
 	"time"
 
@@ -60,37 +61,66 @@ import (
 
 const bufSize = 1024 * 1024
 
-// TestMain sets up test environment
-func TestMain(m *testing.M) {
-	catena.SetEnv(catena.EnvDev)
-	os.Exit(m.Run())
+type testGrpcTransportConfig struct {
+	port         uint16
+	reflection   bool
+	isDev        bool
+	startupDelay time.Duration
 }
 
-// setupTestServer creates an in-memory gRPC test server using bufconn
-func setupTestServer(t *testing.T, slots []uint16, reflectionEnabled bool) (*Server, *bufconn.Listener, func()) {
+type testGrpcTransportOption func(*testGrpcTransportConfig)
+
+func withTestGrpcTransportDevMode(isDev bool) testGrpcTransportOption {
+	return func(cfg *testGrpcTransportConfig) {
+		cfg.isDev = isDev
+	}
+}
+
+func withTestGrpcTransportReflection(enabled bool) testGrpcTransportOption {
+	return func(cfg *testGrpcTransportConfig) {
+		cfg.reflection = enabled
+	}
+}
+
+// setupTestGrpcTransport creates an in-memory gRPC test server using bufconn
+func setupTestGrpcTransport(t *testing.T, slots []uint16, opts ...testGrpcTransportOption) (*GrpcTransport, *stubServerRuntime, *bufconn.Listener, func()) {
 	t.Helper()
 
+	cfg := testGrpcTransportConfig{
+		port:         1234,
+		reflection:   false,
+		isDev:        false,
+		startupDelay: 10 * time.Millisecond,
+	}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	lis := bufconn.Listen(bufSize)
-	cfg := catena.Config{GRPCReflection: reflectionEnabled}
-	srv := NewServer(slots, 100, cfg)
+	transport := NewGrpcTransport(cfg.port, cfg.reflection)
+	runtime := makeStubServerRuntime(t)
+	runtime.slots = slots
+	transport.runtime = runtime
 
 	go func() {
-		if err := srv.grpcServer.Serve(lis); err != nil {
+		if err := transport.grpcServer.Serve(lis); err != nil {
 			t.Logf("server stopped: %v", err)
 		}
 	}()
 
 	// Give server a moment to start
-	time.Sleep(10 * time.Millisecond)
+	if cfg.startupDelay > 0 {
+		time.Sleep(cfg.startupDelay)
+	}
 
 	cleanup := func() {
 		// Use Stop() instead of GracefulStop() in tests to avoid hanging
 		// GracefulStop() waits for active streams which causes deadlocks in tests
-		srv.grpcServer.Stop()
+		transport.grpcServer.Stop()
 		lis.Close()
 	}
 
-	return srv, lis, cleanup
+	return transport, runtime, lis, cleanup
 }
 
 // dialTestServer creates a client connection to the test server
@@ -119,21 +149,38 @@ func assertGRPCError(t *testing.T, err error, expectedCode codes.Code) {
 }
 
 // =============================================================================
-// Test: NewServer
+// Test: NewGrpcTransport
 // =============================================================================
 
-func TestNewServer(t *testing.T) {
-	slots := []uint16{0, 1, 2}
-	cfg := catena.Config{GRPCReflection: false}
-	srv := NewServer(slots, 10, cfg)
+func TestNewGrpcTransport(t *testing.T) {
+	transport := NewGrpcTransport(1234, false)
 
-	if srv == nil {
-		t.Fatal("NewServer returned nil")
+	if transport == nil {
+		t.Fatal("NewGrpcTransport returned nil")
 	}
-	if srv.baseServer == nil {
-		t.Error("baseServer is nil")
+	if transport.catenaService == nil {
+		t.Error("catenaService is nil")
 	}
-	if srv.grpcServer == nil {
+	if transport.grpcServer == nil {
+		t.Error("grpcServer is nil")
+	}
+	if transport.port != 1234 {
+		t.Errorf("expected port 1234, got %d", transport.port)
+	}
+	if transport.reflection != false {
+		t.Errorf("expected reflection false, got %v", transport.reflection)
+	}
+}
+
+func TestNewDefaultGrpcTransport(t *testing.T) {
+	transport := NewDefaultGrpcTransport()
+	if transport == nil {
+		t.Fatal("NewDefaultGrpcTransport returned nil")
+	}
+	if transport.catenaService == nil {
+		t.Error("catenaService is nil")
+	}
+	if transport.grpcServer == nil {
 		t.Error("grpcServer is nil")
 	}
 }
@@ -142,7 +189,7 @@ func TestNewServer(t *testing.T) {
 // Test: GetPopulatedSlots
 // =============================================================================
 
-func TestServer_GetPopulatedSlots(t *testing.T) {
+func TestGrpcTransport_GetPopulatedSlots(t *testing.T) {
 	tests := []struct {
 		name          string
 		slots         []uint16
@@ -168,7 +215,7 @@ func TestServer_GetPopulatedSlots(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			_, lis, cleanup := setupTestServer(t, tt.slots, false)
+			_, _, lis, cleanup := setupTestGrpcTransport(t, tt.slots)
 			defer cleanup()
 
 			client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -185,17 +232,17 @@ func TestServer_GetPopulatedSlots(t *testing.T) {
 // Test: DeviceRequest
 // =============================================================================
 
-func TestServer_DeviceRequest_Success(t *testing.T) {
+func TestGrpcTransport_DeviceRequest_Success(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	// Register mock handler
 	handlerCalled := false
-	srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
+	runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
 		handlerCalled = true
 		deviceMap := map[string]any{
-			"slot":         uint32(0),
+			"slot":         uint32(slot),
 			"detail_level": catena.DetailLevelFull,
 		}
 		device, err := catena.ToCatenaDevice(deviceMap)
@@ -203,7 +250,7 @@ func TestServer_DeviceRequest_Success(t *testing.T) {
 			t.Fatalf("ToCatenaDevice failed: %v", err)
 		}
 		return catena.Reply(device)
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -226,17 +273,13 @@ func TestServer_DeviceRequest_Success(t *testing.T) {
 	}
 }
 
-func TestServer_DeviceRequest_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_DeviceRequest_InvalidSlot(t *testing.T) {
 	tests := []struct {
 		name         string
 		slot         uint32
 		expectedCode codes.Code
 	}{
-		{
-			name:         "No DeviceRequest handler for slot",
-			slot:         99,
-			expectedCode: codes.NotFound, // Note: server returns NotFound for slots without handlers
-		},
+		// only need to test out of bounds
 		{
 			name:         "slot exceeds uint16 max",
 			slot:         70000,
@@ -247,7 +290,7 @@ func TestServer_DeviceRequest_InvalidSlot(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 			defer cleanup()
 
 			client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -265,15 +308,15 @@ func TestServer_DeviceRequest_InvalidSlot(t *testing.T) {
 	}
 }
 
-func TestServer_DeviceRequest_HandlerError(t *testing.T) {
+func TestGrpcTransport_DeviceRequest_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	// Register handler that returns error
-	srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
+	runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
 		return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -292,7 +335,7 @@ func TestServer_DeviceRequest_HandlerError(t *testing.T) {
 // Test: GetValue
 // =============================================================================
 
-func TestServer_GetValue_Success(t *testing.T) {
+func TestGrpcTransport_GetValue_Success(t *testing.T) {
 	tests := []struct {
 		name          string
 		handlerValue  any
@@ -343,16 +386,16 @@ func TestServer_GetValue_Success(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 			defer cleanup()
 
-			srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+			runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 				if fqoid != "device.param1" {
 					t.Errorf("expected fqoid 'device.param1', got %s", fqoid)
 				}
 				value, _ := catena.ToCatenaValue(tt.handlerValue)
 				return catena.Reply(value)
-			})
+			}
 
 			client, cleanup := setupGRPCClient(t, ctx, lis)
 			defer cleanup()
@@ -364,26 +407,26 @@ func TestServer_GetValue_Success(t *testing.T) {
 	}
 }
 
-func TestServer_GetValue_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_GetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	_, err := makeGetValueRequest(t, client, ctx, 99, "device.param1")
-	assertGRPCCode(t, err, codes.NotFound, "No GetValue handler for invalid slot") // Note: server returns NotFound for slots without handlers
+	_, err := makeGetValueRequest(t, client, ctx, 999999, "device.param1")
+	assertGRPCCode(t, err, codes.InvalidArgument, "") // Note: server returns NotFound for slots without handlers
 }
 
-func TestServer_GetValue_HandlerError(t *testing.T) {
+func TestGrpcTransport_GetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not supported")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -396,19 +439,19 @@ func TestServer_GetValue_HandlerError(t *testing.T) {
 // Test: SetValue
 // =============================================================================
 
-func TestServer_SetValue_Success(t *testing.T) {
+func TestGrpcTransport_SetValue_Success(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	receivedValue := any(nil)
-	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 		receivedValue = value
 		if fqoid != "device.param1" {
 			t.Errorf("expected fqoid 'device.param1', got %s", fqoid)
 		}
 		return catena.StatusWithCode(catena.OK, "")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -428,21 +471,21 @@ func TestServer_SetValue_Success(t *testing.T) {
 	}
 }
 
-func TestServer_SetValue_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_SetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	_, err := makeSetValueRequest(t, client, ctx, 99, "device.param1", int32(100))
-	assertGRPCCode(t, err, codes.NotFound, "No SetValue handler for invalid slot") // Note: server returns NotFound for slots without handlers
+	_, err := makeSetValueRequest(t, client, ctx, 999999, "device.param1", int32(100))
+	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_SetValue_NilValue(t *testing.T) {
+func TestGrpcTransport_SetValue_NilValue(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -456,14 +499,14 @@ func TestServer_SetValue_NilValue(t *testing.T) {
 	assertGRPCCode(t, err, codes.InvalidArgument, "nil value")
 }
 
-func TestServer_SetValue_HandlerError(t *testing.T) {
+func TestGrpcTransport_SetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "value out of range")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -476,16 +519,16 @@ func TestServer_SetValue_HandlerError(t *testing.T) {
 // Test: MultiSetValue
 // =============================================================================
 
-func TestServer_MultiSetValue_Success(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	callCount := 0
-	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 		callCount++
 		return catena.StatusWithCode(catena.OK, "")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -502,34 +545,34 @@ func TestServer_MultiSetValue_Success(t *testing.T) {
 	}
 }
 
-func TestServer_MultiSetValue_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	_, err := makeMultiSetValueRequest(t, client, ctx, 99, map[string]any{
+	_, err := makeMultiSetValueRequest(t, client, ctx, 999999, map[string]any{
 		"param1": int32(10),
 	})
-	assertGRPCCode(t, err, codes.NotFound, "No MultiSetValue handler for invalid slot") // Note: server returns NotFound for slots without handlers
+	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_MultiSetValue_HandlerError(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	callCount := 0
-	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 		callCount++
 		// Fail on second value
 		if callCount == 2 {
 			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "second value invalid")
 		}
 		return catena.StatusWithCode(catena.OK, "")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -547,16 +590,16 @@ func TestServer_MultiSetValue_HandlerError(t *testing.T) {
 	}
 }
 
-func TestServer_MultiSetValue_EmptyValues(t *testing.T) {
+func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	callCount := 0
-	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 		callCount++
 		return catena.StatusWithCode(catena.OK, "")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -579,13 +622,13 @@ func TestServer_MultiSetValue_EmptyValues(t *testing.T) {
 // Test: ExternalObjectRequest
 // =============================================================================
 
-func TestServer_ExternalObjectRequest_Success(t *testing.T) {
+func TestGrpcTransport_ExternalObjectRequest_Success(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	handlerCalled := false
-	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "device.image1" {
 			t.Errorf("expected fqoid 'device.image1', got %s", fqoid)
@@ -593,7 +636,7 @@ func TestServer_ExternalObjectRequest_Success(t *testing.T) {
 		payload := catena.ToPayloadFromURL("http://example.com/asset.jpg")
 		asset, _ := catena.ToCatenaAsset(payload, true)
 		return catena.Reply(asset)
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -612,32 +655,32 @@ func TestServer_ExternalObjectRequest_Success(t *testing.T) {
 	assertStreamEOF(t, stream)
 }
 
-func TestServer_ExternalObjectRequest_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_ExternalObjectRequest_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExternalObjectRequest(t, client, ctx, 99, "device.image1")
+	stream, err := makeExternalObjectRequest(t, client, ctx, 999999, "device.image1")
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
 	}
 
 	_, err = stream.Recv()
-	assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at recv")
+	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_ExternalObjectRequest_HandlerError(t *testing.T) {
+func TestGrpcTransport_ExternalObjectRequest_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 		return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -653,16 +696,195 @@ func TestServer_ExternalObjectRequest_HandlerError(t *testing.T) {
 }
 
 // =============================================================================
-// Test: ExecuteCommand
+// Test: ParamInfoRequest
 // =============================================================================
 
-func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
+func TestGrpcTransport_ParamInfoRequest_Success(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		handlerCalled = true
+		if oidPrefix != "parent" {
+			t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
+		}
+		if !recursive {
+			t.Error("expected recursive=true")
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("parent", catena.NewPolyglotText("en", "Parent"), catena.ParamTypeStruct, "", 0),
+			catena.NewParamInfo("parent/child", nil, catena.ParamTypeInt32, "", 0),
+			catena.NewParamInfo("parent/arr", nil, catena.ParamTypeStringArray, "", 5),
+		}, catena.StatusWithCode(catena.OK, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 0, "parent", true)
+	assertNoError(t, err)
+
+	count := 0
+	var lastEntry *protos.ParamInfoResponse
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		assertNoError(t, err)
+		count++
+		lastEntry = msg
+	}
+
+	if count != 3 {
+		t.Errorf("expected 3 entries, got %d", count)
+	}
+	if lastEntry == nil || lastEntry.GetInfo() == nil {
+		t.Fatal("expected last entry to have populated Info")
+	}
+	if lastEntry.GetArrayLength() != 5 {
+		t.Errorf("expected last entry array_length=5, got %d", lastEntry.GetArrayLength())
+	}
+	if !handlerCalled {
+		t.Error("handler was not called")
+	}
+}
+
+func TestGrpcTransport_ParamInfoRequest_TopLevel(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		if oidPrefix != "" {
+			t.Errorf("expected empty oidPrefix, got %q", oidPrefix)
+		}
+		if recursive {
+			t.Error("expected recursive=false")
+		}
+		return []catena.CatenaParamInfo{
+			catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
+			catena.NewParamInfo("b", nil, catena.ParamTypeFloat32, "", 0),
+		}, catena.StatusWithCode(catena.OK, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 0, "", false)
+	assertNoError(t, err)
+
+	count := 0
+	for {
+		_, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		assertNoError(t, err)
+		count++
+	}
+	if count != 2 {
+		t.Errorf("expected 2 entries, got %d", count)
+	}
+}
+
+func TestGrpcTransport_ParamInfoRequest_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.NOT_FOUND, "param not found")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 0, "missing", false)
+	if err != nil {
+		assertGRPCCode(t, err, codes.NotFound, "handler error at stream creation")
+		return
+	}
+	_, err = stream.Recv()
+	assertGRPCCode(t, err, codes.NotFound, "handler error at recv")
+}
+
+// TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound verifies that the gRPC
+// transport promotes an OK + empty result to NOT_FOUND.
+func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
+	t.Run("specific oid empty", func(t *testing.T) {
+		ctx := context.Background()
+		_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+		defer cleanup()
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.OK, "")
+		}
+
+		client, cleanup := setupGRPCClient(t, ctx, lis)
+		defer cleanup()
+
+		stream, err := makeParamInfoRequest(t, client, ctx, 0, "missing", false)
+		if err != nil {
+			assertGRPCCode(t, err, codes.NotFound, "empty result at stream creation")
+			return
+		}
+		_, err = stream.Recv()
+		assertGRPCCode(t, err, codes.NotFound, "empty result at recv")
+	})
+
+	t.Run("top-level empty", func(t *testing.T) {
+		ctx := context.Background()
+		_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+		defer cleanup()
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.OK, "")
+		}
+
+		client, cleanup := setupGRPCClient(t, ctx, lis)
+		defer cleanup()
+
+		stream, err := makeParamInfoRequest(t, client, ctx, 0, "", false)
+		if err != nil {
+			assertGRPCCode(t, err, codes.NotFound, "empty top-level at stream creation")
+			return
+		}
+		_, err = stream.Recv()
+		assertGRPCCode(t, err, codes.NotFound, "empty top-level at recv")
+	})
+}
+
+func TestGrpcTransport_ParamInfoRequest_SlotExceedsMax(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeParamInfoRequest(t, client, ctx, 70000, "x", false)
+	if err != nil {
+		assertGRPCCode(t, err, codes.InvalidArgument, "slot exceeds uint16 max at stream creation")
+		return
+	}
+	_, err = stream.Recv()
+	assertGRPCCode(t, err, codes.InvalidArgument, "slot exceeds uint16 max at recv")
+}
+
+// =============================================================================
+// Test: ExecuteCommand
+// =============================================================================
+
+func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "device.reboot" {
 			t.Errorf("expected fqoid 'device.reboot', got %s", fqoid)
@@ -672,7 +894,7 @@ func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
 		}
 		value, _ := catena.ToCatenaValue(string("Command executed"))
 		return catena.CommandReply(value)
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -692,14 +914,14 @@ func TestServer_ExecuteCommand_WithResponse(t *testing.T) {
 	assertStreamEOF(t, stream)
 }
 
-func TestServer_ExecuteCommand_WithoutResponse(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		return catena.CommandNoResponse()
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -711,13 +933,13 @@ func TestServer_ExecuteCommand_WithoutResponse(t *testing.T) {
 	assertCommandNoResponse(t, resp)
 }
 
-func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_NilPayload(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	receivedPayload := "not nil"
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		if payload != nil {
 			receivedPayload = "not nil"
 		} else {
@@ -725,7 +947,7 @@ func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
 		}
 		value, _ := catena.ToCatenaValue(string("OK"))
 		return catena.CommandReply(value)
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -740,32 +962,32 @@ func TestServer_ExecuteCommand_NilPayload(t *testing.T) {
 	}
 }
 
-func TestServer_ExecuteCommand_InvalidSlot(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 99, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil)
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
 	}
 
 	_, err = stream.Recv()
-	assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at recv")
+	assertGRPCCode(t, err, codes.InvalidArgument, "")
 }
 
-func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 		return catena.CommandError(catena.NOT_FOUND, "command not supported")
-	})
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -784,48 +1006,38 @@ func TestServer_ExecuteCommand_HandlerError(t *testing.T) {
 // Test: Connect
 // =============================================================================
 
-func TestServer_Connect_InitialSlots(t *testing.T) {
+func TestGrpcTransport_Connect_BroadcastUpdates(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	_, lis, cleanup := setupTestServer(t, []uint16{0, 1, 2}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeConnectRequest(t, client, ctx)
-	assertNoError(t, err)
-
-	// Receive initial SlotsAdded update
-	msg := receivePushUpdate(t, stream)
-	assertPushUpdateSlotsAdded(t, msg, []uint32{0, 1, 2})
-
-	// Important: Cancel context to close the stream before cleanup
-	// Otherwise Stop() in cleanup will forcefully terminate the stream
-	cancel()
-}
-
-func TestServer_Connect_BroadcastUpdates(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
-	defer cleanup()
-
-	client, cleanup := setupGRPCClient(t, ctx, lis)
-	defer cleanup()
+	connection := makeTestConnection(1)
+	runtime.WithConnection(connection)
 
 	stream, err := makeConnectRequest(t, client, ctx)
 	assertNoError(t, err)
-
-	// Receive initial update
-	_ = receivePushUpdate(t, stream)
 
 	// Broadcast an update
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		srv.BroadcastUpdate(0, "device.param1", int32(99))
+		connection.Updates <- &protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{
+				Value: &protos.PushUpdates_PushValue{
+					Oid: "device.param1",
+					Value: &protos.Value{
+						Kind: &protos.Value_Int32Value{
+							Int32Value: 99,
+						},
+					},
+				},
+			},
+		}
 	}()
 
 	// Receive broadcast update and verify
@@ -837,21 +1049,20 @@ func TestServer_Connect_BroadcastUpdates(t *testing.T) {
 	cancel()
 }
 
-func TestServer_Connect_ClientDisconnect(t *testing.T) {
+func TestGrpcTransport_Connect_ClientDisconnect(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
+
+	runtime.WithConnection(makeTestConnection(1))
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
 	stream, err := makeConnectRequest(t, client, ctx)
 	assertNoError(t, err)
-
-	// Receive initial update
-	_ = receivePushUpdate(t, stream)
 
 	// Cancel context to simulate client disconnect
 	cancel()
@@ -870,16 +1081,70 @@ func TestServer_Connect_ClientDisconnect(t *testing.T) {
 	}
 }
 
+func TestGrpcTransport_Connect_Rejected(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	// Register WithConnection handler that rejects connection
+	runtime.registerTransportConnFn = func(transport catena.Transport) (int, *catena.Connection) {
+		return -1, nil // Reject connection
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeConnectRequest(t, client, ctx)
+	if err != nil {
+		t.Fatalf("Unexpected error making Connect request: %s", err)
+	}
+	_, err = stream.Recv()
+	if err == nil {
+		t.Fatal("expected error for rejected connection")
+	}
+}
+
+func TestGrpcTransport_Connect_Shutdown(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	connection := makeTestConnection(1)
+	runtime.WithConnection(connection)
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeConnectRequest(t, client, ctx)
+	assertNoError(t, err)
+
+	// Simulate server shutdown by sending the Done signal on the connection
+	connection.Done <- struct{}{}
+
+	// Next Recv should fail with Unavailable error
+	_, err = stream.Recv()
+	if err == nil {
+		t.Fatal("expected error after server shutdown")
+	}
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got %v", err)
+	}
+	if st.Code() != codes.Unavailable {
+		t.Errorf("expected Unavailable code, got %v", st.Code())
+	}
+}
+
 // =============================================================================
 // Test: Error Messages Dev vs Prod
 // =============================================================================
 
-func TestErrorMessages_DevVsProd(t *testing.T) {
+func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 	type endpoint struct {
 		name          string
 		devMessage    string
 		grpcCode      codes.Code
-		setupHandlers func(*Server)
+		setupHandlers func(*stubServerRuntime)
 		callEndpoint  func(protos.CatenaServiceClient, context.Context) error
 	}
 
@@ -888,10 +1153,10 @@ func TestErrorMessages_DevVsProd(t *testing.T) {
 			name:       "GetValue",
 			devMessage: "param not supported",
 			grpcCode:   codes.Unimplemented,
-			setupHandlers: func(srv *Server) {
-				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 					return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "param not supported")
-				})
+				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.GetValue(ctx, &protos.GetValuePayload{Slot: 0, Oid: "device.param1"})
@@ -902,10 +1167,10 @@ func TestErrorMessages_DevVsProd(t *testing.T) {
 			name:       "SetValue",
 			devMessage: "value out of range",
 			grpcCode:   codes.InvalidArgument,
-			setupHandlers: func(srv *Server) {
-				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 					return catena.StatusWithCode(catena.INVALID_ARGUMENT, "value out of range")
-				})
+				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				protoValue, _ := catena.ToProto(int32(100))
@@ -923,10 +1188,10 @@ func TestErrorMessages_DevVsProd(t *testing.T) {
 			name:       "MultiSetValue",
 			devMessage: "multi set failed",
 			grpcCode:   codes.FailedPrecondition,
-			setupHandlers: func(srv *Server) {
-				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string) catena.StatusResult {
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 					return catena.StatusWithCode(catena.FAILED_PRECONDITION, "multi set failed")
-				})
+				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				protoValue, _ := catena.ToProto(int32(1))
@@ -998,16 +1263,12 @@ func TestErrorMessages_DevVsProd(t *testing.T) {
 	for _, ep := range endpoints {
 		ep := ep
 		t.Run(ep.name+"/dev_shows_details", func(t *testing.T) {
-			original := catena.GetEnv()
-			defer catena.SetEnv(original)
-			catena.SetEnv(catena.EnvDev)
-
 			ctx := context.Background()
-			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(true))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
-				ep.setupHandlers(srv)
+				ep.setupHandlers(runtime)
 			}
 
 			client, clientCleanup := setupGRPCClient(t, ctx, lis)
@@ -1032,11 +1293,11 @@ func TestErrorMessages_DevVsProd(t *testing.T) {
 			catena.SetEnv(catena.EnvProd)
 
 			ctx := context.Background()
-			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(false))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
-				ep.setupHandlers(srv)
+				ep.setupHandlers(runtime)
 			}
 
 			client, clientCleanup := setupGRPCClient(t, ctx, lis)
@@ -1063,7 +1324,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 		name          string
 		devMessage    string
 		grpcCode      codes.Code
-		setupHandlers func(*Server)
+		setupHandlers func(*stubServerRuntime)
 		callEndpoint  func(protos.CatenaServiceClient, context.Context) error
 	}
 
@@ -1072,10 +1333,10 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			name:       "DeviceRequest",
 			devMessage: "device not found",
 			grpcCode:   codes.NotFound,
-			setupHandlers: func(srv *Server) {
-				srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
 					return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
-				})
+				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.DeviceRequest(ctx, &protos.DeviceRequestPayload{Slot: 0})
@@ -1090,10 +1351,10 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			name:       "ExternalObjectRequest",
 			devMessage: "asset not found",
 			grpcCode:   codes.NotFound,
-			setupHandlers: func(srv *Server) {
-				srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
 					return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
-				})
+				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.ExternalObjectRequest(ctx, &protos.ExternalObjectRequestPayload{Slot: 0, Oid: "device.image1"})
@@ -1108,10 +1369,10 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			name:       "ExecuteCommand",
 			devMessage: "command not supported",
 			grpcCode:   codes.Unimplemented,
-			setupHandlers: func(srv *Server) {
-				srv.RegisterExecuteCommandHandler(0, func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 					return catena.CommandError(catena.UNIMPLEMENTED, "command not supported")
-				})
+				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.ExecuteCommand(ctx, &protos.ExecuteCommandPayload{Slot: 0, Oid: "device.command"})
@@ -1124,8 +1385,13 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 		},
 		{
 			name:       "ParamInfoRequest",
-			devMessage: "ParamInfoRequest not implemented",
-			grpcCode:   codes.Unimplemented,
+			devMessage: "param not found",
+			grpcCode:   codes.NotFound,
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+					return nil, catena.StatusResult{Code: catena.NOT_FOUND, Error: "param not found"}
+				}
+			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{Slot: 0, OidPrefix: "device"})
 				if err != nil {
@@ -1158,11 +1424,11 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			catena.SetEnv(catena.EnvDev)
 
 			ctx := context.Background()
-			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(true))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
-				ep.setupHandlers(srv)
+				ep.setupHandlers(runtime)
 			}
 
 			client, clientCleanup := setupGRPCClient(t, ctx, lis)
@@ -1187,11 +1453,11 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			catena.SetEnv(catena.EnvProd)
 
 			ctx := context.Background()
-			srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(false))
 			defer cleanup()
 
 			if ep.setupHandlers != nil {
-				ep.setupHandlers(srv)
+				ep.setupHandlers(runtime)
 			}
 
 			client, clientCleanup := setupGRPCClient(t, ctx, lis)
@@ -1217,7 +1483,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 // Test: Unimplemented Endpoints
 // =============================================================================
 
-func TestServer_UnimplementedEndpoints(t *testing.T) {
+func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 	tests := []struct {
 		name     string
 		callFunc func(protos.CatenaServiceClient, context.Context) error
@@ -1229,20 +1495,6 @@ func TestServer_UnimplementedEndpoints(t *testing.T) {
 					Slot: 0,
 					Oid:  "device.param1",
 				})
-				return err
-			},
-		},
-		{
-			name: "ParamInfoRequest",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				stream, err := client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{
-					Slot:      0,
-					OidPrefix: "device",
-				})
-				if err != nil {
-					return err
-				}
-				_, err = stream.Recv()
 				return err
 			},
 		},
@@ -1309,7 +1561,7 @@ func TestServer_UnimplementedEndpoints(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 			defer cleanup()
 
 			client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -1325,9 +1577,9 @@ func TestServer_UnimplementedEndpoints(t *testing.T) {
 // Test: gRPC Reflection
 // =============================================================================
 
-func TestServer_Reflection_Enabled(t *testing.T) {
+func TestGrpcTransport_Reflection_Enabled(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, true)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportReflection(true))
 	defer cleanup()
 
 	conn, err := dialTestServer(ctx, lis)
@@ -1378,9 +1630,9 @@ func TestServer_Reflection_Enabled(t *testing.T) {
 	// Note: cleanup() handles shutdown automatically via defer
 }
 
-func TestServer_Reflection_Disabled(t *testing.T) {
+func TestGrpcTransport_Reflection_Disabled(t *testing.T) {
 	ctx := context.Background()
-	_, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
 	conn, err := dialTestServer(ctx, lis)
@@ -1417,15 +1669,15 @@ func TestServer_Reflection_Disabled(t *testing.T) {
 // Test: Concurrent Clients
 // =============================================================================
 
-func TestServer_ConcurrentClients(t *testing.T) {
+func TestGrpcTransport_ConcurrentClients(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		value, _ := catena.ToCatenaValue(int32(42))
 		return catena.Reply(value)
-	})
+	}
 
 	numClients := 10
 	results := make(chan error, numClients)
@@ -1453,21 +1705,23 @@ func TestServer_ConcurrentClients(t *testing.T) {
 // Test: Handler per Slot
 // =============================================================================
 
-func TestServer_DifferentHandlersPerSlot(t *testing.T) {
+func TestGrpcTransport_DifferentHandlersPerSlot(t *testing.T) {
 	ctx := context.Background()
-	srv, lis, cleanup := setupTestServer(t, []uint16{0, 1}, false)
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0, 1})
 	defer cleanup()
 
 	// Register different handlers for each slot
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-		value, _ := catena.ToCatenaValue(int32(100))
-		return catena.Reply(value)
-	})
-
-	srv.RegisterGetValueHandler(1, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-		value, _ := catena.ToCatenaValue(int32(200))
-		return catena.Reply(value)
-	})
+	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+		if slot == 0 {
+			value, _ := catena.ToCatenaValue(int32(100))
+			return catena.Reply(value)
+		}
+		if slot == 1 {
+			value, _ := catena.ToCatenaValue(int32(200))
+			return catena.Reply(value)
+		}
+		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "slot not found")
+	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
@@ -1489,28 +1743,10 @@ func TestServer_DifferentHandlersPerSlot(t *testing.T) {
 
 // TestServer_Start_EndpointsReachable tests that the server starts successfully
 // and endpoints are reachable over real TCP connections
-func TestServer_Start_EndpointsReachable(t *testing.T) {
+func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-
-	cfg := catena.Config{GRPCReflection: false}
-	srv := NewServer([]uint16{0, 1}, 10, cfg)
-
-	// Register handlers
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-		value, _ := catena.ToCatenaValue(int32(42))
-		return catena.Reply(value)
-	})
-
-	srv.RegisterGetDeviceHandler(1, func() (catena.CatenaDevice, catena.StatusResult) {
-		deviceMap := map[string]any{
-			"slot":         uint32(1),
-			"detail_level": catena.DetailLevelFull,
-		}
-		device, _ := catena.ToCatenaDevice(deviceMap)
-		return catena.Reply(device)
-	})
 
 	// Use port 0 to let OS assign available port
 	port := 0
@@ -1519,11 +1755,36 @@ func TestServer_Start_EndpointsReachable(t *testing.T) {
 		portListener.Close()
 	}
 
+	shutdownCalled := false
+	transport := NewGrpcTransport(uint16(port), false)
+	runtime := makeStubServerRuntime(t)
+	runtime.slots = []uint16{0, 1}
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		shutdownCalled = true
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
+	// Register handlers
+	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+		value, _ := catena.ToCatenaValue(int32(42))
+		return catena.Reply(value)
+	}
+
+	runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
+		deviceMap := map[string]any{
+			"slot":         uint32(slot),
+			"detail_level": catena.DetailLevelFull,
+		}
+		device, _ := catena.ToCatenaDevice(deviceMap)
+		return catena.Reply(device)
+	}
+
 	// Start server in background
-	serverErr := make(chan error, 1)
-	go func() {
-		serverErr <- srv.Start(port)
-	}()
+	if err := transport.Start(context.Background(), runtime); err != nil {
+		t.Fatalf("failed to start server: %v", err)
+	}
 
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
@@ -1535,7 +1796,7 @@ func TestServer_Start_EndpointsReachable(t *testing.T) {
 	addr := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
-		srv.Shutdown()
+		transport.Shutdown(context.Background())
 		t.Fatalf("failed to connect to server at %s: %v", addr, err)
 	}
 	defer conn.Close()
@@ -1572,29 +1833,22 @@ func TestServer_Start_EndpointsReachable(t *testing.T) {
 	})
 
 	// Shutdown server gracefully
-	srv.Shutdown()
-
-	// Verify server stopped (Start() should return)
-	select {
-	case err := <-serverErr:
-		// Expected: server stopped, no error or "use of closed network connection"
-		if err != nil && err.Error() != grpc.ErrServerStopped.Error() {
-			t.Logf("Server stopped with: %v", err)
-		}
-	case <-time.After(2 * time.Second):
-		t.Error("server did not stop within timeout")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := transport.Shutdown(shutdownCtx); err != nil {
+		t.Fatalf("failed to shutdown server: %v", err)
+	}
+	if !shutdownCalled {
+		t.Error("expected shutdown transports callback to be called, but it was not")
 	}
 }
 
 // TestServer_Shutdown_GracefulConnectionClose tests that Shutdown() properly
 // closes active connections
-func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
+func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-
-	cfg := catena.Config{GRPCReflection: false}
-	srv := NewServer([]uint16{0}, 10, cfg)
 
 	// Use port 0 to let OS assign available port
 	port := 0
@@ -1603,11 +1857,19 @@ func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
 		portListener.Close()
 	}
 
+	transport := NewGrpcTransport(uint16(port), false)
+	runtime := makeStubServerRuntime(t)
+	runtime.WithConnection(makeTestConnection(1))
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
 	// Start server in background
-	serverErr := make(chan error, 1)
-	go func() {
-		serverErr <- srv.Start(port)
-	}()
+	if err := transport.Start(context.Background(), runtime); err != nil {
+		t.Fatalf("failed to start server: %v", err)
+	}
 
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
@@ -1617,7 +1879,7 @@ func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
 	addr := fmt.Sprintf("localhost:%d", port)
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
-		srv.Shutdown()
+		transport.Shutdown(context.Background())
 		t.Fatalf("failed to connect to server at %s: %v", addr, err)
 	}
 	defer conn.Close()
@@ -1627,27 +1889,18 @@ func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
 	// Establish Connect stream (long-lived connection)
 	stream, err := client.Connect(ctx, &protos.ConnectPayload{})
 	if err != nil {
-		srv.Shutdown()
+		transport.Shutdown(context.Background())
 		t.Fatalf("Connect failed: %v", err)
 	}
-
-	// Receive initial update
-	_, err = stream.Recv()
-	assertNoError(t, err)
 
 	// Shutdown server while connection is active
 	shutdownComplete := make(chan struct{})
 	go func() {
-		srv.Shutdown()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		transport.Shutdown(ctx)
 		close(shutdownComplete)
 	}()
-
-	// Verify connection gets closed
-	_, err = stream.Recv()
-	if err == nil {
-		t.Error("expected stream to be closed after shutdown, but received message")
-	}
-
 	// Verify shutdown completes
 	select {
 	case <-shutdownComplete:
@@ -1656,17 +1909,99 @@ func TestServer_Shutdown_GracefulConnectionClose(t *testing.T) {
 		t.Error("Shutdown() did not complete within timeout")
 	}
 
-	// Verify server stopped
-	select {
-	case <-serverErr:
-		// Success
-	case <-time.After(1 * time.Second):
-		t.Error("server did not stop after Shutdown()")
+	// Verify connection gets closed
+	_, err = stream.Recv()
+	if err == nil {
+		t.Error("expected stream to be closed after shutdown, but received message")
+	}
+
+}
+
+func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	port := 0
+	if portListener, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
+		port = portListener.Addr().(*net.TCPAddr).Port
+		portListener.Close()
+	}
+
+	transport := NewGrpcTransport(uint16(port), false)
+	runtime := makeStubServerRuntime(t)
+	runtime.WithConnection(makeTestConnection(1))
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
+	if err := transport.Start(context.Background(), runtime); err != nil {
+		t.Fatalf("failed to start server: %v", err)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+
+	addr := fmt.Sprintf("localhost:%d", port)
+	conn, err := grpc.DialContext(context.Background(), addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	if err != nil {
+		transport.Shutdown(context.Background())
+		t.Fatalf("failed to connect to server at %s: %v", addr, err)
+	}
+	defer conn.Close()
+
+	client := protos.NewCatenaServiceClient(conn)
+	stream, err := client.Connect(context.Background(), &protos.ConnectPayload{})
+	if err != nil {
+		transport.Shutdown(context.Background())
+		t.Fatalf("Connect failed: %v", err)
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+
+	err = transport.Shutdown(shutdownCtx)
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected shutdown to return deadline exceeded, got %v", err)
+	}
+
+	if _, recvErr := stream.Recv(); recvErr == nil {
+		t.Fatal("expected stream to be closed after forced shutdown")
+	}
+}
+
+func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
+	transport := NewGrpcTransport(1234, false)
+
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("failed to create listener: %v", err)
+	}
+	runtime := makeStubServerRuntime(t)
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+	transport.listener = listener
+	transport.runtime = runtime
+
+	if err := listener.Close(); err != nil {
+		t.Fatalf("failed to pre-close listener: %v", err)
+	}
+
+	if err := transport.Shutdown(context.Background()); err != nil {
+		t.Fatalf("expected nil shutdown error for pre-closed listener, got %v", err)
+	}
+
+	if transport.listener != nil {
+		t.Fatal("expected shutdown to clear listener reference")
 	}
 }
 
 // TestServer_Start_PortAlreadyInUse tests that Start() handles port conflicts
-func TestServer_Start_PortAlreadyInUse(t *testing.T) {
+func TestGrpcTransport_Start_PortAlreadyInUse(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -1679,30 +2014,34 @@ func TestServer_Start_PortAlreadyInUse(t *testing.T) {
 	port := portListener.Addr().(*net.TCPAddr).Port
 	defer portListener.Close()
 
-	cfg := catena.Config{GRPCReflection: false}
-	srv := NewServer([]uint16{0}, 10, cfg)
+	transport := NewGrpcTransport(uint16(port), false)
+
+	runtime := makeStubServerRuntime(t)
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
 
 	// Try to start on the already-occupied port
-	err = srv.Start(port)
+	err = transport.Start(context.Background(), runtime)
 	if err == nil {
-		srv.Shutdown()
+		transport.Shutdown(context.Background())
 		t.Error("expected Start() to fail on occupied port, but it succeeded")
 	}
 }
 
 // TestServer_MultipleClients_RealNetwork tests concurrent clients over real TCP
-func TestServer_MultipleClients_RealNetwork(t *testing.T) {
+func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	cfg := catena.Config{GRPCReflection: false}
-	srv := NewServer([]uint16{0}, 10, cfg)
-
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	runtime := makeStubServerRuntime(t)
+	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
 		value, _ := catena.ToCatenaValue(int32(99))
 		return catena.Reply(value)
-	})
+	}
 
 	// Use port 0 to let OS assign available port
 	port := 0
@@ -1711,11 +2050,19 @@ func TestServer_MultipleClients_RealNetwork(t *testing.T) {
 		portListener.Close()
 	}
 
+	transport := NewGrpcTransport(uint16(port), false)
+
+	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
 	// Start server
 	go func() {
-		srv.Start(port)
+		transport.Start(context.Background(), runtime)
 	}()
-	defer srv.Shutdown()
+	defer transport.Shutdown(context.Background())
 
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)

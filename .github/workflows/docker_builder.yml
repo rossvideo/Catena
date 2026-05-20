@@ -34,6 +34,9 @@ jobs:
             toolchain:
               - '.devcontainer/go/toolchain.dockerfile'
               - '.devcontainer/go/toolchain.env'
+              - '.devcontainer/go/go.mod'
+              - '.devcontainer/go/go.sum'
+
       - name: create matrix
         id: matrix
         run: |

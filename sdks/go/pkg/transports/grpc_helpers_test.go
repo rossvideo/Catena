@@ -36,7 +36,7 @@
  * @date 2026-03-15
  */
 
-package grpc
+package transports
 
 import (
 	"context"
@@ -171,6 +171,16 @@ func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, 
 func makeConnectRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context) (grpc.ServerStreamingClient[protos.PushUpdates], error) {
 	t.Helper()
 	return client.Connect(ctx, &protos.ConnectPayload{})
+}
+
+// makeParamInfoRequest initiates a ParamInfoRequest stream for parameter info entries.
+func makeParamInfoRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oidPrefix string, recursive bool) (grpc.ServerStreamingClient[protos.ParamInfoResponse], error) {
+	t.Helper()
+	return client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{
+		Slot:      slot,
+		OidPrefix: oidPrefix,
+		Recursive: recursive,
+	})
 }
 
 // --- Stream reading helpers ---
