@@ -204,6 +204,10 @@ type ServerRuntime interface {
 	DeregisterConnection(connID int)
 }
 
+// CatenaServer is an alias for Server, following the CatenaValue/CatenaDevice
+// naming convention used by the rest of the public API.
+type CatenaServer = Server
+
 var _ Server = (*server)(nil)
 var _ ServerRuntime = (*server)(nil)
 
