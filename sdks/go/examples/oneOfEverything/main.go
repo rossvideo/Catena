@@ -63,6 +63,9 @@ func normalizeFqoid(fqoid string) string {
 	return strings.TrimPrefix(fqoid, "/")
 }
 
+var scopeMonOpWrite = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InN0MjEzODptb246dyBzdDIxMzg6b3A6dyJ9."
+var scopeCfgAdmRead = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InN0MjEzODpjZmcgc3QyMTM4OmFkbSJ9."
+
 //go:embed static/*
 var StaticFS embed.FS
 
@@ -509,7 +512,7 @@ func main() {
 	}
 	defer catena.Close()
 
-	srv := catena.NewServer(100)
+	srv := catena.NewServer(100, config.AuthzEnabled)
 	counter := &CounterState{}
 	slotParams := map[uint16]*sync.Map{
 		0: {},
@@ -524,6 +527,22 @@ func main() {
 	slotParams[2].Store("volume", int32(75))
 	slotParams[2].Store("muted", int32(0))
 	slotParams[2].Store("device_name", "Demo Device")
+	readableScopes := []string{
+		catena.ScopeOp,
+		catena.ScopeCfg,
+		catena.ScopeAdm,
+		catena.ScopeMon,
+		catena.ScopeOpWrite,
+		catena.ScopeCfgWrite,
+		catena.ScopeAdmWrite,
+		catena.ScopeMonWrite,
+	}
+	counterScopes := []string{
+		catena.ScopeCfg,
+		catena.ScopeAdm,
+		catena.ScopeCfgWrite,
+		catena.ScopeAdmWrite,
+	}
 
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
@@ -532,7 +551,7 @@ func main() {
 			if counter.IsRunning() {
 				counter.Increment()
 				logger.Info("Counter tick", "value", counter.GetValue())
-				srv.BroadcastUpdate(0, "counter", counter.GetValue())
+				srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
 			}
 		}
 	}()
@@ -541,7 +560,7 @@ func main() {
 	// broadcastRunning publishes the current running flag on the "running" param
 	// so subscribers (REST SSE / gRPC stream) see the state change live.
 	broadcastRunning := func() {
-		srv.BroadcastUpdate(0, "running", counter.RunningInt32())
+		srv.BroadcastUpdate(0, "running", counter.RunningInt32(), readableScopes)
 	}
 
 	commands := map[string]CommandHandler{
@@ -553,7 +572,7 @@ func main() {
 				logger.Info("Counter started", "value", counter.GetValue())
 				broadcastRunning()
 			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -566,7 +585,7 @@ func main() {
 				logger.Info("Counter stopped", "value", counter.GetValue())
 				broadcastRunning()
 			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -574,7 +593,7 @@ func main() {
 		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -582,7 +601,7 @@ func main() {
 		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -598,8 +617,14 @@ func main() {
 		assets.Store(id, payload)
 	}
 
+	srv.RegisterAccessHandler(func(endpointType catena.EndpointType, ctx catena.HandlerContext) bool {
+		logger.Info("Access request", "endpointType", endpointType)
+		// In a real implementation, you'd check the client's credentials and scopes here.
+		return true
+	})
+
 	for _, slot := range slotList {
-		srv.RegisterGetDeviceHandler(slot, func() (catena.Device, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 
 			// Build per-request so every param's value reflects current state:
@@ -618,9 +643,15 @@ func main() {
 	for _, slot := range slotList {
 		p := slotParams[slot]
 
-		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
+		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {
 			logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
+
+			if slot == 1 && !ctx.HasScope(catena.ScopeMon) && !ctx.HasScope(catena.ScopeMonWrite) {
+				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "monitor scope required")
+			} else if slot == 0 && !ctx.HasScope(catena.ScopeCfg) && !ctx.HasScope(catena.ScopeCfgWrite) {
+				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "operate scope required")
+			}
 
 			if slot == 0 && key == "counter" {
 				val, res := catena.ToValue(counter.GetValue())
@@ -655,7 +686,7 @@ func main() {
 	for _, slot := range slotList {
 		p := slotParams[slot]
 
-		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
+		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("SetValue", "slot", slot, "fqoid", fqoid, "value", value)
 			key := normalizeFqoid(fqoid)
 
@@ -686,12 +717,12 @@ func main() {
 
 			p.Store(key, value)
 			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-			srv.BroadcastUpdate(slot, fqoid, value)
+			srv.BroadcastUpdate(slot, fqoid, value, readableScopes)
 			return catena.StatusWithCode(catena.OK, "")
 		})
 	}
 
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx catena.HandlerContext) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 		key := normalizeFqoid(commandFqoid)
 
@@ -705,7 +736,7 @@ func main() {
 	})
 
 	for _, slot := range slotList {
-		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
+		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Asset, catena.StatusResult) {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
 
@@ -729,7 +760,7 @@ func main() {
 	}
 
 	for _, slot := range slotList {
-		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
+		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext) ([]catena.ParamInfo, catena.StatusResult) {
 			if recursive {
 				// TODO: implement recursive param info retrieval in example
 				return []catena.ParamInfo{}, catena.StatusWithCode(catena.UNIMPLEMENTED, "recursive param info not implemented in example")
@@ -792,12 +823,12 @@ func main() {
 
 	srv.RegisterHeartbeatHandler(1, func(slot uint16) {
 		// example ticking on the cannonical "product/version" param
-		srv.BroadcastUpdate(1, "product/version", "1.0.0")
+		srv.BroadcastUpdate(1, "product/version", "1.0.0", readableScopes)
 	})
 	srv.RegisterHeartbeatHandler(2, func(slot uint16) {
 		// example ticking on a different param to show any can be used for heartbeats.
 		if val, ok := slotParams[2].Load("volume"); ok {
-			srv.BroadcastUpdate(2, "volume", val)
+			srv.BroadcastUpdate(2, "volume", val, readableScopes)
 		} else {
 			logger.Warning("Volume param missing at heartbeat", "slot", slot)
 		}
