@@ -34,7 +34,7 @@ import (
 	"net/http"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/rest"
+	// "github.com/rossvideo/catena/sdks/go/pkg/rest"
 
 	paraminfo "github.com/rossvideo/catena/sdks/go/examples/paramInfo"
 )
