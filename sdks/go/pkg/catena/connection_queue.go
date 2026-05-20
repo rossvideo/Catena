@@ -55,7 +55,7 @@ type Connection struct {
 	ID      int
 	Updates chan *protos.PushUpdates
 	Done    chan struct{}
-	owner   any
+	owner   Transport
 }
 
 // connectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
@@ -71,11 +71,11 @@ type connectionQueue struct {
 
 type connectionQueueInterface interface {
 	setMaxConnections(max int)
-	registerOwnedConnection(owner any, initialUpdate *protos.PushUpdates) (int, *Connection)
+	registerOwnedConnection(owner Transport, initialUpdate *protos.PushUpdates) (int, *Connection)
 	deregisterConnection(connID int)
 	notifyUpdate(update *protos.PushUpdates)
 	shutdown(ctx context.Context)
-	shutdownOwner(ctx context.Context, owner any)
+	shutdownOwner(ctx context.Context, owner Transport)
 	shutdownConnection(ctx context.Context, connection *Connection)
 	connectionCount() int
 }
@@ -102,7 +102,7 @@ func (cq *connectionQueue) setMaxConnections(max int) {
 
 // registerConnection creates a new connection and returns its ID and connection.
 // Returns (-1, nil) if server is shutting down or max connections reached.
-func (cq *connectionQueue) registerOwnedConnection(owner any, initialUpdate *protos.PushUpdates) (int, *Connection) {
+func (cq *connectionQueue) registerOwnedConnection(owner Transport, initialUpdate *protos.PushUpdates) (int, *Connection) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
@@ -190,7 +190,7 @@ func (cq *connectionQueue) shutdown(ctx context.Context) {
 }
 
 // shutdownOwner signals all connections owned by the specified owner to stop and waits for them to deregister.
-func (cq *connectionQueue) shutdownOwner(ctx context.Context, owner any) {
+func (cq *connectionQueue) shutdownOwner(ctx context.Context, owner Transport) {
 	cq.mu.Lock()
 	var ownerConns []*Connection
 	for _, conn := range cq.connections {

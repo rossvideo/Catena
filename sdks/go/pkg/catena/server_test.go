@@ -795,7 +795,7 @@ func (s *stubConnectionQueue) setMaxConnections(max int) {
 	}
 }
 
-func (s *stubConnectionQueue) registerOwnedConnection(owner any, initialUpdate *protos.PushUpdates) (int, *Connection) {
+func (s *stubConnectionQueue) registerOwnedConnection(owner Transport, initialUpdate *protos.PushUpdates) (int, *Connection) {
 	if s.registerOwnedFn != nil {
 		return s.registerOwnedFn(owner, initialUpdate)
 	}
@@ -827,7 +827,7 @@ func (s *stubConnectionQueue) shutdown(ctx context.Context) {
 	}
 }
 
-func (s *stubConnectionQueue) shutdownOwner(ctx context.Context, owner any) {
+func (s *stubConnectionQueue) shutdownOwner(ctx context.Context, owner Transport) {
 	if s.shutdownOwnerFn != nil {
 		s.shutdownOwnerFn(ctx, owner)
 	} else {

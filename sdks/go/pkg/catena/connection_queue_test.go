@@ -51,9 +51,9 @@ func TestNewConnectionQueue(t *testing.T) {
 
 func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 	cq := newConnectionQueue(0)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	connID, conn := cq.registerOwnedConnection(&owner, nil)
+	connID, conn := cq.registerOwnedConnection(owner, nil)
 	if connID <= 0 {
 		t.Fatal("RegisterConnection returned negative ID")
 	}
@@ -78,7 +78,7 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 
 func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
 	cq := newConnectionQueue(0)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
 	initialUpdate := &protos.PushUpdates{
 		Slot: 0,
@@ -89,7 +89,7 @@ func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
 		},
 	}
 
-	connID, conn := cq.registerOwnedConnection(&owner, initialUpdate)
+	connID, conn := cq.registerOwnedConnection(owner, initialUpdate)
 	if connID <= 0 {
 		t.Fatal("RegisterConnection returned negative ID")
 	}
@@ -110,19 +110,19 @@ func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
 
 func TestConnectionQueue_MaxConnections(t *testing.T) {
 	cq := newConnectionQueue(2)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	id1, conn1 := cq.registerOwnedConnection(&owner, nil)
+	id1, conn1 := cq.registerOwnedConnection(owner, nil)
 	if id1 < 0 || conn1 == nil {
 		t.Fatal("first connection should succeed")
 	}
 
-	id2, conn2 := cq.registerOwnedConnection(&owner, nil)
+	id2, conn2 := cq.registerOwnedConnection(owner, nil)
 	if id2 < 0 || conn2 == nil {
 		t.Fatal("second connection should succeed")
 	}
 
-	id3, conn3 := cq.registerOwnedConnection(&owner, nil)
+	id3, conn3 := cq.registerOwnedConnection(owner, nil)
 	if id3 >= 0 || conn3 != nil {
 		t.Error("third connection should be rejected (max 2)")
 	}
@@ -132,7 +132,7 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 	}
 
 	cq.deregisterConnection(id1)
-	id4, conn4 := cq.registerOwnedConnection(&owner, nil)
+	id4, conn4 := cq.registerOwnedConnection(owner, nil)
 	if id4 < 0 || conn4 == nil {
 		t.Error("should be able to connect after one disconnects")
 	}
@@ -140,16 +140,16 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 
 func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 	cq := newConnectionQueue(1)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	cq.registerOwnedConnection(&owner, nil)
-	id2, _ := cq.registerOwnedConnection(&owner, nil)
+	cq.registerOwnedConnection(owner, nil)
+	id2, _ := cq.registerOwnedConnection(owner, nil)
 	if id2 >= 0 {
 		t.Error("second connection should be rejected")
 	}
 
 	cq.setMaxConnections(2)
-	id3, conn3 := cq.registerOwnedConnection(&owner, nil)
+	id3, conn3 := cq.registerOwnedConnection(owner, nil)
 	if id3 < 0 || conn3 == nil {
 		t.Error("should succeed after increasing limit")
 	}
@@ -158,10 +158,10 @@ func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 	cq := newConnectionQueue(0)
 
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	_, conn1 := cq.registerOwnedConnection(&owner, nil)
-	_, conn2 := cq.registerOwnedConnection(&owner, nil)
+	_, conn1 := cq.registerOwnedConnection(owner, nil)
+	_, conn2 := cq.registerOwnedConnection(owner, nil)
 
 	update := &protos.PushUpdates{
 		Slot: 0,
@@ -192,10 +192,10 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 
 func TestConnectionQueue_Shutdown(t *testing.T) {
 	cq := newConnectionQueue(0)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	_, conn1 := cq.registerOwnedConnection(&owner, nil)
-	_, conn2 := cq.registerOwnedConnection(&owner, nil)
+	_, conn1 := cq.registerOwnedConnection(owner, nil)
+	_, conn2 := cq.registerOwnedConnection(owner, nil)
 
 	go func() {
 		<-conn1.Done
@@ -216,9 +216,9 @@ func TestConnectionQueue_Shutdown(t *testing.T) {
 
 func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 	cq := newConnectionQueue(0)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(&owner, nil)
+	_, conn := cq.registerOwnedConnection(owner, nil)
 
 	go func() {
 		<-conn.Done
@@ -227,7 +227,7 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 
 	cq.shutdown(context.Background())
 
-	id, c := cq.registerOwnedConnection(&owner, nil)
+	id, c := cq.registerOwnedConnection(owner, nil)
 	if id >= 0 || c != nil {
 		t.Error("should reject new connections after shutdown")
 	}
@@ -235,11 +235,11 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 
 func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 	cq := newConnectionQueue(0)
-	ownerA := struct{ name string }{name: "owner-a"}
-	ownerB := struct{ name string }{name: "owner-b"}
+	ownerA := &stubTransport{tb: t}
+	ownerB := &stubTransport{tb: t}
 
-	_, connA := cq.registerOwnedConnection(&ownerA, nil)
-	_, connB := cq.registerOwnedConnection(&ownerB, nil)
+	_, connA := cq.registerOwnedConnection(ownerA, nil)
+	_, connB := cq.registerOwnedConnection(ownerB, nil)
 
 	go func() {
 		<-connA.Done
@@ -252,7 +252,7 @@ func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 	default:
 	}
 
-	cq.shutdownOwner(context.Background(), &ownerA)
+	cq.shutdownOwner(context.Background(), ownerA)
 
 	if cq.connectionCount() != 1 {
 		t.Fatalf("expected one remaining connection after owner shutdown, got %d", cq.connectionCount())
@@ -269,9 +269,9 @@ func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 
 func TestConnectionQueue_ShutdownConnection_Graceful(t *testing.T) {
 	cq := newConnectionQueue(0)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(&owner, nil)
+	_, conn := cq.registerOwnedConnection(owner, nil)
 
 	go func() {
 		<-conn.Done
@@ -287,9 +287,9 @@ func TestConnectionQueue_ShutdownConnection_Graceful(t *testing.T) {
 
 func TestConnectionQueue_ShutdownConnection_AlreadyClosed(t *testing.T) {
 	cq := newConnectionQueue(0)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(&owner, nil)
+	_, conn := cq.registerOwnedConnection(owner, nil)
 
 	go func() {
 		<-conn.Done
@@ -307,9 +307,9 @@ func TestConnectionQueue_ShutdownConnection_AlreadyClosed(t *testing.T) {
 
 func TestConectionQueue_ShutdownConnection_Deadline(t *testing.T) {
 	cq := newConnectionQueue(0)
-	owner := struct{ name string }{name: "test-owner"}
+	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(&owner, nil)
+	_, conn := cq.registerOwnedConnection(owner, nil)
 
 	// don't deregister
 
@@ -324,8 +324,8 @@ func TestConectionQueue_ShutdownConnection_Deadline(t *testing.T) {
 
 func TestConnectionQueue_ShutdownConnection_OneDeadline(t *testing.T) {
 	cq := newConnectionQueue(0)
-	ownerA := struct{ name string }{name: "test-owner"}
-	ownerB := struct{ name string }{name: "other-owner"}
+	ownerA := &stubTransport{tb: t}
+	ownerB := &stubTransport{tb: t}
 
 	_, connA := cq.registerOwnedConnection(ownerA, nil)
 	_, connB := cq.registerOwnedConnection(ownerB, nil)
