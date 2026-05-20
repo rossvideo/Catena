@@ -150,7 +150,7 @@ func makeExternalObjectRequest(t *testing.T, client protos.CatenaServiceClient, 
 }
 
 // makeExecuteCommandRequest initiates an ExecuteCommand stream with optional payload.
-// Pass nil for respond to leave it unset (server defaults to responding).
+// Pass nil for respond to leave it at the proto3 zero value (false).
 func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, payload any, respond *bool) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
 	t.Helper()
 
@@ -161,8 +161,6 @@ func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, 
 
 	if respond != nil {
 		req.Respond = *respond
-	} else {
-		req.Respond = true
 	}
 
 	if payload != nil {

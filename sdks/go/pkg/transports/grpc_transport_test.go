@@ -920,7 +920,8 @@ func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	defer cleanup()
 
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-		return catena.CommandNoResponse()
+		value, _ := catena.ToValue(string("should be suppressed"))
+		return catena.CommandReply(value)
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -931,9 +932,10 @@ func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 
 	resp := receiveCommandResponse(t, stream)
 	assertCommandNoResponse(t, resp)
+	assertStreamEOF(t, stream)
 }
 
-func TestGrpcTransport_ExecuteCommand_RespondDefaultIsTrue(t *testing.T) {
+func TestGrpcTransport_ExecuteCommand_RespondDefaultSuppresses(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
@@ -950,8 +952,7 @@ func TestGrpcTransport_ExecuteCommand_RespondDefaultIsTrue(t *testing.T) {
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
-	assertCommandHasResponse(t, resp)
-	assertStringValue(t, resp.GetResponse(), "default response")
+	assertCommandNoResponse(t, resp)
 	assertStreamEOF(t, stream)
 }
 
