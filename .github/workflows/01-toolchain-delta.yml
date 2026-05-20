@@ -106,10 +106,10 @@ jobs:
           CPP_CHANGED=false
           GO_CHANGED=false
 
-          if echo "$DIFF_FILES" | grep -Eq '^\.devcontainer/cpp/(toolchain\.dockerfile|toolchain\.env)$'; then
+          if echo "$DIFF_FILES" | grep -Eq '^(\.devcontainer/cpp/(toolchain\.dockerfile|toolchain\.env)|smpte/install-tooling\.sh)$'; then
             CPP_CHANGED=true
           fi
-          if echo "$DIFF_FILES" | grep -Eq '^\.devcontainer/go/(toolchain\.dockerfile|toolchain\.env|go\.mod|go\.sum)$'; then
+          if echo "$DIFF_FILES" | grep -Eq '^(\.devcontainer/go/(toolchain\.dockerfile|toolchain\.env|go\.mod|go\.sum)|smpte/install-tooling\.sh)$'; then
             GO_CHANGED=true
           fi
 
