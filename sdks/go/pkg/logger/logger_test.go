@@ -33,7 +33,8 @@
  * @file logger_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2025-12-09
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-14
  */
 
 package logger
@@ -44,15 +45,12 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/internal/testutil"
 )
 
 func TestInit(t *testing.T) {
 	t.Run("creates log directory", func(t *testing.T) {
 		Close()
-		dir, cleanup := testutil.TempDir(t, "logger-test")
-		defer cleanup()
+		dir := t.TempDir()
 
 		logDir := filepath.Join(dir, "logs")
 		err := Init(Settings{
@@ -74,8 +72,7 @@ func TestInit(t *testing.T) {
 
 	t.Run("creates log file with timestamp", func(t *testing.T) {
 		Close()
-		dir, cleanup := testutil.TempDir(t, "logger-test")
-		defer cleanup()
+		dir := t.TempDir()
 
 		err := Init(Settings{
 			AppName:        "myapp",
@@ -126,8 +123,7 @@ func TestInit(t *testing.T) {
 
 	t.Run("only initializes once", func(t *testing.T) {
 		Close()
-		dir, cleanup := testutil.TempDir(t, "logger-test")
-		defer cleanup()
+		dir := t.TempDir()
 
 		err := Init(Settings{
 			AppName:        "first",
@@ -170,8 +166,7 @@ func TestInit(t *testing.T) {
 
 func TestLogToFile(t *testing.T) {
 	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	err := Init(Settings{
 		AppName:        "filetest",
@@ -201,12 +196,13 @@ func TestLogToFile(t *testing.T) {
 		t.Fatalf("failed to read log file: %v", err)
 	}
 
-	testutil.AssertContains(t, string(content), "test log message to file")
+	if !strings.Contains(string(content), "test log message to file") {
+		t.Errorf("expected %q to contain %q", string(content), "test log message to file")
+	}
 }
 
 func TestClose(t *testing.T) {
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	// First initialization
 	Close()
@@ -269,8 +265,7 @@ func TestGetLogger(t *testing.T) {
 
 func TestGetNamed(t *testing.T) {
 	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	err := Init(Settings{
 		AppName:        "namedtest",
@@ -294,8 +289,7 @@ func TestGetNamed(t *testing.T) {
 
 func TestWith(t *testing.T) {
 	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	err := Init(Settings{
 		AppName:        "withtest",
@@ -319,8 +313,7 @@ func TestWith(t *testing.T) {
 
 func TestWithGroup(t *testing.T) {
 	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	err := Init(Settings{
 		AppName:        "grouptest",
@@ -344,8 +337,7 @@ func TestWithGroup(t *testing.T) {
 
 func TestSilentMode(t *testing.T) {
 	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	err := Init(Settings{
 		AppName:        "silenttest",
@@ -384,8 +376,7 @@ func TestSilentMode(t *testing.T) {
 
 func TestJSONOutput(t *testing.T) {
 	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	err := Init(Settings{
 		AppName:        "jsontest",
