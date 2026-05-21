@@ -2210,10 +2210,7 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 	}
 	addr := lis.Addr().String()
 
-	port := lis.Addr().(*net.TCPAddr).Port
-	lis.Close()
-
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransportWithListener(lis, false)
 
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
 		if gotTransport != transport {
