@@ -49,6 +49,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -818,13 +819,12 @@ func main() {
 	if config.UseGrpc {
 		logger.Info("gRPC transport starting")
 		logger.Info("")
-		// Register gRPC transport if enabled in config
-		if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
+		if err := srv.RegisterTransport(transports.NewGrpcTransport(uint16(config.Port), config.GRPCReflection)); err != nil {
 			logger.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
 		logger.Info("Use grpcurl or a gRPC client to interact with the server:")
-		logger.Info("  grpcurl -plaintext localhost:6254 list")
+		logger.Info(fmt.Sprintf("  grpcurl -plaintext localhost:%d list", config.Port))
 	} else {
 		logger.Info("gRPC transport disabled by config")
 	}
@@ -834,7 +834,7 @@ func main() {
 	if config.UseRest {
 		logger.Info("REST transport starting")
 		logger.Info("")
-		restTransport := transports.NewDefaultRestTransport()
+		restTransport := transports.NewRestTransport(config.Port)
 
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
 			if r.URL.Path == "/assets-list" {
@@ -881,7 +881,7 @@ func main() {
 		}
 
 		logger.Info("Web UI available at:")
-		logger.Info("  http://localhost:8080/")
+		logger.Info(fmt.Sprintf("  http://localhost:%d/", config.Port))
 	} else {
 		logger.Info("REST transport disabled by config")
 	}
@@ -889,7 +889,7 @@ func main() {
 	logger.Info("=======================================================")
 
 	// setup
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	<-ctx.Done()

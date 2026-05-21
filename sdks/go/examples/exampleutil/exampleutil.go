@@ -42,6 +42,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -77,14 +78,14 @@ func RunExample(rc RunConfig) {
 	}
 
 	if cfg.UseGrpc {
-		if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
+		if err := srv.RegisterTransport(transports.NewGrpcTransport(uint16(cfg.Port), cfg.GRPCReflection)); err != nil {
 			logger.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
 	}
 
 	if cfg.UseRest {
-		if err := srv.RegisterTransport(transports.NewDefaultRestTransport()); err != nil {
+		if err := srv.RegisterTransport(transports.NewRestTransport(cfg.Port)); err != nil {
 			logger.Error("Failed to register REST transport", "error", err)
 			os.Exit(1)
 		}
@@ -94,7 +95,7 @@ func RunExample(rc RunConfig) {
 		rc.OnReady(cfg)
 	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	<-ctx.Done()
