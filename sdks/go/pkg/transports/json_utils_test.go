@@ -555,7 +555,7 @@ func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
 // --- MarshalDeviceJSON tests (migrated from catena/device_test.go) ---
 
 func TestMarshalDeviceJSON(t *testing.T) {
-	cd, err := catena.ToCatenaDevice(map[string]any{
+	cd, err := catena.ToDevice(map[string]any{
 		"slot":         uint32(0),
 		"detail_level": catena.DetailLevelFull,
 		"params": map[string]any{
@@ -570,7 +570,7 @@ func TestMarshalDeviceJSON(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("ToCatenaDevice error: %v", err)
+		t.Fatalf("ToDevice error: %v", err)
 	}
 
 	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
@@ -591,7 +591,7 @@ func TestMarshalDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
-	cd, err := catena.ToCatenaDevice(map[string]any{
+	cd, err := catena.ToDevice(map[string]any{
 		"slot":         uint32(0),
 		"detail_level": catena.DetailLevelFull,
 		"params": map[string]any{
@@ -604,7 +604,7 @@ func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("ToCatenaDevice error: %v", err)
+		t.Fatalf("ToDevice error: %v", err)
 	}
 
 	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
@@ -635,11 +635,11 @@ func TestMarshalDeviceJSON_Nil(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
-	cd, err := catena.ToCatenaDevice(map[string]any{
+	cd, err := catena.ToDevice(map[string]any{
 		"slot": uint32(5),
 	})
 	if err != nil {
-		t.Fatalf("ToCatenaDevice: %v", err)
+		t.Fatalf("ToDevice: %v", err)
 	}
 	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
 	if err2 != nil {
@@ -652,12 +652,12 @@ func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
-	cd, err := catena.ToCatenaDevice(map[string]any{
+	cd, err := catena.ToDevice(map[string]any{
 		"slot":         uint32(0),
 		"detail_level": catena.DetailLevelFull,
 	})
 	if err != nil {
-		t.Fatalf("ToCatenaDevice: %v", err)
+		t.Fatalf("ToDevice: %v", err)
 	}
 	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
 	if err2 != nil {
@@ -676,7 +676,7 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
-	cd, err := catena.ToCatenaDevice(map[string]any{
+	cd, err := catena.ToDevice(map[string]any{
 		"slot": uint32(0),
 		"params": map[string]any{
 			"brightness": map[string]any{
@@ -690,7 +690,7 @@ func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("ToCatenaDevice: %v", err)
+		t.Fatalf("ToDevice: %v", err)
 	}
 	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
 	if err2 != nil {
@@ -795,7 +795,7 @@ func TestCleanDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
-	cd, err := catena.ToCatenaDevice(map[string]any{
+	cd, err := catena.ToDevice(map[string]any{
 		"slot":              uint32(0),
 		"detail_level":      catena.DetailLevelFull,
 		"multi_set_enabled": true,
@@ -837,7 +837,7 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("ToCatenaDevice error: %v", err)
+		t.Fatalf("ToDevice error: %v", err)
 	}
 
 	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
@@ -988,9 +988,9 @@ func TestMarshalAssetJSON(t *testing.T) {
 		Payload: []byte("binary data"),
 	}
 
-	asset, res := catena.ToCatenaAsset(dp, true)
+	asset, res := catena.ToAsset(dp, true)
 	if res.Code != catena.OK {
-		t.Fatalf("ToCatenaAsset error: %v", res.Error)
+		t.Fatalf("ToAsset error: %v", res.Error)
 	}
 
 	jsonData, err := MarshalAssetJSON(asset.GetProtoAsset())

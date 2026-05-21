@@ -47,17 +47,17 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// CatenaParamInfo wraps protos.ParamInfoResponse for parameter info handling.
+// ParamInfo wraps protos.ParamInfoResponse for parameter info handling.
 // It carries both a ParamInfo descriptor and, for array parameters, the
 // current array length.
-type CatenaParamInfo struct {
+type ParamInfo struct {
 	response *protos.ParamInfoResponse
 }
 
-// NewParamInfo creates a CatenaParamInfo with the specified fields.
+// NewParamInfo creates a ParamInfo with the specified fields.
 // name may be nil if no display name is required.
 // arrayLength should be 0 for non-array parameters.
-func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOid string, arrayLength uint32) CatenaParamInfo {
+func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOid string, arrayLength uint32) ParamInfo {
 	info := &protos.ParamInfo{
 		Oid:         oid,
 		Type:        paramType,
@@ -66,7 +66,7 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 	if name != nil {
 		info.Name = &protos.PolyglotText{DisplayStrings: name}
 	}
-	return CatenaParamInfo{
+	return ParamInfo{
 		response: &protos.ParamInfoResponse{
 			Info:        info,
 			ArrayLength: arrayLength,
@@ -74,28 +74,28 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 	}
 }
 
-// ToCatenaParamInfo converts a Go map to a CatenaParamInfo by marshalling
+// ToParamInfo converts a Go map to a ParamInfo by marshalling
 // through protojson. The map keys mirror the protos.ParamInfoResponse schema
-func ToCatenaParamInfo(m map[string]any) (CatenaParamInfo, error) {
+func ToParamInfo(m map[string]any) (ParamInfo, error) {
 	jsonData, err := json.Marshal(m)
 	if err != nil {
-		return CatenaParamInfo{}, fmt.Errorf("ToCatenaParamInfo: marshal map: %w", err)
+		return ParamInfo{}, fmt.Errorf("ToParamInfo: marshal map: %w", err)
 	}
 
 	resp := &protos.ParamInfoResponse{}
 	if err := protojson.Unmarshal(jsonData, resp); err != nil {
-		return CatenaParamInfo{}, fmt.Errorf("ToCatenaParamInfo: unmarshal to proto: %w", err)
+		return ParamInfo{}, fmt.Errorf("ToParamInfo: unmarshal to proto: %w", err)
 	}
-	return CatenaParamInfo{response: resp}, nil
+	return ParamInfo{response: resp}, nil
 }
 
 // GetProtoResponse returns the underlying protos.ParamInfoResponse.
-func (p CatenaParamInfo) GetProtoResponse() *protos.ParamInfoResponse {
+func (p ParamInfo) GetProtoResponse() *protos.ParamInfoResponse {
 	return p.response
 }
 
 // GetProtoInfo returns the underlying protos.ParamInfo, or nil if unset.
-func (p CatenaParamInfo) GetProtoInfo() *protos.ParamInfo {
+func (p ParamInfo) GetProtoInfo() *protos.ParamInfo {
 	if p.response == nil {
 		return nil
 	}
@@ -103,22 +103,22 @@ func (p CatenaParamInfo) GetProtoInfo() *protos.ParamInfo {
 }
 
 // GetOid returns the parameter's OID, or "" if unset.
-func (p CatenaParamInfo) GetOid() string {
+func (p ParamInfo) GetOid() string {
 	return p.GetProtoInfo().GetOid()
 }
 
 // GetParamType returns the parameter's type, or UNDEFINED if unset.
-func (p CatenaParamInfo) GetParamType() ParamType {
+func (p ParamInfo) GetParamType() ParamType {
 	return p.GetProtoInfo().GetType()
 }
 
 // GetTemplateOid returns the template OID, or "" if unset.
-func (p CatenaParamInfo) GetTemplateOid() string {
+func (p ParamInfo) GetTemplateOid() string {
 	return p.GetProtoInfo().GetTemplateOid()
 }
 
 // GetArrayLength returns the array length for array parameters, or 0 otherwise.
-func (p CatenaParamInfo) GetArrayLength() uint32 {
+func (p ParamInfo) GetArrayLength() uint32 {
 	if p.response == nil {
 		return 0
 	}

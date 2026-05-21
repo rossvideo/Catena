@@ -54,12 +54,12 @@ import (
 )
 
 // Handler function types used by both REST and gRPC servers.
-type DeviceHandler func() (CatenaDevice, StatusResult)
-type GetValueHandler func(slot uint16, fqoid string) (CatenaValue, StatusResult)
+type DeviceHandler func() (Device, StatusResult)
+type GetValueHandler func(slot uint16, fqoid string) (Value, StatusResult)
 type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
-type GetAssetHandler func(slot uint16, fqoid string) (CatenaAsset, StatusResult)
+type GetAssetHandler func(slot uint16, fqoid string) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult)
 type HeartbeatHandler func(slot uint16)
 
 var ErrServerStopped = errors.New("server is stopped")
@@ -125,12 +125,12 @@ type Server interface {
 // interface of funcs that Transports use to interact with the server without circular imports
 type ServerRuntime interface {
 	GetSlots() []uint16
-	InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult)
-	InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, StatusResult)
+	InvokeGetDeviceHandler(slot uint16) (Device, StatusResult)
+	InvokeGetValueHandler(slot uint16, fqoid string) (Value, StatusResult)
 	InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult
-	InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult)
+	InvokeGetAssetHandler(slot uint16, fqoid string) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult)
+	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult)
 	RegisterTransportConnection(transport Transport) (int, *Connection)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -401,7 +401,7 @@ func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	}
 }
 
-func (s *server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult) {
+func (s *server) InvokeGetDeviceHandler(slot uint16) (Device, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getDeviceHandlers[slot]
 	s.mu.Unlock()
@@ -411,10 +411,10 @@ func (s *server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetDeviceHandler called - no handler registered for this slot")
-	return ReplyError[CatenaDevice](NOT_FOUND, "No device defined at slot")
+	return ReplyError[Device](NOT_FOUND, "No device defined at slot")
 }
 
-func (s *server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, StatusResult) {
+func (s *server) InvokeGetValueHandler(slot uint16, fqoid string) (Value, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getValueHandlers[slot]
 	s.mu.Unlock()
@@ -424,7 +424,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, 
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[CatenaValue](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return ReplyError[Value](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult {
@@ -440,7 +440,7 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string) Sta
 	return StatusWithCode(NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult) {
+func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string) (Asset, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.getAssetHandlers[slot]
 	s.mu.Unlock()
@@ -450,7 +450,7 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, 
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetAssetHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[CatenaAsset](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return ReplyError[Asset](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult) {
@@ -466,7 +466,7 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	return CommandError(NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult) {
+func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult) {
 	s.mu.Lock()
 	handler, ok := s.paramInfoHandlers[slot]
 	s.mu.Unlock()

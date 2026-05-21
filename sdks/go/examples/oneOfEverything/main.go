@@ -554,7 +554,7 @@ func main() {
 				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(counter.GetValue())
+			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 
@@ -567,7 +567,7 @@ func main() {
 				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(counter.GetValue())
+			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 
@@ -575,7 +575,7 @@ func main() {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(counter.GetValue())
+			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 
@@ -583,7 +583,7 @@ func main() {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue())
-			val, _ := catena.ToCatenaValue(counter.GetValue())
+			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
 	}
@@ -599,17 +599,17 @@ func main() {
 	}
 
 	for _, slot := range slotList {
-		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(slot, func() (catena.Device, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 
 			// Build per-request so every param's value reflects current state:
 			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
 			if !ok {
-				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+				return catena.ReplyError[catena.Device](catena.NOT_FOUND, "device not found")
 			}
-			device, err := catena.ToCatenaDevice(deviceInfo)
+			device, err := catena.ToDevice(deviceInfo)
 			if err != nil {
-				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, err.Error())
+				return catena.ReplyError[catena.Device](catena.INTERNAL, err.Error())
 			}
 			return catena.Reply(device)
 		})
@@ -618,14 +618,14 @@ func main() {
 	for _, slot := range slotList {
 		p := slotParams[slot]
 
-		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
 			logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
 
 			if slot == 0 && key == "counter" {
-				val, res := catena.ToCatenaValue(counter.GetValue())
+				val, res := catena.ToValue(counter.GetValue())
 				if res.Code != catena.OK {
-					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert counter value")
+					return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert counter value")
 				}
 				return catena.Reply(val)
 			}
@@ -633,20 +633,20 @@ func main() {
 			// "running" is a status param backed by CounterState; report the
 			// live state instead of any cached slot-param value.
 			if slot == 0 && key == "running" {
-				val, res := catena.ToCatenaValue(counter.RunningInt32())
+				val, res := catena.ToValue(counter.RunningInt32())
 				if res.Code != catena.OK {
-					return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert running value")
+					return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert running value")
 				}
 				return catena.Reply(val)
 			}
 
 			v, ok := p.Load(key)
 			if !ok {
-				return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
+				return catena.ReplyError[catena.Value](catena.NOT_FOUND, "parameter not found: "+fqoid)
 			}
-			catenaVal, res := catena.ToCatenaValue(v)
+			catenaVal, res := catena.ToValue(v)
 			if res.Code != catena.OK {
-				return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+				return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert value")
 			}
 			return catena.Reply(catenaVal)
 		})
@@ -705,22 +705,22 @@ func main() {
 	})
 
 	for _, slot := range slotList {
-		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
 
 			val, ok := assets.Load(key)
 			if !ok {
 				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-				return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
+				return catena.ReplyError[catena.Asset](catena.NOT_FOUND, "asset not found: "+fqoid)
 			}
 
 			payload := val.(catena.DataPayload)
 
-			catenaAsset, res := catena.ToCatenaAsset(payload, true)
+			catenaAsset, res := catena.ToAsset(payload, true)
 			if res.Code != catena.OK {
 				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
-				return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+res.Error)
+				return catena.ReplyError[catena.Asset](catena.INTERNAL, "failed to convert asset: "+res.Error)
 			}
 
 			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
@@ -729,10 +729,10 @@ func main() {
 	}
 
 	for _, slot := range slotList {
-		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 			if recursive {
 				// TODO: implement recursive param info retrieval in example
-				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.UNIMPLEMENTED, "recursive param info not implemented in example")
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.UNIMPLEMENTED, "recursive param info not implemented in example")
 			}
 			logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
@@ -740,28 +740,28 @@ func main() {
 
 			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
 			if !ok {
-				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "device not found")
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "device not found")
 			}
 
 			params, ok := deviceInfo["params"].(map[string]any)
 			if !ok {
-				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.INTERNAL, "invalid device params structure")
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.INTERNAL, "invalid device params structure")
 			}
 
 			var paramInfo map[string]any
 			found := false
 			for _, part := range pathParts {
 				if params == nil {
-					return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+					return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
 				}
 				nextParam, exists := params[part]
 				if !exists {
-					return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+					return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
 				}
 
 				paramInfo, ok = nextParam.(map[string]any)
 				if !ok {
-					return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+					return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
 				}
 				found = true
 
@@ -773,7 +773,7 @@ func main() {
 			}
 
 			if !found {
-				return []catena.CatenaParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
 			}
 
 			oid := pathParts[len(pathParts)-1]
@@ -784,7 +784,7 @@ func main() {
 				}
 			}
 			catenaParamInfo := catena.NewParamInfo(oid, name, paramInfo["type"].(catena.ParamType), "", 0)
-			return []catena.CatenaParamInfo{catenaParamInfo}, catena.StatusWithCode(catena.OK, "")
+			return []catena.ParamInfo{catenaParamInfo}, catena.StatusWithCode(catena.OK, "")
 		})
 	}
 
@@ -836,7 +836,7 @@ func main() {
 		logger.Info("")
 		restTransport := transports.NewDefaultRestTransport()
 
-		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
+		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {
@@ -851,7 +851,7 @@ func main() {
 				})
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(assetList)
-				return catena.Reply(catena.CatenaValue{})
+				return catena.Reply(catena.Value{})
 			}
 
 			fileMap := map[string]struct {
@@ -866,13 +866,13 @@ func main() {
 			if file, ok := fileMap[r.URL.Path]; ok {
 				data, err := webFS.ReadFile(file.path)
 				if err != nil {
-					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "file not found: "+r.URL.Path)
+					return catena.ReplyError[catena.Value](catena.NOT_FOUND, "file not found: "+r.URL.Path)
 				}
 				w.Header().Set("Content-Type", file.contentType)
 				w.Write(data)
-				return catena.Reply(catena.CatenaValue{})
+				return catena.Reply(catena.Value{})
 			}
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
+			return catena.ReplyError[catena.Value](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
 		})
 
 		if err := srv.RegisterTransport(restTransport); err != nil {

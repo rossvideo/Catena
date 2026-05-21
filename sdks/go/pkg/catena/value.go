@@ -45,7 +45,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-type CatenaValue struct {
+type Value struct {
 	Value *protos.Value
 }
 
@@ -95,12 +95,12 @@ const (
 	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
 )
 
-func ToCatenaValue(v any) (CatenaValue, StatusResult) {
+func ToValue(v any) (Value, StatusResult) {
 	val, res := ToProto(v)
 	if res.Code != OK {
-		return CatenaValue{}, StatusResult{Code: res.Code, Error: "ToCatenaValue: " + res.Error}
+		return Value{}, StatusResult{Code: res.Code, Error: "ToValue: " + res.Error}
 	}
-	return CatenaValue{Value: val}, StatusResult{Code: OK}
+	return Value{Value: val}, StatusResult{Code: OK}
 }
 
 // ToProto converts native Go types to protos.Value

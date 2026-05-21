@@ -474,12 +474,12 @@ func TestServer_Shutdown_Idempotent(t *testing.T) {
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	srv := NewServer(100).(*server)
 
-	expected := CatenaDevice{
+	expected := Device{
 		device: &protos.Device{},
 	}
 
 	handlerCalled := false
-	srv.RegisterGetDeviceHandler(0, func() (CatenaDevice, StatusResult) {
+	srv.RegisterGetDeviceHandler(0, func() (Device, StatusResult) {
 		handlerCalled = true
 		return expected, StatusResult{Code: OK}
 	})
@@ -510,8 +510,8 @@ func TestServer_RegisterGetDeviceHandler_SendsSlotsAdded(t *testing.T) {
 		},
 	}
 
-	srv.RegisterGetDeviceHandler(0, func() (CatenaDevice, StatusResult) {
-		return CatenaDevice{}, StatusResult{Code: OK}
+	srv.RegisterGetDeviceHandler(0, func() (Device, StatusResult) {
+		return Device{}, StatusResult{Code: OK}
 	})
 
 	if len(updates) != 1 {
@@ -532,10 +532,10 @@ func TestServer_RegisterGetDeviceHandler_SendsSlotsAdded(t *testing.T) {
 func TestServer_RegisterGetValueHandler(t *testing.T) {
 	srv := NewServer(100).(*server)
 
-	expected := CatenaValue{}
+	expected := Value{}
 
 	handlerCalled := false
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (CatenaValue, StatusResult) {
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (Value, StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -595,10 +595,10 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 		Metadata: map[string]string{"content-type": "image/png"},
 		Payload:  []byte("fake image"),
 	}
-	expected, _ := ToCatenaAsset(dp, false)
+	expected, _ := ToAsset(dp, false)
 
 	handlerCalled := false
-	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (CatenaAsset, StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (Asset, StatusResult) {
 		handlerCalled = true
 		return expected, StatusResult{Code: OK}
 	})
@@ -649,12 +649,12 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 	srv := NewServer(100).(*server)
 
 	handlerCalled := false
-	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult) {
+	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult) {
 		handlerCalled = true
 		if oidPrefix != "test/param" {
 			t.Errorf("expected oidPrefix 'test/param', got %s", oidPrefix)
 		}
-		return []CatenaParamInfo{}, StatusResult{Code: OK}
+		return []ParamInfo{}, StatusResult{Code: OK}
 	})
 
 	actual, _ := srv.InvokeParamInfoHandler(0, "test/param", false)
