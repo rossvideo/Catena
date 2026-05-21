@@ -31,20 +31,9 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	// "github.com/rossvideo/catena/sdks/go/pkg/rest"
-
 	getasset "github.com/rossvideo/catena/sdks/go/examples/getAsset"
 )
 
 func main() {
-	getasset.RunExample("getAsset_REST", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
-		srv := rest.NewServer(slots, 100)
-		srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
-		})
-		return srv
-	})
+	getasset.RunExample("getAsset_REST")
 }

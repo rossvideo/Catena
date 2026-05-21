@@ -31,14 +31,9 @@
 package main
 
 import (
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	// grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
-
 	paraminfo "github.com/rossvideo/catena/sdks/go/examples/paramInfo"
 )
 
 func main() {
-	paraminfo.RunExample("paramInfo_GRPC", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
-		return grpcServer.NewServer(slots, 100, cfg)
-	})
+	paraminfo.RunExample("paramInfo_GRPC")
 }

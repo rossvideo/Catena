@@ -101,8 +101,8 @@ var sampleParams = []paramEntry{
 // flattenParams converts the tree of paramEntries into a flat list of
 // CatenaParamInfo. When recursive is true children are included; when
 // false only the entries at the matched level are returned.
-func flattenParams(entries []paramEntry, recursive bool) []catena.CatenaParamInfo {
-	var out []catena.CatenaParamInfo
+func flattenParams(entries []paramEntry, recursive bool) []catena.ParamInfo {
+	var out []catena.ParamInfo
 	for _, e := range entries {
 		out = append(out, catena.NewParamInfo(e.OID, e.Name, e.Type, e.TemplateOID, e.ArrayLen))
 		if recursive && len(e.Children) > 0 {
@@ -127,8 +127,8 @@ func findByOID(entries []paramEntry, oid string) *paramEntry {
 
 // RegisterHandlers registers the GetParamInfo handler for slot 0 with
 // the static sample device model.
-func RegisterHandlers(srv catena.CatenaServer) {
-	srv.RegisterGetParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
+func RegisterHandlers(srv catena.Server) {
+	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 		logger.Info("GetParamInfo", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
 
 		// Normalise the oid: the REST layer sends a leading "/", the gRPC
@@ -148,7 +148,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			return nil, catena.StatusWithCode(catena.NOT_FOUND, "parameter not found: "+oid)
 		}
 
-		result := []catena.CatenaParamInfo{
+		result := []catena.ParamInfo{
 			catena.NewParamInfo(entry.OID, entry.Name, entry.Type, entry.TemplateOID, entry.ArrayLen),
 		}
 		if recursive && len(entry.Children) > 0 {
@@ -159,13 +159,13 @@ func RegisterHandlers(srv catena.CatenaServer) {
 }
 
 // RunExample encapsulates the full example lifecycle.
-func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
+func RunExample(appName string) {
 	exampleutil.RunExample(exampleutil.RunConfig{
 		AppName:          appName,
 		Slots:            SlotList,
-		MakeServer:       makeServer,
 		RegisterHandlers: RegisterHandlers,
-		OnReady: func(port int) {
+		OnReady: func(cfg catena.Config) {
+			port := cfg.Port
 			logger.Info("=======================================================")
 			logger.Info("ParamInfo Example")
 			logger.Info("=======================================================")
@@ -178,12 +178,13 @@ func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Confi
 			}
 			logger.Info("")
 
-			if strings.Contains(appName, "GRPC") {
+			if cfg.UseGrpc {
 				logger.Info("Test with grpcurl:")
 				logger.Info(fmt.Sprintf("  grpcurl -plaintext -d '{\"slot\": 0, \"oid_prefix\": \"\", \"recursive\": false}' localhost:%d st2138.CatenaService/ParamInfoRequest", port))
 				logger.Info(fmt.Sprintf("  grpcurl -plaintext -d '{\"slot\": 0, \"oid_prefix\": \"video\", \"recursive\": true}' localhost:%d st2138.CatenaService/ParamInfoRequest", port))
 				logger.Info(fmt.Sprintf("  grpcurl -plaintext -d '{\"slot\": 0, \"oid_prefix\": \"brightness\"}' localhost:%d st2138.CatenaService/ParamInfoRequest", port))
-			} else {
+			}
+			if cfg.UseRest {
 				logger.Info("REST endpoints:")
 				logger.Info(fmt.Sprintf("  Unary:          GET http://localhost:%d/st2138-api/v1/0/param-info/brightness", port))
 				logger.Info(fmt.Sprintf("  Stream all:     GET http://localhost:%d/st2138-api/v1/0/param-info/stream", port))

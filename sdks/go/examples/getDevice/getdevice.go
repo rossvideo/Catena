@@ -462,21 +462,21 @@ var Devices = map[uint16]map[string]any{
 
 // RegisterHandlers registers the GetDevice handler for each slot on the given server.
 // It also starts a heartbeat that broadcasts the version param every 5 seconds.
-func RegisterHandlers(srv catena.CatenaServer) {
+func RegisterHandlers(srv catena.Server) {
 	for _, slot := range SlotList {
 		slot := slot
-		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(slot, func() (catena.Device, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 			deviceInfo, ok := Devices[slot]
 			if !ok {
 				logger.Error("GetDevice device not found", "slot", slot)
-				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+				return catena.ReplyError[catena.Device](catena.NOT_FOUND, "device not found")
 			}
 
-			device, err := catena.ToCatenaDevice(deviceInfo)
+			device, err := catena.ToDevice(deviceInfo)
 			if err != nil {
 				logger.Error("failed to convert device", "slot", slot, "error", err)
-				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to convert device")
+				return catena.ReplyError[catena.Device](catena.INTERNAL, "failed to convert device")
 			}
 
 			return catena.Reply(device)
@@ -492,17 +492,16 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 // RunExample encapsulates the full example lifecycle:
 // SDK init, signal handling, server creation, handler registration, and graceful shutdown.
-func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
+func RunExample(appName string) {
 	exampleutil.RunExample(exampleutil.RunConfig{
 		AppName:          appName,
 		Slots:            SlotList,
-		MakeServer:       makeServer,
 		RegisterHandlers: RegisterHandlers,
-		OnReady: func(port int) {
+		OnReady: func(cfg catena.Config) {
 			logger.Info("=======================================================")
 			logger.Info("GetDevice Example", "transport", appName)
 			logger.Info("=======================================================")
-			logger.Info("Listening", "port", port)
+			logger.Info("Listening", "port", cfg.Port)
 			logger.Info("")
 			logger.Info("Available devices:")
 			logger.Info("  Primary Video Processor (slot 0)")

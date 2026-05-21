@@ -115,7 +115,7 @@ func BuildResponse(counter *CounterState) map[string]any {
 // RegisterHandlers registers the GetValue and ExecuteCommand handlers for the
 // counter demo. It also starts a background goroutine that increments the
 // counter every second while running.
-func RegisterHandlers(srv catena.CatenaServer) {
+func RegisterHandlers(srv catena.Server) {
 	counter := &CounterState{}
 
 	go func() {
@@ -133,31 +133,31 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if counter.IsRunning() {
 				logger.Info("Start command - already running")
-				val, _ := catena.ToCatenaValue(BuildResponse(counter))
+				val, _ := catena.ToValue(BuildResponse(counter))
 				return catena.CommandReply(val)
 			}
 			counter.Start()
 			logger.Info("Counter started", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(BuildResponse(counter))
+			val, _ := catena.ToValue(BuildResponse(counter))
 			return catena.CommandReply(val)
 		},
 
 		"stop": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
-				val, _ := catena.ToCatenaValue(BuildResponse(counter))
+				val, _ := catena.ToValue(BuildResponse(counter))
 				return catena.CommandReply(val)
 			}
 			counter.Stop()
 			logger.Info("Counter stopped", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(BuildResponse(counter))
+			val, _ := catena.ToValue(BuildResponse(counter))
 			return catena.CommandReply(val)
 		},
 
 		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			val, _ := catena.ToCatenaValue(BuildResponse(counter))
+			val, _ := catena.ToValue(BuildResponse(counter))
 			return catena.CommandReply(val)
 		},
 
@@ -177,12 +177,12 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		},
 	}
 
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
 		if fqoid == "counter" {
-			val, _ := catena.ToCatenaValue(BuildResponse(counter))
+			val, _ := catena.ToValue(BuildResponse(counter))
 			return catena.Reply(val)
 		}
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
+		return catena.ReplyError[catena.Value](catena.NOT_FOUND, "parameter not found: "+fqoid)
 	})
 
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
@@ -200,13 +200,13 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 // RunExample encapsulates the full example lifecycle:
 // SDK init, signal handling, server creation, handler registration, and graceful shutdown.
-func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
+func RunExample(appName string) {
 	exampleutil.RunExample(exampleutil.RunConfig{
 		AppName:          appName,
 		Slots:            SlotList,
-		MakeServer:       makeServer,
 		RegisterHandlers: RegisterHandlers,
-		OnReady: func(port int) {
+		OnReady: func(cfg catena.Config) {
+			port := cfg.Port
 			logger.Info("=======================================================")
 			logger.Info("ExecuteCommand Example", "transport", appName)
 			logger.Info("=======================================================")

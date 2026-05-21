@@ -31,33 +31,9 @@
 package main
 
 import (
-	"embed"
-	"net/http"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	// "github.com/rossvideo/catena/sdks/go/pkg/rest"
-
 	executecommand "github.com/rossvideo/catena/sdks/go/examples/executeCommand"
 )
 
-//go:embed static/*
-var staticFS embed.FS
-
 func main() {
-	executecommand.RunExample("executeCommand_REST", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
-		srv := rest.NewServer(slots, 100)
-		srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-			if r.URL.Path == "/" {
-				data, err := staticFS.ReadFile("static/index.htm")
-				if err != nil {
-					return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "index.html not found")
-				}
-				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				w.Write(data)
-				return catena.Reply(catena.CatenaValue{})
-			}
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
-		})
-		return srv
-	})
+	executecommand.RunExample("executeCommand_REST")
 }

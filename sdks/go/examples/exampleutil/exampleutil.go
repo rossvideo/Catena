@@ -38,26 +38,28 @@
 package exampleutil
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
-	"syscall"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
 // RunConfig holds all parameters for the shared example lifecycle.
 type RunConfig struct {
 	AppName          string
 	Slots            []uint16
-	MakeServer       func(slots []uint16, cfg catena.Config) catena.CatenaServer
-	RegisterHandlers func(srv catena.CatenaServer)
-	OnReady          func(port int) // optional; called after handler registration, before server start
+	RegisterHandlers func(srv catena.Server)
+	OnReady          func(cfg catena.Config)
 }
 
 // RunExample encapsulates the full example lifecycle:
-// SDK init, signal handling, server creation, handler registration, and graceful shutdown.
+// SDK init, signal handling, server creation, handler registration,
+// transport setup (based on config), and graceful shutdown.
 func RunExample(rc RunConfig) {
 	cfg, err := catena.InitOptions(catena.Options{AppName: rc.AppName})
 	if err != nil {
@@ -66,31 +68,40 @@ func RunExample(rc RunConfig) {
 	}
 	defer catena.Close()
 
-	shutdownChan := make(chan struct{})
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		sig := <-sigChan
-		logger.Info("Caught signal, shutting down", "signal", sig)
-		close(shutdownChan)
-	}()
-
-	port := cfg.Port
-	srv := rc.MakeServer(rc.Slots, cfg)
+	srv := catena.NewServer(100)
 	rc.RegisterHandlers(srv)
 
-	if rc.OnReady != nil {
-		rc.OnReady(port)
+	if !cfg.UseGrpc && !cfg.UseRest {
+		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
+		os.Exit(1)
 	}
 
-	go func() {
-		if err := srv.Start(port); err != nil {
-			logger.Error("server failed", "error", err)
+	if cfg.UseGrpc {
+		if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
+			logger.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
-	}()
+	}
 
-	<-shutdownChan
-	srv.Shutdown()
+	if cfg.UseRest {
+		if err := srv.RegisterTransport(transports.NewDefaultRestTransport()); err != nil {
+			logger.Error("Failed to register REST transport", "error", err)
+			os.Exit(1)
+		}
+	}
+
+	if rc.OnReady != nil {
+		rc.OnReady(cfg)
+	}
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	<-ctx.Done()
+	logger.Info("Shutting down server...")
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second)
+	defer shutdownCancel()
+	srv.Shutdown(shutdownCtx)
 	logger.Info("Server shutdown complete")
 }

@@ -31,20 +31,9 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	// "github.com/rossvideo/catena/sdks/go/pkg/rest"
-
 	getsetvalue "github.com/rossvideo/catena/sdks/go/examples/getSetValue"
 )
 
 func main() {
-	getsetvalue.RunExample("getSetValue_REST", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
-		srv := rest.NewServer(slots, 100)
-		srv.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
-		})
-		return srv
-	})
+	getsetvalue.RunExample("getSetValue_REST")
 }

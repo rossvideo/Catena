@@ -31,14 +31,9 @@
 package main
 
 import (
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	// grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
-
 	getsetvalue "github.com/rossvideo/catena/sdks/go/examples/getSetValue"
 )
 
 func main() {
-	getsetvalue.RunExample("getSetValue_GRPC", func(slots []uint16, cfg catena.Config) catena.CatenaServer {
-		return grpcServer.NewServer(slots, 100, cfg)
-	})
+	getsetvalue.RunExample("getSetValue_GRPC")
 }

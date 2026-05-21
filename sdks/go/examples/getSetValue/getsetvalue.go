@@ -39,7 +39,6 @@ package getsetvalue
 
 import (
 	"reflect"
-	"strconv"
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
@@ -112,7 +111,7 @@ var DeviceModels = map[uint16]map[string]any{
 }
 
 // RegisterBasicParamHandlers registers get/set handlers that accept every fqoid on a slot.
-func RegisterBasicParamHandlers(srv catena.CatenaServer, params *sync.Map, slot uint16) {
+func RegisterBasicParamHandlers(srv catena.Server, params *sync.Map, slot uint16) {
 	srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		if value == nil {
@@ -134,24 +133,24 @@ func RegisterBasicParamHandlers(srv catena.CatenaServer, params *sync.Map, slot 
 		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
-	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 		v, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("GetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
+			return catena.ReplyError[catena.Value](catena.NOT_FOUND, "param not found")
 		}
-		catenaVal, res := catena.ToCatenaValue(v)
+		catenaVal, res := catena.ToValue(v)
 		if res.Code != catena.OK {
 			logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", res.Error)
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+			return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
 	})
 }
 
 // RegisterSpecificParamHandlers registers get/set handlers that only respond to a single fqoid on a slot.
-func RegisterSpecificParamHandlers(srv catena.CatenaServer, params *sync.Map, fqoid string, slot uint16) {
+func RegisterSpecificParamHandlers(srv catena.Server, params *sync.Map, fqoid string, slot uint16) {
 	srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid_ string) catena.StatusResult {
 		if fqoid_ != fqoid {
 			return catena.StatusWithCode(catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
@@ -172,27 +171,27 @@ func RegisterSpecificParamHandlers(srv catena.CatenaServer, params *sync.Map, fq
 		return catena.StatusWithCode(catena.OK, "")
 	})
 
-	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
+	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid_ string) (catena.Value, catena.StatusResult) {
 		if fqoid_ != fqoid {
-			return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
+			return catena.ReplyError[catena.Value](catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
 		}
 		logger.Info("GetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		v, ok := params.Load(fqoid_)
 		if !ok {
 			logger.Error("GetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
+			return catena.ReplyError[catena.Value](catena.NOT_FOUND, "param not found")
 		}
-		catenaVal, res := catena.ToCatenaValue(v)
+		catenaVal, res := catena.ToValue(v)
 		if res.Code != catena.OK {
 			logger.Error("GetSpecificParam failed to convert value", "slot", slot, "fqoid", fqoid_, "error", res.Error)
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+			return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
 	})
 }
 
 // RegisterHandlers wires up all param, command, and device handlers on the given server.
-func RegisterHandlers(srv catena.CatenaServer) {
+func RegisterHandlers(srv catena.Server) {
 	params0, params1, params2 := InitParams()
 
 	RegisterBasicParamHandlers(srv, params0, 0)
@@ -203,7 +202,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		slot := slot
 		srv.RegisterExecuteCommandHandler(slot, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
-			catenaVal, res := catena.ToCatenaValue("Command " + commandFqoid + " executed successfully")
+			catenaVal, res := catena.ToValue("Command " + commandFqoid + " executed successfully")
 			if res.Code != catena.OK {
 				return catena.CommandError(catena.INTERNAL, "failed to create command response")
 			}
@@ -214,11 +213,11 @@ func RegisterHandlers(srv catena.CatenaServer) {
 	for slot, deviceInfo := range DeviceModels {
 		slot := slot
 		deviceInfo := deviceInfo
-		srv.RegisterGetDeviceHandler(slot, func() (catena.CatenaDevice, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(slot, func() (catena.Device, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
-			device, err := catena.ToCatenaDevice(deviceInfo)
+			device, err := catena.ToDevice(deviceInfo)
 			if err != nil {
-				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
+				return catena.ReplyError[catena.Device](catena.INTERNAL, "failed to create device info")
 			}
 			return catena.Reply(device)
 		})
@@ -227,16 +226,13 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 // RunExample encapsulates the full example lifecycle:
 // SDK init, signal handling, server creation, handler registration, and graceful shutdown.
-func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
+func RunExample(appName string) {
 	exampleutil.RunExample(exampleutil.RunConfig{
 		AppName:          appName,
 		Slots:            SlotList,
-		MakeServer:       makeServer,
 		RegisterHandlers: RegisterHandlers,
-		OnReady: func(port int) {
-			addr := ":" + strconv.Itoa(port)
-			logger.Info("Starting Dummy BaseServer", "port", port)
-			logger.Info("Dummy BaseServer listening", "address", addr)
+		OnReady: func(cfg catena.Config) {
+			logger.Info("Starting GetSetValue Example", "port", cfg.Port)
 		},
 	})
 }

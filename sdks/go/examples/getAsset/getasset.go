@@ -41,7 +41,6 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/examples/exampleutil"
@@ -56,7 +55,7 @@ var SlotList = []uint16{0}
 
 // RegisterHandlers loads the embedded asset files and registers the GetAsset
 // handler for slot 0.
-func RegisterHandlers(srv catena.CatenaServer) {
+func RegisterHandlers(srv catena.Server) {
 	assets := &sync.Map{}
 
 	payloads, err := catena.LoadPayloadsFromEmbed(staticFS, "static")
@@ -68,21 +67,21 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		assets.Store(id, payload)
 	}
 
-	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
+	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
 		logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
+			return catena.ReplyError[catena.Asset](catena.NOT_FOUND, "asset not found: "+fqoid)
 		}
 
 		payload := val.(catena.DataPayload)
 
-		catenaAsset, res := catena.ToCatenaAsset(payload, true)
+		catenaAsset, res := catena.ToAsset(payload, true)
 		if res.Code != catena.OK {
 			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
-			return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+res.Error)
+			return catena.ReplyError[catena.Asset](catena.INTERNAL, "failed to convert asset: "+res.Error)
 		}
 
 		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
@@ -92,7 +91,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 // RunExample encapsulates the full example lifecycle:
 // SDK init, signal handling, server creation, handler registration, and graceful shutdown.
-func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Config) catena.CatenaServer) {
+func RunExample(appName string) {
 	assets := &sync.Map{}
 	payloads, _ := catena.LoadPayloadsFromEmbed(staticFS, "static")
 	for id, payload := range payloads {
@@ -110,9 +109,9 @@ func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Confi
 	exampleutil.RunExample(exampleutil.RunConfig{
 		AppName:          appName,
 		Slots:            SlotList,
-		MakeServer:       makeServer,
 		RegisterHandlers: RegisterHandlers,
-		OnReady: func(port int) {
+		OnReady: func(cfg catena.Config) {
+			port := cfg.Port
 			logger.Info("=======================================================")
 			logger.Info("GetAsset Example", "transport", appName)
 			logger.Info("=======================================================")
@@ -125,12 +124,13 @@ func RunExample(appName string, makeServer func(slots []uint16, cfg catena.Confi
 			})
 			logger.Info("")
 			if firstAssetName != "" {
-				if strings.Contains(appName, "GRPC") {
+				if cfg.UseGrpc {
 					logger.Info("Test with grpcurl:")
 					logger.Info(fmt.Sprintf("  grpcurl -plaintext -d '{\"slot\": 0, \"oid\": \"%s\"}' localhost:%d st2138.CatenaService/ExternalObjectRequest", firstAssetName, port))
 					logger.Info(fmt.Sprintf("  grpcurl -plaintext localhost:%d list", port))
 					logger.Info(fmt.Sprintf("  grpcurl -plaintext localhost:%d st2138.CatenaService/GetPopulatedSlots", port))
-				} else {
+				}
+				if cfg.UseRest {
 					logger.Info("Available endpoint:")
 					logger.Info("  GET  /st2138-api/v1/0/asset/{oid}")
 					logger.Info("  GET  /st2138-api/v1/0/asset/{oid}?compression=GZIP")
