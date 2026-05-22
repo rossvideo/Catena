@@ -1128,6 +1128,30 @@ func TestServer_ParamInfo_NoHandler(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterAccessHandlerNilResetsToAllowAll(t *testing.T) {
+	srv := NewServer(100, true).(*server)
+	srv.slots[0] = struct{}{}
+
+	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
+		return false
+	})
+
+	_, status := srv.GetSlots(validTestTransportContext(nil))
+	if status.Code != PERMISSION_DENIED {
+		t.Fatalf("expected PERMISSION_DENIED with deny handler, got %v", status.Code)
+	}
+
+	srv.RegisterAccessHandler(nil)
+
+	slots, status := srv.GetSlots(validTestTransportContext(nil))
+	if status.Code != OK {
+		t.Fatalf("expected OK after nil reset to default handler, got %v", status.Code)
+	}
+	if len(slots) != 1 || slots[0] != 0 {
+		t.Errorf("expected slot [0], got %v", slots)
+	}
+}
+
 func TestServer_AccessHandlerDeniesEndpoint(t *testing.T) {
 	srv := NewServer(100, true).(*server)
 	handlerCalled := false

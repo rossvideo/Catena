@@ -137,6 +137,8 @@ type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx Ha
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
+var allowAllAccessHandler AccessHandler = func(endpointType EndpointType, ctx HandlerContext) bool { return true }
+
 var ErrServerStopped = errors.New("server is stopped")
 
 // defaultServerMaxShutdownWait is a fallback safety cap for shutdown paths when
@@ -254,7 +256,7 @@ func NewServer(maxConnections int, authzEnabled bool) Server {
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
-		accessHandler:          func(endpointType EndpointType, ctx HandlerContext) bool { return true }, // default allow all
+		accessHandler:          allowAllAccessHandler,
 		connectionQueue:        newConnectionQueue(maxConnections),
 		transports:             []Transport{},
 	}
@@ -565,6 +567,9 @@ func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 
 func (s *server) RegisterAccessHandler(handler AccessHandler) {
 	s.mu.Lock()
+	if handler == nil {
+		handler = allowAllAccessHandler
+	}
 	s.accessHandler = handler
 	s.mu.Unlock()
 }
