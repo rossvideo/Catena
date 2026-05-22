@@ -71,28 +71,7 @@ type GrpcTransport struct {
 var _ catena.Transport = (*GrpcTransport)(nil)
 
 func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
-	transport := &GrpcTransport{
-		catenaService: &catenaService{},
-		grpcServer: grpc.NewServer(
-			grpc.UnaryInterceptor(unaryInterceptor),
-			grpc.StreamInterceptor(streamInterceptor),
-		),
-		port:       port,
-		reflection: reflectionEnabled,
-	}
-	transport.catenaService.transport = transport
-
-	// Register the CatenaService with the gRPC server
-	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
-
-	// Register reflection service on gRPC server if enabled
-	if reflectionEnabled {
-		reflection.Register(transport.grpcServer)
-		logger.Info("gRPC server created with reflection enabled")
-	} else {
-		logger.Info("gRPC server created")
-	}
-	return transport
+	return newGrpcTransport(port, nil, reflectionEnabled)
 }
 
 // NewGrpcTransportWithListener creates a GrpcTransport that will use the
@@ -100,6 +79,10 @@ func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
 // a TOCTOU race in tests where the port could be claimed between Close()
 // and rebind.
 func NewGrpcTransportWithListener(lis net.Listener, reflectionEnabled bool) *GrpcTransport {
+	return newGrpcTransport(uint16(lis.Addr().(*net.TCPAddr).Port), lis, reflectionEnabled)
+}
+
+func newGrpcTransport(port uint16, lis net.Listener, reflectionEnabled bool) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
 		grpcServer: grpc.NewServer(
@@ -107,7 +90,7 @@ func NewGrpcTransportWithListener(lis net.Listener, reflectionEnabled bool) *Grp
 			grpc.StreamInterceptor(streamInterceptor),
 		),
 		listener:   lis,
-		port:       uint16(lis.Addr().(*net.TCPAddr).Port),
+		port:       port,
 		reflection: reflectionEnabled,
 	}
 	transport.catenaService.transport = transport
