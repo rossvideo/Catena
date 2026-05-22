@@ -1,6 +1,14 @@
-CMDS := oneOfEverything
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
+
+# Examples with a single main.go at top level
+SINGLE_CMDS := oneOfEverything
+# Examples with grpc/ and rest/ sub-mains
+MULTI_CMDS := getAsset getDevice getSetValue paramInfo
+# Examples with only a rest/ sub-main
+REST_CMDS := executeCommand
+
+ALL_CMDS := $(SINGLE_CMDS) $(MULTI_CMDS) $(REST_CMDS)
 
 # Proto config
 GOBIN         := $(shell go env GOPATH)/bin
@@ -11,15 +19,24 @@ PROTO_FILES   := $(wildcard $(PROTO_DIR)/*.proto)
 GO_M_OPTS     := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 GO_GRPC_M_OPTS:= $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES)))
 
-.PHONY: proto-tools protos protos-grpc protos-all clean-protos
+.PHONY: proto-tools protos protos-grpc protos-all clean-protos examples $(ALL_CMDS)
 
 all: protos-all examples
 
-examples: $(CMDS)
+examples: $(ALL_CMDS)
 
-$(CMDS):
+$(SINGLE_CMDS):
 	mkdir -p $(BIN_DIR)/$@
 	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
+
+$(MULTI_CMDS):
+	mkdir -p $(BIN_DIR)/$@
+	go build -o $(BIN_DIR)/$@/$@-grpc ./examples/$@/grpc
+	go build -o $(BIN_DIR)/$@/$@-rest ./examples/$@/rest
+
+$(REST_CMDS):
+	mkdir -p $(BIN_DIR)/$@
+	go build -o $(BIN_DIR)/$@/$@-rest ./examples/$@/rest
 
 # Clean build artifacts and logs
 clean:
