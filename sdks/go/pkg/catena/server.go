@@ -222,6 +222,7 @@ type server struct {
 	ctx                    context.Context
 	ctxCancel              context.CancelFunc
 	authzEnabled           bool
+	jwtValidator           jwtValidatorInterface
 	maxShutdownWait        time.Duration
 	shutdown               bool
 	stopped                chan struct{}
@@ -239,12 +240,30 @@ type server struct {
 	transports             []Transport
 }
 
-func NewServer(maxConnections int, authzEnabled bool) Server {
+type ServerOptions struct {
+	MaxConnections int
+	AuthzEnabled   bool
+	JwtOptions     JwtValidationOptions
+}
+
+func NewServer(opts ServerOptions) (Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
+
+	var validator jwtValidatorInterface
+	if opts.AuthzEnabled {
+		var err error
+		validator, err = newJwtValidator(ctx, opts.JwtOptions)
+		if err != nil {
+			cancel()
+			return nil, fmt.Errorf("create jwt validator: %w", err)
+		}
+	}
+
 	return &server{
 		ctx:                    ctx,
 		ctxCancel:              cancel,
-		authzEnabled:           authzEnabled,
+		authzEnabled:           opts.AuthzEnabled,
+		jwtValidator:           validator,
 		maxShutdownWait:        defaultServerMaxShutdownWait, // override in unittests if needed
 		shutdown:               false,
 		stopped:                make(chan struct{}),
@@ -257,9 +276,9 @@ func NewServer(maxConnections int, authzEnabled bool) Server {
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
 		accessHandler:          allowAllAccessHandler,
-		connectionQueue:        newConnectionQueue(maxConnections),
+		connectionQueue:        newConnectionQueue(opts.MaxConnections),
 		transports:             []Transport{},
-	}
+	}, nil
 }
 
 func (s *server) boundedShutdownContext(parent context.Context) (context.Context, context.CancelFunc) {
@@ -381,9 +400,13 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 	if accessToken == "" {
 		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "missing access token")
 	}
+	if s.jwtValidator == nil {
+		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "jwt validator is not configured")
+	}
 
-	token, _, err := jwt.NewParser().ParseUnverified(accessToken, jwt.MapClaims{})
+	token, err := s.jwtValidator.validateJwt(accessToken)
 	if err != nil {
+		logger.Warning("Failed to validate access token", "error", err)
 		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "invalid access token")
 	}
 

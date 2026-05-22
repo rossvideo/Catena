@@ -512,7 +512,14 @@ func main() {
 	}
 	defer catena.Close()
 
-	srv := catena.NewServer(100, config.AuthzEnabled)
+	srv, err := catena.NewServer(catena.ServerOptions{
+		MaxConnections: 100,
+		AuthzEnabled:   config.AuthzEnabled,
+	})
+	if err != nil {
+		logger.Error("Failed to create Catena server", "error", err)
+		os.Exit(1)
+	}
 	counter := &CounterState{}
 	slotParams := map[uint16]*sync.Map{
 		0: {},

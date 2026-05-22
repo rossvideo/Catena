@@ -59,6 +59,23 @@ const validTestJWT = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZX
 const validTestJWTWithoutExecuteCommandScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InJlYWQgd3JpdGUgYWxsIn0."
 const validTestJWTWithCfgScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InN0MjEzODpjZmcifQ."
 
+func newTestServer(t *testing.T, authzEnabled bool) *server {
+	t.Helper()
+
+	srv, err := NewServer(ServerOptions{
+		MaxConnections: 100,
+		AuthzEnabled:   authzEnabled,
+		JwtOptions: JwtValidationOptions{
+			// leave everything else unset for testing which will disable all claims checking
+			ValidateSignature: false, // skip signature validation for testing
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer() error = %v", err)
+	}
+	return srv.(*server)
+}
+
 func validTestTransportContext(metadata map[string][]string) TransportContext {
 	return TransportContext{
 		AccessToken: validTestJWT,
@@ -67,7 +84,7 @@ func validTestTransportContext(metadata map[string][]string) TransportContext {
 }
 
 func TestServer_ParseTransportContext_ParsesTokenAndMetadata(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	ctx, status := srv.parseTransportContext(TransportContext{
 		AccessToken: "Bearer " + validTestJWT,
 		Metadata:    map[string][]string{"scope": {"read"}},
@@ -121,7 +138,7 @@ func TestHandlerContext_HasAnyReadScope(t *testing.T) {
 }
 
 func TestServer_ParseTransportContext_InvalidAccessToken(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	tests := []struct {
 		name        string
@@ -315,7 +332,7 @@ func assertContextDeadlineWithin(t *testing.T, ctx context.Context, maxWait time
 }
 
 func TestServer_BoundedShutdownContext_NilParent(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.maxShutdownWait = 100 * time.Millisecond
 
 	// make a nil context so we don't get warnings from editors about passing nil
@@ -336,7 +353,7 @@ func TestServer_BoundedShutdownContext_NilParent(t *testing.T) {
 }
 
 func TestServer_BoundedShutdownContext_NoWait(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.maxShutdownWait = 0 // disabled
 
 	parent := context.Background()
@@ -354,7 +371,7 @@ func TestServer_BoundedShutdownContext_NoWait(t *testing.T) {
 func TestServer_Shutdown_CallsShutdown(t *testing.T) {
 	called := false
 
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.maxShutdownWait = 100 * time.Millisecond
 	srv.connectionQueue = &stubConnectionQueue{
 		shutdownFn: func(ctx context.Context) {
@@ -371,7 +388,7 @@ func TestServer_Shutdown_CallsShutdown(t *testing.T) {
 
 func TestServer_RegisterTransport_Normal(t *testing.T) {
 	called := false
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// server starts with new transports
 	if len(srv.transports) != 0 {
@@ -406,7 +423,7 @@ func TestServer_RegisterTransport_Normal(t *testing.T) {
 }
 
 func TestServer_RegisterTransport_Nil(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	err := srv.RegisterTransport(nil)
 
@@ -417,7 +434,7 @@ func TestServer_RegisterTransport_Nil(t *testing.T) {
 
 func TestServer_RegisterTransport_StartupError(t *testing.T) {
 	expectedError := fmt.Errorf("expected startup error")
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	err := srv.RegisterTransport(&stubTransport{
 		tb: t,
 		startFn: func(ctx context.Context, runtime ServerRuntime) error {
@@ -434,7 +451,7 @@ func TestServer_RegisterTransport_StartupError(t *testing.T) {
 }
 
 func TestServer_RegisterTransport_Shutdown(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Simulate server shutdown
 	srv.shutdown = true
@@ -452,7 +469,7 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 	// not really an error just testing that the Start function is called and
 	// its return value is passed through correctly
 	expectedError := fmt.Errorf("expected error")
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.maxShutdownWait = 100 * time.Millisecond
 	transport := &stubTransport{
 		tb: t,
@@ -492,7 +509,7 @@ func TestServer_DeregisterTransport_Normal(t *testing.T) {
 }
 
 func TestServer_DeregisterTransport_NotFound(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Simulate deregistering a transport that was never registered
 	err := srv.DeregisterTransport(context.Background(), &stubTransport{tb: t})
@@ -503,7 +520,7 @@ func TestServer_DeregisterTransport_NotFound(t *testing.T) {
 }
 
 func TestServer_DeregisterTransport_Shutdown(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Simulate server shutdown
 	srv.shutdown = true
@@ -517,7 +534,7 @@ func TestServer_DeregisterTransport_Shutdown(t *testing.T) {
 }
 
 func TestServer_Wait(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Wait should block until shutdown is called
 	done := make(chan struct{})
@@ -544,7 +561,7 @@ func TestServer_Wait(t *testing.T) {
 }
 
 func TestServer_Wait_MultipleCalls(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Call Wait multiple times; they should all return after shutdown
 	done1 := make(chan struct{})
@@ -576,7 +593,7 @@ func TestServer_Wait_MultipleCalls(t *testing.T) {
 }
 
 func TestServer_Shutdown_Idempotent(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// register a transport that simulates a long shutdown to test that multiple calls to Shutdown don't cause issues
 	srv.RegisterTransport(&stubTransport{
@@ -596,7 +613,7 @@ func TestServer_Shutdown_Idempotent(t *testing.T) {
 }
 
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	transportContext := validTestTransportContext(map[string][]string{"tenant": {"test"}})
 
 	expected := Device{
@@ -645,7 +662,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 }
 
 func TestServer_RegisterGetDeviceHandler_SendsSlotsAdded(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	var updates []*protos.PushUpdates
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
@@ -674,7 +691,7 @@ func TestServer_RegisterGetDeviceHandler_SendsSlotsAdded(t *testing.T) {
 }
 
 func TestServer_RegisterGetValueHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	transportContext := validTestTransportContext(nil)
 
 	expected := Value{}
@@ -720,7 +737,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 }
 
 func TestServer_RegisterSetValueHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	transportContext := validTestTransportContext(nil)
 
 	handlerCalled := false
@@ -758,7 +775,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 }
 
 func TestServer_RegisterGetAssetHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	dp := DataPayload{
 		Metadata: map[string]string{"content-type": "image/png"},
@@ -795,7 +812,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 }
 
 func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	handlerCalled := false
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult) {
@@ -829,7 +846,7 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 }
 
 func TestServer_InvokeExecuteCommandHandler_RequiresWriteScope(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	handlerCalled := false
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult) {
 		handlerCalled = true
@@ -905,7 +922,7 @@ func TestServer_ReadEndpointsRequireReadScope(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewServer(100, true).(*server)
+			srv := newTestServer(t, true)
 			handlerCalled := false
 
 			status := tt.invoke(srv, &handlerCalled)
@@ -954,7 +971,7 @@ func TestServer_WriteEndpointsRequireWriteScope(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewServer(100, true).(*server)
+			srv := newTestServer(t, true)
 			handlerCalled := false
 
 			status := tt.invoke(srv, &handlerCalled)
@@ -970,7 +987,7 @@ func TestServer_WriteEndpointsRequireWriteScope(t *testing.T) {
 }
 
 func TestServer_RegisterParamInfoHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	handlerCalled := false
 	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
@@ -1004,7 +1021,7 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 }
 
 func TestServer_RegisterHeartbeatHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	srv.RegisterHeartbeatHandler(0, func(slot uint16) {})
 
@@ -1015,7 +1032,7 @@ func TestServer_RegisterHeartbeatHandler(t *testing.T) {
 }
 
 func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1034,7 +1051,7 @@ func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
 }
 
 func TestServer_InvokeGetValueHandler_NoHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1053,7 +1070,7 @@ func TestServer_InvokeGetValueHandler_NoHandler(t *testing.T) {
 }
 
 func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1072,7 +1089,7 @@ func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
 }
 
 func TestServer_InvokeGetAsset_NoHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1091,7 +1108,7 @@ func TestServer_InvokeGetAsset_NoHandler(t *testing.T) {
 }
 
 func TestServer_ExecuteCommand_Route(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1110,7 +1127,7 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 }
 
 func TestServer_ParamInfo_NoHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1129,7 +1146,7 @@ func TestServer_ParamInfo_NoHandler(t *testing.T) {
 }
 
 func TestServer_RegisterAccessHandlerNilResetsToAllowAll(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.slots[0] = struct{}{}
 
 	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
@@ -1153,7 +1170,7 @@ func TestServer_RegisterAccessHandlerNilResetsToAllowAll(t *testing.T) {
 }
 
 func TestServer_AccessHandlerDeniesEndpoint(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	handlerCalled := false
 	accessCalled := false
 	transportContext := validTestTransportContext(map[string][]string{"scope": {"none"}})
@@ -1193,7 +1210,7 @@ func TestServer_AccessHandlerDeniesEndpoint(t *testing.T) {
 }
 
 func TestServer_GetSlots_AllowsNoCatenaScopeWhenAccessHandlerAllows(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.slots[0] = struct{}{}
 	srv.slots[5] = struct{}{}
 
@@ -1229,7 +1246,7 @@ func TestServer_GetSlots_AllowsNoCatenaScopeWhenAccessHandlerAllows(t *testing.T
 }
 
 func TestServer_GetSlots_DeniedByAccessHandler(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.slots[0] = struct{}{}
 
 	accessCalled := false
@@ -1265,7 +1282,7 @@ func TestServer_GetSlots_InvalidTokenSkipsAccessHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			srv := NewServer(100, true).(*server)
+			srv := newTestServer(t, true)
 			srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
 				t.Fatal("access handler should not run when token parsing fails")
 				return true
@@ -1284,7 +1301,7 @@ func TestServer_GetSlots_InvalidTokenSkipsAccessHandler(t *testing.T) {
 }
 
 func TestServer_GetSlotsAndConnect_HaveDifferentScopeRequirements(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.slots[0] = struct{}{}
 
 	endpoints := []EndpointType{}
@@ -1320,7 +1337,7 @@ func TestServer_GetSlotsAndConnect_HaveDifferentScopeRequirements(t *testing.T) 
 }
 
 func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
-	srv := NewServer(100, false).(*server)
+	srv := newTestServer(t, false)
 	handlerCalled := false
 	accessCalled := false
 
@@ -1347,7 +1364,7 @@ func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
 }
 
 func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
-	srv := NewServer(100, false).(*server)
+	srv := newTestServer(t, false)
 	srv.slots[0] = struct{}{}
 	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
 		return Reply(Value{})
@@ -1459,7 +1476,7 @@ func (s *stubConnectionQueue) connectionCount() int {
 func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 	called := false
 	lastConnID := 0
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		deregisterFn: func(connID int) {
@@ -1481,7 +1498,7 @@ func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	called := false
 	transport := &stubTransport{tb: t}
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.slots[0] = struct{}{}
 	srv.slots[5] = struct{}{}
 	srv.connectionQueue = &stubConnectionQueue{
@@ -1527,7 +1544,7 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 }
 
 func TestServer_RegisterTransportConnection_Failed(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		registerOwnedFn: func(gotOwner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult) {
@@ -1548,7 +1565,7 @@ func TestServer_RegisterTransportConnection_Failed(t *testing.T) {
 func TestServer_SetMaxConnections_Passthrough(t *testing.T) {
 	called := false
 	lastMax := 0
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		setMaxFn: func(max int) {
@@ -1570,7 +1587,7 @@ func TestServer_SetMaxConnections_Passthrough(t *testing.T) {
 func TestServer_ShutdownTransportConnections_Passthrough(t *testing.T) {
 	called := false
 	transport := &stubTransport{tb: t}
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.maxShutdownWait = 100 * time.Millisecond
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
@@ -1591,7 +1608,7 @@ func TestServer_ShutdownTransportConnections_Passthrough(t *testing.T) {
 }
 
 func TestServer_ConnectionCount_Passthrough(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		countFn: func() int {
@@ -1607,7 +1624,7 @@ func TestServer_ConnectionCount_Passthrough(t *testing.T) {
 }
 
 func TestServer_BroadcastUpdate_Normal(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Register a connection
 	conn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
@@ -1648,7 +1665,7 @@ func TestServer_BroadcastUpdate_Normal(t *testing.T) {
 }
 
 func TestServer_BroadcastUpdate_FiltersConnectionsByScope(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	matchingConn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1688,7 +1705,7 @@ func TestServer_BroadcastUpdate_FiltersConnectionsByScope(t *testing.T) {
 }
 
 func TestServer_BroadcastUpdate_AuthzDisabledBypassesScopeFilter(t *testing.T) {
-	srv := NewServer(100, false).(*server)
+	srv := newTestServer(t, false)
 
 	matchingConn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1724,7 +1741,7 @@ func TestServer_BroadcastUpdate_AuthzDisabledBypassesScopeFilter(t *testing.T) {
 }
 
 func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	conn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
 	if status.Code != OK {
@@ -1751,7 +1768,7 @@ func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_InvalidInterval(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Zero interval should be rejected and heartbeat should remain nil
 	srv.StartHeartbeat(0)
@@ -1767,7 +1784,7 @@ func TestServer_StartHeartbeat_InvalidInterval(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_StartsHeartbeat(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	defer srv.StopHeartbeat()
 
 	srv.StartHeartbeat(10 * time.Millisecond)
@@ -1785,7 +1802,7 @@ func TestServer_StartHeartbeat_StartsHeartbeat(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_InvokesHandlers(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	defer srv.StopHeartbeat()
 
 	var slot0Called, slot1Called atomic.Int32
@@ -1805,7 +1822,7 @@ func TestServer_StartHeartbeat_InvokesHandlers(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_HandlerReceivesCorrectSlot(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	defer srv.StopHeartbeat()
 
 	var receivedSlots sync.Map
@@ -1829,7 +1846,7 @@ func TestServer_StartHeartbeat_HandlerReceivesCorrectSlot(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_ReplacesExisting(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	defer srv.StopHeartbeat()
 
 	srv.StartHeartbeat(10 * time.Millisecond)
@@ -1856,7 +1873,7 @@ func TestServer_StartHeartbeat_ReplacesExisting(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_InvalidIntervalPreservesExisting(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	defer srv.StopHeartbeat()
 
 	srv.StartHeartbeat(10 * time.Millisecond)
@@ -1881,7 +1898,7 @@ func TestServer_StartHeartbeat_InvalidIntervalPreservesExisting(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_HandlerPanicRecovered(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 	defer srv.StopHeartbeat()
 
 	var afterPanic atomic.Int32
@@ -1901,7 +1918,7 @@ func TestServer_StartHeartbeat_HandlerPanicRecovered(t *testing.T) {
 }
 
 func TestServer_StopHeartbeat_WhenRunning(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	srv.StartHeartbeat(10 * time.Millisecond)
 
@@ -1924,7 +1941,7 @@ func TestServer_StopHeartbeat_WhenRunning(t *testing.T) {
 }
 
 func TestServer_StopHeartbeat_WhenNotRunning(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	// Should not panic or error when no heartbeat is running
 	srv.StopHeartbeat()
@@ -1939,7 +1956,7 @@ func TestServer_StopHeartbeat_WhenNotRunning(t *testing.T) {
 }
 
 func TestServer_StopHeartbeat_NoTicksAfterStop(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	var tickCount atomic.Int32
 	srv.RegisterHeartbeatHandler(0, func(slot uint16) { tickCount.Add(1) })
@@ -1957,7 +1974,7 @@ func TestServer_StopHeartbeat_NoTicksAfterStop(t *testing.T) {
 }
 
 func TestServer_StartHeartbeat_RestartAfterStop(t *testing.T) {
-	srv := NewServer(100, true).(*server)
+	srv := newTestServer(t, true)
 
 	var tickCount atomic.Int32
 	srv.RegisterHeartbeatHandler(0, func(slot uint16) { tickCount.Add(1) })
