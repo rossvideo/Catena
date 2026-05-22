@@ -1333,9 +1333,7 @@ func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
 		return Reply(Value{})
 	})
 
-	_, status := srv.InvokeGetValueHandler(0, "test/param", TransportContext{
-		AccessToken: validTestJWTWithoutExecuteCommandScope,
-	})
+	_, status := srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
 
 	if accessCalled {
 		t.Fatal("access handler should not run when authz is disabled")
@@ -1345,6 +1343,38 @@ func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
 	}
 	if status.Code != OK {
 		t.Errorf("expected OK, got %v", status.Code)
+	}
+}
+
+func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
+	srv := NewServer(100, false).(*server)
+	srv.slots[0] = struct{}{}
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+		return Reply(Value{})
+	})
+
+	slots, status := srv.GetSlots(TransportContext{})
+	if status.Code != OK {
+		t.Fatalf("GetSlots: expected OK without token, got %v (%s)", status.Code, status.Error)
+	}
+	if len(slots) != 1 || slots[0] != 0 {
+		t.Fatalf("GetSlots: expected [0], got %v", slots)
+	}
+
+	_, status = srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
+	if status.Code != OK {
+		t.Fatalf("InvokeGetValueHandler: expected OK without token, got %v (%s)", status.Code, status.Error)
+	}
+
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		registerOwnedFn: func(owner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult) {
+			return &Connection{ID: 1}, StatusWithCode(OK, "")
+		},
+	}
+	_, status = srv.RegisterTransportConnection(nil, TransportContext{})
+	if status.Code != OK {
+		t.Fatalf("RegisterTransportConnection: expected OK without token, got %v (%s)", status.Code, status.Error)
 	}
 }
 

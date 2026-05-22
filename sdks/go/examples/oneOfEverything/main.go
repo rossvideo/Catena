@@ -650,7 +650,7 @@ func main() {
 			if slot == 1 && !ctx.HasScope(catena.ScopeMon) && !ctx.HasScope(catena.ScopeMonWrite) {
 				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "monitor scope required")
 			} else if slot == 0 && !ctx.HasScope(catena.ScopeCfg) && !ctx.HasScope(catena.ScopeCfgWrite) {
-				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "operate scope required")
+				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "configuration scope required")
 			}
 
 			if slot == 0 && key == "counter" {

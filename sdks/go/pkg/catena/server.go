@@ -401,6 +401,18 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 	return handlerContext, StatusWithCode(OK, "")
 }
 
+// resolveHandlerContext builds a HandlerContext for an incoming request.
+// When authorization is disabled, JWT validation is skipped so clients are not
+// required to send an access token.
+func (s *server) resolveHandlerContext(transportContext TransportContext) (HandlerContext, StatusResult) {
+	if !s.authzEnabled {
+		return HandlerContext{
+			Metadata: maps.Clone(transportContext.Metadata),
+		}, StatusWithCode(OK, "")
+	}
+	return s.parseTransportContext(transportContext)
+}
+
 func extractTokenScopes(token *jwt.Token) (map[string]struct{}, StatusResult) {
 	scopes := make(map[string]struct{})
 	claims, ok := token.Claims.(jwt.MapClaims)
@@ -445,7 +457,7 @@ func (s *server) hasWriteAccess(handlerContext HandlerContext) bool {
 }
 
 func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusResult) {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return nil, res
 	}
@@ -575,7 +587,7 @@ func (s *server) RegisterAccessHandler(handler AccessHandler) {
 }
 
 func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult) {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return ReplyError[Device](res.Code, res.Error)
 	}
@@ -600,7 +612,7 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 }
 
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult) {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return ReplyError[Value](res.Code, res.Error)
 	}
@@ -625,7 +637,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 }
 
 func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, transportContext TransportContext) StatusResult {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return res
 	}
@@ -650,7 +662,7 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, tra
 }
 
 func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return ReplyError[Asset](res.Code, res.Error)
 	}
@@ -675,7 +687,7 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportConte
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult) {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return CommandError(res.Code, res.Error)
 	}
@@ -700,7 +712,7 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 }
 
 func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult) {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return nil, res
 	}
@@ -725,7 +737,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
-	handlerContext, res := s.parseTransportContext(transportContext)
+	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != OK {
 		return nil, res
 	}
