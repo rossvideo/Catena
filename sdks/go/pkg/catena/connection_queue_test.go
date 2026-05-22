@@ -179,7 +179,7 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 		},
 	}
 
-	cq.notifyUpdate(update, []string{ScopeOp})
+	cq.notifyUpdate(update, ScopeOp)
 
 	checkUpdate := func(name string, conn *Connection) {
 		select {
@@ -215,7 +215,7 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 		},
 	}
 
-	cq.notifyUpdate(update, []string{ScopeOp})
+	cq.notifyUpdate(update, ScopeOp)
 
 	select {
 	case <-matchingConn.Updates:

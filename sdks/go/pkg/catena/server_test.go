@@ -50,7 +50,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/protobuf/proto"
 )
@@ -158,40 +157,6 @@ func TestServer_ParseTransportContext_InvalidAccessToken(t *testing.T) {
 				t.Fatalf("expected no token on parse failure, got %v", ctx.Token)
 			}
 		})
-	}
-}
-
-func TestExtractTokenScopes_NonMapClaims(t *testing.T) {
-	token := &jwt.Token{
-		Claims: &jwt.RegisteredClaims{
-			Subject: "test-user",
-		},
-	}
-
-	scopes, status := extractTokenScopes(token)
-
-	if status.Code != OK {
-		t.Fatalf("expected OK status, got %v", status)
-	}
-	if len(scopes) != 0 {
-		t.Errorf("expected no scopes for non-map claims, got %v", scopes)
-	}
-}
-
-func TestExtractTokenScopes_MissingScopeClaim(t *testing.T) {
-	token := &jwt.Token{
-		Claims: jwt.MapClaims{
-			"sub": "test-user",
-		},
-	}
-
-	scopes, status := extractTokenScopes(token)
-
-	if status.Code != OK {
-		t.Fatalf("expected OK status, got %v", status)
-	}
-	if len(scopes) != 0 {
-		t.Errorf("expected no scopes when scope claim is absent, got %v", scopes)
 	}
 }
 
@@ -666,7 +631,7 @@ func TestServer_RegisterGetDeviceHandler_SendsSlotsAdded(t *testing.T) {
 	var updates []*protos.PushUpdates
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
-		notifyFn: func(update *protos.PushUpdates, scopes []string) {
+		notifyFn: func(update *protos.PushUpdates, scope string) {
 			updates = append(updates, update)
 		},
 	}
@@ -1402,7 +1367,7 @@ type stubConnectionQueue struct {
 	setMaxFn        func(max int)
 	registerOwnedFn func(owner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult)
 	deregisterFn    func(connID int)
-	notifyFn        func(update *protos.PushUpdates, scopes []string)
+	notifyFn        func(update *protos.PushUpdates, scope string)
 	shutdownFn      func(ctx context.Context)
 	shutdownOwnerFn func(ctx context.Context, owner any)
 	shutdownConnFn  func(ctx context.Context, conn *Connection)
@@ -1433,9 +1398,9 @@ func (s *stubConnectionQueue) deregisterConnection(connID int) {
 	}
 }
 
-func (s *stubConnectionQueue) notifyUpdate(update *protos.PushUpdates, scopes []string) {
+func (s *stubConnectionQueue) notifyUpdate(update *protos.PushUpdates, scope string) {
 	if s.notifyFn != nil {
-		s.notifyFn(update, scopes)
+		s.notifyFn(update, scope)
 	} else {
 		s.tb.Fatalf("notifyUpdate called on stubConnectionQueue without notifyFn defined")
 	}
@@ -1641,7 +1606,7 @@ func TestServer_BroadcastUpdate_Normal(t *testing.T) {
 	}
 
 	// Broadcast an update
-	srv.BroadcastUpdate(0, "test/param", int32(42), []string{ScopeOpWrite})
+	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOpWrite)
 
 	// Verify the update was received
 	select {
@@ -1689,7 +1654,7 @@ func TestServer_BroadcastUpdate_FiltersConnectionsByScope(t *testing.T) {
 		}
 	}
 
-	srv.BroadcastUpdate(0, "test/param", int32(42), []string{ScopeOpWrite})
+	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOpWrite)
 
 	select {
 	case <-matchingConn.Updates:
@@ -1729,7 +1694,7 @@ func TestServer_BroadcastUpdate_AuthzDisabledBypassesScopeFilter(t *testing.T) {
 		}
 	}
 
-	srv.BroadcastUpdate(0, "test/param", int32(42), []string{ScopeOpWrite})
+	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOpWrite)
 
 	for _, conn := range []*Connection{matchingConn, noScopeConn} {
 		select {
@@ -1757,7 +1722,7 @@ func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
 	}
 
 	// Try to broadcast an invalid value (bool is not supported by ToProto)
-	srv.BroadcastUpdate(0, "test/param", true, []string{ScopeOpWrite})
+	srv.BroadcastUpdate(0, "test/param", true, ScopeOpWrite)
 
 	// Should not receive update (logged error instead)
 	select {

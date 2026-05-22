@@ -534,22 +534,7 @@ func main() {
 	slotParams[2].Store("volume", int32(75))
 	slotParams[2].Store("muted", int32(0))
 	slotParams[2].Store("device_name", "Demo Device")
-	readableScopes := []string{
-		catena.ScopeOp,
-		catena.ScopeCfg,
-		catena.ScopeAdm,
-		catena.ScopeMon,
-		catena.ScopeOpWrite,
-		catena.ScopeCfgWrite,
-		catena.ScopeAdmWrite,
-		catena.ScopeMonWrite,
-	}
-	counterScopes := []string{
-		catena.ScopeCfg,
-		catena.ScopeAdm,
-		catena.ScopeCfgWrite,
-		catena.ScopeAdmWrite,
-	}
+	counterScope := catena.ScopeCfg
 
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
@@ -558,7 +543,7 @@ func main() {
 			if counter.IsRunning() {
 				counter.Increment()
 				logger.Info("Counter tick", "value", counter.GetValue())
-				srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
+				srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			}
 		}
 	}()
@@ -567,7 +552,7 @@ func main() {
 	// broadcastRunning publishes the current running flag on the "running" param
 	// so subscribers (REST SSE / gRPC stream) see the state change live.
 	broadcastRunning := func() {
-		srv.BroadcastUpdate(0, "running", counter.RunningInt32(), readableScopes)
+		srv.BroadcastUpdate(0, "running", counter.RunningInt32(), catena.ScopeMon)
 	}
 
 	commands := map[string]CommandHandler{
@@ -579,7 +564,7 @@ func main() {
 				logger.Info("Counter started", "value", counter.GetValue())
 				broadcastRunning()
 			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -592,7 +577,7 @@ func main() {
 				logger.Info("Counter stopped", "value", counter.GetValue())
 				broadcastRunning()
 			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -600,7 +585,7 @@ func main() {
 		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -608,7 +593,7 @@ func main() {
 		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScopes)
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -724,7 +709,7 @@ func main() {
 
 			p.Store(key, value)
 			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-			srv.BroadcastUpdate(slot, fqoid, value, readableScopes)
+			srv.BroadcastUpdate(slot, fqoid, value, catena.ScopeMon)
 			return catena.StatusWithCode(catena.OK, "")
 		})
 	}
@@ -830,12 +815,12 @@ func main() {
 
 	srv.RegisterHeartbeatHandler(1, func(slot uint16) {
 		// example ticking on the cannonical "product/version" param
-		srv.BroadcastUpdate(1, "product/version", "1.0.0", readableScopes)
+		srv.BroadcastUpdate(1, "product/version", "1.0.0", catena.ScopeMon)
 	})
 	srv.RegisterHeartbeatHandler(2, func(slot uint16) {
 		// example ticking on a different param to show any can be used for heartbeats.
 		if val, ok := slotParams[2].Load("volume"); ok {
-			srv.BroadcastUpdate(2, "volume", val, readableScopes)
+			srv.BroadcastUpdate(2, "volume", val, catena.ScopeMon)
 		} else {
 			logger.Warning("Volume param missing at heartbeat", "slot", slot)
 		}

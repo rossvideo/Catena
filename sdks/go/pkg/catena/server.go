@@ -68,32 +68,6 @@ const (
 	EndpointConnect
 )
 
-const (
-	ScopeOp  = "st2138:op"
-	ScopeCfg = "st2138:cfg"
-	ScopeAdm = "st2138:adm"
-	ScopeMon = "st2138:mon"
-
-	ScopeOpWrite  = "st2138:op:w"
-	ScopeCfgWrite = "st2138:cfg:w"
-	ScopeAdmWrite = "st2138:adm:w"
-	ScopeMonWrite = "st2138:mon:w"
-)
-
-var catenaReadScopes = []string{
-	ScopeOp,
-	ScopeCfg,
-	ScopeAdm,
-	ScopeMon,
-}
-
-var catenaWriteScopes = []string{
-	ScopeOpWrite,
-	ScopeCfgWrite,
-	ScopeAdmWrite,
-	ScopeMonWrite,
-}
-
 type TransportContext struct {
 	AccessToken string
 	Metadata    map[string][]string
@@ -194,7 +168,7 @@ type Server interface {
 
 	SetMaxConnections(max int)
 	ConnectionCount() int
-	BroadcastUpdate(slot uint16, oid string, value any, scopes []string)
+	BroadcastUpdate(slot uint16, oid string, value any, scope string)
 
 	StartHeartbeat(interval time.Duration)
 	StopHeartbeat()
@@ -410,7 +384,6 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "invalid access token")
 	}
 
-	// TODO: Validate the parsed token with Keycloak before trusting its claims.
 	scopes, res := extractTokenScopes(token)
 	if res.Code != OK {
 		return HandlerContext{}, res
@@ -434,29 +407,6 @@ func (s *server) resolveHandlerContext(transportContext TransportContext) (Handl
 		}, StatusWithCode(OK, "")
 	}
 	return s.parseTransportContext(transportContext)
-}
-
-func extractTokenScopes(token *jwt.Token) (map[string]struct{}, StatusResult) {
-	scopes := make(map[string]struct{})
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return scopes, StatusWithCode(OK, "")
-	}
-
-	scopeClaim, ok := claims["scope"]
-	if !ok {
-		return scopes, StatusWithCode(OK, "")
-	}
-
-	scopeString, ok := scopeClaim.(string)
-	if !ok {
-		return nil, StatusWithCode(UNAUTHENTICATED, "invalid scope claim")
-	}
-	for _, scopeName := range strings.Fields(scopeString) {
-		scopes[scopeName] = struct{}{}
-	}
-
-	return scopes, StatusWithCode(OK, "")
 }
 
 func (s *server) isAccessAllowed(endpointType EndpointType, handlerContext HandlerContext) bool {
@@ -519,7 +469,7 @@ func (s *server) notifySlotsAdded(slot uint16) {
 				Slots: []uint32{uint32(slot)},
 			},
 		},
-	}, nil)
+	}, "")
 }
 
 // Handler registration methods
@@ -821,7 +771,7 @@ func (s *server) ConnectionCount() int {
 // BroadcastUpdate converts a native Go value into a proto PushUpdates message
 // and sends it to all connected streaming clients. Business logic calls this with
 // plain Go types; the proto serialization is handled internally.
-func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scopes []string) {
+func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
 	protoValue, res := ToProto(value)
 	if res.Code != OK {
 		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
@@ -837,9 +787,9 @@ func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scopes []st
 		},
 	}
 	if !s.authzEnabled {
-		scopes = nil
+		scope = ""
 	}
-	s.connectionQueue.notifyUpdate(update, scopes)
+	s.connectionQueue.notifyUpdate(update, scope)
 }
 
 // StartHeartbeat begins periodic invocation of all registered heartbeat handlers.

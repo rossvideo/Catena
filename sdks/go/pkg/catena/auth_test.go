@@ -396,3 +396,36 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 		}
 	})
 }
+func TestExtractTokenScopes_NonMapClaims(t *testing.T) {
+	token := &jwt.Token{
+		Claims: &jwt.RegisteredClaims{
+			Subject: "test-user",
+		},
+	}
+
+	scopes, status := extractTokenScopes(token)
+
+	if status.Code != OK {
+		t.Fatalf("expected OK status, got %v", status)
+	}
+	if len(scopes) != 0 {
+		t.Errorf("expected no scopes for non-map claims, got %v", scopes)
+	}
+}
+
+func TestExtractTokenScopes_MissingScopeClaim(t *testing.T) {
+	token := &jwt.Token{
+		Claims: jwt.MapClaims{
+			"sub": "test-user",
+		},
+	}
+
+	scopes, status := extractTokenScopes(token)
+
+	if status.Code != OK {
+		t.Fatalf("expected OK status, got %v", status)
+	}
+	if len(scopes) != 0 {
+		t.Errorf("expected no scopes when scope claim is absent, got %v", scopes)
+	}
+}

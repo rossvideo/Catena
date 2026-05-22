@@ -50,6 +50,32 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	ScopeOp  = "st2138:op"
+	ScopeCfg = "st2138:cfg"
+	ScopeAdm = "st2138:adm"
+	ScopeMon = "st2138:mon"
+
+	ScopeOpWrite  = "st2138:op:w"
+	ScopeCfgWrite = "st2138:cfg:w"
+	ScopeAdmWrite = "st2138:adm:w"
+	ScopeMonWrite = "st2138:mon:w"
+)
+
+var catenaReadScopes = []string{
+	ScopeOp,
+	ScopeCfg,
+	ScopeAdm,
+	ScopeMon,
+}
+
+var catenaWriteScopes = []string{
+	ScopeOpWrite,
+	ScopeCfgWrite,
+	ScopeAdmWrite,
+	ScopeMonWrite,
+}
+
 // JwtValidationOptions controls optional claim validation and HTTP behavior.
 type JwtValidationOptions struct {
 	AllowedAlgs       []string
@@ -203,4 +229,27 @@ func (v *jwtValidator) validateSignature(tokenString string, parseOptions []jwt.
 		return nil, fmt.Errorf("keyfunc is not initialized")
 	}
 	return jwt.ParseWithClaims(tokenString, claims, v.keyfunc, parseOptions...)
+}
+
+func extractTokenScopes(token *jwt.Token) (map[string]struct{}, StatusResult) {
+	scopes := make(map[string]struct{})
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return scopes, StatusWithCode(OK, "")
+	}
+
+	scopeClaim, ok := claims["scope"]
+	if !ok {
+		return scopes, StatusWithCode(OK, "")
+	}
+
+	scopeString, ok := scopeClaim.(string)
+	if !ok {
+		return nil, StatusWithCode(UNAUTHENTICATED, "invalid scope claim")
+	}
+	for _, scopeName := range strings.Fields(scopeString) {
+		scopes[scopeName] = struct{}{}
+	}
+
+	return scopes, StatusWithCode(OK, "")
 }

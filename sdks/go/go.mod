@@ -5,7 +5,6 @@ go 1.25.0
 toolchain go1.25.10
 
 require (
-	github.com/MicahParks/jwkset v0.5.19
 	github.com/MicahParks/keyfunc/v3 v3.3.4
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/valyala/fastjson v1.6.10
@@ -14,6 +13,7 @@ require (
 )
 
 require (
+	github.com/MicahParks/jwkset v0.5.19 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/text v0.32.0 // indirect

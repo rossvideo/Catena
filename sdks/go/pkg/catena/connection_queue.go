@@ -74,7 +74,7 @@ type connectionQueueInterface interface {
 	setMaxConnections(max int)
 	registerOwnedConnection(owner Transport, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult)
 	deregisterConnection(connID int)
-	notifyUpdate(update *protos.PushUpdates, scopes []string)
+	notifyUpdate(update *protos.PushUpdates, scope string)
 	shutdown(ctx context.Context)
 	shutdownOwner(ctx context.Context, owner Transport)
 	shutdownConnection(ctx context.Context, connection *Connection)
@@ -153,12 +153,12 @@ func (cq *connectionQueue) deregisterConnection(connID int) {
 // notifyUpdate sends a PushUpdates message to all connected clients.
 // Called when a value changes (by client or server) to propagate
 // the update to all streaming subscribers.
-func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scopes []string) {
+func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scope string) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
 	for connID, conn := range cq.connections {
-		if isValueUpdate(update) && len(scopes) > 0 && !conn.HandlerContext.hasAnyScope(scopes...) {
+		if isValueUpdate(update) && scope != "" && !conn.HandlerContext.HasScope(scope) {
 			continue
 		}
 		select {
