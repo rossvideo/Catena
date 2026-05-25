@@ -101,6 +101,25 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 	return ctx.hasAnyScope(catenaReadScopes...) || ctx.HasAnyWriteScope()
 }
 
+func (ctx HandlerContext) hasReadScope(scopeName string) bool {
+	if ctx.HasScope(scopeName) {
+		return true
+	}
+
+	switch scopeName {
+	case ScopeOp:
+		return ctx.HasScope(ScopeOpWrite)
+	case ScopeCfg:
+		return ctx.HasScope(ScopeCfgWrite)
+	case ScopeAdm:
+		return ctx.HasScope(ScopeAdmWrite)
+	case ScopeMon:
+		return ctx.HasScope(ScopeMonWrite)
+	default:
+		return false
+	}
+}
+
 // Handler function types used by both REST and gRPC servers.
 type DeviceHandler func(slot uint16, ctx HandlerContext) (Device, StatusResult)
 type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult)

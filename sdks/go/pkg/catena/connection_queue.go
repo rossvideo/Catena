@@ -158,7 +158,7 @@ func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scope string
 	defer cq.mu.Unlock()
 
 	for connID, conn := range cq.connections {
-		if isValueUpdate(update) && scope != "" && !conn.HandlerContext.HasScope(scope) {
+		if isValueUpdate(update) && scope != "" && !conn.HandlerContext.hasReadScope(scope) {
 			continue
 		}
 		select {

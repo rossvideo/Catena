@@ -202,7 +202,10 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		scopes: map[string]struct{}{ScopeOp: {}},
+		scopes: map[string]struct{}{ScopeMon: {}},
+	}, nil)
+	matchingWriteConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
+		scopes: map[string]struct{}{ScopeMonWrite: {}},
 	}, nil)
 	nonMatchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
 		scopes: map[string]struct{}{ScopeCfg: {}},
@@ -215,12 +218,18 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 		},
 	}
 
-	cq.notifyUpdate(update, ScopeOp)
+	cq.notifyUpdate(update, ScopeMon)
 
 	select {
 	case <-matchingConn.Updates:
 	case <-time.After(time.Second):
 		t.Fatal("matching connection did not receive value update")
+	}
+
+	select {
+	case <-matchingWriteConn.Updates:
+	case <-time.After(time.Second):
+		t.Fatal("matching write-scope connection did not receive value update")
 	}
 
 	select {
