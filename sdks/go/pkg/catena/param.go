@@ -47,14 +47,14 @@ import (
 
 // CatenaParam wraps a protos.Param and exposes a fluent builder API.
 type CatenaParam struct {
-	param *protos.Param
+	proto *protos.Param
 }
 
 // --- Factory functions (one per ParamType) ---
 
 func NewParamInt32(value int32) *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_INT32,
 			Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: value}},
 		},
@@ -63,7 +63,7 @@ func NewParamInt32(value int32) *CatenaParam {
 
 func NewParamFloat32(value float32) *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_FLOAT32,
 			Value: &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: value}},
 		},
@@ -72,7 +72,7 @@ func NewParamFloat32(value float32) *CatenaParam {
 
 func NewParamString(value string) *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_STRING,
 			Value: &protos.Value{Kind: &protos.Value_StringValue{StringValue: value}},
 		},
@@ -81,7 +81,7 @@ func NewParamString(value string) *CatenaParam {
 
 func NewParamStruct() *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type: protos.ParamType_STRUCT,
 		},
 	}
@@ -89,7 +89,7 @@ func NewParamStruct() *CatenaParam {
 
 func NewParamStructVariant() *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_VARIANT,
 		},
 	}
@@ -97,7 +97,7 @@ func NewParamStructVariant() *CatenaParam {
 
 func NewParamInt32Array(value []int32) *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_INT32_ARRAY,
 			Value: &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: value}}},
 		},
@@ -106,7 +106,7 @@ func NewParamInt32Array(value []int32) *CatenaParam {
 
 func NewParamFloat32Array(value []float32) *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_FLOAT32_ARRAY,
 			Value: &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: value}}},
 		},
@@ -115,7 +115,7 @@ func NewParamFloat32Array(value []float32) *CatenaParam {
 
 func NewParamStringArray(value []string) *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_STRING_ARRAY,
 			Value: &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: value}}},
 		},
@@ -124,7 +124,7 @@ func NewParamStringArray(value []string) *CatenaParam {
 
 func NewParamBinary(value []byte) *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_BINARY,
 			Value: &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: value}}}},
 		},
@@ -133,7 +133,7 @@ func NewParamBinary(value []byte) *CatenaParam {
 
 func NewParamStructArray() *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_ARRAY,
 		},
 	}
@@ -141,7 +141,7 @@ func NewParamStructArray() *CatenaParam {
 
 func NewParamStructVariantArray() *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_VARIANT_ARRAY,
 		},
 	}
@@ -149,7 +149,7 @@ func NewParamStructVariantArray() *CatenaParam {
 
 func NewParamEmpty() *CatenaParam {
 	return &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type:  protos.ParamType_EMPTY,
 			Value: &protos.Value{Kind: &protos.Value_EmptyValue{EmptyValue: &protos.Empty{}}},
 		},
@@ -158,7 +158,7 @@ func NewParamEmpty() *CatenaParam {
 
 func NewParamData(payload DataPayload) *CatenaParam {
 	cp := &CatenaParam{
-		param: &protos.Param{
+		proto: &protos.Param{
 			Type: protos.ParamType_DATA,
 		},
 	}
@@ -168,14 +168,14 @@ func NewParamData(payload DataPayload) *CatenaParam {
 			"error", res.Error)
 		return cp
 	}
-	cp.param.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
+	cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
 	return cp
 }
 
 // --- Chainable With* methods ---
 
 func (cp *CatenaParam) WithName(name PolyglotText) *CatenaParam {
-	cp.param.Name = &protos.PolyglotText{DisplayStrings: name}
+	cp.proto.Name = &protos.PolyglotText{DisplayStrings: name}
 	return cp
 }
 
@@ -183,56 +183,56 @@ func (cp *CatenaParam) WithConstraint(c *protos.Constraint) *CatenaParam {
 	if c == nil {
 		return cp
 	}
-	if !isConstraintValidForParam(c, cp.param.Type) {
+	if !isConstraintValidForParam(c, cp.proto.Type) {
 		logger.Warning("WithConstraint: constraint type incompatible with param type; ignoring",
 			"constraint_type", c.GetType().String(),
-			"param_type", cp.param.Type.String())
+			"param_type", cp.proto.Type.String())
 		return cp
 	}
-	cp.param.Constraint = c
+	cp.proto.Constraint = c
 	return cp
 }
 
 func (cp *CatenaParam) WithReadOnly(readOnly bool) *CatenaParam {
-	cp.param.ReadOnly = readOnly
+	cp.proto.ReadOnly = readOnly
 	return cp
 }
 
 func (cp *CatenaParam) WithWidget(widget string) *CatenaParam {
-	cp.param.Widget = widget
+	cp.proto.Widget = widget
 	return cp
 }
 
 func (cp *CatenaParam) WithPrecision(precision uint32) *CatenaParam {
-	if cp.param.Type != protos.ParamType_FLOAT32 && cp.param.Type != protos.ParamType_FLOAT32_ARRAY {
+	if cp.proto.Type != protos.ParamType_FLOAT32 && cp.proto.Type != protos.ParamType_FLOAT32_ARRAY {
 		logger.Warning("WithPrecision called on non-float param; ignoring",
-			"param_type", cp.param.Type.String())
+			"param_type", cp.proto.Type.String())
 		return cp
 	}
-	cp.param.Precision = precision
+	cp.proto.Precision = precision
 	return cp
 }
 
 func (cp *CatenaParam) WithMaxLength(maxLength uint32) *CatenaParam {
-	if cp.param.Type != protos.ParamType_STRING && cp.param.Type != protos.ParamType_STRING_ARRAY {
+	if cp.proto.Type != protos.ParamType_STRING && cp.proto.Type != protos.ParamType_STRING_ARRAY {
 		logger.Warning("WithMaxLength called on param type that does not support max_length; ignoring",
-			"param_type", cp.param.Type.String())
+			"param_type", cp.proto.Type.String())
 		return cp
 	}
-	cp.param.MaxLength = maxLength
+	cp.proto.MaxLength = maxLength
 	return cp
 }
 
 func (cp *CatenaParam) WithAccessScope(scope string) *CatenaParam {
-	cp.param.AccessScope = scope
+	cp.proto.AccessScope = scope
 	return cp
 }
 
 func (cp *CatenaParam) WithClientHint(key, value string) *CatenaParam {
-	if cp.param.ClientHints == nil {
-		cp.param.ClientHints = map[string]string{}
+	if cp.proto.ClientHints == nil {
+		cp.proto.ClientHints = map[string]string{}
 	}
-	cp.param.ClientHints[key] = value
+	cp.proto.ClientHints[key] = value
 	return cp
 }
 
@@ -247,18 +247,18 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 	if param == nil {
 		logger.Warning("WithParam called with nil sub-param; ignoring",
 			"oid", oid,
-			"param_type", cp.param.Type.String())
+			"param_type", cp.proto.Type.String())
 		return cp
 	}
-	if _, ok := paramTypesWithSubParams[cp.param.Type]; !ok {
+	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
 		logger.Warning("WithParam called on param type that does not support sub-params; ignoring",
-			"param_type", cp.param.Type.String())
+			"param_type", cp.proto.Type.String())
 		return cp
 	}
-	if cp.param.Params == nil {
-		cp.param.Params = map[string]*protos.Param{}
+	if cp.proto.Params == nil {
+		cp.proto.Params = map[string]*protos.Param{}
 	}
-	cp.param.Params[oid] = proto.Clone(param.param).(*protos.Param)
+	cp.proto.Params[oid] = proto.Clone(param.proto).(*protos.Param)
 	return cp
 }
 
@@ -266,27 +266,27 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 // move this there. Consider an unexported baseParam that both CatenaParam and
 // CatenaCommand compose from, since other fields may also be command-specific.
 func (cp *CatenaParam) WithResponse(response bool) *CatenaParam {
-	cp.param.Response = response
+	cp.proto.Response = response
 	return cp
 }
 
 func (cp *CatenaParam) WithHelp(help PolyglotText) *CatenaParam {
-	cp.param.Help = &protos.PolyglotText{DisplayStrings: help}
+	cp.proto.Help = &protos.PolyglotText{DisplayStrings: help}
 	return cp
 }
 
 func (cp *CatenaParam) WithOidAliases(aliases ...string) *CatenaParam {
-	cp.param.OidAliases = aliases
+	cp.proto.OidAliases = aliases
 	return cp
 }
 
 func (cp *CatenaParam) WithMinimalSet(minimalSet bool) *CatenaParam {
-	cp.param.MinimalSet = minimalSet
+	cp.proto.MinimalSet = minimalSet
 	return cp
 }
 
 func (cp *CatenaParam) WithStateless(stateless bool) *CatenaParam {
-	cp.param.Stateless = stateless
+	cp.proto.Stateless = stateless
 	return cp
 }
 
@@ -296,13 +296,13 @@ func (cp *CatenaParam) WithStateless(stateless bool) *CatenaParam {
 // know their full mounted path, which adds significant complexity. Revisit if
 // we ever add path tracking to the param tree.
 func (cp *CatenaParam) WithTemplateOid(oid string) *CatenaParam {
-	cp.param.TemplateOid = oid
+	cp.proto.TemplateOid = oid
 	return cp
 }
 
-// Build returns the underlying protos.Param.
-func (cp *CatenaParam) Build() *protos.Param {
-	return cp.param
+// Proto returns the underlying protos.Param.
+func (cp *CatenaParam) Proto() *protos.Param {
+	return cp.proto
 }
 
 // isConstraintValidForParam checks whether a constraint kind is compatible
