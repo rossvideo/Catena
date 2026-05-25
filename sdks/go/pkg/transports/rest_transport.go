@@ -186,7 +186,6 @@ func writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value in
 	}
 }
 
-// writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
 // writeHTTPMethodNotAllowed writes HTTP 405 with a JSON error body. Method
 // enforcement is a transport-only concern, so it bypasses StatusCode entirely.
 // 405 is not in ST 2138-12, but is emitted here for HTTP correctness when a
@@ -200,6 +199,21 @@ func writeHTTPMethodNotAllowed(w http.ResponseWriter, msg string) {
 	}
 }
 
+// writeHTTPStatusResultNoBody writes a StatusResult to the HTTP response,
+// emitting HTTP 204 No Content on success instead of 200. Used by routes
+// whose successful response has no body per ST 2138-12 §7.7.2, §7.8.4-5,
+// and §7.11.3-5 (SetValue, SetValues, language-pack mutations). 204 vs 200
+// is a route-level choice, not a handler outcome, so it lives here in the
+// transport rather than in StatusCode.
+func writeHTTPStatusResultNoBody(w http.ResponseWriter, result catena.StatusResult) {
+	if result.Code == catena.StatusCodeOk && result.Error == "" {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	writeHTTPStatusResult(w, result)
+}
+
+// writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
 func writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	httpStatus := ToHTTPStatus(result.Code)
 	logger.Info("writeHTTPStatusResult", "httpStatus", httpStatus, "error", result.Error, "code", result.Code)
@@ -498,7 +512,7 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 		}
 
 		res := t.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
-		writeHTTPStatusResult(w, res)
+		writeHTTPStatusResultNoBody(w, res)
 
 	default:
 		writeHTTPMethodNotAllowed(w, "only GET, PUT, PATCH allowed")

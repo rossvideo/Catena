@@ -185,7 +185,7 @@ func TestRestTransport_SetValue_Route(t *testing.T) {
 	}
 
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness", `{"int32_value": 42}`)
-	assertStatus(t, rec, http.StatusOK)
+	assertStatus(t, rec, http.StatusNoContent)
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
@@ -531,6 +531,24 @@ func TestWriteHTTPStatusResult(t *testing.T) {
 	result := catena.StatusResult{Code: catena.StatusCodeOk}
 	writeHTTPStatusResult(rec, result)
 	assertStatus(t, rec, http.StatusOK)
+}
+
+func TestWriteHTTPStatusResultNoBody_SuccessIs204(t *testing.T) {
+	rec := httptest.NewRecorder()
+	writeHTTPStatusResultNoBody(rec, catena.StatusResult{Code: catena.StatusCodeOk})
+	assertStatus(t, rec, http.StatusNoContent)
+	if body := rec.Body.String(); body != "" {
+		t.Errorf("expected empty body for 204, got %q", body)
+	}
+}
+
+func TestWriteHTTPStatusResultNoBody_ErrorPreservesMapping(t *testing.T) {
+	rec := httptest.NewRecorder()
+	writeHTTPStatusResultNoBody(rec, catena.StatusResult{
+		Code:  catena.StatusCodeNotFound,
+		Error: "param not found",
+	})
+	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestRestTransport_ErrorMessages_DevVsProd(t *testing.T) {
