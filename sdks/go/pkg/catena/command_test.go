@@ -82,7 +82,7 @@ func TestCommandReply(t *testing.T) {
 	val, _ := ToCatenaValue(int32(42))
 	result, status := CommandReply(val)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if result.IsEmpty() {
@@ -105,7 +105,7 @@ func TestCommandReply(t *testing.T) {
 func TestCommandNoResponse(t *testing.T) {
 	result, status := CommandNoResponse()
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if !result.IsEmpty() {
@@ -131,7 +131,7 @@ func TestCommandExceptionResult(t *testing.T) {
 	errorMsg := NewPolyglotText("en", "Something failed")
 	result, status := CommandExceptionResult("TestError", "detailed info", errorMsg)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if result.IsEmpty() {
@@ -198,9 +198,9 @@ func TestCommandExceptionResult_NilErrorMessage(t *testing.T) {
 }
 
 func TestCommandError(t *testing.T) {
-	result, status := CommandError(UNIMPLEMENTED, "not implemented")
+	result, status := CommandError(StatusCodeUnimplemented, "not implemented")
 
-	if status.Code != UNIMPLEMENTED {
+	if status.Code != StatusCodeUnimplemented {
 		t.Errorf("expected UNIMPLEMENTED status, got %v", status.Code)
 	}
 	if status.Error != "not implemented" {
@@ -212,7 +212,7 @@ func TestCommandError(t *testing.T) {
 }
 
 func TestCommandError_NilResponse(t *testing.T) {
-	result, _ := CommandError(INTERNAL, "error")
+	result, _ := CommandError(StatusCodeInternal, "error")
 	if result.GetProtoResponse() != nil {
 		t.Error("expected nil proto response for CommandError")
 	}

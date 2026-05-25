@@ -44,30 +44,16 @@ import (
 )
 
 func TestStatusCodeConstants(t *testing.T) {
-	// Verify gRPC-compatible codes are in the expected range (0-16)
 	grpcCodes := []StatusCode{
-		OK, CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED,
-		NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED,
-		FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED,
-		INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED,
+		StatusCodeOk, StatusCodeCanceled, StatusCodeUnknown, StatusCodeInvalidArgument, StatusCodeDeadlineExceeded,
+		StatusCodeNotFound, StatusCodeAlreadyExists, StatusCodePermissionDenied, StatusCodeResourceExhausted,
+		StatusCodeFailedPrecondition, StatusCodeAborted, StatusCodeOutOfRange, StatusCodeUnimplemented,
+		StatusCodeInternal, StatusCodeUnavailable, StatusCodeDataLoss, StatusCodeUnauthenticated,
 	}
 
 	for _, code := range grpcCodes {
 		if code < 0 || code > 16 {
-			t.Errorf("gRPC code %d is outside valid range 0-16", code)
-		}
-	}
-
-	// Verify REST codes are in the expected HTTP range
-	restCodes := []StatusCode{
-		CREATED, ACCEPTED, NO_CONTENT, METHOD_NOT_ALLOWED,
-		CONFLICT, UNPROCESSABLE_ENTITY, TOO_MANY_REQUESTS,
-		BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT,
-	}
-
-	for _, code := range restCodes {
-		if code < 200 {
-			t.Errorf("REST code %d should be >= 200", code)
+			t.Errorf("gRPC code %d is outside valid range 0-16 (ST 2138-11 §6.2)", code)
 		}
 	}
 }
@@ -76,8 +62,8 @@ func TestReply_CatenaValue(t *testing.T) {
 	value, _ := ToCatenaValue(int32(42))
 	result, status := Reply(value)
 
-	if status.Code != OK {
-		t.Errorf("Reply status code = %d, want %d", status.Code, OK)
+	if status.Code != StatusCodeOk {
+		t.Errorf("Reply status code = %d, want %d", status.Code, StatusCodeOk)
 	}
 	if status.Error != "" {
 		t.Errorf("Reply status error = %q, want empty", status.Error)
@@ -95,8 +81,8 @@ func TestReply_CatenaDevice(t *testing.T) {
 	device, _ := ToCatenaDevice(deviceMap)
 	result, status := Reply(device)
 
-	if status.Code != OK {
-		t.Errorf("Reply status code = %d, want %d", status.Code, OK)
+	if status.Code != StatusCodeOk {
+		t.Errorf("Reply status code = %d, want %d", status.Code, StatusCodeOk)
 	}
 	if result.GetProtoDevice() == nil {
 		t.Error("Reply result device should not be nil")
@@ -110,8 +96,8 @@ func TestReply_CatenaAsset(t *testing.T) {
 	asset, _ := ToCatenaAsset(dp, true)
 	result, status := Reply(asset)
 
-	if status.Code != OK {
-		t.Errorf("Reply status code = %d, want %d", status.Code, OK)
+	if status.Code != StatusCodeOk {
+		t.Errorf("Reply status code = %d, want %d", status.Code, StatusCodeOk)
 	}
 	if result.GetProtoAsset() == nil {
 		t.Error("Reply result asset should not be nil")
@@ -120,10 +106,10 @@ func TestReply_CatenaAsset(t *testing.T) {
 
 func TestReplyWithCode(t *testing.T) {
 	value, _ := ToCatenaValue(int32(42))
-	result, status := ReplyWithCode(value, CREATED)
+	result, status := ReplyWithCode(value, StatusCodeNotFound)
 
-	if status.Code != CREATED {
-		t.Errorf("ReplyWithCode status code = %d, want %d", status.Code, CREATED)
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("ReplyWithCode status code = %d, want %d", status.Code, StatusCodeNotFound)
 	}
 	if status.Error != "" {
 		t.Errorf("ReplyWithCode status error = %q, want empty", status.Error)
@@ -134,10 +120,10 @@ func TestReplyWithCode(t *testing.T) {
 }
 
 func TestReplyError_CatenaValue(t *testing.T) {
-	result, status := ReplyError[CatenaValue](NOT_FOUND, "resource not found")
+	result, status := ReplyError[CatenaValue](StatusCodeNotFound, "resource not found")
 
-	if status.Code != NOT_FOUND {
-		t.Errorf("ReplyError status code = %d, want %d", status.Code, NOT_FOUND)
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeNotFound)
 	}
 	if status.Error != "resource not found" {
 		t.Errorf("ReplyError status error = %q, want 'resource not found'", status.Error)
@@ -148,10 +134,10 @@ func TestReplyError_CatenaValue(t *testing.T) {
 }
 
 func TestReplyError_CatenaDevice(t *testing.T) {
-	result, status := ReplyError[CatenaDevice](INTERNAL, "internal error")
+	result, status := ReplyError[CatenaDevice](StatusCodeInternal, "internal error")
 
-	if status.Code != INTERNAL {
-		t.Errorf("ReplyError status code = %d, want %d", status.Code, INTERNAL)
+	if status.Code != StatusCodeInternal {
+		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeInternal)
 	}
 	if status.Error != "internal error" {
 		t.Errorf("ReplyError status error = %q, want 'internal error'", status.Error)
@@ -162,10 +148,10 @@ func TestReplyError_CatenaDevice(t *testing.T) {
 }
 
 func TestReplyError_CatenaAsset(t *testing.T) {
-	result, status := ReplyError[CatenaAsset](UNAVAILABLE, "service unavailable")
+	result, status := ReplyError[CatenaAsset](StatusCodeUnavailable, "service unavailable")
 
-	if status.Code != UNAVAILABLE {
-		t.Errorf("ReplyError status code = %d, want %d", status.Code, UNAVAILABLE)
+	if status.Code != StatusCodeUnavailable {
+		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeUnavailable)
 	}
 	if status.Error != "service unavailable" {
 		t.Errorf("ReplyError status error = %q, want 'service unavailable'", status.Error)
@@ -176,10 +162,10 @@ func TestReplyError_CatenaAsset(t *testing.T) {
 }
 
 func TestStatusWithCode(t *testing.T) {
-	status := StatusWithCode(INVALID_ARGUMENT, "bad input")
+	status := StatusWithCode(StatusCodeInvalidArgument, "bad input")
 
-	if status.Code != INVALID_ARGUMENT {
-		t.Errorf("StatusWithCode code = %d, want %d", status.Code, INVALID_ARGUMENT)
+	if status.Code != StatusCodeInvalidArgument {
+		t.Errorf("StatusWithCode code = %d, want %d", status.Code, StatusCodeInvalidArgument)
 	}
 	if status.Error != "bad input" {
 		t.Errorf("StatusWithCode error = %q, want 'bad input'", status.Error)
@@ -187,10 +173,10 @@ func TestStatusWithCode(t *testing.T) {
 }
 
 func TestStatusWithCode_NoMessage(t *testing.T) {
-	status := StatusWithCode(OK, "")
+	status := StatusWithCode(StatusCodeOk, "")
 
-	if status.Code != OK {
-		t.Errorf("StatusWithCode code = %d, want %d", status.Code, OK)
+	if status.Code != StatusCodeOk {
+		t.Errorf("StatusWithCode code = %d, want %d", status.Code, StatusCodeOk)
 	}
 	if status.Error != "" {
 		t.Errorf("StatusWithCode error = %q, want empty", status.Error)
@@ -199,12 +185,12 @@ func TestStatusWithCode_NoMessage(t *testing.T) {
 
 func TestStatusResult_Fields(t *testing.T) {
 	result := StatusResult{
-		Code:  NOT_FOUND,
+		Code:  StatusCodeNotFound,
 		Error: "not found",
 	}
 
-	if result.Code != NOT_FOUND {
-		t.Errorf("StatusResult.Code = %d, want %d", result.Code, NOT_FOUND)
+	if result.Code != StatusCodeNotFound {
+		t.Errorf("StatusResult.Code = %d, want %d", result.Code, StatusCodeNotFound)
 	}
 	if result.Error != "not found" {
 		t.Errorf("StatusResult.Error = %q, want 'not found'", result.Error)
@@ -217,10 +203,10 @@ func TestStatusCode_Values(t *testing.T) {
 		code     StatusCode
 		expected int
 	}{
-		{OK, 0},
-		{NOT_FOUND, 5},
-		{INTERNAL, 13},
-		{INVALID_ARGUMENT, 3},
+		{StatusCodeOk, 0},
+		{StatusCodeNotFound, 5},
+		{StatusCodeInternal, 13},
+		{StatusCodeInvalidArgument, 3},
 	}
 
 	for _, tt := range tests {
@@ -240,10 +226,10 @@ func TestResponseType_Constraint(t *testing.T) {
 
 func TestReplyError_AllStatusCodes(t *testing.T) {
 	codes := []StatusCode{
-		CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED,
-		NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED,
-		FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED,
-		INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED,
+		StatusCodeCanceled, StatusCodeUnknown, StatusCodeInvalidArgument, StatusCodeDeadlineExceeded,
+		StatusCodeNotFound, StatusCodeAlreadyExists, StatusCodePermissionDenied, StatusCodeResourceExhausted,
+		StatusCodeFailedPrecondition, StatusCodeAborted, StatusCodeOutOfRange, StatusCodeUnimplemented,
+		StatusCodeInternal, StatusCodeUnavailable, StatusCodeDataLoss, StatusCodeUnauthenticated,
 	}
 
 	for i, code := range codes {

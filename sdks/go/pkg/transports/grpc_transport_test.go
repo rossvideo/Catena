@@ -315,7 +315,7 @@ func TestGrpcTransport_DeviceRequest_HandlerError(t *testing.T) {
 
 	// Register handler that returns error
 	runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
-		return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+		return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeNotFound, "device not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -425,7 +425,7 @@ func TestGrpcTransport_GetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not supported")
+		return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "param not supported")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -450,7 +450,7 @@ func TestGrpcTransport_SetValue_Success(t *testing.T) {
 		if fqoid != "device.param1" {
 			t.Errorf("expected fqoid 'device.param1', got %s", fqoid)
 		}
-		return catena.StatusWithCode(catena.OK, "")
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -505,7 +505,7 @@ func TestGrpcTransport_SetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
-		return catena.StatusWithCode(catena.INVALID_ARGUMENT, "value out of range")
+		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -527,7 +527,7 @@ func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 	callCount := 0
 	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 		callCount++
-		return catena.StatusWithCode(catena.OK, "")
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -569,9 +569,9 @@ func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 		callCount++
 		// Fail on second value
 		if callCount == 2 {
-			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "second value invalid")
+			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "second value invalid")
 		}
-		return catena.StatusWithCode(catena.OK, "")
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -598,7 +598,7 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 	callCount := 0
 	runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
 		callCount++
-		return catena.StatusWithCode(catena.OK, "")
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -679,7 +679,7 @@ func TestGrpcTransport_ExternalObjectRequest_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-		return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
+		return catena.ReplyError[catena.CatenaAsset](catena.StatusCodeNotFound, "asset not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -717,7 +717,7 @@ func TestGrpcTransport_ParamInfoRequest_Success(t *testing.T) {
 			catena.NewParamInfo("parent", catena.NewPolyglotText("en", "Parent"), catena.ParamTypeStruct, "", 0),
 			catena.NewParamInfo("parent/child", nil, catena.ParamTypeInt32, "", 0),
 			catena.NewParamInfo("parent/arr", nil, catena.ParamTypeStringArray, "", 5),
-		}, catena.StatusWithCode(catena.OK, "")
+		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -767,7 +767,7 @@ func TestGrpcTransport_ParamInfoRequest_TopLevel(t *testing.T) {
 		return []catena.CatenaParamInfo{
 			catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
 			catena.NewParamInfo("b", nil, catena.ParamTypeFloat32, "", 0),
-		}, catena.StatusWithCode(catena.OK, "")
+		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -796,7 +796,7 @@ func TestGrpcTransport_ParamInfoRequest_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
-		return nil, catena.StatusWithCode(catena.NOT_FOUND, "param not found")
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -820,7 +820,7 @@ func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
 		defer cleanup()
 
 		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
-			return nil, catena.StatusWithCode(catena.OK, "")
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -841,7 +841,7 @@ func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
 		defer cleanup()
 
 		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
-			return nil, catena.StatusWithCode(catena.OK, "")
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -986,7 +986,7 @@ func TestGrpcTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-		return catena.CommandError(catena.NOT_FOUND, "command not supported")
+		return catena.CommandError(catena.StatusCodeNotFound, "command not supported")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -1155,7 +1155,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			grpcCode:   codes.Unimplemented,
 			setupHandlers: func(runtime *stubServerRuntime) {
 				runtime.getValueFn = func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
-					return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "param not supported")
+					return catena.ReplyError[catena.CatenaValue](catena.StatusCodeUnimplemented, "param not supported")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1169,7 +1169,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			grpcCode:   codes.InvalidArgument,
 			setupHandlers: func(runtime *stubServerRuntime) {
 				runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
-					return catena.StatusWithCode(catena.INVALID_ARGUMENT, "value out of range")
+					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1190,7 +1190,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			grpcCode:   codes.FailedPrecondition,
 			setupHandlers: func(runtime *stubServerRuntime) {
 				runtime.setValueFn = func(value any, slot uint16, fqoid string) catena.StatusResult {
-					return catena.StatusWithCode(catena.FAILED_PRECONDITION, "multi set failed")
+					return catena.StatusWithCode(catena.StatusCodeFailedPrecondition, "multi set failed")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1335,7 +1335,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *stubServerRuntime) {
 				runtime.getDeviceFn = func(slot uint16) (catena.CatenaDevice, catena.StatusResult) {
-					return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+					return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeNotFound, "device not found")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1353,7 +1353,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *stubServerRuntime) {
 				runtime.getAssetFn = func(slot uint16, fqoid string) (catena.CatenaAsset, catena.StatusResult) {
-					return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found")
+					return catena.ReplyError[catena.CatenaAsset](catena.StatusCodeNotFound, "asset not found")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1371,7 +1371,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			grpcCode:   codes.Unimplemented,
 			setupHandlers: func(runtime *stubServerRuntime) {
 				runtime.commandFn = func(slot uint16, fqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
-					return catena.CommandError(catena.UNIMPLEMENTED, "command not supported")
+					return catena.CommandError(catena.StatusCodeUnimplemented, "command not supported")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1389,7 +1389,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *stubServerRuntime) {
 				runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool) ([]catena.CatenaParamInfo, catena.StatusResult) {
-					return nil, catena.StatusResult{Code: catena.NOT_FOUND, Error: "param not found"}
+					return nil, catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "param not found"}
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1720,7 +1720,7 @@ func TestGrpcTransport_DifferentHandlersPerSlot(t *testing.T) {
 			value, _ := catena.ToCatenaValue(int32(200))
 			return catena.Reply(value)
 		}
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "slot not found")
+		return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "slot not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)

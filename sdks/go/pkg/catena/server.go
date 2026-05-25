@@ -70,16 +70,16 @@ const defaultServerMaxShutdownWait = 10 * time.Second
 
 func ValidateSlot(slot uint32) (uint16, StatusResult) {
 	if slot > uint32(math.MaxUint16) {
-		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot number: %d", slot))
+		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
 
 	}
-	return uint16(slot), StatusWithCode(OK, "")
+	return uint16(slot), StatusWithCode(StatusCodeOk, "")
 }
 
 func ValidateSlotString(slot string) (uint16, StatusResult) {
 	slotInt, err := strconv.ParseUint(slot, 10, 32)
 	if err != nil {
-		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot string: %s", slot))
+		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
 	}
 	return ValidateSlot(uint32(slotInt))
 }
@@ -411,7 +411,7 @@ func (s *server) InvokeGetDeviceHandler(slot uint16) (CatenaDevice, StatusResult
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetDeviceHandler called - no handler registered for this slot")
-	return ReplyError[CatenaDevice](NOT_FOUND, "No device defined at slot")
+	return ReplyError[CatenaDevice](StatusCodeNotFound, "No device defined at slot")
 }
 
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, StatusResult) {
@@ -424,7 +424,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string) (CatenaValue, 
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[CatenaValue](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return ReplyError[CatenaValue](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult {
@@ -437,7 +437,7 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string) Sta
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return StatusWithCode(NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, StatusResult) {
@@ -450,7 +450,7 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string) (CatenaAsset, 
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetAssetHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[CatenaAsset](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return ReplyError[CatenaAsset](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult) {
@@ -463,7 +463,7 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("ExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
-	return CommandError(NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return CommandError(StatusCodeNotFound, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]CatenaParamInfo, StatusResult) {
@@ -476,7 +476,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
-	return nil, StatusWithCode(NOT_FOUND, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
+	return nil, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) RegisterTransportConnection(transport Transport) (int, *Connection) {
@@ -530,7 +530,7 @@ func (s *server) ConnectionCount() int {
 // plain Go types; the proto serialization is handled internally.
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any) {
 	protoValue, res := ToProto(value)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
 		return
 	}

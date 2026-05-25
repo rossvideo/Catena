@@ -68,7 +68,7 @@ func TestValidateSlot_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlot(tt.in)
-			if err.Code != OK {
+			if err.Code != StatusCodeOk {
 				t.Errorf("expected no error, got %v", err)
 			}
 			if result != uint16(tt.in) {
@@ -90,8 +90,8 @@ func TestValidateSlot_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlot(tt.in)
-			if err.Code != INVALID_ARGUMENT {
-				t.Errorf("expected INVALID_ARGUMENT error, got %v", err)
+			if err.Code != StatusCodeInvalidArgument {
+				t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
 			}
 			if result != 0 {
 				t.Errorf("expected result 0 on error, got %v", result)
@@ -114,7 +114,7 @@ func TestValidateSlotString_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlotString(tt.in)
-			if err.Code != OK {
+			if err.Code != StatusCodeOk {
 				t.Errorf("expected no error, got %v", err)
 			}
 			expected := uint16(0)
@@ -139,8 +139,8 @@ func TestValidateSlotString_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlotString(tt.in)
-			if err.Code != INVALID_ARGUMENT {
-				t.Errorf("expected INVALID_ARGUMENT error, got %v", err)
+			if err.Code != StatusCodeInvalidArgument {
+				t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
 			}
 			if result != 0 {
 				t.Errorf("expected result 0 on error, got %v", result)
@@ -481,7 +481,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	handlerCalled := false
 	srv.RegisterGetDeviceHandler(0, func() (CatenaDevice, StatusResult) {
 		handlerCalled = true
-		return expected, StatusResult{Code: OK}
+		return expected, StatusResult{Code: StatusCodeOk}
 	})
 
 	// Call the registered handler
@@ -511,7 +511,7 @@ func TestServer_RegisterGetDeviceHandler_SendsSlotsAdded(t *testing.T) {
 	}
 
 	srv.RegisterGetDeviceHandler(0, func() (CatenaDevice, StatusResult) {
-		return CatenaDevice{}, StatusResult{Code: OK}
+		return CatenaDevice{}, StatusResult{Code: StatusCodeOk}
 	})
 
 	if len(updates) != 1 {
@@ -543,7 +543,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 		if fqoid != "test/param" {
 			t.Errorf("expected fqoid 'test/param', got %s", fqoid)
 		}
-		return expected, StatusResult{Code: OK}
+		return expected, StatusResult{Code: StatusCodeOk}
 	})
 
 	actual, _ := srv.InvokeGetValueHandler(0, "test/param")
@@ -570,7 +570,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 		if value != int32(42) {
 			t.Errorf("expected value int32(42), got %v", value)
 		}
-		return StatusResult{Code: OK}
+		return StatusResult{Code: StatusCodeOk}
 	})
 
 	status := srv.InvokeSetValueHandler(int32(42), 0, "test/param")
@@ -578,7 +578,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 
@@ -600,7 +600,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 	handlerCalled := false
 	srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string) (CatenaAsset, StatusResult) {
 		handlerCalled = true
-		return expected, StatusResult{Code: OK}
+		return expected, StatusResult{Code: StatusCodeOk}
 	})
 
 	actual, _ := srv.InvokeGetAssetHandler(0, "test/asset")
@@ -654,7 +654,7 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 		if oidPrefix != "test/param" {
 			t.Errorf("expected oidPrefix 'test/param', got %s", oidPrefix)
 		}
-		return []CatenaParamInfo{}, StatusResult{Code: OK}
+		return []CatenaParamInfo{}, StatusResult{Code: StatusCodeOk}
 	})
 
 	actual, _ := srv.InvokeParamInfoHandler(0, "test/param", false)
@@ -692,9 +692,9 @@ func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
 
 	_, status := srv.InvokeGetDeviceHandler(0)
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -707,9 +707,9 @@ func TestServer_InvokeGetValueHandler_NoHandler(t *testing.T) {
 
 	_, status := srv.InvokeGetValueHandler(0, "test/param")
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -722,9 +722,9 @@ func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
 
 	status := srv.InvokeSetValueHandler(42, 0, "test/param")
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -737,9 +737,9 @@ func TestServer_InvokeGetAsset_NoHandler(t *testing.T) {
 
 	_, status := srv.InvokeGetAssetHandler(0, "test/asset")
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -752,9 +752,9 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 
 	_, status := srv.InvokeExecuteCommandHandler(0, "test/command", nil)
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -767,9 +767,9 @@ func TestServer_ParamInfo_NoHandler(t *testing.T) {
 
 	_, status := srv.InvokeParamInfoHandler(0, "test/param", false)
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 

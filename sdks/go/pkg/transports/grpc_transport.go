@@ -226,7 +226,7 @@ func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty
 // DeviceRequest streams the device information for a slot
 func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.ServerStreamingServer[protos.DeviceComponent]) error {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -257,7 +257,7 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 // GetValue returns the value of a parameter
 func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayload) (*protos.Value, error) {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -276,7 +276,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 // SetValue sets the value of a parameter
 func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValuePayload) (*protos.Empty, error) {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -290,7 +290,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 
 	// Convert proto value to native Go type
 	nativeValue, errProto := catena.FromProto(req.Value.Value)
-	if errProto.Code != catena.OK {
+	if errProto.Code != catena.StatusCodeOk {
 		logger.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto.Error))
 	}
@@ -307,7 +307,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 // MultiSetValue sets multiple parameter values
 func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePayload) (*protos.Empty, error) {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -319,7 +319,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 		fqoid := setValue.Oid
 
 		nativeValue, errProto := catena.FromProto(setValue.Value)
-		if errProto.Code != catena.OK {
+		if errProto.Code != catena.StatusCodeOk {
 			logger.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
 		}
@@ -337,7 +337,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 // ExternalObjectRequest streams external object (asset) data
 func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload, stream grpc.ServerStreamingServer[protos.ExternalObjectPayload]) error {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -362,7 +362,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 // ExecuteCommand executes a command and streams the response
 func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.ServerStreamingServer[protos.CommandResponse]) error {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -373,7 +373,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	if req.Value != nil {
 		var errProto catena.StatusResult
 		payload, errProto = catena.FromProto(req.Value)
-		if errProto.Code != catena.OK {
+		if errProto.Code != catena.StatusCodeOk {
 			logger.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto.Error)
 			return status.Error(codes.InvalidArgument, fmt.Sprintf("invalid command payload: %v", errProto.Error))
 		}
@@ -397,7 +397,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 // ParamInfoRequest streams parameter information for the given slot and OID prefix.
 func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
 	slot, err := catena.ValidateSlot(req.GetSlot())
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -473,63 +473,45 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 	}
 }
 
-// ToGRPCCode converts a StatusCode to a gRPC codes.Code.
-// REST-specific codes are mapped to their closest gRPC equivalents.
-// Only codes 0-16 are valid gRPC codes; this ensures proper interoperability.
+// ToGRPCCode converts a transport-neutral StatusCode to a gRPC codes.Code.
+// Catena StatusCode values 0–16 align 1:1 with google.golang.org/grpc/codes
+// per ST 2138-11 §6.2 Table 2; any other input maps to codes.Unknown.
 func ToGRPCCode(s catena.StatusCode) codes.Code {
 	switch s {
-	// gRPC-compatible codes (0-16) map directly
-	case catena.OK:
+	case catena.StatusCodeOk:
 		return codes.OK
-	case catena.CANCELLED:
+	case catena.StatusCodeCanceled:
 		return codes.Canceled
-	case catena.UNKNOWN:
+	case catena.StatusCodeUnknown:
 		return codes.Unknown
-	case catena.INVALID_ARGUMENT:
+	case catena.StatusCodeInvalidArgument:
 		return codes.InvalidArgument
-	case catena.DEADLINE_EXCEEDED:
+	case catena.StatusCodeDeadlineExceeded:
 		return codes.DeadlineExceeded
-	case catena.NOT_FOUND:
+	case catena.StatusCodeNotFound:
 		return codes.NotFound
-	case catena.ALREADY_EXISTS:
+	case catena.StatusCodeAlreadyExists:
 		return codes.AlreadyExists
-	case catena.PERMISSION_DENIED:
+	case catena.StatusCodePermissionDenied:
 		return codes.PermissionDenied
-	case catena.RESOURCE_EXHAUSTED:
+	case catena.StatusCodeResourceExhausted:
 		return codes.ResourceExhausted
-	case catena.FAILED_PRECONDITION:
+	case catena.StatusCodeFailedPrecondition:
 		return codes.FailedPrecondition
-	case catena.ABORTED:
+	case catena.StatusCodeAborted:
 		return codes.Aborted
-	case catena.OUT_OF_RANGE:
+	case catena.StatusCodeOutOfRange:
 		return codes.OutOfRange
-	case catena.UNIMPLEMENTED:
+	case catena.StatusCodeUnimplemented:
 		return codes.Unimplemented
-	case catena.INTERNAL:
+	case catena.StatusCodeInternal:
 		return codes.Internal
-	case catena.UNAVAILABLE:
+	case catena.StatusCodeUnavailable:
 		return codes.Unavailable
-	case catena.DATA_LOSS:
+	case catena.StatusCodeDataLoss:
 		return codes.DataLoss
-	case catena.UNAUTHENTICATED:
+	case catena.StatusCodeUnauthenticated:
 		return codes.Unauthenticated
-	// REST-specific codes need conversion
-	case catena.CREATED, catena.ACCEPTED, catena.NO_CONTENT:
-		return codes.OK
-	case catena.METHOD_NOT_ALLOWED:
-		return codes.Unimplemented
-	case catena.CONFLICT:
-		return codes.AlreadyExists
-	case catena.UNPROCESSABLE_ENTITY:
-		return codes.InvalidArgument
-	case catena.TOO_MANY_REQUESTS:
-		return codes.ResourceExhausted
-	case catena.BAD_GATEWAY:
-		return codes.Unavailable
-	case catena.SERVICE_UNAVAILABLE:
-		return codes.Unavailable
-	case catena.GATEWAY_TIMEOUT:
-		return codes.DeadlineExceeded
 	default:
 		return codes.Unknown
 	}
