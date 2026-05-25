@@ -39,6 +39,7 @@
 package catena
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -277,7 +278,7 @@ func TestWithParam_DeepClone(t *testing.T) {
 	child := NewParamInt32(1)
 	parent := NewParamStruct().WithParam("x", child).Proto()
 
-	child.proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 999}}
+	child.SetValue(int32(999))
 	if parent.GetParams()["x"].GetValue().GetInt32Value() != 1 {
 		t.Error("expected sub-param to be a deep clone, not affected by later mutation")
 	}
@@ -670,4 +671,359 @@ func TestFullChaining(t *testing.T) {
 	if p.GetTemplateOid() != "templates.volume" {
 		t.Error("template_oid mismatch")
 	}
+}
+
+// --- WithValue tests ---
+
+func TestWithValue_MatchingType(t *testing.T) {
+	v, res := ToValue(int32(42))
+	if res.Code != OK {
+		t.Fatal(res.Error)
+	}
+	p := NewParamInt32(0).WithValue(v).Proto()
+	if p.GetValue().GetInt32Value() != 42 {
+		t.Errorf("expected 42, got %d", p.GetValue().GetInt32Value())
+	}
+}
+
+func TestWithValue_Struct(t *testing.T) {
+	v, res := ToValue(map[string]any{"name": "test"})
+	if res.Code != OK {
+		t.Fatal(res.Error)
+	}
+	p := NewParamStruct().WithValue(v).Proto()
+	fields := p.GetValue().GetStructValue().GetFields()
+	if fields["name"].GetStringValue() != "test" {
+		t.Errorf("expected struct field 'name'='test', got %q", fields["name"].GetStringValue())
+	}
+}
+
+func TestWithValue_StructVariant(t *testing.T) {
+	sv := StructVariantValue{StructVariantType: "type_a", Value: int32(10)}
+	v, res := ToValue(sv)
+	if res.Code != OK {
+		t.Fatal(res.Error)
+	}
+	p := NewParamStructVariant().WithValue(v).Proto()
+	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "type_a" {
+		t.Errorf("expected struct_variant_type 'type_a', got %q",
+			p.GetValue().GetStructVariantValue().GetStructVariantType())
+	}
+}
+
+func TestWithValue_MismatchedType(t *testing.T) {
+	v, res := ToValue("hello")
+	if res.Code != OK {
+		t.Fatal(res.Error)
+	}
+	p := NewParamInt32(0).WithValue(v).Proto()
+	if p.GetValue().GetInt32Value() != 0 {
+		t.Error("expected mismatched WithValue to be a no-op")
+	}
+}
+
+// --- SetValue / GetValue tests ---
+
+func TestSetValue_OK(t *testing.T) {
+	cp := NewParamInt32(0)
+	res := cp.SetValue(int32(99))
+	if res.Code != OK {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+	p := cp.Proto()
+	if p.GetValue().GetInt32Value() != 99 {
+		t.Errorf("expected 99, got %d", p.GetValue().GetInt32Value())
+	}
+}
+
+func TestSetValue_TypeMismatch(t *testing.T) {
+	cp := NewParamInt32(0)
+	res := cp.SetValue("not an int")
+	if res.Code != INVALID_ARGUMENT {
+		t.Errorf("expected INVALID_ARGUMENT, got %v", res.Code)
+	}
+	if cp.Proto().GetValue().GetInt32Value() != 0 {
+		t.Error("expected value to remain unchanged after type mismatch")
+	}
+}
+
+func TestSetValue_ConversionError(t *testing.T) {
+	cp := NewParamInt32(0)
+	res := cp.SetValue(struct{}{})
+	if res.Code == OK {
+		t.Error("expected conversion error for unsupported type")
+	}
+}
+
+func TestGetValue_OK(t *testing.T) {
+	cp := NewParamString("hello")
+	v, res := cp.GetValue()
+	if res.Code != OK {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+	s, ok := v.(string)
+	if !ok || s != "hello" {
+		t.Errorf("expected 'hello', got %v", v)
+	}
+}
+
+func TestGetValue_Nil(t *testing.T) {
+	cp := NewParamStruct()
+	v, res := cp.GetValue()
+	if res.Code != OK {
+		t.Fatalf("expected OK for nil value, got %v: %s", res.Code, res.Error)
+	}
+	if v != nil {
+		t.Errorf("expected nil value, got %v", v)
+	}
+}
+
+func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
+	cp := NewParamStruct()
+	input := map[string]any{"x": int32(1), "y": int32(2)}
+	res := cp.SetValue(input)
+	if res.Code != OK {
+		t.Fatalf("SetValue failed: %s", res.Error)
+	}
+	out, res := cp.GetValue()
+	if res.Code != OK {
+		t.Fatalf("GetValue failed: %s", res.Error)
+	}
+	m, ok := out.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map[string]any, got %T", out)
+	}
+	if m["x"] != int32(1) || m["y"] != int32(2) {
+		t.Errorf("round-trip mismatch: got %v", m)
+	}
+}
+
+// --- Typed factory value tests ---
+
+func TestNewParamStruct_WithValue(t *testing.T) {
+	p := NewParamStruct(map[string]any{"a": int32(1)}).Proto()
+	fields := p.GetValue().GetStructValue().GetFields()
+	if fields["a"].GetInt32Value() != 1 {
+		t.Errorf("expected struct field 'a'=1, got %d", fields["a"].GetInt32Value())
+	}
+}
+
+func TestNewParamStruct_NoValue(t *testing.T) {
+	p := NewParamStruct().Proto()
+	if p.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when no arg provided")
+	}
+}
+
+func TestNewParamStructVariant_WithValue(t *testing.T) {
+	sv := StructVariantValue{StructVariantType: "kind_a", Value: int32(5)}
+	p := NewParamStructVariant(sv).Proto()
+	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "kind_a" {
+		t.Errorf("expected struct_variant_type 'kind_a', got %q",
+			p.GetValue().GetStructVariantValue().GetStructVariantType())
+	}
+}
+
+func TestNewParamStructArray_WithValue(t *testing.T) {
+	arr := []map[string]any{
+		{"x": int32(1)},
+		{"x": int32(2)},
+	}
+	p := NewParamStructArray(arr).Proto()
+	list := p.GetValue().GetStructArrayValues().GetStructValues()
+	if len(list) != 2 {
+		t.Fatalf("expected 2 structs, got %d", len(list))
+	}
+	if list[0].GetFields()["x"].GetInt32Value() != 1 {
+		t.Error("expected first struct field x=1")
+	}
+}
+
+func TestNewParamStructVariantArray_WithValue(t *testing.T) {
+	arr := []StructVariantValue{
+		{StructVariantType: "a", Value: int32(1)},
+		{StructVariantType: "b", Value: int32(2)},
+	}
+	p := NewParamStructVariantArray(arr).Proto()
+	list := p.GetValue().GetStructVariantArrayValues().GetStructVariants()
+	if len(list) != 2 {
+		t.Fatalf("expected 2 variants, got %d", len(list))
+	}
+	if list[0].GetStructVariantType() != "a" {
+		t.Error("expected first variant type 'a'")
+	}
+}
+
+// --- NewParamFromValue tests ---
+
+func TestNewParamFromValue_Int32(t *testing.T) {
+	v, _ := ToValue(int32(42))
+	cp := NewParamFromValue(v)
+	p := cp.Proto()
+	if p.GetType() != protos.ParamType_INT32 {
+		t.Errorf("expected INT32, got %v", p.GetType())
+	}
+	if p.GetValue().GetInt32Value() != 42 {
+		t.Errorf("expected 42, got %d", p.GetValue().GetInt32Value())
+	}
+}
+
+func TestNewParamFromValue_Struct(t *testing.T) {
+	v, _ := ToValue(map[string]any{"k": "v"})
+	cp := NewParamFromValue(v)
+	if cp.Proto().GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", cp.Proto().GetType())
+	}
+}
+
+func TestNewParamFromValue_StructVariant(t *testing.T) {
+	v, _ := ToValue(StructVariantValue{StructVariantType: "t", Value: int32(0)})
+	cp := NewParamFromValue(v)
+	if cp.Proto().GetType() != protos.ParamType_STRUCT_VARIANT {
+		t.Errorf("expected STRUCT_VARIANT, got %v", cp.Proto().GetType())
+	}
+}
+
+func TestNewParamFromValue_StructArray(t *testing.T) {
+	v, _ := ToValue([]map[string]any{{"a": int32(1)}})
+	cp := NewParamFromValue(v)
+	if cp.Proto().GetType() != protos.ParamType_STRUCT_ARRAY {
+		t.Errorf("expected STRUCT_ARRAY, got %v", cp.Proto().GetType())
+	}
+}
+
+func TestNewParamFromValue_StructVariantArray(t *testing.T) {
+	v, _ := ToValue([]StructVariantValue{{StructVariantType: "t", Value: int32(0)}})
+	cp := NewParamFromValue(v)
+	if cp.Proto().GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
+		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", cp.Proto().GetType())
+	}
+}
+
+func TestNewParamFromValue_Nil(t *testing.T) {
+	cp := NewParamFromValue(Value{})
+	if cp.Proto().GetType() != protos.ParamType_UNDEFINED {
+		t.Errorf("expected UNDEFINED for nil value, got %v", cp.Proto().GetType())
+	}
+}
+
+func TestNewParamFromValue_AllScalarTypes(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    any
+		wantType protos.ParamType
+	}{
+		{"float32", float32(1.5), protos.ParamType_FLOAT32},
+		{"string", "hello", protos.ParamType_STRING},
+		{"int32_array", []int32{1, 2}, protos.ParamType_INT32_ARRAY},
+		{"float32_array", []float32{1.0}, protos.ParamType_FLOAT32_ARRAY},
+		{"string_array", []string{"a"}, protos.ParamType_STRING_ARRAY},
+		{"empty", EmptyValue{}, protos.ParamType_EMPTY},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, res := ToValue(tt.input)
+			if res.Code != OK {
+				t.Fatalf("ToValue failed: %s", res.Error)
+			}
+			cp := NewParamFromValue(v)
+			if cp.Proto().GetType() != tt.wantType {
+				t.Errorf("expected %v, got %v", tt.wantType, cp.Proto().GetType())
+			}
+		})
+	}
+}
+
+// --- Validation helper tests ---
+
+func TestIsValueValidForParamType_NilValue(t *testing.T) {
+	if isValueValidForParamType(nil, protos.ParamType_INT32) {
+		t.Error("expected nil value to be invalid")
+	}
+}
+
+func TestIsValueValidForParamType_DataPayload_Binary(t *testing.T) {
+	v := &protos.Value{Kind: &protos.Value_DataPayload{
+		DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: []byte{1}}},
+	}}
+	if !isValueValidForParamType(v, protos.ParamType_BINARY) {
+		t.Error("expected DataPayload to be valid for BINARY")
+	}
+	if !isValueValidForParamType(v, protos.ParamType_DATA) {
+		t.Error("expected DataPayload to be valid for DATA")
+	}
+	if isValueValidForParamType(v, protos.ParamType_INT32) {
+		t.Error("expected DataPayload to be invalid for INT32")
+	}
+}
+
+func TestParamTypeFromValueKind_Nil(t *testing.T) {
+	if paramTypeFromValueKind(nil) != protos.ParamType_UNDEFINED {
+		t.Error("expected UNDEFINED for nil value")
+	}
+}
+
+func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
+	v := &protos.Value{Kind: &protos.Value_DataPayload{}}
+	if paramTypeFromValueKind(v) != protos.ParamType_DATA {
+		t.Error("expected DATA for DataPayload value kind")
+	}
+}
+
+// --- Concurrency tests ---
+
+func TestConcurrentSetGetValue(t *testing.T) {
+	cp := NewParamInt32(0)
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(2)
+		val := int32(i)
+		go func() {
+			defer wg.Done()
+			cp.SetValue(val)
+		}()
+		go func() {
+			defer wg.Done()
+			cp.GetValue()
+		}()
+	}
+	wg.Wait()
+}
+
+func TestConcurrentWithMethods(t *testing.T) {
+	cp := NewParamStruct()
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(3)
+		go func() {
+			defer wg.Done()
+			cp.WithWidget("w")
+		}()
+		go func() {
+			defer wg.Done()
+			cp.WithAccessScope("admin")
+		}()
+		go func() {
+			defer wg.Done()
+			cp.Proto()
+		}()
+	}
+	wg.Wait()
+}
+
+func TestConcurrentWithParam(t *testing.T) {
+	parent := NewParamStruct()
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+		child := NewParamInt32(int32(i))
+		go func(oid string) {
+			defer wg.Done()
+			parent.WithParam(oid, child)
+		}("p" + string(rune('a'+i%26)))
+	}
+	wg.Wait()
 }
