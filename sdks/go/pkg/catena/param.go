@@ -39,8 +39,6 @@
 package catena
 
 import (
-	"sync"
-
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -48,9 +46,7 @@ import (
 )
 
 // CatenaParam wraps a protos.Param and exposes a fluent builder API.
-// All methods are safe for concurrent use.
 type CatenaParam struct {
-	mu    sync.RWMutex
 	proto *protos.Param
 }
 
@@ -236,15 +232,11 @@ func NewParamFromValue(v Value) *CatenaParam {
 // --- Chainable With* methods ---
 
 func (cp *CatenaParam) WithName(name PolyglotText) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.Name = &protos.PolyglotText{DisplayStrings: name}
 	return cp
 }
 
 func (cp *CatenaParam) WithValue(v Value) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	if !isValueValidForParamType(v.Value, cp.proto.Type) {
 		logger.Warning("WithValue: value kind incompatible with param type; ignoring",
 			"param_type", cp.proto.Type.String())
@@ -258,8 +250,6 @@ func (cp *CatenaParam) WithConstraint(c *protos.Constraint) *CatenaParam {
 	if c == nil {
 		return cp
 	}
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	if !isConstraintValidForParam(c, cp.proto.Type) {
 		logger.Warning("WithConstraint: constraint type incompatible with param type; ignoring",
 			"constraint_type", c.GetType().String(),
@@ -271,22 +261,16 @@ func (cp *CatenaParam) WithConstraint(c *protos.Constraint) *CatenaParam {
 }
 
 func (cp *CatenaParam) WithReadOnly(readOnly bool) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.ReadOnly = readOnly
 	return cp
 }
 
 func (cp *CatenaParam) WithWidget(widget string) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.Widget = widget
 	return cp
 }
 
 func (cp *CatenaParam) WithPrecision(precision uint32) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	if cp.proto.Type != protos.ParamType_FLOAT32 && cp.proto.Type != protos.ParamType_FLOAT32_ARRAY {
 		logger.Warning("WithPrecision called on non-float param; ignoring",
 			"param_type", cp.proto.Type.String())
@@ -297,8 +281,6 @@ func (cp *CatenaParam) WithPrecision(precision uint32) *CatenaParam {
 }
 
 func (cp *CatenaParam) WithMaxLength(maxLength uint32) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	if cp.proto.Type != protos.ParamType_STRING && cp.proto.Type != protos.ParamType_STRING_ARRAY {
 		logger.Warning("WithMaxLength called on param type that does not support max_length; ignoring",
 			"param_type", cp.proto.Type.String())
@@ -309,15 +291,11 @@ func (cp *CatenaParam) WithMaxLength(maxLength uint32) *CatenaParam {
 }
 
 func (cp *CatenaParam) WithAccessScope(scope string) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.AccessScope = scope
 	return cp
 }
 
 func (cp *CatenaParam) WithClientHint(key, value string) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	if cp.proto.ClientHints == nil {
 		cp.proto.ClientHints = map[string]string{}
 	}
@@ -339,12 +317,8 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 		return cp
 	}
 
-	param.mu.RLock()
 	cloned := proto.Clone(param.proto).(*protos.Param)
-	param.mu.RUnlock()
 
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
 		logger.Warning("WithParam called on param type that does not support sub-params; ignoring",
 			"param_type", cp.proto.Type.String())
@@ -361,36 +335,26 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 // move this there. Consider an unexported baseParam that both CatenaParam and
 // CatenaCommand compose from, since other fields may also be command-specific.
 func (cp *CatenaParam) WithResponse(response bool) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.Response = response
 	return cp
 }
 
 func (cp *CatenaParam) WithHelp(help PolyglotText) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.Help = &protos.PolyglotText{DisplayStrings: help}
 	return cp
 }
 
 func (cp *CatenaParam) WithOidAliases(aliases ...string) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.OidAliases = aliases
 	return cp
 }
 
 func (cp *CatenaParam) WithMinimalSet(minimalSet bool) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.MinimalSet = minimalSet
 	return cp
 }
 
 func (cp *CatenaParam) WithStateless(stateless bool) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.Stateless = stateless
 	return cp
 }
@@ -401,8 +365,6 @@ func (cp *CatenaParam) WithStateless(stateless bool) *CatenaParam {
 // know their full mounted path, which adds significant complexity. Revisit if
 // we ever add path tracking to the param tree.
 func (cp *CatenaParam) WithTemplateOid(oid string) *CatenaParam {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	cp.proto.TemplateOid = oid
 	return cp
 }
@@ -416,8 +378,6 @@ func (cp *CatenaParam) SetValue(v any) StatusResult {
 	if res.Code != OK {
 		return res
 	}
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
 	if !isValueValidForParamType(pv, cp.proto.Type) {
 		return StatusResult{Code: INVALID_ARGUMENT, Error: "value kind incompatible with param type " + cp.proto.Type.String()}
 	}
@@ -428,8 +388,6 @@ func (cp *CatenaParam) SetValue(v any) StatusResult {
 // GetValue reads the current value and converts it to a native Go type via
 // FromProto. Returns (nil, OK) if no value is set.
 func (cp *CatenaParam) GetValue() (any, StatusResult) {
-	cp.mu.RLock()
-	defer cp.mu.RUnlock()
 	if cp.proto.Value == nil {
 		return nil, StatusResult{Code: OK}
 	}
@@ -439,8 +397,6 @@ func (cp *CatenaParam) GetValue() (any, StatusResult) {
 // Proto returns the underlying protos.Param. Callers must not mutate the
 // returned proto concurrently with other CatenaParam method calls.
 func (cp *CatenaParam) Proto() *protos.Param {
-	cp.mu.RLock()
-	defer cp.mu.RUnlock()
 	return cp.proto
 }
 

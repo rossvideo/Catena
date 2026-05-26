@@ -39,7 +39,6 @@
 package catena
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -973,88 +972,11 @@ func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
 	}
 }
 
-// --- Concurrency tests ---
-
-func TestConcurrentSetGetValue(t *testing.T) {
-	cp := NewParamInt32(0)
-	var wg sync.WaitGroup
-	for i := 0; i < 100; i++ {
-		wg.Add(2)
-		val := int32(i)
-		go func() {
-			defer wg.Done()
-			cp.SetValue(val)
-		}()
-		go func() {
-			defer wg.Done()
-			cp.GetValue()
-		}()
-	}
-	wg.Wait()
-}
-
-func TestConcurrentWithMethods(t *testing.T) {
-	cp := NewParamStruct()
-	var wg sync.WaitGroup
-	for i := 0; i < 50; i++ {
-		wg.Add(3)
-		go func() {
-			defer wg.Done()
-			cp.WithWidget("w")
-		}()
-		go func() {
-			defer wg.Done()
-			cp.WithAccessScope("admin")
-		}()
-		go func() {
-			defer wg.Done()
-			cp.Proto()
-		}()
-	}
-	wg.Wait()
-}
-
-func TestConcurrentWithParam(t *testing.T) {
-	parent := NewParamStruct()
-	var wg sync.WaitGroup
-	for i := 0; i < 50; i++ {
-		wg.Add(1)
-		child := NewParamInt32(int32(i))
-		go func(oid string) {
-			defer wg.Done()
-			parent.WithParam(oid, child)
-		}("p" + string(rune('a'+i%26)))
-	}
-	wg.Wait()
-}
-
 func TestWithParam_SelfReference(t *testing.T) {
 	cp := NewParamStruct()
 	cp.WithParam("self", cp)
 	sub := cp.Proto().GetParams()["self"]
 	if sub == nil {
 		t.Fatal("expected self-referencing sub-param to be set")
-	}
-}
-
-func TestWithParam_CrossReference(t *testing.T) {
-	a := NewParamStruct()
-	b := NewParamStruct()
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		a.WithParam("b", b)
-	}()
-	go func() {
-		defer wg.Done()
-		b.WithParam("a", a)
-	}()
-	wg.Wait()
-	if a.Proto().GetParams()["b"] == nil {
-		t.Error("expected a to contain sub-param 'b'")
-	}
-	if b.Proto().GetParams()["a"] == nil {
-		t.Error("expected b to contain sub-param 'a'")
 	}
 }
