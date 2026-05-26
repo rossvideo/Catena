@@ -81,6 +81,25 @@ func TestNewJwtValidator(t *testing.T) {
 		}
 	})
 
+	t.Run("empty http", func(t *testing.T) {
+		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			ValidateSignature: false,
+		})
+		if err != nil {
+			t.Fatalf("newJwtValidator() error = %v", err)
+		}
+		if validator == nil {
+			t.Fatal("newJwtValidator() got nil, want non-nil")
+		}
+		validatorTyped, ok := validator.(*jwtValidator)
+		if !ok {
+			t.Fatalf("newJwtValidator() got type %T, want *jwtValidator", validator)
+		}
+		if validatorTyped.options.Http != http.DefaultClient {
+			t.Fatalf("newJwtValidator() got Http = %v, want %v", validatorTyped.options.Http, http.DefaultClient)
+		}
+	})
+
 	t.Run("discoverJWKSEndpoint error", func(t *testing.T) {
 		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
 			Issuer:            "http://[::1",
@@ -246,7 +265,7 @@ func TestJwtValidator_validateClaims(t *testing.T) {
 	})
 }
 
-func TestJwtValidator_validateSignature(t *testing.T) {
+func TestJwtValidator_validateSignatureAndClaims(t *testing.T) {
 	validator := &jwtValidator{
 		keyfunc: func(token *jwt.Token) (any, error) {
 			return []byte("secret"), nil
@@ -261,16 +280,16 @@ func TestJwtValidator_validateSignature(t *testing.T) {
 			t.Fatalf("SignedString() error = %v", err)
 		}
 
-		token, err := validator.validateSignature(tokenString, nil)
+		token, err := validator.validateSignatureAndClaims(tokenString, nil)
 		if err != nil {
-			t.Fatalf("validateSignature() error = %v", err)
+			t.Fatalf("validateSignatureAndClaims() error = %v", err)
 		}
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			t.Fatalf("validateSignature() got claims of type %T, want jwt.MapClaims", token.Claims)
+			t.Fatalf("validateSignatureAndClaims() got claims of type %T, want jwt.MapClaims", token.Claims)
 		}
 		if claims["foo"] != "bar" {
-			t.Fatalf("validateSignature() got claims[\"foo\"] = %v, want \"bar\"", claims["foo"])
+			t.Fatalf("validateSignatureAndClaims() got claims[\"foo\"] = %v, want \"bar\"", claims["foo"])
 		}
 	})
 
@@ -282,9 +301,9 @@ func TestJwtValidator_validateSignature(t *testing.T) {
 			t.Fatalf("SignedString() error = %v", err)
 		}
 
-		_, err = validator.validateSignature(tokenString, nil)
+		_, err = validator.validateSignatureAndClaims(tokenString, nil)
 		if err == nil || !strings.Contains(err.Error(), "signature is invalid") {
-			t.Fatalf("validateSignature() error = %v, want signature is invalid", err)
+			t.Fatalf("validateSignatureAndClaims() error = %v, want signature is invalid", err)
 		}
 	})
 
@@ -296,9 +315,9 @@ func TestJwtValidator_validateSignature(t *testing.T) {
 		if err != nil {
 			t.Fatalf("SignedString() error = %v", err)
 		}
-		_, err = v.validateSignature(tokenString, nil)
+		_, err = v.validateSignatureAndClaims(tokenString, nil)
 		if err == nil || !strings.Contains(err.Error(), "keyfunc is not initialized") {
-			t.Fatalf("validateSignature() error = %v, want keyfunc is not initialized", err)
+			t.Fatalf("validateSignatureAndClaims() error = %v, want keyfunc is not initialized", err)
 		}
 	})
 }

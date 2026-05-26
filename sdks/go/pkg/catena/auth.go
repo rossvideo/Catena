@@ -78,12 +78,18 @@ var catenaWriteScopes = []string{
 
 // JwtValidationOptions controls optional claim validation and HTTP behavior.
 type JwtValidationOptions struct {
-	AllowedAlgs       []string
-	Audience          string
-	Issuer            string
-	Leeway            time.Duration
+	// AllowedAlgs specifies which signing algorithms are allowed. If empty, defaults to ES256.
+	AllowedAlgs []string
+	// Audience used to validate the "aud" claim. Optional.
+	Audience string
+	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if ValidateSignature is true. Optional.
+	Issuer string
+	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
+	Leeway time.Duration
+	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
 	ValidateSignature bool
 
+	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
 	Http *http.Client
 }
 
@@ -97,43 +103,54 @@ type jwtValidatorInterface interface {
 	validateJwt(tokenString string) (*jwt.Token, error)
 }
 
+// newJwtValidator creates a JWT validator based on the provided options.
+// If ValidateSignature is true, it discovers the JWKS endpoint and sets up signature validation.
+// If ValidateSignature is false, it only validates claims without verifying the signature.
 func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidatorInterface, error) {
 	v := &jwtValidator{
 		options: opts,
 	}
 
+	// Use the default HTTP client if none was provided.
+	if v.options.Http == nil {
+		v.options.Http = http.DefaultClient
+	}
+
+	// determine whether to validate signature based on options
 	if opts.ValidateSignature {
+		// If signature validation is enabled, we need to discover the JWKS endpoint and set up the keyfunc.
 		jwksUrl, err := discoverJWKSEndpoint(ctx, opts.Issuer, opts.Http)
 		if err != nil {
 			return nil, fmt.Errorf("discover jwks endpoint: %w", err)
 		}
 
+		// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
+		// within the KeyFunc there is a background goroutine that periodically refreshes
+		// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
+		// goroutine and any in-flight requests.
 		keyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
 		if err != nil {
 			return nil, fmt.Errorf("create keyfunc: %w", err)
 		}
+
+		// store the keyfunc and set the validateFn to validate both signature and claims
 		v.keyfunc = keyFunc.Keyfunc
-		v.validateFn = v.validateSignature
+		v.validateFn = v.validateSignatureAndClaims
 	} else {
+		// not validating signature, just validate claims
 		v.validateFn = v.validateClaims
 	}
 
 	return v, nil
 }
 func (v *jwtValidator) signingMethods() []string {
+	// if they give no signing methods, make a default we don't want to allow all
+	// algorithms by default, as that would be a security risk
 	if len(v.options.AllowedAlgs) == 0 {
 		return []string{
-			jwt.SigningMethodRS256.Alg(),
-			jwt.SigningMethodRS384.Alg(),
-			jwt.SigningMethodRS512.Alg(),
-			jwt.SigningMethodPS256.Alg(),
-			jwt.SigningMethodPS384.Alg(),
-			jwt.SigningMethodPS512.Alg(),
+			// Ross Way To Auth specifies ES256, so we default to that
+			// but allow users to specify other algorithms if needed.
 			jwt.SigningMethodES256.Alg(),
-			jwt.SigningMethodES384.Alg(),
-			jwt.SigningMethodES512.Alg(),
-			jwt.SigningMethodEdDSA.Alg(),
-			jwt.SigningMethodHS256.Alg(),
 		}
 	}
 	return append([]string(nil), v.options.AllowedAlgs...)
@@ -141,36 +158,45 @@ func (v *jwtValidator) signingMethods() []string {
 
 // discoverJWKSEndpoint resolves the JWKS URL from an OpenID Connect issuer.
 func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Client) (string, error) {
+	// process issuer URL: trim whitespace and trailing slashes, and validate it's not empty
 	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
 	if issuer == "" {
 		return "", fmt.Errorf("issuer is required")
 	}
 
+	// construct the discovery URL and fetch the OpenID Connect discovery document
 	discoveryURL := issuer + "/.well-known/openid-configuration"
+	// the discovery document should contain a "jwks_uri" field that tells us where to fetch
+	// the JWKS for validating JWT signatures
 	discoveryDoc := struct {
 		JwksUri string `json:"jwks_uri"`
 	}{
 		JwksUri: "",
 	}
 
+	// make a request using the client and ctx to allow for cancellation and timeouts
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryURL, nil)
 	if err != nil {
 		return "", fmt.Errorf("build request: %w", err)
 	}
 
+	// do it
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("perform request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	// check for a successful response
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return "", fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
+	// decode the discovery document and extract the JWKS URI
 	if err := json.NewDecoder(resp.Body).Decode(&discoveryDoc); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
+	// if the discovery document doesn't contain a jwks_uri, we can't validate signatures
 	if discoveryDoc.JwksUri == "" {
 		return "", fmt.Errorf("jwks_uri not found in discovery document")
 	}
@@ -181,11 +207,13 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 // ValidateJWT verifies a JWT signature against the provided JWKS URL.
 // It fetches, caches, and auto-refreshes the JWKS as needed.
 func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
+	// process the token string: trim whitespace and validate it's not empty
 	tokenString = strings.TrimSpace(tokenString)
 	if tokenString == "" {
 		return nil, fmt.Errorf("jwt is required")
 	}
 
+	// build the parser options based on the validator options.
 	parseOptions := []jwt.ParserOption{jwt.WithValidMethods(v.signingMethods())}
 	if v.options.Issuer != "" {
 		parseOptions = append(parseOptions, jwt.WithIssuer(v.options.Issuer))
@@ -197,10 +225,13 @@ func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
 		parseOptions = append(parseOptions, jwt.WithLeeway(v.options.Leeway))
 	}
 
+	// quick check to make sure this was initialized properly
 	if v.validateFn == nil {
 		return nil, fmt.Errorf("jwt validator is not properly initialized")
 	}
 
+	// do the validation using the approprate function
+	// have the if up in the ctor means we don't have to check the options every time
 	token, err := v.validateFn(tokenString, parseOptions)
 	if err != nil {
 		return nil, fmt.Errorf("validate jwt: %w", err)
@@ -209,13 +240,16 @@ func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
+// validateClaims parses the JWT without validating the signature, and validates the claims based on the provided parser options.
 func (v *jwtValidator) validateClaims(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error) {
 	claims := jwt.MapClaims{}
 	parser := jwt.NewParser(parseOptions...)
+	// just parse unverifed so it doesn't check the signature
 	token, _, err := parser.ParseUnverified(tokenString, claims)
 	if err != nil {
 		return nil, err
 	}
+	// then we separately validate the claims
 	validator := jwt.NewValidator(parseOptions...)
 	if err := validator.Validate(claims); err != nil {
 		return nil, err
@@ -223,12 +257,18 @@ func (v *jwtValidator) validateClaims(tokenString string, parseOptions []jwt.Par
 	return token, nil
 }
 
-func (v *jwtValidator) validateSignature(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error) {
+// validateSignatureAndClaims parses the JWT, validates the signature using the keyfunc, and validates the claims based on the provided parser options.
+func (v *jwtValidator) validateSignatureAndClaims(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error) {
 	claims := jwt.MapClaims{}
 	if v.keyfunc == nil {
 		return nil, fmt.Errorf("keyfunc is not initialized")
 	}
-	return jwt.ParseWithClaims(tokenString, claims, v.keyfunc, parseOptions...)
+	// super simple check, the jwt lib handles everything if we have a keyfunc
+	token, err := jwt.ParseWithClaims(tokenString, claims, v.keyfunc, parseOptions...)
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
 func extractTokenScopes(token *jwt.Token) (map[string]struct{}, StatusResult) {
