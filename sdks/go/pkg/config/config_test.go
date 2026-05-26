@@ -50,7 +50,7 @@ func TestDefaultOptions(t *testing.T) {
 	opts := defaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
-		RestPort:       6254,
+		RestPort:       8080,
 		GrpcPort:       6254,
 		GrpcReflection: false,
 		Server: ServerOptions{

@@ -5,7 +5,7 @@
 ## Constructor
 
 ```go
-rest := transports.NewRestTransport(transports.RestConfig{Port: 6254})
+rest := transports.NewRestTransport(transports.RestConfig{Port: 8080})
 // or with defaults
 rest := transports.NewRestTransport(transports.DefaultRestConfig())
 ```

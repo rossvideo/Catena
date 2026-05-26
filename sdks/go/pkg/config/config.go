@@ -50,7 +50,7 @@ import (
 type RuntimeOptions struct {
 	UseGrpc bool `env:"USE_GRPC" flag:"use-grpc"`
 	UseRest bool `env:"USE_REST" flag:"use-rest"`
-	// RestPort is the port the REST transport listens on (default: 6254)
+	// RestPort is the port the REST transport listens on (default: 8080)
 	RestPort int `env:"REST_PORT" flag:"rest-port"`
 	// GrpcPort is the port the gRPC transport listens on (default: 6254)
 	GrpcPort int `env:"GRPC_PORT" flag:"grpc-port"`
@@ -163,7 +163,7 @@ func defaultRuntimeOptions() RuntimeOptions {
 	return RuntimeOptions{
 		UseGrpc:        false,
 		UseRest:        false,
-		RestPort:       6254,
+		RestPort:       8080,
 		GrpcPort:       6254,
 		GrpcReflection: false,
 		Server:         DefaultServerOptions(),

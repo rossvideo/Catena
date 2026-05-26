@@ -63,7 +63,7 @@ type RestConfig struct {
 
 // DefaultRestConfig returns a RestConfig with sensible defaults.
 func DefaultRestConfig() RestConfig {
-	return RestConfig{Port: 6254}
+	return RestConfig{Port: 8080}
 }
 
 type RestTransport struct {
