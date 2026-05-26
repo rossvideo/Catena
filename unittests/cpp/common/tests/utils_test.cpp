@@ -3,7 +3,7 @@
 * @brief Testing for utils.cpp
 * @author nathan.rochon@rossvideo.com
 * @author keon.foster@rossvideo.com
-* @date 2026-02-19
+* @date 2026-03-10
 * @copyright Copyright © 2026 Ross Video Ltd
 */
 
@@ -249,7 +249,7 @@ TEST(UtilsTest, Value_Param_KIND_NOT_SET) {
 // READTIMESTAMP TESTS
 
 TEST(UtilsTest, Read_Timestamp_Valid_Normal) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "123123123";
     valid = catena::readTimestamp(value, result);
@@ -258,7 +258,7 @@ TEST(UtilsTest, Read_Timestamp_Valid_Normal) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Valid_Large) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value(19, '1');
     valid = catena::readTimestamp(value, result);
@@ -267,7 +267,7 @@ TEST(UtilsTest, Read_Timestamp_Valid_Large) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Valid_Small) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "1";
     valid = catena::readTimestamp(value, result);
@@ -276,7 +276,7 @@ TEST(UtilsTest, Read_Timestamp_Valid_Small) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Valid_Leading_Zero) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "0123123";
     valid = catena::readTimestamp(value, result);
@@ -285,7 +285,7 @@ TEST(UtilsTest, Read_Timestamp_Valid_Leading_Zero) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_Char) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "123@123";
     valid = catena::readTimestamp(value, result);
@@ -294,7 +294,7 @@ TEST(UtilsTest, Read_Timestamp_Invalid_Char) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_Period) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "123.123";
     valid = catena::readTimestamp(value, result);
@@ -303,7 +303,7 @@ TEST(UtilsTest, Read_Timestamp_Invalid_Period) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_Negative) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "-123123";
     valid = catena::readTimestamp(value, result);
@@ -312,7 +312,7 @@ TEST(UtilsTest, Read_Timestamp_Invalid_Negative) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_Prefix) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "abc123123";
     valid = catena::readTimestamp(value, result);
@@ -321,7 +321,7 @@ TEST(UtilsTest, Read_Timestamp_Invalid_Prefix) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_Suffix) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "123123abc";
     valid = catena::readTimestamp(value, result);
@@ -330,7 +330,7 @@ TEST(UtilsTest, Read_Timestamp_Invalid_Suffix) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_All_Chars) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "abcdefg";
     valid = catena::readTimestamp(value, result);
@@ -339,16 +339,16 @@ TEST(UtilsTest, Read_Timestamp_Invalid_All_Chars) {
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_Large_Value) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
-    std::string value(20, '1');
+    std::string value(21, '1');
     valid = catena::readTimestamp(value, result);
     EXPECT_EQ(result, 0);
     EXPECT_FALSE(valid);
 }
 
 TEST(UtilsTest, Read_Timestamp_Invalid_Empty) {
-    long result = 0;
+    uint64_t result = 0;
     bool valid;
     std::string value = "";
     valid = catena::readTimestamp(value, result);

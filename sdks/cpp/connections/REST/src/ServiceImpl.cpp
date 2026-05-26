@@ -17,6 +17,8 @@ using catena::REST::ServiceImpl;
 #include <controllers/Subscriptions.h>
 #include <controllers/ExecuteCommand.h>
 
+#include <boost/asio/ip/address_v4.hpp>
+
 using catena::REST::Connect;
 
 // (UNUSED) expand env variables
@@ -25,7 +27,19 @@ void expandEnvVariables(std::string &str) {
     static std::regex env{"\\$\\{([^}]+)\\}"};
     std::smatch match;
     while (std::regex_search(str, match, env)) {
-        const char *s = getenv(match[1].str().c_str());
+        const char *s;
+        char *buf = nullptr;
+        #ifdef _WIN32
+        size_t len = 0;
+        if (_dupenv_s(&buf, &len, match[1].str().c_str()) == 0 && buf != nullptr) {
+            s = buf;
+            free(buf);
+        } else {
+            s = NULL;
+        }
+        #else
+        s = getenv(match[1].str().c_str());
+        #endif
         const std::string var(s == nullptr ? "" : s);
         str.replace(match[0].first, match[0].second, var);
     }
@@ -40,7 +54,6 @@ ServiceImpl::ServiceImpl(const ServiceConfig& config)
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), config.port)},
       router_{Router::getInstance()},
       connectionQueue_{config.maxConnections} {
-
     if (authorizationEnabled_) { LOG(INFO) <<"Authorization enabled."; }
     // Adding dms to slotMap.
     for (auto dm : config.dms) {
@@ -87,8 +100,8 @@ void ServiceImpl::run() {
 
     while (!shutdown_) {
         // Waiting for a connection.
-        tcp::socket socket(io_context_);
-        acceptor_.accept(socket);
+        auto socket = std::make_shared<tcp::socket>(io_context_);
+        acceptor_.accept(*socket);
         // Once a connection is made, increment activeRequests and handle async.
         {
             std::lock_guard<std::mutex> lock(activeRequestMutex_);
@@ -105,13 +118,13 @@ void ServiceImpl::run() {
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
-                        SocketWriter(socket, context.origin()).sendResponse(rc);
+                        SocketWriter(*socket, context.origin()).sendResponse(rc);
                     // Sending an empty 200 OK response for health check.
                     } else if (context.method() == Method_GET && context.endpoint() == "/health") {
-                        SocketWriter(socket, context.origin()).sendResponse(rc);
+                        SocketWriter(*socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
-                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dms_);
+                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, *socket, context, dms_);
                         request->proceed();
                     // ERROR
                     } else { 
@@ -138,7 +151,7 @@ void ServiceImpl::run() {
             if (rc.status != catena::StatusCode::OK) {
                 // Try ensures that we don't fail to decrement active requests.
                 try {
-                    SocketWriter writer(socket);
+                    SocketWriter writer(*socket);
                     writer.sendResponse(rc);
                 } catch (...) {}
             }
@@ -168,7 +181,11 @@ void ServiceImpl::Shutdown() {
     shutdown_ = true;
     // Sending dummy connection to run() loop.
     tcp::socket dummySocket(io_context_);
+    #ifdef _WIN32
+    dummySocket.connect(tcp::endpoint(boost::asio::ip::address_v4::loopback(), port_));
+    #else
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
+    #endif
 };
 
 // (UNUSED)

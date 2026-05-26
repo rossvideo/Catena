@@ -315,4 +315,4 @@ class Path {
 }  // namespace common
 }  // namespace catena
 
-catena::common::Path operator"" _path(const char* lit, std::size_t sz);
+catena::common::Path operator""_path(const char* lit, std::size_t sz);

@@ -67,7 +67,7 @@ class SubscriptionManager : public ISubscriptionManager {
 
     /**
      * @brief Add an OID subscription
-     * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
+     * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/ *")
      * @param dm The device model to use 
      * @param rc The status code to return if the operation fails
      * @param authz The authorizer to use for checking permissions
@@ -77,7 +77,7 @@ class SubscriptionManager : public ISubscriptionManager {
 
     /**
      * @brief Remove an OID subscription
-     * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/*")
+     * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/ *")
      * @param dm The device model to use
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
@@ -98,7 +98,7 @@ class SubscriptionManager : public ISubscriptionManager {
     /**
      * @brief Check if an OID is a wildcard subscription
      * @param oid The OID to check
-     * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
+     * @return true if the OID is greater than or equal to 2 characters and ends with "/ *"
      */
     bool isWildcard(const std::string& oid) override;
 

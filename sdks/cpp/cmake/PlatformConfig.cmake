@@ -48,6 +48,9 @@ function(setup_platform_config)
         set(CPP ${CPP} PARENT_SCOPE)
         set(cpp_opts -E -P -x c PARENT_SCOPE)
 
+        # Disable braced scalar initialization, non-standard types with offsetof and block comment warnings 
+        add_compile_options(-Wno-braced-scalar-init -Wno-invalid-offsetof)
+
     else()
         # Linux/other platforms
         find_program(CPP cpp)

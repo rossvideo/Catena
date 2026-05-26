@@ -32,7 +32,7 @@
  * @brief Mock implementation for the ISocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/02/11
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -47,7 +47,7 @@ namespace REST {
 // Mock implementation for the ISocketReader class.
 class MockSocketReader : public ISocketReader {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket, uint32_t timeout), (override));
+    MOCK_METHOD(void, read, (std::shared_ptr<tcp::socket>& socket, uint32_t timeout), (override));
     MOCK_METHOD(RESTMethod, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
@@ -64,8 +64,8 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
     MOCK_METHOD(const std::string&, EOPath, (), (const, override));
     MOCK_METHOD(catena::common::ISubscriptionManager&, subscriptionManager, (), (override));
-    MOCK_METHOD(const long, requestStart, (), (const, override));
-    MOCK_METHOD(const long, requestReceived, (), (const, override));
+    MOCK_METHOD(const uint64_t, requestStart, (), (const, override));
+    MOCK_METHOD(const uint64_t, requestReceived, (), (const, override));
 };
 
 } // namespace REST

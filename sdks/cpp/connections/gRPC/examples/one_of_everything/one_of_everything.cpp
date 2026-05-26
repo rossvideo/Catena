@@ -33,7 +33,7 @@
  * @file one_of_everything.cpp
  * @author Benjamin Whitten (benjamin.whitten@rossvideo.com)
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-24
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -295,7 +295,9 @@ void RunRPCServer(std::string addr)
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
+#ifndef _WIN32
     signal(SIGKILL, handle_signal);
+#endif
 
 
     try {

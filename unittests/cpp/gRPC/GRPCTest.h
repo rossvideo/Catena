@@ -33,7 +33,7 @@
  * @author christian.twarogn@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -44,6 +44,7 @@
 #include <gmock/gmock.h>
 
 // std
+#include <cstdint>
 #include <string>
 
 #include "MockDevice.h"
@@ -108,7 +109,7 @@ class GRPCTest : public ::testing::Test {
         server_ = builder_.BuildAndStart();
 
         // Creating the gRPC client.
-        channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
+        channel_ = grpc::CreateChannel(clientAddr_, grpc::InsecureChannelCredentials());
         client_ = st2138::CatenaService::NewStub(channel_);
 
         // Setting common expected values for the mock service.
@@ -159,6 +160,11 @@ class GRPCTest : public ::testing::Test {
     catena::exception_with_status expRc_{"", catena::StatusCode::OK};
 
     // Address used for gRPC tests.
+    #ifdef _WIN32
+    std::string clientAddr_ = "127.0.0.1:50051";
+    #else
+    std::string clientAddr_ = "0.0.0.0:50051";
+    #endif
     std::string serverAddr_ = "0.0.0.0:50051";
     // Server and service variables.
     grpc::ServerBuilder builder_;
@@ -186,8 +192,8 @@ class GRPCTest : public ::testing::Test {
     // gRPC test variables.
     std::unique_ptr<ICallData> testCall_ = nullptr;
     std::unique_ptr<ICallData> asyncCall_ = nullptr;
-    long requestStart_ = -1;
-    long requestReceived_ = -1;
+    uint64_t requestStart_ = 0;
+    uint64_t requestReceived_ = 0;
 };
 
 } // namespace gRPC

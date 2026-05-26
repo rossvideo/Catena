@@ -53,18 +53,31 @@ endif()
 foreach(test_file ${TEST_FILES})
     get_filename_component(test_name ${test_file} NAME_WE)
     add_executable(common_${test_name} tests/${test_file})
-    target_link_libraries(common_${test_name} PRIVATE
-        ${GTEST_BOTH_LIBRARIES}
-        absl::log
-        absl::log_globals
-        absl::log_initialize
-        absl::log_severity
-        GTest::GTest
-        GTest::Main
-        GTest::gmock
-        GTest::gmock_main
-        ${common_lib}
-    )
+    if (WIN32)
+        target_link_libraries(common_${test_name} PRIVATE
+            Threads::Threads
+            absl::log
+            absl::log_globals
+            absl::log_initialize
+            absl::log_severity
+            GTest::gmock_main
+            ${common_lib}
+        )
+    else ()
+        target_link_libraries(common_${test_name} PRIVATE
+            Threads::Threads
+            ${GTEST_BOTH_LIBRARIES}
+            absl::log
+            absl::log_globals
+            absl::log_initialize
+            absl::log_severity
+            GTest::GTest
+            GTest::Main
+            GTest::gmock
+            GTest::gmock_main
+            ${common_lib}
+        )
+    endif()
     gtest_discover_tests(common_${test_name} TEST_PREFIX "common." DISCOVERY_MODE PRE_TEST)
 endforeach()
 
@@ -94,17 +107,30 @@ endif()
 # ParamWithValue_test subdir: one executable for all files
 file(GLOB PARAMWITHVALUE_TESTS "tests/ParamWithValue_test/*.cpp")
 add_executable(common_ParamWithValue ${PARAMWITHVALUE_TESTS})
-target_link_libraries(common_ParamWithValue PRIVATE
-    ${GTEST_BOTH_LIBRARIES}
-    absl::log
-    absl::log_globals
-    absl::log_initialize
-    absl::log_severity
-    GTest::GTest
-    GTest::Main
-    GTest::gmock
-    GTest::gmock_main
-    ${common_lib}
-)
+if (WIN32)
+    target_link_libraries(common_ParamWithValue PRIVATE
+        Threads::Threads
+        absl::log
+        absl::log_globals
+        absl::log_initialize
+        absl::log_severity
+        GTest::gmock_main
+        ${common_lib}
+    )
+else ()
+    target_link_libraries(common_ParamWithValue PRIVATE
+        Threads::Threads
+        ${GTEST_BOTH_LIBRARIES}
+        absl::log
+        absl::log_globals
+        absl::log_initialize
+        absl::log_severity
+        GTest::GTest
+        GTest::Main
+        GTest::gmock
+        GTest::gmock_main
+        ${common_lib}
+    )
+endif()
 
 gtest_discover_tests(common_ParamWithValue TEST_PREFIX "common.ParamWithValue." DISCOVERY_MODE PRE_TEST)

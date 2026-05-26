@@ -9,7 +9,18 @@ using namespace catena::common;
 std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::string prefix) {
     try {
         //Declare options
-        const char* home = (getenv("HOME") != nullptr) ? getenv("HOME") : CATENA_STATIC_ROOT.c_str(); // TODO: Add windows functionality
+        const char* home;
+        char* buf = nullptr;
+        #ifdef _WIN32
+        size_t len = 0;
+        if (_dupenv_s(&buf, &len, "USERPROFILE") == 0 && buf != nullptr) {
+            home = buf;
+        } else {
+            home = CATENA_STATIC_ROOT.c_str();
+        }
+        #else
+        home = (getenv("HOME") != nullptr) ? getenv("HOME") : CATENA_STATIC_ROOT.c_str();
+        #endif
         po::options_description configArgs("Allowed options");
         configArgs.add_options()
             (CATENA_HELP_NAME.c_str(), "Get help message")
@@ -57,7 +68,6 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
                 }),
             vars);
         
-        
         po::notify(vars);
         
         // help message
@@ -83,6 +93,7 @@ std::pair<bool, int> config::initConfigVariables(int argc, char* argv[], std::st
         if (vars.count(CATENA_AUTHZ_NAME)) config::authz = vars[CATENA_AUTHZ_NAME].as<bool>();
         if (vars.count(CATENA_SILENT_NAME)) config::silent = vars[CATENA_SILENT_NAME].as<bool>();
 
+    free(buf);
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
         return std::pair<bool, int>(true, 1);

@@ -79,13 +79,10 @@ if(WIN32)
         set(_ucrt_debug_dll "C:/Windows/System32/ucrtbased.dll")
     endif()
 
-    file(GLOB _vcpkg_debug_bin_dlls "C:/vcpkg/installed/x64-windows/debug/bin/*.dll")
-    file(GLOB _vcpkg_bin_dlls "C:/vcpkg/installed/x64-windows/bin/*.dll")
-
     add_custom_command(TARGET ${TARGET} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${TARGET}> $<TARGET_RUNTIME_DLLS:${TARGET}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_msvc_debug_crt_dlls} ${_ucrt_debug_dll} $<TARGET_FILE_DIR:${TARGET}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_vcpkg_debug_bin_dlls} ${_vcpkg_bin_dlls} $<TARGET_FILE_DIR:${TARGET}>
+        COMMAND ${CMAKE_COMMAND} -D DEST=$<TARGET_FILE_DIR:${TARGET}> -P ${CMAKE_CURRENT_SOURCE_DIR}/CopyVcpkgDlls.cmake
         COMMAND_EXPAND_LISTS
     )
 endif()

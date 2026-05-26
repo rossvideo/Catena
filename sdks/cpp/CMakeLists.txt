@@ -30,6 +30,13 @@
 
 cmake_minimum_required(VERSION 3.20)
 
+# Set policy for finding Boost in Windows
+if (WIN32)
+    if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+    endif()
+endif()
+
 # Project declaration
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 

@@ -34,7 +34,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/02/11
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -127,7 +127,7 @@ class SocketReader : public ISocketReader {
      * @param socket The socket to read from.
      * @param timeout How long to read before in ms cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    void read(tcp::socket& socket, uint32_t timeout = DEFAULT_TIMEOUT) override;
+    void read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout = DEFAULT_TIMEOUT) override;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -210,12 +210,12 @@ class SocketReader : public ISocketReader {
      * @brief Returns the time the client started the request formatted as,
      * <number of milliseconds since start of epoch>
      */
-    const long requestStart() const override { return requestStart_; }
+    const uint64_t requestStart() const override { return requestStart_; }
     /**
      * @brief Returns the time the client's request was received formatted as,
      * <number of milliseconds since start of epoch>
      */
-    const long requestReceived() const override { return requestReceived_; }
+    const uint64_t requestReceived() const override { return requestReceived_; }
 
 
   private:
@@ -272,12 +272,12 @@ class SocketReader : public ISocketReader {
      * @brief The time at which the request was sent formatted as,
      * <number of milliseconds since start of epoch>
      */
-    long requestStart_ = DEFAULT_REQUEST_START;
+    uint64_t requestStart_ = DEFAULT_REQUEST_START;
     /**
      * @brief The time at which the request was received formatted as,
      * <number of milliseconds since start of epoch>
      */
-    long requestReceived_ = DEFAULT_REQUEST_RECEIVED;
+    uint64_t requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 }; // Namespace REST

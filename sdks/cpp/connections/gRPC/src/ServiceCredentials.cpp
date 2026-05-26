@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,9 @@
 
 #include <ServiceImpl.h> // JWTMetaAuthMetadataProcessor
 #include <regex>
+#ifdef _WIN32
+#include <stdlib.h>
+#endif
 
 using catena::readFile;
 
@@ -67,8 +70,20 @@ void catena::gRPC::expandEnvVariables(std::string &str) {
     static std::regex env{"\\$\\{([^}]+)\\}"};
     std::smatch match;
     while (std::regex_search(str, match, env)) {
+        std::string var;
+#ifdef _WIN32
+        char *buf = nullptr;
+        size_t len = 0;
+        if (_dupenv_s(&buf, &len, match[1].str().c_str()) == 0 && buf != nullptr) {
+            var = buf;
+            free(buf);
+        } else {
+            var = "";
+        }
+#else
         const char *s = getenv(match[1].str().c_str());
-        const std::string var(s == nullptr ? "" : s);
+        var = (s != nullptr) ? s : "";
+#endif
         str.replace(match[0].first, match[0].second, var);
     }
 }

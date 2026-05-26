@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,9 @@
  * @brief Implements the SocketWriter class.
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026-03-10
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -152,6 +154,7 @@ const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::PERMISSION_DENIED,   {403, "Forbidden"}},
     {catena::StatusCode::NOT_FOUND,           {404, "Not Found"}},
     {catena::StatusCode::METHOD_NOT_ALLOWED,  {405, "Method Not Allowed"}},
+    {catena::StatusCode::DEADLINE_EXCEEDED,   {408, "Request Timeout"}},
     {catena::StatusCode::CONFLICT,            {409, "Conflict"}},
     {catena::StatusCode::ABORTED,             {409, "Conflict"}},
     {catena::StatusCode::FAILED_PRECONDITION, {412, "Precondition Failed"}},

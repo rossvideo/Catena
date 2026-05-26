@@ -34,6 +34,17 @@ foreach(test_file ${REST_TEST_FILES})
     get_filename_component(test_name ${test_file} NAME_WE)
     add_executable(REST_${test_name} tests/${test_file})
     find_package(Threads REQUIRED)
+    if (WIN32)
+    target_link_libraries(REST_${test_name} PRIVATE
+        catena_connections_REST
+        Threads::Threads
+        absl::log
+        absl::log_globals
+        absl::log_initialize
+        absl::log_severity
+        GTest::gmock_main
+    )
+    else ()
     target_link_libraries(REST_${test_name} PRIVATE
         catena_connections_REST
         Threads::Threads
@@ -47,5 +58,6 @@ foreach(test_file ${REST_TEST_FILES})
         GTest::gmock
         GTest::gmock_main
     )
+    endif()
     gtest_discover_tests(REST_${test_name} TEST_PREFIX "REST." DISCOVERY_MODE PRE_TEST)
 endforeach()

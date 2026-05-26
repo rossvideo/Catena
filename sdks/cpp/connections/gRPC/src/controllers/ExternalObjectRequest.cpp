@@ -136,6 +136,12 @@ void ExternalObjectRequest::proceed(bool ok) {
                         throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
                     }
                 }
+                if (!std::filesystem::is_regular_file(path)){
+                    LOG(ERROR) << "ExternalObjectRequest[" << objectId_ << "] file not found";
+                    std::stringstream why;
+                    why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' may be a directory";
+                    throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
+                }
                 // Read the file into a byte array
                 std::ifstream file(path, std::ios::binary);
                 std::vector<char> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());

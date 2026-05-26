@@ -33,19 +33,32 @@ foreach(test_file ${GRPC_TEST_FILES})
     get_filename_component(test_name ${test_file} NAME_WE)
     add_executable(gRPC_${test_name} tests/${test_file})
     find_package(Threads REQUIRED)
-    target_link_libraries(gRPC_${test_name} PRIVATE
-        catena_grpc_common
-        catena_connections_grpc
-        Threads::Threads
-        ${GTEST_BOTH_LIBRARIES}
-        absl::log
-        absl::log_globals
-        absl::log_initialize
-        absl::log_severity
-        GTest::GTest
-        GTest::Main
-        GTest::gmock
-        GTest::gmock_main
-    )
+    if (WIN32)
+        target_link_libraries(gRPC_${test_name} PRIVATE
+            catena_grpc_common
+            catena_connections_grpc
+            Threads::Threads
+            absl::log
+            absl::log_globals
+            absl::log_initialize
+            absl::log_severity
+            GTest::gmock_main
+        )
+    else ()
+        target_link_libraries(gRPC_${test_name} PRIVATE
+            catena_grpc_common
+            catena_connections_grpc
+            Threads::Threads
+            ${GTEST_BOTH_LIBRARIES}
+            absl::log
+            absl::log_globals
+            absl::log_initialize
+            absl::log_severity
+            GTest::GTest
+            GTest::Main
+            GTest::gmock
+            GTest::gmock_main
+        )
+    endif()
     gtest_discover_tests(gRPC_${test_name} TEST_PREFIX "gRPC." DISCOVERY_MODE PRE_TEST)
 endforeach()

@@ -97,12 +97,20 @@
 
             // Reset "HOME" in case missing "HOME" test case couldn't
             if (home != nullptr) {
+                #ifdef _WIN32
+                _putenv_s("USERPROFILE", home);
+                #else
                 setenv("HOME", home, 0);
+                #endif
             }
 
             // Delete set environment variables
             for (auto var : setVars) {
+                #ifdef _WIN32
+                _putenv_s(var.c_str(), "");
+                #else
                 unsetenv(var.c_str());
+                #endif
             }
             setVars.clear();
         }
@@ -131,7 +139,11 @@
                 } else {
                     val = "true";
                 }
+                #ifdef _WIN32
+                _putenv_s(name.c_str(), val.c_str());
+                #else
                 setenv(name.c_str(), val.c_str(), 0);
+                #endif
             }
         }
 
@@ -140,7 +152,11 @@
             for (std::string var : vars) {
                 std::size_t index = var.find("=");
                 std::string name = var.substr(0, index);
+                #ifdef _WIN32
+                _putenv_s(name.c_str(), "");
+                #else
                 unsetenv(name.c_str());
+                #endif
             }
         }
 
@@ -171,7 +187,6 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
     EXPECT_EQ(config::log_dir, LOG_DIR);
     EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
-    EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::default_max_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::default_total_array_size, kDefaultMaxArrayLength);
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
@@ -180,7 +195,14 @@ TEST_F(ConfigTest, defaultValues) {
     EXPECT_EQ(config::mutual_authc, false);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
-
+    #ifdef _WIN32
+    char *buf = nullptr;
+    size_t len = 0;
+    _dupenv_s(&buf, &len, "USERPROFILE");
+    EXPECT_EQ(config::static_root, buf);
+    #else
+    EXPECT_EQ(config::static_root, getenv("HOME"));
+    #endif
 }
 
 /**
@@ -326,11 +348,18 @@ TEST_F(ConfigTest, CmdAndEnv) {
     EXPECT_EQ(config::key_file, config::CATENA_KEY_FILE);
     EXPECT_EQ(config::log_dir, LOG_DIR);
     EXPECT_EQ(config::secure_comms, config::CATENA_SECURE_COMMS);
-    EXPECT_EQ(config::static_root, getenv("HOME"));
     EXPECT_EQ(config::max_connections, DEFAULT_MAX_CONNECTIONS);
     EXPECT_EQ(config::port, config::CATENA_PORT);
     EXPECT_EQ(config::private_ca, false);
     EXPECT_EQ(config::silent, false);
+    #ifdef _WIN32
+    char *buf = nullptr;
+    size_t len = 0;
+    _dupenv_s(&buf, &len, "USERPROFILE");
+    EXPECT_EQ(config::static_root, buf);
+    #else
+    EXPECT_EQ(config::static_root, getenv("HOME"));
+    #endif
 }
 
 /**
@@ -414,8 +443,14 @@ TEST_F(ConfigTest, MissingHome) {
     int argc = 1;
 
     // Save "HOME" value and delete environment variable
+    #ifdef _WIN32
+    size_t len = 0;
+    _dupenv_s(&home, &len, "USERPROFILE");
+    _putenv_s("USERPROFILE", "");
+    #else
     home = getenv("HOME");
     unsetenv("HOME");
+    #endif
 
     // Do call resulting in new default
     const auto [exit, code] = config::initConfigVariables(argc, argv, "CONFIGTEST_");
@@ -424,7 +459,11 @@ TEST_F(ConfigTest, MissingHome) {
     EXPECT_EQ(config::static_root, "/");
 
     // Reset "HOME"
+    #ifdef _WIN32
+    _putenv_s("USERPROFILE", home);
+    #else
     setenv("HOME", home, 0);
+    #endif
 }
 
 /**

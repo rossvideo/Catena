@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -54,6 +54,8 @@
 
 // REST
 #include "ServiceImpl.h"
+
+#include <boost/asio/ip/address_v4.hpp>
 
 using namespace catena::common;
 using namespace catena::REST;
@@ -100,7 +102,11 @@ class RESTServiceImplTests : public testing::Test {
         // Creating client and connecting to the service port.
         boost::asio::io_context io_context;
         tcp::socket clientSocket(io_context);
+        #ifdef _WIN32
+        clientSocket.connect(tcp::endpoint(boost::asio::ip::address_v4::loopback(), port_));
+        #else
         clientSocket.connect(tcp::endpoint(tcp::v4(), port_));
+        #endif
         // Compiling request.
         std::string request = "";
         request += RESTMethodMap().getForwardMap().at(method);

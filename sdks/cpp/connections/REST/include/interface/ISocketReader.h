@@ -33,7 +33,7 @@
  * @brief Interface for the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/02/11
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -51,6 +51,7 @@ using boost::asio::ip::tcp;
 //REST
 #include "interface/IServiceImpl.h"
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
  
@@ -62,8 +63,8 @@ namespace REST {
  */
 enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, Method_PATCH, Method_DELETE, Method_HEAD, Method_OPTIONS };
 
-const long DEFAULT_REQUEST_START = 0;
-const long DEFAULT_REQUEST_RECEIVED = 0;
+const uint64_t DEFAULT_REQUEST_START = 0;
+const uint64_t DEFAULT_REQUEST_RECEIVED = 0;
 const uint32_t DEFAULT_TIMEOUT = REST_READ_TIMEOUT_MS; // value is in milliseconds
 
 /**
@@ -87,7 +88,7 @@ class ISocketReader {
      * @param socket The socket to read from.
      * @param timeout How long to read for in ms before cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    virtual void read(tcp::socket& socket, uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+    virtual void read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout = DEFAULT_TIMEOUT) = 0;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -162,12 +163,12 @@ class ISocketReader {
      * @brief Returns the time the client started the request formatted as,
      * <number of milliseconds since start of epoch>
      */
-    virtual const long requestStart() const = 0;
+    virtual const uint64_t requestStart() const = 0;
     /**
      * @brief Returns the time the client's request was received formatted as,
      * <number of milliseconds since start of epoch>
      */
-    virtual const long requestReceived() const = 0;
+    virtual const uint64_t requestReceived() const = 0;
 };
  
 }; // Namespace REST

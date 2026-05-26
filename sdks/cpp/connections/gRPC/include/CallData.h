@@ -33,7 +33,7 @@
  * @brief Base class for gRPC CallData classes which defines getJWSToken_().
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 22/01/26
+ * @date 2026-03-10
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -57,6 +57,7 @@ using grpc::Status;
 using grpc::ServerCompletionQueue;
 
 // std
+#include <cstdint>
 #include <vector>
 #include <mutex>
 
@@ -68,8 +69,8 @@ namespace gRPC {
  */
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
-const long DEFAULT_REQUEST_START = 0;
-const long DEFAULT_REQUEST_RECEIVED = 0;
+const uint64_t DEFAULT_REQUEST_START = 0;
+const uint64_t DEFAULT_REQUEST_RECEIVED = 0;
 
 /**
  * @brief Abstract base class for inherited by CallData child classes defining
@@ -81,11 +82,11 @@ class CallData : public ICallData {
     /**
      * @brief Getter for requestStart_ 
      */
-    long getRequestStart() { return requestStart_; }
+    uint64_t getRequestStart() { return requestStart_; }
     /**
      * @brief Getter for requestReceived_ 
      */
-    long getRequestReceived() { return requestReceived_; }
+    uint64_t getRequestReceived() { return requestReceived_; }
 
   protected:
     /**
@@ -128,11 +129,12 @@ class CallData : public ICallData {
     /**
      * @brief Reads requestStart from metadata and records current time for requestReceived.
      */
-    void processTimestamps_() {
+    void processTimestamps_() override {
         // Getting request receival time formatted as,
         // <number of milliseconds since start of epoch>
         const auto epoch_time = std::chrono::system_clock::now().time_since_epoch();
-        requestReceived_ = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count();
+        requestReceived_ = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(epoch_time).count());
 
         auto clientMeta = context_.client_metadata();
         // Getting client metadata from context.
@@ -156,12 +158,12 @@ class CallData : public ICallData {
      * @brief The time at which the request was sent formatted as,
      * <number of milliseconds since start of epoch>
      */
-    long requestStart_ = DEFAULT_REQUEST_START;
+    uint64_t requestStart_ = DEFAULT_REQUEST_START;
     /**
      * @brief The time at which the request was sent formatted as,
      * <number of milliseconds since start of epoch>
      */
-    long requestReceived_ = DEFAULT_REQUEST_RECEIVED;
+    uint64_t requestReceived_ = DEFAULT_REQUEST_RECEIVED;
 };
 
 };
