@@ -50,6 +50,9 @@ func TestDefaultOptions(t *testing.T) {
 	opts := defaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
+		RestPort:       6254,
+		GrpcPort:       6254,
+		GrpcReflection: false,
 		Server: ServerOptions{
 			IsDev:          false,
 			MaxConnections: 100,
@@ -145,8 +148,11 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 	}
 
 	want := map[string]any{
-		"use_grpc": false,
-		"use_rest": false,
+		"use_grpc":        false,
+		"use_rest":        false,
+		"rest_port":       json.Number("0"),
+		"grpc_port":       json.Number("0"),
+		"grpc_reflection": false,
 		"server": map[string]any{
 			"dev":             true,
 			"max_connections": json.Number("123"),

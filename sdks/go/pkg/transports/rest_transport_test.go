@@ -58,8 +58,7 @@ import (
 )
 
 func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
-	// create and start the transport
-	transport := NewRestTransport(8080)
+	transport := NewRestTransport(RestConfig{Port: 8080})
 	stubRuntime := makeStubServerRuntime(tb)
 	stubRuntime.isDev = true
 	transport.runtime = stubRuntime
@@ -68,7 +67,7 @@ func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
 
 func TestRestTransport_NewRestTransport(t *testing.T) {
 	expected := 1234
-	transport := NewRestTransport(expected)
+	transport := NewRestTransport(RestConfig{Port: expected})
 	if transport == nil {
 		t.Fatal("NewRestTransport returned nil")
 	}
@@ -77,10 +76,11 @@ func TestRestTransport_NewRestTransport(t *testing.T) {
 	}
 }
 
-func TestRestTransport_NewDefaultTransport(t *testing.T) {
-	transport := NewDefaultRestTransport()
+func TestRestTransport_DefaultRestConfig(t *testing.T) {
+	cfg := DefaultRestConfig()
+	transport := NewRestTransport(cfg)
 	if transport == nil {
-		t.Fatal("NewDefaultRestTransport returned nil")
+		t.Fatal("NewRestTransport returned nil")
 	}
 	if transport.port != 9080 {
 		t.Errorf("expected default port 9080, got %d", transport.port)

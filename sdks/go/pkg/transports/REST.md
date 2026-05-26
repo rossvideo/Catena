@@ -5,9 +5,9 @@
 ## Constructor
 
 ```go
-rest := transports.NewRestTransport(9080)
-// or
-rest := transports.NewDefaultRestTransport() // 9080
+rest := transports.NewRestTransport(transports.RestConfig{Port: 6254})
+// or with defaults
+rest := transports.NewRestTransport(transports.DefaultRestConfig())
 ```
 
 Register it on the shared server:

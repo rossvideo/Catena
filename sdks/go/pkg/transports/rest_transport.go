@@ -56,6 +56,16 @@ import (
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult)
 
+// RestConfig holds configuration for the REST transport.
+type RestConfig struct {
+	Port int // HTTP listen port (default: 8080)
+}
+
+// DefaultRestConfig returns a RestConfig with sensible defaults.
+func DefaultRestConfig() RestConfig {
+	return RestConfig{Port: 6254}
+}
+
 type RestTransport struct {
 	mu              sync.Mutex
 	server          *http.Server
@@ -64,26 +74,18 @@ type RestTransport struct {
 	fallbackHandler FallbackHandler
 
 	port int
-
-	// future configs
-	// tls: TlsConfig etc.
 }
 
 var _ catena.Transport = (*RestTransport)(nil)
 
-func NewRestTransport(port int) *RestTransport {
+// NewRestTransport creates a new REST transport with the given configuration.
+func NewRestTransport(cfg RestConfig) *RestTransport {
 	t := &RestTransport{
-		port: port,
+		port: cfg.Port,
 		mux:  http.NewServeMux(),
 	}
 	t.registerRoutes()
 	return t
-}
-
-func NewDefaultRestTransport() *RestTransport {
-	return NewRestTransport(
-		9080, // port
-	)
 }
 
 // Start starts the HTTP server on the specified port using this server's mux

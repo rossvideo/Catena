@@ -872,14 +872,14 @@ func main() {
 
 	// Register the enabled transports.
 	if options.UseGrpc {
-		if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
+		if err := srv.RegisterTransport(transports.NewGrpcTransport(transports.GrpcConfigFromOptions(options))); err != nil {
 			logger.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
 	}
 
 	if options.UseRest {
-		restTransport := transports.NewDefaultRestTransport()
+		restTransport := transports.NewRestTransport(transports.RestConfigFromOptions(options))
 
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
 			if r.URL.Path == "/assets-list" {

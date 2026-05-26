@@ -98,7 +98,7 @@ func setupTestGrpcTransport(t *testing.T, slots []uint16, opts ...testGrpcTransp
 	}
 
 	lis := bufconn.Listen(bufSize)
-	transport := NewGrpcTransport(cfg.port, cfg.reflection)
+	transport := NewGrpcTransport(GrpcConfig{Port: cfg.port, Reflection: cfg.reflection})
 	runtime := makeStubServerRuntime(t)
 	runtime.isDev = cfg.isDev
 	runtime.slots = slots
@@ -155,7 +155,7 @@ func assertGRPCError(t *testing.T, err error, expectedCode codes.Code) {
 // =============================================================================
 
 func TestNewGrpcTransport(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
+	transport := NewGrpcTransport(GrpcConfig{Port: 1234, Reflection: false})
 
 	if transport == nil {
 		t.Fatal("NewGrpcTransport returned nil")
@@ -174,16 +174,23 @@ func TestNewGrpcTransport(t *testing.T) {
 	}
 }
 
-func TestNewDefaultGrpcTransport(t *testing.T) {
-	transport := NewDefaultGrpcTransport()
+func TestDefaultGrpcConfig(t *testing.T) {
+	cfg := DefaultGrpcConfig()
+	transport := NewGrpcTransport(cfg)
 	if transport == nil {
-		t.Fatal("NewDefaultGrpcTransport returned nil")
+		t.Fatal("NewGrpcTransport returned nil")
 	}
 	if transport.catenaService == nil {
 		t.Error("catenaService is nil")
 	}
 	if transport.grpcServer == nil {
 		t.Error("grpcServer is nil")
+	}
+	if transport.port != 6254 {
+		t.Errorf("expected default port 6254, got %d", transport.port)
+	}
+	if transport.reflection != false {
+		t.Errorf("expected reflection false, got %v", transport.reflection)
 	}
 }
 
@@ -1905,7 +1912,7 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	shutdownCalled := false
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(GrpcConfig{Port: 0, Reflection: false})
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = []uint16{0, 1}
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -1997,7 +2004,7 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(GrpcConfig{Port: 0, Reflection: false})
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2062,7 +2069,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(GrpcConfig{Port: 0, Reflection: false})
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2104,7 +2111,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 }
 
 func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
+	transport := NewGrpcTransport(GrpcConfig{Port: 1234, Reflection: false})
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -2146,7 +2153,7 @@ func TestGrpcTransport_Start_PortAlreadyInUse(t *testing.T) {
 	port := portListener.Addr().(*net.TCPAddr).Port
 	defer portListener.Close()
 
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(GrpcConfig{Port: uint16(port), Reflection: false})
 
 	runtime := makeStubServerRuntime(t)
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2178,7 +2185,7 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 	// Use port 0 so net.Listen picks an available port; read the bound
 	// address back from the listener after Start to avoid a TOCTOU race
 	// between Close() and rebind.
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(GrpcConfig{Port: 0, Reflection: false})
 
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
 		if gotTransport != transport {
