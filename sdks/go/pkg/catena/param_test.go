@@ -1027,3 +1027,34 @@ func TestConcurrentWithParam(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestWithParam_SelfReference(t *testing.T) {
+	cp := NewParamStruct()
+	cp.WithParam("self", cp)
+	sub := cp.Proto().GetParams()["self"]
+	if sub == nil {
+		t.Fatal("expected self-referencing sub-param to be set")
+	}
+}
+
+func TestWithParam_CrossReference(t *testing.T) {
+	a := NewParamStruct()
+	b := NewParamStruct()
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		a.WithParam("b", b)
+	}()
+	go func() {
+		defer wg.Done()
+		b.WithParam("a", a)
+	}()
+	wg.Wait()
+	if a.Proto().GetParams()["b"] == nil {
+		t.Error("expected a to contain sub-param 'b'")
+	}
+	if b.Proto().GetParams()["a"] == nil {
+		t.Error("expected b to contain sub-param 'a'")
+	}
+}

@@ -338,6 +338,11 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 			"oid", oid)
 		return cp
 	}
+
+	param.mu.RLock()
+	cloned := proto.Clone(param.proto).(*protos.Param)
+	param.mu.RUnlock()
+
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
@@ -348,9 +353,6 @@ func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
 	if cp.proto.Params == nil {
 		cp.proto.Params = map[string]*protos.Param{}
 	}
-	param.mu.RLock()
-	cloned := proto.Clone(param.proto).(*protos.Param)
-	param.mu.RUnlock()
 	cp.proto.Params[oid] = cloned
 	return cp
 }
