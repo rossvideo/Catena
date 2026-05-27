@@ -92,8 +92,6 @@ Examples in parentheses are taken from ST 2138-11 §6.2 Table 2 where given.
 - **When to return:** you detected explicit cancellation. Not for plain
   timeouts.
 - **What clients infer:** the work was abandoned, no result.
-- **Naming:** ST 2138-11 spells this `CANCELED` (one L); standard gRPC and
-  the Catena Go constant both use `Canceled`.
 
 ### `StatusCodeUnknown`
 
@@ -117,8 +115,6 @@ Examples in parentheses are taken from ST 2138-11 §6.2 Table 2 where given.
   finished.
 - **When to return:** timeouts.
 - **What clients infer:** retry only if the operation is safe to repeat.
-- **Naming:** ST 2138-11 names this `TIMEOUT EXCEEDED` (value 4); standard
-  gRPC and the Catena Go constant both use `DeadlineExceeded`.
 
 ### `StatusCodeNotFound`
 
@@ -239,15 +235,3 @@ Examples in parentheses are taken from ST 2138-11 §6.2 Table 2 where given.
   by the router via `writeHTTPMethodNotAllowed`, which writes HTTP 405 and
   bypasses `StatusCode` entirely. Method routing is a transport concern,
   not a handler outcome.
-
-## Naming divergence vs ST 2138-11
-
-| Spec name (ST 2138-11) | Catena Go constant            | Standard gRPC name |
-|------------------------|-------------------------------|--------------------|
-| `CANCELED` (one L)     | `StatusCodeCanceled`          | `Canceled`         |
-| `TIMEOUT EXCEEDED`     | `StatusCodeDeadlineExceeded`  | `DeadlineExceeded` |
-
-The Catena Go constants follow the standard gRPC spellings, so they map
-directly to `google.golang.org/grpc/codes` without translation. The
-ST 2138-11 spec names differ in spelling only; the wire integer values
-are identical.

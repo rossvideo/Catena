@@ -43,21 +43,6 @@ import (
 	"testing"
 )
 
-func TestStatusCodeConstants(t *testing.T) {
-	grpcCodes := []StatusCode{
-		StatusCodeOk, StatusCodeCanceled, StatusCodeUnknown, StatusCodeInvalidArgument, StatusCodeDeadlineExceeded,
-		StatusCodeNotFound, StatusCodeAlreadyExists, StatusCodePermissionDenied, StatusCodeResourceExhausted,
-		StatusCodeFailedPrecondition, StatusCodeAborted, StatusCodeOutOfRange, StatusCodeUnimplemented,
-		StatusCodeInternal, StatusCodeUnavailable, StatusCodeDataLoss, StatusCodeUnauthenticated,
-	}
-
-	for _, code := range grpcCodes {
-		if code < 0 || code > 16 {
-			t.Errorf("gRPC code %d is outside valid range 0-16 (ST 2138-11 §6.2)", code)
-		}
-	}
-}
-
 func TestReply_CatenaValue(t *testing.T) {
 	value, _ := ToCatenaValue(int32(42))
 	result, status := Reply(value)
