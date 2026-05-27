@@ -1907,15 +1907,8 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	// Use port 0 to let OS assign available port
-	port := 0
-	if portListener, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
-		port = portListener.Addr().(*net.TCPAddr).Port
-		portListener.Close()
-	}
-
 	shutdownCalled := false
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(0, false)
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = []uint16{0, 1}
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -1940,19 +1933,17 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 		return catena.Reply(device)
 	}
 
-	// Start server in background
+	// Start server in background. Port 0 makes net.Listen pick an available
+	// port; read the bound address back from the listener after Start.
 	if err := transport.Start(context.Background(), runtime); err != nil {
 		t.Fatalf("failed to start server: %v", err)
 	}
-
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
 
 	// Create real gRPC client connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	addr := fmt.Sprintf("localhost:%d", port)
+	addr := transport.listener.Addr().String()
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		transport.Shutdown(context.Background())
@@ -2009,15 +2000,7 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	// Use port 0 to let OS assign available port
-	port := 0
-	if portListener, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
-		port = portListener.Addr().(*net.TCPAddr).Port
-		portListener.Close()
-	}
-	addr := fmt.Sprintf("localhost:%d", port)
-
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(0, false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2026,7 +2009,8 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		}
 	}
 
-	// Start server in background
+	// Start server in background. Port 0 lets net.Listen pick an available
+	// port; read the bound address back from the listener after Start.
 	if err := transport.Start(context.Background(), runtime); err != nil {
 		t.Fatalf("failed to start server: %v", err)
 	}
@@ -2035,6 +2019,7 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 	// grpc.WithBlock() blocks until the listener accepts, so no startup sleep
 	// is required.
 	ctx := context.Background()
+	addr := transport.listener.Addr().String()
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		transport.Shutdown(context.Background())
@@ -2080,13 +2065,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	port := 0
-	if portListener, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
-		port = portListener.Addr().(*net.TCPAddr).Port
-		portListener.Close()
-	}
-
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(0, false)
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2099,9 +2078,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 		t.Fatalf("failed to start server: %v", err)
 	}
 
-	time.Sleep(100 * time.Millisecond)
-
-	addr := fmt.Sprintf("localhost:%d", port)
+	addr := transport.listener.Addr().String()
 	conn, err := grpc.DialContext(context.Background(), addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		transport.Shutdown(context.Background())
@@ -2201,16 +2178,10 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 		return catena.Reply(value)
 	}
 
-	// Bind to an OS-assigned port and hand the listener directly to the server,
-	// avoiding a TOCTOU race where another process could grab the port between
-	// Close() and rebind.
-	lis, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("net.Listen: %v", err)
-	}
-	addr := lis.Addr().String()
-
-	transport := NewGrpcTransportWithListener(lis, false)
+	// Use port 0 so net.Listen picks an available port; read the bound
+	// address back from the listener after Start to avoid a TOCTOU race
+	// between Close() and rebind.
+	transport := NewGrpcTransport(0, false)
 
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
 		if gotTransport != transport {
@@ -2218,11 +2189,13 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 		}
 	}
 
-	// Start server
-	go func() {
-		transport.Start(context.Background(), runtime)
-	}()
+	// Start server synchronously so the listener is ready before we dial.
+	if err := transport.Start(context.Background(), runtime); err != nil {
+		t.Fatalf("failed to start server: %v", err)
+	}
 	defer transport.Shutdown(context.Background())
+
+	addr := transport.listener.Addr().String()
 
 	// Launch multiple concurrent clients. grpc.WithBlock() in each dial below
 	// waits for the listener to be ready, so no startup sleep is required.

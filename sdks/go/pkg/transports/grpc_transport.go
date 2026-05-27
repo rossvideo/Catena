@@ -71,25 +71,12 @@ type GrpcTransport struct {
 var _ catena.Transport = (*GrpcTransport)(nil)
 
 func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
-	return newGrpcTransport(port, nil, reflectionEnabled)
-}
-
-// NewGrpcTransportWithListener creates a GrpcTransport that will use the
-// provided listener instead of binding a new one in Start(). This avoids
-// a TOCTOU race in tests where the port could be claimed between Close()
-// and rebind.
-func NewGrpcTransportWithListener(lis net.Listener, reflectionEnabled bool) *GrpcTransport {
-	return newGrpcTransport(uint16(lis.Addr().(*net.TCPAddr).Port), lis, reflectionEnabled)
-}
-
-func newGrpcTransport(port uint16, lis net.Listener, reflectionEnabled bool) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
 		grpcServer: grpc.NewServer(
 			grpc.UnaryInterceptor(unaryInterceptor),
 			grpc.StreamInterceptor(streamInterceptor),
 		),
-		listener:   lis,
 		port:       port,
 		reflection: reflectionEnabled,
 	}
