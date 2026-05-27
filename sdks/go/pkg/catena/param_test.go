@@ -47,7 +47,7 @@ import (
 // --- Factory tests ---
 
 func TestNewParamInt32(t *testing.T) {
-	p := NewParamInt32(42).Proto()
+	p := NewParamInt32(42).Proto
 	if p.GetType() != protos.ParamType_INT32 {
 		t.Errorf("expected INT32, got %v", p.GetType())
 	}
@@ -57,7 +57,7 @@ func TestNewParamInt32(t *testing.T) {
 }
 
 func TestNewParamFloat32(t *testing.T) {
-	p := NewParamFloat32(3.14).Proto()
+	p := NewParamFloat32(3.14).Proto
 	if p.GetType() != protos.ParamType_FLOAT32 {
 		t.Errorf("expected FLOAT32, got %v", p.GetType())
 	}
@@ -67,7 +67,7 @@ func TestNewParamFloat32(t *testing.T) {
 }
 
 func TestNewParamString(t *testing.T) {
-	p := NewParamString("hello").Proto()
+	p := NewParamString("hello").Proto
 	if p.GetType() != protos.ParamType_STRING {
 		t.Errorf("expected STRING, got %v", p.GetType())
 	}
@@ -77,21 +77,21 @@ func TestNewParamString(t *testing.T) {
 }
 
 func TestNewParamStruct(t *testing.T) {
-	p := NewParamStruct().Proto()
+	p := NewParamStruct().Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
 }
 
 func TestNewParamStructVariant(t *testing.T) {
-	p := NewParamStructVariant().Proto()
+	p := NewParamStructVariant().Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
 		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
 	}
 }
 
 func TestNewParamInt32Array(t *testing.T) {
-	p := NewParamInt32Array([]int32{1, 2, 3}).Proto()
+	p := NewParamInt32Array([]int32{1, 2, 3}).Proto
 	if p.GetType() != protos.ParamType_INT32_ARRAY {
 		t.Errorf("expected INT32_ARRAY, got %v", p.GetType())
 	}
@@ -102,7 +102,7 @@ func TestNewParamInt32Array(t *testing.T) {
 }
 
 func TestNewParamFloat32Array(t *testing.T) {
-	p := NewParamFloat32Array([]float32{1.1, 2.2}).Proto()
+	p := NewParamFloat32Array([]float32{1.1, 2.2}).Proto
 	if p.GetType() != protos.ParamType_FLOAT32_ARRAY {
 		t.Errorf("expected FLOAT32_ARRAY, got %v", p.GetType())
 	}
@@ -113,7 +113,7 @@ func TestNewParamFloat32Array(t *testing.T) {
 }
 
 func TestNewParamStringArray(t *testing.T) {
-	p := NewParamStringArray([]string{"a", "b"}).Proto()
+	p := NewParamStringArray([]string{"a", "b"}).Proto
 	if p.GetType() != protos.ParamType_STRING_ARRAY {
 		t.Errorf("expected STRING_ARRAY, got %v", p.GetType())
 	}
@@ -124,7 +124,7 @@ func TestNewParamStringArray(t *testing.T) {
 }
 
 func TestNewParamBinary(t *testing.T) {
-	p := NewParamBinary([]byte{0xDE, 0xAD}).Proto()
+	p := NewParamBinary([]byte{0xDE, 0xAD}).Proto
 	if p.GetType() != protos.ParamType_BINARY {
 		t.Errorf("expected BINARY, got %v", p.GetType())
 	}
@@ -135,21 +135,21 @@ func TestNewParamBinary(t *testing.T) {
 }
 
 func TestNewParamStructArray(t *testing.T) {
-	p := NewParamStructArray().Proto()
+	p := NewParamStructArray().Proto
 	if p.GetType() != protos.ParamType_STRUCT_ARRAY {
 		t.Errorf("expected STRUCT_ARRAY, got %v", p.GetType())
 	}
 }
 
 func TestNewParamStructVariantArray(t *testing.T) {
-	p := NewParamStructVariantArray().Proto()
+	p := NewParamStructVariantArray().Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
 		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", p.GetType())
 	}
 }
 
 func TestNewParamEmpty(t *testing.T) {
-	p := NewParamEmpty().Proto()
+	p := NewParamEmpty().Proto
 	if p.GetType() != protos.ParamType_EMPTY {
 		t.Errorf("expected EMPTY, got %v", p.GetType())
 	}
@@ -160,7 +160,7 @@ func TestNewParamEmpty(t *testing.T) {
 
 func TestNewParamData(t *testing.T) {
 	dp := ToPayload([]byte("content"), "text/plain", "test.txt")
-	p := NewParamData(dp).Proto()
+	p := NewParamData(dp).Proto
 	if p.GetType() != protos.ParamType_DATA {
 		t.Errorf("expected DATA, got %v", p.GetType())
 	}
@@ -172,28 +172,28 @@ func TestNewParamData(t *testing.T) {
 // --- With* method tests ---
 
 func TestWithName(t *testing.T) {
-	p := NewParamInt32(0).WithName(NewPolyglotText("en", "Temperature")).Proto()
+	p := NewParamInt32(0).WithName(NewPolyglotText("en", "Temperature")).Proto
 	if p.GetName().GetDisplayStrings()["en"] != "Temperature" {
 		t.Errorf("expected 'Temperature', got %q", p.GetName().GetDisplayStrings()["en"])
 	}
 }
 
 func TestWithReadOnly(t *testing.T) {
-	p := NewParamInt32(0).WithReadOnly(true).Proto()
+	p := NewParamInt32(0).WithReadOnly(true).Proto
 	if !p.GetReadOnly() {
 		t.Error("expected read_only=true")
 	}
 }
 
 func TestWithWidget(t *testing.T) {
-	p := NewParamInt32(0).WithWidget("slider").Proto()
+	p := NewParamInt32(0).WithWidget("slider").Proto
 	if p.GetWidget() != "slider" {
 		t.Errorf("expected 'slider', got %q", p.GetWidget())
 	}
 }
 
 func TestWithPrecision(t *testing.T) {
-	p := NewParamFloat32(0).WithPrecision(3).Proto()
+	p := NewParamFloat32(0).WithPrecision(3).Proto
 	if p.GetPrecision() != 3 {
 		t.Errorf("expected precision 3, got %d", p.GetPrecision())
 	}
@@ -203,21 +203,21 @@ func TestWithPrecision(t *testing.T) {
 // params (see device.one_of_everything.yaml, which sets precision: 3 on a
 // FLOAT32_ARRAY).
 func TestWithPrecision_Float32Array(t *testing.T) {
-	p := NewParamFloat32Array([]float32{1.1, 2.2}).WithPrecision(3).Proto()
+	p := NewParamFloat32Array([]float32{1.1, 2.2}).WithPrecision(3).Proto
 	if p.GetPrecision() != 3 {
 		t.Errorf("expected precision 3 on FLOAT32_ARRAY, got %d", p.GetPrecision())
 	}
 }
 
 func TestWithPrecision_WrongType(t *testing.T) {
-	p := NewParamInt32(0).WithPrecision(3).Proto()
+	p := NewParamInt32(0).WithPrecision(3).Proto
 	if p.GetPrecision() != 0 {
 		t.Error("expected precision to remain 0 for non-float param")
 	}
 }
 
 func TestWithMaxLength(t *testing.T) {
-	p := NewParamString("").WithMaxLength(255).Proto()
+	p := NewParamString("").WithMaxLength(255).Proto
 	if p.GetMaxLength() != 255 {
 		t.Errorf("expected max_length 255, got %d", p.GetMaxLength())
 	}
@@ -227,21 +227,21 @@ func TestWithMaxLength(t *testing.T) {
 // params (see param.string_array_length.yaml, which sets max_length: 10 on a
 // STRING_ARRAY to cap the number of strings in the array).
 func TestWithMaxLength_StringArray(t *testing.T) {
-	p := NewParamStringArray([]string{"a", "b"}).WithMaxLength(10).Proto()
+	p := NewParamStringArray([]string{"a", "b"}).WithMaxLength(10).Proto
 	if p.GetMaxLength() != 10 {
 		t.Errorf("expected max_length 10 on STRING_ARRAY, got %d", p.GetMaxLength())
 	}
 }
 
 func TestWithMaxLength_WrongType(t *testing.T) {
-	p := NewParamInt32(0).WithMaxLength(255).Proto()
+	p := NewParamInt32(0).WithMaxLength(255).Proto
 	if p.GetMaxLength() != 0 {
 		t.Error("expected max_length to remain 0 for param type that does not support max_length")
 	}
 }
 
 func TestWithAccessScope(t *testing.T) {
-	p := NewParamInt32(0).WithAccessScope("admin").Proto()
+	p := NewParamInt32(0).WithAccessScope("admin").Proto
 	if p.GetAccessScope() != "admin" {
 		t.Errorf("expected 'admin', got %q", p.GetAccessScope())
 	}
@@ -251,7 +251,7 @@ func TestWithClientHint(t *testing.T) {
 	p := NewParamInt32(0).
 		WithClientHint("display", "compact").
 		WithClientHint("color", "red").
-		Proto()
+		Proto
 	if p.GetClientHints()["display"] != "compact" {
 		t.Errorf("expected client_hint 'display'='compact', got %q", p.GetClientHints()["display"])
 	}
@@ -262,7 +262,7 @@ func TestWithClientHint(t *testing.T) {
 
 func TestWithParam_Struct(t *testing.T) {
 	child := NewParamInt32(10).WithName(NewPolyglotText("en", "child"))
-	p := NewParamStruct().WithParam("brightness", child).Proto()
+	p := NewParamStruct().WithParam("brightness", child).Proto
 
 	sub := p.GetParams()["brightness"]
 	if sub == nil {
@@ -275,7 +275,7 @@ func TestWithParam_Struct(t *testing.T) {
 
 func TestWithParam_DeepClone(t *testing.T) {
 	child := NewParamInt32(1)
-	parent := NewParamStruct().WithParam("x", child).Proto()
+	parent := NewParamStruct().WithParam("x", child).Proto
 
 	child.SetValue(int32(999))
 	if parent.GetParams()["x"].GetValue().GetInt32Value() != 1 {
@@ -285,7 +285,7 @@ func TestWithParam_DeepClone(t *testing.T) {
 
 func TestWithParam_WrongType(t *testing.T) {
 	child := NewParamInt32(0)
-	p := NewParamInt32(0).WithParam("x", child).Proto()
+	p := NewParamInt32(0).WithParam("x", child).Proto
 	if len(p.GetParams()) != 0 {
 		t.Error("expected no sub-params on INT32 param")
 	}
@@ -296,34 +296,34 @@ func TestWithParam_Nil(t *testing.T) {
 	// preserving the contract that method chaining is never interrupted
 	// by error handling.
 	cp := NewParamStruct().WithParam("x", nil)
-	p := cp.Proto()
+	p := cp.Proto
 	if len(p.GetParams()) != 0 {
 		t.Error("expected nil sub-param to be a no-op")
 	}
 	// Chaining must continue to work after the no-op.
 	child := NewParamInt32(7)
-	p = cp.WithParam("y", child).Proto()
+	p = cp.WithParam("y", child).Proto
 	if p.GetParams()["y"].GetValue().GetInt32Value() != 7 {
 		t.Error("expected chaining to continue working after nil sub-param")
 	}
 }
 
 func TestWithResponse(t *testing.T) {
-	p := NewParamEmpty().WithResponse(true).Proto()
+	p := NewParamEmpty().WithResponse(true).Proto
 	if !p.GetResponse() {
 		t.Error("expected response=true")
 	}
 }
 
 func TestWithHelp(t *testing.T) {
-	p := NewParamInt32(0).WithHelp(NewPolyglotText("en", "Adjusts volume")).Proto()
+	p := NewParamInt32(0).WithHelp(NewPolyglotText("en", "Adjusts volume")).Proto
 	if p.GetHelp().GetDisplayStrings()["en"] != "Adjusts volume" {
 		t.Errorf("unexpected help text: %q", p.GetHelp().GetDisplayStrings()["en"])
 	}
 }
 
 func TestWithOidAliases(t *testing.T) {
-	p := NewParamInt32(0).WithOidAliases("/old/path", "/legacy/path").Proto()
+	p := NewParamInt32(0).WithOidAliases("/old/path", "/legacy/path").Proto
 	aliases := p.GetOidAliases()
 	if len(aliases) != 2 || aliases[0] != "/old/path" {
 		t.Errorf("unexpected aliases: %v", aliases)
@@ -331,21 +331,21 @@ func TestWithOidAliases(t *testing.T) {
 }
 
 func TestWithMinimalSet(t *testing.T) {
-	p := NewParamInt32(0).WithMinimalSet(true).Proto()
+	p := NewParamInt32(0).WithMinimalSet(true).Proto
 	if !p.GetMinimalSet() {
 		t.Error("expected minimal_set=true")
 	}
 }
 
 func TestWithStateless(t *testing.T) {
-	p := NewParamInt32(0).WithStateless(true).Proto()
+	p := NewParamInt32(0).WithStateless(true).Proto
 	if !p.GetStateless() {
 		t.Error("expected stateless=true")
 	}
 }
 
 func TestWithTemplateOid(t *testing.T) {
-	p := NewParamInt32(0).WithTemplateOid("templates.volume").Proto()
+	p := NewParamInt32(0).WithTemplateOid("templates.volume").Proto
 	if p.GetTemplateOid() != "templates.volume" {
 		t.Errorf("expected 'templates.volume', got %q", p.GetTemplateOid())
 	}
@@ -364,7 +364,7 @@ func TestWithConstraint_ValidInt32Choice(t *testing.T) {
 			},
 		},
 	}
-	p := NewParamInt32(0).WithConstraint(c).Proto()
+	p := NewParamInt32(0).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
@@ -380,7 +380,7 @@ func TestWithConstraint_ValidIntRange(t *testing.T) {
 			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 100, Step: 1},
 		},
 	}
-	p := NewParamInt32(50).WithConstraint(c).Proto()
+	p := NewParamInt32(50).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
@@ -393,7 +393,7 @@ func TestWithConstraint_ValidFloatRange(t *testing.T) {
 			FloatRange: &protos.FloatRangeConstraint{MinValue: 0, MaxValue: 1, Step: 0.01},
 		},
 	}
-	p := NewParamFloat32(0.5).WithConstraint(c).Proto()
+	p := NewParamFloat32(0.5).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
@@ -406,7 +406,7 @@ func TestWithConstraint_ValidStringChoice(t *testing.T) {
 			StringChoice: &protos.StringChoiceConstraint{Choices: []string{"a", "b"}, Strict: true},
 		},
 	}
-	p := NewParamString("a").WithConstraint(c).Proto()
+	p := NewParamString("a").WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
@@ -423,7 +423,7 @@ func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
 			},
 		},
 	}
-	p := NewParamString("v").WithConstraint(c).Proto()
+	p := NewParamString("v").WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
@@ -438,7 +438,7 @@ func TestWithConstraint_ValidAlarmTable(t *testing.T) {
 			},
 		},
 	}
-	p := NewParamInt32(0).WithConstraint(c).Proto()
+	p := NewParamInt32(0).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected alarm table constraint to be applied to INT32 param")
 	}
@@ -449,13 +449,13 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 		Type: protos.Constraint_UNDEFINED,
 		Kind: &protos.Constraint_RefOid{RefOid: "shared.my_constraint"},
 	}
-	for _, factory := range []func() *CatenaParam{
-		func() *CatenaParam { return NewParamInt32(0) },
-		func() *CatenaParam { return NewParamFloat32(0) },
-		func() *CatenaParam { return NewParamString("") },
-		func() *CatenaParam { return NewParamStruct() },
+	for _, factory := range []func() *Param{
+		func() *Param { return NewParamInt32(0) },
+		func() *Param { return NewParamFloat32(0) },
+		func() *Param { return NewParamString("") },
+		func() *Param { return NewParamStruct() },
 	} {
-		p := factory().WithConstraint(c).Proto()
+		p := factory().WithConstraint(c).Proto
 		if p.GetConstraint() == nil {
 			t.Errorf("expected RefOid constraint to be valid for param type %v", p.GetType())
 		}
@@ -469,7 +469,7 @@ func TestWithConstraint_InvalidStringOnInt(t *testing.T) {
 			StringChoice: &protos.StringChoiceConstraint{Choices: []string{"a", "b"}, Strict: true},
 		},
 	}
-	p := NewParamInt32(0).WithConstraint(c).Proto()
+	p := NewParamInt32(0).WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected string constraint to be rejected on INT32 param")
 	}
@@ -482,7 +482,7 @@ func TestWithConstraint_InvalidIntOnFloat(t *testing.T) {
 			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 100, Step: 1},
 		},
 	}
-	p := NewParamFloat32(0).WithConstraint(c).Proto()
+	p := NewParamFloat32(0).WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected int32 range constraint to be rejected on FLOAT32 param")
 	}
@@ -495,14 +495,14 @@ func TestWithConstraint_InvalidFloatOnString(t *testing.T) {
 			FloatRange: &protos.FloatRangeConstraint{MinValue: 0, MaxValue: 1, Step: 0.1},
 		},
 	}
-	p := NewParamString("x").WithConstraint(c).Proto()
+	p := NewParamString("x").WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected float range constraint to be rejected on STRING param")
 	}
 }
 
 func TestWithConstraint_Nil(t *testing.T) {
-	p := NewParamInt32(0).WithConstraint(nil).Proto()
+	p := NewParamInt32(0).WithConstraint(nil).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected nil constraint to be a no-op")
 	}
@@ -521,7 +521,7 @@ func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
 			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 10, Step: 2},
 		},
 	}
-	p := NewParamInt32Array([]int32{0, 2, 4}).WithConstraint(c).Proto()
+	p := NewParamInt32Array([]int32{0, 2, 4}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected int32 range constraint to be applied to INT32_ARRAY param")
 	}
@@ -539,7 +539,7 @@ func TestWithConstraint_ValidInt32ChoiceOnInt32Array(t *testing.T) {
 			},
 		},
 	}
-	p := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).Proto()
+	p := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected int32 choice constraint to be applied to INT32_ARRAY param")
 	}
@@ -554,7 +554,7 @@ func TestWithConstraint_ValidAlarmTableOnInt32Array(t *testing.T) {
 			},
 		},
 	}
-	p := NewParamInt32Array([]int32{0, 1, 2}).WithConstraint(c).Proto()
+	p := NewParamInt32Array([]int32{0, 1, 2}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected alarm table constraint to be applied to INT32_ARRAY param")
 	}
@@ -567,7 +567,7 @@ func TestWithConstraint_ValidFloatRangeOnFloat32Array(t *testing.T) {
 			FloatRange: &protos.FloatRangeConstraint{MinValue: 0, MaxValue: 100, Step: 0.5},
 		},
 	}
-	p := NewParamFloat32Array([]float32{1.0, 2.0}).WithConstraint(c).Proto()
+	p := NewParamFloat32Array([]float32{1.0, 2.0}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected float range constraint to be applied to FLOAT32_ARRAY param")
 	}
@@ -580,7 +580,7 @@ func TestWithConstraint_ValidStringChoiceOnStringArray(t *testing.T) {
 			StringChoice: &protos.StringChoiceConstraint{Choices: []string{"a", "b"}, Strict: true},
 		},
 	}
-	p := NewParamStringArray([]string{"a", "b"}).WithConstraint(c).Proto()
+	p := NewParamStringArray([]string{"a", "b"}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected string choice constraint to be applied to STRING_ARRAY param")
 	}
@@ -598,7 +598,7 @@ func TestWithConstraint_ValidStringStringChoiceOnStringArray(t *testing.T) {
 			},
 		},
 	}
-	p := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).Proto()
+	p := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected string-string choice constraint to be applied to STRING_ARRAY param")
 	}
@@ -611,7 +611,7 @@ func TestWithConstraint_InvalidIntOnStringArray(t *testing.T) {
 			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 10, Step: 1},
 		},
 	}
-	p := NewParamStringArray([]string{"a"}).WithConstraint(c).Proto()
+	p := NewParamStringArray([]string{"a"}).WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected int32 range constraint to be rejected on STRING_ARRAY param")
 	}
@@ -638,7 +638,7 @@ func TestFullChaining(t *testing.T) {
 		WithMinimalSet(true).
 		WithStateless(false).
 		WithTemplateOid("templates.volume").
-		Proto()
+		Proto
 
 	if p.GetType() != protos.ParamType_INT32 {
 		t.Errorf("expected INT32, got %v", p.GetType())
@@ -679,7 +679,7 @@ func TestWithValue_MatchingType(t *testing.T) {
 	if res.Code != OK {
 		t.Fatal(res.Error)
 	}
-	p := NewParamInt32(0).WithValue(v).Proto()
+	p := NewParamInt32(0).WithValue(v).Proto
 	if p.GetValue().GetInt32Value() != 42 {
 		t.Errorf("expected 42, got %d", p.GetValue().GetInt32Value())
 	}
@@ -690,7 +690,7 @@ func TestWithValue_Struct(t *testing.T) {
 	if res.Code != OK {
 		t.Fatal(res.Error)
 	}
-	p := NewParamStruct().WithValue(v).Proto()
+	p := NewParamStruct().WithValue(v).Proto
 	fields := p.GetValue().GetStructValue().GetFields()
 	if fields["name"].GetStringValue() != "test" {
 		t.Errorf("expected struct field 'name'='test', got %q", fields["name"].GetStringValue())
@@ -703,7 +703,7 @@ func TestWithValue_StructVariant(t *testing.T) {
 	if res.Code != OK {
 		t.Fatal(res.Error)
 	}
-	p := NewParamStructVariant().WithValue(v).Proto()
+	p := NewParamStructVariant().WithValue(v).Proto
 	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "type_a" {
 		t.Errorf("expected struct_variant_type 'type_a', got %q",
 			p.GetValue().GetStructVariantValue().GetStructVariantType())
@@ -715,7 +715,7 @@ func TestWithValue_MismatchedType(t *testing.T) {
 	if res.Code != OK {
 		t.Fatal(res.Error)
 	}
-	p := NewParamInt32(0).WithValue(v).Proto()
+	p := NewParamInt32(0).WithValue(v).Proto
 	if p.GetValue().GetInt32Value() != 0 {
 		t.Error("expected mismatched WithValue to be a no-op")
 	}
@@ -729,7 +729,7 @@ func TestSetValue_OK(t *testing.T) {
 	if res.Code != OK {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
-	p := cp.Proto()
+	p := cp.Proto
 	if p.GetValue().GetInt32Value() != 99 {
 		t.Errorf("expected 99, got %d", p.GetValue().GetInt32Value())
 	}
@@ -741,7 +741,7 @@ func TestSetValue_TypeMismatch(t *testing.T) {
 	if res.Code != INVALID_ARGUMENT {
 		t.Errorf("expected INVALID_ARGUMENT, got %v", res.Code)
 	}
-	if cp.Proto().GetValue().GetInt32Value() != 0 {
+	if cp.Proto.GetValue().GetInt32Value() != 0 {
 		t.Error("expected value to remain unchanged after type mismatch")
 	}
 }
@@ -800,7 +800,7 @@ func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
 // --- Typed factory value tests ---
 
 func TestNewParamStruct_WithValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"a": int32(1)}).Proto()
+	p := NewParamStruct(map[string]any{"a": int32(1)}).Proto
 	fields := p.GetValue().GetStructValue().GetFields()
 	if fields["a"].GetInt32Value() != 1 {
 		t.Errorf("expected struct field 'a'=1, got %d", fields["a"].GetInt32Value())
@@ -808,7 +808,7 @@ func TestNewParamStruct_WithValue(t *testing.T) {
 }
 
 func TestNewParamStruct_NoValue(t *testing.T) {
-	p := NewParamStruct().Proto()
+	p := NewParamStruct().Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
@@ -819,7 +819,7 @@ func TestNewParamStruct_NoValue(t *testing.T) {
 
 func TestNewParamStructVariant_WithValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "kind_a", Value: int32(5)}
-	p := NewParamStructVariant(sv).Proto()
+	p := NewParamStructVariant(sv).Proto
 	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "kind_a" {
 		t.Errorf("expected struct_variant_type 'kind_a', got %q",
 			p.GetValue().GetStructVariantValue().GetStructVariantType())
@@ -831,7 +831,7 @@ func TestNewParamStructArray_WithValue(t *testing.T) {
 		{"x": int32(1)},
 		{"x": int32(2)},
 	}
-	p := NewParamStructArray(arr).Proto()
+	p := NewParamStructArray(arr).Proto
 	list := p.GetValue().GetStructArrayValues().GetStructValues()
 	if len(list) != 2 {
 		t.Fatalf("expected 2 structs, got %d", len(list))
@@ -846,7 +846,7 @@ func TestNewParamStructVariantArray_WithValue(t *testing.T) {
 		{StructVariantType: "a", Value: int32(1)},
 		{StructVariantType: "b", Value: int32(2)},
 	}
-	p := NewParamStructVariantArray(arr).Proto()
+	p := NewParamStructVariantArray(arr).Proto
 	list := p.GetValue().GetStructVariantArrayValues().GetStructVariants()
 	if len(list) != 2 {
 		t.Fatalf("expected 2 variants, got %d", len(list))
@@ -861,7 +861,7 @@ func TestNewParamStructVariantArray_WithValue(t *testing.T) {
 func TestNewParamFromValue_Int32(t *testing.T) {
 	v, _ := ToValue(int32(42))
 	cp := NewParamFromValue(v)
-	p := cp.Proto()
+	p := cp.Proto
 	if p.GetType() != protos.ParamType_INT32 {
 		t.Errorf("expected INT32, got %v", p.GetType())
 	}
@@ -873,39 +873,39 @@ func TestNewParamFromValue_Int32(t *testing.T) {
 func TestNewParamFromValue_Struct(t *testing.T) {
 	v, _ := ToValue(map[string]any{"k": "v"})
 	cp := NewParamFromValue(v)
-	if cp.Proto().GetType() != protos.ParamType_STRUCT {
-		t.Errorf("expected STRUCT, got %v", cp.Proto().GetType())
+	if cp.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", cp.Proto.GetType())
 	}
 }
 
 func TestNewParamFromValue_StructVariant(t *testing.T) {
 	v, _ := ToValue(StructVariantValue{StructVariantType: "t", Value: int32(0)})
 	cp := NewParamFromValue(v)
-	if cp.Proto().GetType() != protos.ParamType_STRUCT_VARIANT {
-		t.Errorf("expected STRUCT_VARIANT, got %v", cp.Proto().GetType())
+	if cp.Proto.GetType() != protos.ParamType_STRUCT_VARIANT {
+		t.Errorf("expected STRUCT_VARIANT, got %v", cp.Proto.GetType())
 	}
 }
 
 func TestNewParamFromValue_StructArray(t *testing.T) {
 	v, _ := ToValue([]map[string]any{{"a": int32(1)}})
 	cp := NewParamFromValue(v)
-	if cp.Proto().GetType() != protos.ParamType_STRUCT_ARRAY {
-		t.Errorf("expected STRUCT_ARRAY, got %v", cp.Proto().GetType())
+	if cp.Proto.GetType() != protos.ParamType_STRUCT_ARRAY {
+		t.Errorf("expected STRUCT_ARRAY, got %v", cp.Proto.GetType())
 	}
 }
 
 func TestNewParamFromValue_StructVariantArray(t *testing.T) {
 	v, _ := ToValue([]StructVariantValue{{StructVariantType: "t", Value: int32(0)}})
 	cp := NewParamFromValue(v)
-	if cp.Proto().GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
-		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", cp.Proto().GetType())
+	if cp.Proto.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
+		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", cp.Proto.GetType())
 	}
 }
 
 func TestNewParamFromValue_Nil(t *testing.T) {
 	cp := NewParamFromValue(Value{})
-	if cp.Proto().GetType() != protos.ParamType_UNDEFINED {
-		t.Errorf("expected UNDEFINED for nil value, got %v", cp.Proto().GetType())
+	if cp.Proto.GetType() != protos.ParamType_UNDEFINED {
+		t.Errorf("expected UNDEFINED for nil value, got %v", cp.Proto.GetType())
 	}
 }
 
@@ -929,8 +929,8 @@ func TestNewParamFromValue_AllScalarTypes(t *testing.T) {
 				t.Fatalf("ToValue failed: %s", res.Error)
 			}
 			cp := NewParamFromValue(v)
-			if cp.Proto().GetType() != tt.wantType {
-				t.Errorf("expected %v, got %v", tt.wantType, cp.Proto().GetType())
+			if cp.Proto.GetType() != tt.wantType {
+				t.Errorf("expected %v, got %v", tt.wantType, cp.Proto.GetType())
 			}
 		})
 	}
@@ -975,7 +975,7 @@ func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
 func TestWithParam_SelfReference(t *testing.T) {
 	cp := NewParamStruct()
 	cp.WithParam("self", cp)
-	sub := cp.Proto().GetParams()["self"]
+	sub := cp.Proto.GetParams()["self"]
 	if sub == nil {
 		t.Fatal("expected self-referencing sub-param to be set")
 	}

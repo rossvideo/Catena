@@ -45,43 +45,43 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// CatenaParam wraps a protos.Param and exposes a fluent builder API.
-type CatenaParam struct {
-	proto *protos.Param
+// Param wraps a protos.Param and exposes a fluent builder API.
+type Param struct {
+	Proto *protos.Param
 }
 
 // --- Factory functions (one per ParamType) ---
 
-func NewParamInt32(value int32) *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamInt32(value int32) *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_INT32,
 			Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: value}},
 		},
 	}
 }
 
-func NewParamFloat32(value float32) *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamFloat32(value float32) *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_FLOAT32,
 			Value: &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: value}},
 		},
 	}
 }
 
-func NewParamString(value string) *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamString(value string) *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_STRING,
 			Value: &protos.Value{Kind: &protos.Value_StringValue{StringValue: value}},
 		},
 	}
 }
 
-func NewParamStruct(value ...map[string]any) *CatenaParam {
-	cp := &CatenaParam{
-		proto: &protos.Param{
+func NewParamStruct(value ...map[string]any) *Param {
+	cp := &Param{
+		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT,
 		},
 	}
@@ -92,14 +92,14 @@ func NewParamStruct(value ...map[string]any) *CatenaParam {
 				"error", res.Error)
 			return cp
 		}
-		cp.proto.Value = pv
+		cp.Proto.Value = pv
 	}
 	return cp
 }
 
-func NewParamStructVariant(value ...StructVariantValue) *CatenaParam {
-	cp := &CatenaParam{
-		proto: &protos.Param{
+func NewParamStructVariant(value ...StructVariantValue) *Param {
+	cp := &Param{
+		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_VARIANT,
 		},
 	}
@@ -110,50 +110,50 @@ func NewParamStructVariant(value ...StructVariantValue) *CatenaParam {
 				"error", res.Error)
 			return cp
 		}
-		cp.proto.Value = pv
+		cp.Proto.Value = pv
 	}
 	return cp
 }
 
-func NewParamInt32Array(value []int32) *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamInt32Array(value []int32) *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_INT32_ARRAY,
 			Value: &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: value}}},
 		},
 	}
 }
 
-func NewParamFloat32Array(value []float32) *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamFloat32Array(value []float32) *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_FLOAT32_ARRAY,
 			Value: &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: value}}},
 		},
 	}
 }
 
-func NewParamStringArray(value []string) *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamStringArray(value []string) *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_STRING_ARRAY,
 			Value: &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: value}}},
 		},
 	}
 }
 
-func NewParamBinary(value []byte) *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamBinary(value []byte) *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_BINARY,
 			Value: &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: value}}}},
 		},
 	}
 }
 
-func NewParamStructArray(value ...[]map[string]any) *CatenaParam {
-	cp := &CatenaParam{
-		proto: &protos.Param{
+func NewParamStructArray(value ...[]map[string]any) *Param {
+	cp := &Param{
+		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_ARRAY,
 		},
 	}
@@ -164,14 +164,14 @@ func NewParamStructArray(value ...[]map[string]any) *CatenaParam {
 				"error", res.Error)
 			return cp
 		}
-		cp.proto.Value = pv
+		cp.Proto.Value = pv
 	}
 	return cp
 }
 
-func NewParamStructVariantArray(value ...[]StructVariantValue) *CatenaParam {
-	cp := &CatenaParam{
-		proto: &protos.Param{
+func NewParamStructVariantArray(value ...[]StructVariantValue) *Param {
+	cp := &Param{
+		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_VARIANT_ARRAY,
 		},
 	}
@@ -182,23 +182,23 @@ func NewParamStructVariantArray(value ...[]StructVariantValue) *CatenaParam {
 				"error", res.Error)
 			return cp
 		}
-		cp.proto.Value = pv
+		cp.Proto.Value = pv
 	}
 	return cp
 }
 
-func NewParamEmpty() *CatenaParam {
-	return &CatenaParam{
-		proto: &protos.Param{
+func NewParamEmpty() *Param {
+	return &Param{
+		Proto: &protos.Param{
 			Type:  protos.ParamType_EMPTY,
 			Value: &protos.Value{Kind: &protos.Value_EmptyValue{EmptyValue: &protos.Empty{}}},
 		},
 	}
 }
 
-func NewParamData(payload DataPayload) *CatenaParam {
-	cp := &CatenaParam{
-		proto: &protos.Param{
+func NewParamData(payload DataPayload) *Param {
+	cp := &Param{
+		Proto: &protos.Param{
 			Type: protos.ParamType_DATA,
 		},
 	}
@@ -208,21 +208,21 @@ func NewParamData(payload DataPayload) *CatenaParam {
 			"error", res.Error)
 		return cp
 	}
-	cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
+	cp.Proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
 	return cp
 }
 
-// NewParamFromValue creates a CatenaParam by inferring the ParamType from the
+// NewParamFromValue creates a Param by inferring the ParamType from the
 // Value's proto kind. This allows dynamic param creation regardless of type.
 // DataPayload values are mapped to ParamType_DATA (not BINARY) since the two
 // cannot be distinguished from the value alone.
-func NewParamFromValue(v Value) *CatenaParam {
+func NewParamFromValue(v Value) *Param {
 	pt := paramTypeFromValueKind(v.Value)
 	if pt == protos.ParamType_UNDEFINED {
 		logger.Warning("NewParamFromValue: could not infer param type from value; using UNDEFINED")
 	}
-	return &CatenaParam{
-		proto: &protos.Param{
+	return &Param{
+		Proto: &protos.Param{
 			Type:  pt,
 			Value: v.Value,
 		},
@@ -231,75 +231,75 @@ func NewParamFromValue(v Value) *CatenaParam {
 
 // --- Chainable With* methods ---
 
-func (cp *CatenaParam) WithName(name PolyglotText) *CatenaParam {
-	cp.proto.Name = &protos.PolyglotText{DisplayStrings: name}
+func (cp *Param) WithName(name PolyglotText) *Param {
+	cp.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
 	return cp
 }
 
-func (cp *CatenaParam) WithValue(v Value) *CatenaParam {
-	if !isValueValidForParamType(v.Value, cp.proto.Type) {
+func (cp *Param) WithValue(v Value) *Param {
+	if !isValueValidForParamType(v.Value, cp.Proto.Type) {
 		logger.Warning("WithValue: value kind incompatible with param type; ignoring",
-			"param_type", cp.proto.Type.String())
+			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.proto.Value = v.Value
+	cp.Proto.Value = v.Value
 	return cp
 }
 
-func (cp *CatenaParam) WithConstraint(c *protos.Constraint) *CatenaParam {
+func (cp *Param) WithConstraint(c *protos.Constraint) *Param {
 	if c == nil {
 		return cp
 	}
-	if !isConstraintValidForParam(c, cp.proto.Type) {
+	if !isConstraintValidForParam(c, cp.Proto.Type) {
 		logger.Warning("WithConstraint: constraint type incompatible with param type; ignoring",
 			"constraint_type", c.GetType().String(),
-			"param_type", cp.proto.Type.String())
+			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.proto.Constraint = c
+	cp.Proto.Constraint = c
 	return cp
 }
 
-func (cp *CatenaParam) WithReadOnly(readOnly bool) *CatenaParam {
-	cp.proto.ReadOnly = readOnly
+func (cp *Param) WithReadOnly(readOnly bool) *Param {
+	cp.Proto.ReadOnly = readOnly
 	return cp
 }
 
-func (cp *CatenaParam) WithWidget(widget string) *CatenaParam {
-	cp.proto.Widget = widget
+func (cp *Param) WithWidget(widget string) *Param {
+	cp.Proto.Widget = widget
 	return cp
 }
 
-func (cp *CatenaParam) WithPrecision(precision uint32) *CatenaParam {
-	if cp.proto.Type != protos.ParamType_FLOAT32 && cp.proto.Type != protos.ParamType_FLOAT32_ARRAY {
+func (cp *Param) WithPrecision(precision uint32) *Param {
+	if cp.Proto.Type != protos.ParamType_FLOAT32 && cp.Proto.Type != protos.ParamType_FLOAT32_ARRAY {
 		logger.Warning("WithPrecision called on non-float param; ignoring",
-			"param_type", cp.proto.Type.String())
+			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.proto.Precision = precision
+	cp.Proto.Precision = precision
 	return cp
 }
 
-func (cp *CatenaParam) WithMaxLength(maxLength uint32) *CatenaParam {
-	if cp.proto.Type != protos.ParamType_STRING && cp.proto.Type != protos.ParamType_STRING_ARRAY {
+func (cp *Param) WithMaxLength(maxLength uint32) *Param {
+	if cp.Proto.Type != protos.ParamType_STRING && cp.Proto.Type != protos.ParamType_STRING_ARRAY {
 		logger.Warning("WithMaxLength called on param type that does not support max_length; ignoring",
-			"param_type", cp.proto.Type.String())
+			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.proto.MaxLength = maxLength
+	cp.Proto.MaxLength = maxLength
 	return cp
 }
 
-func (cp *CatenaParam) WithAccessScope(scope string) *CatenaParam {
-	cp.proto.AccessScope = scope
+func (cp *Param) WithAccessScope(scope string) *Param {
+	cp.Proto.AccessScope = scope
 	return cp
 }
 
-func (cp *CatenaParam) WithClientHint(key, value string) *CatenaParam {
-	if cp.proto.ClientHints == nil {
-		cp.proto.ClientHints = map[string]string{}
+func (cp *Param) WithClientHint(key, value string) *Param {
+	if cp.Proto.ClientHints == nil {
+		cp.Proto.ClientHints = map[string]string{}
 	}
-	cp.proto.ClientHints[key] = value
+	cp.Proto.ClientHints[key] = value
 	return cp
 }
 
@@ -310,62 +310,62 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 	protos.ParamType_STRUCT_VARIANT_ARRAY: {},
 }
 
-func (cp *CatenaParam) WithParam(oid string, param *CatenaParam) *CatenaParam {
+func (cp *Param) WithParam(oid string, param *Param) *Param {
 	if param == nil {
 		logger.Warning("WithParam called with nil sub-param; ignoring",
 			"oid", oid)
 		return cp
 	}
 
-	cloned := proto.Clone(param.proto).(*protos.Param)
+	cloned := proto.Clone(param.Proto).(*protos.Param)
 
-	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
+	if _, ok := paramTypesWithSubParams[cp.Proto.Type]; !ok {
 		logger.Warning("WithParam called on param type that does not support sub-params; ignoring",
-			"param_type", cp.proto.Type.String())
+			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	if cp.proto.Params == nil {
-		cp.proto.Params = map[string]*protos.Param{}
+	if cp.Proto.Params == nil {
+		cp.Proto.Params = map[string]*protos.Param{}
 	}
-	cp.proto.Params[oid] = cloned
+	cp.Proto.Params[oid] = cloned
 	return cp
 }
 
 // TODO: WithResponse only applies to commands. When we add a CatenaCommand helper,
-// move this there. Consider an unexported baseParam that both CatenaParam and
+// move this there. Consider an unexported baseParam that both Param and
 // CatenaCommand compose from, since other fields may also be command-specific.
-func (cp *CatenaParam) WithResponse(response bool) *CatenaParam {
-	cp.proto.Response = response
+func (cp *Param) WithResponse(response bool) *Param {
+	cp.Proto.Response = response
 	return cp
 }
 
-func (cp *CatenaParam) WithHelp(help PolyglotText) *CatenaParam {
-	cp.proto.Help = &protos.PolyglotText{DisplayStrings: help}
+func (cp *Param) WithHelp(help PolyglotText) *Param {
+	cp.Proto.Help = &protos.PolyglotText{DisplayStrings: help}
 	return cp
 }
 
-func (cp *CatenaParam) WithOidAliases(aliases ...string) *CatenaParam {
-	cp.proto.OidAliases = aliases
+func (cp *Param) WithOidAliases(aliases ...string) *Param {
+	cp.Proto.OidAliases = aliases
 	return cp
 }
 
-func (cp *CatenaParam) WithMinimalSet(minimalSet bool) *CatenaParam {
-	cp.proto.MinimalSet = minimalSet
+func (cp *Param) WithMinimalSet(minimalSet bool) *Param {
+	cp.Proto.MinimalSet = minimalSet
 	return cp
 }
 
-func (cp *CatenaParam) WithStateless(stateless bool) *CatenaParam {
-	cp.proto.Stateless = stateless
+func (cp *Param) WithStateless(stateless bool) *Param {
+	cp.Proto.Stateless = stateless
 	return cp
 }
 
-// TODO: Ideally this would accept a *CatenaParam reference instead of a raw
-// string, but CatenaParam doesn't track its own OID path (the OID is only
+// TODO: Ideally this would accept a *Param reference instead of a raw
+// string, but Param doesn't track its own OID path (the OID is only
 // assigned externally via WithParam). Auto-linking would require params to
 // know their full mounted path, which adds significant complexity. Revisit if
 // we ever add path tracking to the param tree.
-func (cp *CatenaParam) WithTemplateOid(oid string) *CatenaParam {
-	cp.proto.TemplateOid = oid
+func (cp *Param) WithTemplateOid(oid string) *Param {
+	cp.Proto.TemplateOid = oid
 	return cp
 }
 
@@ -373,31 +373,25 @@ func (cp *CatenaParam) WithTemplateOid(oid string) *CatenaParam {
 
 // SetValue converts v to a proto value via ToProto, validates it against the
 // param type, and sets it.
-func (cp *CatenaParam) SetValue(v any) StatusResult {
+func (cp *Param) SetValue(v any) StatusResult {
 	pv, res := ToProto(v)
 	if res.Code != OK {
 		return res
 	}
-	if !isValueValidForParamType(pv, cp.proto.Type) {
-		return StatusResult{Code: INVALID_ARGUMENT, Error: "value kind incompatible with param type " + cp.proto.Type.String()}
+	if !isValueValidForParamType(pv, cp.Proto.Type) {
+		return StatusResult{Code: INVALID_ARGUMENT, Error: "value kind incompatible with param type " + cp.Proto.Type.String()}
 	}
-	cp.proto.Value = pv
+	cp.Proto.Value = pv
 	return StatusResult{Code: OK}
 }
 
 // GetValue reads the current value and converts it to a native Go type via
 // FromProto. Returns (nil, OK) if no value is set.
-func (cp *CatenaParam) GetValue() (any, StatusResult) {
-	if cp.proto.Value == nil {
+func (cp *Param) GetValue() (any, StatusResult) {
+	if cp.Proto.Value == nil {
 		return nil, StatusResult{Code: OK}
 	}
-	return FromProto(cp.proto.Value)
-}
-
-// Proto returns the underlying protos.Param. Callers must not mutate the
-// returned proto concurrently with other CatenaParam method calls.
-func (cp *CatenaParam) Proto() *protos.Param {
-	return cp.proto
+	return FromProto(cp.Proto.Value)
 }
 
 // --- Validation helpers ---
