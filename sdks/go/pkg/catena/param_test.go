@@ -980,3 +980,162 @@ func TestWithParam_SelfReference(t *testing.T) {
 		t.Fatal("expected self-referencing sub-param to be set")
 	}
 }
+
+// --- Error path tests ---
+
+func TestNewParamStruct_InvalidValue(t *testing.T) {
+	p := NewParamStruct(map[string]any{"bad": struct{}{}}).Proto
+	if p.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when conversion fails")
+	}
+}
+
+func TestNewParamStructVariant_InvalidValue(t *testing.T) {
+	sv := StructVariantValue{StructVariantType: "t", Value: struct{}{}}
+	p := NewParamStructVariant(sv).Proto
+	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
+		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when conversion fails")
+	}
+}
+
+func TestNewParamStructArray_InvalidValue(t *testing.T) {
+	arr := []map[string]any{{"bad": struct{}{}}}
+	p := NewParamStructArray(arr).Proto
+	if p.GetType() != protos.ParamType_STRUCT_ARRAY {
+		t.Errorf("expected STRUCT_ARRAY, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when conversion fails")
+	}
+}
+
+func TestNewParamStructVariantArray_InvalidValue(t *testing.T) {
+	arr := []StructVariantValue{{StructVariantType: "t", Value: struct{}{}}}
+	p := NewParamStructVariantArray(arr).Proto
+	if p.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
+		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when conversion fails")
+	}
+}
+
+func TestNewParamData_InvalidPayload(t *testing.T) {
+	dp := DataPayload{}
+	p := NewParamData(dp).Proto
+	if p.GetType() != protos.ParamType_DATA {
+		t.Errorf("expected DATA, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when DataPayload conversion fails")
+	}
+}
+
+func TestNewParamData_BothPayloadAndUrl(t *testing.T) {
+	dp := DataPayload{Payload: []byte("data"), Url: "http://example.com"}
+	p := NewParamData(dp).Proto
+	if p.GetType() != protos.ParamType_DATA {
+		t.Errorf("expected DATA, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when both payload and url are set")
+	}
+}
+
+func TestWithParam_StructVariant(t *testing.T) {
+	child := NewParamInt32(5)
+	p := NewParamStructVariant().WithParam("field", child).Proto
+	sub := p.GetParams()["field"]
+	if sub == nil {
+		t.Fatal("expected sub-param on STRUCT_VARIANT")
+	}
+	if sub.GetValue().GetInt32Value() != 5 {
+		t.Errorf("expected 5, got %d", sub.GetValue().GetInt32Value())
+	}
+}
+
+func TestWithParam_StructArray(t *testing.T) {
+	child := NewParamString("val")
+	p := NewParamStructArray().WithParam("item", child).Proto
+	sub := p.GetParams()["item"]
+	if sub == nil {
+		t.Fatal("expected sub-param on STRUCT_ARRAY")
+	}
+	if sub.GetValue().GetStringValue() != "val" {
+		t.Errorf("expected 'val', got %q", sub.GetValue().GetStringValue())
+	}
+}
+
+func TestWithParam_StructVariantArray(t *testing.T) {
+	child := NewParamFloat32(1.5)
+	p := NewParamStructVariantArray().WithParam("entry", child).Proto
+	sub := p.GetParams()["entry"]
+	if sub == nil {
+		t.Fatal("expected sub-param on STRUCT_VARIANT_ARRAY")
+	}
+	if sub.GetValue().GetFloat32Value() != 1.5 {
+		t.Errorf("expected 1.5, got %f", sub.GetValue().GetFloat32Value())
+	}
+}
+
+func TestIsValueValidForParamType_NilKind(t *testing.T) {
+	v := &protos.Value{}
+	if isValueValidForParamType(v, protos.ParamType_INT32) {
+		t.Error("expected Value with nil Kind to be invalid")
+	}
+}
+
+func TestIsValueValidForParamType_UndefinedValue(t *testing.T) {
+	v := &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: 0}}
+	if !isValueValidForParamType(v, protos.ParamType_UNDEFINED) {
+		t.Error("expected UndefinedValue to be valid for UNDEFINED")
+	}
+	if isValueValidForParamType(v, protos.ParamType_INT32) {
+		t.Error("expected UndefinedValue to be invalid for INT32")
+	}
+}
+
+func TestParamTypeFromValueKind_NilKind(t *testing.T) {
+	v := &protos.Value{}
+	if paramTypeFromValueKind(v) != protos.ParamType_UNDEFINED {
+		t.Error("expected UNDEFINED for Value with nil Kind")
+	}
+}
+
+func TestParamTypeFromValueKind_UndefinedValue(t *testing.T) {
+	v := &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: 0}}
+	if paramTypeFromValueKind(v) != protos.ParamType_UNDEFINED {
+		t.Error("expected UNDEFINED for UndefinedValue kind")
+	}
+}
+
+func TestIsConstraintValidForParam_NilKind(t *testing.T) {
+	c := &protos.Constraint{}
+	if isConstraintValidForParam(c, protos.ParamType_INT32) {
+		t.Error("expected constraint with nil Kind to be invalid")
+	}
+}
+
+func TestSetValue_InvalidThenValid(t *testing.T) {
+	cp := NewParamInt32(10)
+	res := cp.SetValue("wrong type")
+	if res.Code != INVALID_ARGUMENT {
+		t.Errorf("expected INVALID_ARGUMENT, got %v", res.Code)
+	}
+	if cp.Proto.GetValue().GetInt32Value() != 10 {
+		t.Error("expected original value to be preserved after failed SetValue")
+	}
+	res = cp.SetValue(int32(20))
+	if res.Code != OK {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+	if cp.Proto.GetValue().GetInt32Value() != 20 {
+		t.Errorf("expected 20, got %d", cp.Proto.GetValue().GetInt32Value())
+	}
+}
