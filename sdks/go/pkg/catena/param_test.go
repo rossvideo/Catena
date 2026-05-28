@@ -77,14 +77,14 @@ func TestNewParamString(t *testing.T) {
 }
 
 func TestNewParamStruct(t *testing.T) {
-	p := NewParamStruct().Proto
+	p := NewParamStruct(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
 }
 
 func TestNewParamStructVariant(t *testing.T) {
-	p := NewParamStructVariant().Proto
+	p := NewParamStructVariant(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
 		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
 	}
@@ -135,14 +135,14 @@ func TestNewParamBinary(t *testing.T) {
 }
 
 func TestNewParamStructArray(t *testing.T) {
-	p := NewParamStructArray().Proto
+	p := NewParamStructArray(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT_ARRAY {
 		t.Errorf("expected STRUCT_ARRAY, got %v", p.GetType())
 	}
 }
 
 func TestNewParamStructVariantArray(t *testing.T) {
-	p := NewParamStructVariantArray().Proto
+	p := NewParamStructVariantArray(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
 		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", p.GetType())
 	}
@@ -262,7 +262,7 @@ func TestWithClientHint(t *testing.T) {
 
 func TestWithParam_Struct(t *testing.T) {
 	child := NewParamInt32(10).WithName(NewPolyglotText("en", "child"))
-	p := NewParamStruct().WithParam("brightness", child).Proto
+	p := NewParamStruct(nil).WithParam("brightness", child).Proto
 
 	sub := p.GetParams()["brightness"]
 	if sub == nil {
@@ -275,7 +275,7 @@ func TestWithParam_Struct(t *testing.T) {
 
 func TestWithParam_DeepClone(t *testing.T) {
 	child := NewParamInt32(1)
-	parent := NewParamStruct().WithParam("x", child).Proto
+	parent := NewParamStruct(nil).WithParam("x", child).Proto
 
 	child.SetValue(int32(999))
 	if parent.GetParams()["x"].GetValue().GetInt32Value() != 1 {
@@ -295,7 +295,7 @@ func TestWithParam_Nil(t *testing.T) {
 	// Passing a nil sub-param must not panic and must not add an entry,
 	// preserving the contract that method chaining is never interrupted
 	// by error handling.
-	cp := NewParamStruct().WithParam("x", nil)
+	cp := NewParamStruct(nil).WithParam("x", nil)
 	p := cp.Proto
 	if len(p.GetParams()) != 0 {
 		t.Error("expected nil sub-param to be a no-op")
@@ -453,7 +453,7 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 		func() *Param { return NewParamInt32(0) },
 		func() *Param { return NewParamFloat32(0) },
 		func() *Param { return NewParamString("") },
-		func() *Param { return NewParamStruct() },
+		func() *Param { return NewParamStruct(nil) },
 	} {
 		p := factory().WithConstraint(c).Proto
 		if p.GetConstraint() == nil {
@@ -509,10 +509,7 @@ func TestWithConstraint_Nil(t *testing.T) {
 }
 
 // Scalar constraints must also be accepted on their corresponding array
-// param types, matching the Catena protocol (see param.int_array_range.yaml,
-// param.int_array_choice.yaml, param.int_array_alarm.yaml,
-// param.float_array_range.yaml, param.string_array_choice.yaml,
-// param.string_string_array_choice.yaml).
+// param types, matching the Catena protocol
 
 func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
 	c := &protos.Constraint{
@@ -690,7 +687,7 @@ func TestWithValue_Struct(t *testing.T) {
 	if res.Code != OK {
 		t.Fatal(res.Error)
 	}
-	p := NewParamStruct().WithValue(v).Proto
+	p := NewParamStruct(nil).WithValue(v).Proto
 	fields := p.GetValue().GetStructValue().GetFields()
 	if fields["name"].GetStringValue() != "test" {
 		t.Errorf("expected struct field 'name'='test', got %q", fields["name"].GetStringValue())
@@ -703,7 +700,7 @@ func TestWithValue_StructVariant(t *testing.T) {
 	if res.Code != OK {
 		t.Fatal(res.Error)
 	}
-	p := NewParamStructVariant().WithValue(v).Proto
+	p := NewParamStructVariant(nil).WithValue(v).Proto
 	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "type_a" {
 		t.Errorf("expected struct_variant_type 'type_a', got %q",
 			p.GetValue().GetStructVariantValue().GetStructVariantType())
@@ -767,7 +764,7 @@ func TestGetValue_OK(t *testing.T) {
 }
 
 func TestGetValue_Nil(t *testing.T) {
-	cp := NewParamStruct()
+	cp := NewParamStruct(nil)
 	v, res := cp.GetValue()
 	if res.Code != OK {
 		t.Fatalf("expected OK for nil value, got %v: %s", res.Code, res.Error)
@@ -778,7 +775,7 @@ func TestGetValue_Nil(t *testing.T) {
 }
 
 func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
-	cp := NewParamStruct()
+	cp := NewParamStruct(nil)
 	input := map[string]any{"x": int32(1), "y": int32(2)}
 	res := cp.SetValue(input)
 	if res.Code != OK {
@@ -808,7 +805,7 @@ func TestNewParamStruct_WithValue(t *testing.T) {
 }
 
 func TestNewParamStruct_NoValue(t *testing.T) {
-	p := NewParamStruct().Proto
+	p := NewParamStruct(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
@@ -819,7 +816,7 @@ func TestNewParamStruct_NoValue(t *testing.T) {
 
 func TestNewParamStructVariant_WithValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "kind_a", Value: int32(5)}
-	p := NewParamStructVariant(sv).Proto
+	p := NewParamStructVariant(&sv).Proto
 	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "kind_a" {
 		t.Errorf("expected struct_variant_type 'kind_a', got %q",
 			p.GetValue().GetStructVariantValue().GetStructVariantType())
@@ -973,7 +970,7 @@ func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
 }
 
 func TestWithParam_SelfReference(t *testing.T) {
-	cp := NewParamStruct()
+	cp := NewParamStruct(nil)
 	cp.WithParam("self", cp)
 	sub := cp.Proto.GetParams()["self"]
 	if sub == nil {
@@ -995,7 +992,7 @@ func TestNewParamStruct_InvalidValue(t *testing.T) {
 
 func TestNewParamStructVariant_InvalidValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "t", Value: struct{}{}}
-	p := NewParamStructVariant(sv).Proto
+	p := NewParamStructVariant(&sv).Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
 		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
 	}
@@ -1050,7 +1047,7 @@ func TestNewParamData_BothPayloadAndUrl(t *testing.T) {
 
 func TestWithParam_StructVariant(t *testing.T) {
 	child := NewParamInt32(5)
-	p := NewParamStructVariant().WithParam("field", child).Proto
+	p := NewParamStructVariant(nil).WithParam("field", child).Proto
 	sub := p.GetParams()["field"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_VARIANT")
@@ -1062,7 +1059,7 @@ func TestWithParam_StructVariant(t *testing.T) {
 
 func TestWithParam_StructArray(t *testing.T) {
 	child := NewParamString("val")
-	p := NewParamStructArray().WithParam("item", child).Proto
+	p := NewParamStructArray(nil).WithParam("item", child).Proto
 	sub := p.GetParams()["item"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_ARRAY")
@@ -1074,7 +1071,7 @@ func TestWithParam_StructArray(t *testing.T) {
 
 func TestWithParam_StructVariantArray(t *testing.T) {
 	child := NewParamFloat32(1.5)
-	p := NewParamStructVariantArray().WithParam("entry", child).Proto
+	p := NewParamStructVariantArray(nil).WithParam("entry", child).Proto
 	sub := p.GetParams()["entry"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_VARIANT_ARRAY")

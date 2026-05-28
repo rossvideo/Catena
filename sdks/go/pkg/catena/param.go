@@ -79,14 +79,14 @@ func NewParamString(value string) *Param {
 	}
 }
 
-func NewParamStruct(value ...map[string]any) *Param {
+func NewParamStruct(value map[string]any) *Param {
 	cp := &Param{
 		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT,
 		},
 	}
-	if len(value) > 0 {
-		pv, res := ToProto(value[0])
+	if value != nil {
+		pv, res := ToProto(value)
 		if res.Code != OK {
 			logger.Warning("NewParamStruct: failed to convert value; value left nil",
 				"error", res.Error)
@@ -97,14 +97,14 @@ func NewParamStruct(value ...map[string]any) *Param {
 	return cp
 }
 
-func NewParamStructVariant(value ...StructVariantValue) *Param {
+func NewParamStructVariant(value *StructVariantValue) *Param {
 	cp := &Param{
 		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_VARIANT,
 		},
 	}
-	if len(value) > 0 {
-		pv, res := ToProto(value[0])
+	if value != nil {
+		pv, res := ToProto(*value)
 		if res.Code != OK {
 			logger.Warning("NewParamStructVariant: failed to convert value; value left nil",
 				"error", res.Error)
@@ -151,14 +151,14 @@ func NewParamBinary(value []byte) *Param {
 	}
 }
 
-func NewParamStructArray(value ...[]map[string]any) *Param {
+func NewParamStructArray(value []map[string]any) *Param {
 	cp := &Param{
 		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_ARRAY,
 		},
 	}
-	if len(value) > 0 {
-		pv, res := ToProto(value[0])
+	if value != nil {
+		pv, res := ToProto(value)
 		if res.Code != OK {
 			logger.Warning("NewParamStructArray: failed to convert value; value left nil",
 				"error", res.Error)
@@ -169,14 +169,14 @@ func NewParamStructArray(value ...[]map[string]any) *Param {
 	return cp
 }
 
-func NewParamStructVariantArray(value ...[]StructVariantValue) *Param {
+func NewParamStructVariantArray(value []StructVariantValue) *Param {
 	cp := &Param{
 		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT_VARIANT_ARRAY,
 		},
 	}
-	if len(value) > 0 {
-		pv, res := ToProto(value[0])
+	if value != nil {
+		pv, res := ToProto(value)
 		if res.Code != OK {
 			logger.Warning("NewParamStructVariantArray: failed to convert value; value left nil",
 				"error", res.Error)
@@ -214,7 +214,7 @@ func NewParamData(payload DataPayload) *Param {
 
 // NewParamFromValue creates a Param by inferring the ParamType from the
 // Value's proto kind. This allows dynamic param creation regardless of type.
-// DataPayload values are mapped to ParamType_DATA (not BINARY) since the two
+// DataPayload values are mapped to ParamType_DATA since the two
 // cannot be distinguished from the value alone.
 func NewParamFromValue(v Value) *Param {
 	pt := paramTypeFromValueKind(v.Value)
