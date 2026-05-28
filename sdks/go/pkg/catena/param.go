@@ -363,8 +363,6 @@ func (cp *Param) WithTemplateOid(oid string) *Param {
 	return cp
 }
 
-// --- Thread-safe runtime accessors ---
-
 // SetValue converts v to a proto value via ToProto, validates it against the
 // param type, and sets it.
 func (cp *Param) SetValue(v any) StatusResult {
