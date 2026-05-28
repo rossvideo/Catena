@@ -85,15 +85,13 @@ func NewParamStruct(value map[string]any) *Param {
 			Type: protos.ParamType_STRUCT,
 		},
 	}
-	if value != nil {
-		pv, res := ToProto(value)
-		if res.Code != OK {
-			logger.Warning("NewParamStruct: failed to convert value; value left nil",
-				"error", res.Error)
-			return cp
-		}
-		cp.Proto.Value = pv
+	pv, res := ToProto(value)
+	if res.Code != OK {
+		logger.Warning("NewParamStruct: failed to convert value; value left nil",
+			"error", res.Error)
+		return cp
 	}
+	cp.Proto.Value = pv
 	return cp
 }
 
@@ -157,15 +155,13 @@ func NewParamStructArray(value []map[string]any) *Param {
 			Type: protos.ParamType_STRUCT_ARRAY,
 		},
 	}
-	if value != nil {
-		pv, res := ToProto(value)
-		if res.Code != OK {
-			logger.Warning("NewParamStructArray: failed to convert value; value left nil",
-				"error", res.Error)
-			return cp
-		}
-		cp.Proto.Value = pv
+	pv, res := ToProto(value)
+	if res.Code != OK {
+		logger.Warning("NewParamStructArray: failed to convert value; value left nil",
+			"error", res.Error)
+		return cp
 	}
+	cp.Proto.Value = pv
 	return cp
 }
 
@@ -175,15 +171,13 @@ func NewParamStructVariantArray(value []StructVariantValue) *Param {
 			Type: protos.ParamType_STRUCT_VARIANT_ARRAY,
 		},
 	}
-	if value != nil {
-		pv, res := ToProto(value)
-		if res.Code != OK {
-			logger.Warning("NewParamStructVariantArray: failed to convert value; value left nil",
-				"error", res.Error)
-			return cp
-		}
-		cp.Proto.Value = pv
+	pv, res := ToProto(value)
+	if res.Code != OK {
+		logger.Warning("NewParamStructVariantArray: failed to convert value; value left nil",
+			"error", res.Error)
+		return cp
 	}
+	cp.Proto.Value = pv
 	return cp
 }
 

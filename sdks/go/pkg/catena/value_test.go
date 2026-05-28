@@ -449,6 +449,34 @@ func TestRoundTrip_DataPayload(t *testing.T) {
 	}
 }
 
+func TestToProto_Nil(t *testing.T) {
+	_, res := ToProto(nil)
+	if res.Code == OK {
+		t.Error("ToProto(nil) expected error")
+	}
+}
+
+func TestToProto_TypedNil_Map(t *testing.T) {
+	_, res := ToProto((map[string]any)(nil))
+	if res.Code == OK {
+		t.Error("ToProto(nil map[string]any) expected error")
+	}
+}
+
+func TestToProto_TypedNil_StructArray(t *testing.T) {
+	_, res := ToProto(([]map[string]any)(nil))
+	if res.Code == OK {
+		t.Error("ToProto(nil []map[string]any) expected error")
+	}
+}
+
+func TestToProto_TypedNil_StructVariantArray(t *testing.T) {
+	_, res := ToProto(([]StructVariantValue)(nil))
+	if res.Code == OK {
+		t.Error("ToProto(nil []StructVariantValue) expected error")
+	}
+}
+
 func TestToProto_UnsupportedType(t *testing.T) {
 	tests := []struct {
 		name  string

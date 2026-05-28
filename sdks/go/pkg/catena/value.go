@@ -105,6 +105,9 @@ func ToValue(v any) (Value, StatusResult) {
 
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, StatusResult) {
+	if v == nil {
+		return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil value"}
+	}
 	switch val := v.(type) {
 	case DataPayload:
 		pdp, res := dataPayloadToProto(val)
@@ -129,6 +132,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	case []string:
 		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: val}}}, StatusResult{Code: OK}
 	case map[string]any:
+		if val == nil {
+			return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil map[string]any"}
+		}
 		fields := make(map[string]*protos.Value)
 		for k, v := range val {
 			res, sr := ToProto(v)
@@ -139,6 +145,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 		}
 		return &protos.Value{Kind: &protos.Value_StructValue{StructValue: &protos.StructValue{Fields: fields}}}, StatusResult{Code: OK}
 	case []map[string]any:
+		if val == nil {
+			return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil []map[string]any"}
+		}
 		structArr := make([]*protos.StructValue, len(val))
 		for i, m := range val {
 			fields := make(map[string]*protos.Value)
@@ -162,6 +171,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 			Value:             protoVal,
 		}}}, StatusResult{Code: OK}
 	case []StructVariantValue:
+		if val == nil {
+			return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil []StructVariantValue"}
+		}
 		var structVariants []*protos.StructVariantValue
 		for _, sv := range val {
 			protoVal, sr := ToProto(sv.Value)
