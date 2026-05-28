@@ -477,6 +477,20 @@ func TestToProto_TypedNil_StructVariantArray(t *testing.T) {
 	}
 }
 
+func TestToProto_EmptyMap(t *testing.T) {
+	_, res := ToProto(map[string]any{})
+	if res.Code == OK {
+		t.Error("ToProto(empty map[string]any) expected error")
+	}
+}
+
+func TestToProto_EmptyStructVariant(t *testing.T) {
+	_, res := ToProto(StructVariantValue{})
+	if res.Code == OK {
+		t.Error("ToProto(empty StructVariantValue) expected error")
+	}
+}
+
 func TestToProto_UnsupportedType(t *testing.T) {
 	tests := []struct {
 		name  string

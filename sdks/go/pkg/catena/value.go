@@ -132,8 +132,8 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	case []string:
 		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: val}}}, StatusResult{Code: OK}
 	case map[string]any:
-		if val == nil {
-			return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil map[string]any"}
+		if len(val) == 0 {
+			return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil or empty map[string]any"}
 		}
 		fields := make(map[string]*protos.Value)
 		for k, v := range val {
@@ -162,6 +162,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 		}
 		return &protos.Value{Kind: &protos.Value_StructArrayValues{StructArrayValues: &protos.StructList{StructValues: structArr}}}, StatusResult{Code: OK}
 	case StructVariantValue:
+		if val.Value == nil {
+			return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "nil StructVariantValue.Value"}
+		}
 		protoVal, sr := ToProto(val.Value)
 		if sr.Code != OK {
 			return nil, StatusResult{Code: sr.Code, Error: "failed to convert StructVariantValue.Value: " + sr.Error}
