@@ -240,17 +240,17 @@ func (cp *Param) WithValue(v Value) *Param {
 	return cp
 }
 
-func (cp *Param) WithConstraint(c *protos.Constraint) *Param {
-	if c == nil {
+func (cp *Param) WithConstraint(c *Constraint) *Param {
+	if c == nil || c.Proto == nil {
 		return cp
 	}
-	if !isConstraintValidForParam(c, cp.Proto.Type) {
+	if !isConstraintValidForParam(c.Proto, cp.Proto.Type) {
 		logger.Warning("WithConstraint: constraint type incompatible with param type; ignoring",
-			"constraint_type", c.GetType().String(),
+			"constraint_type", c.Proto.GetType().String(),
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.Proto.Constraint = c
+	cp.Proto.Constraint = c.Proto
 	return cp
 }
 
