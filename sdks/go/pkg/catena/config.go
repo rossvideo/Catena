@@ -57,9 +57,7 @@ const (
 	EnvProd Environment = "prod" // production mode
 )
 
-// currentEnv holds the active SDK environment (dev/prod). Stored atomically so
-// concurrent readers (e.g. gRPC interceptors) and writers (e.g. tests calling
-// SetEnv across subtests) do not race.
+// currentEnv holds the active SDK environment (dev/prod). Stored atomically so concurrent readers and writers do not race.
 var currentEnv atomic.Pointer[Environment]
 
 func init() {
