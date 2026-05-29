@@ -48,6 +48,7 @@ import (
 
 type stubServerRuntime struct {
 	tb                       testing.TB
+	isDev                    bool
 	slots                    []uint16
 	getDeviceFn              func(slot uint16) (catena.Device, catena.StatusResult)
 	getValueFn               func(slot uint16, fqoid string) (catena.Value, catena.StatusResult)
@@ -78,6 +79,10 @@ func (s *stubServerRuntime) panicf(format string, args ...any) {
 }
 
 var _ catena.ServerRuntime = (*stubServerRuntime)(nil)
+
+func (s *stubServerRuntime) IsDev() bool {
+	return s.isDev
+}
 
 func (s *stubServerRuntime) GetSlots() []uint16 {
 	return s.slots

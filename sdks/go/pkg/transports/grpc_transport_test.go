@@ -99,6 +99,7 @@ func setupTestGrpcTransport(t *testing.T, slots []uint16, opts ...testGrpcTransp
 	lis := bufconn.Listen(bufSize)
 	transport := NewGrpcTransport(cfg.port, cfg.reflection)
 	runtime := makeStubServerRuntime(t)
+	runtime.isDev = cfg.isDev
 	runtime.slots = slots
 	transport.runtime = runtime
 
@@ -1288,10 +1289,6 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 		})
 
 		t.Run(ep.name+"/prod_hides_details", func(t *testing.T) {
-			original := catena.GetEnv()
-			defer catena.SetEnv(original)
-			catena.SetEnv(catena.EnvProd)
-
 			ctx := context.Background()
 			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(false))
 			defer cleanup()
@@ -1419,10 +1416,6 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 	for _, ep := range endpoints {
 		ep := ep
 		t.Run(ep.name+"/dev_shows_details", func(t *testing.T) {
-			original := catena.GetEnv()
-			defer catena.SetEnv(original)
-			catena.SetEnv(catena.EnvDev)
-
 			ctx := context.Background()
 			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(true))
 			defer cleanup()
@@ -1448,10 +1441,6 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 		})
 
 		t.Run(ep.name+"/prod_hides_details", func(t *testing.T) {
-			original := catena.GetEnv()
-			defer catena.SetEnv(original)
-			catena.SetEnv(catena.EnvProd)
-
 			ctx := context.Background()
 			_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0}, withTestGrpcTransportDevMode(false))
 			defer cleanup()

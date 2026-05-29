@@ -71,14 +71,14 @@ var _ catena.Transport = (*GrpcTransport)(nil)
 func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
-		grpcServer: grpc.NewServer(
-			grpc.UnaryInterceptor(unaryInterceptor),
-			grpc.StreamInterceptor(streamInterceptor),
-		),
-		port:       port,
-		reflection: reflectionEnabled,
+		port:          port,
+		reflection:    reflectionEnabled,
 	}
 	transport.catenaService.transport = transport
+	transport.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(transport.unaryInterceptor),
+		grpc.StreamInterceptor(transport.streamInterceptor),
+	)
 
 	// Register the CatenaService with the gRPC server
 	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
@@ -171,8 +171,8 @@ func (t *GrpcTransport) Shutdown(ctx context.Context) error {
 
 // sanitizeGRPCError replaces detailed error messages with generic status code
 // descriptions in production mode, matching the REST server's IsDev behavior.
-func sanitizeGRPCError(err error) error {
-	if err == nil || catena.IsDev() {
+func (t *GrpcTransport) sanitizeGRPCError(err error) error {
+	if err == nil || t.runtime.IsDev() {
 		return err
 	}
 	st, ok := status.FromError(err)
@@ -183,17 +183,17 @@ func sanitizeGRPCError(err error) error {
 }
 
 // unaryInterceptor logs all incoming unary RPC calls
-func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (t *GrpcTransport) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	logger.Debug("gRPC unary call received", "method", info.FullMethod)
 	resp, err := handler(ctx, req)
 	if err != nil {
 		logger.Error("gRPC unary call error", "method", info.FullMethod, "error", err)
 	}
-	return resp, sanitizeGRPCError(err)
+	return resp, t.sanitizeGRPCError(err)
 }
 
 // streamInterceptor logs all incoming streaming RPC calls
-func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func (t *GrpcTransport) streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	logger.Debug("gRPC stream call received", "method", info.FullMethod, "isClientStream", info.IsClientStream, "isServerStream", info.IsServerStream)
 	err := handler(srv, ss)
 	if err != nil {
@@ -204,7 +204,7 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 			logger.Error("gRPC stream call error", "method", info.FullMethod, "error", err)
 		}
 	}
-	return sanitizeGRPCError(err)
+	return t.sanitizeGRPCError(err)
 }
 
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server

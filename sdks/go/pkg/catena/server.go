@@ -124,6 +124,7 @@ type Server interface {
 
 // interface of funcs that Transports use to interact with the server without circular imports
 type ServerRuntime interface {
+	IsDev() bool
 	GetSlots() []uint16
 	InvokeGetDeviceHandler(slot uint16) (Device, StatusResult)
 	InvokeGetValueHandler(slot uint16, fqoid string) (Value, StatusResult)
@@ -140,6 +141,7 @@ var _ Server = (*server)(nil)
 var _ ServerRuntime = (*server)(nil)
 
 type server struct {
+	options                ServerOptions
 	mu                     sync.Mutex
 	ctx                    context.Context
 	ctxCancel              context.CancelFunc
@@ -159,9 +161,10 @@ type server struct {
 	transports             []Transport
 }
 
-func NewServer(maxConnections int) Server {
+func NewServer(opts ServerOptions) Server {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &server{
+		options:                opts,
 		ctx:                    ctx,
 		ctxCancel:              cancel,
 		maxShutdownWait:        defaultServerMaxShutdownWait, // override in unittests if needed
@@ -175,7 +178,7 @@ func NewServer(maxConnections int) Server {
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
-		connectionQueue:        newConnectionQueue(maxConnections),
+		connectionQueue:        newConnectionQueue(opts.MaxConnections),
 		transports:             []Transport{},
 	}
 }
@@ -289,6 +292,10 @@ func (s *server) Shutdown(ctx context.Context) {
 	s.connectionQueue.shutdown(shutdownCtx)
 
 	close(s.stopped)
+}
+
+func (s *server) IsDev() bool {
+	return s.options.IsDev
 }
 
 func (s *server) GetSlots() []uint16 {

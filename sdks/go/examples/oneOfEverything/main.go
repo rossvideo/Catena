@@ -52,6 +52,7 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
@@ -502,14 +503,19 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 }
 
 func main() {
-	config, err := catena.InitOptions()
+	config, err := config.InitOptions("oneofeverything", os.Args[1:])
 	if err != nil {
 		logger.Error("Failed to initialize Catena SDK", "error", err)
 		os.Exit(1)
 	}
-	defer catena.Close()
+	closeLogger, err := logger.Init(config.Logger)
+	if err != nil {
+		logger.Error("Failed to initialize logger", "error", err)
+		os.Exit(1)
+	}
+	defer closeLogger()
 
-	srv := catena.NewServer(100)
+	srv := catena.NewServer(config.Server)
 	counter := &CounterState{}
 	slotParams := map[uint16]*sync.Map{
 		0: {},

@@ -49,6 +49,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
 var (
@@ -59,31 +61,34 @@ var (
 	initMu       sync.Mutex
 )
 
+type CloseFunc func()
+
 // logger handles structured logging using slog
 type logger struct {
-	settings Settings
+	settings config.LoggerOptions
 	file     *os.File
 }
 
 // Init initializes the global logger.
+// Returns a CloseFunc to clean up resources.
 // Returns ErrAlreadyInitialized if called more than once.
-func Init(stg Settings) error {
+func Init(opts config.LoggerOptions) (CloseFunc, error) {
 	initMu.Lock()
 	defer initMu.Unlock()
 
 	if initialized {
-		return ErrAlreadyInitialized
+		return nil, ErrAlreadyInitialized
 	}
 
-	globalLogger = &logger{settings: stg}
+	globalLogger = &logger{settings: opts}
 	initErr := globalLogger.setup()
 	if initErr != nil {
 		// Nil out globalLogger on setup failure to avoid partially initialized state
 		globalLogger = nil
-		return initErr
+		return nil, initErr
 	}
 	initialized = true
-	return nil
+	return close, nil
 }
 
 // setup configures the slog handlers based on config and sets slog.SetDefault
@@ -374,8 +379,8 @@ func formatString(v string) string {
 	return v
 }
 
-// Close cleans up resources and allows re-initialization.
-func Close() {
+// close cleans up resources and allows re-initialization.
+func close() {
 	initMu.Lock()
 	defer initMu.Unlock()
 
