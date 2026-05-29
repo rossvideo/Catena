@@ -165,7 +165,10 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 	cq := newConnectionQueue(0)
 
 	owner := &stubTransport{tb: t}
-	handlerContext := HandlerContext{readScopes: map[string]struct{}{ScopeOp: {}}}
+	handlerContext := HandlerContext{
+		readScopes:   map[string]struct{}{ScopeOp: {}},
+		authzEnabled: true,
+	}
 
 	conn1, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
 	conn2, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
@@ -202,14 +205,17 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes: map[string]struct{}{ScopeMon: {}},
+		readScopes:   map[string]struct{}{ScopeMon: {}},
+		authzEnabled: true,
 	}, nil)
 	matchingWriteConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes:  map[string]struct{}{ScopeMon: {}},
-		writeScopes: map[string]struct{}{ScopeMon: {}},
+		readScopes:   map[string]struct{}{ScopeMon: {}},
+		writeScopes:  map[string]struct{}{ScopeMon: {}},
+		authzEnabled: true,
 	}, nil)
 	nonMatchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes: map[string]struct{}{ScopeCfg: {}},
+		readScopes:   map[string]struct{}{ScopeCfg: {}},
+		authzEnabled: true,
 	}, nil)
 
 	update := &protos.PushUpdates{

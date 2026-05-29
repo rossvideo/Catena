@@ -76,18 +76,25 @@ type TransportContext struct {
 // HandlerContext is the context for a handler function.
 // It contains the token, read and write scopes, and metadata.
 type HandlerContext struct {
-	Token       *jwt.Token
-	readScopes  map[string]struct{}
-	writeScopes map[string]struct{}
-	Metadata    map[string][]string
+	Token        *jwt.Token
+	readScopes   map[string]struct{}
+	writeScopes  map[string]struct{}
+	Metadata     map[string][]string
+	authzEnabled bool
 }
 
 func (ctx HandlerContext) HasReadScope(scopeName string) bool {
+	if !ctx.authzEnabled {
+		return true
+	}
 	_, ok := ctx.readScopes[scopeName]
 	return ok
 }
 
 func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
+	if !ctx.authzEnabled {
+		return true
+	}
 	_, ok := ctx.writeScopes[scopeName]
 	return ok
 }
@@ -401,10 +408,11 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 	}
 
 	handlerContext := HandlerContext{
-		Token:       token,
-		readScopes:  readScopes,
-		writeScopes: writeScopes,
-		Metadata:    maps.Clone(transportContext.Metadata),
+		Token:        token,
+		readScopes:   readScopes,
+		writeScopes:  writeScopes,
+		Metadata:     maps.Clone(transportContext.Metadata),
+		authzEnabled: true,
 	}
 	return handlerContext, StatusWithCode(OK, "")
 }
@@ -415,7 +423,8 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 func (s *server) resolveHandlerContext(transportContext TransportContext) (HandlerContext, StatusResult) {
 	if !s.authzEnabled {
 		return HandlerContext{
-			Metadata: maps.Clone(transportContext.Metadata),
+			Metadata:     maps.Clone(transportContext.Metadata),
+			authzEnabled: false,
 		}, StatusWithCode(OK, "")
 	}
 	return s.parseTransportContext(transportContext)

@@ -63,9 +63,6 @@ func normalizeFqoid(fqoid string) string {
 	return strings.TrimPrefix(fqoid, "/")
 }
 
-var scopeMonOpWrite = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InN0MjEzODptb246dyBzdDIxMzg6b3A6dyJ9."
-var scopeCfgAdmRead = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InN0MjEzODpjZmcgc3QyMTM4OmFkbSJ9."
-
 //go:embed static/*
 var StaticFS embed.FS
 

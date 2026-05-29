@@ -125,7 +125,10 @@ func TestServer_ParseTransportContext_ParsesTokenAndMetadata(t *testing.T) {
 }
 
 func TestHandlerContext_ScopeChecksUseSeparateReadAndWriteScopes(t *testing.T) {
-	readOnly := HandlerContext{readScopes: map[string]struct{}{ScopeMon: {}}}
+	readOnly := HandlerContext{
+		readScopes:   map[string]struct{}{ScopeMon: {}},
+		authzEnabled: true,
+	}
 	if !readOnly.HasReadScope(ScopeMon) {
 		t.Fatal("expected read scope to satisfy read scope check")
 	}
@@ -136,7 +139,10 @@ func TestHandlerContext_ScopeChecksUseSeparateReadAndWriteScopes(t *testing.T) {
 		t.Fatal("read scope should not satisfy write scope check")
 	}
 
-	writeOnly := HandlerContext{writeScopes: map[string]struct{}{ScopeCfg: {}}}
+	writeOnly := HandlerContext{
+		writeScopes:  map[string]struct{}{ScopeCfg: {}},
+		authzEnabled: true,
+	}
 	if writeOnly.HasAnyReadScope() {
 		t.Fatal("write scope should not satisfy read access unless it is also in read scopes")
 	}
@@ -148,8 +154,9 @@ func TestHandlerContext_ScopeChecksUseSeparateReadAndWriteScopes(t *testing.T) {
 	}
 
 	parsedWrite := HandlerContext{
-		readScopes:  map[string]struct{}{ScopeCfg: {}},
-		writeScopes: map[string]struct{}{ScopeCfg: {}},
+		readScopes:   map[string]struct{}{ScopeCfg: {}},
+		writeScopes:  map[string]struct{}{ScopeCfg: {}},
+		authzEnabled: true,
 	}
 	if !parsedWrite.HasAnyReadScope() {
 		t.Fatal("parsed write scope should satisfy read access because parsing adds it to read scopes")
@@ -1460,6 +1467,36 @@ func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
 	}
 	if status.Code != OK {
 		t.Errorf("expected OK, got %v", status.Code)
+	}
+}
+
+func TestServer_AuthzDisabledHandlerContextGrantsAllScopes(t *testing.T) {
+	srv := newTestServer(t, false)
+
+	ctx, status := srv.resolveHandlerContext(TransportContext{})
+	if status.Code != OK {
+		t.Fatalf("expected OK, got %v", status)
+	}
+	if !ctx.HasReadScope(ScopeCfg) {
+		t.Fatal("expected HasReadScope to succeed when authz is disabled")
+	}
+	if !ctx.HasWriteScope(ScopeCfg) {
+		t.Fatal("expected HasWriteScope to succeed when authz is disabled")
+	}
+	if !ctx.HasAnyReadScope() || !ctx.HasAnyWriteScope() {
+		t.Fatal("expected HasAnyReadScope and HasAnyWriteScope to succeed when authz is disabled")
+	}
+
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+		if !ctx.HasReadScope(ScopeCfg) {
+			return ReplyError[Value](PERMISSION_DENIED, "configuration scope required")
+		}
+		return Reply(Value{})
+	})
+
+	_, status = srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
+	if status.Code != OK {
+		t.Errorf("expected handler scope check to pass when authz is disabled, got %v", status.Code)
 	}
 }
 
