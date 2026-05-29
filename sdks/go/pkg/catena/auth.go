@@ -259,6 +259,9 @@ func (v *jwtValidator) validateSignatureAndClaims(tokenString string, parseOptio
 	return token, nil
 }
 
+// extractTokenScopes extracts the scopes from the token and returns them as a map of strings.
+// The map is keyed by the scope name and the value is a struct{} to act as a set in Go
+// The function returns the read and write scopes as separate maps.
 func extractTokenScopes(token *jwt.Token) (map[string]struct{}, map[string]struct{}, StatusResult) {
 	readScopes := make(map[string]struct{})
 	writeScopes := make(map[string]struct{})
@@ -272,8 +275,8 @@ func extractTokenScopes(token *jwt.Token) (map[string]struct{}, map[string]struc
 		return readScopes, writeScopes, StatusWithCode(OK, "")
 	}
 
-	scopeString, ok := scopeClaim.(string)
-	for _, scopeName := range strings.Fields(scopeString) {
+	scopeString, _ := scopeClaim.(string)
+	for scopeName := range strings.FieldsSeq(scopeString) {
 		if strings.HasSuffix(scopeName, ":w") {
 			scopeName = strings.TrimSuffix(scopeName, ":w")
 			writeScopes[scopeName] = struct{}{}

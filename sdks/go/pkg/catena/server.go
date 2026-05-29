@@ -73,6 +73,8 @@ type TransportContext struct {
 	Metadata    map[string][]string
 }
 
+// HandlerContext is the context for a handler function.
+// It contains the token, read and write scopes, and metadata.
 type HandlerContext struct {
 	Token       *jwt.Token
 	readScopes  map[string]struct{}
@@ -373,6 +375,8 @@ func (s *server) Shutdown(ctx context.Context) {
 	close(s.stopped)
 }
 
+// parseTransportContext parses the transport context and returns a HandlerContext.
+// It validates the access token and extracts the read and write scopes from the token.
 func (s *server) parseTransportContext(transportContext TransportContext) (HandlerContext, StatusResult) {
 	accessToken := strings.TrimSpace(transportContext.AccessToken)
 	if strings.HasPrefix(strings.ToLower(accessToken), "bearer ") {
