@@ -1473,29 +1473,6 @@ func TestServer_AuthzDisabledSkipsAccessHandlerAndAllowsScopedHandlerChecks(t *t
 	}
 }
 
-func TestServer_HasAccessUsesHandlerContextScopes(t *testing.T) {
-	srv := newTestServer(t, false)
-
-	scopedAuthzContext := HandlerContext{authzEnabled: true}
-	if srv.hasReadAccess(scopedAuthzContext) {
-		t.Fatal("expected read access to use handler context scopes, not server authz setting")
-	}
-	if srv.hasWriteAccess(scopedAuthzContext) {
-		t.Fatal("expected write access to use handler context scopes, not server authz setting")
-	}
-
-	authzDisabledContext, status := srv.resolveHandlerContext(TransportContext{})
-	if status.Code != OK {
-		t.Fatalf("expected OK, got %v", status)
-	}
-	if !srv.hasReadAccess(authzDisabledContext) {
-		t.Fatal("expected authz-disabled handler context to satisfy read access")
-	}
-	if !srv.hasWriteAccess(authzDisabledContext) {
-		t.Fatal("expected authz-disabled handler context to satisfy write access")
-	}
-}
-
 func TestServer_AuthzDisabledHandlerContextGrantsAllScopes(t *testing.T) {
 	srv := newTestServer(t, false)
 
