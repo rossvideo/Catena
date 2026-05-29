@@ -639,6 +639,7 @@ func main() {
 			logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
 
+			//Shows how to restrict scope access to specific slots.
 			if slot == 1 && !ctx.HasScope(catena.ScopeMon) && !ctx.HasScope(catena.ScopeMonWrite) {
 				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "monitor scope required")
 			} else if slot == 0 && !ctx.HasScope(catena.ScopeCfg) && !ctx.HasScope(catena.ScopeCfgWrite) {

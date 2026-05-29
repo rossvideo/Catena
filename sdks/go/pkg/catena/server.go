@@ -454,6 +454,9 @@ func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusRe
 		return nil, res
 	}
 
+	if !s.hasReadAccess(handlerContext) {
+		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
 	if !s.isAccessAllowed(EndpointGetSlots, handlerContext) {
 		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
 	}
@@ -584,10 +587,10 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 		return ReplyError[Device](res.Code, res.Error)
 	}
 
-	if !s.isAccessAllowed(EndpointGetDevice, handlerContext) {
+	if !s.hasReadAccess(handlerContext) {
 		return ReplyError[Device](PERMISSION_DENIED, "Permission denied")
 	}
-	if !s.hasReadAccess(handlerContext) {
+	if !s.isAccessAllowed(EndpointGetDevice, handlerContext) {
 		return ReplyError[Device](PERMISSION_DENIED, "Permission denied")
 	}
 
@@ -609,10 +612,10 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 		return ReplyError[Value](res.Code, res.Error)
 	}
 
-	if !s.isAccessAllowed(EndpointGetValue, handlerContext) {
+	if !s.hasReadAccess(handlerContext) {
 		return ReplyError[Value](PERMISSION_DENIED, "Permission denied")
 	}
-	if !s.hasReadAccess(handlerContext) {
+	if !s.isAccessAllowed(EndpointGetValue, handlerContext) {
 		return ReplyError[Value](PERMISSION_DENIED, "Permission denied")
 	}
 
@@ -634,10 +637,10 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, tra
 		return res
 	}
 
-	if !s.isAccessAllowed(EndpointSetValue, handlerContext) {
+	if !s.hasWriteAccess(handlerContext) {
 		return StatusWithCode(PERMISSION_DENIED, "Permission denied")
 	}
-	if !s.hasWriteAccess(handlerContext) {
+	if !s.isAccessAllowed(EndpointSetValue, handlerContext) {
 		return StatusWithCode(PERMISSION_DENIED, "Permission denied")
 	}
 
@@ -659,10 +662,10 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportConte
 		return ReplyError[Asset](res.Code, res.Error)
 	}
 
-	if !s.isAccessAllowed(EndpointGetAsset, handlerContext) {
+	if !s.hasReadAccess(handlerContext) {
 		return ReplyError[Asset](PERMISSION_DENIED, "Permission denied")
 	}
-	if !s.hasReadAccess(handlerContext) {
+	if !s.isAccessAllowed(EndpointGetAsset, handlerContext) {
 		return ReplyError[Asset](PERMISSION_DENIED, "Permission denied")
 	}
 
@@ -684,10 +687,10 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 		return CommandError(res.Code, res.Error)
 	}
 
-	if !s.isAccessAllowed(EndpointExecuteCommand, handlerContext) {
+	if !s.hasWriteAccess(handlerContext) {
 		return CommandError(PERMISSION_DENIED, "Permission denied")
 	}
-	if !s.hasWriteAccess(handlerContext) {
+	if !s.isAccessAllowed(EndpointExecuteCommand, handlerContext) {
 		return CommandError(PERMISSION_DENIED, "Permission denied")
 	}
 
@@ -709,10 +712,10 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 		return nil, res
 	}
 
-	if !s.isAccessAllowed(EndpointParamInfo, handlerContext) {
+	if !s.hasReadAccess(handlerContext) {
 		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
 	}
-	if !s.hasReadAccess(handlerContext) {
+	if !s.isAccessAllowed(EndpointParamInfo, handlerContext) {
 		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
 	}
 
@@ -734,10 +737,10 @@ func (s *server) RegisterTransportConnection(transport Transport, transportConte
 		return nil, res
 	}
 
-	if !s.isAccessAllowed(EndpointConnect, handlerContext) {
+	if !s.hasReadAccess(handlerContext) {
 		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
 	}
-	if !s.hasReadAccess(handlerContext) {
+	if !s.isAccessAllowed(EndpointConnect, handlerContext) {
 		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
 	}
 

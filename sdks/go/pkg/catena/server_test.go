@@ -810,35 +810,154 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 	}
 }
 
-func TestServer_InvokeExecuteCommandHandler_RequiresWriteScope(t *testing.T) {
-	srv := newTestServer(t, true)
-	handlerCalled := false
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult) {
-		handlerCalled = true
-		return CommandNoResponse()
-	})
-
-	_, status := srv.InvokeExecuteCommandHandler(0, "test/command", nil, TransportContext{
+func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T) {
+	noReadContext := TransportContext{
 		AccessToken: validTestJWTWithoutExecuteCommandScope,
-	})
-
-	if handlerCalled {
-		t.Fatal("execute command handler should not run without a write scope")
 	}
-	if status.Code != PERMISSION_DENIED {
-		t.Errorf("expected PERMISSION_DENIED, got %v", status.Code)
+	noWriteContext := TransportContext{
+		AccessToken: validTestJWTWithCfgScope,
+	}
+
+	tests := []struct {
+		name      string
+		scopeKind string
+		invoke    func(*server, *bool) StatusResult
+	}{
+		{
+			name:      "get slots",
+			scopeKind: "read",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.slots[0] = struct{}{}
+				slots, status := srv.GetSlots(noReadContext)
+				if slots != nil {
+					t.Errorf("expected no slots without read scope, got %v", slots)
+				}
+				return status
+			},
+		},
+		{
+			name:      "get device",
+			scopeKind: "read",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (Device, StatusResult) {
+					*handlerCalled = true
+					return Reply(Device{})
+				})
+				_, status := srv.InvokeGetDeviceHandler(0, noReadContext)
+				return status
+			},
+		},
+		{
+			name:      "get value",
+			scopeKind: "read",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+					*handlerCalled = true
+					return Reply(Value{})
+				})
+				_, status := srv.InvokeGetValueHandler(0, "test/param", noReadContext)
+				return status
+			},
+		},
+		{
+			name:      "get asset",
+			scopeKind: "read",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
+					*handlerCalled = true
+					return Reply(Asset{})
+				})
+				_, status := srv.InvokeGetAssetHandler(0, "test/asset", noReadContext)
+				return status
+			},
+		},
+		{
+			name:      "param info",
+			scopeKind: "read",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
+					*handlerCalled = true
+					return []ParamInfo{}, StatusWithCode(OK, "")
+				})
+				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, noReadContext)
+				return status
+			},
+		},
+		{
+			name:      "set value",
+			scopeKind: "write",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(OK, "")
+				})
+				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", noWriteContext)
+			},
+		},
+		{
+			name:      "execute command",
+			scopeKind: "write",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult) {
+					*handlerCalled = true
+					return CommandNoResponse()
+				})
+				_, status := srv.InvokeExecuteCommandHandler(0, "test/command", nil, noWriteContext)
+				return status
+			},
+		},
+		{
+			name:      "connect",
+			scopeKind: "read",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				conn, status := srv.RegisterTransportConnection(nil, noReadContext)
+				if conn != nil {
+					t.Errorf("expected no connection without read scope, got %+v", conn)
+				}
+				return status
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := newTestServer(t, true)
+			handlerCalled := false
+			accessCalled := false
+			srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
+				accessCalled = true
+				return true
+			})
+
+			status := tt.invoke(srv, &handlerCalled)
+
+			if handlerCalled {
+				t.Fatalf("endpoint handler should not run without a %s scope", tt.scopeKind)
+			}
+			if accessCalled {
+				t.Fatalf("access handler should not run without a %s scope", tt.scopeKind)
+			}
+			if status.Code != PERMISSION_DENIED {
+				t.Errorf("expected PERMISSION_DENIED, got %v", status.Code)
+			}
+		})
 	}
 }
 
-func TestServer_ReadEndpointsRequireReadScope(t *testing.T) {
-	transportContext := TransportContext{
-		AccessToken: validTestJWTWithoutExecuteCommandScope,
-	}
+func TestServer_EndpointsReturnResolveHandlerContextError(t *testing.T) {
+	invalidContext := TransportContext{AccessToken: "not-a-jwt"}
 
 	tests := []struct {
 		name   string
 		invoke func(*server, *bool) StatusResult
 	}{
+		{
+			name: "get slots",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				_, status := srv.GetSlots(invalidContext)
+				return status
+			},
+		},
 		{
 			name: "get device",
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
@@ -846,7 +965,7 @@ func TestServer_ReadEndpointsRequireReadScope(t *testing.T) {
 					*handlerCalled = true
 					return Reply(Device{})
 				})
-				_, status := srv.InvokeGetDeviceHandler(0, transportContext)
+				_, status := srv.InvokeGetDeviceHandler(0, invalidContext)
 				return status
 			},
 		},
@@ -857,8 +976,18 @@ func TestServer_ReadEndpointsRequireReadScope(t *testing.T) {
 					*handlerCalled = true
 					return Reply(Value{})
 				})
-				_, status := srv.InvokeGetValueHandler(0, "test/param", transportContext)
+				_, status := srv.InvokeGetValueHandler(0, "test/param", invalidContext)
 				return status
+			},
+		},
+		{
+			name: "set value",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(OK, "")
+				})
+				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", invalidContext)
 			},
 		},
 		{
@@ -868,7 +997,18 @@ func TestServer_ReadEndpointsRequireReadScope(t *testing.T) {
 					*handlerCalled = true
 					return Reply(Asset{})
 				})
-				_, status := srv.InvokeGetAssetHandler(0, "test/asset", transportContext)
+				_, status := srv.InvokeGetAssetHandler(0, "test/asset", invalidContext)
+				return status
+			},
+		},
+		{
+			name: "execute command",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult) {
+					*handlerCalled = true
+					return CommandNoResponse()
+				})
+				_, status := srv.InvokeExecuteCommandHandler(0, "test/command", nil, invalidContext)
 				return status
 			},
 		},
@@ -879,7 +1019,17 @@ func TestServer_ReadEndpointsRequireReadScope(t *testing.T) {
 					*handlerCalled = true
 					return []ParamInfo{}, StatusWithCode(OK, "")
 				})
-				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, transportContext)
+				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, invalidContext)
+				return status
+			},
+		},
+		{
+			name: "connect",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				conn, status := srv.RegisterTransportConnection(nil, invalidContext)
+				if conn != nil {
+					t.Errorf("expected no connection when resolveHandlerContext fails, got %+v", conn)
+				}
 				return status
 			},
 		},
@@ -889,30 +1039,74 @@ func TestServer_ReadEndpointsRequireReadScope(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			handlerCalled := false
+			accessCalled := false
+			srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
+				accessCalled = true
+				return true
+			})
 
 			status := tt.invoke(srv, &handlerCalled)
 
 			if handlerCalled {
-				t.Fatal("endpoint handler should not run without a read scope")
+				t.Fatal("endpoint handler should not run when resolveHandlerContext fails")
 			}
-			if status.Code != PERMISSION_DENIED {
-				t.Errorf("expected PERMISSION_DENIED, got %v", status.Code)
+			if accessCalled {
+				t.Fatal("access handler should not run when resolveHandlerContext fails")
+			}
+			if status.Code != UNAUTHENTICATED {
+				t.Fatalf("expected UNAUTHENTICATED, got %v (%s)", status.Code, status.Error)
 			}
 		})
 	}
 }
 
-func TestServer_WriteEndpointsRequireWriteScope(t *testing.T) {
-	transportContext := TransportContext{
-		AccessToken: validTestJWTWithCfgScope,
-	}
+func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testing.T) {
+	transportContext := validTestTransportContext(map[string][]string{"scope": {"none"}})
 
 	tests := []struct {
-		name   string
-		invoke func(*server, *bool) StatusResult
+		name     string
+		endpoint EndpointType
+		invoke   func(*server, *bool) StatusResult
 	}{
 		{
-			name: "set value",
+			name:     "get slots",
+			endpoint: EndpointGetSlots,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.slots[0] = struct{}{}
+				slots, status := srv.GetSlots(transportContext)
+				if slots != nil {
+					t.Errorf("expected no slots when access is denied, got %v", slots)
+				}
+				return status
+			},
+		},
+		{
+			name:     "get device",
+			endpoint: EndpointGetDevice,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (Device, StatusResult) {
+					*handlerCalled = true
+					return Reply(Device{})
+				})
+				_, status := srv.InvokeGetDeviceHandler(0, transportContext)
+				return status
+			},
+		},
+		{
+			name:     "get value",
+			endpoint: EndpointGetValue,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+					*handlerCalled = true
+					return Reply(Value{})
+				})
+				_, status := srv.InvokeGetValueHandler(0, "test/param", transportContext)
+				return status
+			},
+		},
+		{
+			name:     "set value",
+			endpoint: EndpointSetValue,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
@@ -922,7 +1116,20 @@ func TestServer_WriteEndpointsRequireWriteScope(t *testing.T) {
 			},
 		},
 		{
-			name: "execute command",
+			name:     "get asset",
+			endpoint: EndpointGetAsset,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
+					*handlerCalled = true
+					return Reply(Asset{})
+				})
+				_, status := srv.InvokeGetAssetHandler(0, "test/asset", transportContext)
+				return status
+			},
+		},
+		{
+			name:     "execute command",
+			endpoint: EndpointExecuteCommand,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult) {
 					*handlerCalled = true
@@ -932,20 +1139,63 @@ func TestServer_WriteEndpointsRequireWriteScope(t *testing.T) {
 				return status
 			},
 		},
+		{
+			name:     "param info",
+			endpoint: EndpointParamInfo,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
+					*handlerCalled = true
+					return []ParamInfo{}, StatusWithCode(OK, "")
+				})
+				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, transportContext)
+				return status
+			},
+		},
+		{
+			name:     "connect",
+			endpoint: EndpointConnect,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				conn, status := srv.RegisterTransportConnection(nil, transportContext)
+				if conn != nil {
+					t.Errorf("expected no connection when access is denied, got %+v", conn)
+				}
+				return status
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			handlerCalled := false
+			accessCalled := false
+			srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
+				accessCalled = true
+				if endpointType != tt.endpoint {
+					t.Errorf("expected endpoint %v, got %v", tt.endpoint, endpointType)
+				}
+				if ctx.Token == nil || ctx.Token.Raw != transportContext.AccessToken {
+					t.Errorf("expected parsed token from access token")
+				}
+				if !ctx.HasScope("all") {
+					t.Errorf("expected parsed token scopes to include all, got %v", ctx.scopes)
+				}
+				if len(ctx.Metadata["scope"]) != 1 || ctx.Metadata["scope"][0] != "none" {
+					t.Errorf("expected scope metadata to be passed through, got %v", ctx.Metadata)
+				}
+				return false
+			})
 
 			status := tt.invoke(srv, &handlerCalled)
 
+			if !accessCalled {
+				t.Fatal("expected access handler to be called")
+			}
 			if handlerCalled {
-				t.Fatal("endpoint handler should not run without a write scope")
+				t.Fatal("endpoint handler should not run when access is denied")
 			}
 			if status.Code != PERMISSION_DENIED {
-				t.Errorf("expected PERMISSION_DENIED, got %v", status.Code)
+				t.Fatalf("expected PERMISSION_DENIED, got %v", status.Code)
 			}
 		})
 	}
@@ -1134,108 +1384,6 @@ func TestServer_RegisterAccessHandlerNilResetsToAllowAll(t *testing.T) {
 	}
 }
 
-func TestServer_AccessHandlerDeniesEndpoint(t *testing.T) {
-	srv := newTestServer(t, true)
-	handlerCalled := false
-	accessCalled := false
-	transportContext := validTestTransportContext(map[string][]string{"scope": {"none"}})
-
-	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
-		accessCalled = true
-		if endpointType != EndpointGetValue {
-			t.Errorf("expected EndpointGetValue, got %v", endpointType)
-		}
-		if ctx.Token == nil || ctx.Token.Raw != transportContext.AccessToken {
-			t.Errorf("expected parsed token from access token")
-		}
-		if !ctx.HasScope("all") {
-			t.Errorf("expected parsed token scopes to include all, got %v", ctx.scopes)
-		}
-		if len(ctx.Metadata["scope"]) != 1 || ctx.Metadata["scope"][0] != "none" {
-			t.Errorf("expected scope metadata to be passed through, got %v", ctx.Metadata)
-		}
-		return false
-	})
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
-		handlerCalled = true
-		return Reply(Value{})
-	})
-
-	_, status := srv.InvokeGetValueHandler(0, "test/param", transportContext)
-
-	if !accessCalled {
-		t.Fatal("expected access handler to be called")
-	}
-	if handlerCalled {
-		t.Fatal("endpoint handler should not run when access is denied")
-	}
-	if status.Code != PERMISSION_DENIED {
-		t.Errorf("expected PERMISSION_DENIED, got %v", status.Code)
-	}
-}
-
-func TestServer_GetSlots_AllowsNoCatenaScopeWhenAccessHandlerAllows(t *testing.T) {
-	srv := newTestServer(t, true)
-	srv.slots[0] = struct{}{}
-	srv.slots[5] = struct{}{}
-
-	accessCalled := false
-	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
-		accessCalled = true
-		if endpointType != EndpointGetSlots {
-			t.Errorf("expected EndpointGetSlots, got %v", endpointType)
-		}
-		if ctx.HasAnyReadScope() {
-			t.Errorf("expected no Catena read scope, got %v", ctx.scopes)
-		}
-		if ctx.HasAnyWriteScope() {
-			t.Errorf("expected no Catena write scope, got %v", ctx.scopes)
-		}
-		return true
-	})
-
-	slots, status := srv.GetSlots(TransportContext{
-		AccessToken: validTestJWTWithoutExecuteCommandScope,
-	})
-
-	if !accessCalled {
-		t.Fatal("expected access handler to be called")
-	}
-	if status.Code != OK {
-		t.Fatalf("expected OK, got %v", status.Code)
-	}
-	slices.Sort(slots)
-	if !slices.Equal(slots, []uint16{0, 5}) {
-		t.Errorf("expected slots [0, 5], got %v", slots)
-	}
-}
-
-func TestServer_GetSlots_DeniedByAccessHandler(t *testing.T) {
-	srv := newTestServer(t, true)
-	srv.slots[0] = struct{}{}
-
-	accessCalled := false
-	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
-		accessCalled = true
-		if endpointType != EndpointGetSlots {
-			t.Errorf("expected EndpointGetSlots, got %v", endpointType)
-		}
-		return false
-	})
-
-	slots, status := srv.GetSlots(validTestTransportContext(nil))
-
-	if !accessCalled {
-		t.Fatal("expected access handler to be called")
-	}
-	if status.Code != PERMISSION_DENIED {
-		t.Errorf("expected PERMISSION_DENIED, got %v", status.Code)
-	}
-	if slots != nil {
-		t.Errorf("expected no slots when access is denied, got %v", slots)
-	}
-}
-
 func TestServer_GetSlots_InvalidTokenSkipsAccessHandler(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -1262,42 +1410,6 @@ func TestServer_GetSlots_InvalidTokenSkipsAccessHandler(t *testing.T) {
 				t.Errorf("expected no slots when token parsing fails, got %v", slots)
 			}
 		})
-	}
-}
-
-func TestServer_GetSlotsAndConnect_HaveDifferentScopeRequirements(t *testing.T) {
-	srv := newTestServer(t, true)
-	srv.slots[0] = struct{}{}
-
-	endpoints := []EndpointType{}
-	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
-		endpoints = append(endpoints, endpointType)
-		return true
-	})
-	transportContext := TransportContext{
-		AccessToken: validTestJWTWithoutExecuteCommandScope,
-	}
-
-	slots, status := srv.GetSlots(transportContext)
-	if status.Code != OK {
-		t.Fatalf("expected GetSlots to succeed with access handler approval, got %v", status.Code)
-	}
-	if !slices.Equal(slots, []uint16{0}) {
-		t.Errorf("expected slot [0], got %v", slots)
-	}
-
-	conn, status := srv.RegisterTransportConnection(nil, transportContext)
-	if status.Code != PERMISSION_DENIED {
-		t.Errorf("expected Connect to require read scope, got %v", status.Code)
-	}
-	if conn != nil {
-		t.Errorf("expected no connection without read scope, got %+v", conn)
-	}
-	if !slices.Contains(endpoints, EndpointGetSlots) {
-		t.Errorf("expected EndpointGetSlots access check, got %v", endpoints)
-	}
-	if !slices.Contains(endpoints, EndpointConnect) {
-		t.Errorf("expected EndpointConnect access check, got %v", endpoints)
 	}
 }
 
@@ -1329,34 +1441,136 @@ func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
 }
 
 func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
-	srv := newTestServer(t, false)
-	srv.slots[0] = struct{}{}
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
-		return Reply(Value{})
-	})
-
-	slots, status := srv.GetSlots(TransportContext{})
-	if status.Code != OK {
-		t.Fatalf("GetSlots: expected OK without token, got %v (%s)", status.Code, status.Error)
-	}
-	if len(slots) != 1 || slots[0] != 0 {
-		t.Fatalf("GetSlots: expected [0], got %v", slots)
-	}
-
-	_, status = srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
-	if status.Code != OK {
-		t.Fatalf("InvokeGetValueHandler: expected OK without token, got %v (%s)", status.Code, status.Error)
-	}
-
-	srv.connectionQueue = &stubConnectionQueue{
-		tb: t,
-		registerOwnedFn: func(owner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult) {
-			return &Connection{ID: 1}, StatusWithCode(OK, "")
+	tests := []struct {
+		name              string
+		invoke            func(*server, *bool) StatusResult
+		expectHandlerCall bool
+	}{
+		{
+			name: "get slots",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.slots[0] = struct{}{}
+				slots, status := srv.GetSlots(TransportContext{})
+				if status.Code == OK && (len(slots) != 1 || slots[0] != 0) {
+					t.Fatalf("GetSlots: expected [0], got %v", slots)
+				}
+				return status
+			},
+		},
+		{
+			name:              "get device",
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (Device, StatusResult) {
+					*handlerCalled = true
+					return Reply(Device{})
+				})
+				_, status := srv.InvokeGetDeviceHandler(0, TransportContext{})
+				return status
+			},
+		},
+		{
+			name:              "get value",
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+					*handlerCalled = true
+					return Reply(Value{})
+				})
+				_, status := srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
+				return status
+			},
+		},
+		{
+			name:              "set value",
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(OK, "")
+				})
+				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", TransportContext{})
+			},
+		},
+		{
+			name:              "get asset",
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
+					*handlerCalled = true
+					return Reply(Asset{})
+				})
+				_, status := srv.InvokeGetAssetHandler(0, "test/asset", TransportContext{})
+				return status
+			},
+		},
+		{
+			name:              "execute command",
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult) {
+					*handlerCalled = true
+					return CommandNoResponse()
+				})
+				_, status := srv.InvokeExecuteCommandHandler(0, "test/command", nil, TransportContext{})
+				return status
+			},
+		},
+		{
+			name:              "param info",
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
+					*handlerCalled = true
+					return []ParamInfo{}, StatusWithCode(OK, "")
+				})
+				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, TransportContext{})
+				return status
+			},
+		},
+		{
+			name: "connect",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.connectionQueue = &stubConnectionQueue{
+					tb: t,
+					registerOwnedFn: func(owner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult) {
+						return &Connection{ID: 1}, StatusWithCode(OK, "")
+					},
+				}
+				conn, status := srv.RegisterTransportConnection(nil, TransportContext{})
+				if status.Code == OK && conn == nil {
+					t.Fatal("RegisterTransportConnection: expected connection without token")
+				}
+				return status
+			},
 		},
 	}
-	_, status = srv.RegisterTransportConnection(nil, TransportContext{})
-	if status.Code != OK {
-		t.Fatalf("RegisterTransportConnection: expected OK without token, got %v (%s)", status.Code, status.Error)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := newTestServer(t, false)
+			handlerCalled := false
+			accessCalled := false
+			srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
+				accessCalled = true
+				return false
+			})
+
+			status := tt.invoke(srv, &handlerCalled)
+
+			if accessCalled {
+				t.Fatal("access handler should not run when authz is disabled")
+			}
+			if tt.expectHandlerCall && !handlerCalled {
+				t.Fatal("endpoint handler should run when authz is disabled")
+			}
+			if !tt.expectHandlerCall && handlerCalled {
+				t.Fatal("endpoint handler unexpectedly ran")
+			}
+			if status.Code != OK {
+				t.Fatalf("expected OK without token, got %v (%s)", status.Code, status.Error)
+			}
+		})
 	}
 }
 

@@ -284,9 +284,6 @@ func extractTokenScopes(token *jwt.Token) (map[string]struct{}, StatusResult) {
 	}
 
 	scopeString, ok := scopeClaim.(string)
-	if !ok {
-		return nil, StatusWithCode(UNAUTHENTICATED, "invalid scope claim")
-	}
 	for _, scopeName := range strings.Fields(scopeString) {
 		scopes[scopeName] = struct{}{}
 	}

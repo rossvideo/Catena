@@ -239,6 +239,12 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 	}
 }
 
+func TestIsValueUpdate_NilUpdate(t *testing.T) {
+	if isValueUpdate(nil) {
+		t.Error("expected nil update not to be treated as value update")
+	}
+}
+
 func TestConnectionQueue_Shutdown(t *testing.T) {
 	cq := newConnectionQueue(0)
 	owner := &stubTransport{tb: t}
