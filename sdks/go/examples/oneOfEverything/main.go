@@ -503,19 +503,18 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 }
 
 func main() {
-	config, err := config.InitOptions("oneofeverything", os.Args[1:])
+	options, err := config.InitOptions("oneofeverything", os.Args[1:])
 	if err != nil {
-		logger.Error("Failed to initialize Catena SDK", "error", err)
 		os.Exit(1)
 	}
-	closeLogger, err := logger.Init(config.Logger)
+	closeLogger, err := logger.Init(options.Logger)
 	if err != nil {
-		logger.Error("Failed to initialize logger", "error", err)
+		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 	defer closeLogger()
 
-	srv := catena.NewServer(config.Server)
+	srv := catena.NewServer(options.Server)
 	counter := &CounterState{}
 	slotParams := map[uint16]*sync.Map{
 		0: {},
@@ -811,7 +810,7 @@ func main() {
 
 	srv.StartHeartbeat(5 * time.Second)
 
-	if !config.UseGrpc && !config.UseRest {
+	if !options.UseGrpc && !options.UseRest {
 		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
 		os.Exit(1)
 	}
@@ -821,7 +820,7 @@ func main() {
 	logger.Info("=======================================================")
 
 	// register the transports we want to serve on.
-	if config.UseGrpc {
+	if options.UseGrpc {
 		logger.Info("gRPC transport starting")
 		logger.Info("")
 		// Register gRPC transport if enabled in config
@@ -837,7 +836,7 @@ func main() {
 	logger.Info("")
 	logger.Info("=======================================================")
 
-	if config.UseRest {
+	if options.UseRest {
 		logger.Info("REST transport starting")
 		logger.Info("")
 		restTransport := transports.NewDefaultRestTransport()

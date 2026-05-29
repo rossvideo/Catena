@@ -29,12 +29,11 @@
  */
 
 /**
- * @brief Configuration for the Catena SDK.
- * @file config.go
+ * @brief load configuration for the Catena SDK.
+ * @file load.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-05-14
+ * @date 2026-05-29
  */
 
 package config
@@ -87,8 +86,8 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 	}
 	// chain building all the options up
 	loader.
-		Bool(prefix+"_USE_GRPC", "use-grpc", "Enable gRPC transport (default: false)", &opts.UseGrpc).
-		Bool(prefix+"_USE_REST", "use-rest", "Enable REST transport (default: false)", &opts.UseRest).
+		Bool(prefix+"_USE_GRPC", "use-grpc", "Enable gRPC transport", &opts.UseGrpc).
+		Bool(prefix+"_USE_REST", "use-rest", "Enable REST transport", &opts.UseRest).
 		Int(prefix+"_MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		Bool(prefix+"_DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
 		Bool(prefix+"_SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).
