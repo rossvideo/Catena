@@ -46,21 +46,88 @@ import (
 	"maps"
 	"math"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
+type EndpointType int
+
+const (
+	EndpointGetSlots EndpointType = iota
+	EndpointGetDevice
+	EndpointGetValue
+	EndpointSetValue
+	EndpointGetAsset
+	EndpointExecuteCommand
+	EndpointParamInfo
+	EndpointConnect
+)
+
+type TransportContext struct {
+	AccessToken string
+	Metadata    map[string][]string
+}
+
+// HandlerContext is the context for a handler function.
+// It contains the token, read and write scopes, and metadata.
+type HandlerContext struct {
+	Token        *jwt.Token
+	readScopes   map[string]struct{}
+	writeScopes  map[string]struct{}
+	Metadata     map[string][]string
+	authzEnabled bool
+}
+
+func (ctx HandlerContext) HasReadScope(scopeName string) bool {
+	if !ctx.authzEnabled {
+		return true
+	}
+	_, ok := ctx.readScopes[scopeName]
+	return ok
+}
+
+func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
+	if !ctx.authzEnabled {
+		return true
+	}
+	_, ok := ctx.writeScopes[scopeName]
+	return ok
+}
+
+func (ctx HandlerContext) HasAnyWriteScope() bool {
+	for _, scopeName := range catenaScopes {
+		if ctx.HasWriteScope(scopeName) {
+			return true
+		}
+	}
+	return false
+}
+
+func (ctx HandlerContext) HasAnyReadScope() bool {
+	for _, scopeName := range catenaScopes {
+		if ctx.HasReadScope(scopeName) {
+			return true
+		}
+	}
+	return false
+}
+
 // Handler function types used by both REST and gRPC servers.
-type DeviceHandler func() (Device, StatusResult)
-type GetValueHandler func(slot uint16, fqoid string) (Value, StatusResult)
-type SetValueHandler func(value any, slot uint16, fqoid string) StatusResult
-type GetAssetHandler func(slot uint16, fqoid string) (Asset, StatusResult)
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult)
+type DeviceHandler func(slot uint16, ctx HandlerContext) (Device, StatusResult)
+type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult)
+type SetValueHandler func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult
+type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
+type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
+type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
 type HeartbeatHandler func(slot uint16)
+type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
+
+var allowAllAccessHandler AccessHandler = func(endpointType EndpointType, ctx HandlerContext) bool { return true }
 
 var ErrServerStopped = errors.New("server is stopped")
 
@@ -113,10 +180,11 @@ type Server interface {
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
+	RegisterAccessHandler(handler AccessHandler)
 
 	SetMaxConnections(max int)
 	ConnectionCount() int
-	BroadcastUpdate(slot uint16, oid string, value any)
+	BroadcastUpdate(slot uint16, oid string, value any, scope string)
 
 	StartHeartbeat(interval time.Duration)
 	StopHeartbeat()
@@ -124,14 +192,14 @@ type Server interface {
 
 // interface of funcs that Transports use to interact with the server without circular imports
 type ServerRuntime interface {
-	GetSlots() []uint16
-	InvokeGetDeviceHandler(slot uint16) (Device, StatusResult)
-	InvokeGetValueHandler(slot uint16, fqoid string) (Value, StatusResult)
-	InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult
-	InvokeGetAssetHandler(slot uint16, fqoid string) (Asset, StatusResult)
-	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult)
-	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult)
-	RegisterTransportConnection(transport Transport) (int, *Connection)
+	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
+	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult)
+	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
+	InvokeSetValueHandler(value any, slot uint16, fqoid string, transportContext TransportContext) StatusResult
+	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
+	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
+	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
+	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
 }
@@ -143,6 +211,8 @@ type server struct {
 	mu                     sync.Mutex
 	ctx                    context.Context
 	ctxCancel              context.CancelFunc
+	authzEnabled           bool
+	jwtValidator           jwtValidatorInterface
 	maxShutdownWait        time.Duration
 	shutdown               bool
 	stopped                chan struct{}
@@ -154,16 +224,36 @@ type server struct {
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
 	heartbeatHandlers      map[uint16]HeartbeatHandler
+	accessHandler          AccessHandler // optional fallback for slots without specific handlers
 	connectionQueue        connectionQueueInterface
 	heartbeat              *Heartbeat
 	transports             []Transport
 }
 
-func NewServer(maxConnections int) Server {
+type ServerOptions struct {
+	MaxConnections int
+	AuthzEnabled   bool
+	JwtOptions     JwtValidationOptions
+}
+
+func NewServer(opts ServerOptions) (Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
+
+	var validator jwtValidatorInterface
+	if opts.AuthzEnabled {
+		var err error
+		validator, err = newJwtValidator(ctx, opts.JwtOptions)
+		if err != nil {
+			cancel()
+			return nil, fmt.Errorf("create jwt validator: %w", err)
+		}
+	}
+
 	return &server{
 		ctx:                    ctx,
 		ctxCancel:              cancel,
+		authzEnabled:           opts.AuthzEnabled,
+		jwtValidator:           validator,
 		maxShutdownWait:        defaultServerMaxShutdownWait, // override in unittests if needed
 		shutdown:               false,
 		stopped:                make(chan struct{}),
@@ -175,9 +265,10 @@ func NewServer(maxConnections int) Server {
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
-		connectionQueue:        newConnectionQueue(maxConnections),
+		accessHandler:          allowAllAccessHandler,
+		connectionQueue:        newConnectionQueue(opts.MaxConnections),
 		transports:             []Transport{},
-	}
+	}, nil
 }
 
 func (s *server) boundedShutdownContext(parent context.Context) (context.Context, context.CancelFunc) {
@@ -291,10 +382,92 @@ func (s *server) Shutdown(ctx context.Context) {
 	close(s.stopped)
 }
 
-func (s *server) GetSlots() []uint16 {
+// parseTransportContext parses the transport context and returns a HandlerContext.
+// It validates the access token and extracts the read and write scopes from the token.
+func (s *server) parseTransportContext(transportContext TransportContext) (HandlerContext, StatusResult) {
+	accessToken := strings.TrimSpace(transportContext.AccessToken)
+	if strings.HasPrefix(strings.ToLower(accessToken), "bearer ") {
+		accessToken = strings.TrimSpace(accessToken[len("Bearer "):])
+	}
+	if accessToken == "" {
+		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "missing access token")
+	}
+	if s.jwtValidator == nil {
+		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "jwt validator is not configured")
+	}
+
+	token, err := s.jwtValidator.validateJwt(accessToken)
+	if err != nil {
+		logger.Warning("Failed to validate access token", "error", err)
+		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "invalid access token")
+	}
+
+	readScopes, writeScopes, res := extractTokenScopes(token)
+	if res.Code != OK {
+		return HandlerContext{}, res
+	}
+
+	handlerContext := HandlerContext{
+		Token:        token,
+		readScopes:   readScopes,
+		writeScopes:  writeScopes,
+		Metadata:     maps.Clone(transportContext.Metadata),
+		authzEnabled: true,
+	}
+	return handlerContext, StatusWithCode(OK, "")
+}
+
+// resolveHandlerContext builds a HandlerContext for an incoming request.
+// When authorization is disabled, JWT validation is skipped so clients are not
+// required to send an access token.
+func (s *server) resolveHandlerContext(transportContext TransportContext) (HandlerContext, StatusResult) {
+	if !s.authzEnabled {
+		return HandlerContext{
+			Metadata:     maps.Clone(transportContext.Metadata),
+			authzEnabled: false,
+		}, StatusWithCode(OK, "")
+	}
+	return s.parseTransportContext(transportContext)
+}
+
+func (s *server) isAccessAllowed(endpointType EndpointType, handlerContext HandlerContext) bool {
+	if !s.authzEnabled {
+		return true
+	}
+
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.getSlotsLocked()
+	accessHandler := s.accessHandler
+	s.mu.Unlock()
+
+	return accessHandler(endpointType, handlerContext)
+}
+
+func (s *server) hasReadAccess(handlerContext HandlerContext) bool {
+	return handlerContext.HasAnyReadScope()
+}
+
+func (s *server) hasWriteAccess(handlerContext HandlerContext) bool {
+	return handlerContext.HasAnyWriteScope()
+}
+
+func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return nil, res
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointGetSlots, handlerContext) {
+		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+
+	s.mu.Lock()
+	slots := s.getSlotsLocked()
+	s.mu.Unlock()
+
+	return slots, StatusWithCode(OK, "")
 }
 
 // call this within a locked s.mu context
@@ -320,7 +493,7 @@ func (s *server) notifySlotsAdded(slot uint16) {
 				Slots: []uint32{uint32(slot)},
 			},
 		},
-	})
+	}, "")
 }
 
 // Handler registration methods
@@ -401,87 +574,181 @@ func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	}
 }
 
-func (s *server) InvokeGetDeviceHandler(slot uint16) (Device, StatusResult) {
+func (s *server) RegisterAccessHandler(handler AccessHandler) {
+	s.mu.Lock()
+	if handler == nil {
+		handler = allowAllAccessHandler
+	}
+	s.accessHandler = handler
+	s.mu.Unlock()
+}
+
+func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return ReplyError[Device](res.Code, res.Error)
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return ReplyError[Device](PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointGetDevice, handlerContext) {
+		return ReplyError[Device](PERMISSION_DENIED, "Permission denied")
+	}
+
 	s.mu.Lock()
 	handler, ok := s.getDeviceHandlers[slot]
 	s.mu.Unlock()
 
 	if ok {
-		return handler()
+		return handler(slot, handlerContext)
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetDeviceHandler called - no handler registered for this slot")
 	return ReplyError[Device](NOT_FOUND, "No device defined at slot")
 }
 
-func (s *server) InvokeGetValueHandler(slot uint16, fqoid string) (Value, StatusResult) {
+func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return ReplyError[Value](res.Code, res.Error)
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return ReplyError[Value](PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointGetValue, handlerContext) {
+		return ReplyError[Value](PERMISSION_DENIED, "Permission denied")
+	}
+
 	s.mu.Lock()
 	handler, ok := s.getValueHandlers[slot]
 	s.mu.Unlock()
 
 	if ok {
-		return handler(slot, fqoid)
+		return handler(slot, fqoid, handlerContext)
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
 	return ReplyError[Value](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string) StatusResult {
+func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, transportContext TransportContext) StatusResult {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return res
+	}
+
+	if !s.hasWriteAccess(handlerContext) {
+		return StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointSetValue, handlerContext) {
+		return StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+
 	s.mu.Lock()
 	handler, ok := s.setValueHandlers[slot]
 	s.mu.Unlock()
 
 	if ok {
-		return handler(value, slot, fqoid)
+		return handler(value, slot, fqoid, handlerContext)
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
 	return StatusWithCode(NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string) (Asset, StatusResult) {
+func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return ReplyError[Asset](res.Code, res.Error)
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return ReplyError[Asset](PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointGetAsset, handlerContext) {
+		return ReplyError[Asset](PERMISSION_DENIED, "Permission denied")
+	}
+
 	s.mu.Lock()
 	handler, ok := s.getAssetHandlers[slot]
 	s.mu.Unlock()
 
 	if ok {
-		return handler(slot, fqoid)
+		return handler(slot, fqoid, handlerContext)
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetAssetHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
 	return ReplyError[Asset](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (CommandResult, StatusResult) {
+func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return CommandError(res.Code, res.Error)
+	}
+
+	if !s.hasWriteAccess(handlerContext) {
+		return CommandError(PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointExecuteCommand, handlerContext) {
+		return CommandError(PERMISSION_DENIED, "Permission denied")
+	}
+
 	s.mu.Lock()
 	handler, ok := s.executeCommandHandlers[slot]
 	s.mu.Unlock()
 
 	if ok {
-		return handler(slot, commandFqoid, payload)
+		return handler(slot, commandFqoid, payload, handlerContext)
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("ExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
 	return CommandError(NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult) {
+func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return nil, res
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointParamInfo, handlerContext) {
+		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+
 	s.mu.Lock()
 	handler, ok := s.paramInfoHandlers[slot]
 	s.mu.Unlock()
 
 	if ok {
-		return handler(slot, oidPrefix, recursive)
+		return handler(slot, oidPrefix, recursive, handlerContext)
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
 	return nil, StatusWithCode(NOT_FOUND, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) RegisterTransportConnection(transport Transport) (int, *Connection) {
+func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != OK {
+		return nil, res
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointConnect, handlerContext) {
+		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	// build the initial update with the current slots
 	slots := s.getSlotsLocked()
 	uint32Slots := make([]uint32, len(slots))
@@ -498,7 +765,7 @@ func (s *server) RegisterTransportConnection(transport Transport) (int, *Connect
 
 	// register and it will send the initial update to the new connection before returning it
 	// this ensures the transport receives the initial update before it starts processing the connection
-	return s.connectionQueue.registerOwnedConnection(transport, initialUpdate)
+	return s.connectionQueue.registerOwnedConnection(transport, handlerContext, initialUpdate)
 }
 
 // ShutdownTransportConnections allows transports to signal
@@ -528,7 +795,7 @@ func (s *server) ConnectionCount() int {
 // BroadcastUpdate converts a native Go value into a proto PushUpdates message
 // and sends it to all connected streaming clients. Business logic calls this with
 // plain Go types; the proto serialization is handled internally.
-func (s *server) BroadcastUpdate(slot uint16, oid string, value any) {
+func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
 	protoValue, res := ToProto(value)
 	if res.Code != OK {
 		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
@@ -543,7 +810,10 @@ func (s *server) BroadcastUpdate(slot uint16, oid string, value any) {
 			},
 		},
 	}
-	s.connectionQueue.notifyUpdate(update)
+	if !s.authzEnabled {
+		scope = ""
+	}
+	s.connectionQueue.notifyUpdate(update, scope)
 }
 
 // StartHeartbeat begins periodic invocation of all registered heartbeat handlers.
