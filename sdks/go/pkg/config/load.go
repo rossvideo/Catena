@@ -87,6 +87,8 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 	}
 	// chain building all the options up
 	loader.
+		Bool(prefix+"_USE_GRPC", "use-grpc", "Enable gRPC transport (default: false)", &opts.UseGrpc).
+		Bool(prefix+"_USE_REST", "use-rest", "Enable REST transport (default: false)", &opts.UseRest).
 		Int(prefix+"_MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		Bool(prefix+"_DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
 		Bool(prefix+"_SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).

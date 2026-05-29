@@ -3,8 +3,10 @@ package config
 import "log/slog"
 
 type RuntimeOptions struct {
-	Server ServerOptions
-	Logger LoggerOptions
+	UseGrpc bool
+	UseRest bool
+	Server  ServerOptions
+	Logger  LoggerOptions
 }
 
 type ServerOptions struct {
@@ -40,8 +42,10 @@ type LoggerOptions struct {
 
 func defaultRuntimeOptions() RuntimeOptions {
 	return RuntimeOptions{
-		Server: DefaultServerOptions(),
-		Logger: DefaultLoggerOptions(),
+		UseGrpc: false,
+		UseRest: false,
+		Server:  DefaultServerOptions(),
+		Logger:  DefaultLoggerOptions(),
 	}
 }
 
