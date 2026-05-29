@@ -443,11 +443,11 @@ func (s *server) isAccessAllowed(endpointType EndpointType, handlerContext Handl
 }
 
 func (s *server) hasReadAccess(handlerContext HandlerContext) bool {
-	return !s.authzEnabled || handlerContext.HasAnyReadScope()
+	return handlerContext.HasAnyReadScope()
 }
 
 func (s *server) hasWriteAccess(handlerContext HandlerContext) bool {
-	return !s.authzEnabled || handlerContext.HasAnyWriteScope()
+	return handlerContext.HasAnyWriteScope()
 }
 
 func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusResult) {

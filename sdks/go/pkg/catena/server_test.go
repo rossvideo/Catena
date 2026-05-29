@@ -1443,7 +1443,7 @@ func TestServer_GetSlots_InvalidTokenSkipsAccessHandler(t *testing.T) {
 	}
 }
 
-func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
+func TestServer_AuthzDisabledSkipsAccessHandlerAndAllowsScopedHandlerChecks(t *testing.T) {
 	srv := newTestServer(t, false)
 	handlerCalled := false
 	accessCalled := false
@@ -1454,6 +1454,9 @@ func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
 	})
 	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
 		handlerCalled = true
+		if !ctx.HasReadScope(ScopeCfg) {
+			return ReplyError[Value](PERMISSION_DENIED, "configuration scope required")
+		}
 		return Reply(Value{})
 	})
 
@@ -1467,6 +1470,29 @@ func TestServer_AuthzDisabledBypassesAccessAndScopeChecks(t *testing.T) {
 	}
 	if status.Code != OK {
 		t.Errorf("expected OK, got %v", status.Code)
+	}
+}
+
+func TestServer_HasAccessUsesHandlerContextScopes(t *testing.T) {
+	srv := newTestServer(t, false)
+
+	scopedAuthzContext := HandlerContext{authzEnabled: true}
+	if srv.hasReadAccess(scopedAuthzContext) {
+		t.Fatal("expected read access to use handler context scopes, not server authz setting")
+	}
+	if srv.hasWriteAccess(scopedAuthzContext) {
+		t.Fatal("expected write access to use handler context scopes, not server authz setting")
+	}
+
+	authzDisabledContext, status := srv.resolveHandlerContext(TransportContext{})
+	if status.Code != OK {
+		t.Fatalf("expected OK, got %v", status)
+	}
+	if !srv.hasReadAccess(authzDisabledContext) {
+		t.Fatal("expected authz-disabled handler context to satisfy read access")
+	}
+	if !srv.hasWriteAccess(authzDisabledContext) {
+		t.Fatal("expected authz-disabled handler context to satisfy write access")
 	}
 }
 
