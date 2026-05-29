@@ -74,50 +74,38 @@ type TransportContext struct {
 }
 
 type HandlerContext struct {
-	Token    *jwt.Token
-	scopes   map[string]struct{}
-	Metadata map[string][]string
+	Token       *jwt.Token
+	readScopes  map[string]struct{}
+	writeScopes map[string]struct{}
+	Metadata    map[string][]string
 }
 
-func (ctx HandlerContext) HasScope(scopeName string) bool {
-	_, ok := ctx.scopes[scopeName]
+func (ctx HandlerContext) HasReadScope(scopeName string) bool {
+	_, ok := ctx.readScopes[scopeName]
 	return ok
 }
 
-func (ctx HandlerContext) hasAnyScope(scopeNames ...string) bool {
-	for _, scopeName := range scopeNames {
-		if ctx.HasScope(scopeName) {
+func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
+	_, ok := ctx.writeScopes[scopeName]
+	return ok
+}
+
+func (ctx HandlerContext) HasAnyWriteScope() bool {
+	for _, scopeName := range catenaScopes {
+		if ctx.HasWriteScope(scopeName) {
 			return true
 		}
 	}
 	return false
 }
 
-func (ctx HandlerContext) HasAnyWriteScope() bool {
-	return ctx.hasAnyScope(catenaWriteScopes...)
-}
-
 func (ctx HandlerContext) HasAnyReadScope() bool {
-	return ctx.hasAnyScope(catenaReadScopes...) || ctx.HasAnyWriteScope()
-}
-
-func (ctx HandlerContext) hasReadScope(scopeName string) bool {
-	if ctx.HasScope(scopeName) {
-		return true
+	for _, scopeName := range catenaScopes {
+		if ctx.HasReadScope(scopeName) {
+			return true
+		}
 	}
-
-	switch scopeName {
-	case ScopeOp:
-		return ctx.HasScope(ScopeOpWrite)
-	case ScopeCfg:
-		return ctx.HasScope(ScopeCfgWrite)
-	case ScopeAdm:
-		return ctx.HasScope(ScopeAdmWrite)
-	case ScopeMon:
-		return ctx.HasScope(ScopeMonWrite)
-	default:
-		return false
-	}
+	return false
 }
 
 // Handler function types used by both REST and gRPC servers.
@@ -403,15 +391,16 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "invalid access token")
 	}
 
-	scopes, res := extractTokenScopes(token)
+	readScopes, writeScopes, res := extractTokenScopes(token)
 	if res.Code != OK {
 		return HandlerContext{}, res
 	}
 
 	handlerContext := HandlerContext{
-		Token:    token,
-		scopes:   scopes,
-		Metadata: maps.Clone(transportContext.Metadata),
+		Token:       token,
+		readScopes:  readScopes,
+		writeScopes: writeScopes,
+		Metadata:    maps.Clone(transportContext.Metadata),
 	}
 	return handlerContext, StatusWithCode(OK, "")
 }

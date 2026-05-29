@@ -165,7 +165,7 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 	cq := newConnectionQueue(0)
 
 	owner := &stubTransport{tb: t}
-	handlerContext := HandlerContext{scopes: map[string]struct{}{ScopeOp: {}}}
+	handlerContext := HandlerContext{readScopes: map[string]struct{}{ScopeOp: {}}}
 
 	conn1, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
 	conn2, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
@@ -202,13 +202,14 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		scopes: map[string]struct{}{ScopeMon: {}},
+		readScopes: map[string]struct{}{ScopeMon: {}},
 	}, nil)
 	matchingWriteConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		scopes: map[string]struct{}{ScopeMonWrite: {}},
+		readScopes:  map[string]struct{}{ScopeMon: {}},
+		writeScopes: map[string]struct{}{ScopeMon: {}},
 	}, nil)
 	nonMatchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		scopes: map[string]struct{}{ScopeCfg: {}},
+		readScopes: map[string]struct{}{ScopeCfg: {}},
 	}, nil)
 
 	update := &protos.PushUpdates{

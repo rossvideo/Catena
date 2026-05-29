@@ -640,9 +640,9 @@ func main() {
 			key := normalizeFqoid(fqoid)
 
 			//Shows how to restrict scope access to specific slots.
-			if slot == 1 && !ctx.HasScope(catena.ScopeMon) && !ctx.HasScope(catena.ScopeMonWrite) {
+			if slot == 1 && !ctx.HasReadScope(catena.ScopeMon) {
 				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "monitor scope required")
-			} else if slot == 0 && !ctx.HasScope(catena.ScopeCfg) && !ctx.HasScope(catena.ScopeCfgWrite) {
+			} else if slot == 0 && !ctx.HasReadScope(catena.ScopeCfg) {
 				return catena.ReplyError[catena.Value](catena.PERMISSION_DENIED, "configuration scope required")
 			}
 

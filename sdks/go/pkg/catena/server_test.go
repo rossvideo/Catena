@@ -98,41 +98,64 @@ func TestServer_ParseTransportContext_ParsesTokenAndMetadata(t *testing.T) {
 	if ctx.Token.Raw != validTestJWT {
 		t.Errorf("expected token raw value %q, got %q", validTestJWT, ctx.Token.Raw)
 	}
-	if !ctx.HasScope("all") {
-		t.Errorf("expected parsed token scopes to include all, got %v", ctx.scopes)
+	if !ctx.HasReadScope("all") {
+		t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
 	}
-	if !ctx.HasScope("read") || !ctx.HasScope("write") {
-		t.Errorf("expected parsed token scopes to include read and write, got %v", ctx.scopes)
+	if !ctx.HasReadScope("read") || !ctx.HasReadScope("write") {
+		t.Errorf("expected parsed token read scopes to include read and write, got %v", ctx.readScopes)
 	}
-	if !ctx.HasScope("st2138:op:w") {
-		t.Errorf("expected parsed token scopes to include st2138:op:w, got %v", ctx.scopes)
+	if !ctx.HasReadScope(ScopeOp) {
+		t.Errorf("expected parsed token read scopes to include %s, got %v", ScopeOp, ctx.readScopes)
+	}
+	if !ctx.HasWriteScope(ScopeOp) {
+		t.Errorf("expected parsed token write scopes to include %s, got %v", ScopeOp, ctx.writeScopes)
+	}
+	if ctx.HasWriteScope("write") {
+		t.Errorf("expected non-:w scope to be read-only, got %v", ctx.writeScopes)
 	}
 	if !ctx.HasAnyWriteScope() {
-		t.Errorf("expected parsed token scopes to satisfy write access, got %v", ctx.scopes)
+		t.Errorf("expected parsed token scopes to satisfy write access, got %v", ctx.writeScopes)
 	}
 	if !ctx.HasAnyReadScope() {
-		t.Errorf("expected parsed token scopes to satisfy read access, got %v", ctx.scopes)
+		t.Errorf("expected parsed token scopes to satisfy read access, got %v", ctx.readScopes)
 	}
 	if len(ctx.Metadata["scope"]) != 1 || ctx.Metadata["scope"][0] != "read" {
 		t.Errorf("expected metadata to be preserved, got %v", ctx.Metadata)
 	}
 }
 
-func TestHandlerContext_HasAnyReadScope(t *testing.T) {
-	readOnly := HandlerContext{scopes: map[string]struct{}{"st2138:mon": {}}}
-	if !readOnly.HasAnyReadScope() {
-		t.Fatal("expected read scope to satisfy read access")
+func TestHandlerContext_ScopeChecksUseSeparateReadAndWriteScopes(t *testing.T) {
+	readOnly := HandlerContext{readScopes: map[string]struct{}{ScopeMon: {}}}
+	if !readOnly.HasReadScope(ScopeMon) {
+		t.Fatal("expected read scope to satisfy read scope check")
 	}
 	if readOnly.HasAnyWriteScope() {
 		t.Fatal("read scope should not satisfy write access")
 	}
+	if readOnly.HasWriteScope(ScopeMon) {
+		t.Fatal("read scope should not satisfy write scope check")
+	}
 
-	writeOnly := HandlerContext{scopes: map[string]struct{}{"st2138:cfg:w": {}}}
-	if !writeOnly.HasAnyReadScope() {
-		t.Fatal("write scope should satisfy read access")
+	writeOnly := HandlerContext{writeScopes: map[string]struct{}{ScopeCfg: {}}}
+	if writeOnly.HasAnyReadScope() {
+		t.Fatal("write scope should not satisfy read access unless it is also in read scopes")
 	}
 	if !writeOnly.HasAnyWriteScope() {
 		t.Fatal("expected write scope to satisfy write access")
+	}
+	if writeOnly.HasReadScope(ScopeCfg) {
+		t.Fatal("write scope should not satisfy read scope check")
+	}
+
+	parsedWrite := HandlerContext{
+		readScopes:  map[string]struct{}{ScopeCfg: {}},
+		writeScopes: map[string]struct{}{ScopeCfg: {}},
+	}
+	if !parsedWrite.HasAnyReadScope() {
+		t.Fatal("parsed write scope should satisfy read access because parsing adds it to read scopes")
+	}
+	if !parsedWrite.HasAnyWriteScope() {
+		t.Fatal("parsed write scope should satisfy write access")
 	}
 }
 
@@ -594,8 +617,8 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 		if ctx.Token == nil || ctx.Token.Raw != transportContext.AccessToken {
 			t.Errorf("expected parsed token from access token")
 		}
-		if !ctx.HasScope("all") {
-			t.Errorf("expected parsed token scopes to include all, got %v", ctx.scopes)
+		if !ctx.HasReadScope("all") {
+			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
 		}
 		if len(ctx.Metadata["tenant"]) != 1 || ctx.Metadata["tenant"][0] != "test" {
 			t.Errorf("expected tenant metadata to be passed through, got %v", ctx.Metadata)
@@ -673,8 +696,8 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 		if ctx.Token == nil || ctx.Token.Raw != transportContext.AccessToken {
 			t.Errorf("expected parsed token from access token")
 		}
-		if !ctx.HasScope("all") {
-			t.Errorf("expected parsed token scopes to include all, got %v", ctx.scopes)
+		if !ctx.HasReadScope("all") {
+			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
 		}
 		return Reply(expected)
 	})
@@ -714,8 +737,8 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 		if ctx.Token == nil || ctx.Token.Raw != transportContext.AccessToken {
 			t.Errorf("expected parsed token from access token")
 		}
-		if !ctx.HasScope("all") {
-			t.Errorf("expected parsed token scopes to include all, got %v", ctx.scopes)
+		if !ctx.HasReadScope("all") {
+			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
 		}
 		return StatusResult{Code: OK}
 	})
@@ -1177,8 +1200,8 @@ func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testin
 				if ctx.Token == nil || ctx.Token.Raw != transportContext.AccessToken {
 					t.Errorf("expected parsed token from access token")
 				}
-				if !ctx.HasScope("all") {
-					t.Errorf("expected parsed token scopes to include all, got %v", ctx.scopes)
+				if !ctx.HasReadScope("all") {
+					t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
 				}
 				if len(ctx.Metadata["scope"]) != 1 || ctx.Metadata["scope"][0] != "none" {
 					t.Errorf("expected scope metadata to be passed through, got %v", ctx.Metadata)
@@ -1687,8 +1710,8 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 			if gotTransport != transport {
 				t.Error("expected transport owner to be passed through")
 			}
-			if !handlerContext.HasScope(ScopeOpWrite) {
-				t.Errorf("expected handler context to be passed through, got %v", handlerContext.scopes)
+			if !handlerContext.HasWriteScope(ScopeOp) {
+				t.Errorf("expected handler context to be passed through, got %v", handlerContext.writeScopes)
 			}
 			if initialUpdate == nil {
 				t.Fatal("expected initial update, got nil")
@@ -1820,7 +1843,7 @@ func TestServer_BroadcastUpdate_Normal(t *testing.T) {
 	}
 
 	// Broadcast an update
-	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOpWrite)
+	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOp)
 
 	// Verify the update was received
 	select {
@@ -1868,7 +1891,7 @@ func TestServer_BroadcastUpdate_FiltersConnectionsByScope(t *testing.T) {
 		}
 	}
 
-	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOpWrite)
+	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOp)
 
 	select {
 	case <-matchingConn.Updates:
@@ -1908,7 +1931,7 @@ func TestServer_BroadcastUpdate_AuthzDisabledBypassesScopeFilter(t *testing.T) {
 		}
 	}
 
-	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOpWrite)
+	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOp)
 
 	for _, conn := range []*Connection{matchingConn, noScopeConn} {
 		select {
@@ -1936,7 +1959,7 @@ func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
 	}
 
 	// Try to broadcast an invalid value (bool is not supported by ToProto)
-	srv.BroadcastUpdate(0, "test/param", true, ScopeOpWrite)
+	srv.BroadcastUpdate(0, "test/param", true, ScopeOp)
 
 	// Should not receive update (logged error instead)
 	select {

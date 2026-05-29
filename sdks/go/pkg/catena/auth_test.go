@@ -422,13 +422,16 @@ func TestExtractTokenScopes_NonMapClaims(t *testing.T) {
 		},
 	}
 
-	scopes, status := extractTokenScopes(token)
+	readScopes, writeScopes, status := extractTokenScopes(token)
 
 	if status.Code != OK {
 		t.Fatalf("expected OK status, got %v", status)
 	}
-	if len(scopes) != 0 {
-		t.Errorf("expected no scopes for non-map claims, got %v", scopes)
+	if len(readScopes) != 0 {
+		t.Errorf("expected no read scopes for non-map claims, got %v", readScopes)
+	}
+	if len(writeScopes) != 0 {
+		t.Errorf("expected no write scopes for non-map claims, got %v", writeScopes)
 	}
 }
 
@@ -439,12 +442,68 @@ func TestExtractTokenScopes_MissingScopeClaim(t *testing.T) {
 		},
 	}
 
-	scopes, status := extractTokenScopes(token)
+	readScopes, writeScopes, status := extractTokenScopes(token)
 
 	if status.Code != OK {
 		t.Fatalf("expected OK status, got %v", status)
 	}
-	if len(scopes) != 0 {
-		t.Errorf("expected no scopes when scope claim is absent, got %v", scopes)
+	if len(readScopes) != 0 {
+		t.Errorf("expected no read scopes when scope claim is absent, got %v", readScopes)
+	}
+	if len(writeScopes) != 0 {
+		t.Errorf("expected no write scopes when scope claim is absent, got %v", writeScopes)
+	}
+}
+
+func TestExtractTokenScopes_NonStringScopeClaim(t *testing.T) {
+	token := &jwt.Token{
+		Claims: jwt.MapClaims{
+			"scope": []string{ScopeOp},
+		},
+	}
+
+	readScopes, writeScopes, status := extractTokenScopes(token)
+
+	if status.Code != OK {
+		t.Fatalf("expected OK status, got %v", status)
+	}
+	if len(readScopes) != 0 {
+		t.Errorf("expected no read scopes for non-string scope claim, got %v", readScopes)
+	}
+	if len(writeScopes) != 0 {
+		t.Errorf("expected no write scopes for non-string scope claim, got %v", writeScopes)
+	}
+}
+
+func TestExtractTokenScopes_SplitsReadAndWriteScopes(t *testing.T) {
+	token := &jwt.Token{
+		Claims: jwt.MapClaims{
+			"scope": "st2138:mon st2138:cfg:w custom:w",
+		},
+	}
+
+	readScopes, writeScopes, status := extractTokenScopes(token)
+
+	if status.Code != OK {
+		t.Fatalf("expected OK status, got %v", status)
+	}
+	for _, scopeName := range []string{"st2138:mon", "st2138:cfg", "custom"} {
+		if _, ok := readScopes[scopeName]; !ok {
+			t.Errorf("expected read scopes to include %s, got %v", scopeName, readScopes)
+		}
+	}
+	for _, scopeName := range []string{"st2138:cfg", "custom"} {
+		if _, ok := writeScopes[scopeName]; !ok {
+			t.Errorf("expected write scopes to include %s, got %v", scopeName, writeScopes)
+		}
+	}
+	if _, ok := writeScopes["st2138:mon"]; ok {
+		t.Errorf("expected read-only scope to be omitted from write scopes, got %v", writeScopes)
+	}
+	if _, ok := readScopes["st2138:cfg:w"]; ok {
+		t.Errorf("expected suffixed write scope to be normalized out of read scopes, got %v", readScopes)
+	}
+	if _, ok := writeScopes["st2138:cfg:w"]; ok {
+		t.Errorf("expected suffixed write scope to be normalized out of write scopes, got %v", writeScopes)
 	}
 }
