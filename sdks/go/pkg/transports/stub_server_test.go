@@ -49,13 +49,14 @@ import (
 type stubServerRuntime struct {
 	tb                       testing.TB
 	slots                    []uint16
-	getDeviceFn              func(slot uint16) (catena.Device, catena.StatusResult)
-	getValueFn               func(slot uint16, fqoid string) (catena.Value, catena.StatusResult)
-	setValueFn               func(value any, slot uint16, fqoid string) catena.StatusResult
-	getAssetFn               func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult)
-	commandFn                func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult)
-	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult)
-	registerTransportConnFn  func(transport catena.Transport) (int, *catena.Connection)
+	getSlotsFn               func(ctx catena.TransportContext) ([]uint16, catena.StatusResult)
+	getDeviceFn              func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult)
+	getValueFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult)
+	setValueFn               func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
+	getAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
+	commandFn                func(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult)
+	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
+	registerTransportConnFn  func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult)
 	deregisterConnFn         func(connID int)
 	shutdownTransportConnsFn func(ctx context.Context, transport catena.Transport)
 	registerCalls            int
@@ -79,68 +80,73 @@ func (s *stubServerRuntime) panicf(format string, args ...any) {
 
 var _ catena.ServerRuntime = (*stubServerRuntime)(nil)
 
-func (s *stubServerRuntime) GetSlots() []uint16 {
-	return s.slots
+func (s *stubServerRuntime) GetSlots(ctx catena.TransportContext) ([]uint16, catena.StatusResult) {
+	if s.getSlotsFn != nil {
+		return s.getSlotsFn(ctx)
+	}
+	return s.slots, catena.StatusResult{Code: catena.OK}
 }
 
-func (s *stubServerRuntime) InvokeGetDeviceHandler(slot uint16) (catena.Device, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeGetDeviceHandler(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 	if s.getDeviceFn != nil {
-		return s.getDeviceFn(slot)
+		return s.getDeviceFn(slot, ctx)
 	}
 	s.panicf("GetDevice handler not implemented in stubServerRuntime for slot %d", slot)
-	return catena.Device{}, catena.StatusResult{Code: catena.INTERNAL}
+	return catena.ReplyError[catena.Device](catena.INTERNAL, "GetDevice handler not implemented")
 }
 
-func (s *stubServerRuntime) InvokeGetValueHandler(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeGetValueHandler(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult) {
 	if s.getValueFn != nil {
-		return s.getValueFn(slot, fqoid)
+		return s.getValueFn(slot, fqoid, ctx)
 	}
 	s.panicf("GetValue handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
-	return catena.Value{}, catena.StatusResult{Code: catena.INTERNAL}
+	return catena.ReplyError[catena.Value](catena.INTERNAL, "GetValue handler not implemented")
 }
 
-func (s *stubServerRuntime) InvokeSetValueHandler(value any, slot uint16, fqoid string) catena.StatusResult {
+func (s *stubServerRuntime) InvokeSetValueHandler(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
 	if s.setValueFn != nil {
-		return s.setValueFn(value, slot, fqoid)
+		return s.setValueFn(value, slot, fqoid, ctx)
 	}
 	s.panicf("SetValue handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
 	return catena.StatusResult{Code: catena.INTERNAL}
 }
 
-func (s *stubServerRuntime) InvokeGetAssetHandler(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeGetAssetHandler(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 	if s.getAssetFn != nil {
-		return s.getAssetFn(slot, fqoid)
+		return s.getAssetFn(slot, fqoid, ctx)
 	}
 	s.panicf("GetAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
-	return catena.Asset{}, catena.StatusResult{Code: catena.INTERNAL}
+	return catena.ReplyError[catena.Asset](catena.INTERNAL, "GetAsset handler not implemented")
 }
 
-func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
 	if s.commandFn != nil {
-		return s.commandFn(slot, commandFqoid, payload)
+		return s.commandFn(slot, commandFqoid, payload, ctx)
 	}
 	s.panicf("ExecuteCommand handler not implemented in stubServerRuntime for slot %d, commandFqoid %s", slot, commandFqoid)
 	return catena.CommandResult{}, catena.StatusResult{Code: catena.INTERNAL}
 }
 
-func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 	if s.paramInfoFn != nil {
-		return s.paramInfoFn(slot, oidPrefix, recursive)
+		return s.paramInfoFn(slot, oidPrefix, recursive, ctx)
 	}
 	s.panicf("ParamInfo handler not implemented in stubServerRuntime for slot %d, oidPrefix %s", slot, oidPrefix)
 	return nil, catena.StatusResult{Code: catena.INTERNAL}
 }
 
-func (s *stubServerRuntime) RegisterTransportConnection(transport catena.Transport) (int, *catena.Connection) {
+func (s *stubServerRuntime) RegisterTransportConnection(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
 	if s.registerTransportConnFn != nil {
-		connID, conn := s.registerTransportConnFn(transport)
+		conn, res := s.registerTransportConnFn(transport, ctx)
 		s.registerCalls++
-		s.lastRegisterID = connID
+		if conn != nil {
+			s.lastRegisterID = conn.ID
+		}
 		s.lastRegisterOwner = transport
-		return connID, conn
+		return conn, res
 	}
 	s.panicf("RegisterTransportConnection not implemented in stubServerRuntime")
-	return -1, nil
+	return nil, catena.StatusResult{Code: catena.INTERNAL}
 }
 
 func (s *stubServerRuntime) DeregisterConnection(connID int) {
@@ -169,8 +175,8 @@ func (s *stubServerRuntime) WithConnection(
 ) {
 	s.tb.Helper()
 
-	s.registerTransportConnFn = func(transport catena.Transport) (int, *catena.Connection) {
-		return connection.ID, connection
+	s.registerTransportConnFn = func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
+		return connection, catena.StatusResult{Code: catena.OK}
 	}
 
 	s.deregisterConnFn = func(connID int) {

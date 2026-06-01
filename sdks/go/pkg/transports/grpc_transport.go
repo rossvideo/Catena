@@ -44,6 +44,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -51,6 +52,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
@@ -207,6 +209,31 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 	return sanitizeGRPCError(err)
 }
 
+func (t *GrpcTransport) retrieveMetadataFromContext(ctx context.Context) catena.TransportContext {
+	var accessToken string
+	requestMetadata, ok := metadata.FromIncomingContext(ctx)
+	metadataMap := make(map[string][]string)
+	if ok {
+		if vals := requestMetadata.Get("authorization"); len(vals) > 0 {
+			accessToken = vals[0]
+		} else {
+			logger.Debug("No authorization metadata found in context")
+		}
+
+		// Convert metadata.MD map[string][]string to map[string][]string
+		metadataMap = maps.Clone(requestMetadata)
+	} else {
+		logger.Debug("No metadata found in context")
+	}
+
+	transportContext := catena.TransportContext{
+		AccessToken: accessToken,
+		Metadata:    metadataMap,
+	}
+
+	return transportContext
+}
+
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
 type catenaService struct {
 	transport *GrpcTransport
@@ -215,7 +242,13 @@ type catenaService struct {
 
 func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
 	logger.Info("GetPopulatedSlots")
-	slots := s.transport.runtime.GetSlots()
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	slots, res := s.transport.runtime.GetSlots(transportContext)
+	if res.Code != catena.OK {
+		return nil, status.Error(ToGRPCCode(res.Code), res.Error)
+	}
+
 	uint32slots := make([]uint32, len(slots))
 	for i, slot := range slots {
 		uint32slots[i] = uint32(slot)
@@ -232,7 +265,8 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 
 	logger.Info("DeviceRequest", "slot", slot)
 
-	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot, transportContext)
 	if res.Error != "" {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -264,7 +298,8 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 	fqoid := req.Oid
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
-	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid)
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid, transportContext)
 	if result.Error != "" {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -295,7 +330,8 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto.Error))
 	}
 
-	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -314,6 +350,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 	// TODO server should get a direct handler for this to make it a atomic operation, rather than looping and invoking the single set handler multiple times
 
 	logger.Info("MultiSetValue", "slot", slot, "count", len(req.Values))
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 
 	for _, setValue := range req.Values {
 		fqoid := setValue.Oid
@@ -324,7 +361,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
 		}
 
-		result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
+		result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
 		if result.Error != "" {
 			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 			return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -344,7 +381,9 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 	fqoid := req.Oid
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
-	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+
+	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
 	if result.Error != "" {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -379,7 +418,9 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 		}
 	}
 
-	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+
+	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -405,7 +446,9 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 	recursive := req.GetRecursive()
 	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
 
-	infos, res := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+
+	infos, res := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
 	if res.Error != "" {
 		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -445,28 +488,29 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 	// Register this connection with the runtime using this transport as owner.
 	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
 	// so one transport can shut down without impacting streams owned by others.
-	connID, conn := s.transport.runtime.RegisterTransportConnection(s.transport)
-	if connID < 0 {
-		logger.Error("gRPC connection rejected - server shutting down")
-		return status.Error(codes.Unavailable, "server shutting down")
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+	conn, err := s.transport.runtime.RegisterTransportConnection(s.transport, transportContext)
+	if err.Code != catena.OK {
+		logger.Error("gRPC connection rejected", "error", err.Error)
+		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
-	defer s.transport.runtime.DeregisterConnection(connID)
+	defer s.transport.runtime.DeregisterConnection(conn.ID)
 
-	logger.Info("gRPC Connect started", "connID", connID)
+	logger.Info("gRPC Connect started", "connID", conn.ID)
 
 	// Listen for updates and client disconnect
 	ctx := stream.Context()
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Info("gRPC client disconnected", "connID", connID)
+			logger.Info("gRPC client disconnected", "connID", conn.ID)
 			return ctx.Err()
 		case <-conn.Done:
-			logger.Info("gRPC connection shut down by server", "connID", connID)
+			logger.Info("gRPC connection shut down by server", "connID", conn.ID)
 			return status.Error(codes.Unavailable, "server shutting down")
 		case update := <-conn.Updates:
 			if err := stream.Send(update); err != nil {
-				logger.Error("failed to send update", "connID", connID, "error", err)
+				logger.Error("failed to send update", "connID", conn.ID, "error", err)
 				return err
 			}
 		}

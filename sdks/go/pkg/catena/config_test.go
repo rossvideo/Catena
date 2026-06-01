@@ -139,6 +139,9 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.Port != 6254 {
 		t.Errorf("expected default port 6254, got %d", cfg.Port)
 	}
+	if !cfg.AuthzEnabled {
+		t.Error("expected AuthzEnabled to default to true")
+	}
 }
 
 func TestDefaultConfig_CustomPrefix(t *testing.T) {
@@ -161,6 +164,7 @@ func TestParseConfig_DefaultValues(t *testing.T) {
 	// Clear any existing env vars
 	os.Unsetenv("TEST_ENV")
 	os.Unsetenv("TEST_PORT")
+	os.Unsetenv("TEST_AUTHZ_ENABLED")
 
 	cfg := parseConfig("TEST")
 	if cfg.Prefix != "TEST" {
@@ -191,6 +195,16 @@ func TestParseConfig_PortVar(t *testing.T) {
 	cfg := parseConfig("TESTCFG")
 	if cfg.Port != 8080 {
 		t.Errorf("expected port 8080 from env var, got %d", cfg.Port)
+	}
+}
+
+func TestParseConfig_AuthzEnabledVar(t *testing.T) {
+	os.Setenv("TESTCFG_AUTHZ_ENABLED", "false")
+	defer os.Unsetenv("TESTCFG_AUTHZ_ENABLED")
+
+	cfg := parseConfig("TESTCFG")
+	if cfg.AuthzEnabled {
+		t.Error("expected AuthzEnabled=false from env var")
 	}
 }
 
@@ -300,9 +314,10 @@ func TestClose(t *testing.T) {
 
 func TestConfigStruct_Fields(t *testing.T) {
 	cfg := Config{
-		Prefix: "TEST",
-		Env:    EnvDev,
-		Port:   9000,
+		Prefix:       "TEST",
+		Env:          EnvDev,
+		Port:         9000,
+		AuthzEnabled: true,
 		Logger: logger.Settings{
 			Level: logger.LevelDebug,
 		},
@@ -319,6 +334,9 @@ func TestConfigStruct_Fields(t *testing.T) {
 	}
 	if cfg.Logger.Level != logger.LevelDebug {
 		t.Errorf("expected Logger.Level=LevelDebug, got %v", cfg.Logger.Level)
+	}
+	if !cfg.AuthzEnabled {
+		t.Errorf("expected AuthzEnabled=true, got %v", cfg.AuthzEnabled)
 	}
 }
 

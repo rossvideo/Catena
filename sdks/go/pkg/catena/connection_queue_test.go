@@ -53,12 +53,15 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 	cq := newConnectionQueue(0)
 	owner := &stubTransport{tb: t}
 
-	connID, conn := cq.registerOwnedConnection(owner, nil)
-	if connID <= 0 {
-		t.Fatal("RegisterConnection returned negative ID")
+	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res.Code != OK {
+		t.Fatalf("RegisterConnection returned error: %v", res)
 	}
 	if conn == nil {
 		t.Fatal("RegisterConnection returned nil connection")
+	}
+	if conn.ID <= 0 {
+		t.Fatal("RegisterConnection returned non-positive ID")
 	}
 	if conn.Updates == nil {
 		t.Error("connection updates channel should be initialized")
@@ -70,7 +73,7 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 		t.Errorf("expected 1 connection, got %d", cq.connectionCount())
 	}
 
-	cq.deregisterConnection(connID)
+	cq.deregisterConnection(conn.ID)
 	if cq.connectionCount() != 0 {
 		t.Errorf("expected 0 connections after deregister, got %d", cq.connectionCount())
 	}
@@ -89,12 +92,15 @@ func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
 		},
 	}
 
-	connID, conn := cq.registerOwnedConnection(owner, initialUpdate)
-	if connID <= 0 {
-		t.Fatal("RegisterConnection returned negative ID")
+	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, initialUpdate)
+	if res.Code != OK {
+		t.Fatalf("RegisterConnection returned error: %v", res)
 	}
 	if conn == nil {
 		t.Fatal("RegisterConnection returned nil connection")
+	}
+	if conn.ID <= 0 {
+		t.Fatal("RegisterConnection returned non-positive ID")
 	}
 
 	select {
@@ -112,18 +118,18 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 	cq := newConnectionQueue(2)
 	owner := &stubTransport{tb: t}
 
-	id1, conn1 := cq.registerOwnedConnection(owner, nil)
-	if id1 < 0 || conn1 == nil {
+	conn1, res1 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res1.Code != OK || conn1 == nil {
 		t.Fatal("first connection should succeed")
 	}
 
-	id2, conn2 := cq.registerOwnedConnection(owner, nil)
-	if id2 < 0 || conn2 == nil {
+	conn2, res2 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res2.Code != OK || conn2 == nil {
 		t.Fatal("second connection should succeed")
 	}
 
-	id3, conn3 := cq.registerOwnedConnection(owner, nil)
-	if id3 >= 0 || conn3 != nil {
+	conn3, res3 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res3.Code != RESOURCE_EXHAUSTED || conn3 != nil {
 		t.Error("third connection should be rejected (max 2)")
 	}
 
@@ -131,9 +137,9 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 		t.Errorf("expected 2 connections, got %d", cq.connectionCount())
 	}
 
-	cq.deregisterConnection(id1)
-	id4, conn4 := cq.registerOwnedConnection(owner, nil)
-	if id4 < 0 || conn4 == nil {
+	cq.deregisterConnection(conn1.ID)
+	conn4, res4 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res4.Code != OK || conn4 == nil {
 		t.Error("should be able to connect after one disconnects")
 	}
 }
@@ -142,15 +148,15 @@ func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 	cq := newConnectionQueue(1)
 	owner := &stubTransport{tb: t}
 
-	cq.registerOwnedConnection(owner, nil)
-	id2, _ := cq.registerOwnedConnection(owner, nil)
-	if id2 >= 0 {
+	cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	conn2, res2 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res2.Code != RESOURCE_EXHAUSTED || conn2 != nil {
 		t.Error("second connection should be rejected")
 	}
 
 	cq.setMaxConnections(2)
-	id3, conn3 := cq.registerOwnedConnection(owner, nil)
-	if id3 < 0 || conn3 == nil {
+	conn3, res3 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res3.Code != OK || conn3 == nil {
 		t.Error("should succeed after increasing limit")
 	}
 }
@@ -159,9 +165,13 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 	cq := newConnectionQueue(0)
 
 	owner := &stubTransport{tb: t}
+	handlerContext := HandlerContext{
+		readScopes:   map[string]struct{}{ScopeOp: {}},
+		authzEnabled: true,
+	}
 
-	_, conn1 := cq.registerOwnedConnection(owner, nil)
-	_, conn2 := cq.registerOwnedConnection(owner, nil)
+	conn1, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
+	conn2, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
 
 	update := &protos.PushUpdates{
 		Slot: 0,
@@ -172,7 +182,7 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 		},
 	}
 
-	cq.notifyUpdate(update)
+	cq.notifyUpdate(update, ScopeOp)
 
 	checkUpdate := func(name string, conn *Connection) {
 		select {
@@ -190,12 +200,64 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 	checkUpdate("conn2", conn2)
 }
 
+func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
+	cq := newConnectionQueue(0)
+	owner := &stubTransport{tb: t}
+
+	matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
+		readScopes:   map[string]struct{}{ScopeMon: {}},
+		authzEnabled: true,
+	}, nil)
+	matchingWriteConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
+		readScopes:   map[string]struct{}{ScopeMon: {}},
+		writeScopes:  map[string]struct{}{ScopeMon: {}},
+		authzEnabled: true,
+	}, nil)
+	nonMatchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
+		readScopes:   map[string]struct{}{ScopeCfg: {}},
+		authzEnabled: true,
+	}, nil)
+
+	update := &protos.PushUpdates{
+		Slot: 0,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{Oid: "test/param"},
+		},
+	}
+
+	cq.notifyUpdate(update, ScopeMon)
+
+	select {
+	case <-matchingConn.Updates:
+	case <-time.After(time.Second):
+		t.Fatal("matching connection did not receive value update")
+	}
+
+	select {
+	case <-matchingWriteConn.Updates:
+	case <-time.After(time.Second):
+		t.Fatal("matching write-scope connection did not receive value update")
+	}
+
+	select {
+	case <-nonMatchingConn.Updates:
+		t.Fatal("non-matching connection should not receive value update")
+	default:
+	}
+}
+
+func TestIsValueUpdate_NilUpdate(t *testing.T) {
+	if isValueUpdate(nil) {
+		t.Error("expected nil update not to be treated as value update")
+	}
+}
+
 func TestConnectionQueue_Shutdown(t *testing.T) {
 	cq := newConnectionQueue(0)
 	owner := &stubTransport{tb: t}
 
-	_, conn1 := cq.registerOwnedConnection(owner, nil)
-	_, conn2 := cq.registerOwnedConnection(owner, nil)
+	conn1, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	conn2, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
 
 	go func() {
 		<-conn1.Done
@@ -218,7 +280,7 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 	cq := newConnectionQueue(0)
 	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(owner, nil)
+	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
 
 	go func() {
 		<-conn.Done
@@ -227,8 +289,8 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 
 	cq.shutdown(context.Background())
 
-	id, c := cq.registerOwnedConnection(owner, nil)
-	if id >= 0 || c != nil {
+	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+	if res.Code != INTERNAL || conn != nil {
 		t.Error("should reject new connections after shutdown")
 	}
 }
@@ -238,8 +300,8 @@ func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 	ownerA := &stubTransport{tb: t}
 	ownerB := &stubTransport{tb: t}
 
-	_, connA := cq.registerOwnedConnection(ownerA, nil)
-	_, connB := cq.registerOwnedConnection(ownerB, nil)
+	connA, _ := cq.registerOwnedConnection(ownerA, HandlerContext{}, nil)
+	connB, _ := cq.registerOwnedConnection(ownerB, HandlerContext{}, nil)
 
 	go func() {
 		<-connA.Done
@@ -271,7 +333,7 @@ func TestConnectionQueue_ShutdownConnection_Graceful(t *testing.T) {
 	cq := newConnectionQueue(0)
 	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(owner, nil)
+	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
 
 	go func() {
 		<-conn.Done
@@ -289,7 +351,7 @@ func TestConnectionQueue_ShutdownConnection_AlreadyClosed(t *testing.T) {
 	cq := newConnectionQueue(0)
 	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(owner, nil)
+	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
 
 	go func() {
 		<-conn.Done
@@ -309,7 +371,7 @@ func TestConectionQueue_ShutdownConnection_Deadline(t *testing.T) {
 	cq := newConnectionQueue(0)
 	owner := &stubTransport{tb: t}
 
-	_, conn := cq.registerOwnedConnection(owner, nil)
+	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
 
 	// don't deregister
 
@@ -327,8 +389,8 @@ func TestConnectionQueue_ShutdownConnection_OneDeadline(t *testing.T) {
 	ownerA := &stubTransport{tb: t}
 	ownerB := &stubTransport{tb: t}
 
-	_, connA := cq.registerOwnedConnection(ownerA, nil)
-	_, connB := cq.registerOwnedConnection(ownerB, nil)
+	connA, _ := cq.registerOwnedConnection(ownerA, HandlerContext{}, nil)
+	connB, _ := cq.registerOwnedConnection(ownerB, HandlerContext{}, nil)
 
 	// only properly deregsiter connA, leave connB hanging
 

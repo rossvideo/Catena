@@ -485,7 +485,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 
 	// Start heartbeat — invokes all registered heartbeat handlers every 5 seconds.
 	srv.RegisterHeartbeatHandler(0, func(slot uint16) {
-		srv.BroadcastUpdate(slot, "product/version", "1.0.0")
+		srv.BroadcastUpdate(slot, "product/version", "1.0.0", catena.ScopeMon)
 	})
 	srv.StartHeartbeat(5 * time.Second)
 }

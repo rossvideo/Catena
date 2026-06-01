@@ -130,7 +130,7 @@ func RegisterBasicParamHandlers(srv catena.CatenaServer, params *sync.Map, slot 
 		}
 		params.Store(fqoid, value)
 
-		srv.BroadcastUpdate(slot, fqoid, value)
+		srv.BroadcastUpdate(slot, fqoid, value, catena.ScopeMon)
 		return catena.StatusWithCode(catena.NO_CONTENT, "")
 	})
 
@@ -168,7 +168,7 @@ func RegisterSpecificParamHandlers(srv catena.CatenaServer, params *sync.Map, fq
 		}
 		params.Store(fqoid_, value)
 
-		srv.BroadcastUpdate(slot, fqoid_, value)
+		srv.BroadcastUpdate(slot, fqoid_, value, catena.ScopeMon)
 		return catena.StatusWithCode(catena.OK, "")
 	})
 

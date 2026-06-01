@@ -44,6 +44,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"strings"
 	"sync"
@@ -154,6 +155,14 @@ func (t *RestTransport) RegisterFallbackHandler(handler FallbackHandler) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.fallbackHandler = handler
+}
+
+func (t *RestTransport) retrieveMetadataFromRequest(r *http.Request) catena.TransportContext {
+	transportContext := catena.TransportContext{
+		AccessToken: r.Header.Get("Authorization"),
+		Metadata:    maps.Clone(r.Header), // include all headers as metadata for now; could be filtered in the future if needed
+	}
+	return transportContext
 }
 
 // writeHTTPResult is a unified function that handles writing different response types
@@ -308,13 +317,15 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Register this connection with the runtime using this transport as owner.
 	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
 	// so one transport can shut down without impacting streams owned by others.
-	connID, conn := t.runtime.RegisterTransportConnection(t)
-	if connID < 0 {
-		val, res := catena.ReplyError[catena.Value](catena.RESOURCE_EXHAUSTED, "Too many connections to service")
+	transportContext := t.retrieveMetadataFromRequest(r)
+
+	conn, res := t.runtime.RegisterTransportConnection(t, transportContext)
+	if res.Code != catena.OK {
+		val, res := catena.ReplyError[catena.Value](res.Code, res.Error)
 		writeHTTPResult(w, res, val)
 		return
 	}
-	defer t.runtime.DeregisterConnection(connID)
+	defer t.runtime.DeregisterConnection(conn.ID)
 
 	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -330,21 +341,21 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	logger.Info("SSE Connect started", "connID", connID)
+	logger.Info("SSE Connect started", "connID", conn.ID)
 
 	// Each connection's goroutine listens for setValue updates and server shutdown signals
 	ctx := r.Context()
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Info("SSE client disconnected", "connID", connID)
+			logger.Info("SSE client disconnected", "connID", conn.ID)
 			return
 		case <-conn.Done:
-			logger.Info("SSE connection shut down by server", "connID", connID)
+			logger.Info("SSE connection shut down by server", "connID", conn.ID)
 			return
 		case update := <-conn.Updates:
 			if err := t.sendSSEEvent(w, flusher, update); err != nil {
-				logger.Error("failed to send SSE event", "connID", connID, "error", err)
+				logger.Error("failed to send SSE event", "connID", conn.ID, "error", err)
 				return
 			}
 		}
@@ -374,7 +385,8 @@ func (t *RestTransport) registerRoutes() {
 		// Route based on path structure
 		if len(parts) == 3 && r.Method == http.MethodGet {
 			// GET /st2138-api/v1/{slot} - Get device info
-			device, res := t.runtime.InvokeGetDeviceHandler(slot)
+			transportContext := t.retrieveMetadataFromRequest(r)
+			device, res := t.runtime.InvokeGetDeviceHandler(slot, transportContext)
 			writeHTTPResult(w, res, device)
 			return
 		}
@@ -444,7 +456,13 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 	}
 
 	logger.Info("GetPopulatedSlots")
-	slots := t.runtime.GetSlots()
+	transportContext := t.retrieveMetadataFromRequest(r)
+	slots, err := t.runtime.GetSlots(transportContext)
+	if err.Code != catena.OK {
+		val, res := catena.ReplyError[catena.Value](err.Code, err.Error)
+		writeHTTPResult(w, res, val)
+		return
+	}
 	uint32Slots := make([]uint32, len(slots))
 	for i, slot := range slots {
 		uint32Slots[i] = uint32(slot)
@@ -466,7 +484,8 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 
 	switch r.Method {
 	case http.MethodGet:
-		val, res := t.runtime.InvokeGetValueHandler(slot, fqoid)
+		transportContext := t.retrieveMetadataFromRequest(r)
+		val, res := t.runtime.InvokeGetValueHandler(slot, fqoid, transportContext)
 		writeHTTPResult(w, res, val)
 
 	case http.MethodPut:
@@ -487,7 +506,8 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		res := t.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
+		transportContext := t.retrieveMetadataFromRequest(r)
+		res := t.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
 		writeHTTPStatusResult(w, res)
 
 	default:
@@ -504,7 +524,8 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	fqoid := strings.Join(pathParts, "/")
-	asset, res := t.runtime.InvokeGetAssetHandler(slot, fqoid)
+	transportContext := t.retrieveMetadataFromRequest(r)
+	asset, res := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
 
 	if res.Error == "" {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
@@ -562,7 +583,8 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	infos, res := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
+	transportContext := t.retrieveMetadataFromRequest(r)
+	infos, res := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
 	if res.Code != catena.OK {
 		writeHTTPStatusResult(w, res)
 		return
@@ -661,7 +683,8 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	cmdResult, res := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
+	transportContext := t.retrieveMetadataFromRequest(r)
+	cmdResult, res := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
 	if res.Code != catena.OK {
 		writeHTTPResult(w, res, catena.Value{})
 		return
