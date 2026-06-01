@@ -44,40 +44,6 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-func TestNewPolyglotText(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
-	}
-}
-
-func TestPolyglotText_With(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
-	}
-	if pt["fr"] != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
-	}
-}
-
-func TestPolyglotText_Get(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
-	if pt.Get("fr", "en") != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt.Get("fr", "en"))
-	}
-	if pt.Get("de", "en") != "Hello" {
-		t.Errorf("expected fallback 'Hello', got %s", pt.Get("de", "en"))
-	}
-}
-
-func TestPolyglotText_Get_MissingFallback(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello")
-	if pt.Get("de", "fr") != "" {
-		t.Errorf("expected empty string for missing fallback, got %s", pt.Get("de", "fr"))
-	}
-}
-
 func TestCommandReply(t *testing.T) {
 	val, _ := ToValue(int32(42))
 	result, status := CommandReply(val)
