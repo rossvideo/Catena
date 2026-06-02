@@ -70,6 +70,9 @@ func (mg *MenuGroup) AddMenuGroupName(name PolyglotText) *MenuGroup {
 	if mg.Proto.Name == nil {
 		mg.Proto.Name = &protos.PolyglotText{DisplayStrings: make(map[string]string)}
 	}
+	if mg.Proto.Name.DisplayStrings == nil {
+		mg.Proto.Name.DisplayStrings = make(map[string]string)
+	}
 	for k, v := range name {
 		mg.Proto.Name.DisplayStrings[k] = v
 	}
@@ -119,6 +122,9 @@ func (m *Menu) WithMenuName(name PolyglotText) *Menu {
 func (m *Menu) AddMenuName(name PolyglotText) *Menu {
 	if m.Proto.Name == nil {
 		m.Proto.Name = &protos.PolyglotText{DisplayStrings: make(map[string]string)}
+	}
+	if m.Proto.Name.DisplayStrings == nil {
+		m.Proto.Name.DisplayStrings = make(map[string]string)
 	}
 	for k, v := range name {
 		m.Proto.Name.DisplayStrings[k] = v
