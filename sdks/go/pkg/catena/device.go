@@ -91,6 +91,12 @@ func toProtoDevice(m map[string]any) (*protos.Device, error) {
 		return nil, fmt.Errorf("failed to unmarshal JSON to Device proto: %w", err)
 	}
 
+	// Reserved software-update commands are auto-injected into every device so
+	// upload_update / apply_update are always present and cannot be removed.
+	if err := injectReservedCommands(device); err != nil {
+		return nil, fmt.Errorf("failed to inject reserved commands: %w", err)
+	}
+
 	return device, nil
 }
 
