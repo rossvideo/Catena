@@ -99,6 +99,7 @@ type Config struct {
 	GRPCReflection bool            // Enable gRPC reflection (default: false)
 	UseGrpc        bool            // Enable gRPC transport (default: false)
 	UseRest        bool            // Enable REST transport (default: true)
+	AuthzEnabled   bool            // Enable authorization checks (default: true)
 }
 
 // DefaultConfig returns sensible defaults with the given prefix.
@@ -114,6 +115,7 @@ func DefaultConfig(prefix string) Config {
 		GRPCReflection: false,
 		UseGrpc:        false,
 		UseRest:        true,
+		AuthzEnabled:   true,
 	}
 }
 
@@ -156,6 +158,10 @@ func parseConfig(prefix string) Config {
 
 	if v := os.Getenv(prefix + "_USE_REST"); v != "" {
 		cfg.UseRest = v == "true"
+	}
+
+	if v := os.Getenv(prefix + "_AUTHZ_ENABLED"); v != "" {
+		cfg.AuthzEnabled = v == "true"
 	}
 
 	return cfg

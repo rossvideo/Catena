@@ -95,7 +95,7 @@ func (r CommandResult) GetProtoResponse() *protos.CommandResponse {
 }
 
 // CommandReply returns a successful command response wrapping a value.
-func CommandReply(value CatenaValue) (CommandResult, StatusResult) {
+func CommandReply(value Value) (CommandResult, StatusResult) {
 	return CommandResult{
 		response: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Response{Response: value.Value},

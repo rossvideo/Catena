@@ -45,7 +45,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-type CatenaValue struct {
+type Value struct {
 	Value *protos.Value
 }
 
@@ -95,16 +95,19 @@ const (
 	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
 )
 
-func ToCatenaValue(v any) (CatenaValue, StatusResult) {
+func ToValue(v any) (Value, StatusResult) {
 	val, res := ToProto(v)
 	if res.Code != StatusCodeOk {
-		return CatenaValue{}, StatusResult{Code: res.Code, Error: "ToCatenaValue: " + res.Error}
+		return Value{}, StatusResult{Code: res.Code, Error: "ToValue: " + res.Error}
 	}
-	return CatenaValue{Value: val}, StatusResult{Code: StatusCodeOk}
+	return Value{Value: val}, StatusResult{Code: StatusCodeOk}
 }
 
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, StatusResult) {
+	if v == nil {
+		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil value"}
+	}
 	switch val := v.(type) {
 	case DataPayload:
 		pdp, res := dataPayloadToProto(val)
@@ -129,6 +132,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	case []string:
 		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: val}}}, StatusResult{Code: StatusCodeOk}
 	case map[string]any:
+		if len(val) == 0 {
+			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil or empty map[string]any"}
+		}
 		fields := make(map[string]*protos.Value)
 		for k, v := range val {
 			res, sr := ToProto(v)
@@ -139,6 +145,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 		}
 		return &protos.Value{Kind: &protos.Value_StructValue{StructValue: &protos.StructValue{Fields: fields}}}, StatusResult{Code: StatusCodeOk}
 	case []map[string]any:
+		if val == nil {
+			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil []map[string]any"}
+		}
 		structArr := make([]*protos.StructValue, len(val))
 		for i, m := range val {
 			fields := make(map[string]*protos.Value)
@@ -153,6 +162,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 		}
 		return &protos.Value{Kind: &protos.Value_StructArrayValues{StructArrayValues: &protos.StructList{StructValues: structArr}}}, StatusResult{Code: StatusCodeOk}
 	case StructVariantValue:
+		if val.Value == nil {
+			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil StructVariantValue.Value"}
+		}
 		protoVal, sr := ToProto(val.Value)
 		if sr.Code != StatusCodeOk {
 			return nil, StatusResult{Code: sr.Code, Error: "failed to convert StructVariantValue.Value: " + sr.Error}
@@ -162,6 +174,9 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 			Value:             protoVal,
 		}}}, StatusResult{Code: StatusCodeOk}
 	case []StructVariantValue:
+		if val == nil {
+			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil []StructVariantValue"}
+		}
 		var structVariants []*protos.StructVariantValue
 		for _, sv := range val {
 			protoVal, sr := ToProto(sv.Value)

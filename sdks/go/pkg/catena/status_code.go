@@ -124,7 +124,7 @@ const (
 
 // ResponseType is a constraint for types that can be returned from handlers
 type ResponseType interface {
-	CatenaValue | CatenaAsset | CatenaDevice
+	Value | Asset | Device
 }
 
 // Reply returns a successful response (StatusCodeOk) with the given value.
@@ -141,7 +141,7 @@ func ReplyWithCode[T ResponseType](value T, code StatusCode) (T, StatusResult) {
 
 // ReplyError returns an error response with the given status code and message.
 // The value returned is the zero value of T.
-// Usage: catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "not found")
+// Usage: catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "not found")
 func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 	var zero T
 	return zero, StatusResult{Code: code, Error: msg}

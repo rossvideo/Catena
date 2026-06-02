@@ -80,8 +80,8 @@ func (e Encoding) String() string {
 	}
 }
 
-// CatenaAsset wraps protos.ExternalObjectPayload for asset handling
-type CatenaAsset struct {
+// Asset wraps protos.ExternalObjectPayload for asset handling
+type Asset struct {
 	asset *protos.ExternalObjectPayload
 }
 
@@ -197,11 +197,11 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 	return pdp, StatusResult{Code: StatusCodeOk}
 }
 
-// ToCatenaAsset converts DataPayload to CatenaAsset by building the proto directly
-func ToCatenaAsset(dp DataPayload, cachable bool) (CatenaAsset, StatusResult) {
+// ToAsset converts DataPayload to Asset by building the proto directly
+func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 	protoPayload, res := dataPayloadToProto(dp)
 	if res.Code != StatusCodeOk {
-		return CatenaAsset{asset: nil}, res
+		return Asset{asset: nil}, res
 	}
 
 	asset := &protos.ExternalObjectPayload{
@@ -209,11 +209,11 @@ func ToCatenaAsset(dp DataPayload, cachable bool) (CatenaAsset, StatusResult) {
 		Payload:  protoPayload,
 	}
 
-	return CatenaAsset{asset: asset}, StatusResult{Code: StatusCodeOk}
+	return Asset{asset: asset}, StatusResult{Code: StatusCodeOk}
 }
 
 // GetProtoAsset returns the underlying protos.ExternalObjectPayload
-func (ca CatenaAsset) GetProtoAsset() *protos.ExternalObjectPayload {
+func (ca Asset) GetProtoAsset() *protos.ExternalObjectPayload {
 	return ca.asset
 }
 
@@ -336,7 +336,7 @@ func PayloadEncodingFromExt(filename string) Encoding {
 // TranscodeAssetPayload decodes the asset's current payload encoding and
 // re-encodes it to targetEncoding, modifying the asset in place.
 // If the asset is already in the target encoding, this is a no-op.
-func TranscodeAssetPayload(asset *CatenaAsset, targetEncoding Encoding) StatusResult {
+func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
 	original := asset.GetProtoAsset()
 	if original == nil || original.GetPayload() == nil {
 		return StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no payload"}

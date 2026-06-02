@@ -43,8 +43,8 @@ import (
 	"testing"
 )
 
-func TestReply_CatenaValue(t *testing.T) {
-	value, _ := ToCatenaValue(int32(42))
+func TestReply_Value(t *testing.T) {
+	value, _ := ToValue(int32(42))
 	result, status := Reply(value)
 
 	if status.Code != StatusCodeOk {
@@ -58,12 +58,12 @@ func TestReply_CatenaValue(t *testing.T) {
 	}
 }
 
-func TestReply_CatenaDevice(t *testing.T) {
+func TestReply_Device(t *testing.T) {
 	deviceMap := map[string]any{
 		"slot":         uint32(0),
 		"detail_level": DetailLevelFull,
 	}
-	device, _ := ToCatenaDevice(deviceMap)
+	device, _ := ToDevice(deviceMap)
 	result, status := Reply(device)
 
 	if status.Code != StatusCodeOk {
@@ -74,11 +74,11 @@ func TestReply_CatenaDevice(t *testing.T) {
 	}
 }
 
-func TestReply_CatenaAsset(t *testing.T) {
+func TestReply_Asset(t *testing.T) {
 	dp := DataPayload{
 		Payload: []byte("test"),
 	}
-	asset, _ := ToCatenaAsset(dp, true)
+	asset, _ := ToAsset(dp, true)
 	result, status := Reply(asset)
 
 	if status.Code != StatusCodeOk {
@@ -90,7 +90,7 @@ func TestReply_CatenaAsset(t *testing.T) {
 }
 
 func TestReplyWithCode(t *testing.T) {
-	value, _ := ToCatenaValue(int32(42))
+	value, _ := ToValue(int32(42))
 	result, status := ReplyWithCode(value, StatusCodeNotFound)
 
 	if status.Code != StatusCodeNotFound {
@@ -104,8 +104,8 @@ func TestReplyWithCode(t *testing.T) {
 	}
 }
 
-func TestReplyError_CatenaValue(t *testing.T) {
-	result, status := ReplyError[CatenaValue](StatusCodeNotFound, "resource not found")
+func TestReplyError_Value(t *testing.T) {
+	result, status := ReplyError[Value](StatusCodeNotFound, "resource not found")
 
 	if status.Code != StatusCodeNotFound {
 		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeNotFound)
@@ -118,8 +118,8 @@ func TestReplyError_CatenaValue(t *testing.T) {
 	}
 }
 
-func TestReplyError_CatenaDevice(t *testing.T) {
-	result, status := ReplyError[CatenaDevice](StatusCodeInternal, "internal error")
+func TestReplyError_Device(t *testing.T) {
+	result, status := ReplyError[Device](StatusCodeInternal, "internal error")
 
 	if status.Code != StatusCodeInternal {
 		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeInternal)
@@ -132,8 +132,8 @@ func TestReplyError_CatenaDevice(t *testing.T) {
 	}
 }
 
-func TestReplyError_CatenaAsset(t *testing.T) {
-	result, status := ReplyError[CatenaAsset](StatusCodeUnavailable, "service unavailable")
+func TestReplyError_Asset(t *testing.T) {
+	result, status := ReplyError[Asset](StatusCodeUnavailable, "service unavailable")
 
 	if status.Code != StatusCodeUnavailable {
 		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeUnavailable)
@@ -204,9 +204,9 @@ func TestStatusCode_Values(t *testing.T) {
 // TestResponseType_Constraint verifies the generic constraint works
 func TestResponseType_Constraint(t *testing.T) {
 	// These should all compile and work
-	var _ func(CatenaValue) (CatenaValue, StatusResult) = Reply[CatenaValue]
-	var _ func(CatenaDevice) (CatenaDevice, StatusResult) = Reply[CatenaDevice]
-	var _ func(CatenaAsset) (CatenaAsset, StatusResult) = Reply[CatenaAsset]
+	var _ func(Value) (Value, StatusResult) = Reply[Value]
+	var _ func(Device) (Device, StatusResult) = Reply[Device]
+	var _ func(Asset) (Asset, StatusResult) = Reply[Asset]
 }
 
 func TestReplyError_AllStatusCodes(t *testing.T) {
@@ -219,7 +219,7 @@ func TestReplyError_AllStatusCodes(t *testing.T) {
 
 	for i, code := range codes {
 		t.Run(fmt.Sprintf("StatusCode_%d", code), func(t *testing.T) {
-			result, status := ReplyError[CatenaValue](code, "test error")
+			result, status := ReplyError[Value](code, "test error")
 			if status.Code != code {
 				t.Errorf("test %d: ReplyError code = %d, want %d", i, status.Code, code)
 			}

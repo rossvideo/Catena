@@ -79,7 +79,7 @@ func TestPolyglotText_Get_MissingFallback(t *testing.T) {
 }
 
 func TestCommandReply(t *testing.T) {
-	val, _ := ToCatenaValue(int32(42))
+	val, _ := ToValue(int32(42))
 	result, status := CommandReply(val)
 
 	if status.Code != StatusCodeOk {
@@ -222,7 +222,7 @@ func TestCommandError_NilResponse(t *testing.T) {
 }
 
 func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
-	val, _ := ToCatenaValue("hello")
+	val, _ := ToValue("hello")
 	result, _ := CommandReply(val)
 	proto := result.GetProtoResponse()
 

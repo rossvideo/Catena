@@ -46,7 +46,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-func TestToCatenaValue(t *testing.T) {
+func TestToValue(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   any
@@ -68,19 +68,19 @@ func TestToCatenaValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cv, err := ToCatenaValue(tt.input)
+			cv, err := ToValue(tt.input)
 			if tt.wantErr {
 				if err.Code == StatusCodeOk {
-					t.Errorf("ToCatenaValue(%v) expected error, got nil", tt.input)
+					t.Errorf("ToValue(%v) expected error, got nil", tt.input)
 				}
 				return
 			}
 			if err.Code != StatusCodeOk {
-				t.Errorf("ToCatenaValue(%v) unexpected error: %v", tt.input, err.Error)
+				t.Errorf("ToValue(%v) unexpected error: %v", tt.input, err.Error)
 				return
 			}
 			if cv.Value == nil {
-				t.Errorf("ToCatenaValue(%v) returned nil Value", tt.input)
+				t.Errorf("ToValue(%v) returned nil Value", tt.input)
 			}
 		})
 	}
@@ -446,6 +446,84 @@ func TestRoundTrip_DataPayload(t *testing.T) {
 				t.Errorf("url mismatch: got %v, want %v", dp.Url, tt.input.Url)
 			}
 		})
+	}
+}
+
+func TestToProto_Nil(t *testing.T) {
+	_, res := ToProto(nil)
+	if res.Code == StatusCodeOk {
+		t.Error("ToProto(nil) expected error")
+	}
+}
+
+func TestToProto_TypedNil_Map(t *testing.T) {
+	_, res := ToProto((map[string]any)(nil))
+	if res.Code == StatusCodeOk {
+		t.Error("ToProto(nil map[string]any) expected error")
+	}
+}
+
+func TestToProto_TypedNil_StructArray(t *testing.T) {
+	_, res := ToProto(([]map[string]any)(nil))
+	if res.Code == StatusCodeOk {
+		t.Error("ToProto(nil []map[string]any) expected error")
+	}
+}
+
+func TestToProto_TypedNil_StructVariantArray(t *testing.T) {
+	_, res := ToProto(([]StructVariantValue)(nil))
+	if res.Code == StatusCodeOk {
+		t.Error("ToProto(nil []StructVariantValue) expected error")
+	}
+}
+
+func TestToProto_TypedNil_StructVariant(t *testing.T) {
+	sv := StructVariantValue{StructVariantType: "t", Value: nil}
+	_, res := ToProto(sv)
+	if res.Code == StatusCodeOk {
+		t.Error("ToProto(StructVariantValue with nil Value) expected error")
+	}
+}
+
+func TestToProto_EmptyStructArray(t *testing.T) {
+	pv, res := ToProto([]map[string]any{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("ToProto(empty []map[string]any) expected OK, got %v: %s", res.Code, res.Error)
+	}
+	sa := pv.GetStructArrayValues()
+	if sa == nil {
+		t.Fatal("expected StructArrayValues kind, got nil")
+	}
+	if len(sa.GetStructValues()) != 0 {
+		t.Errorf("expected 0 struct values, got %d", len(sa.GetStructValues()))
+	}
+}
+
+func TestToProto_EmptyStructVariantArray(t *testing.T) {
+	pv, res := ToProto([]StructVariantValue{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("ToProto(empty []StructVariantValue) expected OK, got %v: %s", res.Code, res.Error)
+	}
+	sva := pv.GetStructVariantArrayValues()
+	if sva == nil {
+		t.Fatal("expected StructVariantArrayValues kind, got nil")
+	}
+	if len(sva.GetStructVariants()) != 0 {
+		t.Errorf("expected 0 struct variants, got %d", len(sva.GetStructVariants()))
+	}
+}
+
+func TestToProto_EmptyMap(t *testing.T) {
+	_, res := ToProto(map[string]any{})
+	if res.Code == StatusCodeOk {
+		t.Error("ToProto(empty map[string]any) expected error")
+	}
+}
+
+func TestToProto_EmptyStructVariant(t *testing.T) {
+	_, res := ToProto(StructVariantValue{})
+	if res.Code == StatusCodeOk {
+		t.Error("ToProto(empty StructVariantValue) expected error")
 	}
 }
 
