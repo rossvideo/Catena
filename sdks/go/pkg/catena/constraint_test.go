@@ -256,3 +256,51 @@ func TestAlarmSeverityConstants(t *testing.T) {
 		}
 	}
 }
+
+func TestConstraintToMap_ForDeviceDefinition(t *testing.T) {
+	constraint := NewConstraintStringChoice(true, "SDI", "HDMI", "IP")
+
+	definition := constraint.ToMap()
+	if got, want := definition["type"], protos.Constraint_STRING_CHOICE; got != want {
+		t.Fatalf("expected type %v, got %v", want, got)
+	}
+	if _, ok := definition["string_choice"].(map[string]any); !ok {
+		t.Fatalf("expected string_choice definition, got %#v", definition["string_choice"])
+	}
+
+	device, err := ToDevice(map[string]any{
+		"slot":         uint32(0),
+		"detail_level": DetailLevelFull,
+		"constraints": map[string]any{
+			"input_source": definition,
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToDevice with Constraint.ToMap output error: %v", err)
+	}
+
+	stringChoice := device.GetProtoDevice().GetConstraints()["input_source"].GetStringChoice()
+	if stringChoice == nil {
+		t.Fatal("expected string_choice constraint")
+	}
+	if !stringChoice.GetStrict() {
+		t.Fatal("expected strict string choice")
+	}
+	if got := len(stringChoice.GetChoices()); got != 3 {
+		t.Fatalf("expected 3 choices, got %d", got)
+	}
+}
+
+func TestConstraintToMap_NilConstraint(t *testing.T) {
+	var constraint *Constraint
+	if definition := constraint.ToMap(); len(definition) != 0 {
+		t.Fatalf("expected empty map for nil Constraint, got %#v", definition)
+	}
+}
+
+func TestConstraintToMap_NilProto(t *testing.T) {
+	constraint := &Constraint{}
+	if definition := constraint.ToMap(); len(definition) != 0 {
+		t.Fatalf("expected empty map for Constraint with nil Proto, got %#v", definition)
+	}
+}

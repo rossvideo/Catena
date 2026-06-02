@@ -41,6 +41,7 @@ package catena
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -95,6 +96,14 @@ const (
 	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
 )
 
+// ToValue converts v into a Value with its own deep-copied backing data.
+//
+// For supported input types, the returned Value does not alias caller-owned
+// slices, maps, or payload buffers, so callers may release locks and freely
+// mutate or discard the original input after ToValue returns.
+//
+// Callers must still prevent concurrent mutation of v while this function is
+// running.
 func ToValue(v any) (Value, StatusResult) {
 	val, res := ToProto(v)
 	if res.Code != StatusCodeOk {
@@ -126,11 +135,11 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	case string:
 		return &protos.Value{Kind: &protos.Value_StringValue{StringValue: val}}, StatusResult{Code: StatusCodeOk}
 	case []int32:
-		return &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: val}}}, StatusResult{Code: StatusCodeOk}
+		return &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: slices.Clone(val)}}}, StatusResult{Code: StatusCodeOk}
 	case []float32:
-		return &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: val}}}, StatusResult{Code: StatusCodeOk}
+		return &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: slices.Clone(val)}}}, StatusResult{Code: StatusCodeOk}
 	case []string:
-		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: val}}}, StatusResult{Code: StatusCodeOk}
+		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: slices.Clone(val)}}}, StatusResult{Code: StatusCodeOk}
 	case map[string]any:
 		if len(val) == 0 {
 			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil or empty map[string]any"}

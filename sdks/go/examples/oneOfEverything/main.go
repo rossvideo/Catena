@@ -38,6 +38,22 @@
 
 package main
 
+// oneOfEverything is a reference server that demonstrates the Catena Go SDK end
+// to end. The same handler registrations serve both REST and gRPC transports.
+//
+// Adopter map — where to look:
+//   - main.go (this file): application state, device model (buildDeviceDefinition),
+//     server bootstrap, transports, embedded demo UI/assets
+//   - device_handler.go:     GetDevice handler registration
+//   - value_handlers.go:     GetValue / SetValue per slot (three dispatch styles)
+//   - param_info_handler.go: ParamInfo per slot (manual vs device-delegated)
+//   - command_handler.go:    ExecuteCommand (slot 0 counter commands)
+//   - asset_handler.go:      ExternalObject / asset download
+//   - access_handler.go:     coarse endpoint authorization gate
+//   - heartbeat_handler.go:  periodic BroadcastUpdate for quiet slots
+//
+// Run: go run . --use-rest [--use-grpc]   (authz disabled here for easy local testing)
+
 import (
 	"context"
 	"embed"
@@ -47,8 +63,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"reflect"
-	"strings"
+	"sort"
 	"sync"
 	"time"
 
@@ -58,21 +73,14 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
-// normalizeFqoid strips the leading "/" so that handlers can be called from
-// either gRPC (where the dashboard sends fully-qualified OIDs like "/brightness")
-// or REST (where path-derived OIDs arrive without a leading slash, e.g. "brightness").
-func normalizeFqoid(fqoid string) string {
-	return strings.TrimPrefix(fqoid, "/")
-}
-
 //go:embed static/*
-var StaticFS embed.FS
+var StaticFS embed.FS // binary assets served via GetAssetHandler (ExternalObjectRequest)
 
 //go:embed webui/*
-var webFS embed.FS
+var webFS embed.FS // demo dashboard; served by REST fallback handler, not Catena API
 
-type CommandHandler func(payload any) (catena.CommandResult, catena.StatusResult)
-
+// CounterState backs slot 0's live counter demo: a ticking value plus a
+// read-only "running" flag changed only by start/stop commands.
 type CounterState struct {
 	mu      sync.RWMutex
 	value   int32
@@ -124,6 +132,12 @@ func (c *CounterState) Reset() {
 	c.value = 0
 }
 
+func (c *CounterState) SetValue(value int32) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.value = value
+}
+
 func (c *CounterState) Increment() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -132,378 +146,182 @@ func (c *CounterState) Increment() {
 	}
 }
 
-var slotList = []uint16{0, 1, 2}
+var slotList = []uint16{0, 1, 2} // every handler file iterates this to register per-slot callbacks
 
-// int32ParamValue returns a Catena value{} map containing the int32 currently
-// stored at key in p, or fallback if the key is missing or the wrong type.
-// Used by BuildDevices so slot descriptors serve current values at GetDevice
-// time rather than init-time constants.
-func int32ParamValue(p *sync.Map, key string, fallback int32) map[string]any {
-	v := fallback
-	if raw, ok := p.Load(key); ok {
-		if iv, ok := raw.(int32); ok {
-			v = iv
-		}
-	}
-	return map[string]any{"int32_value": v}
+// ExampleState is the in-memory device model shared by all handlers. Each slot
+// intentionally uses a different storage style so adopters can pick a pattern:
+//   - slot 0 fields + CounterState: explicit typed fields, manual switch handlers
+//   - slot 1 slotOneParams sync.Map: map-backed params, direct key lookup
+//   - slot 2 typed fields + product map: prefix-based dispatch in value_handlers
+//
+// Slot 2's sample_* fields demonstrate the remaining Catena param types (except DATA).
+type ExampleState struct {
+	mu                       sync.RWMutex
+	slotZeroProduct          map[string]any
+	sampleIntArray           []int32
+	slotOneParams            *sync.Map
+	slotTwoProduct           map[string]any
+	volume                   int32
+	muted                    int32
+	deviceName               string
+	structExample            map[string]any
+	sampleFloat              float32
+	sampleFloatArray         []float32
+	sampleStringArray        []string
+	sampleBinary             []byte
+	sampleStructVariant      catena.StructVariantValue
+	sampleStructArray        []map[string]any
+	sampleStructVariantArray []catena.StructVariantValue
 }
 
-// stringParamValue is the string analogue of int32ParamValue.
-func stringParamValue(p *sync.Map, key string, fallback string) map[string]any {
-	v := fallback
-	if raw, ok := p.Load(key); ok {
-		if sv, ok := raw.(string); ok {
-			v = sv
-		}
+func NewExampleState() *ExampleState {
+	// Defaults here are what GetValue returns on first request and what
+	// buildDeviceDefinition embeds into each param's initial "value" field.
+	state := &ExampleState{
+		slotZeroProduct: map[string]any{
+			"name":    "Counter Slot 0 Product",
+			"vendor":  "Ross Video",
+			"version": "1.0.0",
+		},
+		sampleIntArray: []int32{1, 2, 3, 4},
+		slotOneParams:  &sync.Map{},
+		slotTwoProduct: map[string]any{
+			"name":               "Prefix Slot 2 Product",
+			"vendor":             "Ross Video",
+			"version":            "1.0.0",
+			"catena_sdk":         "github.com/rossvideo/catena/sdks/go",
+			"catena_sdk_version": "v0.1.0",
+			"serial_number":      "SN12345678",
+		},
+		volume:     75,
+		muted:      0,
+		deviceName: "Demo Device",
+		structExample: map[string]any{
+			"number": int32(2),
+			"text":   "Slot 2 struct",
+		},
+		sampleFloat:       3.14,
+		sampleFloatArray:  []float32{1.1, 2.2, 3.3},
+		sampleStringArray: []string{"alpha", "beta", "gamma"},
+		sampleBinary:      []byte{0xCA, 0xFE, 0xBA, 0xBE},
+		sampleStructVariant: catena.StructVariantValue{
+			StructVariantType: "int_kind",
+			Value:             int32(42),
+		},
+		sampleStructArray: []map[string]any{
+			{"label": "entry_a", "count": int32(1)},
+			{"label": "entry_b", "count": int32(2)},
+		},
+		sampleStructVariantArray: []catena.StructVariantValue{
+			{StructVariantType: "int_kind", Value: int32(10)},
+			{StructVariantType: "string_kind", Value: "hello"},
+		},
 	}
-	return map[string]any{"string_value": v}
+	state.slotOneParams.Store("resolution", "1920x1080")
+	state.slotOneParams.Store("brightness", int32(50))
+	state.slotOneParams.Store("contrast", int32(50))
+	state.slotOneParams.Store("saturation", int32(50))
+	return state
 }
 
-// BuildDevices returns the slot -> device-descriptor map. It is a function so
-// every param's "value" can be plugged in live at GetDevice time.
-func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[uint16]map[string]any {
-	s1 := slotParams[1]
-	s2 := slotParams[2]
-	return map[uint16]map[string]any{
-		0: {
-			"slot":              uint32(0),
-			"detail_level":      catena.DetailLevelFull,
-			"multi_set_enabled": true,
-			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-			"params": map[string]any{
-				"counter": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Counter",
-						},
-					},
-					"type": catena.ParamTypeInt32,
-					"value": map[string]any{
-						"int32_value": counter.GetValue(),
-					},
-				},
-				"running": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Counter Running Status",
-						},
-					},
-					"type":      catena.ParamTypeInt32,
-					"read_only": true,
-					"value": map[string]any{
-						"int32_value": counter.RunningInt32(),
-					},
-					"constraint": map[string]any{
-						"type": "INT_CHOICE",
-						"int32_choice": map[string]any{
-							"choices": []map[string]any{
-								{
-									"value": int32(0),
-									"name": map[string]any{
-										"display_strings": map[string]string{
-											"en": "Not Counting",
-										},
-									},
-								},
-								{
-									"value": int32(1),
-									"name": map[string]any{
-										"display_strings": map[string]string{
-											"en": "Counting",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"commands": map[string]any{
-				"start": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Start Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-				"stop": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Stop Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-				"add10": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Add 10 to Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-				"reset": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Reset Counter",
-						},
-					},
-					"type": catena.ParamTypeEmpty,
-				},
-			},
-			"menu_groups": map[string]any{
-				"status": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Status",
-						},
-					},
-					"order": 0,
-					"menus": map[string]any{
-						"status": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Status",
-								},
-							},
-							"param_oids": []string{"counter", "running"},
-						},
-					},
-				},
-				"config": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Configuration",
-						},
-					},
-					"order": 1,
-					"menus": map[string]any{
-						"control": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Control",
-								},
-							},
-							"command_oids": []string{"start", "stop", "add10", "reset"},
-						},
-					},
-				},
-			},
-		},
-		1: {
-			"slot":              uint32(1),
-			"detail_level":      catena.DetailLevelFull,
-			"multi_set_enabled": false,
-			"subscriptions":     true,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-			"params": map[string]any{
-				"product": map[string]any{
-					"type":      catena.ParamTypeStruct,
-					"read_only": true,
-					"params": map[string]any{
-						"name": map[string]any{
-							"type": catena.ParamTypeString,
-						},
-						"vendor": map[string]any{
-							"type": catena.ParamTypeString,
-						},
-						"version": map[string]any{
-							"type": catena.ParamTypeString,
-						},
-						"catena_sdk": map[string]any{
-							"type": catena.ParamTypeString,
-						},
-						"catena_sdk_version": map[string]any{
-							"type": catena.ParamTypeString,
-						},
-						"serial_number": map[string]any{
-							"type": catena.ParamTypeString,
-						},
-					},
-					"value": map[string]any{
-						"struct_value": map[string]any{
-							"fields": map[string]any{
-								"name": map[string]any{
-									"string_value": "One of Everything Demo",
-								},
-								"vendor": map[string]any{
-									"string_value": "Ross Video",
-								},
-								"version": map[string]any{
-									"string_value": "1.0.0",
-								},
-								"catena_sdk": map[string]any{
-									"string_value": "github.com/rossvideo/catena/sdks/go",
-								},
-								"catena_sdk_version": map[string]any{
-									"string_value": "v0.1.0", // TODO: SDK should expose
-								},
-								"serial_number": map[string]any{
-									"string_value": "SN12345678",
-								},
-							},
-						},
-					},
-				},
-				"resolution": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Resolution",
-						},
-					},
-					"type":  catena.ParamTypeString,
-					"value": stringParamValue(s1, "resolution", "1920x1080"),
-				},
-				"brightness": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Brightness",
-						},
-					},
-					"type":  catena.ParamTypeInt32,
-					"value": int32ParamValue(s1, "brightness", 50),
-				},
-				"contrast": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Contrast",
-						},
-					},
-					"type":  catena.ParamTypeInt32,
-					"value": int32ParamValue(s1, "contrast", 50),
-				},
-				"saturation": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Saturation",
-						},
-					},
-					"type":  catena.ParamTypeInt32,
-					"value": int32ParamValue(s1, "saturation", 50),
-				},
-			},
-			"menu_groups": map[string]any{
-				"status": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Status",
-						},
-					},
-					"order": 0,
-					"menus": map[string]any{
-						"status": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Status",
-								},
-							},
-							"param_oids": []string{"resolution"},
-						},
-					},
-				},
-				"config": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Configuration",
-						},
-					},
-					"order": 1,
-					"menus": map[string]any{
-						"picture": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Picture",
-								},
-							},
-							"param_oids": []string{"brightness", "contrast", "saturation"},
-						},
-					},
-				},
-			},
-		},
-		2: {
-			"slot":              uint32(2),
-			"detail_level":      catena.DetailLevelFull,
-			"multi_set_enabled": true,
-			"subscriptions":     false,
-			"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-			"default_scope":     "st2138:op",
-			"params": map[string]any{
-				"volume": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Volume",
-						},
-					},
-					"type":  catena.ParamTypeInt32,
-					"value": int32ParamValue(s2, "volume", 75),
-				},
-				"muted": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Muted",
-						},
-					},
-					"type":  catena.ParamTypeInt32,
-					"value": int32ParamValue(s2, "muted", 0),
-				},
-				"device_name": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Device Name",
-						},
-					},
-					"type":  catena.ParamTypeString,
-					"value": stringParamValue(s2, "device_name", "Demo Device"),
-				},
-			},
-			"menu_groups": map[string]any{
-				"status": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Status",
-						},
-					},
-					"order": 0,
-					"menus": map[string]any{
-						"identity": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Identity",
-								},
-							},
-							"param_oids": []string{"device_name"},
-						},
-					},
-				},
-				"config": map[string]any{
-					"name": map[string]any{
-						"display_strings": map[string]string{
-							"en": "Configuration",
-						},
-					},
-					"order": 1,
-					"menus": map[string]any{
-						"audio": map[string]any{
-							"name": map[string]any{
-								"display_strings": map[string]string{
-									"en": "Audio",
-								},
-							},
-							"param_oids": []string{"volume", "muted"},
-						},
-					},
-				},
-			},
-		},
+func (s *ExampleState) sampleIntArrayValue() []int32 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.sampleIntArray
+}
+
+func (s *ExampleState) slotZeroProductValue(fqoid string) (any, bool) {
+	// Slot 0 product subtree lookup; called from value_handlers case switch.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	switch fqoid {
+	case "product":
+		return s.slotZeroProduct, true
+	case "product/name":
+		value, ok := s.slotZeroProduct["name"]
+		return value, ok
+	case "product/vendor":
+		value, ok := s.slotZeroProduct["vendor"]
+		return value, ok
+	case "product/version":
+		value, ok := s.slotZeroProduct["version"]
+		return value, ok
+	default:
+		return nil, false
 	}
+}
+
+func (s *ExampleState) slotTwoProductValue(fqoid string) (any, bool) {
+	// Slot 2 product subtree lookup; prefix-dispatched from value_handlers.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	switch fqoid {
+	case "product":
+		return s.slotTwoProduct, true
+	case "product/name":
+		value, ok := s.slotTwoProduct["name"]
+		return value, ok
+	case "product/vendor":
+		value, ok := s.slotTwoProduct["vendor"]
+		return value, ok
+	case "product/version":
+		value, ok := s.slotTwoProduct["version"]
+		return value, ok
+	case "product/catena_sdk":
+		value, ok := s.slotTwoProduct["catena_sdk"]
+		return value, ok
+	case "product/catena_sdk_version":
+		value, ok := s.slotTwoProduct["catena_sdk_version"]
+		return value, ok
+	case "product/serial_number":
+		value, ok := s.slotTwoProduct["serial_number"]
+		return value, ok
+	default:
+		return nil, false
+	}
+}
+
+func (s *ExampleState) sampleFloatArrayValue() []float32 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.sampleFloatArray
+}
+
+func (s *ExampleState) sampleStringArrayValue() []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.sampleStringArray
+}
+
+func (s *ExampleState) sampleStructArrayValue() []map[string]any {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.sampleStructArray
+}
+
+func (s *ExampleState) sampleStructVariantArrayValue() []catena.StructVariantValue {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.sampleStructVariantArray
+}
+
+func sortedAssetIDs(assets *sync.Map) []string {
+	var ids []string
+	assets.Range(func(key, _ any) bool {
+		if id, ok := key.(string); ok {
+			ids = append(ids, id)
+		}
+		return true
+	})
+	sort.Strings(ids)
+	return ids
 }
 
 func main() {
+	// --- Configuration & logging ---
+	// Flags/env: --use-rest, --use-grpc, --authz, log level, etc. See config.InitOptions.
 	options, err := config.InitOptions("oneofeverything", os.Args[1:])
 	if err != nil {
 		if errors.Is(err, config.ErrHelp) {
@@ -511,6 +329,7 @@ func main() {
 		}
 		os.Exit(1)
 	}
+	options.Server.AuthzEnabled = false // disable JWT scope checks for local demo use
 	closeLogger, err := logger.Init(options.Logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
@@ -525,22 +344,15 @@ func main() {
 		logger.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
 	}
-	counter := &CounterState{}
-	slotParams := map[uint16]*sync.Map{
-		0: {},
-		1: {},
-		2: {},
-	}
-	slotParams[0].Store("counter", int32(0))
-	slotParams[1].Store("resolution", "1920x1080")
-	slotParams[1].Store("brightness", int32(50))
-	slotParams[1].Store("contrast", int32(50))
-	slotParams[1].Store("saturation", int32(50))
-	slotParams[2].Store("volume", int32(75))
-	slotParams[2].Store("muted", int32(0))
-	slotParams[2].Store("device_name", "Demo Device")
-	counterScope := catena.ScopeCfg
 
+	// --- Application state ---
+	// Handlers receive these pointers; mutations here are what Get/SetValue expose.
+	counter := &CounterState{}
+	state := NewExampleState()
+	counterScope := catena.ScopeCfg // scope tag on counter BroadcastUpdate ticks
+
+	// Background goroutine: increment counter every second while running and push
+	// updates to SSE/gRPC subscribers. Command handler toggles running via broadcastRunning.
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
@@ -560,50 +372,6 @@ func main() {
 		srv.BroadcastUpdate(0, "running", counter.RunningInt32(), catena.ScopeMon)
 	}
 
-	commands := map[string]CommandHandler{
-		"start": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			if counter.IsRunning() {
-				logger.Info("Start command - already running")
-			} else {
-				counter.Start()
-				logger.Info("Counter started", "value", counter.GetValue())
-				broadcastRunning()
-			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
-		},
-
-		"stop": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			if !counter.IsRunning() {
-				logger.Info("Stop command - already stopped")
-			} else {
-				counter.Stop()
-				logger.Info("Counter stopped", "value", counter.GetValue())
-				broadcastRunning()
-			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
-		},
-
-		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			counter.Add(10)
-			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
-		},
-
-		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
-			counter.Reset()
-			logger.Info("Counter reset", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
-		},
-	}
-
 	assets := &sync.Map{}
 	payloads, err := catena.LoadPayloadsFromEmbed(StaticFS, "static")
 	if err != nil {
@@ -613,237 +381,18 @@ func main() {
 	for id, payload := range payloads {
 		assets.Store(id, payload)
 	}
+	assetIDs := sortedAssetIDs(assets)
 
-	srv.RegisterAccessHandler(func(endpointType catena.EndpointType, ctx catena.HandlerContext) bool {
-		logger.Info("Access request", "endpointType", endpointType)
-		// In a real implementation, you'd check the client's credentials and scopes here.
-		return true
-	})
-
-	for _, slot := range slotList {
-		srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
-			logger.Info("GetDevice", "slot", slot)
-
-			// Build per-request so every param's value reflects current state:
-			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
-			if !ok {
-				return catena.ReplyError[catena.Device](catena.StatusCodeNotFound, "device not found")
-			}
-			device, err := catena.ToDevice(deviceInfo)
-			if err != nil {
-				return catena.ReplyError[catena.Device](catena.StatusCodeInternal, err.Error())
-			}
-			return catena.Reply(device)
-		})
-	}
-
-	for _, slot := range slotList {
-		p := slotParams[slot]
-
-		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {
-			logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
-			key := normalizeFqoid(fqoid)
-
-			//Shows how to restrict scope access to specific slots.
-			if slot == 1 && !ctx.HasReadScope(catena.ScopeMon) {
-				return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "monitor scope required")
-			} else if slot == 0 && !ctx.HasReadScope(catena.ScopeCfg) {
-				return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "configuration scope required")
-			}
-
-			if slot == 0 && key == "counter" {
-				val, res := catena.ToValue(counter.GetValue())
-				if res.Code != catena.StatusCodeOk {
-					return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert counter value")
-				}
-				return catena.Reply(val)
-			}
-
-			// "running" is a status param backed by CounterState; report the
-			// live state instead of any cached slot-param value.
-			if slot == 0 && key == "running" {
-				val, res := catena.ToValue(counter.RunningInt32())
-				if res.Code != catena.StatusCodeOk {
-					return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert running value")
-				}
-				return catena.Reply(val)
-			}
-
-			v, ok := p.Load(key)
-			if !ok {
-				return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
-			}
-			catenaVal, res := catena.ToValue(v)
-			if res.Code != catena.StatusCodeOk {
-				return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert value")
-			}
-			return catena.Reply(catenaVal)
-		})
-	}
-
-	for _, slot := range slotList {
-		p := slotParams[slot]
-
-		// A single SetValueHandler covers both single and multi set requests:
-		// single endpoints deliver a one-element slice, multi endpoints deliver
-		// the full slice. Validate every entry before applying any so the batch
-		// is all-or-nothing.
-		srv.RegisterSetValueHandler(slot, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-			logger.Info("SetValue", "slot", slot, "count", len(entries))
-
-			// Validate pass: check every entry before applying any changes.
-			for _, entry := range entries {
-				key := normalizeFqoid(entry.Fqoid)
-
-				if entry.Value == nil {
-					logger.Error("SetValue nil value", "slot", slot, "fqoid", entry.Fqoid)
-					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value for "+entry.Fqoid)
-				}
-
-				// "running" is driven by start/stop commands, not direct writes,
-				// so reject SetValue with a clear hint to avoid silent drift
-				// between CounterState and the slot-param cache.
-				if slot == 0 && key == "running" {
-					logger.Warning("SetValue rejected for running param", "slot", slot, "fqoid", entry.Fqoid)
-					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "use start/stop commands to change running state")
-				}
-
-				existing, ok := p.Load(key)
-				if !ok {
-					logger.Error("SetValue param not found", "slot", slot, "fqoid", entry.Fqoid)
-					return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+entry.Fqoid)
-				}
-
-				if reflect.TypeOf(existing) != reflect.TypeOf(entry.Value) {
-					logger.Error("SetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid,
-						"expected", reflect.TypeOf(existing), "got", reflect.TypeOf(entry.Value))
-					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch for "+entry.Fqoid)
-				}
-			}
-
-			// Apply pass: all entries validated, store and broadcast.
-			for _, entry := range entries {
-				key := normalizeFqoid(entry.Fqoid)
-				p.Store(key, entry.Value)
-				logger.Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
-				srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeMon)
-			}
-
-			return catena.StatusWithCode(catena.StatusCodeOk, "")
-		})
-	}
-
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx catena.HandlerContext) (catena.CommandResult, catena.StatusResult) {
-		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
-		key := normalizeFqoid(commandFqoid)
-
-		handler, ok := commands[key]
-		if !ok {
-			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.CommandExceptionResult("Invalid Command", "Command not found: "+commandFqoid, nil)
-		}
-
-		return handler(payload)
-	})
-
-	for _, slot := range slotList {
-		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Asset, catena.StatusResult) {
-			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
-			key := normalizeFqoid(fqoid)
-
-			val, ok := assets.Load(key)
-			if !ok {
-				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-				return catena.ReplyError[catena.Asset](catena.StatusCodeNotFound, "asset not found: "+fqoid)
-			}
-
-			payload := val.(catena.DataPayload)
-
-			catenaAsset, res := catena.ToAsset(payload, true)
-			if res.Code != catena.StatusCodeOk {
-				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
-				return catena.ReplyError[catena.Asset](catena.StatusCodeInternal, "failed to convert asset: "+res.Error)
-			}
-
-			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
-			return catena.Reply(catenaAsset)
-		})
-	}
-
-	for _, slot := range slotList {
-		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext) ([]catena.ParamInfo, catena.StatusResult) {
-			if recursive {
-				// TODO: implement recursive param info retrieval in example
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeUnimplemented, "recursive param info not implemented in example")
-			}
-			logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid)
-			key := normalizeFqoid(fqoid)
-			pathParts := strings.Split(key, "/")
-
-			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
-			if !ok {
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
-			}
-
-			params, ok := deviceInfo["params"].(map[string]any)
-			if !ok {
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeInternal, "invalid device params structure")
-			}
-
-			var paramInfo map[string]any
-			found := false
-			for _, part := range pathParts {
-				if params == nil {
-					return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
-				}
-				nextParam, exists := params[part]
-				if !exists {
-					return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
-				}
-
-				paramInfo, ok = nextParam.(map[string]any)
-				if !ok {
-					return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
-				}
-				found = true
-
-				if nested, hasNested := paramInfo["params"]; hasNested {
-					params, _ = nested.(map[string]any)
-				} else {
-					params = nil
-				}
-			}
-
-			if !found {
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
-			}
-
-			oid := pathParts[len(pathParts)-1]
-			name := catena.PolyglotText{}
-			if paramInfo["name"] != nil {
-				for lang, text := range paramInfo["name"].(map[string]any)["display_strings"].(map[string]string) {
-					name.With(lang, text)
-				}
-			}
-			catenaParamInfo := catena.NewParamInfo(oid, name, paramInfo["type"].(catena.ParamType), "", 0)
-			return []catena.ParamInfo{catenaParamInfo}, catena.StatusWithCode(catena.StatusCodeOk, "")
-		})
-	}
-
-	// counter ticks often enough in slot 0 that a heartbeat isn't needed.
-
-	srv.RegisterHeartbeatHandler(1, func(slot uint16) {
-		// example ticking on the cannonical "product/version" param
-		srv.BroadcastUpdate(1, "product/version", "1.0.0", catena.ScopeMon)
-	})
-	srv.RegisterHeartbeatHandler(2, func(slot uint16) {
-		// example ticking on a different param to show any can be used for heartbeats.
-		if val, ok := slotParams[2].Load("volume"); ok {
-			srv.BroadcastUpdate(2, "volume", val, catena.ScopeMon)
-		} else {
-			logger.Warning("Volume param missing at heartbeat", "slot", slot)
-		}
-	})
+	// --- Handler registration ---
+	// Each register* function wires one Catena endpoint family. Transports call
+	// these through the SDK runtime; you do not implement HTTP/gRPC routing here.
+	registerAccessHandler(srv)                                           // EndpointAccess gate
+	registerDeviceHandlers(srv, counter, state)                          // GetDevice → buildDeviceDefinition
+	registerValueHandlers(srv, counter, state)                           // GetValue / SetValue
+	registerCommandHandler(srv, counter, broadcastRunning, counterScope) // ExecuteCommand
+	registerAssetHandlers(srv, assets)                                   // ExternalObjectRequest
+	registerParamInfoHandlers(srv, counter, state)                       // ParamInfoRequest
+	registerHeartbeatHandlers(srv, state)                                // periodic BroadcastUpdate
 
 	srv.StartHeartbeat(5 * time.Second)
 
@@ -870,17 +419,31 @@ func main() {
 		connectionPropsURL = ""
 	}
 
-	// Register the enabled transports.
+	sampleAsset := ""
+	if len(assetIDs) > 0 {
+		sampleAsset = assetIDs[0]
+	}
+
+	// --- Transports ---
+	// Register one or both; the same handlers serve REST (port 8080) and gRPC (6254).
 	if options.UseGrpc {
+		// Reflection enabled so grpcurl works without -proto (local demo only).
 		if err := srv.RegisterTransport(transports.NewGrpcTransport(options.Grpc)); err != nil {
 			logger.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
+		logGrpcEndpointGuide("localhost:6254", sampleAsset)
+	} else {
+		logger.Info("gRPC transport disabled by config")
 	}
 
 	if options.UseRest {
 		restTransport := transports.NewRestTransport(options.Rest)
 
+		// RegisterFallbackHandler is for custom HTTP routes that are not part of
+		// the Catena API. SDK endpoints are still handled by the REST transport;
+		// this fallback only serves the demo UI and an asset index convenience
+		// route when no SDK route matched.
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
@@ -924,6 +487,17 @@ func main() {
 			logger.Error("Failed to register REST transport", "error", err)
 			os.Exit(1)
 		}
+
+		logRestEndpointGuide(sampleAsset)
+		if len(assetIDs) > 0 {
+			logger.Info("")
+			logger.Info("Available assets:")
+			for _, id := range assetIDs {
+				logger.Info(fmt.Sprintf("  %s", id))
+			}
+		}
+	} else {
+		logger.Info("REST transport disabled by config")
 	}
 
 	// Startup summary: header, then one section per transport/service with an
@@ -963,7 +537,7 @@ func main() {
 	logger.Info("")
 	logger.Info("=======================================================")
 
-	// setup
+	// Block until Ctrl+C, then shut down transports and streaming connections.
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 

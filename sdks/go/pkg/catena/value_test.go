@@ -873,6 +873,306 @@ func TestToProto_StructVariantArrayError(t *testing.T) {
 	}
 }
 
+// TestToProto_CopiesInputData verifies that ToProto clones mutable input data.
+// Mutating the input after conversion must not change the resulting proto Value.
+func TestToProto_CopiesInputData(t *testing.T) {
+	tests := []struct {
+		name   string
+		assert func(t *testing.T)
+	}{
+		{
+			name: "int32",
+			assert: func(t *testing.T) {
+				var input int32 = 42
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input = 99
+				if pv.GetInt32Value() != 42 {
+					t.Errorf("expected int32 value copy, got %d", pv.GetInt32Value())
+				}
+			},
+		},
+		{
+			name: "float32",
+			assert: func(t *testing.T) {
+				var input float32 = 3.14
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input = 9.99
+				if pv.GetFloat32Value() != 3.14 {
+					t.Errorf("expected float32 value copy, got %v", pv.GetFloat32Value())
+				}
+			},
+		},
+		{
+			name: "string",
+			assert: func(t *testing.T) {
+				input := "hello"
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input = "mutated"
+				if pv.GetStringValue() != "hello" {
+					t.Errorf("expected string value copy, got %q", pv.GetStringValue())
+				}
+			},
+		},
+		{
+			name: "[]int32",
+			assert: func(t *testing.T) {
+				slice := []int32{1, 2, 3}
+				pv, res := ToProto(slice)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				slice[0] = 99
+				if pv.GetInt32ArrayValues().GetInts()[0] != 1 {
+					t.Errorf("expected []int32 copy, proto[0]=%d after input mutation", pv.GetInt32ArrayValues().GetInts()[0])
+				}
+			},
+		},
+		{
+			name: "[]float32",
+			assert: func(t *testing.T) {
+				slice := []float32{1.1, 2.2}
+				pv, res := ToProto(slice)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				slice[0] = 9.9
+				if pv.GetFloat32ArrayValues().GetFloats()[0] != 1.1 {
+					t.Errorf("expected []float32 copy, proto[0]=%v after input mutation", pv.GetFloat32ArrayValues().GetFloats()[0])
+				}
+			},
+		},
+		{
+			name: "[]string",
+			assert: func(t *testing.T) {
+				slice := []string{"a", "b"}
+				pv, res := ToProto(slice)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				slice[0] = "mutated"
+				if pv.GetStringArrayValues().GetStrings()[0] != "a" {
+					t.Errorf("expected []string copy, proto[0]=%q after input mutation", pv.GetStringArrayValues().GetStrings()[0])
+				}
+			},
+		},
+		{
+			name: "map[string]any",
+			assert: func(t *testing.T) {
+				input := map[string]any{
+					"x": int32(1),
+					"y": "alpha",
+				}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input["x"] = int32(2)
+				input["z"] = int32(3)
+				fields := pv.GetStructValue().GetFields()
+				if fields["x"].GetInt32Value() != 1 {
+					t.Errorf("expected struct field x to remain 1, got %d", fields["x"].GetInt32Value())
+				}
+				if _, ok := fields["z"]; ok {
+					t.Error("expected struct fields map to be independent of input map mutations")
+				}
+			},
+		},
+		{
+			name: "map[string]any nested []int32",
+			assert: func(t *testing.T) {
+				nested := []int32{1, 2}
+				input := map[string]any{"arr": nested}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				nested[0] = 99
+				got := pv.GetStructValue().GetFields()["arr"].GetInt32ArrayValues().GetInts()[0]
+				if got != 1 {
+					t.Errorf("expected nested []int32 copy, proto[0]=%d after input mutation", got)
+				}
+			},
+		},
+		{
+			name: "[]map[string]any",
+			assert: func(t *testing.T) {
+				input := []map[string]any{
+					{"id": int32(1)},
+				}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input[0]["id"] = int32(99)
+				input = append(input, map[string]any{"id": int32(2)})
+				list := pv.GetStructArrayValues().GetStructValues()
+				if list[0].GetFields()["id"].GetInt32Value() != 1 {
+					t.Errorf("expected first struct id to remain 1, got %d", list[0].GetFields()["id"].GetInt32Value())
+				}
+				if len(list) != 1 {
+					t.Errorf("expected struct array length 1, got %d", len(list))
+				}
+			},
+		},
+		{
+			name: "[]map[string]any nested []int32",
+			assert: func(t *testing.T) {
+				nested := []int32{1, 2}
+				input := []map[string]any{{"arr": nested}}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				nested[0] = 99
+				got := pv.GetStructArrayValues().GetStructValues()[0].
+					GetFields()["arr"].GetInt32ArrayValues().GetInts()[0]
+				if got != 1 {
+					t.Errorf("expected nested []int32 copy, proto[0]=%d after input mutation", got)
+				}
+			},
+		},
+		{
+			name: "StructVariantValue",
+			assert: func(t *testing.T) {
+				input := StructVariantValue{
+					StructVariantType: "variant",
+					Value:             int32(7),
+				}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input.StructVariantType = "mutated"
+				input.Value = int32(99)
+				sv := pv.GetStructVariantValue()
+				if sv.GetStructVariantType() != "variant" {
+					t.Errorf("expected struct variant type copy, got %q", sv.GetStructVariantType())
+				}
+				if sv.GetValue().GetInt32Value() != 7 {
+					t.Errorf("expected struct variant value copy, got %d", sv.GetValue().GetInt32Value())
+				}
+			},
+		},
+		{
+			name: "StructVariantValue nested []string",
+			assert: func(t *testing.T) {
+				nested := []string{"a", "b"}
+				input := StructVariantValue{
+					StructVariantType: "variant",
+					Value:             nested,
+				}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				nested[0] = "mutated"
+				got := pv.GetStructVariantValue().GetValue().
+					GetStringArrayValues().GetStrings()[0]
+				if got != "a" {
+					t.Errorf("expected nested []string copy, proto[0]=%q after input mutation", got)
+				}
+			},
+		},
+		{
+			name: "[]StructVariantValue",
+			assert: func(t *testing.T) {
+				input := []StructVariantValue{
+					{StructVariantType: "A", Value: int32(1)},
+				}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input[0].StructVariantType = "mutated"
+				input[0].Value = int32(99)
+				input = append(input, StructVariantValue{StructVariantType: "B", Value: int32(2)})
+				list := pv.GetStructVariantArrayValues().GetStructVariants()
+				if len(list) != 1 {
+					t.Fatalf("expected struct variant array length 1, got %d", len(list))
+				}
+				if list[0].GetStructVariantType() != "A" {
+					t.Errorf("expected first variant type copy, got %q", list[0].GetStructVariantType())
+				}
+				if list[0].GetValue().GetInt32Value() != 1 {
+					t.Errorf("expected first variant value copy, got %d", list[0].GetValue().GetInt32Value())
+				}
+			},
+		},
+		{
+			name: "DataPayload.Payload",
+			assert: func(t *testing.T) {
+				payload := []byte("hello")
+				input := DataPayload{Payload: payload}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				payload[0] = 'X'
+				if pv.GetDataPayload().GetPayload()[0] != 'h' {
+					t.Errorf("expected DataPayload.Payload copy, proto[0]=%q after input mutation", pv.GetDataPayload().GetPayload()[0])
+				}
+			},
+		},
+		{
+			name: "DataPayload.Digest",
+			assert: func(t *testing.T) {
+				digest := []byte{0x01, 0x02}
+				input := DataPayload{Payload: []byte("data"), Digest: digest}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				digest[0] = 0xff
+				if pv.GetDataPayload().GetDigest()[0] != 0x01 {
+					t.Errorf("expected DataPayload.Digest copy, proto[0]=%#x after input mutation", pv.GetDataPayload().GetDigest()[0])
+				}
+			},
+		},
+		{
+			name: "DataPayload.Metadata",
+			assert: func(t *testing.T) {
+				metadata := map[string]string{"content-type": "text/plain"}
+				input := DataPayload{Payload: []byte("data"), Metadata: metadata}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				metadata["content-type"] = "application/json"
+				if pv.GetDataPayload().GetMetadata()["content-type"] != "text/plain" {
+					t.Errorf("expected DataPayload.Metadata copy, got %q after input mutation", pv.GetDataPayload().GetMetadata()["content-type"])
+				}
+			},
+		},
+		{
+			name: "DataPayload.Url",
+			assert: func(t *testing.T) {
+				input := DataPayload{Url: "https://example.com"}
+				pv, res := ToProto(input)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("ToProto error: %s", res.Error)
+				}
+				input.Url = "https://mutated.example.com"
+				if pv.GetDataPayload().GetUrl() != "https://example.com" {
+					t.Errorf("expected DataPayload.Url copy, got %q", pv.GetDataPayload().GetUrl())
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.assert)
+	}
+}
+
 func TestParamTypeConstants(t *testing.T) {
 	// Verify ParamType constants are properly aliased
 	tests := []struct {
