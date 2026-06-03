@@ -244,7 +244,7 @@ func (cp *Param) WithConstraint(c *Constraint) *Param {
 	if c == nil || c.Proto == nil {
 		return cp
 	}
-	if !isConstraintValidForParam(c.Proto, cp.Proto.Type) {
+	if !isConstraintValidForParam(c, cp.Proto.Type) {
 		logger.Warning("WithConstraint: constraint type incompatible with param type; ignoring",
 			"constraint_type", c.Proto.GetType().String(),
 			"param_type", cp.Proto.Type.String())
@@ -469,8 +469,8 @@ func paramTypeFromValueKind(v *protos.Value) protos.ParamType {
 // with the given ParamType. RefOid constraints are always valid. Scalar
 // constraints are also valid on their corresponding array param type
 // (e.g. Int32Range on INT32 or INT32_ARRAY).
-func isConstraintValidForParam(c *protos.Constraint, pt protos.ParamType) bool {
-	switch c.Kind.(type) {
+func isConstraintValidForParam(c *Constraint, pt protos.ParamType) bool {
+	switch c.Proto.Kind.(type) {
 	case *protos.Constraint_RefOid:
 		return true
 	case *protos.Constraint_Int32Range, *protos.Constraint_Int32Choice, *protos.Constraint_AlarmTable:

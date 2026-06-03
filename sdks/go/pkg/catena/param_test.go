@@ -1016,7 +1016,7 @@ func TestParamTypeFromValueKind_UndefinedValue(t *testing.T) {
 }
 
 func TestIsConstraintValidForParam_NilKind(t *testing.T) {
-	c := &protos.Constraint{}
+	c := &Constraint{Proto: &protos.Constraint{}}
 	if isConstraintValidForParam(c, protos.ParamType_INT32) {
 		t.Error("expected constraint with nil Kind to be invalid")
 	}
