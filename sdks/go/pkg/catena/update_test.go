@@ -31,29 +31,9 @@
 package catena
 
 import (
-	"errors"
-	"os"
+	"strings"
 	"testing"
 )
-
-func uploadPayload(data DataPayload, metadata []map[string]any) map[string]any {
-	return map[string]any{
-		"metadata": metadata,
-		"data":     data,
-	}
-}
-
-func replyInt32(t *testing.T, r CommandResult) int32 {
-	t.Helper()
-	proto := r.GetProtoResponse()
-	if proto == nil {
-		t.Fatal("expected a CommandResponse, got nil")
-	}
-	if r.IsException() {
-		t.Fatalf("expected reply, got exception: %v", r.GetException())
-	}
-	return proto.GetResponse().GetInt32Value()
-}
 
 func TestToDevice_InjectsReservedCommands(t *testing.T) {
 	deviceMap := map[string]any{
@@ -120,180 +100,28 @@ func TestToDevice_InjectsReservedCommandsWhenNoneDefined(t *testing.T) {
 	}
 }
 
-func TestUpdateManager_UploadApplyRoundTrip(t *testing.T) {
-	dir := t.TempDir()
-	m := newUpdateManager(dir, nil)
+func TestToDevice_RejectsReservedCommandDefinition(t *testing.T) {
+	for _, reserved := range []string{ReservedOidUploadUpdate, ReservedOidApplyUpdate} {
+		t.Run(reserved, func(t *testing.T) {
+			deviceMap := map[string]any{
+				"slot": uint32(0),
+				"commands": map[string]any{
+					reserved: map[string]any{
+						"name": map[string]any{
+							"display_strings": map[string]string{"en": "Custom"},
+						},
+						"type": ParamTypeEmpty,
+					},
+				},
+			}
 
-	metadata := []map[string]any{
-		{"key": "version", "value": "1.2.3"},
-		{"key": "vendor", "value": "Ross"},
-	}
-	payload := uploadPayload(DataPayload{Payload: []byte("firmware-bytes")}, metadata)
-
-	uploadResult, status := m.handleUpload(payload)
-	if status.Code != OK {
-		t.Fatalf("handleUpload status: %v", status.Error)
-	}
-	id := replyInt32(t, uploadResult)
-	if id != 1 {
-		t.Fatalf("expected first update id 1, got %d", id)
-	}
-
-	stored := m.updates[id]
-	if stored == nil {
-		t.Fatal("expected update to be stored")
-	}
-	if stored.Metadata["version"] != "1.2.3" {
-		t.Errorf("expected metadata version 1.2.3, got %q", stored.Metadata["version"])
-	}
-	if _, err := os.Stat(stored.DataPath); err != nil {
-		t.Fatalf("expected update file to exist: %v", err)
-	}
-
-	applyResult, status := m.handleApply(map[string]any{"id": id})
-	if status.Code != OK {
-		t.Fatalf("handleApply status: %v", status.Error)
-	}
-	if progress := replyInt32(t, applyResult); progress != 100 {
-		t.Errorf("expected apply progress 100, got %d", progress)
-	}
-}
-
-func TestUpdateManager_UploadAssignsIncrementingIDs(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-	payload := uploadPayload(DataPayload{Payload: []byte("x")}, nil)
-
-	first, _ := m.handleUpload(payload)
-	second, _ := m.handleUpload(payload)
-
-	if replyInt32(t, first) != 1 || replyInt32(t, second) != 2 {
-		t.Error("expected incrementing update ids 1, 2")
-	}
-}
-
-func TestUpdateManager_UploadURLOnly(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-	payload := uploadPayload(DataPayload{Url: "https://example.com/fw.bin"}, nil)
-
-	uploadResult, status := m.handleUpload(payload)
-	if status.Code != OK {
-		t.Fatalf("handleUpload status: %v", status.Error)
-	}
-	id := replyInt32(t, uploadResult)
-	if m.updates[id].URL != "https://example.com/fw.bin" {
-		t.Error("expected URL to be stored")
-	}
-
-	applyResult, _ := m.handleApply(map[string]any{"id": id})
-	if applyResult.IsException() {
-		t.Errorf("expected URL-based apply to succeed, got exception: %v", applyResult.GetException())
-	}
-}
-
-func TestUpdateManager_UploadInvalidPayload(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-
-	result, _ := m.handleUpload("not-a-struct")
-	if !result.IsException() {
-		t.Fatal("expected exception for non-struct payload")
-	}
-	if result.GetException().GetType() != "InvalidPayload" {
-		t.Errorf("expected InvalidPayload, got %q", result.GetException().GetType())
-	}
-}
-
-func TestUpdateManager_UploadEmptyData(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-
-	result, _ := m.handleUpload(uploadPayload(DataPayload{}, nil))
-	if !result.IsException() {
-		t.Fatal("expected exception for empty data")
-	}
-}
-
-func TestUpdateManager_UploadMissingDataField(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-
-	result, _ := m.handleUpload(map[string]any{"metadata": []map[string]any{}})
-	if !result.IsException() {
-		t.Fatal("expected exception when data field is missing")
-	}
-}
-
-func TestUpdateManager_ApplyUnknownID(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-
-	result, _ := m.handleApply(map[string]any{"id": int32(999)})
-	if !result.IsException() {
-		t.Fatal("expected exception for unknown update id")
-	}
-	if result.GetException().GetType() != "UnknownUpdate" {
-		t.Errorf("expected UnknownUpdate, got %q", result.GetException().GetType())
-	}
-}
-
-func TestUpdateManager_ApplyMissingID(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-
-	result, _ := m.handleApply(map[string]any{})
-	if !result.IsException() {
-		t.Fatal("expected exception when id is missing")
-	}
-}
-
-func TestUpdateManager_ApplyCustomFuncError(t *testing.T) {
-	called := false
-	m := newUpdateManager(t.TempDir(), func(u *Update) error {
-		called = true
-		return errors.New("bootloader rejected image")
-	})
-
-	upload, _ := m.handleUpload(uploadPayload(DataPayload{Payload: []byte("fw")}, nil))
-	id := replyInt32(t, upload)
-
-	result, _ := m.handleApply(map[string]any{"id": id})
-	if !called {
-		t.Error("expected custom ApplyUpdateFunc to be invoked")
-	}
-	if !result.IsException() {
-		t.Fatal("expected exception when apply func fails")
-	}
-	if result.GetException().GetType() != "UpdateFailed" {
-		t.Errorf("expected UpdateFailed, got %q", result.GetException().GetType())
-	}
-}
-
-func TestUpdateManager_ExecuteDispatch(t *testing.T) {
-	m := newUpdateManager(t.TempDir(), nil)
-
-	// Leading-slash form (REST) should normalize to the same OID.
-	upload, status := m.execute("/"+ReservedOidUploadUpdate, uploadPayload(DataPayload{Payload: []byte("fw")}, nil))
-	if status.Code != OK {
-		t.Fatalf("execute upload status: %v", status.Error)
-	}
-	id := replyInt32(t, upload)
-
-	apply, status := m.execute(ReservedOidApplyUpdate, map[string]any{"id": id})
-	if status.Code != OK {
-		t.Fatalf("execute apply status: %v", status.Error)
-	}
-	if replyInt32(t, apply) != 100 {
-		t.Error("expected apply progress 100")
-	}
-}
-
-func TestIsReservedUpdateOid(t *testing.T) {
-	cases := map[string]bool{
-		ReservedOidUploadUpdate:       true,
-		ReservedOidApplyUpdate:        true,
-		"/" + ReservedOidUploadUpdate: true,
-		"/" + ReservedOidApplyUpdate:  true,
-		"reboot":                      false,
-		"":                            false,
-	}
-	for oid, want := range cases {
-		if got := isReservedUpdateOid(oid); got != want {
-			t.Errorf("isReservedUpdateOid(%q) = %v, want %v", oid, got, want)
-		}
+			_, err := ToDevice(deviceMap)
+			if err == nil {
+				t.Fatalf("expected error when device defines reserved command %q", reserved)
+			}
+			if !strings.Contains(err.Error(), reserved) {
+				t.Errorf("expected error to name %q, got: %v", reserved, err)
+			}
+		})
 	}
 }

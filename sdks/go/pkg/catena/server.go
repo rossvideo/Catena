@@ -228,15 +228,12 @@ type server struct {
 	connectionQueue        connectionQueueInterface
 	heartbeat              *Heartbeat
 	transports             []Transport
-	updateManager          *updateManager
 }
 
 type ServerOptions struct {
-	MaxConnections   int
-	AuthzEnabled     bool
-	JwtOptions       JwtValidationOptions
-	UpdateStorageDir string
-	ApplyUpdateFunc  ApplyUpdateFunc
+	MaxConnections int
+	AuthzEnabled   bool
+	JwtOptions     JwtValidationOptions
 }
 
 func NewServer(opts ServerOptions) (Server, error) {
@@ -271,7 +268,6 @@ func NewServer(opts ServerOptions) (Server, error) {
 		accessHandler:          allowAllAccessHandler,
 		connectionQueue:        newConnectionQueue(opts.MaxConnections),
 		transports:             []Transport{},
-		updateManager:          newUpdateManager(opts.UpdateStorageDir, opts.ApplyUpdateFunc),
 	}, nil
 }
 
@@ -698,12 +694,6 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	}
 	if !s.isAccessAllowed(EndpointExecuteCommand, handlerContext) {
 		return CommandError(PERMISSION_DENIED, "Permission denied")
-	}
-
-	// Reserved software-update commands are owned by the SDK and take
-	// precedence over any application-registered handler.
-	if isReservedUpdateOid(commandFqoid) && s.updateManager != nil {
-		return s.updateManager.execute(commandFqoid, payload)
 	}
 
 	s.mu.Lock()
