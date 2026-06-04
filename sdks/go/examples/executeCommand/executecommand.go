@@ -182,7 +182,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			val, _ := catena.ToCatenaValue(BuildResponse(counter))
 			return catena.Reply(val)
 		}
-		return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "parameter not found: "+fqoid)
+		return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 	})
 
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
@@ -191,7 +191,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		handler, ok := commands[commandFqoid]
 		if !ok {
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.CommandError(catena.NOT_FOUND, "Command not found: "+commandFqoid)
+			return catena.CommandError(catena.StatusCodeNotFound, "Command not found: "+commandFqoid)
 		}
 
 		return handler(payload)

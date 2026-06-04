@@ -470,13 +470,13 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			deviceInfo, ok := Devices[slot]
 			if !ok {
 				logger.Error("GetDevice device not found", "slot", slot)
-				return catena.ReplyError[catena.CatenaDevice](catena.NOT_FOUND, "device not found")
+				return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeNotFound, "device not found")
 			}
 
 			device, err := catena.ToCatenaDevice(deviceInfo)
 			if err != nil {
 				logger.Error("failed to convert device", "slot", slot, "error", err)
-				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to convert device")
+				return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeInternal, "failed to convert device")
 			}
 
 			return catena.Reply(device)

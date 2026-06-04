@@ -137,16 +137,16 @@ const defaultServerMaxShutdownWait = 10 * time.Second
 
 func ValidateSlot(slot uint32) (uint16, StatusResult) {
 	if slot > uint32(math.MaxUint16) {
-		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot number: %d", slot))
+		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
 
 	}
-	return uint16(slot), StatusWithCode(OK, "")
+	return uint16(slot), StatusWithCode(StatusCodeOk, "")
 }
 
 func ValidateSlotString(slot string) (uint16, StatusResult) {
 	slotInt, err := strconv.ParseUint(slot, 10, 32)
 	if err != nil {
-		return 0, StatusWithCode(INVALID_ARGUMENT, fmt.Sprintf("invalid slot string: %s", slot))
+		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
 	}
 	return ValidateSlot(uint32(slotInt))
 }
@@ -390,20 +390,20 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 		accessToken = strings.TrimSpace(accessToken[len("Bearer "):])
 	}
 	if accessToken == "" {
-		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "missing access token")
+		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "missing access token")
 	}
 	if s.jwtValidator == nil {
-		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "jwt validator is not configured")
+		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "jwt validator is not configured")
 	}
 
 	token, err := s.jwtValidator.validateJwt(accessToken)
 	if err != nil {
 		logger.Warning("Failed to validate access token", "error", err)
-		return HandlerContext{}, StatusWithCode(UNAUTHENTICATED, "invalid access token")
+		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
 	}
 
 	readScopes, writeScopes, res := extractTokenScopes(token)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return HandlerContext{}, res
 	}
 
@@ -414,7 +414,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 		Metadata:     maps.Clone(transportContext.Metadata),
 		authzEnabled: true,
 	}
-	return handlerContext, StatusWithCode(OK, "")
+	return handlerContext, StatusWithCode(StatusCodeOk, "")
 }
 
 // resolveHandlerContext builds a HandlerContext for an incoming request.
@@ -425,7 +425,7 @@ func (s *server) resolveHandlerContext(transportContext TransportContext) (Handl
 		return HandlerContext{
 			Metadata:     maps.Clone(transportContext.Metadata),
 			authzEnabled: false,
-		}, StatusWithCode(OK, "")
+		}, StatusWithCode(StatusCodeOk, "")
 	}
 	return s.parseTransportContext(transportContext)
 }
@@ -452,22 +452,22 @@ func (s *server) hasWriteAccess(handlerContext HandlerContext) bool {
 
 func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return nil, res
 	}
 
 	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointGetSlots, handlerContext) {
-		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
 	slots := s.getSlotsLocked()
 	s.mu.Unlock()
 
-	return slots, StatusWithCode(OK, "")
+	return slots, StatusWithCode(StatusCodeOk, "")
 }
 
 // call this within a locked s.mu context
@@ -585,15 +585,15 @@ func (s *server) RegisterAccessHandler(handler AccessHandler) {
 
 func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return ReplyError[Device](res.Code, res.Error)
 	}
 
 	if !s.hasReadAccess(handlerContext) {
-		return ReplyError[Device](PERMISSION_DENIED, "Permission denied")
+		return ReplyError[Device](StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointGetDevice, handlerContext) {
-		return ReplyError[Device](PERMISSION_DENIED, "Permission denied")
+		return ReplyError[Device](StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -605,20 +605,20 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetDeviceHandler called - no handler registered for this slot")
-	return ReplyError[Device](NOT_FOUND, "No device defined at slot")
+	return ReplyError[Device](StatusCodeNotFound, "No device defined at slot")
 }
 
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return ReplyError[Value](res.Code, res.Error)
 	}
 
 	if !s.hasReadAccess(handlerContext) {
-		return ReplyError[Value](PERMISSION_DENIED, "Permission denied")
+		return ReplyError[Value](StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointGetValue, handlerContext) {
-		return ReplyError[Value](PERMISSION_DENIED, "Permission denied")
+		return ReplyError[Value](StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -630,20 +630,20 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[Value](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return ReplyError[Value](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, transportContext TransportContext) StatusResult {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return res
 	}
 
 	if !s.hasWriteAccess(handlerContext) {
-		return StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointSetValue, handlerContext) {
-		return StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -655,20 +655,20 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, tra
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return StatusWithCode(NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return ReplyError[Asset](res.Code, res.Error)
 	}
 
 	if !s.hasReadAccess(handlerContext) {
-		return ReplyError[Asset](PERMISSION_DENIED, "Permission denied")
+		return ReplyError[Asset](StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointGetAsset, handlerContext) {
-		return ReplyError[Asset](PERMISSION_DENIED, "Permission denied")
+		return ReplyError[Asset](StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -680,20 +680,20 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportConte
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetAssetHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[Asset](NOT_FOUND, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return ReplyError[Asset](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return CommandError(res.Code, res.Error)
 	}
 
 	if !s.hasWriteAccess(handlerContext) {
-		return CommandError(PERMISSION_DENIED, "Permission denied")
+		return CommandError(StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointExecuteCommand, handlerContext) {
-		return CommandError(PERMISSION_DENIED, "Permission denied")
+		return CommandError(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	// Reserved software-update commands are owned by the SDK. They currently
@@ -712,20 +712,20 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("ExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
-	return CommandError(NOT_FOUND, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return CommandError(StatusCodeNotFound, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return nil, res
 	}
 
 	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointParamInfo, handlerContext) {
-		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -737,20 +737,20 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
-	return nil, StatusWithCode(NOT_FOUND, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
+	return nil, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return nil, res
 	}
 
 	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 	if !s.isAccessAllowed(EndpointConnect, handlerContext) {
-		return nil, StatusWithCode(PERMISSION_DENIED, "Permission denied")
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -804,7 +804,7 @@ func (s *server) ConnectionCount() int {
 // plain Go types; the proto serialization is handled internally.
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
 	protoValue, res := ToProto(value)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
 		return
 	}

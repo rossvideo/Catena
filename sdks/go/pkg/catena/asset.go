@@ -191,16 +191,16 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
 		pdp.Kind = &protos.DataPayload_Payload{Payload: dp.Payload}
 	} else {
-		return nil, StatusResult{Code: INVALID_ARGUMENT, Error: "either payload or url must be provided in DataPayload, but not both"}
+		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload, but not both"}
 	}
 
-	return pdp, StatusResult{Code: OK}
+	return pdp, StatusResult{Code: StatusCodeOk}
 }
 
 // ToAsset converts DataPayload to Asset by building the proto directly
 func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 	protoPayload, res := dataPayloadToProto(dp)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return Asset{asset: nil}, res
 	}
 
@@ -209,7 +209,7 @@ func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 		Payload:  protoPayload,
 	}
 
-	return Asset{asset: asset}, StatusResult{Code: OK}
+	return Asset{asset: asset}, StatusResult{Code: StatusCodeOk}
 }
 
 // GetProtoAsset returns the underlying protos.ExternalObjectPayload
@@ -310,13 +310,13 @@ func EncodePayload(data []byte, encoding Encoding) ([]byte, error) {
 func ParsePayloadEncoding(s string) (Encoding, StatusResult) {
 	switch strings.ToUpper(strings.TrimSpace(s)) {
 	case "UNCOMPRESSED", "":
-		return EncodingUncompressed, StatusResult{Code: OK}
+		return EncodingUncompressed, StatusResult{Code: StatusCodeOk}
 	case "GZIP":
-		return EncodingGzip, StatusResult{Code: OK}
+		return EncodingGzip, StatusResult{Code: StatusCodeOk}
 	case "DEFLATE":
-		return EncodingDeflate, StatusResult{Code: OK}
+		return EncodingDeflate, StatusResult{Code: StatusCodeOk}
 	default:
-		return EncodingUncompressed, StatusResult{Code: INVALID_ARGUMENT, Error: fmt.Sprintf("invalid payload encoding: %s", s)}
+		return EncodingUncompressed, StatusResult{Code: StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid payload encoding: %s", s)}
 	}
 }
 
@@ -339,24 +339,24 @@ func PayloadEncodingFromExt(filename string) Encoding {
 func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
 	original := asset.GetProtoAsset()
 	if original == nil || original.GetPayload() == nil {
-		return StatusResult{Code: INVALID_ARGUMENT, Error: "asset has no payload"}
+		return StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no payload"}
 	}
 
 	dp := original.GetPayload()
 	currentEncoding := Encoding(dp.GetPayloadEncoding())
 
 	if currentEncoding == targetEncoding {
-		return StatusResult{Code: OK}
+		return StatusResult{Code: StatusCodeOk}
 	}
 
 	rawData, err := DecodePayload(dp.GetPayload(), currentEncoding)
 	if err != nil {
-		return StatusResult{Code: INTERNAL, Error: fmt.Sprintf("decode: %v", err)}
+		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("decode: %v", err)}
 	}
 
 	encodedData, err := EncodePayload(rawData, targetEncoding)
 	if err != nil {
-		return StatusResult{Code: INTERNAL, Error: fmt.Sprintf("encode: %v", err)}
+		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("encode: %v", err)}
 	}
 
 	cloned := proto.Clone(original).(*protos.ExternalObjectPayload)
@@ -366,5 +366,5 @@ func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
 	cloned.Payload.Digest = newDigest[:]
 	asset.asset = cloned
 
-	return StatusResult{Code: OK}
+	return StatusResult{Code: StatusCodeOk}
 }

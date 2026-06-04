@@ -108,11 +108,11 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 	defer cq.mu.Unlock()
 
 	if cq.shuttingDown {
-		return nil, StatusWithCode(INTERNAL, "Server is shutting down")
+		return nil, StatusWithCode(StatusCodeInternal, "Server is shutting down")
 	}
 
 	if cq.maxConnections > 0 && len(cq.connections) >= cq.maxConnections {
-		return nil, StatusWithCode(RESOURCE_EXHAUSTED, "Maximum connections reached")
+		return nil, StatusWithCode(StatusCodeResourceExhausted, "Maximum connections reached")
 	}
 
 	cq.nextConnID++
@@ -134,7 +134,7 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		}
 	}
 	logger.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
-	return conn, StatusWithCode(OK, "Connection registered successfully")
+	return conn, StatusWithCode(StatusCodeOk, "Connection registered successfully")
 }
 
 // deregisterConnection removes a connection from the queue.

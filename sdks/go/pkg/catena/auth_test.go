@@ -424,7 +424,7 @@ func TestExtractTokenScopes_NonMapClaims(t *testing.T) {
 
 	readScopes, writeScopes, status := extractTokenScopes(token)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK status, got %v", status)
 	}
 	if len(readScopes) != 0 {
@@ -444,7 +444,7 @@ func TestExtractTokenScopes_MissingScopeClaim(t *testing.T) {
 
 	readScopes, writeScopes, status := extractTokenScopes(token)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK status, got %v", status)
 	}
 	if len(readScopes) != 0 {
@@ -464,7 +464,7 @@ func TestExtractTokenScopes_NonStringScopeClaim(t *testing.T) {
 
 	readScopes, writeScopes, status := extractTokenScopes(token)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK status, got %v", status)
 	}
 	if len(readScopes) != 0 {
@@ -484,7 +484,7 @@ func TestExtractTokenScopes_SplitsReadAndWriteScopes(t *testing.T) {
 
 	readScopes, writeScopes, status := extractTokenScopes(token)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK status, got %v", status)
 	}
 	for _, scopeName := range []string{"st2138:mon", "st2138:cfg", "custom"} {
