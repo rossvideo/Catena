@@ -171,7 +171,7 @@ func executeReservedCommand(commandFqoid string, payload any) (CommandResult, St
 // response, surfacing any conversion error as a transport-level error.
 func reservedCommandReply(msg string) (CommandResult, StatusResult) {
 	val, res := ToValue(msg)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return CommandError(res.Code, res.Error)
 	}
 	return CommandReply(val)
