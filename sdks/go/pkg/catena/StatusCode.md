@@ -47,7 +47,7 @@ to add `400` to §7.3 Table 1 is tracked in
 | `StatusCode`                   | Meaning (handler view)            | Typical wire result                          |
 |--------------------------------|-----------------------------------|----------------------------------------------|
 | `StatusCodeOk`                 | success                           | HTTP 200 / 204; gRPC `OK`                    |
-| `StatusCodeCanceled`           | caller stopped the work           | HTTP 499; gRPC `Canceled`                    |
+| `StatusCodeCancelled`           | caller stopped the work           | HTTP 499; gRPC `Canceled`                    |
 | `StatusCodeUnknown`            | unclassified failure              | HTTP 500; gRPC `Unknown`                     |
 | `StatusCodeInvalidArgument`    | bad client input                  | HTTP 400 (per-route); gRPC `InvalidArgument` |
 | `StatusCodeDeadlineExceeded`   | time ran out                      | HTTP 504; gRPC `DeadlineExceeded`            |
@@ -86,9 +86,9 @@ Examples in parentheses are taken from ST 2138-11 §6.2 Table 2 where given.
   body?".
 - **What clients infer:** success; the body (if any) is the result.
 
-### `StatusCodeCanceled`
+### `StatusCodeCancelled`
 
-- **Cause:** the operation was canceled by either the client or the device.
+- **Cause:** the operation was cancelled by either the client or the device.
 - **When to return:** you detected explicit cancellation. Not for plain
   timeouts.
 - **What clients infer:** the work was abandoned, no result.

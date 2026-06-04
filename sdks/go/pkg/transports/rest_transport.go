@@ -726,7 +726,7 @@ func ToHTTPStatus(s catena.StatusCode) int {
 	switch s {
 	case catena.StatusCodeOk:
 		return http.StatusOK
-	case catena.StatusCodeCanceled:
+	case catena.StatusCodeCancelled:
 		return 499 // Client Closed Request (nginx convention; no stdlib const)
 	case catena.StatusCodeUnknown:
 		return http.StatusInternalServerError

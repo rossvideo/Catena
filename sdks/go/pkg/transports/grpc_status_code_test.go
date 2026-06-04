@@ -43,7 +43,7 @@ func TestToGRPCCode(t *testing.T) {
 		expected codes.Code
 	}{
 		{catena.StatusCodeOk, codes.OK},
-		{catena.StatusCodeCanceled, codes.Canceled},
+		{catena.StatusCodeCancelled, codes.Canceled},
 		{catena.StatusCodeUnknown, codes.Unknown},
 		{catena.StatusCodeInvalidArgument, codes.InvalidArgument},
 		{catena.StatusCodeDeadlineExceeded, codes.DeadlineExceeded},
@@ -81,7 +81,7 @@ func TestToGRPCCode_Unknown(t *testing.T) {
 
 func TestToGRPCCode_ValidRange(t *testing.T) {
 	grpcCodes := []catena.StatusCode{
-		catena.StatusCodeOk, catena.StatusCodeCanceled, catena.StatusCodeUnknown, catena.StatusCodeInvalidArgument, catena.StatusCodeDeadlineExceeded,
+		catena.StatusCodeOk, catena.StatusCodeCancelled, catena.StatusCodeUnknown, catena.StatusCodeInvalidArgument, catena.StatusCodeDeadlineExceeded,
 		catena.StatusCodeNotFound, catena.StatusCodeAlreadyExists, catena.StatusCodePermissionDenied, catena.StatusCodeResourceExhausted,
 		catena.StatusCodeFailedPrecondition, catena.StatusCodeAborted, catena.StatusCodeOutOfRange, catena.StatusCodeUnimplemented,
 		catena.StatusCodeInternal, catena.StatusCodeUnavailable, catena.StatusCodeDataLoss, catena.StatusCodeUnauthenticated,

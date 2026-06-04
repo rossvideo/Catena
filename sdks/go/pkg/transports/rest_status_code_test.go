@@ -43,7 +43,7 @@ func TestToHTTPStatus(t *testing.T) {
 		expected int
 	}{
 		{catena.StatusCodeOk, http.StatusOK},
-		{catena.StatusCodeCanceled, 499},
+		{catena.StatusCodeCancelled, 499},
 		{catena.StatusCodeUnknown, http.StatusInternalServerError},
 		{catena.StatusCodeInvalidArgument, http.StatusBadRequest},
 		{catena.StatusCodeDeadlineExceeded, http.StatusGatewayTimeout},

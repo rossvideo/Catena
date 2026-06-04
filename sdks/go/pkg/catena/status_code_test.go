@@ -211,7 +211,7 @@ func TestResponseType_Constraint(t *testing.T) {
 
 func TestReplyError_AllStatusCodes(t *testing.T) {
 	codes := []StatusCode{
-		StatusCodeCanceled, StatusCodeUnknown, StatusCodeInvalidArgument, StatusCodeDeadlineExceeded,
+		StatusCodeCancelled, StatusCodeUnknown, StatusCodeInvalidArgument, StatusCodeDeadlineExceeded,
 		StatusCodeNotFound, StatusCodeAlreadyExists, StatusCodePermissionDenied, StatusCodeResourceExhausted,
 		StatusCodeFailedPrecondition, StatusCodeAborted, StatusCodeOutOfRange, StatusCodeUnimplemented,
 		StatusCodeInternal, StatusCodeUnavailable, StatusCodeDataLoss, StatusCodeUnauthenticated,

@@ -524,7 +524,7 @@ func ToGRPCCode(s catena.StatusCode) codes.Code {
 	switch s {
 	case catena.StatusCodeOk:
 		return codes.OK
-	case catena.StatusCodeCanceled:
+	case catena.StatusCodeCancelled:
 		return codes.Canceled
 	case catena.StatusCodeUnknown:
 		return codes.Unknown

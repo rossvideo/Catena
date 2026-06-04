@@ -57,9 +57,9 @@ const (
 	// StatusCodeOk indicates the operation completed successfully.
 	StatusCodeOk StatusCode = 0
 
-	// StatusCodeCanceled indicates the operation was canceled, typically by
+	// StatusCodeCancelled indicates the operation was cancelled, typically by
 	// the caller (closed stream, cancelled context).
-	StatusCodeCanceled StatusCode = 1
+	StatusCodeCancelled StatusCode = 1
 
 	// StatusCodeUnknown indicates a failure that cannot be classified more
 	// specifically.
