@@ -100,6 +100,43 @@ func TestToDevice_InjectsReservedCommandsWhenNoneDefined(t *testing.T) {
 	}
 }
 
+func TestExecuteReservedCommand_MatchesTopLevelOnly(t *testing.T) {
+	reserved := []struct {
+		name  string
+		fqoid string
+	}{
+		{"upload_update", ReservedOidUploadUpdate},
+		{"apply_update", ReservedOidApplyUpdate},
+		{"upload_update with leading slash", "/" + ReservedOidUploadUpdate},
+		{"apply_update with leading slash", "/" + ReservedOidApplyUpdate},
+	}
+	for _, tc := range reserved {
+		t.Run("reserved/"+tc.name, func(t *testing.T) {
+			if _, _, handled := executeReservedCommand(tc.fqoid, nil); !handled {
+				t.Errorf("expected %q to be handled as a reserved command", tc.fqoid)
+			}
+		})
+	}
+
+	notReserved := []struct {
+		name  string
+		fqoid string
+	}{
+		{"nested upload_update", "custom.upload_update"},
+		{"nested apply_update", "custom.apply_update"},
+		{"nested upload_update with leading slash", "/custom.upload_update"},
+		{"deeply nested", "device.commands.upload_update"},
+		{"unrelated command", "reboot"},
+	}
+	for _, tc := range notReserved {
+		t.Run("user/"+tc.name, func(t *testing.T) {
+			if _, _, handled := executeReservedCommand(tc.fqoid, nil); handled {
+				t.Errorf("expected %q NOT to be hijacked by the reserved command handler", tc.fqoid)
+			}
+		})
+	}
+}
+
 func TestToDevice_RejectsReservedCommandDefinition(t *testing.T) {
 	for _, reserved := range []string{ReservedOidUploadUpdate, ReservedOidApplyUpdate} {
 		t.Run(reserved, func(t *testing.T) {

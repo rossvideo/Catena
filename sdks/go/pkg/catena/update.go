@@ -135,23 +135,14 @@ func injectReservedCommands(device *protos.Device) error {
 	return nil
 }
 
-// reservedCommandOid extracts the trailing OID segment from a (possibly
-// fully-qualified) command OID so it can be matched against the reserved
-// software-update OIDs. It tolerates a leading "/" and dotted prefixes such
-// as "device.upload_update".
+// reservedCommandOid normalizes a command OID for matching against the reserved
+// software-update OIDs. The reserved commands are injected as top-level commands
 func reservedCommandOid(commandFqoid string) string {
-	oid := strings.TrimPrefix(commandFqoid, "/")
-	if idx := strings.LastIndex(oid, "."); idx >= 0 {
-		oid = oid[idx+1:]
-	}
-	return oid
+	return strings.TrimPrefix(commandFqoid, "/")
 }
 
 // executeReservedCommand handles execution of the reserved software-update
-// commands. These are not yet implemented, so for now each returns a unique,
-// recognizable placeholder response so the commands can be demonstrated
-// end-to-end before the real update pipeline lands. The boolean return reports
-// whether commandFqoid matched a reserved command and was handled here.
+// commands. These are not yet implemented, so for now each returns a placeholder response.
 func executeReservedCommand(commandFqoid string, payload any) (CommandResult, StatusResult, bool) {
 	token := fmt.Sprintf("%d", time.Now().UnixNano())
 	switch reservedCommandOid(commandFqoid) {
