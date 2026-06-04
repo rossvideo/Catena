@@ -696,6 +696,13 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 		return CommandError(PERMISSION_DENIED, "Permission denied")
 	}
 
+	// Reserved software-update commands are owned by the SDK. They currently
+	// return a placeholder response and take precedence over any user handler.
+	if result, status, handled := executeReservedCommand(commandFqoid, payload); handled {
+		logger.Info("ExecuteCommand handled reserved command", "slot", slot, "commandFqoid", commandFqoid)
+		return result, status
+	}
+
 	s.mu.Lock()
 	handler, ok := s.executeCommandHandlers[slot]
 	s.mu.Unlock()

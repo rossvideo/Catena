@@ -41,6 +41,8 @@ package catena
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -131,6 +133,48 @@ func injectReservedCommands(device *protos.Device) error {
 		device.Commands[oid] = param
 	}
 	return nil
+}
+
+// reservedCommandOid extracts the trailing OID segment from a (possibly
+// fully-qualified) command OID so it can be matched against the reserved
+// software-update OIDs. It tolerates a leading "/" and dotted prefixes such
+// as "device.upload_update".
+func reservedCommandOid(commandFqoid string) string {
+	oid := strings.TrimPrefix(commandFqoid, "/")
+	if idx := strings.LastIndex(oid, "."); idx >= 0 {
+		oid = oid[idx+1:]
+	}
+	return oid
+}
+
+// executeReservedCommand handles execution of the reserved software-update
+// commands. These are not yet implemented, so for now each returns a unique,
+// recognizable placeholder response so the commands can be demonstrated
+// end-to-end before the real update pipeline lands. The boolean return reports
+// whether commandFqoid matched a reserved command and was handled here.
+func executeReservedCommand(commandFqoid string, payload any) (CommandResult, StatusResult, bool) {
+	token := fmt.Sprintf("%d", time.Now().UnixNano())
+	switch reservedCommandOid(commandFqoid) {
+	case ReservedOidUploadUpdate:
+		msg := fmt.Sprintf("PLACEHOLDER upload_update [%s]: update upload received, not yet implemented", token)
+		result, status := reservedCommandReply(msg)
+		return result, status, true
+	case ReservedOidApplyUpdate:
+		msg := fmt.Sprintf("PLACEHOLDER apply_update [%s]: update apply scheduled, not yet implemented", token)
+		result, status := reservedCommandReply(msg)
+		return result, status, true
+	}
+	return CommandResult{}, StatusResult{}, false
+}
+
+// reservedCommandReply wraps a placeholder string into a successful command
+// response, surfacing any conversion error as a transport-level error.
+func reservedCommandReply(msg string) (CommandResult, StatusResult) {
+	val, res := ToValue(msg)
+	if res.Code != OK {
+		return CommandError(res.Code, res.Error)
+	}
+	return CommandReply(val)
 }
 
 // descriptorToParam converts a Go descriptor map into a protos.Param using the
