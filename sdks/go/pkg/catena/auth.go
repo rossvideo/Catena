@@ -267,12 +267,12 @@ func extractTokenScopes(token *jwt.Token) (map[string]struct{}, map[string]struc
 	writeScopes := make(map[string]struct{})
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return readScopes, writeScopes, StatusWithCode(OK, "")
+		return readScopes, writeScopes, StatusWithCode(StatusCodeOk, "")
 	}
 
 	scopeClaim, ok := claims["scope"]
 	if !ok {
-		return readScopes, writeScopes, StatusWithCode(OK, "")
+		return readScopes, writeScopes, StatusWithCode(StatusCodeOk, "")
 	}
 
 	scopeString, _ := scopeClaim.(string)
@@ -284,5 +284,5 @@ func extractTokenScopes(token *jwt.Token) (map[string]struct{}, map[string]struc
 		readScopes[scopeName] = struct{}{}
 	}
 
-	return readScopes, writeScopes, StatusWithCode(OK, "")
+	return readScopes, writeScopes, StatusWithCode(StatusCodeOk, "")
 }

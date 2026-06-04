@@ -37,28 +37,28 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func TestToGRPCCode_gRPCCodes(t *testing.T) {
+func TestToGRPCCode(t *testing.T) {
 	tests := []struct {
 		code     catena.StatusCode
 		expected codes.Code
 	}{
-		{catena.OK, codes.OK},
-		{catena.CANCELLED, codes.Canceled},
-		{catena.UNKNOWN, codes.Unknown},
-		{catena.INVALID_ARGUMENT, codes.InvalidArgument},
-		{catena.DEADLINE_EXCEEDED, codes.DeadlineExceeded},
-		{catena.NOT_FOUND, codes.NotFound},
-		{catena.ALREADY_EXISTS, codes.AlreadyExists},
-		{catena.PERMISSION_DENIED, codes.PermissionDenied},
-		{catena.RESOURCE_EXHAUSTED, codes.ResourceExhausted},
-		{catena.FAILED_PRECONDITION, codes.FailedPrecondition},
-		{catena.ABORTED, codes.Aborted},
-		{catena.OUT_OF_RANGE, codes.OutOfRange},
-		{catena.UNIMPLEMENTED, codes.Unimplemented},
-		{catena.INTERNAL, codes.Internal},
-		{catena.UNAVAILABLE, codes.Unavailable},
-		{catena.DATA_LOSS, codes.DataLoss},
-		{catena.UNAUTHENTICATED, codes.Unauthenticated},
+		{catena.StatusCodeOk, codes.OK},
+		{catena.StatusCodeCancelled, codes.Canceled},
+		{catena.StatusCodeUnknown, codes.Unknown},
+		{catena.StatusCodeInvalidArgument, codes.InvalidArgument},
+		{catena.StatusCodeDeadlineExceeded, codes.DeadlineExceeded},
+		{catena.StatusCodeNotFound, codes.NotFound},
+		{catena.StatusCodeAlreadyExists, codes.AlreadyExists},
+		{catena.StatusCodePermissionDenied, codes.PermissionDenied},
+		{catena.StatusCodeResourceExhausted, codes.ResourceExhausted},
+		{catena.StatusCodeFailedPrecondition, codes.FailedPrecondition},
+		{catena.StatusCodeAborted, codes.Aborted},
+		{catena.StatusCodeOutOfRange, codes.OutOfRange},
+		{catena.StatusCodeUnimplemented, codes.Unimplemented},
+		{catena.StatusCodeInternal, codes.Internal},
+		{catena.StatusCodeUnavailable, codes.Unavailable},
+		{catena.StatusCodeDataLoss, codes.DataLoss},
+		{catena.StatusCodeUnauthenticated, codes.Unauthenticated},
 	}
 
 	for i, tt := range tests {
@@ -81,10 +81,10 @@ func TestToGRPCCode_Unknown(t *testing.T) {
 
 func TestToGRPCCode_ValidRange(t *testing.T) {
 	grpcCodes := []catena.StatusCode{
-		catena.OK, catena.CANCELLED, catena.UNKNOWN, catena.INVALID_ARGUMENT, catena.DEADLINE_EXCEEDED,
-		catena.NOT_FOUND, catena.ALREADY_EXISTS, catena.PERMISSION_DENIED, catena.RESOURCE_EXHAUSTED,
-		catena.FAILED_PRECONDITION, catena.ABORTED, catena.OUT_OF_RANGE, catena.UNIMPLEMENTED,
-		catena.INTERNAL, catena.UNAVAILABLE, catena.DATA_LOSS, catena.UNAUTHENTICATED,
+		catena.StatusCodeOk, catena.StatusCodeCancelled, catena.StatusCodeUnknown, catena.StatusCodeInvalidArgument, catena.StatusCodeDeadlineExceeded,
+		catena.StatusCodeNotFound, catena.StatusCodeAlreadyExists, catena.StatusCodePermissionDenied, catena.StatusCodeResourceExhausted,
+		catena.StatusCodeFailedPrecondition, catena.StatusCodeAborted, catena.StatusCodeOutOfRange, catena.StatusCodeUnimplemented,
+		catena.StatusCodeInternal, catena.StatusCodeUnavailable, catena.StatusCodeDataLoss, catena.StatusCodeUnauthenticated,
 	}
 
 	for _, code := range grpcCodes {
@@ -95,17 +95,3 @@ func TestToGRPCCode_ValidRange(t *testing.T) {
 	}
 }
 
-func TestToGRPCCode_RESTCodesValidRange(t *testing.T) {
-	restCodes := []catena.StatusCode{
-		catena.CREATED, catena.ACCEPTED, catena.NO_CONTENT, catena.METHOD_NOT_ALLOWED, catena.CONFLICT,
-		catena.UNPROCESSABLE_ENTITY, catena.TOO_MANY_REQUESTS, catena.BAD_GATEWAY,
-		catena.SERVICE_UNAVAILABLE, catena.GATEWAY_TIMEOUT,
-	}
-
-	for _, code := range restCodes {
-		result := ToGRPCCode(code)
-		if int(result) < 0 || int(result) > 16 {
-			t.Errorf("ToGRPCCode(%d) = %v (%d) is outside valid gRPC code range 0-16", code, result, int(result))
-		}
-	}
-}

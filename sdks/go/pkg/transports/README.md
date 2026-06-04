@@ -35,7 +35,7 @@ func main() {
 
     // Register handlers once. All registered transports share this runtime.
     srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
-        return catena.ReplyError[catena.CatenaDevice](catena.UNIMPLEMENTED, "implement me")
+        return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeUnimplemented, "implement me")
     })
 
     if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
@@ -49,7 +49,7 @@ func main() {
 
     // Optional custom fallback endpoints on REST.
     rest.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-        return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "endpoint not found")
+        return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "endpoint not found")
     })
 
     ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

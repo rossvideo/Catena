@@ -89,7 +89,7 @@ func TestServer_ParseTransportContext_ParsesTokenAndMetadata(t *testing.T) {
 		Metadata:    map[string][]string{"scope": {"read"}},
 	})
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK status, got %v", status)
 	}
 	if ctx.Token == nil {
@@ -180,7 +180,7 @@ func TestServer_ParseTransportContext_InvalidAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, status := srv.parseTransportContext(TransportContext{AccessToken: tt.accessToken})
-			if status.Code != UNAUTHENTICATED {
+			if status.Code != StatusCodeUnauthenticated {
 				t.Fatalf("expected UNAUTHENTICATED, got %v", status)
 			}
 			if ctx.Token != nil {
@@ -204,7 +204,7 @@ func TestValidateSlot_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlot(tt.in)
-			if err.Code != OK {
+			if err.Code != StatusCodeOk {
 				t.Errorf("expected no error, got %v", err)
 			}
 			if result != uint16(tt.in) {
@@ -226,8 +226,8 @@ func TestValidateSlot_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlot(tt.in)
-			if err.Code != INVALID_ARGUMENT {
-				t.Errorf("expected INVALID_ARGUMENT error, got %v", err)
+			if err.Code != StatusCodeInvalidArgument {
+				t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
 			}
 			if result != 0 {
 				t.Errorf("expected result 0 on error, got %v", result)
@@ -250,7 +250,7 @@ func TestValidateSlotString_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlotString(tt.in)
-			if err.Code != OK {
+			if err.Code != StatusCodeOk {
 				t.Errorf("expected no error, got %v", err)
 			}
 			expected := uint16(0)
@@ -275,8 +275,8 @@ func TestValidateSlotString_Invalid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ValidateSlotString(tt.in)
-			if err.Code != INVALID_ARGUMENT {
-				t.Errorf("expected INVALID_ARGUMENT error, got %v", err)
+			if err.Code != StatusCodeInvalidArgument {
+				t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
 			}
 			if result != 0 {
 				t.Errorf("expected result 0 on error, got %v", result)
@@ -639,7 +639,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if !proto.Equal(actual.GetProtoDevice(), expected.GetProtoDevice()) {
@@ -648,7 +648,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 
 	// check that the slot is registered
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if !slices.Contains(slots, uint16(0)) {
@@ -714,7 +714,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if !proto.Equal(actual.Value, expected.Value) {
@@ -723,7 +723,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 
 	// check that the slot is registered
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if !slices.Contains(slots, uint16(0)) {
@@ -747,7 +747,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 		if !ctx.HasReadScope("all") {
 			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
 		}
-		return StatusResult{Code: OK}
+		return StatusResult{Code: StatusCodeOk}
 	})
 
 	status := srv.InvokeSetValueHandler(int32(42), 0, "test/param", transportContext)
@@ -755,13 +755,13 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 
 	// check that the slot is registered
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if !slices.Contains(slots, uint16(0)) {
@@ -789,7 +789,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if !proto.Equal(actual.GetProtoAsset(), expected.GetProtoAsset()) {
@@ -798,7 +798,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 
 	// check that the slot is registered
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if !slices.Contains(slots, uint16(0)) {
@@ -823,7 +823,7 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if !result.IsEmpty() {
@@ -832,7 +832,7 @@ func TestServer_RegisterExecuteCommandHandler(t *testing.T) {
 
 	// check that the slot is registered
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if !slices.Contains(slots, uint16(0)) {
@@ -907,7 +907,7 @@ func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T)
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
 					*handlerCalled = true
-					return []ParamInfo{}, StatusWithCode(OK, "")
+					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, noReadContext)
 				return status
@@ -919,7 +919,7 @@ func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T)
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
-					return StatusWithCode(OK, "")
+					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", noWriteContext)
 			},
@@ -967,8 +967,8 @@ func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T)
 			if accessCalled {
 				t.Fatalf("access handler should not run without a %s scope", tt.scopeKind)
 			}
-			if status.Code != PERMISSION_DENIED {
-				t.Errorf("expected PERMISSION_DENIED, got %v", status.Code)
+			if status.Code != StatusCodePermissionDenied {
+				t.Errorf("expected StatusCodePermissionDenied, got %v", status.Code)
 			}
 		})
 	}
@@ -1015,7 +1015,7 @@ func TestServer_EndpointsReturnResolveHandlerContextError(t *testing.T) {
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
-					return StatusWithCode(OK, "")
+					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", invalidContext)
 			},
@@ -1047,7 +1047,7 @@ func TestServer_EndpointsReturnResolveHandlerContextError(t *testing.T) {
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
 					*handlerCalled = true
-					return []ParamInfo{}, StatusWithCode(OK, "")
+					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, invalidContext)
 				return status
@@ -1083,7 +1083,7 @@ func TestServer_EndpointsReturnResolveHandlerContextError(t *testing.T) {
 			if accessCalled {
 				t.Fatal("access handler should not run when resolveHandlerContext fails")
 			}
-			if status.Code != UNAUTHENTICATED {
+			if status.Code != StatusCodeUnauthenticated {
 				t.Fatalf("expected UNAUTHENTICATED, got %v (%s)", status.Code, status.Error)
 			}
 		})
@@ -1140,7 +1140,7 @@ func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testin
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
-					return StatusWithCode(OK, "")
+					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", transportContext)
 			},
@@ -1175,7 +1175,7 @@ func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testin
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
 					*handlerCalled = true
-					return []ParamInfo{}, StatusWithCode(OK, "")
+					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, transportContext)
 				return status
@@ -1224,8 +1224,8 @@ func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testin
 			if handlerCalled {
 				t.Fatal("endpoint handler should not run when access is denied")
 			}
-			if status.Code != PERMISSION_DENIED {
-				t.Fatalf("expected PERMISSION_DENIED, got %v", status.Code)
+			if status.Code != StatusCodePermissionDenied {
+				t.Fatalf("expected StatusCodePermissionDenied, got %v", status.Code)
 			}
 		})
 	}
@@ -1240,7 +1240,7 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 		if oidPrefix != "test/param" {
 			t.Errorf("expected oidPrefix 'test/param', got %s", oidPrefix)
 		}
-		return []ParamInfo{}, StatusResult{Code: OK}
+		return []ParamInfo{}, StatusResult{Code: StatusCodeOk}
 	})
 
 	actual, status := srv.InvokeParamInfoHandler(0, "test/param", false, validTestTransportContext(nil))
@@ -1248,7 +1248,7 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if len(actual) != 0 {
@@ -1257,7 +1257,7 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 
 	// check that the slot is registered
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if !slices.Contains(slots, uint16(0)) {
@@ -1280,7 +1280,7 @@ func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if len(slots) != 0 {
@@ -1289,9 +1289,9 @@ func TestServer_InvokeGetDeviceHandler_NoHandler(t *testing.T) {
 
 	_, status = srv.InvokeGetDeviceHandler(0, validTestTransportContext(nil))
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -1299,7 +1299,7 @@ func TestServer_InvokeGetValueHandler_NoHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if len(slots) != 0 {
@@ -1308,9 +1308,9 @@ func TestServer_InvokeGetValueHandler_NoHandler(t *testing.T) {
 
 	_, status = srv.InvokeGetValueHandler(0, "test/param", validTestTransportContext(nil))
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -1318,7 +1318,7 @@ func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if len(slots) != 0 {
@@ -1327,9 +1327,9 @@ func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
 
 	status = srv.InvokeSetValueHandler(42, 0, "test/param", validTestTransportContext(nil))
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -1337,7 +1337,7 @@ func TestServer_InvokeGetAsset_NoHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if len(slots) != 0 {
@@ -1346,9 +1346,9 @@ func TestServer_InvokeGetAsset_NoHandler(t *testing.T) {
 
 	_, status = srv.InvokeGetAssetHandler(0, "test/asset", validTestTransportContext(nil))
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -1356,7 +1356,7 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if len(slots) != 0 {
@@ -1365,9 +1365,9 @@ func TestServer_ExecuteCommand_Route(t *testing.T) {
 
 	_, status = srv.InvokeExecuteCommandHandler(0, "test/command", nil, validTestTransportContext(nil))
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -1375,7 +1375,7 @@ func TestServer_ParamInfo_NoHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
 	}
 	if len(slots) != 0 {
@@ -1384,9 +1384,9 @@ func TestServer_ParamInfo_NoHandler(t *testing.T) {
 
 	_, status = srv.InvokeParamInfoHandler(0, "test/param", false, validTestTransportContext(nil))
 
-	// no handler should return NOT_FOUND status
-	if status.Code != NOT_FOUND {
-		t.Errorf("expected NOT_FOUND status, got %v", status.Code)
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
 }
 
@@ -1399,14 +1399,14 @@ func TestServer_RegisterAccessHandlerNilResetsToAllowAll(t *testing.T) {
 	})
 
 	_, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != PERMISSION_DENIED {
-		t.Fatalf("expected PERMISSION_DENIED with deny handler, got %v", status.Code)
+	if status.Code != StatusCodePermissionDenied {
+		t.Fatalf("expected StatusCodePermissionDenied with deny handler, got %v", status.Code)
 	}
 
 	srv.RegisterAccessHandler(nil)
 
 	slots, status := srv.GetSlots(validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK after nil reset to default handler, got %v", status.Code)
 	}
 	if len(slots) != 1 || slots[0] != 0 {
@@ -1433,7 +1433,7 @@ func TestServer_GetSlots_InvalidTokenSkipsAccessHandler(t *testing.T) {
 
 			slots, status := srv.GetSlots(TransportContext{AccessToken: tt.accessToken})
 
-			if status.Code != UNAUTHENTICATED {
+			if status.Code != StatusCodeUnauthenticated {
 				t.Errorf("expected UNAUTHENTICATED, got %v", status.Code)
 			}
 			if slots != nil {
@@ -1455,7 +1455,7 @@ func TestServer_AuthzDisabledSkipsAccessHandlerAndAllowsScopedHandlerChecks(t *t
 	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
 		handlerCalled = true
 		if !ctx.HasReadScope(ScopeCfg) {
-			return ReplyError[Value](PERMISSION_DENIED, "configuration scope required")
+			return ReplyError[Value](StatusCodePermissionDenied, "configuration scope required")
 		}
 		return Reply(Value{})
 	})
@@ -1468,7 +1468,7 @@ func TestServer_AuthzDisabledSkipsAccessHandlerAndAllowsScopedHandlerChecks(t *t
 	if !handlerCalled {
 		t.Fatal("endpoint handler should run when authz is disabled")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK, got %v", status.Code)
 	}
 }
@@ -1477,7 +1477,7 @@ func TestServer_AuthzDisabledHandlerContextGrantsAllScopes(t *testing.T) {
 	srv := newTestServer(t, false)
 
 	ctx, status := srv.resolveHandlerContext(TransportContext{})
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v", status)
 	}
 	if !ctx.HasReadScope(ScopeCfg) {
@@ -1492,13 +1492,13 @@ func TestServer_AuthzDisabledHandlerContextGrantsAllScopes(t *testing.T) {
 
 	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
 		if !ctx.HasReadScope(ScopeCfg) {
-			return ReplyError[Value](PERMISSION_DENIED, "configuration scope required")
+			return ReplyError[Value](StatusCodePermissionDenied, "configuration scope required")
 		}
 		return Reply(Value{})
 	})
 
 	_, status = srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected handler scope check to pass when authz is disabled, got %v", status.Code)
 	}
 }
@@ -1514,7 +1514,7 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.slots[0] = struct{}{}
 				slots, status := srv.GetSlots(TransportContext{})
-				if status.Code == OK && (len(slots) != 1 || slots[0] != 0) {
+				if status.Code == StatusCodeOk && (len(slots) != 1 || slots[0] != 0) {
 					t.Fatalf("GetSlots: expected [0], got %v", slots)
 				}
 				return status
@@ -1550,7 +1550,7 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
-					return StatusWithCode(OK, "")
+					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", TransportContext{})
 			},
@@ -1585,7 +1585,7 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
 					*handlerCalled = true
-					return []ParamInfo{}, StatusWithCode(OK, "")
+					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, TransportContext{})
 				return status
@@ -1597,11 +1597,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 				srv.connectionQueue = &stubConnectionQueue{
 					tb: t,
 					registerOwnedFn: func(owner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult) {
-						return &Connection{ID: 1}, StatusWithCode(OK, "")
+						return &Connection{ID: 1}, StatusWithCode(StatusCodeOk, "")
 					},
 				}
 				conn, status := srv.RegisterTransportConnection(nil, TransportContext{})
-				if status.Code == OK && conn == nil {
+				if status.Code == StatusCodeOk && conn == nil {
 					t.Fatal("RegisterTransportConnection: expected connection without token")
 				}
 				return status
@@ -1630,7 +1630,7 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			if !tt.expectHandlerCall && handlerCalled {
 				t.Fatal("endpoint handler unexpectedly ran")
 			}
-			if status.Code != OK {
+			if status.Code != StatusCodeOk {
 				t.Fatalf("expected OK without token, got %v (%s)", status.Code, status.Error)
 			}
 		})
@@ -1664,7 +1664,7 @@ func (s *stubConnectionQueue) registerOwnedConnection(owner Transport, handlerCo
 		return s.registerOwnedFn(owner, handlerContext, initialUpdate)
 	}
 	s.tb.Fatalf("registerOwnedConnection called on stubConnectionQueue without registerOwnedFn defined")
-	return nil, StatusResult{Code: INTERNAL}
+	return nil, StatusResult{Code: StatusCodeInternal}
 }
 
 func (s *stubConnectionQueue) deregisterConnection(connID int) {
@@ -1768,7 +1768,7 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 				ID:      78,
 				Updates: make(chan *protos.PushUpdates, 10),
 				Done:    make(chan struct{}),
-			}, StatusResult{Code: OK}
+			}, StatusResult{Code: StatusCodeOk}
 		},
 	}
 
@@ -1777,7 +1777,7 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	if !called {
 		t.Error("expected registerOwnedConnection to be called on connection queue")
 	}
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if conn == nil || conn.ID != 78 {
@@ -1790,14 +1790,14 @@ func TestServer_RegisterTransportConnection_Failed(t *testing.T) {
 	srv.connectionQueue = &stubConnectionQueue{
 		tb: t,
 		registerOwnedFn: func(gotOwner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult) {
-			return nil, StatusResult{Code: RESOURCE_EXHAUSTED, Error: "queue full"}
+			return nil, StatusResult{Code: StatusCodeResourceExhausted, Error: "queue full"}
 		},
 	}
 
 	conn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
 
-	if status.Code != RESOURCE_EXHAUSTED {
-		t.Errorf("expected RESOURCE_EXHAUSTED on registration failure, got %v", status.Code)
+	if status.Code != StatusCodeResourceExhausted {
+		t.Errorf("expected StatusCodeResourceExhausted on registration failure, got %v", status.Code)
 	}
 	if conn != nil {
 		t.Errorf("expected nil connection on registration failure, got %+v", conn)
@@ -1870,7 +1870,7 @@ func TestServer_BroadcastUpdate_Normal(t *testing.T) {
 
 	// Register a connection
 	conn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("Failed to register connection: %v", status)
 	}
 	defer srv.DeregisterConnection(conn.ID)
@@ -1910,7 +1910,7 @@ func TestServer_BroadcastUpdate_FiltersConnectionsByScope(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	matchingConn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("Failed to register matching connection: %v", status)
 	}
 	defer srv.DeregisterConnection(matchingConn.ID)
@@ -1918,7 +1918,7 @@ func TestServer_BroadcastUpdate_FiltersConnectionsByScope(t *testing.T) {
 	nonMatchingConn, status := srv.RegisterTransportConnection(nil, TransportContext{
 		AccessToken: validTestJWTWithCfgScope,
 	})
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("Failed to register non-matching connection: %v", status)
 	}
 	defer srv.DeregisterConnection(nonMatchingConn.ID)
@@ -1950,7 +1950,7 @@ func TestServer_BroadcastUpdate_AuthzDisabledBypassesScopeFilter(t *testing.T) {
 	srv := newTestServer(t, false)
 
 	matchingConn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("Failed to register matching connection: %v", status)
 	}
 	defer srv.DeregisterConnection(matchingConn.ID)
@@ -1958,7 +1958,7 @@ func TestServer_BroadcastUpdate_AuthzDisabledBypassesScopeFilter(t *testing.T) {
 	noScopeConn, status := srv.RegisterTransportConnection(nil, TransportContext{
 		AccessToken: validTestJWTWithoutExecuteCommandScope,
 	})
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("Failed to register no-scope connection: %v", status)
 	}
 	defer srv.DeregisterConnection(noScopeConn.ID)
@@ -1986,7 +1986,7 @@ func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	conn, status := srv.RegisterTransportConnection(nil, validTestTransportContext(nil))
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("Failed to register connection: %v", status)
 	}
 	defer srv.DeregisterConnection(conn.ID)

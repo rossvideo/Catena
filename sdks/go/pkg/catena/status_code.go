@@ -40,10 +40,8 @@ package catena
 
 // StatusCode is a transport-neutral outcome for handlers. Values 0–16 match
 // gRPC's canonical code space (ST 2138-11 §6.2 Table 2) and map 1:1 in the
-// gRPC transport. Values 200+ are legacy HTTP-shaped codes; prefer 0–16 in
-// new handler code. See StatusCode.md in this directory for which constants
-// to use, per-code semantics, and how the REST transport chooses 200 vs 204
-// per ST 2138-12.
+// gRPC transport. See StatusCode.md in this directory for per-code semantics
+// and how the REST transport chooses 200 vs 204 per ST 2138-12.
 //
 // Based on Google's gRPC project (Apache 2.0 license):
 // https://github.com/grpc/grpc
@@ -56,124 +54,72 @@ type StatusResult struct {
 }
 
 const (
-	// gRPC-compatible status codes (0-16)
+	// StatusCodeOk indicates the operation completed successfully.
+	StatusCodeOk StatusCode = 0
 
-	// OK indicates the operation completed successfully.
-	OK StatusCode = 0
+	// StatusCodeCancelled indicates the operation was cancelled, typically by
+	// the caller (closed stream, cancelled context).
+	StatusCodeCancelled StatusCode = 1
 
-	// CANCELLED indicates the operation was cancelled (typically by the caller).
-	CANCELLED StatusCode = 1
+	// StatusCodeUnknown indicates a failure that cannot be classified more
+	// specifically.
+	StatusCodeUnknown StatusCode = 2
 
-	// UNKNOWN indicates an unknown error occurred.
-	UNKNOWN StatusCode = 2
+	// StatusCodeInvalidArgument indicates the client supplied a request that
+	// cannot succeed as-is (bad JSON, wrong type, malformed fqoid, missing
+	// required field).
+	StatusCodeInvalidArgument StatusCode = 3
 
-	// INVALID_ARGUMENT indicates the client specified an invalid argument.
-	INVALID_ARGUMENT StatusCode = 3
+	// StatusCodeDeadlineExceeded indicates the deadline expired before the
+	// operation could complete.
+	StatusCodeDeadlineExceeded StatusCode = 4
 
-	// DEADLINE_EXCEEDED indicates the deadline expired before operation could complete.
-	DEADLINE_EXCEEDED StatusCode = 4
+	// StatusCodeNotFound indicates a referenced entity does not exist
+	// (unknown slot, missing param, unknown route).
+	StatusCodeNotFound StatusCode = 5
 
-	// NOT_FOUND indicates some requested entity was not found.
-	NOT_FOUND StatusCode = 5
+	// StatusCodeAlreadyExists indicates a create would duplicate a unique
+	// resource.
+	StatusCodeAlreadyExists StatusCode = 6
 
-	// ALREADY_EXISTS indicates the entity that we attempted to create already exists.
-	ALREADY_EXISTS StatusCode = 6
+	// StatusCodePermissionDenied indicates the caller is authenticated but
+	// not authorized (token scope insufficient for the command/param).
+	StatusCodePermissionDenied StatusCode = 7
 
-	// PERMISSION_DENIED indicates the caller does not have permission to execute the operation.
-	PERMISSION_DENIED StatusCode = 7
+	// StatusCodeResourceExhausted indicates a quota or rate limit was hit,
+	// or another resource has been exhausted.
+	StatusCodeResourceExhausted StatusCode = 8
 
-	// RESOURCE_EXHAUSTED indicates some resource has been exhausted.
-	RESOURCE_EXHAUSTED StatusCode = 8
+	// StatusCodeFailedPrecondition indicates the system is in the wrong
+	// state for the requested operation. (Distinct from HTTP 412 Precondition
+	// Failed; see StatusCode.md.)
+	StatusCodeFailedPrecondition StatusCode = 9
 
-	// FAILED_PRECONDITION indicates the operation was rejected because the system is not
-	// in a state required for the operation's execution.
-	FAILED_PRECONDITION StatusCode = 9
+	// StatusCodeAborted indicates a concurrency or transaction conflict;
+	// the client may retry at a higher level.
+	StatusCodeAborted StatusCode = 10
 
-	// ABORTED indicates the operation was aborted, typically due to a concurrency issue.
-	ABORTED StatusCode = 10
+	// StatusCodeOutOfRange indicates a value is past the end of a valid
+	// range (e.g. accessing band 5 of a 4-band eq).
+	StatusCodeOutOfRange StatusCode = 11
 
-	// OUT_OF_RANGE indicates the operation was attempted past the valid range.
-	OUT_OF_RANGE StatusCode = 11
+	// StatusCodeUnimplemented indicates the operation or capability is not
+	// implemented or not enabled.
+	StatusCodeUnimplemented StatusCode = 12
 
-	// UNIMPLEMENTED indicates the operation is not implemented or not supported.
-	UNIMPLEMENTED StatusCode = 12
+	// StatusCodeInternal indicates an unexpected server failure or broken
+	// invariant.
+	StatusCodeInternal StatusCode = 13
 
-	// INTERNAL indicates internal errors. Something is very broken.
-	INTERNAL StatusCode = 13
+	// StatusCodeUnavailable indicates a transient outage; the client may
+	// retry with backoff.
+	StatusCodeUnavailable StatusCode = 14
 
-	// UNAVAILABLE indicates the service is currently unavailable.
-	UNAVAILABLE StatusCode = 14
+	// StatusCodeDataLoss indicates unrecoverable data loss or corruption.
+	StatusCodeDataLoss StatusCode = 15
 
-	// DATA_LOSS indicates unrecoverable data loss or corruption.
-	DATA_LOSS StatusCode = 15
-
-	// UNAUTHENTICATED indicates the request does not have valid authentication credentials.
-	UNAUTHENTICATED StatusCode = 16
-
-	// REST-specific status codes (legacy; see StatusCode.md)
-
-	// CREATED indicates the request has succeeded and a new resource has been created.
-	//
-	// Deprecated: not present in ST 2138-12. Use OK in handlers and let the
-	// REST transport choose the wire status.
-	CREATED StatusCode = 201
-
-	// ACCEPTED indicates the request has been accepted for processing.
-	//
-	// Deprecated: not present in ST 2138-12. Use OK in handlers and let the
-	// REST transport choose the wire status.
-	ACCEPTED StatusCode = 202
-
-	// NO_CONTENT indicates success with no response body.
-	// Prefer OK in handlers; let the REST transport emit 204 when the route
-	// (per ST 2138-12 §7.7–§7.11) calls for it.
-	NO_CONTENT StatusCode = 204
-
-	// BAD_REQUEST indicates the request was malformed.
-	// Prefer INVALID_ARGUMENT for new code so gRPC and REST map consistently.
-	// Note: 400 is not in the ST 2138-12 §7.3 default failure set; emit it
-	// only from a per-route mapping that opts into it. Adding 400 to §7.3 is
-	// tracked in https://github.com/SMPTE/st2138-12/issues/5.
-	BAD_REQUEST StatusCode = 400
-
-	// METHOD_NOT_ALLOWED indicates the method is not allowed for the requested resource.
-	//
-	// Deprecated: not present in ST 2138-12. Routing/method enforcement is a
-	// transport concern; do not use in handlers.
-	METHOD_NOT_ALLOWED StatusCode = 405
-
-	// CONFLICT indicates the request could not be completed due to a conflict.
-	//
-	// Deprecated: not present in ST 2138-12. Use ALREADY_EXISTS (duplicate
-	// create) or ABORTED (concurrency) instead.
-	CONFLICT StatusCode = 409
-
-	// UNPROCESSABLE_ENTITY indicates the request was well-formed but semantically erroneous.
-	//
-	// Deprecated: not present in ST 2138-12. Use INVALID_ARGUMENT or
-	// FAILED_PRECONDITION instead.
-	UNPROCESSABLE_ENTITY StatusCode = 422
-
-	// TOO_MANY_REQUESTS indicates the user has sent too many requests.
-	//
-	// Deprecated: not present in ST 2138-12. Use RESOURCE_EXHAUSTED instead.
-	TOO_MANY_REQUESTS StatusCode = 429
-
-	// BAD_GATEWAY indicates the server received an invalid response from upstream.
-	//
-	// Deprecated: not present in ST 2138-12. Proxy/gateway conditions are a
-	// transport concern; do not use in handlers.
-	BAD_GATEWAY StatusCode = 502
-
-	// SERVICE_UNAVAILABLE indicates the server is not ready to handle the request.
-	// Prefer UNAVAILABLE in handlers (same HTTP 503 / gRPC Unavailable result,
-	// gRPC-aligned name).
-	SERVICE_UNAVAILABLE StatusCode = 503
-
-	// GATEWAY_TIMEOUT indicates the server did not receive a timely response from upstream.
-	//
-	// Deprecated: not present in ST 2138-12. Use DEADLINE_EXCEEDED instead.
-	GATEWAY_TIMEOUT StatusCode = 504
+	// StatusCodeUnauthenticated indicates missing or invalid credentials.
+	StatusCodeUnauthenticated StatusCode = 16
 )
 
 // ResponseType is a constraint for types that can be returned from handlers
@@ -181,21 +127,21 @@ type ResponseType interface {
 	Value | Asset | Device
 }
 
-// Reply returns a successful response (OK) with the given value.
+// Reply returns a successful response (StatusCodeOk) with the given value.
 // Usage: catena.Reply(value), catena.Reply(asset), catena.Reply(device)
 func Reply[T ResponseType](value T) (T, StatusResult) {
-	return value, StatusResult{Code: OK}
+	return value, StatusResult{Code: StatusCodeOk}
 }
 
 // ReplyWithCode returns a response with the given value and status code.
-// Usage: catena.ReplyWithCode(value, catena.OK)
+// Usage: catena.ReplyWithCode(value, catena.StatusCodeOk)
 func ReplyWithCode[T ResponseType](value T, code StatusCode) (T, StatusResult) {
 	return value, StatusResult{Code: code}
 }
 
 // ReplyError returns an error response with the given status code and message.
 // The value returned is the zero value of T.
-// Usage: catena.ReplyError[catena.Value](catena.NOT_FOUND, "not found")
+// Usage: catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "not found")
 func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 	var zero T
 	return zero, StatusResult{Code: code, Error: msg}

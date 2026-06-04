@@ -54,7 +54,7 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("RegisterConnection returned error: %v", res)
 	}
 	if conn == nil {
@@ -93,7 +93,7 @@ func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
 	}
 
 	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, initialUpdate)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("RegisterConnection returned error: %v", res)
 	}
 	if conn == nil {
@@ -119,17 +119,17 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	conn1, res1 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res1.Code != OK || conn1 == nil {
+	if res1.Code != StatusCodeOk || conn1 == nil {
 		t.Fatal("first connection should succeed")
 	}
 
 	conn2, res2 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res2.Code != OK || conn2 == nil {
+	if res2.Code != StatusCodeOk || conn2 == nil {
 		t.Fatal("second connection should succeed")
 	}
 
 	conn3, res3 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res3.Code != RESOURCE_EXHAUSTED || conn3 != nil {
+	if res3.Code != StatusCodeResourceExhausted || conn3 != nil {
 		t.Error("third connection should be rejected (max 2)")
 	}
 
@@ -139,7 +139,7 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 
 	cq.deregisterConnection(conn1.ID)
 	conn4, res4 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res4.Code != OK || conn4 == nil {
+	if res4.Code != StatusCodeOk || conn4 == nil {
 		t.Error("should be able to connect after one disconnects")
 	}
 }
@@ -150,13 +150,13 @@ func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 
 	cq.registerOwnedConnection(owner, HandlerContext{}, nil)
 	conn2, res2 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res2.Code != RESOURCE_EXHAUSTED || conn2 != nil {
+	if res2.Code != StatusCodeResourceExhausted || conn2 != nil {
 		t.Error("second connection should be rejected")
 	}
 
 	cq.setMaxConnections(2)
 	conn3, res3 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res3.Code != OK || conn3 == nil {
+	if res3.Code != StatusCodeOk || conn3 == nil {
 		t.Error("should succeed after increasing limit")
 	}
 }
@@ -290,7 +290,7 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 	cq.shutdown(context.Background())
 
 	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res.Code != INTERNAL || conn != nil {
+	if res.Code != StatusCodeInternal || conn != nil {
 		t.Error("should reject new connections after shutdown")
 	}
 }
