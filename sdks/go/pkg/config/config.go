@@ -41,6 +41,7 @@ package config
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -146,6 +147,14 @@ func (o RuntimeOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Bool("dev", o.Server.IsDev),
 		slog.Int("max_connections", o.Server.MaxConnections),
+		slog.Bool("authz_enabled", o.Server.AuthzEnabled),
+		slog.Group("jwt_validation",
+			slog.String("issuer", o.Server.JwtOptions.Issuer),
+			slog.String("audience", o.Server.JwtOptions.Audience),
+			slog.Bool("validate_signature", o.Server.JwtOptions.ValidateSignature),
+			slog.Duration("leeway", o.Server.JwtOptions.Leeway),
+			slog.String("allowed_algs", strings.Join(o.Server.JwtOptions.AllowedAlgs, ",")),
+		),
 		slog.Group("logger",
 			slog.String("app_name", o.Logger.AppName),
 			slog.Bool("silent", o.Logger.Silent),

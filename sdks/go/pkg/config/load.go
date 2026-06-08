@@ -86,10 +86,18 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 	}
 	// chain building all the options up
 	loader.
+		// runtime options
 		Bool(prefix+"_USE_GRPC", "use-grpc", "Enable gRPC transport", &opts.UseGrpc).
 		Bool(prefix+"_USE_REST", "use-rest", "Enable REST transport", &opts.UseRest).
+		//server options
 		Int(prefix+"_MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		Bool(prefix+"_DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
+		Bool(prefix+"_AUTHZ", "authz", "Enable authorization checks (requires auth)", &opts.Server.AuthzEnabled).
+		// JWT validation options
+		String(prefix+"_JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
+		String(prefix+"_JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
+		Bool(prefix+"_JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
+		// logging options
 		Bool(prefix+"_SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).
 		String(prefix+"_LOG_DIR", "log-dir", "Directory for log files", &opts.Logger.LogDir).
 		LogLevel(prefix+"_LOG_LEVEL", "log-level", "Minimum log level to output", &opts.Logger.Level).
