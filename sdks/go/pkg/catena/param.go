@@ -86,7 +86,7 @@ func NewParamStruct(value map[string]any) *Param {
 		},
 	}
 	pv, res := ToProto(value)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		logger.Warning("NewParamStruct: failed to convert value; value left nil",
 			"error", res.Error)
 		return cp
@@ -103,7 +103,7 @@ func NewParamStructVariant(value *StructVariantValue) *Param {
 	}
 	if value != nil {
 		pv, res := ToProto(*value)
-		if res.Code != OK {
+		if res.Code != StatusCodeOk {
 			logger.Warning("NewParamStructVariant: failed to convert value; value left nil",
 				"error", res.Error)
 			return cp
@@ -156,7 +156,7 @@ func NewParamStructArray(value []map[string]any) *Param {
 		},
 	}
 	pv, res := ToProto(value)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		logger.Warning("NewParamStructArray: failed to convert value; value left nil",
 			"error", res.Error)
 		return cp
@@ -172,7 +172,7 @@ func NewParamStructVariantArray(value []StructVariantValue) *Param {
 		},
 	}
 	pv, res := ToProto(value)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		logger.Warning("NewParamStructVariantArray: failed to convert value; value left nil",
 			"error", res.Error)
 		return cp
@@ -197,7 +197,7 @@ func NewParamData(payload DataPayload) *Param {
 		},
 	}
 	pdp, res := dataPayloadToProto(payload)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		logger.Warning("NewParamData: failed to convert DataPayload; value left nil",
 			"error", res.Error)
 		return cp
@@ -240,17 +240,17 @@ func (cp *Param) WithValue(v Value) *Param {
 	return cp
 }
 
-func (cp *Param) WithConstraint(c *protos.Constraint) *Param {
-	if c == nil {
+func (cp *Param) WithConstraint(c *Constraint) *Param {
+	if c == nil || c.Proto == nil {
 		return cp
 	}
 	if !isConstraintValidForParam(c, cp.Proto.Type) {
 		logger.Warning("WithConstraint: constraint type incompatible with param type; ignoring",
-			"constraint_type", c.GetType().String(),
+			"constraint_type", c.Proto.GetType().String(),
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.Proto.Constraint = c
+	cp.Proto.Constraint = c.Proto
 	return cp
 }
 
@@ -367,21 +367,21 @@ func (cp *Param) WithTemplateOid(oid string) *Param {
 // param type, and sets it.
 func (cp *Param) SetValue(v any) StatusResult {
 	pv, res := ToProto(v)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		return res
 	}
 	if !isValueValidForParamType(pv, cp.Proto.Type) {
-		return StatusResult{Code: INVALID_ARGUMENT, Error: "value kind incompatible with param type " + cp.Proto.Type.String()}
+		return StatusResult{Code: StatusCodeInvalidArgument, Error: "value kind incompatible with param type " + cp.Proto.Type.String()}
 	}
 	cp.Proto.Value = pv
-	return StatusResult{Code: OK}
+	return StatusResult{Code: StatusCodeOk}
 }
 
 // GetValue reads the current value and converts it to a native Go type via
-// FromProto. Returns (nil, OK) if no value is set.
+// FromProto. Returns (nil, StatusCodeOk) if no value is set.
 func (cp *Param) GetValue() (any, StatusResult) {
 	if cp.Proto.Value == nil {
-		return nil, StatusResult{Code: OK}
+		return nil, StatusResult{Code: StatusCodeOk}
 	}
 	return FromProto(cp.Proto.Value)
 }
@@ -469,8 +469,8 @@ func paramTypeFromValueKind(v *protos.Value) protos.ParamType {
 // with the given ParamType. RefOid constraints are always valid. Scalar
 // constraints are also valid on their corresponding array param type
 // (e.g. Int32Range on INT32 or INT32_ARRAY).
-func isConstraintValidForParam(c *protos.Constraint, pt protos.ParamType) bool {
-	switch c.Kind.(type) {
+func isConstraintValidForParam(c *Constraint, pt protos.ParamType) bool {
+	switch c.Proto.Kind.(type) {
 	case *protos.Constraint_RefOid:
 		return true
 	case *protos.Constraint_Int32Range, *protos.Constraint_Int32Choice, *protos.Constraint_AlarmTable:

@@ -49,10 +49,18 @@ import (
 func TestDefaultOptions(t *testing.T) {
 	opts := defaultRuntimeOptions()
 
-	if opts != (RuntimeOptions{
+	if !reflect.DeepEqual(opts, RuntimeOptions{
 		Server: ServerOptions{
 			IsDev:          false,
 			MaxConnections: 100,
+			AuthzEnabled:   true,
+			JwtOptions: JwtValidationOptions{
+				AllowedAlgs:       nil,
+				Audience:          "",
+				Issuer:            "",
+				ValidateSignature: true,
+				Http:              nil,
+			},
 		},
 		Logger: LoggerOptions{
 			AppName:        "catena",

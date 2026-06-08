@@ -354,16 +354,9 @@ func TestWithTemplateOid(t *testing.T) {
 // --- Constraint validation tests ---
 
 func TestWithConstraint_ValidInt32Choice(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_INT_CHOICE,
-		Kind: &protos.Constraint_Int32Choice{
-			Int32Choice: &protos.Int32ChoiceConstraint{
-				Choices: []*protos.Int32ChoiceConstraint_IntChoice{
-					{Value: 1, Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "one"}}},
-				},
-			},
-		},
-	}
+	c := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: NewPolyglotText("en", "one")},
+	})
 	p := NewParamInt32(0).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
@@ -374,12 +367,7 @@ func TestWithConstraint_ValidInt32Choice(t *testing.T) {
 }
 
 func TestWithConstraint_ValidIntRange(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_INT_RANGE,
-		Kind: &protos.Constraint_Int32Range{
-			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 100, Step: 1},
-		},
-	}
+	c := NewConstraintInt32Range(0, 100, 1)
 	p := NewParamInt32(50).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
@@ -387,12 +375,7 @@ func TestWithConstraint_ValidIntRange(t *testing.T) {
 }
 
 func TestWithConstraint_ValidFloatRange(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_FLOAT_RANGE,
-		Kind: &protos.Constraint_FloatRange{
-			FloatRange: &protos.FloatRangeConstraint{MinValue: 0, MaxValue: 1, Step: 0.01},
-		},
-	}
+	c := NewConstraintFloatRange(0, 1, 0.01)
 	p := NewParamFloat32(0.5).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
@@ -400,12 +383,7 @@ func TestWithConstraint_ValidFloatRange(t *testing.T) {
 }
 
 func TestWithConstraint_ValidStringChoice(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_STRING_CHOICE,
-		Kind: &protos.Constraint_StringChoice{
-			StringChoice: &protos.StringChoiceConstraint{Choices: []string{"a", "b"}, Strict: true},
-		},
-	}
+	c := NewConstraintStringChoice(true, "a", "b")
 	p := NewParamString("a").WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
@@ -413,16 +391,9 @@ func TestWithConstraint_ValidStringChoice(t *testing.T) {
 }
 
 func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_STRING_STRING_CHOICE,
-		Kind: &protos.Constraint_StringStringChoice{
-			StringStringChoice: &protos.StringStringChoiceConstraint{
-				Choices: []*protos.StringStringChoiceConstraint_StringStringChoice{
-					{Value: "v", Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "V"}}},
-				},
-			},
-		},
-	}
+	c := NewConstraintStringStringChoice(false, []StringStringChoice{
+		{Value: "v", Name: NewPolyglotText("en", "V")},
+	})
 	p := NewParamString("v").WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
@@ -430,14 +401,9 @@ func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
 }
 
 func TestWithConstraint_ValidAlarmTable(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_ALARM_TABLE,
-		Kind: &protos.Constraint_AlarmTable{
-			AlarmTable: &protos.AlarmTableConstraint{
-				Alarms: []*protos.Alarm{{BitValue: 0, Severity: protos.Alarm_INFO}},
-			},
-		},
-	}
+	c := NewConstraintAlarmTable([]AlarmEntry{
+		{BitValue: 0, Severity: AlarmSeverityInfo},
+	})
 	p := NewParamInt32(0).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected alarm table constraint to be applied to INT32 param")
@@ -445,10 +411,7 @@ func TestWithConstraint_ValidAlarmTable(t *testing.T) {
 }
 
 func TestWithConstraint_RefOid_AnyType(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_UNDEFINED,
-		Kind: &protos.Constraint_RefOid{RefOid: "shared.my_constraint"},
-	}
+	c := NewConstraintRefOid("shared.my_constraint")
 	for _, factory := range []func() *Param{
 		func() *Param { return NewParamInt32(0) },
 		func() *Param { return NewParamFloat32(0) },
@@ -463,12 +426,7 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 }
 
 func TestWithConstraint_InvalidStringOnInt(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_STRING_CHOICE,
-		Kind: &protos.Constraint_StringChoice{
-			StringChoice: &protos.StringChoiceConstraint{Choices: []string{"a", "b"}, Strict: true},
-		},
-	}
+	c := NewConstraintStringChoice(true, "a", "b")
 	p := NewParamInt32(0).WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected string constraint to be rejected on INT32 param")
@@ -476,12 +434,7 @@ func TestWithConstraint_InvalidStringOnInt(t *testing.T) {
 }
 
 func TestWithConstraint_InvalidIntOnFloat(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_INT_RANGE,
-		Kind: &protos.Constraint_Int32Range{
-			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 100, Step: 1},
-		},
-	}
+	c := NewConstraintInt32Range(0, 100, 1)
 	p := NewParamFloat32(0).WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected int32 range constraint to be rejected on FLOAT32 param")
@@ -489,12 +442,7 @@ func TestWithConstraint_InvalidIntOnFloat(t *testing.T) {
 }
 
 func TestWithConstraint_InvalidFloatOnString(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_FLOAT_RANGE,
-		Kind: &protos.Constraint_FloatRange{
-			FloatRange: &protos.FloatRangeConstraint{MinValue: 0, MaxValue: 1, Step: 0.1},
-		},
-	}
+	c := NewConstraintFloatRange(0, 1, 0.1)
 	p := NewParamString("x").WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected float range constraint to be rejected on STRING param")
@@ -512,12 +460,7 @@ func TestWithConstraint_Nil(t *testing.T) {
 // param types, matching the Catena protocol
 
 func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_INT_RANGE,
-		Kind: &protos.Constraint_Int32Range{
-			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 10, Step: 2},
-		},
-	}
+	c := NewConstraintInt32Range(0, 10, 2)
 	p := NewParamInt32Array([]int32{0, 2, 4}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected int32 range constraint to be applied to INT32_ARRAY param")
@@ -525,17 +468,10 @@ func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
 }
 
 func TestWithConstraint_ValidInt32ChoiceOnInt32Array(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_INT_CHOICE,
-		Kind: &protos.Constraint_Int32Choice{
-			Int32Choice: &protos.Int32ChoiceConstraint{
-				Choices: []*protos.Int32ChoiceConstraint_IntChoice{
-					{Value: 0, Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "Off"}}},
-					{Value: 1, Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "On"}}},
-				},
-			},
-		},
-	}
+	c := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 0, Name: NewPolyglotText("en", "Off")},
+		{Value: 1, Name: NewPolyglotText("en", "On")},
+	})
 	p := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected int32 choice constraint to be applied to INT32_ARRAY param")
@@ -543,14 +479,9 @@ func TestWithConstraint_ValidInt32ChoiceOnInt32Array(t *testing.T) {
 }
 
 func TestWithConstraint_ValidAlarmTableOnInt32Array(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_ALARM_TABLE,
-		Kind: &protos.Constraint_AlarmTable{
-			AlarmTable: &protos.AlarmTableConstraint{
-				Alarms: []*protos.Alarm{{BitValue: 0, Severity: protos.Alarm_INFO}},
-			},
-		},
-	}
+	c := NewConstraintAlarmTable([]AlarmEntry{
+		{BitValue: 0, Severity: AlarmSeverityInfo},
+	})
 	p := NewParamInt32Array([]int32{0, 1, 2}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected alarm table constraint to be applied to INT32_ARRAY param")
@@ -558,12 +489,7 @@ func TestWithConstraint_ValidAlarmTableOnInt32Array(t *testing.T) {
 }
 
 func TestWithConstraint_ValidFloatRangeOnFloat32Array(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_FLOAT_RANGE,
-		Kind: &protos.Constraint_FloatRange{
-			FloatRange: &protos.FloatRangeConstraint{MinValue: 0, MaxValue: 100, Step: 0.5},
-		},
-	}
+	c := NewConstraintFloatRange(0, 100, 0.5)
 	p := NewParamFloat32Array([]float32{1.0, 2.0}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected float range constraint to be applied to FLOAT32_ARRAY param")
@@ -571,12 +497,7 @@ func TestWithConstraint_ValidFloatRangeOnFloat32Array(t *testing.T) {
 }
 
 func TestWithConstraint_ValidStringChoiceOnStringArray(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_STRING_CHOICE,
-		Kind: &protos.Constraint_StringChoice{
-			StringChoice: &protos.StringChoiceConstraint{Choices: []string{"a", "b"}, Strict: true},
-		},
-	}
+	c := NewConstraintStringChoice(true, "a", "b")
 	p := NewParamStringArray([]string{"a", "b"}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected string choice constraint to be applied to STRING_ARRAY param")
@@ -584,17 +505,9 @@ func TestWithConstraint_ValidStringChoiceOnStringArray(t *testing.T) {
 }
 
 func TestWithConstraint_ValidStringStringChoiceOnStringArray(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_STRING_STRING_CHOICE,
-		Kind: &protos.Constraint_StringStringChoice{
-			StringStringChoice: &protos.StringStringChoiceConstraint{
-				Choices: []*protos.StringStringChoiceConstraint_StringStringChoice{
-					{Value: "<#FF0000>", Name: &protos.PolyglotText{DisplayStrings: map[string]string{"en": "Red"}}},
-				},
-				Strict: true,
-			},
-		},
-	}
+	c := NewConstraintStringStringChoice(true, []StringStringChoice{
+		{Value: "<#FF0000>", Name: NewPolyglotText("en", "Red")},
+	})
 	p := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).Proto
 	if p.GetConstraint() == nil {
 		t.Fatal("expected string-string choice constraint to be applied to STRING_ARRAY param")
@@ -602,12 +515,7 @@ func TestWithConstraint_ValidStringStringChoiceOnStringArray(t *testing.T) {
 }
 
 func TestWithConstraint_InvalidIntOnStringArray(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_INT_RANGE,
-		Kind: &protos.Constraint_Int32Range{
-			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 10, Step: 1},
-		},
-	}
+	c := NewConstraintInt32Range(0, 10, 1)
 	p := NewParamStringArray([]string{"a"}).WithConstraint(c).Proto
 	if p.GetConstraint() != nil {
 		t.Error("expected int32 range constraint to be rejected on STRING_ARRAY param")
@@ -617,12 +525,7 @@ func TestWithConstraint_InvalidIntOnStringArray(t *testing.T) {
 // --- Full chaining test ---
 
 func TestFullChaining(t *testing.T) {
-	c := &protos.Constraint{
-		Type: protos.Constraint_INT_RANGE,
-		Kind: &protos.Constraint_Int32Range{
-			Int32Range: &protos.Int32RangeConstraint{MinValue: 0, MaxValue: 100, Step: 1, DisplayMin: 0, DisplayMax: 100},
-		},
-	}
+	c := NewConstraintInt32RangeWithDisplay(0, 100, 1, 0, 100)
 	p := NewParamInt32(0).
 		WithName(NewPolyglotText("en", "Volume")).
 		WithConstraint(c).
@@ -673,7 +576,7 @@ func TestFullChaining(t *testing.T) {
 
 func TestWithValue_MatchingType(t *testing.T) {
 	v, res := ToValue(int32(42))
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatal(res.Error)
 	}
 	p := NewParamInt32(0).WithValue(v).Proto
@@ -684,7 +587,7 @@ func TestWithValue_MatchingType(t *testing.T) {
 
 func TestWithValue_Struct(t *testing.T) {
 	v, res := ToValue(map[string]any{"name": "test"})
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatal(res.Error)
 	}
 	p := NewParamStruct(nil).WithValue(v).Proto
@@ -697,7 +600,7 @@ func TestWithValue_Struct(t *testing.T) {
 func TestWithValue_StructVariant(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "type_a", Value: int32(10)}
 	v, res := ToValue(sv)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatal(res.Error)
 	}
 	p := NewParamStructVariant(nil).WithValue(v).Proto
@@ -709,7 +612,7 @@ func TestWithValue_StructVariant(t *testing.T) {
 
 func TestWithValue_MismatchedType(t *testing.T) {
 	v, res := ToValue("hello")
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatal(res.Error)
 	}
 	p := NewParamInt32(0).WithValue(v).Proto
@@ -723,7 +626,7 @@ func TestWithValue_MismatchedType(t *testing.T) {
 func TestSetValue_OK(t *testing.T) {
 	cp := NewParamInt32(0)
 	res := cp.SetValue(int32(99))
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 	p := cp.Proto
@@ -735,8 +638,8 @@ func TestSetValue_OK(t *testing.T) {
 func TestSetValue_TypeMismatch(t *testing.T) {
 	cp := NewParamInt32(0)
 	res := cp.SetValue("not an int")
-	if res.Code != INVALID_ARGUMENT {
-		t.Errorf("expected INVALID_ARGUMENT, got %v", res.Code)
+	if res.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected StatusCodeInvalidArgument, got %v", res.Code)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 0 {
 		t.Error("expected value to remain unchanged after type mismatch")
@@ -746,7 +649,7 @@ func TestSetValue_TypeMismatch(t *testing.T) {
 func TestSetValue_ConversionError(t *testing.T) {
 	cp := NewParamInt32(0)
 	res := cp.SetValue(struct{}{})
-	if res.Code == OK {
+	if res.Code == StatusCodeOk {
 		t.Error("expected conversion error for unsupported type")
 	}
 }
@@ -754,7 +657,7 @@ func TestSetValue_ConversionError(t *testing.T) {
 func TestGetValue_OK(t *testing.T) {
 	cp := NewParamString("hello")
 	v, res := cp.GetValue()
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 	s, ok := v.(string)
@@ -766,7 +669,7 @@ func TestGetValue_OK(t *testing.T) {
 func TestGetValue_Nil(t *testing.T) {
 	cp := NewParamStruct(nil)
 	v, res := cp.GetValue()
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK for nil value, got %v: %s", res.Code, res.Error)
 	}
 	if v != nil {
@@ -778,11 +681,11 @@ func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
 	cp := NewParamStruct(nil)
 	input := map[string]any{"x": int32(1), "y": int32(2)}
 	res := cp.SetValue(input)
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("SetValue failed: %s", res.Error)
 	}
 	out, res := cp.GetValue()
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("GetValue failed: %s", res.Error)
 	}
 	m, ok := out.(map[string]any)
@@ -922,7 +825,7 @@ func TestNewParamFromValue_AllScalarTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v, res := ToValue(tt.input)
-			if res.Code != OK {
+			if res.Code != StatusCodeOk {
 				t.Fatalf("ToValue failed: %s", res.Error)
 			}
 			cp := NewParamFromValue(v)
@@ -1113,7 +1016,7 @@ func TestParamTypeFromValueKind_UndefinedValue(t *testing.T) {
 }
 
 func TestIsConstraintValidForParam_NilKind(t *testing.T) {
-	c := &protos.Constraint{}
+	c := &Constraint{Proto: &protos.Constraint{}}
 	if isConstraintValidForParam(c, protos.ParamType_INT32) {
 		t.Error("expected constraint with nil Kind to be invalid")
 	}
@@ -1122,14 +1025,14 @@ func TestIsConstraintValidForParam_NilKind(t *testing.T) {
 func TestSetValue_InvalidThenValid(t *testing.T) {
 	cp := NewParamInt32(10)
 	res := cp.SetValue("wrong type")
-	if res.Code != INVALID_ARGUMENT {
-		t.Errorf("expected INVALID_ARGUMENT, got %v", res.Code)
+	if res.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected StatusCodeInvalidArgument, got %v", res.Code)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 10 {
 		t.Error("expected original value to be preserved after failed SetValue")
 	}
 	res = cp.SetValue(int32(20))
-	if res.Code != OK {
+	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 20 {

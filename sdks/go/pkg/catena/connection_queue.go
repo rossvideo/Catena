@@ -52,10 +52,11 @@ import (
 // Updates channel as proto PushUpdates messages. The Done channel is closed
 // by the ConnectionQueue to signal server-initiated shutdown.
 type Connection struct {
-	ID      int
-	Updates chan *protos.PushUpdates
-	Done    chan struct{}
-	owner   Transport
+	ID             int
+	Updates        chan *protos.PushUpdates
+	Done           chan struct{}
+	HandlerContext HandlerContext
+	owner          Transport
 }
 
 // connectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
@@ -71,9 +72,9 @@ type connectionQueue struct {
 
 type connectionQueueInterface interface {
 	setMaxConnections(max int)
-	registerOwnedConnection(owner Transport, initialUpdate *protos.PushUpdates) (int, *Connection)
+	registerOwnedConnection(owner Transport, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult)
 	deregisterConnection(connID int)
-	notifyUpdate(update *protos.PushUpdates)
+	notifyUpdate(update *protos.PushUpdates, scope string)
 	shutdown(ctx context.Context)
 	shutdownOwner(ctx context.Context, owner Transport)
 	shutdownConnection(ctx context.Context, connection *Connection)
@@ -102,24 +103,25 @@ func (cq *connectionQueue) setMaxConnections(max int) {
 
 // registerConnection creates a new connection and returns its ID and connection.
 // Returns (-1, nil) if server is shutting down or max connections reached.
-func (cq *connectionQueue) registerOwnedConnection(owner Transport, initialUpdate *protos.PushUpdates) (int, *Connection) {
+func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
 	if cq.shuttingDown {
-		return -1, nil
+		return nil, StatusWithCode(StatusCodeInternal, "Server is shutting down")
 	}
 
 	if cq.maxConnections > 0 && len(cq.connections) >= cq.maxConnections {
-		return -1, nil
+		return nil, StatusWithCode(StatusCodeResourceExhausted, "Maximum connections reached")
 	}
 
 	cq.nextConnID++
 	conn := &Connection{
-		ID:      cq.nextConnID,
-		Updates: make(chan *protos.PushUpdates, 100),
-		Done:    make(chan struct{}),
-		owner:   owner,
+		ID:             cq.nextConnID,
+		Updates:        make(chan *protos.PushUpdates, 100),
+		Done:           make(chan struct{}),
+		HandlerContext: handlerContext,
+		owner:          owner,
 	}
 	cq.connections[cq.nextConnID] = conn
 
@@ -132,7 +134,7 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, initialUpdat
 		}
 	}
 	logger.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
-	return cq.nextConnID, conn
+	return conn, StatusWithCode(StatusCodeOk, "Connection registered successfully")
 }
 
 // deregisterConnection removes a connection from the queue.
@@ -151,17 +153,28 @@ func (cq *connectionQueue) deregisterConnection(connID int) {
 // notifyUpdate sends a PushUpdates message to all connected clients.
 // Called when a value changes (by client or server) to propagate
 // the update to all streaming subscribers.
-func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates) {
+func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scope string) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
 	for connID, conn := range cq.connections {
+		if isValueUpdate(update) && scope != "" && !conn.HandlerContext.HasReadScope(scope) {
+			continue
+		}
 		select {
 		case conn.Updates <- update:
 		default:
 			logger.Warning("Streaming channel full, dropping update", "connID", connID)
 		}
 	}
+}
+
+func isValueUpdate(update *protos.PushUpdates) bool {
+	if update == nil {
+		return false
+	}
+	_, ok := update.Kind.(*protos.PushUpdates_Value)
+	return ok
 }
 
 // shutdown signals all connections to stop and waits for them to deregister.

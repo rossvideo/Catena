@@ -100,7 +100,7 @@ func CommandReply(value Value) (CommandResult, StatusResult) {
 		response: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Response{Response: value.Value},
 		},
-	}, StatusResult{Code: OK}
+	}, StatusResult{Code: StatusCodeOk}
 }
 
 // CommandNoResponse returns an empty command response (no_response).
@@ -109,7 +109,7 @@ func CommandNoResponse() (CommandResult, StatusResult) {
 		response: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
 		},
-	}, StatusResult{Code: OK}
+	}, StatusResult{Code: StatusCodeOk}
 }
 
 // CommandExceptionResult returns a command exception response.
@@ -127,7 +127,7 @@ func CommandExceptionResult(exType, details string, errorMessage PolyglotText) (
 		response: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Exception{Exception: exc},
 		},
-	}, StatusResult{Code: OK}
+	}, StatusResult{Code: StatusCodeOk}
 }
 
 // CommandError returns a transport-level error (not a CommandResponse exception).

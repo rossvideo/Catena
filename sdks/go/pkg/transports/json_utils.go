@@ -177,29 +177,29 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 
 	contentType := r.Header.Get("Content-Type")
 	if contentType == "" {
-		return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: "missing Content-Type header"}
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "missing Content-Type header"}
 	} else {
 		mediaType, _, err := mime.ParseMediaType(contentType)
 		if err != nil {
-			return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: fmt.Sprintf("invalid content type: %s", contentType)}
+			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
 		}
 		if mediaType != "application/json" {
-			return nil, catena.StatusResult{Code: catena.INVALID_ARGUMENT, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
+			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
 		}
 	}
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil || err == io.EOF {
-		return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: fmt.Sprintf("failed to read request body: %v", err)}
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
 	}
 
 	v := &protos.Value{}
 	if err := (protojson.UnmarshalOptions{
 		DiscardUnknown: true,
 	}).Unmarshal(data, v); err != nil {
-		return nil, catena.StatusResult{Code: catena.BAD_REQUEST, Error: fmt.Sprintf("failed to unmarshal request body: %v", err)}
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to unmarshal request body: %v", err)}
 	}
-	return v, catena.StatusResult{Code: catena.OK}
+	return v, catena.StatusResult{Code: catena.StatusCodeOk}
 }
 
 // --- Device JSON cleanup via fastjson AST ---

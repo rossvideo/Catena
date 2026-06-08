@@ -38,7 +38,11 @@
 
 package config
 
-import "log/slog"
+import (
+	"log/slog"
+	"net/http"
+	"time"
+)
 
 type RuntimeOptions struct {
 	UseGrpc bool
@@ -53,27 +57,42 @@ type ServerOptions struct {
 
 	// maximum number of concurrent connections (default: 100)
 	MaxConnections int
+	// AuthzEnabled enables authorization checks for all endpoints. If false, all requests are allowed.
+	AuthzEnabled bool
+	// JwtOptions configures JWT validation for incoming requests when AuthzEnabled is true
+	JwtOptions JwtValidationOptions
+}
+
+// JwtValidationOptions controls optional claim validation and HTTP behavior.
+type JwtValidationOptions struct {
+	// AllowedAlgs specifies which signing algorithms are allowed. If empty, defaults to ES256.
+	AllowedAlgs []string
+	// Audience used to validate the "aud" claim. Optional.
+	Audience string
+	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if ValidateSignature is true. Optional.
+	Issuer string
+	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
+	Leeway time.Duration
+	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
+	ValidateSignature bool
+
+	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
+	Http *http.Client
 }
 
 type LoggerOptions struct {
 	// AppName is used in log file naming
 	AppName string
-
 	// LogDir is the directory for log files
 	LogDir string
-
 	// Silent suppresses all log output
 	Silent bool
-
 	// Level is the minimum log level to output
 	Level slog.Level
-
 	// WriteToFile enables file logging
 	WriteToFile bool
-
 	// WriteToConsole enables console (stderr) logging
 	WriteToConsole bool
-
 	// UseJSON outputs logs in JSON format (useful for structured logging)
 	UseJSON bool
 }
@@ -91,6 +110,19 @@ func DefaultServerOptions() ServerOptions {
 	return ServerOptions{
 		IsDev:          false,
 		MaxConnections: 100,
+		AuthzEnabled:   true,
+		JwtOptions:     DefaultJwtValidationOptions(),
+	}
+}
+
+func DefaultJwtValidationOptions() JwtValidationOptions {
+	return JwtValidationOptions{
+		AllowedAlgs:       nil, // will default to ES256 in the code if empty
+		Audience:          "",
+		Issuer:            "",
+		Leeway:            0,
+		ValidateSignature: true,
+		Http:              nil, // will default to http.DefaultClient in the code if nil
 	}
 }
 

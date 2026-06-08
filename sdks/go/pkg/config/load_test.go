@@ -58,7 +58,7 @@ func TestInitOptions(t *testing.T) {
 		// should return default options with the app name set
 		defaultOpts := defaultRuntimeOptions()
 		defaultOpts.Logger.AppName = "test_app"
-		if opts != defaultOpts {
+		if !reflect.DeepEqual(opts, defaultOpts) {
 			t.Errorf("Expected options to be %v got: %v", defaultOpts, opts)
 		}
 	})

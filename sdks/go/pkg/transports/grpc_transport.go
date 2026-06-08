@@ -44,6 +44,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -51,6 +52,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
@@ -207,6 +209,31 @@ func (t *GrpcTransport) streamInterceptor(srv interface{}, ss grpc.ServerStream,
 	return t.sanitizeGRPCError(err)
 }
 
+func (t *GrpcTransport) retrieveMetadataFromContext(ctx context.Context) catena.TransportContext {
+	var accessToken string
+	requestMetadata, ok := metadata.FromIncomingContext(ctx)
+	metadataMap := make(map[string][]string)
+	if ok {
+		if vals := requestMetadata.Get("authorization"); len(vals) > 0 {
+			accessToken = vals[0]
+		} else {
+			logger.Debug("No authorization metadata found in context")
+		}
+
+		// Convert metadata.MD map[string][]string to map[string][]string
+		metadataMap = maps.Clone(requestMetadata)
+	} else {
+		logger.Debug("No metadata found in context")
+	}
+
+	transportContext := catena.TransportContext{
+		AccessToken: accessToken,
+		Metadata:    metadataMap,
+	}
+
+	return transportContext
+}
+
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
 type catenaService struct {
 	transport *GrpcTransport
@@ -215,7 +242,13 @@ type catenaService struct {
 
 func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
 	logger.Info("GetPopulatedSlots")
-	slots := s.transport.runtime.GetSlots()
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	slots, res := s.transport.runtime.GetSlots(transportContext)
+	if res.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(res.Code), res.Error)
+	}
+
 	uint32slots := make([]uint32, len(slots))
 	for i, slot := range slots {
 		uint32slots[i] = uint32(slot)
@@ -226,13 +259,14 @@ func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty
 // DeviceRequest streams the device information for a slot
 func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream grpc.ServerStreamingServer[protos.DeviceComponent]) error {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
 	logger.Info("DeviceRequest", "slot", slot)
 
-	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot, transportContext)
 	if res.Error != "" {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -257,14 +291,15 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 // GetValue returns the value of a parameter
 func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayload) (*protos.Value, error) {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
 	fqoid := req.Oid
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
-	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid)
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid, transportContext)
 	if result.Error != "" {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -276,7 +311,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 // SetValue sets the value of a parameter
 func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValuePayload) (*protos.Empty, error) {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -290,12 +325,13 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 
 	// Convert proto value to native Go type
 	nativeValue, errProto := catena.FromProto(req.Value.Value)
-	if errProto.Code != catena.OK {
+	if errProto.Code != catena.StatusCodeOk {
 		logger.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto.Error))
 	}
 
-	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -307,24 +343,25 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 // MultiSetValue sets multiple parameter values
 func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetValuePayload) (*protos.Empty, error) {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
 	// TODO server should get a direct handler for this to make it a atomic operation, rather than looping and invoking the single set handler multiple times
 
 	logger.Info("MultiSetValue", "slot", slot, "count", len(req.Values))
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 
 	for _, setValue := range req.Values {
 		fqoid := setValue.Oid
 
 		nativeValue, errProto := catena.FromProto(setValue.Value)
-		if errProto.Code != catena.OK {
+		if errProto.Code != catena.StatusCodeOk {
 			logger.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
 		}
 
-		result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid)
+		result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
 		if result.Error != "" {
 			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 			return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -337,14 +374,16 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 // ExternalObjectRequest streams external object (asset) data
 func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestPayload, stream grpc.ServerStreamingServer[protos.ExternalObjectPayload]) error {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
 	fqoid := req.Oid
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
-	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+
+	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
 	if result.Error != "" {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -362,7 +401,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 // ExecuteCommand executes a command and streams the response
 func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream grpc.ServerStreamingServer[protos.CommandResponse]) error {
 	slot, err := catena.ValidateSlot(req.Slot)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -373,13 +412,15 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	if req.Value != nil {
 		var errProto catena.StatusResult
 		payload, errProto = catena.FromProto(req.Value)
-		if errProto.Code != catena.OK {
+		if errProto.Code != catena.StatusCodeOk {
 			logger.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto.Error)
 			return status.Error(codes.InvalidArgument, fmt.Sprintf("invalid command payload: %v", errProto.Error))
 		}
 	}
 
-	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+
+	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
 	if result.Error != "" {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -397,7 +438,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 // ParamInfoRequest streams parameter information for the given slot and OID prefix.
 func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, stream grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
 	slot, err := catena.ValidateSlot(req.GetSlot())
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
@@ -405,7 +446,9 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 	recursive := req.GetRecursive()
 	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
 
-	infos, res := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive)
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+
+	infos, res := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
 	if res.Error != "" {
 		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -445,91 +488,74 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 	// Register this connection with the runtime using this transport as owner.
 	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
 	// so one transport can shut down without impacting streams owned by others.
-	connID, conn := s.transport.runtime.RegisterTransportConnection(s.transport)
-	if connID < 0 {
-		logger.Error("gRPC connection rejected - server shutting down")
-		return status.Error(codes.Unavailable, "server shutting down")
+	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
+	conn, err := s.transport.runtime.RegisterTransportConnection(s.transport, transportContext)
+	if err.Code != catena.StatusCodeOk {
+		logger.Error("gRPC connection rejected", "error", err.Error)
+		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
-	defer s.transport.runtime.DeregisterConnection(connID)
+	defer s.transport.runtime.DeregisterConnection(conn.ID)
 
-	logger.Info("gRPC Connect started", "connID", connID)
+	logger.Info("gRPC Connect started", "connID", conn.ID)
 
 	// Listen for updates and client disconnect
 	ctx := stream.Context()
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Info("gRPC client disconnected", "connID", connID)
+			logger.Info("gRPC client disconnected", "connID", conn.ID)
 			return ctx.Err()
 		case <-conn.Done:
-			logger.Info("gRPC connection shut down by server", "connID", connID)
+			logger.Info("gRPC connection shut down by server", "connID", conn.ID)
 			return status.Error(codes.Unavailable, "server shutting down")
 		case update := <-conn.Updates:
 			if err := stream.Send(update); err != nil {
-				logger.Error("failed to send update", "connID", connID, "error", err)
+				logger.Error("failed to send update", "connID", conn.ID, "error", err)
 				return err
 			}
 		}
 	}
 }
 
-// ToGRPCCode converts a StatusCode to a gRPC codes.Code.
-// REST-specific codes are mapped to their closest gRPC equivalents.
-// Only codes 0-16 are valid gRPC codes; this ensures proper interoperability.
+// ToGRPCCode converts a transport-neutral StatusCode to a gRPC codes.Code.
+// Catena StatusCode values 0–16 align 1:1 with google.golang.org/grpc/codes
+// per ST 2138-11 §6.2 Table 2; any other input maps to codes.Unknown.
 func ToGRPCCode(s catena.StatusCode) codes.Code {
 	switch s {
-	// gRPC-compatible codes (0-16) map directly
-	case catena.OK:
+	case catena.StatusCodeOk:
 		return codes.OK
-	case catena.CANCELLED:
+	case catena.StatusCodeCancelled:
 		return codes.Canceled
-	case catena.UNKNOWN:
+	case catena.StatusCodeUnknown:
 		return codes.Unknown
-	case catena.INVALID_ARGUMENT:
+	case catena.StatusCodeInvalidArgument:
 		return codes.InvalidArgument
-	case catena.DEADLINE_EXCEEDED:
+	case catena.StatusCodeDeadlineExceeded:
 		return codes.DeadlineExceeded
-	case catena.NOT_FOUND:
+	case catena.StatusCodeNotFound:
 		return codes.NotFound
-	case catena.ALREADY_EXISTS:
+	case catena.StatusCodeAlreadyExists:
 		return codes.AlreadyExists
-	case catena.PERMISSION_DENIED:
+	case catena.StatusCodePermissionDenied:
 		return codes.PermissionDenied
-	case catena.RESOURCE_EXHAUSTED:
+	case catena.StatusCodeResourceExhausted:
 		return codes.ResourceExhausted
-	case catena.FAILED_PRECONDITION:
+	case catena.StatusCodeFailedPrecondition:
 		return codes.FailedPrecondition
-	case catena.ABORTED:
+	case catena.StatusCodeAborted:
 		return codes.Aborted
-	case catena.OUT_OF_RANGE:
+	case catena.StatusCodeOutOfRange:
 		return codes.OutOfRange
-	case catena.UNIMPLEMENTED:
+	case catena.StatusCodeUnimplemented:
 		return codes.Unimplemented
-	case catena.INTERNAL:
+	case catena.StatusCodeInternal:
 		return codes.Internal
-	case catena.UNAVAILABLE:
+	case catena.StatusCodeUnavailable:
 		return codes.Unavailable
-	case catena.DATA_LOSS:
+	case catena.StatusCodeDataLoss:
 		return codes.DataLoss
-	case catena.UNAUTHENTICATED:
+	case catena.StatusCodeUnauthenticated:
 		return codes.Unauthenticated
-	// REST-specific codes need conversion
-	case catena.CREATED, catena.ACCEPTED, catena.NO_CONTENT:
-		return codes.OK
-	case catena.METHOD_NOT_ALLOWED:
-		return codes.Unimplemented
-	case catena.CONFLICT:
-		return codes.AlreadyExists
-	case catena.UNPROCESSABLE_ENTITY:
-		return codes.InvalidArgument
-	case catena.TOO_MANY_REQUESTS:
-		return codes.ResourceExhausted
-	case catena.BAD_GATEWAY:
-		return codes.Unavailable
-	case catena.SERVICE_UNAVAILABLE:
-		return codes.Unavailable
-	case catena.GATEWAY_TIMEOUT:
-		return codes.DeadlineExceeded
 	default:
 		return codes.Unknown
 	}

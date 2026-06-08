@@ -117,21 +117,21 @@ func RegisterBasicParamHandlers(srv catena.CatenaServer, params *sync.Map, slot 
 		logger.Info("SetParam", "slot", slot, "fqoid", fqoid)
 		if value == nil {
 			logger.Error("SetParam nil value received", "slot", slot, "fqoid", fqoid)
-			return catena.StatusWithCode(catena.INTERNAL, "nil value received")
+			return catena.StatusWithCode(catena.StatusCodeInternal, "nil value received")
 		}
 		val, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("SetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.StatusWithCode(catena.NOT_FOUND, "param not found")
+			return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetParam type mismatch", "slot", slot, "fqoid", fqoid)
-			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
+			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
 		params.Store(fqoid, value)
 
-		srv.BroadcastUpdate(slot, fqoid, value)
-		return catena.StatusWithCode(catena.NO_CONTENT, "")
+		srv.BroadcastUpdate(slot, fqoid, value, catena.ScopeMon)
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.CatenaValue, catena.StatusResult) {
@@ -139,12 +139,12 @@ func RegisterBasicParamHandlers(srv catena.CatenaServer, params *sync.Map, slot 
 		v, ok := params.Load(fqoid)
 		if !ok {
 			logger.Error("GetParam param not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
+			return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "param not found")
 		}
 		catenaVal, res := catena.ToCatenaValue(v)
-		if res.Code != catena.OK {
+		if res.Code != catena.StatusCodeOk {
 			logger.Error("GetParam failed to convert value", "slot", slot, "fqoid", fqoid, "error", res.Error)
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+			return catena.ReplyError[catena.CatenaValue](catena.StatusCodeInternal, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
 	})
@@ -154,38 +154,38 @@ func RegisterBasicParamHandlers(srv catena.CatenaServer, params *sync.Map, slot 
 func RegisterSpecificParamHandlers(srv catena.CatenaServer, params *sync.Map, fqoid string, slot uint16) {
 	srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid_ string) catena.StatusResult {
 		if fqoid_ != fqoid {
-			return catena.StatusWithCode(catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
+			return catena.StatusWithCode(catena.StatusCodeUnimplemented, "no handler for fqoid "+fqoid_)
 		}
 		logger.Info("SetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		val, ok := params.Load(fqoid_)
 		if !ok {
 			logger.Error("SetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
-			return catena.StatusWithCode(catena.NOT_FOUND, "param not found")
+			return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 		}
 		if reflect.TypeOf(val) != reflect.TypeOf(value) {
 			logger.Error("SetSpecificParam type mismatch", "slot", slot, "fqoid", fqoid_)
-			return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
+			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
 		params.Store(fqoid_, value)
 
-		srv.BroadcastUpdate(slot, fqoid_, value)
-		return catena.StatusWithCode(catena.OK, "")
+		srv.BroadcastUpdate(slot, fqoid_, value, catena.ScopeMon)
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid_ string) (catena.CatenaValue, catena.StatusResult) {
 		if fqoid_ != fqoid {
-			return catena.ReplyError[catena.CatenaValue](catena.UNIMPLEMENTED, "no handler for fqoid "+fqoid_)
+			return catena.ReplyError[catena.CatenaValue](catena.StatusCodeUnimplemented, "no handler for fqoid "+fqoid_)
 		}
 		logger.Info("GetSpecificParam", "slot", slot, "fqoid", fqoid_)
 		v, ok := params.Load(fqoid_)
 		if !ok {
 			logger.Error("GetSpecificParam param not found", "slot", slot, "fqoid", fqoid_)
-			return catena.ReplyError[catena.CatenaValue](catena.NOT_FOUND, "param not found")
+			return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "param not found")
 		}
 		catenaVal, res := catena.ToCatenaValue(v)
-		if res.Code != catena.OK {
+		if res.Code != catena.StatusCodeOk {
 			logger.Error("GetSpecificParam failed to convert value", "slot", slot, "fqoid", fqoid_, "error", res.Error)
-			return catena.ReplyError[catena.CatenaValue](catena.INTERNAL, "failed to convert value")
+			return catena.ReplyError[catena.CatenaValue](catena.StatusCodeInternal, "failed to convert value")
 		}
 		return catena.Reply(catenaVal)
 	})
@@ -204,8 +204,8 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		srv.RegisterExecuteCommandHandler(slot, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
 			logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid, "payload", payload)
 			catenaVal, res := catena.ToCatenaValue("Command " + commandFqoid + " executed successfully")
-			if res.Code != catena.OK {
-				return catena.CommandError(catena.INTERNAL, "failed to create command response")
+			if res.Code != catena.StatusCodeOk {
+				return catena.CommandError(catena.StatusCodeInternal, "failed to create command response")
 			}
 			return catena.CommandReply(catenaVal)
 		})
@@ -218,7 +218,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 			logger.Info("GetDevice", "slot", slot)
 			device, err := catena.ToCatenaDevice(deviceInfo)
 			if err != nil {
-				return catena.ReplyError[catena.CatenaDevice](catena.INTERNAL, "failed to create device info")
+				return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeInternal, "failed to create device info")
 			}
 			return catena.Reply(device)
 		})

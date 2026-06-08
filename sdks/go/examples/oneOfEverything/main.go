@@ -514,7 +514,11 @@ func main() {
 	}
 	defer closeLogger()
 
-	srv := catena.NewServer(options.Server)
+	srv, err := catena.NewServer(options.Server)
+	if err != nil {
+		logger.Error("Failed to create Catena server", "error", err)
+		os.Exit(1)
+	}
 	counter := &CounterState{}
 	slotParams := map[uint16]*sync.Map{
 		0: {},
@@ -529,6 +533,7 @@ func main() {
 	slotParams[2].Store("volume", int32(75))
 	slotParams[2].Store("muted", int32(0))
 	slotParams[2].Store("device_name", "Demo Device")
+	counterScope := catena.ScopeCfg
 
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
@@ -537,7 +542,7 @@ func main() {
 			if counter.IsRunning() {
 				counter.Increment()
 				logger.Info("Counter tick", "value", counter.GetValue())
-				srv.BroadcastUpdate(0, "counter", counter.GetValue())
+				srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			}
 		}
 	}()
@@ -546,7 +551,7 @@ func main() {
 	// broadcastRunning publishes the current running flag on the "running" param
 	// so subscribers (REST SSE / gRPC stream) see the state change live.
 	broadcastRunning := func() {
-		srv.BroadcastUpdate(0, "running", counter.RunningInt32())
+		srv.BroadcastUpdate(0, "running", counter.RunningInt32(), catena.ScopeMon)
 	}
 
 	commands := map[string]CommandHandler{
@@ -558,7 +563,7 @@ func main() {
 				logger.Info("Counter started", "value", counter.GetValue())
 				broadcastRunning()
 			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -571,7 +576,7 @@ func main() {
 				logger.Info("Counter stopped", "value", counter.GetValue())
 				broadcastRunning()
 			}
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -579,7 +584,7 @@ func main() {
 		"add10": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -587,7 +592,7 @@ func main() {
 		"reset": func(payload any) (catena.CommandResult, catena.StatusResult) {
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
-			srv.BroadcastUpdate(0, "counter", counter.GetValue())
+			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			val, _ := catena.ToValue(counter.GetValue())
 			return catena.CommandReply(val)
 		},
@@ -603,18 +608,24 @@ func main() {
 		assets.Store(id, payload)
 	}
 
+	srv.RegisterAccessHandler(func(endpointType catena.EndpointType, ctx catena.HandlerContext) bool {
+		logger.Info("Access request", "endpointType", endpointType)
+		// In a real implementation, you'd check the client's credentials and scopes here.
+		return true
+	})
+
 	for _, slot := range slotList {
-		srv.RegisterGetDeviceHandler(slot, func() (catena.Device, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
 			logger.Info("GetDevice", "slot", slot)
 
 			// Build per-request so every param's value reflects current state:
 			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
 			if !ok {
-				return catena.ReplyError[catena.Device](catena.NOT_FOUND, "device not found")
+				return catena.ReplyError[catena.Device](catena.StatusCodeNotFound, "device not found")
 			}
 			device, err := catena.ToDevice(deviceInfo)
 			if err != nil {
-				return catena.ReplyError[catena.Device](catena.INTERNAL, err.Error())
+				return catena.ReplyError[catena.Device](catena.StatusCodeInternal, err.Error())
 			}
 			return catena.Reply(device)
 		})
@@ -623,14 +634,21 @@ func main() {
 	for _, slot := range slotList {
 		p := slotParams[slot]
 
-		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string) (catena.Value, catena.StatusResult) {
+		srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {
 			logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
 
+			//Shows how to restrict scope access to specific slots.
+			if slot == 1 && !ctx.HasReadScope(catena.ScopeMon) {
+				return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "monitor scope required")
+			} else if slot == 0 && !ctx.HasReadScope(catena.ScopeCfg) {
+				return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "configuration scope required")
+			}
+
 			if slot == 0 && key == "counter" {
 				val, res := catena.ToValue(counter.GetValue())
-				if res.Code != catena.OK {
-					return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert counter value")
+				if res.Code != catena.StatusCodeOk {
+					return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert counter value")
 				}
 				return catena.Reply(val)
 			}
@@ -639,19 +657,19 @@ func main() {
 			// live state instead of any cached slot-param value.
 			if slot == 0 && key == "running" {
 				val, res := catena.ToValue(counter.RunningInt32())
-				if res.Code != catena.OK {
-					return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert running value")
+				if res.Code != catena.StatusCodeOk {
+					return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert running value")
 				}
 				return catena.Reply(val)
 			}
 
 			v, ok := p.Load(key)
 			if !ok {
-				return catena.ReplyError[catena.Value](catena.NOT_FOUND, "parameter not found: "+fqoid)
+				return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 			}
 			catenaVal, res := catena.ToValue(v)
-			if res.Code != catena.OK {
-				return catena.ReplyError[catena.Value](catena.INTERNAL, "failed to convert value")
+			if res.Code != catena.StatusCodeOk {
+				return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert value")
 			}
 			return catena.Reply(catenaVal)
 		})
@@ -660,13 +678,13 @@ func main() {
 	for _, slot := range slotList {
 		p := slotParams[slot]
 
-		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string) catena.StatusResult {
+		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("SetValue", "slot", slot, "fqoid", fqoid, "value", value)
 			key := normalizeFqoid(fqoid)
 
 			if value == nil {
 				logger.Error("SetValue nil value received", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "nil value received")
+				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value received")
 			}
 
 			// "running" is driven by start/stop commands, not direct writes,
@@ -674,29 +692,29 @@ func main() {
 			// between CounterState and the slot-param cache.
 			if slot == 0 && key == "running" {
 				logger.Warning("SetValue rejected for running param", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "use start/stop commands to change running state")
+				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "use start/stop commands to change running state")
 			}
 
 			val, ok := p.Load(key)
 			if !ok {
 				logger.Error("SetValue param not found", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+				return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 			}
 
 			if reflect.TypeOf(val) != reflect.TypeOf(value) {
 				logger.Error("SetValue type mismatch", "slot", slot, "fqoid", fqoid,
 					"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
-				return catena.StatusWithCode(catena.INVALID_ARGUMENT, "type mismatch")
+				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 			}
 
 			p.Store(key, value)
 			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-			srv.BroadcastUpdate(slot, fqoid, value)
-			return catena.StatusWithCode(catena.OK, "")
+			srv.BroadcastUpdate(slot, fqoid, value, catena.ScopeMon)
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 	}
 
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any) (catena.CommandResult, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx catena.HandlerContext) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 		key := normalizeFqoid(commandFqoid)
 
@@ -710,22 +728,22 @@ func main() {
 	})
 
 	for _, slot := range slotList {
-		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string) (catena.Asset, catena.StatusResult) {
+		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Asset, catena.StatusResult) {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
 
 			val, ok := assets.Load(key)
 			if !ok {
 				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-				return catena.ReplyError[catena.Asset](catena.NOT_FOUND, "asset not found: "+fqoid)
+				return catena.ReplyError[catena.Asset](catena.StatusCodeNotFound, "asset not found: "+fqoid)
 			}
 
 			payload := val.(catena.DataPayload)
 
 			catenaAsset, res := catena.ToAsset(payload, true)
-			if res.Code != catena.OK {
+			if res.Code != catena.StatusCodeOk {
 				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
-				return catena.ReplyError[catena.Asset](catena.INTERNAL, "failed to convert asset: "+res.Error)
+				return catena.ReplyError[catena.Asset](catena.StatusCodeInternal, "failed to convert asset: "+res.Error)
 			}
 
 			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))
@@ -734,10 +752,10 @@ func main() {
 	}
 
 	for _, slot := range slotList {
-		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
+		srv.RegisterParamInfoHandler(slot, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext) ([]catena.ParamInfo, catena.StatusResult) {
 			if recursive {
 				// TODO: implement recursive param info retrieval in example
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.UNIMPLEMENTED, "recursive param info not implemented in example")
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeUnimplemented, "recursive param info not implemented in example")
 			}
 			logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid)
 			key := normalizeFqoid(fqoid)
@@ -745,28 +763,28 @@ func main() {
 
 			deviceInfo, ok := BuildDevices(counter, slotParams)[slot]
 			if !ok {
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "device not found")
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 			}
 
 			params, ok := deviceInfo["params"].(map[string]any)
 			if !ok {
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.INTERNAL, "invalid device params structure")
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeInternal, "invalid device params structure")
 			}
 
 			var paramInfo map[string]any
 			found := false
 			for _, part := range pathParts {
 				if params == nil {
-					return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+					return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 				}
 				nextParam, exists := params[part]
 				if !exists {
-					return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+					return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 				}
 
 				paramInfo, ok = nextParam.(map[string]any)
 				if !ok {
-					return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+					return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 				}
 				found = true
 
@@ -778,7 +796,7 @@ func main() {
 			}
 
 			if !found {
-				return []catena.ParamInfo{}, catena.StatusWithCode(catena.NOT_FOUND, "param not found: "+fqoid)
+				return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 			}
 
 			oid := pathParts[len(pathParts)-1]
@@ -789,7 +807,7 @@ func main() {
 				}
 			}
 			catenaParamInfo := catena.NewParamInfo(oid, name, paramInfo["type"].(catena.ParamType), "", 0)
-			return []catena.ParamInfo{catenaParamInfo}, catena.StatusWithCode(catena.OK, "")
+			return []catena.ParamInfo{catenaParamInfo}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 	}
 
@@ -797,12 +815,12 @@ func main() {
 
 	srv.RegisterHeartbeatHandler(1, func(slot uint16) {
 		// example ticking on the cannonical "product/version" param
-		srv.BroadcastUpdate(1, "product/version", "1.0.0")
+		srv.BroadcastUpdate(1, "product/version", "1.0.0", catena.ScopeMon)
 	})
 	srv.RegisterHeartbeatHandler(2, func(slot uint16) {
 		// example ticking on a different param to show any can be used for heartbeats.
 		if val, ok := slotParams[2].Load("volume"); ok {
-			srv.BroadcastUpdate(2, "volume", val)
+			srv.BroadcastUpdate(2, "volume", val, catena.ScopeMon)
 		} else {
 			logger.Warning("Volume param missing at heartbeat", "slot", slot)
 		}
@@ -871,13 +889,13 @@ func main() {
 			if file, ok := fileMap[r.URL.Path]; ok {
 				data, err := webFS.ReadFile(file.path)
 				if err != nil {
-					return catena.ReplyError[catena.Value](catena.NOT_FOUND, "file not found: "+r.URL.Path)
+					return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "file not found: "+r.URL.Path)
 				}
 				w.Header().Set("Content-Type", file.contentType)
 				w.Write(data)
 				return catena.Reply(catena.Value{})
 			}
-			return catena.ReplyError[catena.Value](catena.NOT_FOUND, "endpoint not found: "+r.URL.Path)
+			return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "endpoint not found: "+r.URL.Path)
 		})
 
 		if err := srv.RegisterTransport(restTransport); err != nil {

@@ -57,7 +57,7 @@ func TestReadRequestJSON_ValidInt32(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetInt32Value() != 42 {
@@ -71,7 +71,7 @@ func TestReadRequestJSON_ValidString(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetStringValue() != "hello" {
@@ -85,7 +85,7 @@ func TestReadRequestJSON_ValidFloat(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetFloat32Value() < 3.13 || val.GetFloat32Value() > 3.15 {
@@ -99,7 +99,7 @@ func TestReadRequestJSON_ContentTypeWithCharset(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.OK {
+	if err.Code != catena.StatusCodeOk {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetInt32Value() != 100 {
@@ -113,7 +113,7 @@ func TestReadRequestJSON_MissingContentType(t *testing.T) {
 	// No Content-Type header
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.BAD_REQUEST {
+	if err.Code != catena.StatusCodeInvalidArgument {
 		t.Fatal("expected BAD_REQUEST error for missing Content-Type")
 	}
 	if err.Error != "missing Content-Type header" {
@@ -127,7 +127,7 @@ func TestReadRequestJSON_InvalidContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "text/plain")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.INVALID_ARGUMENT {
+	if err.Code != catena.StatusCodeInvalidArgument {
 		t.Fatal("expected error for invalid Content-Type")
 	}
 	if err.Error != "unsupported content type: text/plain, expected application/json" {
@@ -141,7 +141,7 @@ func TestReadRequestJSON_MalformedContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "invalid;;;type")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.BAD_REQUEST {
+	if err.Code != catena.StatusCodeInvalidArgument {
 		t.Fatal("expected error for malformed Content-Type")
 	}
 	if err.Error != "invalid content type: invalid;;;type" {
@@ -155,7 +155,7 @@ func TestReadRequestJSON_InvalidJSON(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.BAD_REQUEST {
+	if err.Code != catena.StatusCodeInvalidArgument {
 		t.Fatal("expected BAD_REQUEST error for invalid JSON")
 	}
 	if !strings.Contains(err.Error, "failed to unmarshal request body") {
@@ -168,7 +168,7 @@ func TestReadRequestJSON_EmptyBody(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.BAD_REQUEST {
+	if err.Code != catena.StatusCodeInvalidArgument {
 		t.Fatal("expected BAD_REQUEST error for empty body")
 	}
 	if !strings.Contains(err.Error, "failed to unmarshal request body") {
@@ -989,7 +989,7 @@ func TestMarshalAssetJSON(t *testing.T) {
 	}
 
 	asset, res := catena.ToAsset(dp, true)
-	if res.Code != catena.OK {
+	if res.Code != catena.StatusCodeOk {
 		t.Fatalf("ToAsset error: %v", res.Error)
 	}
 
