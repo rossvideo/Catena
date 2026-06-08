@@ -44,6 +44,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
@@ -56,7 +57,13 @@ const (
 	EnvProd Environment = "prod" // production mode
 )
 
-var currentEnv Environment = EnvProd // default to prod
+// currentEnv holds the active SDK environment (dev/prod). Stored atomically so concurrent readers and writers do not race.
+var currentEnv atomic.Pointer[Environment]
+
+func init() {
+	defaultEnv := EnvProd
+	currentEnv.Store(&defaultEnv)
+}
 
 // parseEnvString parses an environment string to Environment type.
 func parseEnvString(s string) Environment {
@@ -72,22 +79,22 @@ func parseEnvString(s string) Environment {
 
 // IsDev returns true if the SDK is running in development mode.
 func IsDev() bool {
-	return currentEnv == EnvDev
+	return *currentEnv.Load() == EnvDev
 }
 
 // IsProd returns true if the SDK is running in production mode.
 func IsProd() bool {
-	return currentEnv == EnvProd
+	return *currentEnv.Load() == EnvProd
 }
 
 // GetEnv returns the current environment (dev or prod).
 func GetEnv() Environment {
-	return currentEnv
+	return *currentEnv.Load()
 }
 
 // SetEnv allows programmatic override of the environment.
 func SetEnv(env Environment) {
-	currentEnv = env
+	currentEnv.Store(&env)
 }
 
 // Config holds all Catena SDK configuration.
@@ -195,7 +202,7 @@ func InitOptions(opts ...Options) (Config, error) {
 	if opt.AppName != "" {
 		cfg.Logger.AppName = opt.AppName
 	}
-	currentEnv = cfg.Env
+	SetEnv(cfg.Env)
 	if err := logger.Init(cfg.Logger); err != nil {
 		return Config{}, err
 	}

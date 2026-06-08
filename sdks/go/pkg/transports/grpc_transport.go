@@ -82,10 +82,8 @@ func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
 	}
 	transport.catenaService.transport = transport
 
-	// Register the CatenaService with the gRPC server
 	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
 
-	// Register reflection service on gRPC server if enabled
 	if reflectionEnabled {
 		reflection.Register(transport.grpcServer)
 		logger.Info("gRPC server created with reflection enabled")
@@ -105,15 +103,17 @@ func NewDefaultGrpcTransport() *GrpcTransport {
 func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRuntime) error {
 	t.runtime = runtime
 
-	addr := fmt.Sprintf(":%d", t.port)
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		logger.Error("Failed to create listener", "address", addr, "error", err)
-		return fmt.Errorf("failed to listen on %s: %w", addr, err)
+	if t.listener == nil {
+		addr := fmt.Sprintf(":%d", t.port)
+		listener, err := net.Listen("tcp", addr)
+		if err != nil {
+			logger.Error("Failed to create listener", "address", addr, "error", err)
+			return fmt.Errorf("failed to listen on %s: %w", addr, err)
+		}
+		t.listener = listener
 	}
-	t.listener = listener
 
-	logger.Info("Starting gRPC transport", "address", addr)
+	logger.Info("Starting gRPC transport", "address", t.listener.Addr().String())
 	logger.Info("grpc listening and ready to accept connections")
 
 	go func() {

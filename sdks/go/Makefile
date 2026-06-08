@@ -53,8 +53,8 @@ protos-grpc: proto-tools
 clean-protos:
 	rm -rf "$(GENERATED_DIR)"
 
-# Test coverage targets
-.PHONY: test coverage coverage-html coverage-lcov clean-coverage
+# Test targets
+.PHONY: test race coverage coverage-html coverage-lcov clean-coverage
 
 # Exclude generated protos from tests + coverage accounting
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
@@ -69,6 +69,16 @@ VERBOSE ?= 0
 
 test:
 	go test -v ./...
+
+RACE_PACKAGES ?= $(TEST_PACKAGES)
+RACE_COUNT ?= 10
+
+race: protos-all
+	go test \
+		-race \
+		-count=$(RACE_COUNT) \
+		$(if $(filter 1,$(VERBOSE)),-v) \
+		$(RACE_PACKAGES)
 
 coverage: | $(COVERAGE_DIR) protos-all
 	go test \
