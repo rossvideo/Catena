@@ -854,7 +854,7 @@ func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 		return nil, catena.StatusResult{Code: catena.StatusCodeResourceExhausted, Error: "connection rejected"}
 	}
 
-	_, cancel1 := setupSSEConnection(t, transport)
+	_, cleanup1 := setupSSEConnection(t, transport)
 
 	rec2 := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/connect", "")
 	assertStatus(t, rec2, http.StatusTooManyRequests)
@@ -863,7 +863,7 @@ func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 		t.Errorf("expected error \"connection rejected\" (dev) or \"Too Many Requests\" (prod), got %q", errMsg)
 	}
 
-	cleanupSSE(cancel1)
+	cleanup1()
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
@@ -1456,10 +1456,9 @@ func TestRestTransport_Connect_ServerShutdown(t *testing.T) {
 	runtime.WithConnection(connection)
 
 	_, cancel := setupSSEConnection(t, transport)
-	defer cancel()
 
 	connection.Done <- struct{}{}
-	time.Sleep(100 * time.Millisecond)
+	cancel()
 
 	if runtime.registerCalls != runtime.deregisterCalls {
 		t.Errorf("expected deregister calls to match register calls after server shutdown, got %d deregister calls and %d register calls", runtime.deregisterCalls, runtime.registerCalls)

@@ -195,21 +195,32 @@ func assertBodyNotContains(t *testing.T, rec *httptest.ResponseRecorder, substr 
 // --- SSE helpers ---
 
 // setupSSEConnection starts a background SSE connection to /st2138-api/v1/connect
-// and waits for the handler to be established. Returns the recorder and a cancel
+// and waits for the handler to be established. Returns the recorder and a cleanup
 // function to tear down the connection.
-func setupSSEConnection(t *testing.T, transport *RestTransport) (*httptest.ResponseRecorder, context.CancelFunc) {
+func setupSSEConnection(t *testing.T, transport *RestTransport) (*httptest.ResponseRecorder, func()) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
 	rec := httptest.NewRecorder()
-	go transport.mux.ServeHTTP(rec, req)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		transport.mux.ServeHTTP(rec, req)
+	}()
 	time.Sleep(150 * time.Millisecond)
-	return rec, cancel
+	return rec, func() {
+		cancel()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Fatal("SSE handler did not exit after context cancel")
+		}
+	}
 }
 
-// cleanupSSE cancels the SSE context and waits for the handler goroutine to exit.
-func cleanupSSE(cancel context.CancelFunc) {
-	cancel()
+// cleanupSSE tears down an SSE connection and waits briefly for cleanup.
+func cleanupSSE(cleanup func()) {
+	cleanup()
 	time.Sleep(50 * time.Millisecond)
 }
 

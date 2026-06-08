@@ -41,12 +41,14 @@ package transports
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
 
 type stubServerRuntime struct {
+	mu                       sync.Mutex
 	tb                       testing.TB
 	isDev                    bool
 	slots                    []uint16
@@ -141,6 +143,8 @@ func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string
 }
 
 func (s *stubServerRuntime) RegisterTransportConnection(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.registerTransportConnFn != nil {
 		conn, res := s.registerTransportConnFn(transport, ctx)
 		s.registerCalls++
@@ -155,6 +159,8 @@ func (s *stubServerRuntime) RegisterTransportConnection(transport catena.Transpo
 }
 
 func (s *stubServerRuntime) DeregisterConnection(connID int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.deregisterConnFn != nil {
 		s.deregisterCalls++
 		s.lastDeregisterID = connID
@@ -165,6 +171,8 @@ func (s *stubServerRuntime) DeregisterConnection(connID int) {
 }
 
 func (s *stubServerRuntime) ShutdownTransportConnections(ctx context.Context, transport catena.Transport) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.shutdownTransportConnsFn != nil {
 		s.lastShutdownOwner = transport
 		s.shutdownCalls++
