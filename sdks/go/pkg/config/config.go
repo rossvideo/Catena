@@ -48,10 +48,11 @@ import (
 )
 
 type RuntimeOptions struct {
-	UseGrpc bool `env:"USE_GRPC" flag:"use-grpc"`
-	UseRest bool `env:"USE_REST" flag:"use-rest"`
-	Server  ServerOptions
-	Logger  LoggerOptions
+	UseGrpc   bool `env:"USE_GRPC" flag:"use-grpc"`
+	UseRest   bool `env:"USE_REST" flag:"use-rest"`
+	Server    ServerOptions
+	Logger    LoggerOptions
+	Dashboard DashboardOptions
 }
 
 type ServerOptions struct {
@@ -93,6 +94,20 @@ func (o JwtValidationOptions) ResolvedAllowedAlgs() []string {
 	return append([]string(nil), o.AllowedAlgs...)
 }
 
+// DashboardOptions configures the DashBoard connection-props HTTP server that
+// advertises this device for the "Detect Frame Information" workflow. It is
+// transport-agnostic and can front either a REST or gRPC Catena device.
+type DashboardOptions struct {
+	// Hostname is the address advertised to DashBoard (default "localhost").
+	Hostname string `env:"HOSTNAME" flag:"hostname"`
+	// Port is the port the connection-props HTTP server listens on (default 80).
+	Port int `env:"DASHBOARD_PORT" flag:"dashboard-port"`
+	// ServicePort is the Catena service port advertised to DashBoard (default 6254).
+	ServicePort int `env:"SERVICE_PORT" flag:"service-port"`
+	// TLSEnabled controls whether the advertised connection uses TLS/SSL (default false).
+	TLSEnabled bool `env:"DASHBOARD_TLS_ENABLED" flag:"dashboard-tls-enabled"`
+}
+
 type LoggerOptions struct {
 	// AppName is used in log file naming
 	AppName string
@@ -112,10 +127,22 @@ type LoggerOptions struct {
 
 func defaultRuntimeOptions() RuntimeOptions {
 	return RuntimeOptions{
-		UseGrpc: false,
-		UseRest: false,
-		Server:  DefaultServerOptions(),
-		Logger:  DefaultLoggerOptions(),
+		UseGrpc:   false,
+		UseRest:   false,
+		Server:    DefaultServerOptions(),
+		Logger:    DefaultLoggerOptions(),
+		Dashboard: DefaultDashboardOptions(),
+	}
+}
+
+// DefaultDashboardOptions returns sensible defaults for the DashBoard
+// connection-props server.
+func DefaultDashboardOptions() DashboardOptions {
+	return DashboardOptions{
+		Hostname:    "localhost",
+		Port:        80,
+		ServicePort: 6254,
+		TLSEnabled:  false,
 	}
 }
 

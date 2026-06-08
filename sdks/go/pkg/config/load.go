@@ -98,6 +98,11 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 		extractString("JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
 		extractString("JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
 		extractBool("JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
+		// DashBoard connection-props options
+		extractString("HOSTNAME", "hostname", "Advertised hostname/address for DashBoard connection props", &opts.Dashboard.Hostname).
+		extractInt("DASHBOARD_PORT", "dashboard-port", "Port for the DashBoard connection-props HTTP server", &opts.Dashboard.Port).
+		extractInt("SERVICE_PORT", "service-port", "Catena service port advertised to DashBoard", &opts.Dashboard.ServicePort).
+		extractBool("DASHBOARD_TLS_ENABLED", "dashboard-tls-enabled", "Whether the advertised DashBoard connection uses TLS", &opts.Dashboard.TLSEnabled).
 		// logging options
 		extractBool("SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).
 		extractString("LOG_DIR", "log-dir", "Directory for log files", &opts.Logger.LogDir).

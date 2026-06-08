@@ -839,6 +839,30 @@ func main() {
 		os.Exit(1)
 	}
 
+	// DashBoard "Detect Frame Information" connection-props HTTP server.
+	// Advertises this device so DashBoard can resolve and populate the
+	// connection dialog. Works for both REST and gRPC devices.
+	connectionProtocol := catena.ProtocolST2138Rest
+	if options.UseGrpc {
+		connectionProtocol = catena.ProtocolST2138Grpc
+	}
+	connectionProps := catena.NewConnectionProps(catena.ConnectionPropsOptions{
+		Protocol:        connectionProtocol,
+		Port:            options.Dashboard.Port,
+		ServicePort:     options.Dashboard.ServicePort,
+		Hostname:        options.Dashboard.Hostname,
+		RefreshInterval: 30000,
+		NodeName:        "One of Everything Demo",
+		NodeID:          "one-of-everything-a4:bb:6d:6a:6f:a3",
+		TLSEnabled:      options.Dashboard.TLSEnabled,
+	})
+	if err := connectionProps.Start(); err != nil {
+		logger.Warning("Failed to start connection props server", "port", options.Dashboard.Port, "error", err)
+	} else {
+		logger.Info("Connection props available at:",
+			"url", fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint()))
+	}
+
 	logger.Info("=======================================================")
 	logger.Info("One of Everything gRPC Example")
 	logger.Info("=======================================================")
@@ -866,6 +890,16 @@ func main() {
 		restTransport := transports.NewDefaultRestTransport()
 
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
+			// Also serve the DashBoard connection-props XML on the REST port
+			if r.URL.Path == connectionProps.Endpoint() {
+				if r.Method != http.MethodGet {
+					return catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "method not allowed: "+r.Method)
+				}
+				w.Header().Set("Content-Type", "application/xml")
+				w.Write([]byte(connectionProps.Content()))
+				return catena.Reply(catena.Value{})
+			}
+
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {
@@ -926,6 +960,9 @@ func main() {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second)
 	defer shutdownCancel()
+	if err := connectionProps.Stop(shutdownCtx); err != nil {
+		logger.Warning("Error stopping connection props server", "error", err)
+	}
 	srv.Shutdown(shutdownCtx)
 	logger.Info("Server shutdown complete")
 }

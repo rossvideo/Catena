@@ -71,6 +71,12 @@ func TestDefaultOptions(t *testing.T) {
 			WriteToConsole: true,
 			UseJSON:        false,
 		},
+		Dashboard: DashboardOptions{
+			Hostname:    "localhost",
+			Port:        80,
+			ServicePort: 6254,
+			TLSEnabled:  false,
+		},
 	}) {
 		t.Errorf("defaultRuntimeOptions() returned unexpected value: %+v", opts)
 	}
