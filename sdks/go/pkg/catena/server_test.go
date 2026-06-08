@@ -50,7 +50,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/protobuf/proto"
 )
@@ -65,7 +64,7 @@ func newTestServer(t *testing.T, authzEnabled bool) *server {
 	srv, err := NewServer(ServerOptions{
 		MaxConnections: 100,
 		AuthzEnabled:   authzEnabled,
-		JwtOptions: config.JwtValidationOptions{
+		JwtOptions: JwtValidationOptions{
 			// leave everything else unset for testing which will disable all claims checking
 			ValidateSignature: false, // skip signature validation for testing
 		},

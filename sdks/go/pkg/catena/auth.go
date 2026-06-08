@@ -47,7 +47,6 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
 const (
@@ -65,7 +64,7 @@ var catenaScopes = []string{
 }
 
 type jwtValidator struct {
-	options    config.JwtValidationOptions
+	options    JwtValidationOptions
 	keyfunc    jwt.Keyfunc
 	validateFn func(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error)
 }
@@ -77,7 +76,7 @@ type jwtValidatorInterface interface {
 // newJwtValidator creates a JWT validator based on the provided options.
 // If ValidateSignature is true, it discovers the JWKS endpoint and sets up signature validation.
 // If ValidateSignature is false, it only validates claims without verifying the signature.
-func newJwtValidator(ctx context.Context, opts config.JwtValidationOptions) (jwtValidatorInterface, error) {
+func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidatorInterface, error) {
 	v := &jwtValidator{
 		options: opts,
 	}
