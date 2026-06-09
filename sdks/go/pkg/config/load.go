@@ -81,29 +81,30 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 	// Continue on err so we can send the err back to caller and letting them
 	// handle exiting if they want to
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
-	loader := &loader{
-		flags: flags,
+	loader := &configLoader{
+		flags:     flags,
+		envPrefix: prefix + "_",
 	}
 	// chain building all the options up
 	loader.
 		// runtime options
-		Bool(prefix+"_USE_GRPC", "use-grpc", "Enable gRPC transport", &opts.UseGrpc).
-		Bool(prefix+"_USE_REST", "use-rest", "Enable REST transport", &opts.UseRest).
+		withBool("USE_GRPC", "use-grpc", "Enable gRPC transport", &opts.UseGrpc).
+		withBool("USE_REST", "use-rest", "Enable REST transport", &opts.UseRest).
 		//server options
-		Int(prefix+"_MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
-		Bool(prefix+"_DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
-		Bool(prefix+"_AUTHZ", "authz", "Enable authorization checks (requires auth)", &opts.Server.AuthzEnabled).
+		withInt("MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
+		withBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
+		withBool("AUTHZ", "authz", "Enable authorization checks (requires auth)", &opts.Server.AuthzEnabled).
 		// JWT validation options
-		String(prefix+"_JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
-		String(prefix+"_JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
-		Bool(prefix+"_JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
+		withString("JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
+		withString("JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
+		withBool("JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
 		// logging options
-		Bool(prefix+"_SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).
-		String(prefix+"_LOG_DIR", "log-dir", "Directory for log files", &opts.Logger.LogDir).
-		LogLevel(prefix+"_LOG_LEVEL", "log-level", "Minimum log level to output", &opts.Logger.Level).
-		Bool(prefix+"_LOG_TO_FILE", "log-to-file", "Enable file logging", &opts.Logger.WriteToFile).
-		Bool(prefix+"_LOG_TO_CONSOLE", "log-to-console", "Enable console logging", &opts.Logger.WriteToConsole).
-		Bool(prefix+"_LOG_USE_JSON", "log-use-json", "Output logs in JSON format", &opts.Logger.UseJSON)
+		withBool("SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).
+		withString("LOG_DIR", "log-dir", "Directory for log files", &opts.Logger.LogDir).
+		withLogLevel("LOG_LEVEL", "log-level", "Minimum log level to output", &opts.Logger.Level).
+		withBool("LOG_TO_FILE", "log-to-file", "Enable file logging", &opts.Logger.WriteToFile).
+		withBool("LOG_TO_CONSOLE", "log-to-console", "Enable console logging", &opts.Logger.WriteToConsole).
+		withBool("LOG_USE_JSON", "log-use-json", "Output logs in JSON format", &opts.Logger.UseJSON)
 
 	// basic flag lib doesn't support repeating flags, so we can just manually do the 3
 	// levels of verbosity as a special case that sets the log level
@@ -148,25 +149,22 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 	return opts, nil
 }
 
-type loader struct {
+type configLoader struct {
 	err       error
 	flags     *flag.FlagSet
 	envPrefix string
-	cliPrefix string
 }
 
-func (l *loader) WithEnvPrefix(prefix string) *loader {
-	l.envPrefix = prefix
-	return l
+func (l *configLoader) prefixEnv(name string) string {
+	return l.envPrefix + name
 }
 
-func (l *loader) WithCliPrefix(prefix string) *loader {
-	l.cliPrefix = prefix
-	return l
-}
-
-func (l *loader) Bool(envName, cliName, usage string, val *bool) *loader {
-	// custom bool parsing to handle cli flags specially
+func (l *configLoader) withBool(envName, cliName, usage string, val *bool) *configLoader {
+	envName = l.prefixEnv(envName)
+	// we have to do custom parsing for bools since strconv.ParseBool is very strict and
+	// doesn't handle common env var values like "1" or "yes" also the flag package's
+	// BoolVar doesn't support custom parsing, so we have to do it manually here instead
+	// of using loadParser
 	l.flags.BoolVar(val, cliName, *val, usage+" (env: "+envName+")")
 	if l.err != nil {
 		return l
@@ -184,23 +182,23 @@ func (l *loader) Bool(envName, cliName, usage string, val *bool) *loader {
 	return l
 }
 
-func (l *loader) Int(envName, cliName, usage string, val *int) *loader {
+func (l *configLoader) withInt(envName, cliName, usage string, val *int) *configLoader {
 	// just wrap strconv.Atoi, works cause the signature is the same
-	l.err = loadParser(l.err, l.flags, envName, cliName, usage, val, strconv.Atoi)
+	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, strconv.Atoi)
 	return l
 }
 
-func (l *loader) String(envName, cliName, usage string, val *string) *loader {
+func (l *configLoader) withString(envName, cliName, usage string, val *string) *configLoader {
 	// dummy passthrough parser func
-	l.err = loadParser(l.err, l.flags, envName, cliName, usage, val, func(s string) (string, error) {
+	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, func(s string) (string, error) {
 		return s, nil
 	})
 	return l
 }
 
-func (l *loader) LogLevel(envName, cliName, usage string, val *slog.Level) *loader {
+func (l *configLoader) withLogLevel(envName, cliName, usage string, val *slog.Level) *configLoader {
 	// custom parser to convert from string to slog.Level
-	l.err = loadParser(l.err, l.flags, envName, cliName, usage, val, func(s string) (slog.Level, error) {
+	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, func(s string) (slog.Level, error) {
 		var level slog.Level
 		err := level.UnmarshalText([]byte(s))
 		return level, err

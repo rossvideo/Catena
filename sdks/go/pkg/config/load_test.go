@@ -144,21 +144,10 @@ func TestInitOptions(t *testing.T) {
 	})
 }
 
-func makeTestLoader(t *testing.T) *loader {
+func makeTestLoader(t *testing.T) *configLoader {
 	t.Helper()
-	return &loader{
+	return &configLoader{
 		flags: flag.NewFlagSet("TEST", flag.ContinueOnError),
-	}
-}
-
-func TestLoaderPrefixs(t *testing.T) {
-	loader := makeTestLoader(t)
-	loader.WithEnvPrefix("TEST_ENV_").WithCliPrefix("test-")
-	if loader.envPrefix != "TEST_ENV_" {
-		t.Errorf("Expected env prefix to be 'TEST_ENV_' got: %s", loader.envPrefix)
-	}
-	if loader.cliPrefix != "test-" {
-		t.Errorf("Expected cli prefix to be 'test-' got: %s", loader.cliPrefix)
 	}
 }
 
@@ -166,7 +155,7 @@ func TestLoader_Bool(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		loader := makeTestLoader(t)
 		val := true
-		loader.Bool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
+		loader.withBool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
 		if loader.err != nil {
 			t.Errorf("Expected no error got: %v", loader.err)
 		}
@@ -201,7 +190,7 @@ func TestLoader_Bool(t *testing.T) {
 			t.Run(tt.input, func(t *testing.T) {
 				val := false
 				t.Setenv("TEST_BOOL", tt.input)
-				loader.Bool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
+				loader.withBool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
 				if loader.err != nil {
 					t.Errorf("Expected no error got: %v", loader.err)
 				}
@@ -216,7 +205,7 @@ func TestLoader_Bool(t *testing.T) {
 		loader := makeTestLoader(t)
 		val := true
 		t.Setenv("TEST_BOOL", "notabool")
-		loader.Bool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
+		loader.withBool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
 		if loader.err == nil {
 			t.Errorf("Expected error got nil")
 		}
@@ -230,7 +219,7 @@ func TestLoader_Bool(t *testing.T) {
 		loader.err = strconv.ErrSyntax
 		val := true
 		t.Setenv("TEST_BOOL", "false")
-		loader.Bool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
+		loader.withBool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
 		if loader.err == nil {
 			t.Errorf("Expected error got nil")
 		}
@@ -244,7 +233,7 @@ func TestLoader_Int(t *testing.T) {
 	loader := makeTestLoader(t)
 	val := 12
 	t.Setenv("TEST_INT", "34")
-	loader.Int("TEST_INT", "test-int", "Test int flag", &val)
+	loader.withInt("TEST_INT", "test-int", "Test int flag", &val)
 	if loader.err != nil {
 		t.Errorf("Expected no error got: %v", loader.err)
 	}
@@ -260,7 +249,7 @@ func TestLoader_String(t *testing.T) {
 	loader := makeTestLoader(t)
 	val := "default"
 	t.Setenv("TEST_STRING", "hello")
-	loader.String("TEST_STRING", "test-string", "Test string flag", &val)
+	loader.withString("TEST_STRING", "test-string", "Test string flag", &val)
 	if loader.err != nil {
 		t.Errorf("Expected no error got: %v", loader.err)
 	}
@@ -287,7 +276,7 @@ func TestLoader_LogLevel(t *testing.T) {
 			loader := makeTestLoader(t)
 			val := slog.LevelInfo
 			t.Setenv("TEST_LOG_LEVEL", tt.input)
-			loader.LogLevel("TEST_LOG_LEVEL", "test-log-level", "Test log level flag", &val)
+			loader.withLogLevel("TEST_LOG_LEVEL", "test-log-level", "Test log level flag", &val)
 			if loader.err != nil {
 				t.Errorf("Expected no error got: %v", loader.err)
 			}
@@ -301,7 +290,7 @@ func TestLoader_LogLevel(t *testing.T) {
 		loader := makeTestLoader(t)
 		val := slog.LevelInfo
 		t.Setenv("TEST_LOG_LEVEL", "notalevel")
-		loader.LogLevel("TEST_LOG_LEVEL", "test-log-level", "Test log level flag", &val)
+		loader.withLogLevel("TEST_LOG_LEVEL", "test-log-level", "Test log level flag", &val)
 		if loader.err == nil {
 			t.Errorf("Expected error got nil")
 		}
