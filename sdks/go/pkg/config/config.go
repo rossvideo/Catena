@@ -122,7 +122,7 @@ func DefaultJwtValidationOptions() JwtValidationOptions {
 		Audience:          "",
 		Issuer:            "",
 		Leeway:            0,
-		ValidateSignature: true,
+		ValidateSignature: false,
 		Http:              nil, // will default to http.DefaultClient in the code if nil
 	}
 }

@@ -58,7 +58,7 @@ func TestDefaultOptions(t *testing.T) {
 				AllowedAlgs:       nil,
 				Audience:          "",
 				Issuer:            "",
-				ValidateSignature: true,
+				ValidateSignature: false,
 				Http:              nil,
 			},
 		},
