@@ -174,12 +174,17 @@ func (t *GrpcTransport) Shutdown(ctx context.Context) error {
 // sanitizeGRPCError replaces detailed error messages with generic status code
 // descriptions in production mode, matching the REST server's IsDev behavior.
 func (t *GrpcTransport) sanitizeGRPCError(err error) error {
-	if err == nil || t.runtime.IsDev() {
+	if err == nil {
+		return nil
+	}
+
+	if t != nil && t.runtime != nil && t.runtime.IsDev() {
 		return err
 	}
+
 	st, ok := status.FromError(err)
 	if !ok {
-		return err
+		return status.Error(codes.Unknown, codes.Unknown.String())
 	}
 	return status.Error(st.Code(), st.Code().String())
 }

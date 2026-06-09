@@ -165,6 +165,10 @@ func (t *RestTransport) retrieveMetadataFromRequest(r *http.Request) catena.Tran
 	return transportContext
 }
 
+func (t *RestTransport) isDevMode() bool {
+	return t != nil && t.runtime != nil && t.runtime.IsDev()
+}
+
 // writeHTTPResult is a unified function that handles writing different response types
 func (t *RestTransport) writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := ToHTTPStatus(result.Code)
@@ -174,7 +178,7 @@ func (t *RestTransport) writeHTTPResult(w http.ResponseWriter, result catena.Sta
 		w.WriteHeader(httpStatus)
 
 		// Only return detailed error messages in dev mode
-		if t.runtime.IsDev() {
+		if t.isDevMode() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		} else {
 			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
@@ -201,7 +205,7 @@ func (t *RestTransport) writeHTTPResult(w http.ResponseWriter, result catena.Sta
 // route is reached with the wrong method.
 func (t *RestTransport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg string) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
-	if t.runtime.IsDev() {
+	if t.isDevMode() {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 	} else {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(http.StatusMethodNotAllowed)})
@@ -232,7 +236,7 @@ func (t *RestTransport) writeHTTPStatusResult(w http.ResponseWriter, result cate
 
 	if result.Error != "" {
 		// Only return detailed error messages in dev mode
-		if t.runtime.IsDev() {
+		if t.isDevMode() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
 		} else {
 			json.NewEncoder(w).Encode(map[string]string{"error": http.StatusText(httpStatus)})
