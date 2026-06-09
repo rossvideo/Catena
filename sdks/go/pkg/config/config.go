@@ -46,20 +46,20 @@ import (
 )
 
 type RuntimeOptions struct {
-	UseGrpc bool
-	UseRest bool
+	UseGrpc bool `env:"USE_GRPC" flag:"use-grpc"`
+	UseRest bool `env:"USE_REST" flag:"use-rest"`
 	Server  ServerOptions
 	Logger  LoggerOptions
 }
 
 type ServerOptions struct {
 	// true for development mode, false for production mode
-	IsDev bool
+	IsDev bool `env:"DEV_MODE" flag:"dev"`
 
 	// maximum number of concurrent connections (default: 100)
-	MaxConnections int
+	MaxConnections int `env:"MAX_CONNECTIONS" flag:"max-connections"`
 	// AuthzEnabled enables authorization checks for all endpoints. If false, all requests are allowed.
-	AuthzEnabled bool
+	AuthzEnabled bool `env:"AUTHZ" flag:"authz"`
 	// JwtOptions configures JWT validation for incoming requests when AuthzEnabled is true
 	JwtOptions JwtValidationOptions
 }
@@ -69,13 +69,13 @@ type JwtValidationOptions struct {
 	// AllowedAlgs specifies which signing algorithms are allowed. If empty, defaults to ES256.
 	AllowedAlgs []string
 	// Audience used to validate the "aud" claim. Optional.
-	Audience string
+	Audience string `env:"JWT_AUDIENCE" flag:"jwt-audience"`
 	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if ValidateSignature is true. Optional.
-	Issuer string
+	Issuer string `env:"JWT_ISSUER" flag:"jwt-issuer"`
 	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
 	Leeway time.Duration
 	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
-	ValidateSignature bool
+	ValidateSignature bool `env:"JWT_VALIDATE_SIGNATURE" flag:"jwt-validate-signature"`
 
 	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
 	Http *http.Client
@@ -85,17 +85,17 @@ type LoggerOptions struct {
 	// AppName is used in log file naming
 	AppName string
 	// LogDir is the directory for log files
-	LogDir string
+	LogDir string `env:"LOG_DIR" flag:"log-dir"`
 	// Silent suppresses all log output
-	Silent bool
+	Silent bool `env:"SILENT" flag:"silent"`
 	// Level is the minimum log level to output
-	Level slog.Level
+	Level slog.Level `env:"LOG_LEVEL" flag:"log-level"`
 	// WriteToFile enables file logging
-	WriteToFile bool
+	WriteToFile bool `env:"LOG_TO_FILE" flag:"log-to-file"`
 	// WriteToConsole enables console (stderr) logging
-	WriteToConsole bool
+	WriteToConsole bool `env:"LOG_TO_CONSOLE" flag:"log-to-console"`
 	// UseJSON outputs logs in JSON format (useful for structured logging)
-	UseJSON bool
+	UseJSON bool `env:"LOG_USE_JSON" flag:"log-use-json"`
 }
 
 func defaultRuntimeOptions() RuntimeOptions {
