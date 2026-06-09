@@ -42,6 +42,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -505,6 +506,9 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 func main() {
 	options, err := config.InitOptions("oneofeverything", os.Args[1:])
 	if err != nil {
+		if errors.Is(err, config.ErrHelp) {
+			os.Exit(0)
+		}
 		os.Exit(1)
 	}
 	closeLogger, err := logger.Init(options.Logger)
