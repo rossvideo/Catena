@@ -152,3 +152,53 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 		t.Fatalf("logged options mismatch\n got: %#v\nwant: %#v", got, want)
 	}
 }
+
+func TestJwtValidationOptions_ResolvedAllowedAlgs(t *testing.T) {
+	t.Run("defaults to ES256 when unset", func(t *testing.T) {
+		o := JwtValidationOptions{}
+
+		got := o.ResolvedAllowedAlgs()
+		want := []string{"ES256"}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("ResolvedAllowedAlgs() mismatch\n got: %#v\nwant: %#v", got, want)
+		}
+	})
+
+	t.Run("returns copy of configured list", func(t *testing.T) {
+		o := JwtValidationOptions{AllowedAlgs: []string{"HS256", "RS256"}}
+
+		got := o.ResolvedAllowedAlgs()
+		got[0] = "MUTATED"
+
+		if o.AllowedAlgs[0] != "HS256" {
+			t.Fatalf("ResolvedAllowedAlgs() should return a copy, got original mutated: %#v", o.AllowedAlgs)
+		}
+	})
+}
+
+func TestJwtValidationOptions_LogValue_DefaultAllowedAlgs(t *testing.T) {
+	var buf bytes.Buffer
+
+	log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+
+	log.Info("jwt options", "options", JwtValidationOptions{})
+
+	var entry map[string]any
+	dec := json.NewDecoder(bytes.NewReader(buf.Bytes()))
+	dec.UseNumber()
+
+	if err := dec.Decode(&entry); err != nil {
+		t.Fatalf("decode slog output: %v\noutput: %s", err, buf.String())
+	}
+
+	got, ok := entry["options"].(map[string]any)
+	if !ok {
+		t.Fatalf("options field missing or wrong type: %#v", entry["options"])
+	}
+
+	if got["allowed_algs"] != "ES256" {
+		t.Fatalf("allowed_algs mismatch: got %v, want ES256", got["allowed_algs"])
+	}
+}

@@ -81,6 +81,16 @@ type JwtValidationOptions struct {
 	Http *http.Client
 }
 
+const defaultJwtSigningAlg = "ES256"
+
+// ResolvedAllowedAlgs returns configured signing algorithms, defaulting to ES256 when unset.
+func (o JwtValidationOptions) ResolvedAllowedAlgs() []string {
+	if len(o.AllowedAlgs) == 0 {
+		return []string{defaultJwtSigningAlg}
+	}
+	return append([]string(nil), o.AllowedAlgs...)
+}
+
 type LoggerOptions struct {
 	// AppName is used in log file naming
 	AppName string
@@ -152,7 +162,7 @@ func (o JwtValidationOptions) LogValue() slog.Value {
 		slog.String("audience", o.Audience),
 		slog.Bool("validate_signature", o.ValidateSignature),
 		slog.Duration("leeway", o.Leeway),
-		slog.String("allowed_algs", strings.Join(o.AllowedAlgs, ",")),
+		slog.String("allowed_algs", strings.Join(o.ResolvedAllowedAlgs(), ",")),
 	)
 }
 

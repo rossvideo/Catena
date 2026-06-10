@@ -114,16 +114,7 @@ func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidat
 	return v, nil
 }
 func (v *jwtValidator) signingMethods() []string {
-	// if they give no signing methods, make a default we don't want to allow all
-	// algorithms by default, as that would be a security risk
-	if len(v.options.AllowedAlgs) == 0 {
-		return []string{
-			// Ross Way To Auth specifies ES256, so we default to that
-			// but allow users to specify other algorithms if needed.
-			jwt.SigningMethodES256.Alg(),
-		}
-	}
-	return append([]string(nil), v.options.AllowedAlgs...)
+	return v.options.ResolvedAllowedAlgs()
 }
 
 // discoverJWKSEndpoint resolves the JWKS URL from an OpenID Connect issuer.
