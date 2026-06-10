@@ -53,7 +53,10 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
+type LoggerOptions = config.LoggerOptions
+
 var (
+	DefaultLoggerOptions  = config.DefaultLoggerOptions
 	ErrAlreadyInitialized = errors.New("logger already initialized")
 
 	globalLogger *logger
@@ -65,14 +68,14 @@ type CloseFunc func()
 
 // logger handles structured logging using slog
 type logger struct {
-	settings config.LoggerOptions
+	settings LoggerOptions
 	file     *os.File
 }
 
 // Init initializes the global logger.
 // Returns a CloseFunc to clean up resources.
 // Returns ErrAlreadyInitialized if called more than once.
-func Init(opts config.LoggerOptions) (CloseFunc, error) {
+func Init(opts LoggerOptions) (CloseFunc, error) {
 	initMu.Lock()
 	defer initMu.Unlock()
 
