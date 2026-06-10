@@ -93,7 +93,7 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 		//server options
 		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		extractBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
-		extractBool("AUTHZ", "authz", "Enable authorization checks (requires auth)", &opts.Server.AuthzEnabled).
+		extractBool("AUTHZ", "authz", "Enable authorization checks (requires auth). Use --authz=false to disable", &opts.Server.AuthzEnabled).
 		// JWT validation options
 		extractString("JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
 		extractString("JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
