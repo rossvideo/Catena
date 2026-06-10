@@ -43,10 +43,7 @@ import (
 )
 
 func TestNewMenuGroup(t *testing.T) {
-	mg := NewMenuGroup("group1")
-	if mg.Oid != "group1" {
-		t.Errorf("expected oid 'group1', got %s", mg.Oid)
-	}
+	mg := NewMenuGroup()
 	if mg.Proto == nil {
 		t.Fatal("expected non-nil proto")
 	}
@@ -58,18 +55,18 @@ func TestNewMenuGroup(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_WithMenuGroupName(t *testing.T) {
-	mg := NewMenuGroup("g1").WithMenuGroupName(NewPolyglotText("en", "Settings"))
+func TestMenuGroup_WithName(t *testing.T) {
+	mg := NewMenuGroup().WithName(NewPolyglotText("en", "Settings"))
 	ds := mg.Proto.Name.GetDisplayStrings()
 	if ds["en"] != "Settings" {
 		t.Errorf("expected 'Settings', got %s", ds["en"])
 	}
 }
 
-func TestMenuGroup_WithMenuGroupName_Replaces(t *testing.T) {
-	mg := NewMenuGroup("g1").
-		WithMenuGroupName(NewPolyglotText("en", "Old").With("fr", "Ancien")).
-		WithMenuGroupName(NewPolyglotText("en", "New"))
+func TestMenuGroup_WithName_Replaces(t *testing.T) {
+	mg := NewMenuGroup().
+		WithName(NewPolyglotText("en", "Old").With("fr", "Ancien")).
+		WithName(NewPolyglotText("en", "New"))
 
 	ds := mg.Proto.Name.GetDisplayStrings()
 	if ds["en"] != "New" {
@@ -80,18 +77,15 @@ func TestMenuGroup_WithMenuGroupName_Replaces(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_AddMenuGroupName_CreatesIfNil(t *testing.T) {
-	mg := NewMenuGroup("g1").AddMenuGroupName(NewPolyglotText("en", "Settings"))
-	ds := mg.Proto.Name.GetDisplayStrings()
-	if ds["en"] != "Settings" {
-		t.Errorf("expected 'Settings', got %s", ds["en"])
+// TestMenuGroup_WithName_LoopBuiltName demonstrates building a name up in a
+// loop via an empty PolyglotText and passing it in, replacing the old
+// AddMenuGroupName merge helper.
+func TestMenuGroup_WithName_LoopBuiltName(t *testing.T) {
+	name := NewPolyglotText()
+	for lang, text := range map[string]string{"en": "Settings", "fr": "Paramètres"} {
+		name.With(lang, text)
 	}
-}
-
-func TestMenuGroup_AddMenuGroupName_Merges(t *testing.T) {
-	mg := NewMenuGroup("g1").
-		WithMenuGroupName(NewPolyglotText("en", "Settings")).
-		AddMenuGroupName(NewPolyglotText("fr", "Paramètres"))
+	mg := NewMenuGroup().WithName(name)
 
 	ds := mg.Proto.Name.GetDisplayStrings()
 	if ds["en"] != "Settings" {
@@ -102,19 +96,8 @@ func TestMenuGroup_AddMenuGroupName_Merges(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_AddMenuGroupName_OverwritesExisting(t *testing.T) {
-	mg := NewMenuGroup("g1").
-		WithMenuGroupName(NewPolyglotText("en", "Old")).
-		AddMenuGroupName(NewPolyglotText("en", "New"))
-
-	ds := mg.Proto.Name.GetDisplayStrings()
-	if ds["en"] != "New" {
-		t.Errorf("expected 'New', got %s", ds["en"])
-	}
-}
-
 func TestMenuGroup_WithMenu(t *testing.T) {
-	mg := NewMenuGroup("g1").WithMenu("video", NewPolyglotText("en", "Video"))
+	mg := NewMenuGroup().WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video")))
 
 	menu, ok := mg.Proto.Menus["video"]
 	if !ok {
@@ -127,9 +110,9 @@ func TestMenuGroup_WithMenu(t *testing.T) {
 }
 
 func TestMenuGroup_WithMenu_Replaces(t *testing.T) {
-	mg := NewMenuGroup("g1").
-		WithMenu("video", NewPolyglotText("en", "Old Video")).
-		WithMenu("video", NewPolyglotText("en", "New Video"))
+	mg := NewMenuGroup().
+		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Old Video"))).
+		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "New Video")))
 
 	ds := mg.Proto.Menus["video"].Name.GetDisplayStrings()
 	if ds["en"] != "New Video" {
@@ -137,23 +120,17 @@ func TestMenuGroup_WithMenu_Replaces(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_AddMenu(t *testing.T) {
-	mg := NewMenuGroup("g1").AddMenu("audio", NewPolyglotText("en", "Audio"))
-
-	menu, ok := mg.Proto.Menus["audio"]
-	if !ok {
-		t.Fatal("expected menu 'audio' to exist")
-	}
-	ds := menu.Name.GetDisplayStrings()
-	if ds["en"] != "Audio" {
-		t.Errorf("expected 'Audio', got %s", ds["en"])
+func TestMenuGroup_WithMenu_NilIgnored(t *testing.T) {
+	mg := NewMenuGroup().WithMenu("video", nil)
+	if len(mg.Proto.Menus) != 0 {
+		t.Errorf("expected nil menu to be ignored, got %d entries", len(mg.Proto.Menus))
 	}
 }
 
 func TestMenuGroup_MultipleMenus(t *testing.T) {
-	mg := NewMenuGroup("g1").
-		WithMenu("video", NewPolyglotText("en", "Video")).
-		AddMenu("audio", NewPolyglotText("en", "Audio"))
+	mg := NewMenuGroup().
+		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video"))).
+		WithMenu("audio", NewMenu().WithName(NewPolyglotText("en", "Audio")))
 
 	if len(mg.Proto.Menus) != 2 {
 		t.Errorf("expected 2 menus, got %d", len(mg.Proto.Menus))
@@ -166,16 +143,19 @@ func TestMenuGroup_MultipleMenus(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_FullChaining(t *testing.T) {
-	mg := NewMenuGroup("main").
-		WithMenuGroupName(NewPolyglotText("en", "Main Group")).
-		AddMenuGroupName(NewPolyglotText("fr", "Groupe Principal")).
-		WithMenu("video", NewPolyglotText("en", "Video")).
-		AddMenu("audio", NewPolyglotText("en", "Audio").With("fr", "Son"))
-
-	if mg.Oid != "main" {
-		t.Errorf("expected oid 'main', got %s", mg.Oid)
+func TestMenuGroup_WithOrder(t *testing.T) {
+	mg := NewMenuGroup().WithOrder(3)
+	if mg.Proto.GetOrder() != 3 {
+		t.Errorf("expected order 3, got %d", mg.Proto.GetOrder())
 	}
+}
+
+func TestMenuGroup_FullChaining(t *testing.T) {
+	mg := NewMenuGroup().
+		WithName(NewPolyglotText("en", "Main Group").With("fr", "Groupe Principal")).
+		WithOrder(1).
+		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video"))).
+		WithMenu("audio", NewMenu().WithName(NewPolyglotText("en", "Audio").With("fr", "Son")))
 
 	ds := mg.Proto.Name.GetDisplayStrings()
 	if ds["en"] != "Main Group" {
@@ -183,6 +163,9 @@ func TestMenuGroup_FullChaining(t *testing.T) {
 	}
 	if ds["fr"] != "Groupe Principal" {
 		t.Errorf("expected 'Groupe Principal', got %s", ds["fr"])
+	}
+	if mg.Proto.GetOrder() != 1 {
+		t.Errorf("expected order 1, got %d", mg.Proto.GetOrder())
 	}
 
 	if len(mg.Proto.Menus) != 2 {
@@ -194,27 +177,24 @@ func TestMenuGroup_FullChaining(t *testing.T) {
 }
 
 func TestNewMenu(t *testing.T) {
-	m := NewMenu("video")
-	if m.Oid != "video" {
-		t.Errorf("expected oid 'video', got %s", m.Oid)
-	}
+	m := NewMenu()
 	if m.Proto == nil {
 		t.Fatal("expected non-nil proto")
 	}
 }
 
-func TestMenu_WithMenuName(t *testing.T) {
-	m := NewMenu("video").WithMenuName(NewPolyglotText("en", "Video Settings"))
+func TestMenu_WithName(t *testing.T) {
+	m := NewMenu().WithName(NewPolyglotText("en", "Video Settings"))
 	ds := m.Proto.Name.GetDisplayStrings()
 	if ds["en"] != "Video Settings" {
 		t.Errorf("expected 'Video Settings', got %s", ds["en"])
 	}
 }
 
-func TestMenu_WithMenuName_Replaces(t *testing.T) {
-	m := NewMenu("video").
-		WithMenuName(NewPolyglotText("en", "Old").With("fr", "Ancien")).
-		WithMenuName(NewPolyglotText("en", "New"))
+func TestMenu_WithName_Replaces(t *testing.T) {
+	m := NewMenu().
+		WithName(NewPolyglotText("en", "Old").With("fr", "Ancien")).
+		WithName(NewPolyglotText("en", "New"))
 
 	ds := m.Proto.Name.GetDisplayStrings()
 	if ds["en"] != "New" {
@@ -225,35 +205,43 @@ func TestMenu_WithMenuName_Replaces(t *testing.T) {
 	}
 }
 
-func TestMenu_AddMenuName_CreatesIfNil(t *testing.T) {
-	m := NewMenu("video").AddMenuName(NewPolyglotText("en", "Video"))
-	ds := m.Proto.Name.GetDisplayStrings()
-	if ds["en"] != "Video" {
-		t.Errorf("expected 'Video', got %s", ds["en"])
+func TestMenu_WithFields(t *testing.T) {
+	m := NewMenu().
+		WithName(NewPolyglotText("en", "Video")).
+		WithHidden(true).
+		WithDisabled(true).
+		WithParamOids("brightness", "contrast").
+		WithCommandOids("reboot").
+		WithClientHint("ui-url", "https://example.com").
+		WithOrder(2)
+
+	if !m.Proto.GetHidden() {
+		t.Error("expected hidden to be true")
+	}
+	if !m.Proto.GetDisabled() {
+		t.Error("expected disabled to be true")
+	}
+	if got := m.Proto.GetParamOids(); len(got) != 2 || got[0] != "brightness" || got[1] != "contrast" {
+		t.Errorf("expected param_oids [brightness contrast], got %v", got)
+	}
+	if got := m.Proto.GetCommandOids(); len(got) != 1 || got[0] != "reboot" {
+		t.Errorf("expected command_oids [reboot], got %v", got)
+	}
+	if m.Proto.GetClientHints()["ui-url"] != "https://example.com" {
+		t.Errorf("expected client hint ui-url, got %v", m.Proto.GetClientHints())
+	}
+	if m.Proto.GetOrder() != 2 {
+		t.Errorf("expected order 2, got %d", m.Proto.GetOrder())
 	}
 }
 
-func TestMenu_AddMenuName_Merges(t *testing.T) {
-	m := NewMenu("video").
-		WithMenuName(NewPolyglotText("en", "Video")).
-		AddMenuName(NewPolyglotText("fr", "Vidéo"))
+func TestMenu_WithClientHint_Multiple(t *testing.T) {
+	m := NewMenu().
+		WithClientHint("a", "1").
+		WithClientHint("b", "2")
 
-	ds := m.Proto.Name.GetDisplayStrings()
-	if ds["en"] != "Video" {
-		t.Errorf("expected 'Video', got %s", ds["en"])
-	}
-	if ds["fr"] != "Vidéo" {
-		t.Errorf("expected 'Vidéo', got %s", ds["fr"])
-	}
-}
-
-func TestMenu_AddMenuName_OverwritesExisting(t *testing.T) {
-	m := NewMenu("video").
-		WithMenuName(NewPolyglotText("en", "Old")).
-		AddMenuName(NewPolyglotText("en", "New"))
-
-	ds := m.Proto.Name.GetDisplayStrings()
-	if ds["en"] != "New" {
-		t.Errorf("expected 'New', got %s", ds["en"])
+	hints := m.Proto.GetClientHints()
+	if hints["a"] != "1" || hints["b"] != "2" {
+		t.Errorf("expected both client hints, got %v", hints)
 	}
 }

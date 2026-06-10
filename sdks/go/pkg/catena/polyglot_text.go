@@ -38,22 +38,35 @@
 
 package catena
 
+import (
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+)
+
 // PolyglotText maps BCP-47 language codes to display strings.
 type PolyglotText map[string]string
 
-// NewPolyglotText creates a PolyglotText with a single language entry.
-func NewPolyglotText(lang, text string) PolyglotText {
-	return PolyglotText{lang: text}
+// NewPolyglotText creates a PolyglotText from zero or more (lang, text) pairs.
+// Calling it with no arguments yields an empty PolyglotText, which is useful
+// for building entries up in a loop before passing the result to a builder:
+//
+//	name := NewPolyglotText()
+//	for lang := range langs {
+//		name.With(lang, translate(lang, "Hello"))
+//	}
+func NewPolyglotText(pairs ...string) PolyglotText {
+	p := PolyglotText{}
+	for i := 0; i+1 < len(pairs); i += 2 {
+		p[pairs[i]] = pairs[i+1]
+	}
+	if len(pairs)%2 != 0 {
+		logger.Warning("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text",
+			"lang", pairs[len(pairs)-1])
+	}
+	return p
 }
 
 // With returns the PolyglotText with an additional language entry added.
 func (p PolyglotText) With(lang, text string) PolyglotText {
-	p[lang] = text
-	return p
-}
-
-// Add returns the PolyglotText with an additional language entry added.
-func (p PolyglotText) Add(lang, text string) PolyglotText {
 	p[lang] = text
 	return p
 }

@@ -59,13 +59,38 @@ func TestPolyglotText_With(t *testing.T) {
 	}
 }
 
-func TestPolyglotText_Add(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello").Add("fr", "Bonjour")
+func TestNewPolyglotText_Empty(t *testing.T) {
+	pt := NewPolyglotText()
+	if pt == nil {
+		t.Fatal("expected non-nil PolyglotText")
+	}
+	if len(pt) != 0 {
+		t.Errorf("expected empty PolyglotText, got %d entries", len(pt))
+	}
+
+	pt.With("en", "Hello").With("fr", "Bonjour")
+	if pt["en"] != "Hello" || pt["fr"] != "Bonjour" {
+		t.Errorf("expected entries to be added, got %v", pt)
+	}
+}
+
+func TestNewPolyglotText_MultiplePairs(t *testing.T) {
+	pt := NewPolyglotText("en", "Hello", "fr", "Bonjour")
 	if pt["en"] != "Hello" {
 		t.Errorf("expected 'Hello', got %s", pt["en"])
 	}
 	if pt["fr"] != "Bonjour" {
 		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
+	}
+}
+
+func TestNewPolyglotText_OddArgs(t *testing.T) {
+	pt := NewPolyglotText("en", "Hello", "fr")
+	if pt["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", pt["en"])
+	}
+	if _, ok := pt["fr"]; ok {
+		t.Errorf("expected unpaired trailing lang to be ignored, got %v", pt)
 	}
 }
 

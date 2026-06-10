@@ -39,95 +39,109 @@
 package catena
 
 import (
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // MenuGroup wraps a protos.MenuGroup and exposes a fluent builder API.
+// The group's oid is supplied by its parent when the group is attached, so it
+// is not stored here.
 type MenuGroup struct {
-	Oid   string
 	Proto *protos.MenuGroup
 }
 
-// NewMenuGroup creates a MenuGroup with the given oid and an initialized proto.
-func NewMenuGroup(oid string) *MenuGroup {
+// NewMenuGroup creates a MenuGroup with an initialized proto.
+func NewMenuGroup() *MenuGroup {
 	return &MenuGroup{
-		Oid: oid,
 		Proto: &protos.MenuGroup{
 			Menus: make(map[string]*protos.Menu),
 		},
 	}
 }
 
-// WithMenuGroupName sets the menu group's display name, replacing any existing name.
-func (mg *MenuGroup) WithMenuGroupName(name PolyglotText) *MenuGroup {
+// WithName sets the menu group's display name, replacing any existing name.
+func (mg *MenuGroup) WithName(name PolyglotText) *MenuGroup {
 	mg.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
 	return mg
 }
 
-// AddMenuGroupName merges entries from name into the menu group's existing display name.
-// If no name exists yet, it is created.
-func (mg *MenuGroup) AddMenuGroupName(name PolyglotText) *MenuGroup {
-	if mg.Proto.Name == nil {
-		mg.Proto.Name = &protos.PolyglotText{DisplayStrings: make(map[string]string)}
+// WithMenu inserts menu into the menu group's menus map, keyed by oid.
+// Replaces any existing menu at that oid. A nil menu is ignored.
+func (mg *MenuGroup) WithMenu(oid string, menu *Menu) *MenuGroup {
+	if menu == nil {
+		logger.Warning("WithMenu called with nil menu; ignoring", "oid", oid)
+		return mg
 	}
-	if mg.Proto.Name.DisplayStrings == nil {
-		mg.Proto.Name.DisplayStrings = make(map[string]string)
+	if mg.Proto.Menus == nil {
+		mg.Proto.Menus = map[string]*protos.Menu{}
 	}
-	for k, v := range name {
-		mg.Proto.Name.DisplayStrings[k] = v
-	}
+	mg.Proto.Menus[oid] = menu.Proto
 	return mg
 }
 
-// WithMenu creates a new menu with the given name and inserts it into the
-// menu group's menus map, keyed by oid. Replaces any existing menu at that oid.
-func (mg *MenuGroup) WithMenu(oid string, name PolyglotText) *MenuGroup {
-	mg.Proto.Menus[oid] = &protos.Menu{
-		Name: &protos.PolyglotText{DisplayStrings: name},
-	}
-	return mg
-}
-
-// AddMenu creates a new menu with the given name and inserts it into the
-// menu group's menus map, keyed by oid. Replaces any existing menu at that oid.
-func (mg *MenuGroup) AddMenu(oid string, name PolyglotText) *MenuGroup {
-	mg.Proto.Menus[oid] = &protos.Menu{
-		Name: &protos.PolyglotText{DisplayStrings: name},
-	}
+// WithOrder sets the menu group's display order.
+func (mg *MenuGroup) WithOrder(order uint32) *MenuGroup {
+	mg.Proto.Order = order
 	return mg
 }
 
 // Menu wraps a protos.Menu and exposes a fluent builder API.
+// The menu's oid is supplied by its parent when the menu is attached, so it is
+// not stored here.
 type Menu struct {
-	Oid   string
 	Proto *protos.Menu
 }
 
-// NewMenu creates a Menu with the given oid and an initialized proto.
-func NewMenu(oid string) *Menu {
+// NewMenu creates a Menu with an initialized proto.
+func NewMenu() *Menu {
 	return &Menu{
-		Oid:   oid,
 		Proto: &protos.Menu{},
 	}
 }
 
-// WithMenuName sets the menu's display name, replacing any existing name.
-func (m *Menu) WithMenuName(name PolyglotText) *Menu {
+// WithName sets the menu's display name, replacing any existing name.
+func (m *Menu) WithName(name PolyglotText) *Menu {
 	m.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
 	return m
 }
 
-// AddMenuName merges entries from name into the menu's existing display name.
-// If no name exists yet, it is created.
-func (m *Menu) AddMenuName(name PolyglotText) *Menu {
-	if m.Proto.Name == nil {
-		m.Proto.Name = &protos.PolyglotText{DisplayStrings: make(map[string]string)}
+// WithHidden sets whether the menu should be hidden in the client GUI.
+func (m *Menu) WithHidden(hidden bool) *Menu {
+	m.Proto.Hidden = hidden
+	return m
+}
+
+// WithDisabled sets whether the menu should be disabled (shown as read-only)
+// in the client GUI.
+func (m *Menu) WithDisabled(disabled bool) *Menu {
+	m.Proto.Disabled = disabled
+	return m
+}
+
+// WithParamOids sets the menu's parameter members, replacing any existing oids.
+func (m *Menu) WithParamOids(oids ...string) *Menu {
+	m.Proto.ParamOids = oids
+	return m
+}
+
+// WithCommandOids sets the menu's command members, replacing any existing oids.
+func (m *Menu) WithCommandOids(oids ...string) *Menu {
+	m.Proto.CommandOids = oids
+	return m
+}
+
+// WithClientHint sets a single client hint key/value pair, creating the map if
+// it does not yet exist.
+func (m *Menu) WithClientHint(key, value string) *Menu {
+	if m.Proto.ClientHints == nil {
+		m.Proto.ClientHints = map[string]string{}
 	}
-	if m.Proto.Name.DisplayStrings == nil {
-		m.Proto.Name.DisplayStrings = make(map[string]string)
-	}
-	for k, v := range name {
-		m.Proto.Name.DisplayStrings[k] = v
-	}
+	m.Proto.ClientHints[key] = value
+	return m
+}
+
+// WithOrder sets the menu's display order.
+func (m *Menu) WithOrder(order uint32) *Menu {
+	m.Proto.Order = order
 	return m
 }
