@@ -44,7 +44,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -62,23 +61,6 @@ var catenaScopes = []string{
 	ScopeCfg,
 	ScopeAdm,
 	ScopeMon,
-}
-
-// JwtValidationOptions controls optional claim validation and HTTP behavior.
-type JwtValidationOptions struct {
-	// AllowedAlgs specifies which signing algorithms are allowed. If empty, defaults to ES256.
-	AllowedAlgs []string
-	// Audience used to validate the "aud" claim. Optional.
-	Audience string
-	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if ValidateSignature is true. Optional.
-	Issuer string
-	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
-	Leeway time.Duration
-	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
-	ValidateSignature bool
-
-	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
-	Http *http.Client
 }
 
 type jwtValidator struct {

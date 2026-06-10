@@ -55,7 +55,6 @@ import (
 
 // TestMain sets up test environment for all tests in this package.
 func TestMain(m *testing.M) {
-	catena.SetEnv(catena.EnvDev)
 	code := m.Run()
 	os.Exit(code)
 }

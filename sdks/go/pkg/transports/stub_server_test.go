@@ -50,6 +50,7 @@ import (
 type stubServerRuntime struct {
 	mu                       sync.Mutex
 	tb                       testing.TB
+	isDev                    bool
 	slots                    []uint16
 	getSlotsFn               func(ctx catena.TransportContext) ([]uint16, catena.StatusResult)
 	getDeviceFn              func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult)
@@ -81,6 +82,10 @@ func (s *stubServerRuntime) panicf(format string, args ...any) {
 }
 
 var _ catena.ServerRuntime = (*stubServerRuntime)(nil)
+
+func (s *stubServerRuntime) IsDev() bool {
+	return s.isDev
+}
 
 func (s *stubServerRuntime) GetSlots(ctx catena.TransportContext) ([]uint16, catena.StatusResult) {
 	if s.getSlotsFn != nil {

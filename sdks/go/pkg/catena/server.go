@@ -51,6 +51,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -192,6 +193,7 @@ type Server interface {
 
 // interface of funcs that Transports use to interact with the server without circular imports
 type ServerRuntime interface {
+	IsDev() bool
 	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
 	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult)
 	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
@@ -208,6 +210,7 @@ var _ Server = (*server)(nil)
 var _ ServerRuntime = (*server)(nil)
 
 type server struct {
+	options                ServerOptions
 	mu                     sync.Mutex
 	ctx                    context.Context
 	ctxCancel              context.CancelFunc
@@ -230,13 +233,7 @@ type server struct {
 	transports             []Transport
 }
 
-type ServerOptions struct {
-	MaxConnections int
-	AuthzEnabled   bool
-	JwtOptions     JwtValidationOptions
-}
-
-func NewServer(opts ServerOptions) (Server, error) {
+func NewServer(opts config.ServerOptions) (Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var validator jwtValidatorInterface
@@ -250,6 +247,7 @@ func NewServer(opts ServerOptions) (Server, error) {
 	}
 
 	return &server{
+		options:                opts,
 		ctx:                    ctx,
 		ctxCancel:              cancel,
 		authzEnabled:           opts.AuthzEnabled,
@@ -380,6 +378,10 @@ func (s *server) Shutdown(ctx context.Context) {
 	s.connectionQueue.shutdown(shutdownCtx)
 
 	close(s.stopped)
+}
+
+func (s *server) IsDev() bool {
+	return s.options.IsDev
 }
 
 // parseTransportContext parses the transport context and returns a HandlerContext.

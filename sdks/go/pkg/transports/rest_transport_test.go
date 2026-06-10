@@ -61,6 +61,7 @@ func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
 	// create and start the transport
 	transport := NewRestTransport(8080)
 	stubRuntime := makeStubServerRuntime(tb)
+	stubRuntime.isDev = true
 	transport.runtime = stubRuntime
 	return transport, stubRuntime
 }
@@ -680,16 +681,13 @@ func TestRestTransport_NegativeSlot(t *testing.T) {
 }
 
 func TestWriteHTTPResult_Error(t *testing.T) {
-	original := catena.GetEnv()
-	catena.SetEnv(catena.EnvDev)
-	defer catena.SetEnv(original)
-
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{
 		Code:  catena.StatusCodeNotFound,
 		Error: "test error message",
 	}
-	writeHTTPResult(rec, result, catena.Value{})
+	transport, _ := makeTestRestTransport(t)
+	transport.writeHTTPResult(rec, result, catena.Value{})
 
 	errMsg := assertHasError(t, rec)
 	if errMsg != "test error message" {
@@ -700,13 +698,15 @@ func TestWriteHTTPResult_Error(t *testing.T) {
 func TestWriteHTTPStatusResult(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeOk}
-	writeHTTPStatusResult(rec, result)
+	transport, _ := makeTestRestTransport(t)
+	transport.writeHTTPStatusResult(rec, result)
 	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestWriteHTTPStatusResultNoBody_SuccessIs204(t *testing.T) {
 	rec := httptest.NewRecorder()
-	writeHTTPStatusResultNoBody(rec, catena.StatusResult{Code: catena.StatusCodeOk})
+	transport, _ := makeTestRestTransport(t)
+	transport.writeHTTPStatusResultNoBody(rec, catena.StatusResult{Code: catena.StatusCodeOk})
 	assertStatus(t, rec, http.StatusNoContent)
 	if rec.Body.Len() != 0 {
 		t.Errorf("expected empty body for 204, got %d bytes", rec.Body.Len())
@@ -715,7 +715,8 @@ func TestWriteHTTPStatusResultNoBody_SuccessIs204(t *testing.T) {
 
 func TestWriteHTTPStatusResultNoBody_ErrorPreservesMapping(t *testing.T) {
 	rec := httptest.NewRecorder()
-	writeHTTPStatusResultNoBody(rec, catena.StatusResult{
+	transport, _ := makeTestRestTransport(t)
+	transport.writeHTTPStatusResultNoBody(rec, catena.StatusResult{
 		Code:  catena.StatusCodeNotFound,
 		Error: "missing",
 	})
@@ -725,22 +726,21 @@ func TestWriteHTTPStatusResultNoBody_ErrorPreservesMapping(t *testing.T) {
 func TestRestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 	tests := []struct {
 		name     string
-		env      catena.Environment
+		isDev    bool
 		expected string
 	}{
-		{"dev mode shows details", catena.EnvDev, "detailed error"},
-		{"prod mode hides details", catena.EnvProd, "Not Found"},
+		{"dev mode shows details", true, "detailed error"},
+		{"prod mode hides details", false, "Not Found"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			original := catena.GetEnv()
-			defer catena.SetEnv(original)
-			catena.SetEnv(tt.env)
+			transport, runtime := makeTestRestTransport(t)
+			runtime.isDev = tt.isDev
 
 			rec := httptest.NewRecorder()
 			result := catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "detailed error"}
-			writeHTTPResult(rec, result, catena.Value{})
+			transport.writeHTTPResult(rec, result, catena.Value{})
 
 			assertBodyContains(t, rec, tt.expected)
 		})
@@ -1039,13 +1039,10 @@ func TestCommandEndpoint_RespondFalseWithException(t *testing.T) {
 }
 
 func TestWriteHTTPStatusResult_WithError(t *testing.T) {
-	original := catena.GetEnv()
-	defer catena.SetEnv(original)
-	catena.SetEnv(catena.EnvDev)
-
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeInternal, Error: "error"}
-	writeHTTPStatusResult(rec, result)
+	transport, _ := makeTestRestTransport(t)
+	transport.writeHTTPStatusResult(rec, result)
 	assertBodyContains(t, rec, "error")
 }
 
@@ -1210,7 +1207,8 @@ func TestRestTransport_Shutdown_Deadline(t *testing.T) {
 func TestWriteHTTPResult_DefaultType(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeOk}
-	writeHTTPResult(rec, result, nil)
+	transport, _ := makeTestRestTransport(t)
+	transport.writeHTTPResult(rec, result, nil)
 	assertStatus(t, rec, http.StatusOK)
 }
 
@@ -1299,10 +1297,6 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T)
 }
 
 func TestRestTransport_Connect_StreamingNotSupported(t *testing.T) {
-	original := catena.GetEnv()
-	defer catena.SetEnv(original)
-	catena.SetEnv(catena.EnvDev)
-
 	transport, _ := makeTestRestTransport(t)
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
 	rec := httptest.NewRecorder()
@@ -1318,13 +1312,11 @@ func TestRestTransport_Connect_StreamingNotSupported(t *testing.T) {
 }
 
 func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
-	original := catena.GetEnv()
-	defer catena.SetEnv(original)
-	catena.SetEnv(catena.EnvProd)
-
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "detailed internal error"}
-	writeHTTPStatusResult(rec, result)
+	transport, runtime := makeTestRestTransport(t)
+	runtime.isDev = false
+	transport.writeHTTPStatusResult(rec, result)
 
 	assertBodyContains(t, rec, "Not Found")
 	assertBodyNotContains(t, rec, "detailed internal error")
@@ -1382,13 +1374,11 @@ func TestWriteAssetResult_WriteError(t *testing.T) {
 }
 
 func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
-	original := catena.GetEnv()
-	defer catena.SetEnv(original)
-	catena.SetEnv(catena.EnvProd)
-
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "internal detail"}
-	writeHTTPResult(rec, result, catena.Value{})
+	transport, runtime := makeTestRestTransport(t)
+	runtime.isDev = false
+	transport.writeHTTPResult(rec, result, catena.Value{})
 
 	assertBodyNotContains(t, rec, "internal detail")
 }

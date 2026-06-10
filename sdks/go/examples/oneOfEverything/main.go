@@ -42,6 +42,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -52,6 +53,7 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
@@ -502,17 +504,21 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 }
 
 func main() {
-	config, err := catena.InitOptions()
+	options, err := config.InitOptions("oneofeverything", os.Args[1:])
 	if err != nil {
-		logger.Error("Failed to initialize Catena SDK", "error", err)
+		if errors.Is(err, config.ErrHelp) {
+			os.Exit(0)
+		}
 		os.Exit(1)
 	}
-	defer catena.Close()
+	closeLogger, err := logger.Init(options.Logger)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+	defer closeLogger()
 
-	srv, err := catena.NewServer(catena.ServerOptions{
-		MaxConnections: 100,
-		AuthzEnabled:   config.AuthzEnabled,
-	})
+	srv, err := catena.NewServer(options.Server)
 	if err != nil {
 		logger.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
@@ -826,7 +832,7 @@ func main() {
 
 	srv.StartHeartbeat(5 * time.Second)
 
-	if !config.UseGrpc && !config.UseRest {
+	if !options.UseGrpc && !options.UseRest {
 		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
 		os.Exit(1)
 	}
@@ -836,7 +842,7 @@ func main() {
 	logger.Info("=======================================================")
 
 	// register the transports we want to serve on.
-	if config.UseGrpc {
+	if options.UseGrpc {
 		logger.Info("gRPC transport starting")
 		logger.Info("")
 		// Register gRPC transport if enabled in config
@@ -852,7 +858,7 @@ func main() {
 	logger.Info("")
 	logger.Info("=======================================================")
 
-	if config.UseRest {
+	if options.UseRest {
 		logger.Info("REST transport starting")
 		logger.Info("")
 		restTransport := transports.NewDefaultRestTransport()
