@@ -39,6 +39,8 @@
 package catena
 
 import (
+	"google.golang.org/protobuf/proto"
+
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -67,6 +69,9 @@ func (mg *MenuGroup) WithName(name PolyglotText) *MenuGroup {
 
 // WithMenu inserts menu into the menu group's menus map, keyed by oid.
 // Replaces any existing menu at that oid. A nil menu is ignored.
+// The menu's proto is deep-copied so that later builder mutations on the
+// caller's Menu (or reusing it under another oid) do not affect entries that
+// were already added.
 func (mg *MenuGroup) WithMenu(oid string, menu *Menu) *MenuGroup {
 	if menu == nil {
 		logger.Warning("WithMenu called with nil menu; ignoring", "oid", oid)
@@ -75,7 +80,7 @@ func (mg *MenuGroup) WithMenu(oid string, menu *Menu) *MenuGroup {
 	if mg.Proto.Menus == nil {
 		mg.Proto.Menus = map[string]*protos.Menu{}
 	}
-	mg.Proto.Menus[oid] = menu.Proto
+	mg.Proto.Menus[oid] = proto.Clone(menu.Proto).(*protos.Menu)
 	return mg
 }
 
