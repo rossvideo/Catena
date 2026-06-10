@@ -140,29 +140,48 @@ func DefaultLoggerOptions() LoggerOptions {
 	}
 }
 
-// make sure RuntimeOptions implements slog.LogValuer for structured logging of the config
+// make sure all options types implement slog.LogValuer for structured logging of the config
 var _ slog.LogValuer = RuntimeOptions{}
+var _ slog.LogValuer = ServerOptions{}
+var _ slog.LogValuer = JwtValidationOptions{}
+var _ slog.LogValuer = LoggerOptions{}
+
+func (o JwtValidationOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("issuer", o.Issuer),
+		slog.String("audience", o.Audience),
+		slog.Bool("validate_signature", o.ValidateSignature),
+		slog.Duration("leeway", o.Leeway),
+		slog.String("allowed_algs", strings.Join(o.AllowedAlgs, ",")),
+	)
+}
+
+func (o ServerOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Bool("dev", o.IsDev),
+		slog.Int("max_connections", o.MaxConnections),
+		slog.Bool("authz_enabled", o.AuthzEnabled),
+		slog.Any("jwt_validation", o.JwtOptions),
+	)
+}
+
+func (o LoggerOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("app_name", o.AppName),
+		slog.Bool("silent", o.Silent),
+		slog.String("log_dir", o.LogDir),
+		slog.String("level", o.Level.String()),
+		slog.Bool("write_to_file", o.WriteToFile),
+		slog.Bool("write_to_console", o.WriteToConsole),
+		slog.Bool("use_json", o.UseJSON),
+	)
+}
 
 func (o RuntimeOptions) LogValue() slog.Value {
 	return slog.GroupValue(
-		slog.Bool("dev", o.Server.IsDev),
-		slog.Int("max_connections", o.Server.MaxConnections),
-		slog.Bool("authz_enabled", o.Server.AuthzEnabled),
-		slog.Group("jwt_validation",
-			slog.String("issuer", o.Server.JwtOptions.Issuer),
-			slog.String("audience", o.Server.JwtOptions.Audience),
-			slog.Bool("validate_signature", o.Server.JwtOptions.ValidateSignature),
-			slog.Duration("leeway", o.Server.JwtOptions.Leeway),
-			slog.String("allowed_algs", strings.Join(o.Server.JwtOptions.AllowedAlgs, ",")),
-		),
-		slog.Group("logger",
-			slog.String("app_name", o.Logger.AppName),
-			slog.Bool("silent", o.Logger.Silent),
-			slog.String("log_dir", o.Logger.LogDir),
-			slog.String("level", o.Logger.Level.String()),
-			slog.Bool("write_to_file", o.Logger.WriteToFile),
-			slog.Bool("write_to_console", o.Logger.WriteToConsole),
-			slog.Bool("use_json", o.Logger.UseJSON),
-		),
+		slog.Bool("use_grpc", o.UseGrpc),
+		slog.Bool("use_rest", o.UseRest),
+		slog.Any("server", o.Server),
+		slog.Any("logger", o.Logger),
 	)
 }

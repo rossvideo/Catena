@@ -123,15 +123,19 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 	}
 
 	want := map[string]any{
-		"dev":             true,
-		"max_connections": json.Number("123"),
-		"authz_enabled":   true,
-		"jwt_validation": map[string]any{
-			"allowed_algs":       "TESTALG",
-			"audience":           "test-audience",
-			"issuer":             "test-issuer",
-			"leeway":             json.Number("12"),
-			"validate_signature": true,
+		"use_grpc": false,
+		"use_rest": false,
+		"server": map[string]any{
+			"dev":             true,
+			"max_connections": json.Number("123"),
+			"authz_enabled":   true,
+			"jwt_validation": map[string]any{
+				"allowed_algs":       "TESTALG",
+				"audience":           "test-audience",
+				"issuer":             "test-issuer",
+				"leeway":             json.Number("12"),
+				"validate_signature": true,
+			},
 		},
 		"logger": map[string]any{
 			"app_name":         "test-app",

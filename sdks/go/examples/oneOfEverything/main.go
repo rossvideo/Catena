@@ -518,6 +518,8 @@ func main() {
 	}
 	defer closeLogger()
 
+	logger.Info("Loaded Configuration", "config", options)
+
 	srv, err := catena.NewServer(options.Server)
 	if err != nil {
 		logger.Error("Failed to create Catena server", "error", err)
