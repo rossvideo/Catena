@@ -142,6 +142,16 @@ func TestInitOptions(t *testing.T) {
 			t.Errorf("Expected log level to be %v got: %v", slog.LevelError, opts.Logger.Level)
 		}
 	})
+
+	t.Run("authz can be disabled with explicit false", func(t *testing.T) {
+		opts, err := InitOptions("test_app", []string{"--authz=false"})
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.AuthzEnabled {
+			t.Errorf("Expected AuthzEnabled to be false")
+		}
+	})
 }
 
 func makeTestLoader(t *testing.T) *configLoader {

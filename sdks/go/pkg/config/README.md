@@ -153,6 +153,9 @@ If `--log-level` is explicitly set, it takes priority over these shortcuts.
 
 ## Parsing Notes
 
+- bool CLI flags use Go's standard bool parser.
+- for any bool option that defaults to true, disable it with `--flag=false` (for example, `--authz=false`).
+- bool CLI values accepted: `true`, `false`, `1`, `0`, `t`, `f` (case-insensitive)
 - bool env values accepted: `true`, `1`, `yes`, `on`, `false`, `0`, `no`, `off`
 - the loader always registers flags first so help output is complete
 - environment parse failures are surfaced as errors
