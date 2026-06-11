@@ -41,6 +41,7 @@ package catena
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -174,8 +175,20 @@ func (c *ConnectionProps) Start() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", c.handle)
 
+	addr := fmt.Sprintf(":%d", c.opts.Port)
+	// Bind synchronously so that errors (privileged port, address already in
+	// use, etc.) are returned to the caller instead of only being logged
+	// asynchronously after Start has already reported success.
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		c.mu.Unlock()
+		logger.Error("Connection props server failed to listen",
+			"address", addr, "error", err)
+		return fmt.Errorf("connection props server failed to listen on %s: %w", addr, err)
+	}
+
 	c.server = &http.Server{
-		Addr:    fmt.Sprintf(":%d", c.opts.Port),
+		Addr:    addr,
 		Handler: mux,
 	}
 	c.running = true
@@ -185,7 +198,7 @@ func (c *ConnectionProps) Start() error {
 	go func() {
 		logger.Info("Connection props server listening",
 			"address", srv.Addr, "endpoint", c.opts.Endpoint)
-		err := srv.ListenAndServe()
+		err := srv.Serve(listener)
 		if err != nil && err != http.ErrServerClosed {
 			logger.Error("Connection props server error", "error", err)
 		}
