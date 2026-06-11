@@ -40,6 +40,8 @@ package catena
 
 import (
 	"testing"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestNewMenuGroup(t *testing.T) {
@@ -117,6 +119,22 @@ func TestMenuGroup_WithMenu_Replaces(t *testing.T) {
 	ds := mg.Proto.Menus["video"].Name.GetDisplayStrings()
 	if ds["en"] != "New Video" {
 		t.Errorf("expected 'New Video', got %s", ds["en"])
+	}
+}
+
+func TestMenuGroup_WithMenu_NilMapInitialized(t *testing.T) {
+	mg := &MenuGroup{Proto: &protos.MenuGroup{}}
+	if mg.Proto.Menus != nil {
+		t.Fatal("expected nil menus map before WithMenu")
+	}
+
+	mg.WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video")))
+
+	if mg.Proto.Menus == nil {
+		t.Fatal("expected menus map to be initialized by WithMenu")
+	}
+	if _, ok := mg.Proto.Menus["video"]; !ok {
+		t.Error("expected menu 'video' to exist")
 	}
 }
 
