@@ -57,7 +57,7 @@ func TestConnectionPropsDefaults(t *testing.T) {
 	if c.Endpoint() != "/connect/connection-props.xml" {
 		t.Errorf("default endpoint = %q", c.Endpoint())
 	}
-	xml := c.Content()
+	xml := fetchPropsXML(t, ConnectionPropsOptions{})
 
 	wants := []string{
 		"<properties version=\"1.0\">",
@@ -85,7 +85,7 @@ func TestConnectionPropsDefaults(t *testing.T) {
 }
 
 func TestConnectionPropsCustomValues(t *testing.T) {
-	c := NewConnectionProps(ConnectionPropsOptions{
+	xml := fetchPropsXML(t, ConnectionPropsOptions{
 		Protocol:        ProtocolST2138Grpc,
 		Hostname:        "10.62.251.47",
 		ServicePort:     5254,
@@ -94,7 +94,6 @@ func TestConnectionPropsCustomValues(t *testing.T) {
 		NodeID:          "Enterprise Management SSG-a4:bb:6d:6a:6f:a3",
 		ServiceName:     "service:broadcast-equipment",
 	})
-	xml := c.Content()
 
 	wants := []string{
 		"<entry key=\"base-url\">http://10.62.251.47/</entry>",
@@ -114,11 +113,10 @@ func TestConnectionPropsCustomValues(t *testing.T) {
 }
 
 func TestConnectionPropsTLSScheme(t *testing.T) {
-	c := NewConnectionProps(ConnectionPropsOptions{
+	xml := fetchPropsXML(t, ConnectionPropsOptions{
 		Hostname:   "host.example",
 		TLSEnabled: true,
 	})
-	xml := c.Content()
 	if !strings.Contains(xml, "<entry key=\"base-url\">https://host.example/</entry>") {
 		t.Errorf("expected https base-url, got:\n%s", xml)
 	}
@@ -135,11 +133,42 @@ func TestConnectionPropsEndpointNormalized(t *testing.T) {
 }
 
 func TestConnectionPropsXMLEscaping(t *testing.T) {
-	c := NewConnectionProps(ConnectionPropsOptions{NodeName: `a&b<c>"d'`})
-	xml := c.Content()
+	xml := fetchPropsXML(t, ConnectionPropsOptions{NodeName: `a&b<c>"d'`})
 	if !strings.Contains(xml, "a&amp;b&lt;c&gt;&quot;d&apos;") {
 		t.Errorf("value not escaped, got:\n%s", xml)
 	}
+}
+
+// fetchPropsXML starts a ConnectionProps server on a free port, fetches the
+// served XML over HTTP, and returns the response body. This mirrors how the
+// C++ tests verify content, since there is no in-process content getter.
+func fetchPropsXML(t *testing.T, opts ConnectionPropsOptions) string {
+	t.Helper()
+	port := freePort(t)
+	opts.Port = port
+	c := NewConnectionProps(opts)
+	if err := c.Start(); err != nil {
+		t.Fatalf("Start() error: %v", err)
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = c.Stop(ctx)
+	})
+
+	base := "http://127.0.0.1:" + itoa(port)
+	waitForServer(t, base+"/health")
+
+	resp, err := http.Get(base + c.Endpoint())
+	if err != nil {
+		t.Fatalf("GET endpoint: %v", err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("endpoint status = %d, want 200", resp.StatusCode)
+	}
+	return string(body)
 }
 
 // freePort returns an available TCP port for tests.

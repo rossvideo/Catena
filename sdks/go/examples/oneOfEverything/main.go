@@ -874,16 +874,6 @@ func main() {
 		restTransport := transports.NewDefaultRestTransport()
 
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
-			// Also serve the DashBoard connection-props XML on the REST port
-			if r.URL.Path == connectionProps.Endpoint() {
-				if r.Method != http.MethodGet {
-					return catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "method not allowed: "+r.Method)
-				}
-				w.Header().Set("Content-Type", "application/xml")
-				w.Write([]byte(connectionProps.Content()))
-				return catena.Reply(catena.Value{})
-			}
-
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {

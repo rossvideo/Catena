@@ -161,13 +161,6 @@ func (c *ConnectionProps) IsRunning() bool {
 	return c.running
 }
 
-// Content returns the generated XML payload served at the endpoint.
-func (c *ConnectionProps) Content() string {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.content
-}
-
 // Start begins serving connection props in a background goroutine. It returns
 // an error if the server is already running or the listener cannot be created.
 func (c *ConnectionProps) Start() error {
