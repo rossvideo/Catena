@@ -43,6 +43,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type RuntimeOptions struct {
@@ -81,12 +83,12 @@ type JwtValidationOptions struct {
 	Http *http.Client
 }
 
-const defaultJwtSigningAlg = "ES256"
-
 // ResolvedAllowedAlgs returns configured signing algorithms, defaulting to ES256 when unset.
 func (o JwtValidationOptions) ResolvedAllowedAlgs() []string {
 	if len(o.AllowedAlgs) == 0 {
-		return []string{defaultJwtSigningAlg}
+		// Ross Way To Auth specifies ES256, so we default to that
+		// but allow users to specify other algorithms if needed.
+		return []string{jwt.SigningMethodES256.Alg()}
 	}
 	return append([]string(nil), o.AllowedAlgs...)
 }
