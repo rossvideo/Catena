@@ -93,14 +93,13 @@ func TestConnectionPropsCustomValues(t *testing.T) {
 		NodeName:        "Enterprise Management SSG",
 		NodeID:          "Enterprise Management SSG-a4:bb:6d:6a:6f:a3",
 		ServiceName:     "service:broadcast-equipment",
-		EquipmentType:   "opengear-json",
 	})
 	xml := c.Content()
 
 	wants := []string{
 		"<entry key=\"base-url\">http://10.62.251.47/</entry>",
 		"<entry key=\"serviceUrl\">service:broadcast-equipment</entry>",
-		"<entry key=\"equipmentType\">opengear-json</entry>",
+		"<entry key=\"equipmentType\">catena</entry>",
 		"<entry key=\"address\">10.62.251.47</entry>",
 		"<entry key=\"port\">5254</entry>",
 		"<entry key=\"node-id\">Enterprise Management SSG-a4:bb:6d:6a:6f:a3</entry>",

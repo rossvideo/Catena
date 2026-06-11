@@ -74,7 +74,6 @@ func (p ConnectionProtocol) String() string {
 const (
 	defaultConnectionPropsEndpoint    = "/connect/connection-props.xml"
 	defaultConnectionPropsService     = "service:catena-device"
-	defaultConnectionPropsEquipment   = "catena"
 	defaultConnectionPropsRefreshMs   = 30000
 	defaultConnectionPropsHostname    = "0.0.0.0"
 	defaultConnectionPropsPort        = 80
@@ -99,8 +98,6 @@ type ConnectionPropsOptions struct {
 	NodeID string
 	// ServiceName is the advertised service URL (default "service:catena-device").
 	ServiceName string
-	// EquipmentType is the DashBoard equipment type (default "catena").
-	EquipmentType string
 	// Endpoint is the path served (default "/connect/connection-props.xml").
 	Endpoint string
 	// TLSEnabled controls whether the advertised connection uses TLS/SSL.
@@ -137,9 +134,6 @@ func NewConnectionProps(opts ConnectionPropsOptions) *ConnectionProps {
 	}
 	if opts.ServiceName == "" {
 		opts.ServiceName = defaultConnectionPropsService
-	}
-	if opts.EquipmentType == "" {
-		opts.EquipmentType = defaultConnectionPropsEquipment
 	}
 	if opts.Endpoint == "" {
 		opts.Endpoint = defaultConnectionPropsEndpoint
@@ -281,7 +275,7 @@ func (c *ConnectionProps) generateXML() string {
 	b.WriteString("    <comment>DashBoard Device Connection Settings</comment>\n")
 	writeEntry(&b, "base-url", fmt.Sprintf("%s://%s/", scheme, c.opts.Hostname))
 	writeEntry(&b, "serviceUrl", c.opts.ServiceName)
-	writeEntry(&b, "equipmentType", c.opts.EquipmentType)
+	writeEntry(&b, "equipmentType", "catena")
 	writeEntry(&b, "address", c.opts.Hostname)
 	writeEntry(&b, "port", fmt.Sprintf("%d", c.opts.ServicePort))
 	writeEntry(&b, "connectionType", connectionType)
