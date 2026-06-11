@@ -76,7 +76,7 @@ const (
 	defaultConnectionPropsService     = "service:catena-device"
 	defaultConnectionPropsRefreshMs   = 30000
 	defaultConnectionPropsHostname    = "0.0.0.0"
-	defaultConnectionPropsPort        = 80
+	defaultConnectionPropsPort        = 8080
 	defaultConnectionPropsServicePort = 6254
 )
 
@@ -84,7 +84,7 @@ const (
 type ConnectionPropsOptions struct {
 	// Protocol is the transport being advertised (used for logging).
 	Protocol ConnectionProtocol
-	// Port is the port the connection-props HTTP server listens on (default 80).
+	// Port is the port the connection-props HTTP server listens on (default 8080).
 	Port int
 	// ServicePort is the Catena service port advertised to DashBoard (default 6254).
 	ServicePort int

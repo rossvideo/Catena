@@ -72,8 +72,8 @@ func TestDefaultOptions(t *testing.T) {
 			UseJSON:        false,
 		},
 		Dashboard: DashboardOptions{
-			Hostname:    "localhost",
-			Port:        80,
+			Hostname:    "0.0.0.0",
+			Port:        8080,
 			ServicePort: 6254,
 			TLSEnabled:  false,
 		},
