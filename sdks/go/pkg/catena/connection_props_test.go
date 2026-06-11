@@ -62,10 +62,10 @@ func TestConnectionPropsDefaults(t *testing.T) {
 	wants := []string{
 		"<properties version=\"1.0\">",
 		"<comment>DashBoard Device Connection Settings</comment>",
-		"<entry key=\"base-url\">http://0.0.0.0/</entry>",
+		"<entry key=\"base-url\">http://localhost/</entry>",
 		"<entry key=\"serviceUrl\">service:catena-device</entry>",
 		"<entry key=\"equipmentType\">catena</entry>",
-		"<entry key=\"address\">0.0.0.0</entry>",
+		"<entry key=\"address\">localhost</entry>",
 		"<entry key=\"port\">6254</entry>",
 		"<entry key=\"connectionType\">TCP</entry>",
 		"<entry key=\"index-url\">connect/connection-props.xml</entry>",

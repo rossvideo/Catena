@@ -76,7 +76,7 @@ const (
 	defaultConnectionPropsEndpoint    = "/connect/connection-props.xml"
 	defaultConnectionPropsService     = "service:catena-device"
 	defaultConnectionPropsRefreshMs   = 30000
-	defaultConnectionPropsHostname    = "0.0.0.0"
+	defaultConnectionPropsHostname    = "localhost"
 	defaultConnectionPropsPort        = 8080
 	defaultConnectionPropsServicePort = 6254
 )
@@ -89,7 +89,7 @@ type ConnectionPropsOptions struct {
 	Port int
 	// ServicePort is the Catena service port advertised to DashBoard (default 6254).
 	ServicePort int
-	// Hostname is the address advertised to DashBoard (default "0.0.0.0").
+	// Hostname is the address advertised to DashBoard (default "localhost").
 	Hostname string
 	// RefreshInterval is the DashBoard refresh interval in milliseconds (default 30000).
 	RefreshInterval uint32
