@@ -50,21 +50,12 @@ import (
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult)
-
-// RestConfig holds configuration for the REST transport.
-type RestConfig struct {
-	Port int // HTTP listen port (default: 8080)
-}
-
-// DefaultRestConfig returns a RestConfig with sensible defaults.
-func DefaultRestConfig() RestConfig {
-	return RestConfig{Port: 8080}
-}
 
 type RestTransport struct {
 	mu              sync.Mutex
@@ -79,7 +70,7 @@ type RestTransport struct {
 var _ catena.Transport = (*RestTransport)(nil)
 
 // NewRestTransport creates a new REST transport with the given configuration.
-func NewRestTransport(cfg RestConfig) *RestTransport {
+func NewRestTransport(cfg config.RestConfig) *RestTransport {
 	t := &RestTransport{
 		port: cfg.Port,
 		mux:  http.NewServeMux(),

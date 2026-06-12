@@ -5,9 +5,9 @@
 ## Constructor
 
 ```go
-grpcTransport := transports.NewGrpcTransport(transports.GrpcConfig{Port: 6254, Reflection: false})
+grpcTransport := transports.NewGrpcTransport(config.GrpcConfig{Port: 6254, Reflection: false})
 // or with defaults
-grpcTransport := transports.NewGrpcTransport(transports.DefaultGrpcConfig())
+grpcTransport := transports.NewGrpcTransport(config.DefaultGrpcConfig())
 ```
 
 Register it on the shared server:

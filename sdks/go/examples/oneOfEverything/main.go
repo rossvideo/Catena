@@ -872,7 +872,7 @@ func main() {
 
 	// Register the enabled transports.
 	if options.UseGrpc {
-		grpcConfig, err := transports.GrpcConfigFromOptions(options)
+		grpcConfig, err := config.GrpcConfigFromOptions(options)
 		if err != nil {
 			logger.Error("Invalid gRPC transport configuration", "error", err)
 			os.Exit(1)
@@ -884,7 +884,7 @@ func main() {
 	}
 
 	if options.UseRest {
-		restConfig, err := transports.RestConfigFromOptions(options)
+		restConfig, err := config.RestConfigFromOptions(options)
 		if err != nil {
 			logger.Error("Invalid REST transport configuration", "error", err)
 			os.Exit(1)

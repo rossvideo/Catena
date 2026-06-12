@@ -53,12 +53,13 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/protobuf/proto"
 )
 
 func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
-	transport := NewRestTransport(RestConfig{Port: 8080})
+	transport := NewRestTransport(config.RestConfig{Port: 8080})
 	stubRuntime := makeStubServerRuntime(tb)
 	stubRuntime.isDev = true
 	transport.runtime = stubRuntime
@@ -67,7 +68,7 @@ func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
 
 func TestRestTransport_NewRestTransport(t *testing.T) {
 	expected := 1234
-	transport := NewRestTransport(RestConfig{Port: expected})
+	transport := NewRestTransport(config.RestConfig{Port: expected})
 	if transport == nil {
 		t.Fatal("NewRestTransport returned nil")
 	}
@@ -77,7 +78,7 @@ func TestRestTransport_NewRestTransport(t *testing.T) {
 }
 
 func TestRestTransport_DefaultRestConfig(t *testing.T) {
-	cfg := DefaultRestConfig()
+	cfg := config.DefaultRestConfig()
 	transport := NewRestTransport(cfg)
 	if transport == nil {
 		t.Fatal("NewRestTransport returned nil")

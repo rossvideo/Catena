@@ -242,3 +242,86 @@ func TestJwtValidationOptions_LogValue_DefaultAllowedAlgs(t *testing.T) {
 		t.Fatalf("allowed_algs mismatch: got %v, want ES256", got["allowed_algs"])
 	}
 }
+
+func TestDefaultRestConfig(t *testing.T) {
+	cfg := DefaultRestConfig()
+	if cfg.Port != 8080 {
+		t.Fatalf("DefaultRestConfig() port = %d, want 8080", cfg.Port)
+	}
+}
+
+func TestDefaultGrpcConfig(t *testing.T) {
+	cfg := DefaultGrpcConfig()
+	if cfg.Port != 6254 {
+		t.Fatalf("DefaultGrpcConfig() port = %d, want 6254", cfg.Port)
+	}
+	if cfg.Reflection {
+		t.Fatalf("DefaultGrpcConfig() reflection = true, want false")
+	}
+}
+
+func TestGrpcConfigFromOptions(t *testing.T) {
+	tests := []struct {
+		name     string
+		port     int
+		wantErr  bool
+		wantPort uint16
+	}{
+		{name: "valid port", port: 6254, wantPort: 6254},
+		{name: "minimum port", port: 0, wantPort: 0},
+		{name: "maximum port", port: 65535, wantPort: 65535},
+		{name: "negative port", port: -1, wantErr: true},
+		{name: "above maximum wraps to valid-looking port", port: 70000, wantErr: true},
+		{name: "65536 would wrap to 0", port: 65536, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := GrpcConfigFromOptions(RuntimeOptions{GrpcPort: tt.port})
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("GrpcConfigFromOptions(%d) expected error, got nil (port=%d)", tt.port, cfg.Port)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("GrpcConfigFromOptions(%d) unexpected error: %v", tt.port, err)
+			}
+			if cfg.Port != tt.wantPort {
+				t.Fatalf("GrpcConfigFromOptions(%d) port = %d, want %d", tt.port, cfg.Port, tt.wantPort)
+			}
+		})
+	}
+}
+
+func TestRestConfigFromOptions(t *testing.T) {
+	tests := []struct {
+		name    string
+		port    int
+		wantErr bool
+	}{
+		{name: "valid port", port: 8080},
+		{name: "minimum port", port: 0},
+		{name: "maximum port", port: 65535},
+		{name: "negative port", port: -1, wantErr: true},
+		{name: "above maximum", port: 70000, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := RestConfigFromOptions(RuntimeOptions{RestPort: tt.port})
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("RestConfigFromOptions(%d) expected error, got nil", tt.port)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("RestConfigFromOptions(%d) unexpected error: %v", tt.port, err)
+			}
+			if cfg.Port != tt.port {
+				t.Fatalf("RestConfigFromOptions(%d) port = %d, want %d", tt.port, cfg.Port, tt.port)
+			}
+		})
+	}
+}

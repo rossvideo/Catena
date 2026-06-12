@@ -48,6 +48,7 @@ import (
 	"net"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/grpc"
@@ -56,17 +57,6 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
-
-// GrpcConfig holds configuration for the gRPC transport.
-type GrpcConfig struct {
-	Port       uint16 // gRPC listen port (default: 6254)
-	Reflection bool   // enable gRPC reflection (default: false)
-}
-
-// DefaultGrpcConfig returns a GrpcConfig with sensible defaults.
-func DefaultGrpcConfig() GrpcConfig {
-	return GrpcConfig{Port: 6254, Reflection: false}
-}
 
 type GrpcTransport struct {
 	catenaService *catenaService
@@ -81,7 +71,7 @@ type GrpcTransport struct {
 var _ catena.Transport = (*GrpcTransport)(nil)
 
 // NewGrpcTransport creates a new gRPC transport with the given configuration.
-func NewGrpcTransport(cfg GrpcConfig) *GrpcTransport {
+func NewGrpcTransport(cfg config.GrpcConfig) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
 		port:          cfg.Port,
