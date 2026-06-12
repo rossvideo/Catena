@@ -51,25 +51,20 @@ import (
 )
 
 // ConnectionProtocol identifies the Catena transport advertised to DashBoard.
-type ConnectionProtocol int
+type ConnectionProtocol string
 
 const (
 	// ProtocolST2138Rest advertises a ST 2138 REST device.
-	ProtocolST2138Rest ConnectionProtocol = iota
+	ProtocolST2138Rest ConnectionProtocol = "st2138-rest"
 	// ProtocolST2138Grpc advertises a ST 2138 gRPC device.
-	ProtocolST2138Grpc
+	ProtocolST2138Grpc ConnectionProtocol = "st2138-grpc"
+	// ProtocolST2138Catena advertises a legacy "catena" device.
+	ProtocolST2138Catena ConnectionProtocol = "catena"
 )
 
 // String returns the canonical protocol identifier used in logs.
 func (p ConnectionProtocol) String() string {
-	switch p {
-	case ProtocolST2138Rest:
-		return "st2138-rest"
-	case ProtocolST2138Grpc:
-		return "st2138-grpc"
-	default:
-		return ""
-	}
+	return string(p)
 }
 
 // Default values
@@ -119,6 +114,9 @@ type ConnectionProps struct {
 // NewConnectionProps builds a ConnectionProps server, applying defaults for any
 // unset option. The XML payload is generated once at construction time.
 func NewConnectionProps(opts ConnectionPropsOptions) *ConnectionProps {
+	if opts.Protocol == "" {
+		opts.Protocol = ProtocolST2138Rest
+	}
 	if opts.Dashboard.Port == 0 {
 		opts.Dashboard.Port = defaultConnectionPropsPort
 	}

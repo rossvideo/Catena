@@ -49,8 +49,8 @@ func TestConnectionProtocolString(t *testing.T) {
 	if got := ProtocolST2138Grpc.String(); got != "st2138-grpc" {
 		t.Errorf("ProtocolST2138Grpc.String() = %q, want %q", got, "st2138-grpc")
 	}
-	if got := ConnectionProtocol(99).String(); got != "" {
-		t.Errorf("unknown protocol String() = %q, want empty", got)
+	if got := ProtocolST2138Catena.String(); got != "catena" {
+		t.Errorf("ProtocolST2138Catena.String() = %q, want %q", got, "catena")
 	}
 }
 
