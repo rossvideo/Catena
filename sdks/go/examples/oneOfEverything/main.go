@@ -848,13 +848,10 @@ func main() {
 	}
 	connectionProps := catena.NewConnectionProps(catena.ConnectionPropsOptions{
 		Protocol:        connectionProtocol,
-		Port:            options.Dashboard.Port,
-		ServicePort:     options.Dashboard.ServicePort,
-		Hostname:        options.Dashboard.Hostname,
+		Dashboard:       options.Dashboard,
 		RefreshInterval: 30000,
 		NodeName:        "One of Everything Demo",
 		NodeID:          "one-of-everything-a4:bb:6d:6a:6f:a3",
-		TLSEnabled:      options.Dashboard.TLSEnabled,
 	})
 	connectionPropsURL := fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint())
 	if err := connectionProps.Start(); err != nil {
@@ -943,7 +940,7 @@ func main() {
 	logger.Info("")
 	logger.Info("[ REST transport ]", "status", status(options.UseRest))
 	if options.UseRest {
-		logger.Info("    web ui", "url", "http://localhost:8080/")
+		logger.Info("    web ui", "url", "http://localhost:9080/")
 	}
 
 	logger.Info("")

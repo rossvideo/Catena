@@ -98,14 +98,14 @@ func (o JwtValidationOptions) ResolvedAllowedAlgs() []string {
 // advertises this device for the "Detect Frame Information" workflow. It is
 // transport-agnostic and can front either a REST or gRPC Catena device.
 type DashboardOptions struct {
-	// Hostname is the address advertised to DashBoard (default "localhost").
-	Hostname string `env:"HOSTNAME" flag:"hostname"`
+	// ServiceHostname is the address advertised to DashBoard (default "localhost").
+	ServiceHostname string `env:"DASHBOARD_HOSTNAME" flag:"dashboard-hostname"`
 	// Port is the port the connection-props HTTP server listens on (default 8080).
 	Port int `env:"DASHBOARD_PORT" flag:"dashboard-port"`
 	// ServicePort is the Catena service port advertised to DashBoard (default 6254).
-	ServicePort int `env:"SERVICE_PORT" flag:"service-port"`
-	// TLSEnabled controls whether the advertised connection uses TLS/SSL (default false).
-	TLSEnabled bool `env:"DASHBOARD_TLS_ENABLED" flag:"dashboard-tls-enabled"`
+	ServicePort int `env:"DASHBOARD_SERVICE_PORT" flag:"dashboard-service-port"`
+	// ServiceTLS controls whether the advertised connection uses TLS/SSL (default false).
+	ServiceTLS bool `env:"DASHBOARD_TLS_ENABLED" flag:"dashboard-tls-enabled"`
 }
 
 type LoggerOptions struct {
@@ -139,10 +139,10 @@ func defaultRuntimeOptions() RuntimeOptions {
 // connection-props server.
 func DefaultDashboardOptions() DashboardOptions {
 	return DashboardOptions{
-		Hostname:    "localhost",
-		Port:        8080,
-		ServicePort: 6254,
-		TLSEnabled:  false,
+		ServiceHostname: "localhost",
+		Port:            8080,
+		ServicePort:     6254,
+		ServiceTLS:      false,
 	}
 }
 

@@ -38,6 +38,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
 func TestConnectionProtocolString(t *testing.T) {
@@ -64,7 +66,7 @@ func TestConnectionPropsDefaults(t *testing.T) {
 		"<comment>DashBoard Device Connection Settings</comment>",
 		"<entry key=\"base-url\">http://localhost/</entry>",
 		"<entry key=\"serviceUrl\">service:catena-device</entry>",
-		"<entry key=\"equipmentType\">catena</entry>",
+		"<entry key=\"equipmentType\">st2138-rest</entry>",
 		"<entry key=\"address\">localhost</entry>",
 		"<entry key=\"port\">6254</entry>",
 		"<entry key=\"connectionType\">TCP</entry>",
@@ -86,9 +88,11 @@ func TestConnectionPropsDefaults(t *testing.T) {
 
 func TestConnectionPropsCustomValues(t *testing.T) {
 	xml := fetchPropsXML(t, ConnectionPropsOptions{
-		Protocol:        ProtocolST2138Grpc,
-		Hostname:        "10.62.251.47",
-		ServicePort:     5254,
+		Protocol: ProtocolST2138Grpc,
+		Dashboard: config.DashboardOptions{
+			ServiceHostname: "10.62.251.47",
+			ServicePort:     5254,
+		},
 		RefreshInterval: 15000,
 		NodeName:        "Enterprise Management SSG",
 		NodeID:          "Enterprise Management SSG-a4:bb:6d:6a:6f:a3",
@@ -98,7 +102,7 @@ func TestConnectionPropsCustomValues(t *testing.T) {
 	wants := []string{
 		"<entry key=\"base-url\">http://10.62.251.47/</entry>",
 		"<entry key=\"serviceUrl\">service:broadcast-equipment</entry>",
-		"<entry key=\"equipmentType\">catena</entry>",
+		"<entry key=\"equipmentType\">st2138-grpc</entry>",
 		"<entry key=\"address\">10.62.251.47</entry>",
 		"<entry key=\"port\">5254</entry>",
 		"<entry key=\"node-id\">Enterprise Management SSG-a4:bb:6d:6a:6f:a3</entry>",
@@ -114,8 +118,10 @@ func TestConnectionPropsCustomValues(t *testing.T) {
 
 func TestConnectionPropsTLSScheme(t *testing.T) {
 	xml := fetchPropsXML(t, ConnectionPropsOptions{
-		Hostname:   "host.example",
-		TLSEnabled: true,
+		Dashboard: config.DashboardOptions{
+			ServiceHostname: "host.example",
+			ServiceTLS:      true,
+		},
 	})
 	if !strings.Contains(xml, "<entry key=\"base-url\">https://host.example/</entry>") {
 		t.Errorf("expected https base-url, got:\n%s", xml)
@@ -145,7 +151,7 @@ func TestConnectionPropsXMLEscaping(t *testing.T) {
 func fetchPropsXML(t *testing.T, opts ConnectionPropsOptions) string {
 	t.Helper()
 	port := freePort(t)
-	opts.Port = port
+	opts.Dashboard.Port = port
 	c := NewConnectionProps(opts)
 	if err := c.Start(); err != nil {
 		t.Fatalf("Start() error: %v", err)
@@ -185,8 +191,10 @@ func freePort(t *testing.T) int {
 func TestConnectionPropsServeAndStop(t *testing.T) {
 	port := freePort(t)
 	c := NewConnectionProps(ConnectionPropsOptions{
-		Port:     port,
-		Hostname: "127.0.0.1",
+		Dashboard: config.DashboardOptions{
+			Port:            port,
+			ServiceHostname: "127.0.0.1",
+		},
 		NodeName: "test-node",
 		NodeID:   "test-node-id",
 	})
@@ -270,7 +278,7 @@ func TestConnectionPropsServeAndStop(t *testing.T) {
 
 func TestConnectionPropsDoubleStart(t *testing.T) {
 	port := freePort(t)
-	c := NewConnectionProps(ConnectionPropsOptions{Port: port})
+	c := NewConnectionProps(ConnectionPropsOptions{Dashboard: config.DashboardOptions{Port: port}})
 	if err := c.Start(); err != nil {
 		t.Fatalf("first Start() error: %v", err)
 	}

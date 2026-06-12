@@ -46,6 +46,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
@@ -83,14 +84,13 @@ const (
 
 // ConnectionPropsOptions configures a ConnectionProps server
 type ConnectionPropsOptions struct {
-	// Protocol is the transport being advertised (used for logging).
+	// Protocol is the transport being advertised (used for logging and the
+	// advertised equipmentType).
 	Protocol ConnectionProtocol
-	// Port is the port the connection-props HTTP server listens on (default 8080).
-	Port int
-	// ServicePort is the Catena service port advertised to DashBoard (default 6254).
-	ServicePort int
-	// Hostname is the address advertised to DashBoard (default "localhost").
-	Hostname string
+	// Dashboard carries the shared connection settings advertised to DashBoard
+	// (listen port, service host/port, TLS). These typically come from the
+	// loaded runtime configuration.
+	Dashboard config.DashboardOptions
 	// RefreshInterval is the DashBoard refresh interval in milliseconds (default 30000).
 	RefreshInterval uint32
 	// NodeName is the optional human-readable node name.
@@ -101,8 +101,6 @@ type ConnectionPropsOptions struct {
 	ServiceName string
 	// Endpoint is the path served (default "/connect/connection-props.xml").
 	Endpoint string
-	// TLSEnabled controls whether the advertised connection uses TLS/SSL.
-	TLSEnabled bool
 }
 
 // ConnectionProps is a lightweight HTTP server that serves a single endpoint
@@ -121,14 +119,14 @@ type ConnectionProps struct {
 // NewConnectionProps builds a ConnectionProps server, applying defaults for any
 // unset option. The XML payload is generated once at construction time.
 func NewConnectionProps(opts ConnectionPropsOptions) *ConnectionProps {
-	if opts.Port == 0 {
-		opts.Port = defaultConnectionPropsPort
+	if opts.Dashboard.Port == 0 {
+		opts.Dashboard.Port = defaultConnectionPropsPort
 	}
-	if opts.ServicePort == 0 {
-		opts.ServicePort = defaultConnectionPropsServicePort
+	if opts.Dashboard.ServicePort == 0 {
+		opts.Dashboard.ServicePort = defaultConnectionPropsServicePort
 	}
-	if opts.Hostname == "" {
-		opts.Hostname = defaultConnectionPropsHostname
+	if opts.Dashboard.ServiceHostname == "" {
+		opts.Dashboard.ServiceHostname = defaultConnectionPropsHostname
 	}
 	if opts.RefreshInterval == 0 {
 		opts.RefreshInterval = defaultConnectionPropsRefreshMs
@@ -146,7 +144,7 @@ func NewConnectionProps(opts ConnectionPropsOptions) *ConnectionProps {
 	c := &ConnectionProps{opts: opts}
 	c.content = c.generateXML()
 	logger.Info("Connection props server constructed",
-		"endpoint", opts.Endpoint, "port", opts.Port, "protocol", opts.Protocol.String())
+		"endpoint", opts.Endpoint, "port", opts.Dashboard.Port, "protocol", opts.Protocol.String())
 	return c
 }
 
@@ -168,14 +166,14 @@ func (c *ConnectionProps) Start() error {
 	c.mu.Lock()
 	if c.running {
 		c.mu.Unlock()
-		logger.Warning("Connection props server already running", "port", c.opts.Port)
+		logger.Warning("Connection props server already running", "port", c.opts.Dashboard.Port)
 		return fmt.Errorf("connection props server already running")
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", c.handle)
 
-	addr := fmt.Sprintf(":%d", c.opts.Port)
+	addr := fmt.Sprintf(":%d", c.opts.Dashboard.Port)
 	// Bind synchronously so that errors (privileged port, address already in
 	// use, etc.) are returned to the caller instead of only being logged
 	// asynchronously after Start has already reported success.
@@ -221,7 +219,7 @@ func (c *ConnectionProps) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	logger.Info("Stopping connection props server", "port", c.opts.Port)
+	logger.Info("Stopping connection props server", "port", c.opts.Dashboard.Port)
 	err := srv.Shutdown(ctx)
 	if err != nil {
 		// Best-effort hard close so we never leak the listener.
@@ -271,7 +269,7 @@ func (c *ConnectionProps) handle(w http.ResponseWriter, r *http.Request) {
 func (c *ConnectionProps) generateXML() string {
 	scheme := "http"
 	connectionType := "TCP"
-	if c.opts.TLSEnabled {
+	if c.opts.Dashboard.ServiceTLS {
 		scheme = "https"
 		connectionType = "SSL"
 	}
@@ -279,11 +277,11 @@ func (c *ConnectionProps) generateXML() string {
 	var b strings.Builder
 	b.WriteString("<properties version=\"1.0\">\n")
 	b.WriteString("    <comment>DashBoard Device Connection Settings</comment>\n")
-	writeEntry(&b, "base-url", fmt.Sprintf("%s://%s/", scheme, c.opts.Hostname))
+	writeEntry(&b, "base-url", fmt.Sprintf("%s://%s/", scheme, c.opts.Dashboard.ServiceHostname))
 	writeEntry(&b, "serviceUrl", c.opts.ServiceName)
-	writeEntry(&b, "equipmentType", "catena")
-	writeEntry(&b, "address", c.opts.Hostname)
-	writeEntry(&b, "port", fmt.Sprintf("%d", c.opts.ServicePort))
+	writeEntry(&b, "equipmentType", c.opts.Protocol.String())
+	writeEntry(&b, "address", c.opts.Dashboard.ServiceHostname)
+	writeEntry(&b, "port", fmt.Sprintf("%d", c.opts.Dashboard.ServicePort))
 	writeEntry(&b, "connectionType", connectionType)
 	if c.opts.NodeID != "" {
 		writeEntry(&b, "node-id", c.opts.NodeID)

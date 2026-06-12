@@ -137,7 +137,7 @@ Caller guidance:
 
 ## Defaults
 
-- REST default port: `8080`
+- REST default port: `9080`
 - gRPC default port: `6254`
 - gRPC reflection default: disabled
 

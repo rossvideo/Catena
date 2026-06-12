@@ -82,7 +82,7 @@ func NewRestTransport(port int) *RestTransport {
 
 func NewDefaultRestTransport() *RestTransport {
 	return NewRestTransport(
-		8080, // port
+		9080, // port
 	)
 }
 
