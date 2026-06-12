@@ -38,19 +38,41 @@
 
 package transports
 
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
+import (
+	"fmt"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
+)
+
+// maxPort is the highest valid TCP port number.
+const maxPort = 65535
+
+// validatePort ensures a configured port is within the valid TCP range so that
+// out-of-range values fail loudly instead of silently wrapping when narrowed.
+func validatePort(name string, port int) error {
+	if port < 0 || port > maxPort {
+		return fmt.Errorf("%s %d is out of range (must be between 0 and %d)", name, port, maxPort)
+	}
+	return nil
+}
 
 // RestConfigFromOptions builds a RestConfig from the top-level config.RuntimeOptions.
-func RestConfigFromOptions(opts config.RuntimeOptions) RestConfig {
+func RestConfigFromOptions(opts config.RuntimeOptions) (RestConfig, error) {
+	if err := validatePort("rest port", opts.RestPort); err != nil {
+		return RestConfig{}, err
+	}
 	return RestConfig{
 		Port: opts.RestPort,
-	}
+	}, nil
 }
 
 // GrpcConfigFromOptions builds a GrpcConfig from the top-level config.RuntimeOptions.
-func GrpcConfigFromOptions(opts config.RuntimeOptions) GrpcConfig {
+func GrpcConfigFromOptions(opts config.RuntimeOptions) (GrpcConfig, error) {
+	if err := validatePort("grpc port", opts.GrpcPort); err != nil {
+		return GrpcConfig{}, err
+	}
 	return GrpcConfig{
 		Port:       uint16(opts.GrpcPort),
 		Reflection: opts.GrpcReflection,
-	}
+	}, nil
 }
