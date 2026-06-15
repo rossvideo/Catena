@@ -26,6 +26,7 @@ Core routes:
 - `GET /st2138-api/v1/{slot}` - DeviceRequest equivalent
 - `GET /st2138-api/v1/{slot}/value/{oid}` - GetValue
 - `PUT /st2138-api/v1/{slot}/value/{oid}` - SetValue
+- `PUT /st2138-api/v1/{slot}/values` - SetValues (MultiSetValue)
 - `GET /st2138-api/v1/{slot}/asset/{oid}` - ExternalObjectRequest equivalent
 - `POST /st2138-api/v1/{slot}/command/{oid}` - ExecuteCommand
 - `GET /st2138-api/v1/{slot}/param-info/{oid...}` - unary param info
@@ -45,6 +46,7 @@ REST routes invoke handlers registered on `catena.Server`:
 
 - Device route -> `RegisterGetDeviceHandler`
 - Value routes -> `RegisterGetValueHandler`, `RegisterSetValueHandler`
+- Values route -> `RegisterMultiSetValueHandler`
 - Asset route -> `RegisterGetAssetHandler`
 - Command route -> `RegisterExecuteCommandHandler`
 - Param-info routes -> `RegisterParamInfoHandler`

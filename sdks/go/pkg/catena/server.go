@@ -63,6 +63,7 @@ const (
 	EndpointGetDevice
 	EndpointGetValue
 	EndpointSetValue
+	EndpointMultiSetValue
 	EndpointGetAsset
 	EndpointExecuteCommand
 	EndpointParamInfo
@@ -122,6 +123,15 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 type DeviceHandler func(slot uint16, ctx HandlerContext) (Device, StatusResult)
 type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult)
 type SetValueHandler func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult
+
+// SetValueEntry is a single fqoid/value pair within a MultiSetValue request.
+type SetValueEntry struct {
+	Fqoid string
+	Value any
+}
+
+// MultiSetValueHandler applies multiple parameter values atomically (all-or-nothing).
+type MultiSetValueHandler func(values []SetValueEntry, slot uint16, ctx HandlerContext) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
@@ -177,6 +187,7 @@ type Server interface {
 	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
+	RegisterMultiSetValueHandler(slot uint16, handler MultiSetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
@@ -198,6 +209,7 @@ type ServerRuntime interface {
 	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult)
 	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
 	InvokeSetValueHandler(value any, slot uint16, fqoid string, transportContext TransportContext) StatusResult
+	InvokeMultiSetValueHandler(values []SetValueEntry, slot uint16, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
@@ -223,6 +235,7 @@ type server struct {
 	getDeviceHandlers      map[uint16]DeviceHandler
 	getValueHandlers       map[uint16]GetValueHandler
 	setValueHandlers       map[uint16]SetValueHandler
+	multiSetValueHandlers  map[uint16]MultiSetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
@@ -259,6 +272,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		getDeviceHandlers:      make(map[uint16]DeviceHandler),
 		getValueHandlers:       make(map[uint16]GetValueHandler),
 		setValueHandlers:       make(map[uint16]SetValueHandler),
+		multiSetValueHandlers:  make(map[uint16]MultiSetValueHandler),
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
@@ -532,6 +546,17 @@ func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	}
 }
 
+func (s *server) RegisterMultiSetValueHandler(slot uint16, handler MultiSetValueHandler) {
+	s.mu.Lock()
+	s.multiSetValueHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
 func (s *server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
 	s.mu.Lock()
 	s.getAssetHandlers[slot] = handler
@@ -658,6 +683,50 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, tra
 	// TODO: lookup default handler for slot
 	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
 	return StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+// InvokeMultiSetValueHandler applies multiple parameter values for a slot.
+// If a dedicated MultiSetValueHandler is registered for the slot, it is used to
+// guarantee all-or-nothing (atomic) semantics. Otherwise, it falls back to
+// looping over the single SetValueHandler per entry, returning on the first
+// error. This fallback is NOT atomic; partial application can occur if a later
+// entry fails. Apps requiring true all-or-nothing behavior must register a
+// MultiSetValueHandler.
+func (s *server) InvokeMultiSetValueHandler(values []SetValueEntry, slot uint16, transportContext TransportContext) StatusResult {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return res
+	}
+
+	if !s.hasWriteAccess(handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointMultiSetValue, handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	multiHandler, hasMulti := s.multiSetValueHandlers[slot]
+	singleHandler, hasSingle := s.setValueHandlers[slot]
+	s.mu.Unlock()
+
+	if hasMulti {
+		return multiHandler(values, slot, handlerContext)
+	}
+
+	// Non-atomic fallback: apply each entry via the single SetValue handler.
+	if hasSingle {
+		for _, entry := range values {
+			res := singleHandler(entry.Value, slot, entry.Fqoid, handlerContext)
+			if res.Code != StatusCodeOk {
+				return res
+			}
+		}
+		return StatusWithCode(StatusCodeOk, "")
+	}
+
+	logger.Warning("MultiSetValueHandler called - no handler registered for this slot", "slot", slot)
+	return StatusWithCode(StatusCodeNotFound, "no value handler registered at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {

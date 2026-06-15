@@ -77,6 +77,7 @@ Both transports invoke the same registered handlers from `catena.ServerRuntime`:
 - `RegisterGetDeviceHandler`
 - `RegisterGetValueHandler`
 - `RegisterSetValueHandler`
+- `RegisterMultiSetValueHandler`
 - `RegisterGetAssetHandler`
 - `RegisterExecuteCommandHandler`
 - `RegisterParamInfoHandler`

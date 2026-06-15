@@ -56,6 +56,7 @@ type stubServerRuntime struct {
 	getDeviceFn              func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult)
 	getValueFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult)
 	setValueFn               func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
+	multiSetValueFn          func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult
 	getAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
 	commandFn                func(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
@@ -115,6 +116,25 @@ func (s *stubServerRuntime) InvokeSetValueHandler(value any, slot uint16, fqoid 
 		return s.setValueFn(value, slot, fqoid, ctx)
 	}
 	s.panicf("SetValue handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	return catena.StatusResult{Code: catena.StatusCodeInternal}
+}
+
+func (s *stubServerRuntime) InvokeMultiSetValueHandler(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	if s.multiSetValueFn != nil {
+		return s.multiSetValueFn(values, slot, ctx)
+	}
+	// Mirror the real server's non-atomic fallback: apply each entry via the
+	// single SetValue handler so tests that only wire setValueFn still work.
+	if s.setValueFn != nil {
+		for _, entry := range values {
+			res := s.setValueFn(entry.Value, slot, entry.Fqoid, ctx)
+			if res.Code != catena.StatusCodeOk {
+				return res
+			}
+		}
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+	s.panicf("MultiSetValue handler not implemented in stubServerRuntime for slot %d", slot)
 	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 

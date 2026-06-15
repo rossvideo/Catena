@@ -426,6 +426,8 @@ func (t *RestTransport) registerRoutes() {
 			switch endpoint {
 			case "value":
 				t.handleValueEndpoint(w, r, slot, parts[4:])
+			case "values":
+				t.handleValuesEndpoint(w, r, slot)
 			case "asset":
 				t.handleAssetEndpoint(w, r, slot, parts[4:])
 			case "command":
@@ -541,6 +543,28 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 	default:
 		t.writeHTTPMethodNotAllowed(w, "only GET, PUT, PATCH allowed")
 	}
+}
+
+// handleValuesEndpoint handles PUT /st2138-api/v1/{slot}/values (SetValues).
+// The values are applied via the runtime's MultiSetValue handler, which is
+// atomic when a dedicated handler is registered. On success it returns 204 No
+// Content per ST 2138-12.
+func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
+	if r.Method != http.MethodPut {
+		t.writeHTTPMethodNotAllowed(w, "only PUT allowed")
+		return
+	}
+
+	entries, err := ReadMultiSetValuesRequestJSON(r)
+	if err.Code != catena.StatusCodeOk {
+		logger.Error("failed to read request", "error", err)
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	res := t.runtime.InvokeMultiSetValueHandler(entries, slot, transportContext)
+	t.writeHTTPStatusResultNoBody(w, res)
 }
 
 func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {

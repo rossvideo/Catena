@@ -769,6 +769,101 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterMultiSetValueHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+	transportContext := validTestTransportContext(nil)
+
+	handlerCalled := false
+	srv.RegisterMultiSetValueHandler(0, func(values []SetValueEntry, slot uint16, ctx HandlerContext) StatusResult {
+		handlerCalled = true
+		if len(values) != 2 {
+			t.Errorf("expected 2 values, got %d", len(values))
+		}
+		if !ctx.HasReadScope("all") {
+			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
+		}
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	entries := []SetValueEntry{
+		{Fqoid: "a", Value: int32(1)},
+		{Fqoid: "b", Value: int32(2)},
+	}
+	status := srv.InvokeMultiSetValueHandler(entries, 0, transportContext)
+
+	if !handlerCalled {
+		t.Error("registered multi-set handler was not called")
+	}
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status, got %v", status.Code)
+	}
+
+	slots, status := srv.GetSlots(validTestTransportContext(nil))
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
+	}
+	if !slices.Contains(slots, uint16(0)) {
+		t.Error("slot 0 should be registered in server slots")
+	}
+}
+
+func TestServer_InvokeMultiSetValueHandler_Fallback(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	callCount := 0
+	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+		callCount++
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	entries := []SetValueEntry{
+		{Fqoid: "a", Value: int32(1)},
+		{Fqoid: "b", Value: int32(2)},
+	}
+	status := srv.InvokeMultiSetValueHandler(entries, 0, validTestTransportContext(nil))
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status, got %v", status.Code)
+	}
+	if callCount != 2 {
+		t.Errorf("expected single handler called 2 times via fallback, got %d", callCount)
+	}
+}
+
+func TestServer_InvokeMultiSetValueHandler_FallbackStopsOnError(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	callCount := 0
+	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+		callCount++
+		if callCount == 2 {
+			return StatusWithCode(StatusCodeInvalidArgument, "bad value")
+		}
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	entries := []SetValueEntry{
+		{Fqoid: "a", Value: int32(1)},
+		{Fqoid: "b", Value: int32(2)},
+		{Fqoid: "c", Value: int32(3)},
+	}
+	status := srv.InvokeMultiSetValueHandler(entries, 0, validTestTransportContext(nil))
+	if status.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected InvalidArgument status, got %v", status.Code)
+	}
+	if callCount != 2 {
+		t.Errorf("expected handler called 2 times (stopped at error), got %d", callCount)
+	}
+}
+
+func TestServer_InvokeMultiSetValueHandler_NoHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	status := srv.InvokeMultiSetValueHandler([]SetValueEntry{{Fqoid: "a", Value: int32(1)}}, 0, validTestTransportContext(nil))
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
+	}
+}
+
 func TestServer_RegisterGetAssetHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
@@ -922,6 +1017,17 @@ func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T)
 					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", noWriteContext)
+			},
+		},
+		{
+			name:      "multi set value",
+			scopeKind: "write",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterMultiSetValueHandler(0, func(values []SetValueEntry, slot uint16, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				return srv.InvokeMultiSetValueHandler([]SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, 0, noWriteContext)
 			},
 		},
 		{

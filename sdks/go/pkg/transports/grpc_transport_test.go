@@ -771,6 +771,31 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 	}
 }
 
+func TestGrpcTransport_MultiSetValue_DedicatedHandler(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	var got []catena.SetValueEntry
+	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+		got = values
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := makeMultiSetValueRequest(t, client, ctx, 0, map[string]any{
+		"param1": int32(10),
+		"param2": "test",
+	})
+	assertNoError(t, err)
+
+	if len(got) != 2 {
+		t.Fatalf("expected 2 entries delivered to dedicated handler, got %d", len(got))
+	}
+}
+
 // =============================================================================
 // Test: ExternalObjectRequest
 // =============================================================================
