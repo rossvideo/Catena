@@ -166,6 +166,20 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			},
 		},
 		{
+			name: "set values",
+			setup: func(t *testing.T, runtime *stubServerRuntime) {
+				runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+					assertContext(t, ctx)
+					return catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+			},
+			run: func(t *testing.T, transport *RestTransport) {
+				rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
+					`{"values":[{"fqoid":"a","value":{"int32_value":1}}]}`, headers)
+				assertStatus(t, rec, http.StatusNoContent)
+			},
+		},
+		{
 			name: "get asset",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {

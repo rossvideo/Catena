@@ -720,6 +720,51 @@ func main() {
 		})
 	}
 
+	for _, slot := range []uint16{0, 2} {
+		p := slotParams[slot]
+
+		srv.RegisterMultiSetValueHandler(slot, func(values []catena.SetValueEntry, slot uint16, ctx catena.HandlerContext) catena.StatusResult {
+			logger.Info("MultiSetValue", "slot", slot, "count", len(values))
+
+			// Validate pass: check every entry before applying any changes.
+			for _, entry := range values {
+				key := normalizeFqoid(entry.Fqoid)
+
+				if entry.Value == nil {
+					logger.Error("MultiSetValue nil value", "slot", slot, "fqoid", entry.Fqoid)
+					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value for "+entry.Fqoid)
+				}
+
+				if slot == 0 && key == "running" {
+					logger.Warning("MultiSetValue rejected for running param", "slot", slot, "fqoid", entry.Fqoid)
+					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "use start/stop commands to change running state")
+				}
+
+				existing, ok := p.Load(key)
+				if !ok {
+					logger.Error("MultiSetValue param not found", "slot", slot, "fqoid", entry.Fqoid)
+					return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+entry.Fqoid)
+				}
+
+				if reflect.TypeOf(existing) != reflect.TypeOf(entry.Value) {
+					logger.Error("MultiSetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid,
+						"expected", reflect.TypeOf(existing), "got", reflect.TypeOf(entry.Value))
+					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch for "+entry.Fqoid)
+				}
+			}
+
+			// Apply pass: all entries validated, store and broadcast.
+			for _, entry := range values {
+				key := normalizeFqoid(entry.Fqoid)
+				p.Store(key, entry.Value)
+				logger.Info("Parameter updated (multi)", "fqoid", entry.Fqoid, "value", entry.Value)
+				srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeMon)
+			}
+
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		})
+	}
+
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx catena.HandlerContext) (catena.CommandResult, catena.StatusResult) {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 		key := normalizeFqoid(commandFqoid)
