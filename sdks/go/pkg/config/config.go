@@ -51,15 +51,11 @@ import (
 type RuntimeOptions struct {
 	UseGrpc bool `env:"USE_GRPC" flag:"use-grpc"`
 	UseRest bool `env:"USE_REST" flag:"use-rest"`
-	// RestPort is the port the REST transport listens on (default: 8080)
-	RestPort int `env:"REST_PORT" flag:"rest-port"`
-	// GrpcPort is the port the gRPC transport listens on (default: 6254)
-	GrpcPort int `env:"GRPC_PORT" flag:"grpc-port"`
-	// GrpcReflection enables gRPC server reflection (default: false)
-	GrpcReflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
-	Server         ServerOptions
-	Logger         LoggerOptions
-	Dashboard      DashboardOptions
+	Server    ServerOptions
+	Logger    LoggerOptions
+	Rest      RestOptions
+	Grpc      GrpcOptions
+	Dashboard DashboardOptions
 }
 
 type ServerOptions struct {
