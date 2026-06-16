@@ -590,11 +590,8 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 		fqoidParts = fqoidParts[:len(fqoidParts)-1]
 	}
 
-	// Build OID prefix from path segments.
-	oidPrefix := ""
-	for _, p := range fqoidParts {
-		oidPrefix += "/" + p
-	}
+	// Build OID prefix from path segments. (no leading slash per spec)
+	oidPrefix := strings.Join(fqoidParts, "/")
 
 	// Unary requests must include fqoid and cannot be recursive.
 	if !streaming {
