@@ -546,9 +546,8 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 }
 
 // handleValuesEndpoint handles PUT /st2138-api/v1/{slot}/values (SetValues).
-// The values are applied via the runtime's MultiSetValue handler, which is
-// atomic when a dedicated handler is registered. On success it returns 204 No
-// Content per ST 2138-12.
+// The values are applied via the runtime's MultiSetValue handler.
+// On success it returns 204
 func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
 	if r.Method != http.MethodPut {
 		t.writeHTTPMethodNotAllowed(w, "only PUT allowed")

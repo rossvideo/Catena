@@ -203,9 +203,7 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 }
 
 // ReadMultiSetValuesRequestJSON reads and unmarshals a SetValues request body of
-// the form {"values":[{"fqoid":"...","value":{<Value oneof>}}, ...]} into a
-// slice of catena.SetValueEntry. It validates the Content-Type header and
-// converts each proto Value into its native Go type.
+// the form {"values":[{"fqoid":"...","value":{<Value oneof>}}, ...]} into a slice of catena.SetValueEntry.
 func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, catena.StatusResult) {
 	defer r.Body.Close()
 

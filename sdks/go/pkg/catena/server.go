@@ -689,9 +689,8 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, tra
 // If a dedicated MultiSetValueHandler is registered for the slot, it is used to
 // guarantee all-or-nothing (atomic) semantics. Otherwise, it falls back to
 // looping over the single SetValueHandler per entry, returning on the first
-// error. This fallback is NOT atomic; partial application can occur if a later
-// entry fails. Apps requiring true all-or-nothing behavior must register a
-// MultiSetValueHandler.
+// error, however it is not atomic; partial application can occur if a later
+// entry fails.
 func (s *server) InvokeMultiSetValueHandler(values []SetValueEntry, slot uint16, transportContext TransportContext) StatusResult {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != StatusCodeOk {
