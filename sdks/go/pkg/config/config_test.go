@@ -50,9 +50,8 @@ func TestDefaultOptions(t *testing.T) {
 	opts := defaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
-		RestPort:       8080,
-		GrpcPort:       6254,
-		GrpcReflection: false,
+		Rest: RestOptions{Port: 8080},
+		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
 			IsDev:          false,
 			MaxConnections: 100,
@@ -148,11 +147,15 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 	}
 
 	want := map[string]any{
-		"use_grpc":        false,
-		"use_rest":        false,
-		"rest_port":       json.Number("0"),
-		"grpc_port":       json.Number("0"),
-		"grpc_reflection": false,
+		"use_grpc": false,
+		"use_rest": false,
+		"rest": map[string]any{
+			"port": json.Number("0"),
+		},
+		"grpc": map[string]any{
+			"port":       json.Number("0"),
+			"reflection": false,
+		},
 		"server": map[string]any{
 			"dev":             true,
 			"max_connections": json.Number("123"),
@@ -277,7 +280,7 @@ func TestGrpcConfigFromOptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg, err := GrpcConfigFromOptions(RuntimeOptions{GrpcPort: tt.port})
+			cfg, err := GrpcConfigFromOptions(RuntimeOptions{Grpc: GrpcOptions{Port: tt.port}})
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("GrpcConfigFromOptions(%d) expected error, got nil (port=%d)", tt.port, cfg.Port)
@@ -309,7 +312,7 @@ func TestRestConfigFromOptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg, err := RestConfigFromOptions(RuntimeOptions{RestPort: tt.port})
+			cfg, err := RestConfigFromOptions(RuntimeOptions{Rest: RestOptions{Port: tt.port}})
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("RestConfigFromOptions(%d) expected error, got nil", tt.port)
@@ -328,18 +331,18 @@ func TestRestConfigFromOptions(t *testing.T) {
 
 func TestDefaultOptions_TransportPorts(t *testing.T) {
 	opts := defaultRuntimeOptions()
-	if opts.RestPort != 8080 {
-		t.Errorf("expected default RestPort 8080, got %d", opts.RestPort)
+	if opts.Rest.Port != 8080 {
+		t.Errorf("expected default Rest.Port 8080, got %d", opts.Rest.Port)
 	}
-	if opts.GrpcPort != 6254 {
-		t.Errorf("expected default GrpcPort 6254, got %d", opts.GrpcPort)
+	if opts.Grpc.Port != 6254 {
+		t.Errorf("expected default Grpc.Port 6254, got %d", opts.Grpc.Port)
 	}
 }
 
 func TestDefaultOptions_TransportFlags(t *testing.T) {
 	opts := defaultRuntimeOptions()
-	if opts.GrpcReflection != false {
-		t.Errorf("expected default GrpcReflection=false, got %v", opts.GrpcReflection)
+	if opts.Grpc.Reflection != false {
+		t.Errorf("expected default Grpc.Reflection=false, got %v", opts.Grpc.Reflection)
 	}
 	if opts.UseGrpc != false {
 		t.Errorf("expected default UseGrpc=false, got %v", opts.UseGrpc)
@@ -356,8 +359,8 @@ func TestInitOptions_RestPortVar(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.RestPort != 9090 {
-		t.Errorf("expected RestPort 9090 from env var, got %d", opts.RestPort)
+	if opts.Rest.Port != 9090 {
+		t.Errorf("expected Rest.Port 9090 from env var, got %d", opts.Rest.Port)
 	}
 }
 
@@ -368,8 +371,8 @@ func TestInitOptions_GrpcPortVar(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.GrpcPort != 7000 {
-		t.Errorf("expected GrpcPort 7000 from env var, got %d", opts.GrpcPort)
+	if opts.Grpc.Port != 7000 {
+		t.Errorf("expected Grpc.Port 7000 from env var, got %d", opts.Grpc.Port)
 	}
 }
 
@@ -394,8 +397,8 @@ func TestInitOptions_GrpcReflectionVar(t *testing.T) {
 			if err != nil {
 				t.Fatalf("InitOptionsPrefix() failed: %v", err)
 			}
-			if opts.GrpcReflection != tt.expected {
-				t.Errorf("expected GrpcReflection=%v for %q, got %v", tt.expected, tt.value, opts.GrpcReflection)
+			if opts.Grpc.Reflection != tt.expected {
+				t.Errorf("expected Grpc.Reflection=%v for %q, got %v", tt.expected, tt.value, opts.Grpc.Reflection)
 			}
 		})
 	}
@@ -455,8 +458,8 @@ func TestInitOptions_RestPortDefaultsWhenUnset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.RestPort != 8080 {
-		t.Errorf("expected default RestPort 8080 when env var unset, got %d", opts.RestPort)
+	if opts.Rest.Port != 8080 {
+		t.Errorf("expected default Rest.Port 8080 when env var unset, got %d", opts.Rest.Port)
 	}
 }
 
@@ -465,8 +468,8 @@ func TestInitOptions_GrpcPortDefaultsWhenUnset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.GrpcPort != 6254 {
-		t.Errorf("expected default GrpcPort 6254 when env var unset, got %d", opts.GrpcPort)
+	if opts.Grpc.Port != 6254 {
+		t.Errorf("expected default Grpc.Port 6254 when env var unset, got %d", opts.Grpc.Port)
 	}
 }
 
@@ -478,11 +481,11 @@ func TestInitOptions_TransportPortsIndependent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.RestPort != 5001 {
-		t.Errorf("expected RestPort=5001, got %d", opts.RestPort)
+	if opts.Rest.Port != 5001 {
+		t.Errorf("expected Rest.Port=5001, got %d", opts.Rest.Port)
 	}
-	if opts.GrpcPort != 5002 {
-		t.Errorf("expected GrpcPort=5002, got %d", opts.GrpcPort)
+	if opts.Grpc.Port != 5002 {
+		t.Errorf("expected Grpc.Port=5002, got %d", opts.Grpc.Port)
 	}
 }
 
@@ -501,7 +504,7 @@ func TestInitOptions_BooleanFieldsCombined(t *testing.T) {
 	if !opts.UseRest {
 		t.Error("expected UseRest=true")
 	}
-	if !opts.GrpcReflection {
+	if !opts.Grpc.Reflection {
 		t.Error("expected GrpcReflection=true")
 	}
 }
@@ -514,11 +517,11 @@ func TestInitOptions_PortBoundaryValues(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.RestPort != 1 {
-		t.Errorf("expected RestPort=1 (min valid), got %d", opts.RestPort)
+	if opts.Rest.Port != 1 {
+		t.Errorf("expected Rest.Port=1 (min valid), got %d", opts.Rest.Port)
 	}
-	if opts.GrpcPort != 65535 {
-		t.Errorf("expected GrpcPort=65535 (max valid), got %d", opts.GrpcPort)
+	if opts.Grpc.Port != 65535 {
+		t.Errorf("expected Grpc.Port=65535 (max valid), got %d", opts.Grpc.Port)
 	}
 }
 
@@ -529,7 +532,7 @@ func TestInitOptions_CliOverridesTransportPortEnv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.RestPort != 4444 {
-		t.Errorf("expected CLI flag to override env (RestPort=4444), got %d", opts.RestPort)
+	if opts.Rest.Port != 4444 {
+		t.Errorf("expected CLI flag to override env (Rest.Port=4444), got %d", opts.Rest.Port)
 	}
 }

@@ -49,13 +49,22 @@ import (
 )
 
 type RuntimeOptions struct {
-	UseGrpc bool `env:"USE_GRPC" flag:"use-grpc"`
-	UseRest bool `env:"USE_REST" flag:"use-rest"`
-	Server    ServerOptions
-	Logger    LoggerOptions
+	UseGrpc   bool `env:"USE_GRPC" flag:"use-grpc"`
+	UseRest   bool `env:"USE_REST" flag:"use-rest"`
 	Rest      RestOptions
 	Grpc      GrpcOptions
+	Server    ServerOptions
+	Logger    LoggerOptions
 	Dashboard DashboardOptions
+}
+
+type RestOptions struct {
+	Port int `env:"REST_PORT" flag:"rest-port"`
+}
+
+type GrpcOptions struct {
+	Port       int  `env:"GRPC_PORT" flag:"grpc-port"`
+	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
 }
 
 type ServerOptions struct {
@@ -158,14 +167,13 @@ type LoggerOptions struct {
 
 func defaultRuntimeOptions() RuntimeOptions {
 	return RuntimeOptions{
-		UseGrpc:        false,
-		UseRest:        false,
-		RestPort:       8080,
-		GrpcPort:       6254,
-		GrpcReflection: false,
-		Server:         DefaultServerOptions(),
-		Logger:         DefaultLoggerOptions(),
-		Dashboard:      DefaultDashboardOptions(),
+		UseGrpc:   false,
+		UseRest:   false,
+		Rest:      DefaultRestOptions(),
+		Grpc:      DefaultGrpcOptions(),
+		Server:    DefaultServerOptions(),
+		Logger:    DefaultLoggerOptions(),
+		Dashboard: DefaultDashboardOptions(),
 	}
 }
 
@@ -182,6 +190,14 @@ func DefaultDashboardOptions() DashboardOptions {
 		ServiceName:     "service:catena-device",
 		Endpoint:        "/connect/connection-props.xml",
 	}
+}
+
+func DefaultRestOptions() RestOptions {
+	return RestOptions{Port: 8080}
+}
+
+func DefaultGrpcOptions() GrpcOptions {
+	return GrpcOptions{Port: 6254, Reflection: false}
 }
 
 func DefaultServerOptions() ServerOptions {
@@ -219,6 +235,8 @@ func DefaultLoggerOptions() LoggerOptions {
 
 // make sure all options types implement slog.LogValuer for structured logging of the config
 var _ slog.LogValuer = RuntimeOptions{}
+var _ slog.LogValuer = RestOptions{}
+var _ slog.LogValuer = GrpcOptions{}
 var _ slog.LogValuer = ServerOptions{}
 var _ slog.LogValuer = JwtValidationOptions{}
 var _ slog.LogValuer = LoggerOptions{}
@@ -255,6 +273,19 @@ func (o LoggerOptions) LogValue() slog.Value {
 	)
 }
 
+func (o RestOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+	)
+}
+
+func (o GrpcOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+		slog.Bool("reflection", o.Reflection),
+	)
+}
+
 func (o DashboardOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("service_hostname", o.ServiceHostname),
@@ -274,9 +305,8 @@ func (o RuntimeOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Bool("use_grpc", o.UseGrpc),
 		slog.Bool("use_rest", o.UseRest),
-		slog.Int("rest_port", o.RestPort),
-		slog.Int("grpc_port", o.GrpcPort),
-		slog.Bool("grpc_reflection", o.GrpcReflection),
+		slog.Any("rest", o.Rest),
+		slog.Any("grpc", o.Grpc),
 		slog.Any("server", o.Server),
 		slog.Any("logger", o.Logger),
 		slog.Any("dashboard", o.Dashboard),
@@ -318,21 +348,21 @@ func validatePort(name string, port int) error {
 
 // RestConfigFromOptions builds a RestConfig from the top-level RuntimeOptions.
 func RestConfigFromOptions(opts RuntimeOptions) (RestConfig, error) {
-	if err := validatePort("rest port", opts.RestPort); err != nil {
+	if err := validatePort("rest port", opts.Rest.Port); err != nil {
 		return RestConfig{}, err
 	}
 	return RestConfig{
-		Port: opts.RestPort,
+		Port: opts.Rest.Port,
 	}, nil
 }
 
 // GrpcConfigFromOptions builds a GrpcConfig from the top-level RuntimeOptions.
 func GrpcConfigFromOptions(opts RuntimeOptions) (GrpcConfig, error) {
-	if err := validatePort("grpc port", opts.GrpcPort); err != nil {
+	if err := validatePort("grpc port", opts.Grpc.Port); err != nil {
 		return GrpcConfig{}, err
 	}
 	return GrpcConfig{
-		Port:       uint16(opts.GrpcPort),
-		Reflection: opts.GrpcReflection,
+		Port:       uint16(opts.Grpc.Port),
+		Reflection: opts.Grpc.Reflection,
 	}, nil
 }
