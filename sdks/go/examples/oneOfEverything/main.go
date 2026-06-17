@@ -842,17 +842,15 @@ func main() {
 	// DashBoard "Detect Frame Information" connection-props HTTP server.
 	// Advertises this device so DashBoard can resolve and populate the
 	// connection dialog. Works for both REST and gRPC devices.
-	connectionProtocol := catena.ProtocolST2138Rest
+	dashboardOpts := options.Dashboard
+	dashboardOpts.Protocol = catena.ProtocolST2138Rest
 	if options.UseGrpc {
-		connectionProtocol = catena.ProtocolST2138Grpc
+		dashboardOpts.Protocol = catena.ProtocolST2138Grpc
 	}
-	connectionProps := catena.NewConnectionProps(catena.ConnectionPropsOptions{
-		Protocol:        connectionProtocol,
-		Dashboard:       options.Dashboard,
-		RefreshInterval: 30000,
-		NodeName:        "One of Everything Demo",
-		NodeID:          "one-of-everything-a4:bb:6d:6a:6f:a3",
-	})
+	dashboardOpts.RefreshInterval = 30000
+	dashboardOpts.NodeName = "One of Everything Demo"
+	dashboardOpts.NodeID = "one-of-everything-a4:bb:6d:6a:6f:a3"
+	connectionProps := catena.NewConnectionProps(dashboardOpts)
 	connectionPropsURL := fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint())
 	if err := connectionProps.Start(); err != nil {
 		logger.Warning("Failed to start connection props server", "port", options.Dashboard.Port, "error", err)

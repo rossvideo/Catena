@@ -99,10 +99,14 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 		extractString("JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
 		extractBool("JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
 		// DashBoard connection-props options
-		extractString("DASHBOARD_HOSTNAME", "dashboard-hostname", "Advertised hostname/address for DashBoard connection props", &opts.Dashboard.ServiceHostname).
+		extractString("DASHBOARD_SERVICE_HOSTNAME", "dashboard-service-hostname", "Advertised hostname/address for DashBoard connection props", &opts.Dashboard.ServiceHostname).
 		extractInt("DASHBOARD_PORT", "dashboard-port", "Port for the DashBoard connection-props HTTP server", &opts.Dashboard.Port).
 		extractInt("DASHBOARD_SERVICE_PORT", "dashboard-service-port", "Catena service port advertised to DashBoard", &opts.Dashboard.ServicePort).
-		extractBool("DASHBOARD_TLS_ENABLED", "dashboard-tls-enabled", "Whether the advertised DashBoard connection uses TLS", &opts.Dashboard.ServiceTLS).
+		extractBool("DASHBOARD_SERVICE_TLS_ENABLED", "dashboard-service-tls-enabled", "Whether the advertised DashBoard connection uses TLS", &opts.Dashboard.ServiceTLS).
+		extractString("DASHBOARD_SERVICE_NAME", "dashboard-service-name", "Advertised service URL for DashBoard connection props", &opts.Dashboard.ServiceName).
+		extractString("DASHBOARD_NODE_NAME", "dashboard-node-name", "Human-readable node name advertised to DashBoard", &opts.Dashboard.NodeName).
+		extractString("DASHBOARD_NODE_ID", "dashboard-node-id", "Unique node identifier advertised to DashBoard", &opts.Dashboard.NodeID).
+		extractString("DASHBOARD_ENDPOINT", "dashboard-endpoint", "Path served by the DashBoard connection-props HTTP server", &opts.Dashboard.Endpoint).
 		// logging options
 		extractBool("SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).
 		extractString("LOG_DIR", "log-dir", "Directory for log files", &opts.Logger.LogDir).

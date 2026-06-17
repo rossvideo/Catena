@@ -40,6 +40,7 @@ package catena
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
 	"net"
 	"net/http"
@@ -49,23 +50,6 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
-
-// ConnectionProtocol identifies the Catena transport advertised to DashBoard.
-type ConnectionProtocol string
-
-const (
-	// ProtocolST2138Rest advertises a ST 2138 REST device.
-	ProtocolST2138Rest ConnectionProtocol = "st2138-rest"
-	// ProtocolST2138Grpc advertises a ST 2138 gRPC device.
-	ProtocolST2138Grpc ConnectionProtocol = "st2138-grpc"
-	// ProtocolST2138Catena advertises a legacy "catena" device.
-	ProtocolST2138Catena ConnectionProtocol = "catena"
-)
-
-// String returns the canonical protocol identifier used in logs.
-func (p ConnectionProtocol) String() string {
-	return string(p)
-}
 
 // Default values
 const (
@@ -77,33 +61,12 @@ const (
 	defaultConnectionPropsServicePort = 6254
 )
 
-// ConnectionPropsOptions configures a ConnectionProps server
-type ConnectionPropsOptions struct {
-	// Protocol is the transport being advertised (used for logging and the
-	// advertised equipmentType).
-	Protocol ConnectionProtocol
-	// Dashboard carries the shared connection settings advertised to DashBoard
-	// (listen port, service host/port, TLS). These typically come from the
-	// loaded runtime configuration.
-	Dashboard config.DashboardOptions
-	// RefreshInterval is the DashBoard refresh interval in milliseconds (default 30000).
-	RefreshInterval uint32
-	// NodeName is the optional human-readable node name.
-	NodeName string
-	// NodeID is the optional unique node identifier.
-	NodeID string
-	// ServiceName is the advertised service URL (default "service:catena-device").
-	ServiceName string
-	// Endpoint is the path served (default "/connect/connection-props.xml").
-	Endpoint string
-}
-
 // ConnectionProps is a lightweight HTTP server that serves a single endpoint
 // (/connect/connection-props.xml) with the connection properties consumed by
 // the DashBoard "Detect Frame Information" workflow. It is transport-agnostic
 // and can front either a REST or gRPC Catena device.
 type ConnectionProps struct {
-	opts ConnectionPropsOptions
+	opts config.DashboardOptions
 
 	mu      sync.Mutex
 	server  *http.Server
@@ -113,18 +76,18 @@ type ConnectionProps struct {
 
 // NewConnectionProps builds a ConnectionProps server, applying defaults for any
 // unset option. The XML payload is generated once at construction time.
-func NewConnectionProps(opts ConnectionPropsOptions) *ConnectionProps {
+func NewConnectionProps(opts config.DashboardOptions) *ConnectionProps {
 	if opts.Protocol == "" {
-		opts.Protocol = ProtocolST2138Rest
+		opts.Protocol = config.ProtocolST2138Rest
 	}
-	if opts.Dashboard.Port == 0 {
-		opts.Dashboard.Port = defaultConnectionPropsPort
+	if opts.Port == 0 {
+		opts.Port = defaultConnectionPropsPort
 	}
-	if opts.Dashboard.ServicePort == 0 {
-		opts.Dashboard.ServicePort = defaultConnectionPropsServicePort
+	if opts.ServicePort == 0 {
+		opts.ServicePort = defaultConnectionPropsServicePort
 	}
-	if opts.Dashboard.ServiceHostname == "" {
-		opts.Dashboard.ServiceHostname = defaultConnectionPropsHostname
+	if opts.ServiceHostname == "" {
+		opts.ServiceHostname = defaultConnectionPropsHostname
 	}
 	if opts.RefreshInterval == 0 {
 		opts.RefreshInterval = defaultConnectionPropsRefreshMs
@@ -142,7 +105,7 @@ func NewConnectionProps(opts ConnectionPropsOptions) *ConnectionProps {
 	c := &ConnectionProps{opts: opts}
 	c.content = c.generateXML()
 	logger.Info("Connection props server constructed",
-		"endpoint", opts.Endpoint, "port", opts.Dashboard.Port, "protocol", opts.Protocol.String())
+		"endpoint", opts.Endpoint, "port", opts.Port, "protocol", string(opts.Protocol))
 	return c
 }
 
@@ -164,17 +127,23 @@ func (c *ConnectionProps) Start() error {
 	c.mu.Lock()
 	if c.running {
 		c.mu.Unlock()
-		logger.Warning("Connection props server already running", "port", c.opts.Dashboard.Port)
+		logger.Warning("Connection props server already running", "port", c.opts.Port)
 		return fmt.Errorf("connection props server already running")
 	}
 
+	// Endpoint is known up front, so register explicit handlers for the
+	// props endpoint and the health probe; ServeMux returns 404 for anything
+	// else.
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", c.handle)
+	mux.HandleFunc(c.opts.Endpoint, c.handleProps)
+	mux.HandleFunc("/health", c.handleHealth)
 
-	addr := fmt.Sprintf(":%d", c.opts.Dashboard.Port)
+	addr := fmt.Sprintf(":%d", c.opts.Port)
 	// Bind synchronously so that errors (privileged port, address already in
 	// use, etc.) are returned to the caller instead of only being logged
 	// asynchronously after Start has already reported success.
+	// TODO: replicate this synchronous-listener startup routine in RestTransport
+	// (sdks/go/pkg/transports/rest_transport.go) so its errors surface to the caller too.
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		c.mu.Unlock()
@@ -217,11 +186,15 @@ func (c *ConnectionProps) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	logger.Info("Stopping connection props server", "port", c.opts.Dashboard.Port)
+	logger.Info("Stopping connection props server", "port", c.opts.Port)
 	err := srv.Shutdown(ctx)
 	if err != nil {
 		// Best-effort hard close so we never leak the listener.
-		_ = srv.Close()
+		logger.Warning("HTTP server shutdown timed out, forcing close")
+		closeErr := srv.Close()
+		if closeErr != nil {
+			logger.Error("failed to force close HTTP server", "error", closeErr)
+		}
 	}
 
 	c.mu.Lock()
@@ -232,84 +205,85 @@ func (c *ConnectionProps) Stop(ctx context.Context) error {
 	return err
 }
 
-// handle serves the connection-props endpoint and a /health probe; everything
-// else returns 404. Only GET is permitted on the props endpoint.
-func (c *ConnectionProps) handle(w http.ResponseWriter, r *http.Request) {
+// handleProps serves the connection-props endpoint. Only GET is permitted.
+func (c *ConnectionProps) handleProps(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("Connection props request", "method", r.Method, "path", r.URL.Path)
 
-	switch r.URL.Path {
-	case c.opts.Endpoint:
-		if r.Method != http.MethodGet {
-			w.Header().Set("Allow", "GET")
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		c.mu.Lock()
-		body := c.content
-		c.mu.Unlock()
-
-		w.Header().Set("Content-Type", "application/xml")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(body))
-	case "/health":
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
-	default:
-		http.Error(w, "Not Found", http.StatusNotFound)
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", "GET")
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
 	}
+	c.mu.Lock()
+	body := c.content
+	c.mu.Unlock()
+
+	w.Header().Set("Content-Type", "application/xml")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(body))
 }
 
-// generateXML renders the DashBoard connection-props XML payload.
+// handleHealth serves the /health probe.
+func (c *ConnectionProps) handleHealth(w http.ResponseWriter, r *http.Request) {
+	logger.Debug("Connection props request", "method", r.Method, "path", r.URL.Path)
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("OK"))
+}
+
+// generateXML renders the DashBoard connection-props XML payload using the
+// standard library marshaller.
 func (c *ConnectionProps) generateXML() string {
+	// DashBoard does not recognize the "https" scheme, so the advertised
+	// base-url always uses "http"; TLS is signalled via connectionType=SSL.
 	scheme := "http"
 	connectionType := "TCP"
-	if c.opts.Dashboard.ServiceTLS {
-		scheme = "https"
+	if c.opts.ServiceTLS {
 		connectionType = "SSL"
 	}
 
-	var b strings.Builder
-	b.WriteString("<properties version=\"1.0\">\n")
-	b.WriteString("    <comment>DashBoard Device Connection Settings</comment>\n")
-	writeEntry(&b, "base-url", fmt.Sprintf("%s://%s/", scheme, c.opts.Dashboard.ServiceHostname))
-	writeEntry(&b, "serviceUrl", c.opts.ServiceName)
-	writeEntry(&b, "equipmentType", c.opts.Protocol.String())
-	writeEntry(&b, "address", c.opts.Dashboard.ServiceHostname)
-	writeEntry(&b, "port", fmt.Sprintf("%d", c.opts.Dashboard.ServicePort))
-	writeEntry(&b, "connectionType", connectionType)
+	type entry struct {
+		Key   string `xml:"key,attr"`
+		Value string `xml:",chardata"`
+	}
+
+	entries := []entry{
+		{Key: "base-url", Value: fmt.Sprintf("%s://%s/", scheme, c.opts.ServiceHostname)},
+		{Key: "serviceUrl", Value: c.opts.ServiceName},
+		{Key: "equipmentType", Value: string(c.opts.Protocol)},
+		{Key: "address", Value: c.opts.ServiceHostname},
+		{Key: "port", Value: fmt.Sprintf("%d", c.opts.ServicePort)},
+		{Key: "connectionType", Value: connectionType},
+	}
 	if c.opts.NodeID != "" {
-		writeEntry(&b, "node-id", c.opts.NodeID)
+		entries = append(entries, entry{Key: "node-id", Value: c.opts.NodeID})
 	}
 	if c.opts.NodeName != "" {
-		writeEntry(&b, "node-name", c.opts.NodeName)
+		entries = append(entries, entry{Key: "node-name", Value: c.opts.NodeName})
 	}
-	writeEntry(&b, "index-url", "connect/connection-props.xml")
-	writeEntry(&b, "refresh-interval", fmt.Sprintf("%d", c.opts.RefreshInterval))
-	b.WriteString("</properties>")
-	return b.String()
-}
-
-// writeEntry appends a single <entry> line with an XML-escaped value.
-func writeEntry(b *strings.Builder, key, value string) {
-	b.WriteString("    <entry key=\"")
-	b.WriteString(key)
-	b.WriteString("\">")
-	b.WriteString(xmlEscape(value))
-	b.WriteString("</entry>\n")
-}
-
-// xmlEscape escapes the characters that are illegal in XML text content.
-func xmlEscape(s string) string {
-	replacer := strings.NewReplacer(
-		"&", "&amp;",
-		"<", "&lt;",
-		">", "&gt;",
-		"\"", "&quot;",
-		"'", "&apos;",
+	entries = append(entries,
+		entry{Key: "index-url", Value: "connect/connection-props.xml"},
+		entry{Key: "refresh-interval", Value: fmt.Sprintf("%d", c.opts.RefreshInterval)},
 	)
-	return replacer.Replace(s)
+
+	doc := struct {
+		XMLName xml.Name `xml:"properties"`
+		Version string   `xml:"version,attr"`
+		Comment string   `xml:"comment"`
+		Entries []entry  `xml:"entry"`
+	}{
+		Version: "1.0",
+		Comment: "DashBoard Device Connection Settings",
+		Entries: entries,
+	}
+
+	out, err := xml.MarshalIndent(doc, "", "    ")
+	if err != nil {
+		logger.Error("Failed to marshal connection props XML", "error", err)
+		return ""
+	}
+	return string(out)
 }

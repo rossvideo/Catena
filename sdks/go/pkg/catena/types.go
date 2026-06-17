@@ -43,8 +43,17 @@ import "github.com/rossvideo/catena/sdks/go/pkg/config"
 type RuntimeOptions = config.RuntimeOptions
 type ServerOptions = config.ServerOptions
 type JwtValidationOptions = config.JwtValidationOptions
+type DashboardOptions = config.DashboardOptions
+type ConnectionProtocol = config.ConnectionProtocol
+
+const (
+	ProtocolST2138Rest   = config.ProtocolST2138Rest
+	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
+	ProtocolST2138Catena = config.ProtocolST2138Catena
+)
 
 var (
 	DefaultServerOptions        = config.DefaultServerOptions
 	DefaultJwtValidationOptions = config.DefaultJwtValidationOptions
+	DefaultDashboardOptions     = config.DefaultDashboardOptions
 )
