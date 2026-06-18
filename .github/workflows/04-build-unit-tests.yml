@@ -290,28 +290,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          emit_summary() {
+            local summary_file="$1"
+            local heading="$2"
+            if [[ -f "$summary_file" ]]; then
+              cat "$summary_file"
+            else
+              echo "$heading"
+              echo '- Result: summary unavailable'
+            fi
+            echo ''
+          }
           {
             echo '<!-- ci-comment:unit-tests -->'
             echo '## Unit Test Results'
             echo ''
-            if [[ '${{ needs.detect_changes.outputs.cpp_changed }}' == 'true' ]]; then
-              cat unit-test-summaries/cpp-test-summary.md
-              echo ''
-            elif [[ '${{ inputs.force_cpp_tests }}' == 'true' ]]; then
-              cat unit-test-summaries/cpp-test-summary.md
-              echo ''
+            if [[ '${{ needs.detect_changes.outputs.cpp_changed }}' == 'true' || '${{ inputs.force_cpp_tests }}' == 'true' ]]; then
+              emit_summary unit-test-summaries/cpp-test-summary.md '### C++ Build and Tests'
             else
               echo '### C++ Build and Tests'
               echo '- Result: not run'
               echo ''
             fi
 
-            if [[ '${{ needs.detect_changes.outputs.go_changed }}' == 'true' ]]; then
-              cat unit-test-summaries/go-test-summary.md
-              echo ''
-            elif [[ '${{ inputs.force_go_tests }}' == 'true' ]]; then
-              cat unit-test-summaries/go-test-summary.md
-              echo ''
+            if [[ '${{ needs.detect_changes.outputs.go_changed }}' == 'true' || '${{ inputs.force_go_tests }}' == 'true' ]]; then
+              emit_summary unit-test-summaries/go-test-summary.md '### Go Build and Tests'
             else
               echo '### Go Build and Tests'
               echo '- Result: not run'
@@ -319,8 +322,7 @@ jobs:
             fi
 
             if [[ '${{ needs.detect_changes.outputs.js_changed }}' == 'true' ]]; then
-              cat unit-test-summaries/js-test-summary.md
-              echo ''
+              emit_summary unit-test-summaries/js-test-summary.md '### JS Codegen Tests'
             else
               echo '### JS Codegen Tests'
               echo '- Result: not run'

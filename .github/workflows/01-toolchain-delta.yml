@@ -85,7 +85,7 @@ jobs:
           fi
 
           if [[ "${{ inputs.run_mode }}" == "force" ]]; then
-            echo "Manual force enabled: rebuilding both toolchains and skipping stages 2-5"
+            echo "Manual force enabled: rebuilding both toolchains"
             echo "cpp_changed=true" >> "$GITHUB_OUTPUT"
             echo "go_changed=true" >> "$GITHUB_OUTPUT"
             echo "toolchain_changed=true" >> "$GITHUB_OUTPUT"
