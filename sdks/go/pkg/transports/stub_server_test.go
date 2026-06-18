@@ -123,6 +123,14 @@ func (s *stubServerRuntime) InvokeMultiSetValueHandler(values []catena.SetValueE
 	if s.multiSetValueFn != nil {
 		return s.multiSetValueFn(values, slot, ctx)
 	}
+	if s.setValueFn != nil {
+		for _, entry := range values {
+			if res := s.setValueFn(entry.Value, slot, entry.Fqoid, ctx); res.Code != catena.StatusCodeOk {
+				return res
+			}
+		}
+		return catena.StatusResult{Code: catena.StatusCodeOk}
+	}
 	s.panicf("MultiSetValue handler not implemented in stubServerRuntime for slot %d", slot)
 	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }

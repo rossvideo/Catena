@@ -700,9 +700,6 @@ func (s *server) InvokeMultiSetValueHandler(values []SetValueEntry, slot uint16,
 	if !s.hasWriteAccess(handlerContext) {
 		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
-	if !s.isAccessAllowed(EndpointMultiSetValue, handlerContext) {
-		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
 
 	s.mu.Lock()
 	multiHandler, hasMulti := s.multiSetValueHandlers[slot]
@@ -710,11 +707,19 @@ func (s *server) InvokeMultiSetValueHandler(values []SetValueEntry, slot uint16,
 	s.mu.Unlock()
 
 	if hasMulti {
+		if !s.isAccessAllowed(EndpointMultiSetValue, handlerContext) {
+			return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+		}
 		return multiHandler(values, slot, handlerContext)
 	}
 
 	// Non-atomic fallback: apply each entry via the single SetValue handler.
+	// The fallback uses the single SetValueHandler, so it is gated by
+	// EndpointSetValue access to preserve the documented fallback semantics
 	if hasSingle {
+		if !s.isAccessAllowed(EndpointSetValue, handlerContext) {
+			return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+		}
 		for _, entry := range values {
 			res := singleHandler(entry.Value, slot, entry.Fqoid, handlerContext)
 			if res.Code != StatusCodeOk {

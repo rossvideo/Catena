@@ -864,6 +864,55 @@ func TestServer_InvokeMultiSetValueHandler_NoHandler(t *testing.T) {
 	}
 }
 
+func TestServer_InvokeMultiSetValueHandler_FallbackUsesSetValueAccess(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	callCount := 0
+	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+		callCount++
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
+		return endpointType == EndpointSetValue
+	})
+
+	entries := []SetValueEntry{
+		{Fqoid: "a", Value: int32(1)},
+		{Fqoid: "b", Value: int32(2)},
+	}
+	status := srv.InvokeMultiSetValueHandler(entries, 0, validTestTransportContext(nil))
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status from SetValue-gated fallback, got %v", status.Code)
+	}
+	if callCount != 2 {
+		t.Errorf("expected single handler called 2 times via fallback, got %d", callCount)
+	}
+}
+
+// A dedicated multi handler must still be gated by EndpointMultiSetValue access.
+func TestServer_InvokeMultiSetValueHandler_DedicatedRequiresMultiAccess(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	handlerCalled := false
+	srv.RegisterMultiSetValueHandler(0, func(values []SetValueEntry, slot uint16, ctx HandlerContext) StatusResult {
+		handlerCalled = true
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	srv.RegisterAccessHandler(func(endpointType EndpointType, ctx HandlerContext) bool {
+		return endpointType == EndpointSetValue
+	})
+
+	status := srv.InvokeMultiSetValueHandler([]SetValueEntry{{Fqoid: "a", Value: int32(1)}}, 0, validTestTransportContext(nil))
+	if status.Code != StatusCodePermissionDenied {
+		t.Errorf("expected StatusCodePermissionDenied for dedicated handler without multi access, got %v", status.Code)
+	}
+	if handlerCalled {
+		t.Error("multi handler should not run when EndpointMultiSetValue access is denied")
+	}
+}
+
 func TestServer_RegisterGetAssetHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
