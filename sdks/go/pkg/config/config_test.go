@@ -76,6 +76,10 @@ func TestDefaultOptions(t *testing.T) {
 			Port:            8080,
 			ServicePort:     6254,
 			ServiceTLS:      false,
+			Protocol:        ProtocolST2138Rest,
+			RefreshInterval: 30000,
+			ServiceName:     "service:catena-device",
+			Endpoint:        "/connect/connection-props.xml",
 		},
 	}) {
 		t.Errorf("defaultRuntimeOptions() returned unexpected value: %+v", opts)

@@ -47,18 +47,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-)
-
-// Default values
-const (
-	defaultConnectionPropsEndpoint    = "/connect/connection-props.xml"
-	defaultConnectionPropsService     = "service:catena-device"
-	defaultConnectionPropsRefreshMs   = 30000
-	defaultConnectionPropsHostname    = "localhost"
-	defaultConnectionPropsPort        = 8080
-	defaultConnectionPropsServicePort = 6254
 )
 
 // ConnectionProps is a lightweight HTTP server that serves a single endpoint
@@ -66,7 +55,7 @@ const (
 // the DashBoard "Detect Frame Information" workflow. It is transport-agnostic
 // and can front either a REST or gRPC Catena device.
 type ConnectionProps struct {
-	opts config.DashboardOptions
+	opts DashboardOptions
 
 	mu      sync.Mutex
 	server  *http.Server
@@ -74,30 +63,10 @@ type ConnectionProps struct {
 	running bool
 }
 
-// NewConnectionProps builds a ConnectionProps server, applying defaults for any
-// unset option. The XML payload is generated once at construction time.
-func NewConnectionProps(opts config.DashboardOptions) *ConnectionProps {
-	if opts.Protocol == "" {
-		opts.Protocol = config.ProtocolST2138Rest
-	}
-	if opts.Port == 0 {
-		opts.Port = defaultConnectionPropsPort
-	}
-	if opts.ServicePort == 0 {
-		opts.ServicePort = defaultConnectionPropsServicePort
-	}
-	if opts.ServiceHostname == "" {
-		opts.ServiceHostname = defaultConnectionPropsHostname
-	}
-	if opts.RefreshInterval == 0 {
-		opts.RefreshInterval = defaultConnectionPropsRefreshMs
-	}
-	if opts.ServiceName == "" {
-		opts.ServiceName = defaultConnectionPropsService
-	}
-	if opts.Endpoint == "" {
-		opts.Endpoint = defaultConnectionPropsEndpoint
-	}
+// NewConnectionProps builds a ConnectionProps server from the supplied options,
+// which are expected to be initialized (see config.DefaultDashboardOptions). The
+// XML payload is generated once at construction time.
+func NewConnectionProps(opts DashboardOptions) *ConnectionProps {
 	if !strings.HasPrefix(opts.Endpoint, "/") {
 		opts.Endpoint = "/" + opts.Endpoint
 	}

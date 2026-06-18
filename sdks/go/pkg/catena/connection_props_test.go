@@ -43,11 +43,11 @@ import (
 )
 
 func TestConnectionPropsDefaults(t *testing.T) {
-	c := NewConnectionProps(config.DashboardOptions{})
+	c := NewConnectionProps(config.DefaultDashboardOptions())
 	if c.Endpoint() != "/connect/connection-props.xml" {
 		t.Errorf("default endpoint = %q", c.Endpoint())
 	}
-	xml := fetchPropsXML(t, config.DashboardOptions{})
+	xml := fetchPropsXML(t, config.DefaultDashboardOptions())
 
 	wants := []string{
 		"<properties version=\"1.0\">",
@@ -75,15 +75,15 @@ func TestConnectionPropsDefaults(t *testing.T) {
 }
 
 func TestConnectionPropsCustomValues(t *testing.T) {
-	xml := fetchPropsXML(t, config.DashboardOptions{
-		Protocol:        ProtocolST2138Grpc,
-		ServiceHostname: "10.62.251.47",
-		ServicePort:     5254,
-		RefreshInterval: 15000,
-		NodeName:        "Enterprise Management SSG",
-		NodeID:          "Enterprise Management SSG-a4:bb:6d:6a:6f:a3",
-		ServiceName:     "service:broadcast-equipment",
-	})
+	opts := config.DefaultDashboardOptions()
+	opts.Protocol = ProtocolST2138Grpc
+	opts.ServiceHostname = "10.62.251.47"
+	opts.ServicePort = 5254
+	opts.RefreshInterval = 15000
+	opts.NodeName = "Enterprise Management SSG"
+	opts.NodeID = "Enterprise Management SSG-a4:bb:6d:6a:6f:a3"
+	opts.ServiceName = "service:broadcast-equipment"
+	xml := fetchPropsXML(t, opts)
 
 	wants := []string{
 		"<entry key=\"base-url\">http://10.62.251.47/</entry>",
@@ -103,10 +103,10 @@ func TestConnectionPropsCustomValues(t *testing.T) {
 }
 
 func TestConnectionPropsTLSScheme(t *testing.T) {
-	xml := fetchPropsXML(t, config.DashboardOptions{
-		ServiceHostname: "host.example",
-		ServiceTLS:      true,
-	})
+	opts := config.DefaultDashboardOptions()
+	opts.ServiceHostname = "host.example"
+	opts.ServiceTLS = true
+	xml := fetchPropsXML(t, opts)
 	// DashBoard does not recognize "https"; base-url stays http even with TLS.
 	if !strings.Contains(xml, "<entry key=\"base-url\">http://host.example/</entry>") {
 		t.Errorf("expected http base-url, got:\n%s", xml)
@@ -117,14 +117,18 @@ func TestConnectionPropsTLSScheme(t *testing.T) {
 }
 
 func TestConnectionPropsEndpointNormalized(t *testing.T) {
-	c := NewConnectionProps(config.DashboardOptions{Endpoint: "connect/foo.xml"})
+	opts := config.DefaultDashboardOptions()
+	opts.Endpoint = "connect/foo.xml"
+	c := NewConnectionProps(opts)
 	if c.Endpoint() != "/connect/foo.xml" {
 		t.Errorf("endpoint not normalized: %q", c.Endpoint())
 	}
 }
 
 func TestConnectionPropsXMLEscaping(t *testing.T) {
-	xml := fetchPropsXML(t, config.DashboardOptions{NodeName: `a&b<c>"d'`})
+	opts := config.DefaultDashboardOptions()
+	opts.NodeName = `a&b<c>"d'`
+	xml := fetchPropsXML(t, opts)
 	// encoding/xml escapes quotes as numeric character references.
 	if !strings.Contains(xml, "a&amp;b&lt;c&gt;&#34;d&#39;") {
 		t.Errorf("value not escaped, got:\n%s", xml)
@@ -176,12 +180,12 @@ func freePort(t *testing.T) int {
 
 func TestConnectionPropsServeAndStop(t *testing.T) {
 	port := freePort(t)
-	c := NewConnectionProps(config.DashboardOptions{
-		Port:            port,
-		ServiceHostname: "127.0.0.1",
-		NodeName:        "test-node",
-		NodeID:          "test-node-id",
-	})
+	opts := config.DefaultDashboardOptions()
+	opts.Port = port
+	opts.ServiceHostname = "127.0.0.1"
+	opts.NodeName = "test-node"
+	opts.NodeID = "test-node-id"
+	c := NewConnectionProps(opts)
 
 	if err := c.Start(); err != nil {
 		t.Fatalf("Start() error: %v", err)
@@ -262,7 +266,9 @@ func TestConnectionPropsServeAndStop(t *testing.T) {
 
 func TestConnectionPropsDoubleStart(t *testing.T) {
 	port := freePort(t)
-	c := NewConnectionProps(config.DashboardOptions{Port: port})
+	opts := config.DefaultDashboardOptions()
+	opts.Port = port
+	c := NewConnectionProps(opts)
 	if err := c.Start(); err != nil {
 		t.Fatalf("first Start() error: %v", err)
 	}
@@ -278,7 +284,7 @@ func TestConnectionPropsDoubleStart(t *testing.T) {
 }
 
 func TestConnectionPropsStopWhenNotRunning(t *testing.T) {
-	c := NewConnectionProps(config.DashboardOptions{})
+	c := NewConnectionProps(config.DefaultDashboardOptions())
 	if err := c.Stop(context.Background()); err != nil {
 		t.Errorf("Stop() on idle server error: %v", err)
 	}

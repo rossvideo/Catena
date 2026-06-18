@@ -109,6 +109,9 @@ const (
 // DashboardOptions configures the DashBoard connection-props HTTP server that
 // advertises this device for the "Detect Frame Information" workflow. It is
 // transport-agnostic and can front either a REST or gRPC Catena device.
+//
+// DashboardOptions must be initialized before use.
+// Prefer config.InitOptions or config.DefaultDashboardOptions().
 type DashboardOptions struct {
 	// ServiceHostname is the address advertised to DashBoard (default "localhost").
 	ServiceHostname string `env:"DASHBOARD_SERVICE_HOSTNAME" flag:"dashboard-service-hostname"`
@@ -120,7 +123,7 @@ type DashboardOptions struct {
 	ServiceTLS bool `env:"DASHBOARD_SERVICE_TLS_ENABLED" flag:"dashboard-service-tls-enabled"`
 	// Protocol is the transport being advertised (used for logging and the
 	// advertised equipmentType).
-	Protocol ConnectionProtocol
+	Protocol ConnectionProtocol `env:"DASHBOARD_PROTOCOL" flag:"dashboard-protocol"`
 	// RefreshInterval is the DashBoard refresh interval in milliseconds (default 30000).
 	RefreshInterval uint32
 	// NodeName is the optional human-readable node name.
@@ -168,6 +171,10 @@ func DefaultDashboardOptions() DashboardOptions {
 		Port:            8080,
 		ServicePort:     6254,
 		ServiceTLS:      false,
+		Protocol:        ProtocolST2138Rest,
+		RefreshInterval: 30000,
+		ServiceName:     "service:catena-device",
+		Endpoint:        "/connect/connection-props.xml",
 	}
 }
 

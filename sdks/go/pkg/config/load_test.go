@@ -310,6 +310,44 @@ func TestLoader_LogLevel(t *testing.T) {
 	})
 }
 
+func TestLoader_ConnectionProtocol(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected ConnectionProtocol
+	}{
+		{"st2138-rest", ProtocolST2138Rest},
+		{"st2138-grpc", ProtocolST2138Grpc},
+		{"catena", ProtocolST2138Catena},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			loader := makeTestLoader(t)
+			val := ProtocolST2138Rest
+			t.Setenv("TEST_PROTOCOL", tt.input)
+			loader.extractConnectionProtocol("TEST_PROTOCOL", "test-protocol", "Test protocol flag", &val)
+			if loader.err != nil {
+				t.Errorf("Expected no error got: %v", loader.err)
+			}
+			if val != tt.expected {
+				t.Errorf("Expected val to be %v got: %v", tt.expected, val)
+			}
+		})
+	}
+
+	t.Run("invalid protocol", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := ProtocolST2138Rest
+		t.Setenv("TEST_PROTOCOL", "notaprotocol")
+		loader.extractConnectionProtocol("TEST_PROTOCOL", "test-protocol", "Test protocol flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+		if val != ProtocolST2138Rest {
+			t.Errorf("Expected val to be unchanged at ProtocolST2138Rest got: %v", val)
+		}
+	})
+}
+
 func TestLoadParser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
