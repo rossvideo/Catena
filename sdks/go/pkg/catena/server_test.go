@@ -1127,6 +1127,16 @@ func TestServer_EndpointsReturnResolveHandlerContextError(t *testing.T) {
 			},
 		},
 		{
+			name: "multi set value",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterMultiSetValueHandler(0, func(values []SetValueEntry, slot uint16, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				return srv.InvokeMultiSetValueHandler([]SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, 0, invalidContext)
+			},
+		},
+		{
 			name: "get asset",
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
@@ -1249,6 +1259,17 @@ func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testin
 					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", transportContext)
+			},
+		},
+		{
+			name:     "multi set value",
+			endpoint: EndpointMultiSetValue,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterMultiSetValueHandler(0, func(values []SetValueEntry, slot uint16, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				return srv.InvokeMultiSetValueHandler([]SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, 0, transportContext)
 			},
 		},
 		{

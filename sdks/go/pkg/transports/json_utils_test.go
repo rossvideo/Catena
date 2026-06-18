@@ -176,6 +176,102 @@ func TestReadRequestJSON_EmptyBody(t *testing.T) {
 	}
 }
 
+func TestReadMultiSetValuesRequestJSON_Valid(t *testing.T) {
+	body := `{"values":[{"oid":"a","value":{"int32_value":1}},{"oid":"b","value":{"string_value":"two"}}]}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	entries, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeOk {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(entries))
+	}
+	if entries[0].Fqoid != "a" {
+		t.Errorf("expected entry[0] oid 'a', got %q", entries[0].Fqoid)
+	}
+	if v, ok := entries[0].Value.(int32); !ok || v != 1 {
+		t.Errorf("expected entry[0] value int32(1), got %v (%T)", entries[0].Value, entries[0].Value)
+	}
+	if entries[1].Fqoid != "b" {
+		t.Errorf("expected entry[1] oid 'b', got %q", entries[1].Fqoid)
+	}
+	if v, ok := entries[1].Value.(string); !ok || v != "two" {
+		t.Errorf("expected entry[1] value 'two', got %v (%T)", entries[1].Value, entries[1].Value)
+	}
+}
+
+func TestReadMultiSetValuesRequestJSON_MissingContentType(t *testing.T) {
+	body := `{"values":[]}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	// No Content-Type header
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatal("expected BAD_REQUEST error for missing Content-Type")
+	}
+	if err.Error != "missing Content-Type header" {
+		t.Errorf("expected 'missing Content-Type header' error, got: %v", err)
+	}
+}
+
+func TestReadMultiSetValuesRequestJSON_MalformedContentType(t *testing.T) {
+	body := `{"values":[]}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "invalid;;;type")
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatal("expected error for malformed Content-Type")
+	}
+	if err.Error != "invalid content type: invalid;;;type" {
+		t.Errorf("expected 'invalid content type' error, got: %v", err)
+	}
+}
+
+func TestReadMultiSetValuesRequestJSON_UnsupportedContentType(t *testing.T) {
+	body := `{"values":[]}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "text/plain")
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatal("expected error for unsupported Content-Type")
+	}
+	if err.Error != "unsupported content type: text/plain, expected application/json" {
+		t.Errorf("expected 'unsupported content type' error, got: %v", err)
+	}
+}
+
+func TestReadMultiSetValuesRequestJSON_MalformedBody(t *testing.T) {
+	body := `{"values": not-json}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatal("expected BAD_REQUEST error for malformed body")
+	}
+	if !strings.Contains(err.Error, "failed to unmarshal request body") {
+		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err.Error)
+	}
+}
+
+func TestReadMultiSetValuesRequestJSON_InvalidValue(t *testing.T) {
+	body := `{"values":[{"oid":"param","value":{"struct_variant_value":{"variant_name":"test"}}}]}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatal("expected BAD_REQUEST error for invalid value")
+	}
+	if !strings.Contains(err.Error, "invalid value at index 0") {
+		t.Errorf("expected error to contain 'invalid value at index 0', got: %v", err.Error)
+	}
+}
+
 func TestWriteProtoJSON_ValidValue(t *testing.T) {
 	w := httptest.NewRecorder()
 	val := &protos.Value{

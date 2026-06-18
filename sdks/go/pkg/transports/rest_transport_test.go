@@ -175,7 +175,7 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			},
 			run: func(t *testing.T, transport *RestTransport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
-					`{"values":[{"fqoid":"a","value":{"int32_value":1}}]}`, headers)
+					`{"values":[{"oid":"a","value":{"int32_value":1}}]}`, headers)
 				assertStatus(t, rec, http.StatusNoContent)
 			},
 		},
@@ -395,7 +395,7 @@ func TestRestTransport_SetValues_Route(t *testing.T) {
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
 
-	body := `{"values":[{"fqoid":"ipv4","value":{"string_value":"192.168.1.1"}},{"fqoid":"brightness","value":{"int32_value":42}}]}`
+	body := `{"values":[{"oid":"ipv4","value":{"string_value":"192.168.1.1"}},{"oid":"brightness","value":{"int32_value":42}}]}`
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
 	assertStatus(t, rec, http.StatusNoContent)
 
@@ -416,20 +416,25 @@ func TestRestTransport_SetValues_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_SetValues_Fallback(t *testing.T) {
+func TestRestTransport_SetValues_DeliversAllEntries(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	callCount := 0
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	var got []catena.SetValueEntry
+	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
+		got = values
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
 
-	body := `{"values":[{"fqoid":"a","value":{"int32_value":1}},{"fqoid":"b","value":{"int32_value":2}}]}`
+	body := `{"values":[{"oid":"a","value":{"int32_value":1}},{"oid":"b","value":{"int32_value":2}}]}`
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
 	assertStatus(t, rec, http.StatusNoContent)
-	if callCount != 2 {
-		t.Errorf("expected single handler called 2 times via fallback, got %d", callCount)
+	if callCount != 1 {
+		t.Errorf("expected handler called once, got %d", callCount)
+	}
+	if len(got) != 2 {
+		t.Errorf("expected 2 entries delivered to handler, got %d", len(got))
 	}
 }
 
@@ -461,7 +466,7 @@ func TestRestTransport_SetValues_MalformedBody(t *testing.T) {
 
 func TestRestTransport_SetValues_FromProtoError(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
-	body := `{"values":[{"fqoid":"param","value":{"struct_variant_value":{"variant_name":"test"}}}]}`
+	body := `{"values":[{"oid":"param","value":{"struct_variant_value":{"variant_name":"test"}}}]}`
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
 	assertStatus(t, rec, http.StatusBadRequest)
 }
@@ -478,7 +483,7 @@ func TestRestTransport_SetValues_HandlerError(t *testing.T) {
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "not found")
 	}
 
-	body := `{"values":[{"fqoid":"a","value":{"int32_value":1}}]}`
+	body := `{"values":[{"oid":"a","value":{"int32_value":1}}]}`
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
 	assertStatus(t, rec, http.StatusNotFound)
 }

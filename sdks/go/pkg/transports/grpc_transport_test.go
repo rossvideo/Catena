@@ -248,7 +248,7 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "multi set value",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
@@ -678,8 +678,10 @@ func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	var got []catena.SetValueEntry
+	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
+		got = values
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -693,8 +695,11 @@ func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 	})
 	assertNoError(t, err)
 
-	if callCount != 3 {
-		t.Errorf("expected handler to be called 3 times, got %d", callCount)
+	if callCount != 1 {
+		t.Errorf("expected handler to be called once, got %d", callCount)
+	}
+	if len(got) != 3 {
+		t.Errorf("expected 3 entries delivered to handler, got %d", len(got))
 	}
 }
 
@@ -718,13 +723,9 @@ func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
-		// Fail on second value
-		if callCount == 2 {
-			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "second value invalid")
-		}
-		return catena.StatusWithCode(catena.StatusCodeOk, "")
+		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value invalid")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -737,9 +738,8 @@ func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 	})
 	assertGRPCCode(t, err, codes.InvalidArgument, "handler error")
 
-	// Verify processing stopped at second value
-	if callCount != 2 {
-		t.Errorf("expected handler called 2 times (stopped at error), got %d", callCount)
+	if callCount != 1 {
+		t.Errorf("expected handler called once, got %d", callCount)
 	}
 }
 
@@ -749,8 +749,10 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	var got []catena.SetValueEntry
+	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
+		got = values
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -766,8 +768,11 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 		t.Fatalf("MultiSetValue with empty values failed: %v", err)
 	}
 
-	if callCount != 0 {
-		t.Errorf("expected handler not to be called, got %d calls", callCount)
+	if callCount != 1 {
+		t.Errorf("expected handler to be called once, got %d calls", callCount)
+	}
+	if len(got) != 0 {
+		t.Errorf("expected 0 entries delivered to handler, got %d", len(got))
 	}
 }
 
@@ -1374,7 +1379,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "multi set failed",
 			grpcCode:   codes.FailedPrecondition,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodeFailedPrecondition, "multi set failed")
 				}
 			},
