@@ -32,7 +32,7 @@ package main
 
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
+	// grpcServer "github.com/rossvideo/catena/sdks/go/pkg/grpc"
 
 	getdevice "github.com/rossvideo/catena/sdks/go/examples/getDevice"
 )

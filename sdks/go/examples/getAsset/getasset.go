@@ -74,15 +74,15 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		val, ok := assets.Load(fqoid)
 		if !ok {
 			logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-			return catena.ReplyError[catena.CatenaAsset](catena.NOT_FOUND, "asset not found: "+fqoid)
+			return catena.ReplyError[catena.CatenaAsset](catena.StatusCodeNotFound, "asset not found: "+fqoid)
 		}
 
 		payload := val.(catena.DataPayload)
 
 		catenaAsset, res := catena.ToCatenaAsset(payload, true)
-		if res.Code != catena.OK {
+		if res.Code != catena.StatusCodeOk {
 			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
-			return catena.ReplyError[catena.CatenaAsset](catena.INTERNAL, "failed to convert asset: "+res.Error)
+			return catena.ReplyError[catena.CatenaAsset](catena.StatusCodeInternal, "failed to convert asset: "+res.Error)
 		}
 
 		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(payload.Payload))

@@ -33,7 +33,8 @@
  * @file logger_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2025-12-09
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-14
  */
 
 package logger
@@ -45,17 +46,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/internal/testutil"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
 func TestInit(t *testing.T) {
 	t.Run("creates log directory", func(t *testing.T) {
-		Close()
-		dir, cleanup := testutil.TempDir(t, "logger-test")
-		defer cleanup()
+		close()
+		dir := t.TempDir()
 
 		logDir := filepath.Join(dir, "logs")
-		err := Init(Settings{
+		_, err := Init(config.LoggerOptions{
 			AppName:        "test",
 			LogDir:         logDir,
 			WriteToFile:    true,
@@ -65,7 +65,7 @@ func TestInit(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Init failed: %v", err)
 		}
-		defer Close()
+		defer close()
 
 		if _, err := os.Stat(logDir); os.IsNotExist(err) {
 			t.Error("log directory was not created")
@@ -73,11 +73,10 @@ func TestInit(t *testing.T) {
 	})
 
 	t.Run("creates log file with timestamp", func(t *testing.T) {
-		Close()
-		dir, cleanup := testutil.TempDir(t, "logger-test")
-		defer cleanup()
+		close()
+		dir := t.TempDir()
 
-		err := Init(Settings{
+		_, err := Init(config.LoggerOptions{
 			AppName:        "myapp",
 			LogDir:         dir,
 			WriteToFile:    true,
@@ -87,7 +86,7 @@ func TestInit(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Init failed: %v", err)
 		}
-		defer Close()
+		defer close()
 
 		// Check that a log file was created
 		entries, err := os.ReadDir(dir)
@@ -110,9 +109,9 @@ func TestInit(t *testing.T) {
 			t.Skip("skipping permission error test when running as root")
 		}
 
-		Close()
+		close()
 		// Try to create a log directory in a non-existent parent with no permissions
-		err := Init(Settings{
+		_, err := Init(config.LoggerOptions{
 			AppName:        "test",
 			LogDir:         "/nonexistent/path/that/should/fail/logs",
 			WriteToFile:    true,
@@ -120,16 +119,15 @@ func TestInit(t *testing.T) {
 		})
 		if err == nil {
 			t.Error("expected error for invalid log directory")
-			Close()
+			close()
 		}
 	})
 
 	t.Run("only initializes once", func(t *testing.T) {
-		Close()
-		dir, cleanup := testutil.TempDir(t, "logger-test")
-		defer cleanup()
+		close()
+		dir := t.TempDir()
 
-		err := Init(Settings{
+		_, err := Init(config.LoggerOptions{
 			AppName:        "first",
 			LogDir:         dir,
 			WriteToFile:    true,
@@ -141,7 +139,7 @@ func TestInit(t *testing.T) {
 		}
 
 		// Second init should return ErrAlreadyInitialized
-		err = Init(Settings{
+		_, err = Init(config.LoggerOptions{
 			AppName:        "second",
 			LogDir:         dir,
 			WriteToFile:    true,
@@ -164,16 +162,15 @@ func TestInit(t *testing.T) {
 			t.Errorf("expected filename to contain 'first', got %s", entries[0].Name())
 		}
 
-		Close()
+		close()
 	})
 }
 
 func TestLogToFile(t *testing.T) {
-	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	close()
+	dir := t.TempDir()
 
-	err := Init(Settings{
+	_, err := Init(config.LoggerOptions{
 		AppName:        "filetest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -185,7 +182,7 @@ func TestLogToFile(t *testing.T) {
 	}
 
 	Info("test log message to file")
-	Close()
+	close()
 
 	// Find and read the log file
 	entries, err := os.ReadDir(dir)
@@ -201,16 +198,17 @@ func TestLogToFile(t *testing.T) {
 		t.Fatalf("failed to read log file: %v", err)
 	}
 
-	testutil.AssertContains(t, string(content), "test log message to file")
+	if !strings.Contains(string(content), "test log message to file") {
+		t.Errorf("expected %q to contain %q", string(content), "test log message to file")
+	}
 }
 
 func TestClose(t *testing.T) {
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	dir := t.TempDir()
 
 	// First initialization
-	Close()
-	err := Init(Settings{
+	close()
+	_, err := Init(config.LoggerOptions{
 		AppName:        "first",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -222,10 +220,10 @@ func TestClose(t *testing.T) {
 	}
 
 	Info("first log")
-	Close()
+	close()
 
 	// Second initialization should work after Close
-	err = Init(Settings{
+	_, err = Init(config.LoggerOptions{
 		AppName:        "second",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -237,7 +235,7 @@ func TestClose(t *testing.T) {
 	}
 
 	Info("second log")
-	Close()
+	close()
 
 	// Should have two log files
 	entries, err := os.ReadDir(dir)
@@ -250,7 +248,7 @@ func TestClose(t *testing.T) {
 }
 
 func TestNoLoggerInitialized(t *testing.T) {
-	Close()
+	close()
 
 	// These should not panic when logger is not initialized
 	// (slog.Default() should handle it gracefully)
@@ -268,11 +266,10 @@ func TestGetLogger(t *testing.T) {
 }
 
 func TestGetNamed(t *testing.T) {
-	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	close()
+	dir := t.TempDir()
 
-	err := Init(Settings{
+	_, err := Init(config.LoggerOptions{
 		AppName:        "namedtest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -282,7 +279,7 @@ func TestGetNamed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer Close()
+	defer close()
 
 	namedLogger := GetNamed("mycomponent")
 	if namedLogger == nil {
@@ -293,11 +290,10 @@ func TestGetNamed(t *testing.T) {
 }
 
 func TestWith(t *testing.T) {
-	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	close()
+	dir := t.TempDir()
 
-	err := Init(Settings{
+	_, err := Init(config.LoggerOptions{
 		AppName:        "withtest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -307,7 +303,7 @@ func TestWith(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer Close()
+	defer close()
 
 	// With should return a logger with attributes
 	loggerWith := With("key", "value")
@@ -318,11 +314,10 @@ func TestWith(t *testing.T) {
 }
 
 func TestWithGroup(t *testing.T) {
-	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	close()
+	dir := t.TempDir()
 
-	err := Init(Settings{
+	_, err := Init(config.LoggerOptions{
 		AppName:        "grouptest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -332,7 +327,7 @@ func TestWithGroup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer Close()
+	defer close()
 
 	// WithGroup should return a logger with a group prefix
 	groupLogger := WithGroup("mygroup")
@@ -343,11 +338,10 @@ func TestWithGroup(t *testing.T) {
 }
 
 func TestSilentMode(t *testing.T) {
-	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	close()
+	dir := t.TempDir()
 
-	err := Init(Settings{
+	_, err := Init(config.LoggerOptions{
 		AppName:        "silenttest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -358,7 +352,7 @@ func TestSilentMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Init failed: %v", err)
 	}
-	defer Close()
+	defer close()
 
 	// In silent mode, nothing should be logged
 	Debug("debug message")
@@ -383,11 +377,10 @@ func TestSilentMode(t *testing.T) {
 }
 
 func TestJSONOutput(t *testing.T) {
-	Close()
-	dir, cleanup := testutil.TempDir(t, "logger-test")
-	defer cleanup()
+	close()
+	dir := t.TempDir()
 
-	err := Init(Settings{
+	_, err := Init(config.LoggerOptions{
 		AppName:        "jsontest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -400,7 +393,7 @@ func TestJSONOutput(t *testing.T) {
 	}
 
 	Info("json log message")
-	Close()
+	close()
 
 	// Check the log file contains JSON
 	entries, err := os.ReadDir(dir)
@@ -419,37 +412,6 @@ func TestJSONOutput(t *testing.T) {
 	// JSON output should contain curly braces
 	if !strings.Contains(string(content), "{") {
 		t.Errorf("expected JSON output, got: %s", string(content))
-	}
-}
-
-func TestDefaultSettings(t *testing.T) {
-	settings := DefaultSettings()
-
-	if settings.AppName != "catena" {
-		t.Errorf("expected AppName 'catena', got %q", settings.AppName)
-	}
-	if settings.LogDir != "./logs" {
-		t.Errorf("expected LogDir './logs', got %q", settings.LogDir)
-	}
-	if settings.Silent != false {
-		t.Errorf("expected Silent false, got %v", settings.Silent)
-	}
-	if settings.Level != slog.LevelInfo {
-		t.Errorf("expected Level LevelInfo, got %v", settings.Level)
-	}
-	if settings.WriteToFile != true {
-		t.Errorf("expected WriteToFile true, got %v", settings.WriteToFile)
-	}
-	if settings.WriteToConsole != true {
-		t.Errorf("expected WriteToConsole true, got %v", settings.WriteToConsole)
-	}
-}
-
-func TestDebugSettings(t *testing.T) {
-	settings := DebugSettings()
-
-	if settings.Level != slog.LevelDebug {
-		t.Errorf("expected Level LevelDebug, got %v", settings.Level)
 	}
 }
 

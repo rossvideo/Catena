@@ -83,7 +83,7 @@ func TestNewParamInfo_ArrayLength(t *testing.T) {
 	}
 }
 
-func TestToCatenaParamInfo_FromMap(t *testing.T) {
+func TestToParamInfo_FromMap(t *testing.T) {
 	m := map[string]any{
 		"info": map[string]any{
 			"oid":          "brightness",
@@ -98,9 +98,9 @@ func TestToCatenaParamInfo_FromMap(t *testing.T) {
 		"array_length": 0,
 	}
 
-	pi, err := ToCatenaParamInfo(m)
+	pi, err := ToParamInfo(m)
 	if err != nil {
-		t.Fatalf("ToCatenaParamInfo error: %v", err)
+		t.Fatalf("ToParamInfo error: %v", err)
 	}
 	if pi.GetOid() != "brightness" {
 		t.Errorf("expected oid 'brightness', got %s", pi.GetOid())
@@ -113,19 +113,19 @@ func TestToCatenaParamInfo_FromMap(t *testing.T) {
 	}
 }
 
-func TestToCatenaParamInfo_InvalidProto(t *testing.T) {
+func TestToParamInfo_InvalidProto(t *testing.T) {
 	m := map[string]any{
 		"info": map[string]any{
 			"type": "NOT_A_TYPE",
 		},
 	}
-	if _, err := ToCatenaParamInfo(m); err == nil {
+	if _, err := ToParamInfo(m); err == nil {
 		t.Error("expected error for invalid ParamType, got nil")
 	}
 }
 
-func TestCatenaParamInfo_ZeroValue(t *testing.T) {
-	var pi CatenaParamInfo
+func TestParamInfo_ZeroValue(t *testing.T) {
+	var pi ParamInfo
 	if pi.GetProtoResponse() != nil {
 		t.Error("expected nil proto response for zero value")
 	}

@@ -44,45 +44,11 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-func TestNewPolyglotText(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
-	}
-}
-
-func TestPolyglotText_With(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
-	}
-	if pt["fr"] != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
-	}
-}
-
-func TestPolyglotText_Get(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
-	if pt.Get("fr", "en") != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt.Get("fr", "en"))
-	}
-	if pt.Get("de", "en") != "Hello" {
-		t.Errorf("expected fallback 'Hello', got %s", pt.Get("de", "en"))
-	}
-}
-
-func TestPolyglotText_Get_MissingFallback(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello")
-	if pt.Get("de", "fr") != "" {
-		t.Errorf("expected empty string for missing fallback, got %s", pt.Get("de", "fr"))
-	}
-}
-
 func TestCommandReply(t *testing.T) {
-	val, _ := ToCatenaValue(int32(42))
+	val, _ := ToValue(int32(42))
 	result, status := CommandReply(val)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if result.IsEmpty() {
@@ -105,7 +71,7 @@ func TestCommandReply(t *testing.T) {
 func TestCommandNoResponse(t *testing.T) {
 	result, status := CommandNoResponse()
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if !result.IsEmpty() {
@@ -131,7 +97,7 @@ func TestCommandExceptionResult(t *testing.T) {
 	errorMsg := NewPolyglotText("en", "Something failed")
 	result, status := CommandExceptionResult("TestError", "detailed info", errorMsg)
 
-	if status.Code != OK {
+	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
 	if result.IsEmpty() {
@@ -198,9 +164,9 @@ func TestCommandExceptionResult_NilErrorMessage(t *testing.T) {
 }
 
 func TestCommandError(t *testing.T) {
-	result, status := CommandError(UNIMPLEMENTED, "not implemented")
+	result, status := CommandError(StatusCodeUnimplemented, "not implemented")
 
-	if status.Code != UNIMPLEMENTED {
+	if status.Code != StatusCodeUnimplemented {
 		t.Errorf("expected UNIMPLEMENTED status, got %v", status.Code)
 	}
 	if status.Error != "not implemented" {
@@ -212,7 +178,7 @@ func TestCommandError(t *testing.T) {
 }
 
 func TestCommandError_NilResponse(t *testing.T) {
-	result, _ := CommandError(INTERNAL, "error")
+	result, _ := CommandError(StatusCodeInternal, "error")
 	if result.GetProtoResponse() != nil {
 		t.Error("expected nil proto response for CommandError")
 	}
@@ -222,7 +188,7 @@ func TestCommandError_NilResponse(t *testing.T) {
 }
 
 func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
-	val, _ := ToCatenaValue("hello")
+	val, _ := ToValue("hello")
 	result, _ := CommandReply(val)
 	proto := result.GetProtoResponse()
 

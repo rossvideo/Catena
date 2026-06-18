@@ -62,19 +62,19 @@ const (
 	DetailLevelUnset         DetailLevel = protos.Device_UNSET
 )
 
-// CatenaDevice wraps protos.Device for device model handling
-type CatenaDevice struct {
+// Device wraps protos.Device for device model handling
+type Device struct {
 	device *protos.Device
 }
 
-// ToCatenaDevice converts a Go map/struct to CatenaDevice
+// ToDevice converts a Go map/struct to Device
 // This allows developers to work with native Go types and convert to the protobuf format
-func ToCatenaDevice(m map[string]any) (CatenaDevice, error) {
+func ToDevice(m map[string]any) (Device, error) {
 	device, err := toProtoDevice(m)
 	if err != nil {
-		return CatenaDevice{}, fmt.Errorf("ToCatenaDevice: %w", err)
+		return Device{}, fmt.Errorf("ToDevice: %w", err)
 	}
-	return CatenaDevice{device: device}, nil
+	return Device{device: device}, nil
 }
 
 // toProtoDevice converts native Go types to protos.Device
@@ -95,6 +95,6 @@ func toProtoDevice(m map[string]any) (*protos.Device, error) {
 }
 
 // GetProtoDevice returns the underlying protos.Device
-func (cd CatenaDevice) GetProtoDevice() *protos.Device {
+func (cd Device) GetProtoDevice() *protos.Device {
 	return cd.device
 }

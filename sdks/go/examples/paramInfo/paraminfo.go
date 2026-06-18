@@ -139,13 +139,13 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		// Mode 1 & 2: empty oid → return top-level params.
 		if oid == "" {
 			infos := flattenParams(sampleParams, recursive)
-			return infos, catena.StatusWithCode(catena.OK, "")
+			return infos, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		// Mode 3: specific param by OID.
 		entry := findByOID(sampleParams, oid)
 		if entry == nil {
-			return nil, catena.StatusWithCode(catena.NOT_FOUND, "parameter not found: "+oid)
+			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "parameter not found: "+oid)
 		}
 
 		result := []catena.CatenaParamInfo{
@@ -154,7 +154,7 @@ func RegisterHandlers(srv catena.CatenaServer) {
 		if recursive && len(entry.Children) > 0 {
 			result = append(result, flattenParams(entry.Children, true)...)
 		}
-		return result, catena.StatusWithCode(catena.OK, "")
+		return result, catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 }
 

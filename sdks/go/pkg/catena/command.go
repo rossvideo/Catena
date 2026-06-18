@@ -42,28 +42,6 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// PolyglotText maps BCP-47 language codes to display strings.
-type PolyglotText map[string]string
-
-// NewPolyglotText creates a PolyglotText with a single language entry.
-func NewPolyglotText(lang, text string) PolyglotText {
-	return PolyglotText{lang: text}
-}
-
-// With returns the PolyglotText with an additional language entry added.
-func (p PolyglotText) With(lang, text string) PolyglotText {
-	p[lang] = text
-	return p
-}
-
-// Get returns the display string for lang, falling back to fallback if not present.
-func (p PolyglotText) Get(lang, fallback string) string {
-	if s, ok := p[lang]; ok {
-		return s
-	}
-	return p[fallback]
-}
-
 // CommandResult wraps protos.CommandResponse, representing the three possible
 // outcomes of ExecuteCommand: no_response, response, or exception.
 type CommandResult struct {
@@ -95,12 +73,12 @@ func (r CommandResult) GetProtoResponse() *protos.CommandResponse {
 }
 
 // CommandReply returns a successful command response wrapping a value.
-func CommandReply(value CatenaValue) (CommandResult, StatusResult) {
+func CommandReply(value Value) (CommandResult, StatusResult) {
 	return CommandResult{
 		response: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Response{Response: value.Value},
 		},
-	}, StatusResult{Code: OK}
+	}, StatusResult{Code: StatusCodeOk}
 }
 
 // CommandNoResponse returns an empty command response (no_response).
@@ -109,7 +87,7 @@ func CommandNoResponse() (CommandResult, StatusResult) {
 		response: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
 		},
-	}, StatusResult{Code: OK}
+	}, StatusResult{Code: StatusCodeOk}
 }
 
 // CommandExceptionResult returns a command exception response.
@@ -127,7 +105,7 @@ func CommandExceptionResult(exType, details string, errorMessage PolyglotText) (
 		response: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Exception{Exception: exc},
 		},
-	}, StatusResult{Code: OK}
+	}, StatusResult{Code: StatusCodeOk}
 }
 
 // CommandError returns a transport-level error (not a CommandResponse exception).

@@ -6,13 +6,15 @@
         "name": "Debug Go example",
         "request": "launch",
         "mode": "debug",
-        "program": "${workspaceFolder}/sdks/go/examples/${input:pickGoService}",
+        "program": "${workspaceFolder}/sdks/go/examples/oneOfEverything",
         "preLaunchTask": "Generate Protobufs",
         "cwd": "${workspaceFolder}",
         "args": [],
         "env": {
           "CATENA_LOG_LEVEL": "DEBUG", // Set log level to DEBUG
-          "CATENA_ENV": "dev",
+          "CATENA_DEV_MODE": "true", // Enable development mode for more descriptive errors in transport responses
+          "CATENA_USE_GRPC": "true",
+          "CATENA_USE_REST": "true",
         }
       },
       {
