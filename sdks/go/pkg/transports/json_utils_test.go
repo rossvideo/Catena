@@ -42,14 +42,25 @@ package transports
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/valyala/fastjson"
+
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
+
+// errReader is an io.Reader that always fails, used to exercise body-read
+// error paths in the request readers.
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) {
+	return 0, errors.New("simulated read error")
+}
 
 func TestReadRequestJSON_ValidInt32(t *testing.T) {
 	body := `{"int32_value": 42}`
@@ -1113,5 +1124,89 @@ func TestMarshalAssetJSON_Nil(t *testing.T) {
 	}
 	if jsonData != nil {
 		t.Error("expected nil JSON data for nil asset")
+	}
+}
+
+func TestInjectJSONField_Float32(t *testing.T) {
+	input := []byte(`{"type":"FLOAT32"}`)
+	got := injectJSONField(input, "value", float32(1.5))
+	body := string(got)
+	if !strings.Contains(body, `"value":1.5`) {
+		t.Errorf("expected value:1.5, got %s", body)
+	}
+}
+
+func TestReadRequestJSON_BodyReadError(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/", errReader{})
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatal("expected BAD_REQUEST error when reading the body fails")
+	}
+	if !strings.Contains(err.Error, "failed to read request body") {
+		t.Errorf("expected error to contain 'failed to read request body', got: %v", err.Error)
+	}
+}
+
+func TestReadMultiSetValuesRequestJSON_BodyReadError(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPut, "/", errReader{})
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatal("expected BAD_REQUEST error when reading the body fails")
+	}
+	if !strings.Contains(err.Error, "failed to read request body") {
+		t.Errorf("expected error to contain 'failed to read request body', got: %v", err.Error)
+	}
+}
+
+func TestCleanDeviceJSON_ParseError(t *testing.T) {
+	_, err := cleanDeviceJSON([]byte(`{not valid json`))
+	if err == nil {
+		t.Fatal("expected error for invalid JSON input")
+	}
+	if !strings.Contains(err.Error(), "cleanDeviceJSON parse") {
+		t.Errorf("expected 'cleanDeviceJSON parse' error, got: %v", err)
+	}
+}
+
+func TestDeleteResponseFromParams_NonObject(t *testing.T) {
+	var p fastjson.Parser
+	v, parseErr := p.Parse(`[1,2,3]`)
+	if parseErr != nil {
+		t.Fatalf("failed to parse test JSON: %v", parseErr)
+	}
+	// Should early-return without panicking when the root is not an object.
+	deleteResponseFromParams(v)
+	if v.Type() != fastjson.TypeArray {
+		t.Errorf("expected array value to be left untouched, got %v", v.Type())
+	}
+}
+
+func TestDeleteResponseFromParams_ParamsNotObject(t *testing.T) {
+	var p fastjson.Parser
+	v, parseErr := p.Parse(`{"params":"not-an-object"}`)
+	if parseErr != nil {
+		t.Fatalf("failed to parse test JSON: %v", parseErr)
+	}
+	// "params" present but not an object should also early-return.
+	deleteResponseFromParams(v)
+	if v.Get("params").Type() != fastjson.TypeString {
+		t.Errorf("expected params string to be left untouched, got %v", v.Get("params").Type())
+	}
+}
+
+func TestDeleteResponseFalse_NonObject(t *testing.T) {
+	var p fastjson.Parser
+	v, parseErr := p.Parse(`"just a string"`)
+	if parseErr != nil {
+		t.Fatalf("failed to parse test JSON: %v", parseErr)
+	}
+	// Should early-return without panicking when the value is not an object.
+	deleteResponseFalse(v)
+	if v.Type() != fastjson.TypeString {
+		t.Errorf("expected string value to be left untouched, got %v", v.Type())
 	}
 }
