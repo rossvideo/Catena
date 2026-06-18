@@ -72,6 +72,8 @@ jobs:
           GO_HASH=$(hash_files \
             .devcontainer/go/toolchain.dockerfile \
             .devcontainer/go/toolchain.env \
+            .devcontainer/go/go.mod \
+            .devcontainer/go/go.sum \
             smpte/install-tooling.sh)
 
           if [[ "${{ inputs.run_mode }}" == "pr" ]]; then
