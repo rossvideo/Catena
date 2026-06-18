@@ -432,6 +432,8 @@ func (t *RestTransport) registerRoutes() {
 				t.handleCommandEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
+			case "language-pack":
+				t.handleLanguagePackEndpoint(w, r, slot, parts[4:])
 			default:
 				val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "unknown endpoint")
 				t.writeHTTPResult(w, res, val)
@@ -631,6 +633,38 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 
 	if err := WriteProtoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
+	}
+}
+
+func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if r.Method != http.MethodGet {
+		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+		return
+	}
+
+	if len(pathParts) == 0 || strings.Join(pathParts, "/") == "" {
+		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "language is required")
+		t.writeHTTPResult(w, res, val)
+		return
+	}
+
+	language := strings.Join(pathParts, "/")
+	transportContext := t.retrieveMetadataFromRequest(r)
+
+	languagePack, res := t.runtime.InvokeLanguagePackHandler(slot, language, transportContext)
+	if res.Code != catena.StatusCodeOk {
+		t.writeHTTPStatusResult(w, res)
+		return
+	}
+
+	if languagePack == nil {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, "language pack not found"))
+		return
+	}
+
+	if err := WriteProtoJSON(w, languagePack, http.StatusOK); err != nil {
+		logger.Error("failed to write language pack response", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
