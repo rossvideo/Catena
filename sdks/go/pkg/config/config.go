@@ -153,7 +153,7 @@ type LoggerOptions struct {
 	UseJSON bool `env:"LOG_USE_JSON" flag:"log-use-json"`
 }
 
-func defaultRuntimeOptions() RuntimeOptions {
+func DefaultRuntimeOptions() RuntimeOptions {
 	return RuntimeOptions{
 		UseGrpc:   false,
 		UseRest:   false,

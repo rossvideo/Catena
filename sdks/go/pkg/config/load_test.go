@@ -56,7 +56,7 @@ func TestInitOptions(t *testing.T) {
 			t.Errorf("Expected no error got: %v", err)
 		}
 		// should return default options with the app name set
-		defaultOpts := defaultRuntimeOptions()
+		defaultOpts := DefaultRuntimeOptions()
 		defaultOpts.Logger.AppName = "test_app"
 		if !reflect.DeepEqual(opts, defaultOpts) {
 			t.Errorf("Expected options to be %v got: %v", defaultOpts, opts)
@@ -152,6 +152,78 @@ func TestInitOptions(t *testing.T) {
 			t.Errorf("Expected AuthzEnabled to be false")
 		}
 	})
+
+	t.Run("WithPrefix", func(t *testing.T) {
+		t.Setenv("MYAPP_MAX_CONNECTIONS", "321")
+		opts, err := InitOptions("test_app", []string{}, WithPrefix("MYAPP"))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 321 {
+			t.Errorf("Expected MaxConnections to be 321 got: %v", opts.Server.MaxConnections)
+		}
+	})
+
+	t.Run("WithDefaults", func(t *testing.T) {
+		customDefaults := DefaultRuntimeOptions()
+		customDefaults.Server.MaxConnections = 222
+		customDefaults.Logger.Level = slog.LevelDebug
+
+		opts, err := InitOptions("test_app", []string{}, WithDefaults(customDefaults))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 222 {
+			t.Errorf("Expected MaxConnections to be 222 got: %v", opts.Server.MaxConnections)
+		}
+		if opts.Logger.Level != slog.LevelDebug {
+			t.Errorf("Expected Logger.Level to be debug got: %v", opts.Logger.Level)
+		}
+	})
+
+	t.Run("WithDefaults still respects env and cli precedence", func(t *testing.T) {
+		customDefaults := DefaultRuntimeOptions()
+		customDefaults.Server.MaxConnections = 111
+
+		t.Setenv("CATENA_MAX_CONNECTIONS", "222")
+		opts, err := InitOptions("test_app", []string{"--max-connections=333"}, WithDefaults(customDefaults))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 333 {
+			t.Errorf("Expected MaxConnections to be 333 got: %v", opts.Server.MaxConnections)
+		}
+	})
+
+	t.Run("WithSuppressedInputs ignores env for suppressed field", func(t *testing.T) {
+		customDefaults := DefaultRuntimeOptions()
+		customDefaults.Server.MaxConnections = 111
+
+		t.Setenv("CATENA_MAX_CONNECTIONS", "222")
+		opts, err := InitOptions(
+			"test_app",
+			[]string{},
+			WithDefaults(customDefaults),
+			WithSuppressedInputs("max-connections"),
+		)
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 111 {
+			t.Errorf("Expected MaxConnections to stay at default 111 got: %v", opts.Server.MaxConnections)
+		}
+	})
+
+	t.Run("WithSuppressedInputs unknown name is no-op", func(t *testing.T) {
+		t.Setenv("CATENA_MAX_CONNECTIONS", "222")
+		opts, err := InitOptions("test_app", []string{}, WithSuppressedInputs("does-not-exist"))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 222 {
+			t.Errorf("Expected MaxConnections to be 222 got: %v", opts.Server.MaxConnections)
+		}
+	})
 }
 
 func makeTestLoader(t *testing.T) *configLoader {
@@ -235,6 +307,26 @@ func TestLoader_Bool(t *testing.T) {
 		}
 		if !val {
 			t.Errorf("Expected val to be unchanged at true got: %v", val)
+		}
+	})
+
+	t.Run("WithSuppressedInputs ignores env for suppressed field", func(t *testing.T) {
+		loader := &configLoader{
+			flags:            flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix:        "",
+			suppressedInputs: []string{"test-bool"},
+		}
+		val := true
+		t.Setenv("TEST_BOOL", "false")
+		loader.extractBool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if loader.flags.Lookup("test-bool") != nil {
+			t.Errorf("Expected suppressed flag 'test-bool' to not be registered")
+		}
+		if !val {
+			t.Errorf("Expected val to be unchanged at true for suppressed input got: %v", val)
 		}
 	})
 }
@@ -350,29 +442,35 @@ func TestLoader_ConnectionProtocol(t *testing.T) {
 
 func TestLoadParser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
 		val := 12
-		err := loadParser(nil, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
 
-		if err != nil {
-			t.Errorf("Expected no err got: %v", err)
+		if loader.err != nil {
+			t.Errorf("Expected no err got: %v", loader.err)
 		}
 		if val != 12 {
 			t.Errorf("Expected val to be 12 got: %d", val)
 		}
-		if flags.Lookup("test") == nil {
+		if loader.flags.Lookup("test") == nil {
 			t.Errorf("Expected flag 'test' to be registered")
 		}
 	})
 
 	t.Run("env var parsing", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
 		val := 12
 		t.Setenv("TEST_ENV", "34")
-		err := loadParser(nil, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
 
-		if err != nil {
-			t.Errorf("Expected no err got: %v", err)
+		if loader.err != nil {
+			t.Errorf("Expected no err got: %v", loader.err)
 		}
 		if val != 34 {
 			t.Errorf("Expected val to be 34 got: %d", val)
@@ -380,27 +478,55 @@ func TestLoadParser(t *testing.T) {
 	})
 
 	t.Run("env var parsing error", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
 		val := 12
 		t.Setenv("TEST_ENV", "notanint")
-		err := loadParser(nil, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
 
-		if err == nil {
+		if loader.err == nil {
 			t.Errorf("Expected error got nil")
 		}
 	})
 
 	t.Run("skips parsing on existing error", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
 		val := 12
 		testErr := errors.New("test error")
-		err := loadParser(testErr, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+		loader.err = testErr
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
 
-		if err != testErr {
-			t.Errorf("Expected error to be %v got: %v", testErr, err)
+		if loader.err != testErr {
+			t.Errorf("Expected error to be %v got: %v", testErr, loader.err)
 		}
 		if val != 12 {
 			t.Errorf("Expected val to be unchanged at 12 got: %d", val)
+		}
+	})
+
+	t.Run("suppressed input", func(t *testing.T) {
+		loader := &configLoader{
+			flags:            flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix:        "",
+			suppressedInputs: []string{"test"},
+		}
+		val := 12
+		t.Setenv("TEST_ENV", "34")
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+
+		if loader.err != nil {
+			t.Errorf("Expected no err got: %v", loader.err)
+		}
+		if val != 12 {
+			t.Errorf("Expected val to stay 12 for suppressed input got: %d", val)
+		}
+		if loader.flags.Lookup("test") != nil {
+			t.Errorf("Expected suppressed flag 'test' to not be registered")
 		}
 	})
 }

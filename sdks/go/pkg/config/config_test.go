@@ -47,7 +47,7 @@ import (
 )
 
 func TestDefaultOptions(t *testing.T) {
-	opts := defaultRuntimeOptions()
+	opts := DefaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
 		Server: ServerOptions{
