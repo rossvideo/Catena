@@ -173,7 +173,7 @@ func (t *RestTransport) isDevMode() bool {
 func (t *RestTransport) writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := ToHTTPStatus(result.Code)
 
-	if result.Error != "" {
+	if result.IsError() {
 		// Set status code BEFORE writing error body
 		w.WriteHeader(httpStatus)
 
@@ -219,7 +219,7 @@ func (t *RestTransport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg str
 // is a route-level choice, not a handler outcome, so it lives here in the
 // transport rather than in StatusCode.
 func (t *RestTransport) writeHTTPStatusResultNoBody(w http.ResponseWriter, result catena.StatusResult) {
-	if result.Code == catena.StatusCodeOk && result.Error == "" {
+	if result.IsOk() {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -234,7 +234,7 @@ func (t *RestTransport) writeHTTPStatusResult(w http.ResponseWriter, result cate
 	// Set status code BEFORE writing body
 	w.WriteHeader(httpStatus)
 
-	if result.Error != "" {
+	if result.IsError() {
 		// Only return detailed error messages in dev mode
 		if t.isDevMode() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
@@ -575,17 +575,17 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 
 	fqoid := strings.Join(pathParts, "/")
 	transportContext := t.retrieveMetadataFromRequest(r)
-	asset, res := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
+	asset, result := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
 
-	if res.Error == "" {
+	if result.IsOk() {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
 			targetEncoding, encRes := catena.ParsePayloadEncoding(compressionStr)
-			if encRes.Code != catena.StatusCodeOk {
+			if encRes.IsError() {
 				val, errRes := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, encRes.Error)
 				t.writeHTTPResult(w, errRes, val)
 				return
 			}
-			if tcRes := catena.TranscodeAssetPayload(&asset, targetEncoding); tcRes.Code != catena.StatusCodeOk {
+			if tcRes := catena.TranscodeAssetPayload(&asset, targetEncoding); tcRes.IsError() {
 				logger.Error("failed to transcode asset payload", "error", tcRes.Error)
 				val, errRes := catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to transcode payload: "+tcRes.Error)
 				t.writeHTTPResult(w, errRes, val)
@@ -594,7 +594,7 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	t.writeHTTPResult(w, res, asset)
+	t.writeHTTPResult(w, result, asset)
 }
 
 // handleParamInfoEndpoint handles param info requests and streaming (SSE).
@@ -633,9 +633,9 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	infos, res := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
-	if res.Code != catena.StatusCodeOk {
-		t.writeHTTPStatusResult(w, res)
+	infos, result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
