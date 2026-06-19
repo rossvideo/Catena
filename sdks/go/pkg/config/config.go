@@ -57,12 +57,18 @@ type RuntimeOptions struct {
 	Dashboard DashboardOptions
 }
 
+// RestOptions configures the REST transport.
 type RestOptions struct {
+	// Port is the TCP port the REST/HTTP server listens on (default 9080).
 	Port int `env:"REST_PORT" flag:"rest-port"`
 }
 
+// GrpcOptions configures the gRPC transport.
 type GrpcOptions struct {
-	Port       int  `env:"GRPC_PORT" flag:"grpc-port"`
+	// Port is the TCP port the gRPC server listens on (default 6254).
+	Port int `env:"GRPC_PORT" flag:"grpc-port"`
+	// Reflection enables the gRPC server reflection service, which lets tools
+	// like grpcurl discover services at runtime (default false).
 	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
 }
 

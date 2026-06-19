@@ -29,33 +29,20 @@
  */
 
 /**
- * @brief Redeclare types from sub packages for easier access
+ * @brief Redeclare transport configuration types from the config package for
+ *        easier access from the transports package.
  * @file types.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-06-08
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2026-06-19
  */
 
-package catena
+package transports
 
 import "github.com/rossvideo/catena/sdks/go/pkg/config"
 
-type RuntimeOptions = config.RuntimeOptions
-type ServerOptions = config.ServerOptions
-type JwtValidationOptions = config.JwtValidationOptions
-type DashboardOptions = config.DashboardOptions
-type ConnectionProtocol = config.ConnectionProtocol
+// GrpcOptions configures a GrpcTransport (listen port and reflection support).
+type GrpcOptions = config.GrpcOptions
 
-const (
-	ProtocolST2138Rest   = config.ProtocolST2138Rest
-	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
-	ProtocolST2138Catena = config.ProtocolST2138Catena
-)
-
-var (
-	DefaultServerOptions        = config.DefaultServerOptions
-	DefaultJwtValidationOptions = config.DefaultJwtValidationOptions
-	DefaultDashboardOptions     = config.DefaultDashboardOptions
-	DefaultGrpcOptions          = config.DefaultGrpcOptions
-	DefaultRestOptions          = config.DefaultRestOptions
-)
+// RestOptions configures a RestTransport (listen port).
+type RestOptions = config.RestOptions
