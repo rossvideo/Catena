@@ -45,8 +45,8 @@ Fallback and root behavior:
 REST routes invoke handlers registered on `catena.Server`:
 
 - Device route -> `RegisterGetDeviceHandler`
-- Value routes -> `RegisterGetValueHandler`, `RegisterSetValueHandler`
-- Values route -> `RegisterMultiSetValueHandler`
+- Value routes -> `RegisterGetValueHandler`, `RegisterSetValueHandler` (the set route delivers a one-element `[]SetValueEntry`)
+- Values route -> `RegisterSetValueHandler` (delivers the full `[]SetValueEntry` for atomic application)
 - Asset route -> `RegisterGetAssetHandler`
 - Command route -> `RegisterExecuteCommandHandler`
 - Param-info routes -> `RegisterParamInfoHandler`

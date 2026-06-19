@@ -155,7 +155,7 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "set value",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
@@ -168,7 +168,7 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "set values",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
@@ -344,13 +344,16 @@ func TestRestTransport_SetValue_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
-		if v, ok := value.(int32); !ok || v != 42 {
-			t.Errorf("expected value int32(42), got %v (%T)", value, value)
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
 		}
-		if fqoid != "brightness" {
-			t.Errorf("expected fqoid 'brightness', got %s", fqoid)
+		if v, ok := entries[0].Value.(int32); !ok || v != 42 {
+			t.Errorf("expected value int32(42), got %v (%T)", entries[0].Value, entries[0].Value)
+		}
+		if entries[0].Fqoid != "brightness" {
+			t.Errorf("expected fqoid 'brightness', got %s", entries[0].Fqoid)
 		}
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
@@ -366,7 +369,7 @@ func TestRestTransport_SetValue_InvalidContentType(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
@@ -387,7 +390,7 @@ func TestRestTransport_SetValues_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	var got []catena.SetValueEntry
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		got = values
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -421,7 +424,7 @@ func TestRestTransport_SetValues_DeliversAllEntries(t *testing.T) {
 
 	callCount := 0
 	var got []catena.SetValueEntry
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
 		got = values
 		return catena.StatusResult{Code: catena.StatusCodeOk}
@@ -442,7 +445,7 @@ func TestRestTransport_SetValues_InvalidContentType(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
@@ -479,7 +482,7 @@ func TestRestTransport_SetValues_MethodNotAllowed(t *testing.T) {
 
 func TestRestTransport_SetValues_HandlerError(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "not found")
 	}
 
@@ -947,7 +950,7 @@ func TestRouting_EdgeCases(t *testing.T) {
 
 func TestValueEndpoint_Methods(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
 

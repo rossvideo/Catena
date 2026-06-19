@@ -248,7 +248,7 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "multi set value",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
@@ -598,10 +598,13 @@ func TestGrpcTransport_SetValue_Success(t *testing.T) {
 	defer cleanup()
 
 	receivedValue := any(nil)
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
-		receivedValue = value
-		if fqoid != "device.param1" {
-			t.Errorf("expected fqoid 'device.param1', got %s", fqoid)
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		receivedValue = entries[0].Value
+		if entries[0].Fqoid != "device.param1" {
+			t.Errorf("expected fqoid 'device.param1', got %s", entries[0].Fqoid)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -657,7 +660,7 @@ func TestGrpcTransport_SetValue_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 	}
 
@@ -679,7 +682,7 @@ func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 
 	callCount := 0
 	var got []catena.SetValueEntry
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
 		got = values
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -723,7 +726,7 @@ func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
 		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value invalid")
 	}
@@ -750,7 +753,7 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 
 	callCount := 0
 	var got []catena.SetValueEntry
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
 		got = values
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -773,31 +776,6 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 	}
 	if len(got) != 0 {
 		t.Errorf("expected 0 entries delivered to handler, got %d", len(got))
-	}
-}
-
-func TestGrpcTransport_MultiSetValue_DedicatedHandler(t *testing.T) {
-	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
-	defer cleanup()
-
-	var got []catena.SetValueEntry
-	runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
-		got = values
-		return catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	client, cleanup := setupGRPCClient(t, ctx, lis)
-	defer cleanup()
-
-	_, err := makeMultiSetValueRequest(t, client, ctx, 0, map[string]any{
-		"param1": int32(10),
-		"param2": "test",
-	})
-	assertNoError(t, err)
-
-	if len(got) != 2 {
-		t.Fatalf("expected 2 entries delivered to dedicated handler, got %d", len(got))
 	}
 }
 
@@ -1358,7 +1336,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "value out of range",
 			grpcCode:   codes.InvalidArgument,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 				}
 			},
@@ -1379,7 +1357,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "multi set failed",
 			grpcCode:   codes.FailedPrecondition,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.multiSetValueFn = func(values []catena.SetValueEntry, slot uint16, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodeFailedPrecondition, "multi set failed")
 				}
 			},

@@ -336,7 +336,8 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 	}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
+	entries := []catena.SetValueEntry{{Fqoid: fqoid, Value: nativeValue}}
+	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -368,7 +369,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 		entries = append(entries, catena.SetValueEntry{Fqoid: fqoid, Value: nativeValue})
 	}
 
-	result := s.transport.runtime.InvokeMultiSetValueHandler(entries, slot, transportContext)
+	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
 	if result.Error != "" {
 		logger.Error("MultiSetValue handler error", "slot", slot, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)

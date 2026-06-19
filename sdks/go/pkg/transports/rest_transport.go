@@ -537,7 +537,8 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 		}
 
 		transportContext := t.retrieveMetadataFromRequest(r)
-		res := t.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
+		entries := []catena.SetValueEntry{{Fqoid: fqoid, Value: nativeValue}}
+		res := t.runtime.InvokeSetValueHandler(slot, entries, transportContext)
 		t.writeHTTPStatusResultNoBody(w, res)
 
 	default:
@@ -546,7 +547,7 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 }
 
 // handleValuesEndpoint handles PUT /st2138-api/v1/{slot}/values (SetValues).
-// The values are applied via the runtime's MultiSetValue handler.
+// The full set of values is applied via the runtime's SetValue handler.
 // On success it returns 204
 func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
 	if r.Method != http.MethodPut {
@@ -562,7 +563,7 @@ func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Requ
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	res := t.runtime.InvokeMultiSetValueHandler(entries, slot, transportContext)
+	res := t.runtime.InvokeSetValueHandler(slot, entries, transportContext)
 	t.writeHTTPStatusResultNoBody(w, res)
 }
 

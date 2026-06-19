@@ -684,80 +684,48 @@ func main() {
 	for _, slot := range slotList {
 		p := slotParams[slot]
 
-		srv.RegisterSetValueHandler(slot, func(value any, slot uint16, fqoid string, ctx catena.HandlerContext) catena.StatusResult {
-			logger.Info("SetValue", "slot", slot, "fqoid", fqoid, "value", value)
-			key := normalizeFqoid(fqoid)
-
-			if value == nil {
-				logger.Error("SetValue nil value received", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value received")
-			}
-
-			// "running" is driven by start/stop commands, not direct writes,
-			// so reject SetValue with a clear hint to avoid silent drift
-			// between CounterState and the slot-param cache.
-			if slot == 0 && key == "running" {
-				logger.Warning("SetValue rejected for running param", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "use start/stop commands to change running state")
-			}
-
-			val, ok := p.Load(key)
-			if !ok {
-				logger.Error("SetValue param not found", "slot", slot, "fqoid", fqoid)
-				return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
-			}
-
-			if reflect.TypeOf(val) != reflect.TypeOf(value) {
-				logger.Error("SetValue type mismatch", "slot", slot, "fqoid", fqoid,
-					"expected", reflect.TypeOf(val), "got", reflect.TypeOf(value))
-				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
-			}
-
-			p.Store(key, value)
-			logger.Info("Parameter updated", "fqoid", fqoid, "value", value)
-			srv.BroadcastUpdate(slot, fqoid, value, catena.ScopeMon)
-			return catena.StatusWithCode(catena.StatusCodeOk, "")
-		})
-	}
-
-	for _, slot := range []uint16{0, 2} {
-		p := slotParams[slot]
-
-		srv.RegisterMultiSetValueHandler(slot, func(values []catena.SetValueEntry, slot uint16, ctx catena.HandlerContext) catena.StatusResult {
-			logger.Info("MultiSetValue", "slot", slot, "count", len(values))
+		// A single SetValueHandler covers both single and multi set requests:
+		// single endpoints deliver a one-element slice, multi endpoints deliver
+		// the full slice. Validate every entry before applying any so the batch
+		// is all-or-nothing.
+		srv.RegisterSetValueHandler(slot, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
+			logger.Info("SetValue", "slot", slot, "count", len(entries))
 
 			// Validate pass: check every entry before applying any changes.
-			for _, entry := range values {
+			for _, entry := range entries {
 				key := normalizeFqoid(entry.Fqoid)
 
 				if entry.Value == nil {
-					logger.Error("MultiSetValue nil value", "slot", slot, "fqoid", entry.Fqoid)
+					logger.Error("SetValue nil value", "slot", slot, "fqoid", entry.Fqoid)
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value for "+entry.Fqoid)
 				}
 
+				// "running" is driven by start/stop commands, not direct writes,
+				// so reject SetValue with a clear hint to avoid silent drift
+				// between CounterState and the slot-param cache.
 				if slot == 0 && key == "running" {
-					logger.Warning("MultiSetValue rejected for running param", "slot", slot, "fqoid", entry.Fqoid)
+					logger.Warning("SetValue rejected for running param", "slot", slot, "fqoid", entry.Fqoid)
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "use start/stop commands to change running state")
 				}
 
 				existing, ok := p.Load(key)
 				if !ok {
-					logger.Error("MultiSetValue param not found", "slot", slot, "fqoid", entry.Fqoid)
+					logger.Error("SetValue param not found", "slot", slot, "fqoid", entry.Fqoid)
 					return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+entry.Fqoid)
 				}
 
 				if reflect.TypeOf(existing) != reflect.TypeOf(entry.Value) {
-					logger.Error("MultiSetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid,
+					logger.Error("SetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid,
 						"expected", reflect.TypeOf(existing), "got", reflect.TypeOf(entry.Value))
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch for "+entry.Fqoid)
 				}
 			}
 
 			// Apply pass: all entries validated, store and broadcast.
-			for _, entry := range values {
+			for _, entry := range entries {
 				key := normalizeFqoid(entry.Fqoid)
 				p.Store(key, entry.Value)
-				logger.Info("Parameter updated (multi)", "fqoid", entry.Fqoid, "value", entry.Value)
+				logger.Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
 				srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeMon)
 			}
 
