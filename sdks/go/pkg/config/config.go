@@ -193,7 +193,7 @@ func DefaultDashboardOptions() DashboardOptions {
 }
 
 func DefaultRestOptions() RestOptions {
-	return RestOptions{Port: 8080}
+	return RestOptions{Port: 9080}
 }
 
 func DefaultGrpcOptions() GrpcOptions {
@@ -318,12 +318,12 @@ const maxPort = 65535
 
 // RestConfig holds configuration for the REST transport.
 type RestConfig struct {
-	Port int // HTTP listen port (default: 8080)
+	Port int // HTTP listen port (default: 9080)
 }
 
 // DefaultRestConfig returns a RestConfig with sensible defaults.
 func DefaultRestConfig() RestConfig {
-	return RestConfig{Port: 8080}
+	return RestConfig{Port: 9080}
 }
 
 // GrpcConfig holds configuration for the gRPC transport.

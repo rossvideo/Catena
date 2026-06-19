@@ -50,7 +50,7 @@ func TestDefaultOptions(t *testing.T) {
 	opts := defaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
-		Rest: RestOptions{Port: 8080},
+		Rest: RestOptions{Port: 9080},
 		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
 			IsDev:          false,
@@ -248,8 +248,8 @@ func TestJwtValidationOptions_LogValue_DefaultAllowedAlgs(t *testing.T) {
 
 func TestDefaultRestConfig(t *testing.T) {
 	cfg := DefaultRestConfig()
-	if cfg.Port != 8080 {
-		t.Fatalf("DefaultRestConfig() port = %d, want 8080", cfg.Port)
+	if cfg.Port != 9080 {
+		t.Fatalf("DefaultRestConfig() port = %d, want 9080", cfg.Port)
 	}
 }
 
@@ -331,8 +331,8 @@ func TestRestConfigFromOptions(t *testing.T) {
 
 func TestDefaultOptions_TransportPorts(t *testing.T) {
 	opts := defaultRuntimeOptions()
-	if opts.Rest.Port != 8080 {
-		t.Errorf("expected default Rest.Port 8080, got %d", opts.Rest.Port)
+	if opts.Rest.Port != 9080 {
+		t.Errorf("expected default Rest.Port 9080, got %d", opts.Rest.Port)
 	}
 	if opts.Grpc.Port != 6254 {
 		t.Errorf("expected default Grpc.Port 6254, got %d", opts.Grpc.Port)
@@ -458,8 +458,8 @@ func TestInitOptions_RestPortDefaultsWhenUnset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitOptionsPrefix() failed: %v", err)
 	}
-	if opts.Rest.Port != 8080 {
-		t.Errorf("expected default Rest.Port 8080 when env var unset, got %d", opts.Rest.Port)
+	if opts.Rest.Port != 9080 {
+		t.Errorf("expected default Rest.Port 9080 when env var unset, got %d", opts.Rest.Port)
 	}
 }
 
