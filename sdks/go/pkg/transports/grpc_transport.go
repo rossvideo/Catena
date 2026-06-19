@@ -64,14 +64,14 @@ type GrpcTransport struct {
 	listener      net.Listener
 	runtime       catena.ServerRuntime
 
-	port       uint16
+	port       int
 	reflection bool
 }
 
 var _ catena.Transport = (*GrpcTransport)(nil)
 
 // NewGrpcTransport creates a new gRPC transport with the given configuration.
-func NewGrpcTransport(cfg config.GrpcConfig) *GrpcTransport {
+func NewGrpcTransport(cfg config.GrpcOptions) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
 		port:          cfg.Port,

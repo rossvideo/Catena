@@ -70,7 +70,7 @@ type RestTransport struct {
 var _ catena.Transport = (*RestTransport)(nil)
 
 // NewRestTransport creates a new REST transport with the given configuration.
-func NewRestTransport(cfg config.RestConfig) *RestTransport {
+func NewRestTransport(cfg config.RestOptions) *RestTransport {
 	t := &RestTransport{
 		port: cfg.Port,
 		mux:  http.NewServeMux(),

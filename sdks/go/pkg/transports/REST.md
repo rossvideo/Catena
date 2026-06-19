@@ -5,9 +5,9 @@
 ## Constructor
 
 ```go
-rest := transports.NewRestTransport(config.RestConfig{Port: 9080})
+rest := transports.NewRestTransport(config.RestOptions{Port: 9080})
 // or with defaults
-rest := transports.NewRestTransport(config.DefaultRestConfig())
+rest := transports.NewRestTransport(config.DefaultRestOptions())
 ```
 
 Register it on the shared server:

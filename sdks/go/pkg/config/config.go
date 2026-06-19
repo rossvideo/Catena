@@ -39,7 +39,6 @@
 package config
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -311,58 +310,4 @@ func (o RuntimeOptions) LogValue() slog.Value {
 		slog.Any("logger", o.Logger),
 		slog.Any("dashboard", o.Dashboard),
 	)
-}
-
-// maxPort is the highest valid TCP port number.
-const maxPort = 65535
-
-// RestConfig holds configuration for the REST transport.
-type RestConfig struct {
-	Port int // HTTP listen port (default: 9080)
-}
-
-// DefaultRestConfig returns a RestConfig with sensible defaults.
-func DefaultRestConfig() RestConfig {
-	return RestConfig{Port: 9080}
-}
-
-// GrpcConfig holds configuration for the gRPC transport.
-type GrpcConfig struct {
-	Port       uint16 // gRPC listen port (default: 6254)
-	Reflection bool   // enable gRPC reflection (default: false)
-}
-
-// DefaultGrpcConfig returns a GrpcConfig with sensible defaults.
-func DefaultGrpcConfig() GrpcConfig {
-	return GrpcConfig{Port: 6254, Reflection: false}
-}
-
-// validatePort ensures a configured port is within the valid TCP range so that
-// out-of-range values fail loudly instead of silently wrapping when narrowed.
-func validatePort(name string, port int) error {
-	if port < 0 || port > maxPort {
-		return fmt.Errorf("%s %d is out of range (must be between 0 and %d)", name, port, maxPort)
-	}
-	return nil
-}
-
-// RestConfigFromOptions builds a RestConfig from the top-level RuntimeOptions.
-func RestConfigFromOptions(opts RuntimeOptions) (RestConfig, error) {
-	if err := validatePort("rest port", opts.Rest.Port); err != nil {
-		return RestConfig{}, err
-	}
-	return RestConfig{
-		Port: opts.Rest.Port,
-	}, nil
-}
-
-// GrpcConfigFromOptions builds a GrpcConfig from the top-level RuntimeOptions.
-func GrpcConfigFromOptions(opts RuntimeOptions) (GrpcConfig, error) {
-	if err := validatePort("grpc port", opts.Grpc.Port); err != nil {
-		return GrpcConfig{}, err
-	}
-	return GrpcConfig{
-		Port:       uint16(opts.Grpc.Port),
-		Reflection: opts.Grpc.Reflection,
-	}, nil
 }

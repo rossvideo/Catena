@@ -45,6 +45,8 @@ type ServerOptions = config.ServerOptions
 type JwtValidationOptions = config.JwtValidationOptions
 type DashboardOptions = config.DashboardOptions
 type ConnectionProtocol = config.ConnectionProtocol
+type GrpcOptions = config.GrpcOptions
+type RestOptions = config.RestOptions
 
 const (
 	ProtocolST2138Rest   = config.ProtocolST2138Rest
@@ -56,4 +58,6 @@ var (
 	DefaultServerOptions        = config.DefaultServerOptions
 	DefaultJwtValidationOptions = config.DefaultJwtValidationOptions
 	DefaultDashboardOptions     = config.DefaultDashboardOptions
+	DefaultGrpcOptions          = config.DefaultGrpcOptions
+	DefaultRestOptions          = config.DefaultRestOptions
 )

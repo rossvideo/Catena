@@ -39,11 +39,11 @@ func main() {
         return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeUnimplemented, "implement me")
     })
 
-    if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcConfig())); err != nil {
+    if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcOptions())); err != nil {
         panic(err)
     }
 
-    rest := transports.NewRestTransport(config.DefaultRestConfig())
+    rest := transports.NewRestTransport(config.DefaultRestOptions())
     if err := srv.RegisterTransport(rest); err != nil {
         panic(err)
     }
