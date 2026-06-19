@@ -82,8 +82,8 @@ func TestRestTransport_NewDefaultTransport(t *testing.T) {
 	if transport == nil {
 		t.Fatal("NewDefaultRestTransport returned nil")
 	}
-	if transport.port != 8080 {
-		t.Errorf("expected default port 8080, got %d", transport.port)
+	if transport.port != 9080 {
+		t.Errorf("expected default port 9080, got %d", transport.port)
 	}
 }
 

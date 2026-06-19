@@ -71,6 +71,16 @@ func TestDefaultOptions(t *testing.T) {
 			WriteToConsole: true,
 			UseJSON:        false,
 		},
+		Dashboard: DashboardOptions{
+			ServiceHostname: "localhost",
+			Port:            8080,
+			ServicePort:     6254,
+			ServiceTLS:      false,
+			Protocol:        ProtocolST2138Grpc,
+			RefreshInterval: 30000,
+			ServiceName:     "service:catena-device",
+			Endpoint:        "/connect/connection-props.xml",
+		},
 	}) {
 		t.Errorf("defaultRuntimeOptions() returned unexpected value: %+v", opts)
 	}
@@ -98,6 +108,18 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			WriteToFile:    true,
 			WriteToConsole: true,
 			UseJSON:        true,
+		},
+		Dashboard: DashboardOptions{
+			ServiceHostname: "test-host",
+			Port:            8080,
+			ServicePort:     6254,
+			ServiceTLS:      true,
+			Protocol:        ProtocolST2138Grpc,
+			RefreshInterval: 30000,
+			NodeName:        "test-node",
+			NodeID:          "test-id",
+			ServiceName:     "service:test",
+			Endpoint:        "/connect/connection-props.xml",
 		},
 	}
 
@@ -145,6 +167,18 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			"write_to_file":    true,
 			"write_to_console": true,
 			"use_json":         true,
+		},
+		"dashboard": map[string]any{
+			"service_hostname": "test-host",
+			"port":             json.Number("8080"),
+			"service_port":     json.Number("6254"),
+			"service_tls":      true,
+			"protocol":         "st2138-grpc",
+			"refresh_interval": json.Number("30000"),
+			"node_name":        "test-node",
+			"node_id":          "test-id",
+			"service_name":     "service:test",
+			"endpoint":         "/connect/connection-props.xml",
 		},
 	}
 

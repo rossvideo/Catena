@@ -5,9 +5,9 @@
 ## Constructor
 
 ```go
-rest := transports.NewRestTransport(8080)
+rest := transports.NewRestTransport(9080)
 // or
-rest := transports.NewDefaultRestTransport() // 8080
+rest := transports.NewDefaultRestTransport() // 9080
 ```
 
 Register it on the shared server:
@@ -77,7 +77,7 @@ srv.BroadcastUpdate(slot, "product/version", "1.2.3")
 Client side:
 
 ```javascript
-const source = new EventSource("http://localhost:8080/st2138-api/v1/connect");
+const source = new EventSource("http://localhost:9080/st2138-api/v1/connect");
 source.onmessage = (event) => {
   const update = JSON.parse(event.data);
   console.log(update);
