@@ -58,7 +58,7 @@ func TestConnectionPropsDefaults(t *testing.T) {
 		"<entry key=\"address\">localhost</entry>",
 		"<entry key=\"port\">6254</entry>",
 		"<entry key=\"connectionType\">TCP</entry>",
-		"<entry key=\"index-url\">connect/connection-props.xml</entry>",
+		"<entry key=\"index-url\">/connect/connection-props.xml</entry>",
 		"<entry key=\"refresh-interval\">30000</entry>",
 		"</properties>",
 	}

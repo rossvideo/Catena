@@ -171,7 +171,7 @@ func DefaultDashboardOptions() DashboardOptions {
 		Port:            8080,
 		ServicePort:     6254,
 		ServiceTLS:      false,
-		Protocol:        ProtocolST2138Rest,
+		Protocol:        ProtocolST2138Grpc,
 		RefreshInterval: 30000,
 		ServiceName:     "service:catena-device",
 		Endpoint:        "/connect/connection-props.xml",
@@ -216,6 +216,7 @@ var _ slog.LogValuer = RuntimeOptions{}
 var _ slog.LogValuer = ServerOptions{}
 var _ slog.LogValuer = JwtValidationOptions{}
 var _ slog.LogValuer = LoggerOptions{}
+var _ slog.LogValuer = DashboardOptions{}
 
 func (o JwtValidationOptions) LogValue() slog.Value {
 	return slog.GroupValue(
@@ -248,11 +249,27 @@ func (o LoggerOptions) LogValue() slog.Value {
 	)
 }
 
+func (o DashboardOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("service_hostname", o.ServiceHostname),
+		slog.Int("port", o.Port),
+		slog.Int("service_port", o.ServicePort),
+		slog.Bool("service_tls", o.ServiceTLS),
+		slog.String("protocol", string(o.Protocol)),
+		slog.Uint64("refresh_interval", uint64(o.RefreshInterval)),
+		slog.String("node_name", o.NodeName),
+		slog.String("node_id", o.NodeID),
+		slog.String("service_name", o.ServiceName),
+		slog.String("endpoint", o.Endpoint),
+	)
+}
+
 func (o RuntimeOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Bool("use_grpc", o.UseGrpc),
 		slog.Bool("use_rest", o.UseRest),
 		slog.Any("server", o.Server),
 		slog.Any("logger", o.Logger),
+		slog.Any("dashboard", o.Dashboard),
 	)
 }

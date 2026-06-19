@@ -234,7 +234,7 @@ func (c *ConnectionProps) generateXML() string {
 		entries = append(entries, entry{Key: "node-name", Value: c.opts.NodeName})
 	}
 	entries = append(entries,
-		entry{Key: "index-url", Value: "connect/connection-props.xml"},
+		entry{Key: "index-url", Value: c.opts.Endpoint},
 		entry{Key: "refresh-interval", Value: fmt.Sprintf("%d", c.opts.RefreshInterval)},
 	)
 
