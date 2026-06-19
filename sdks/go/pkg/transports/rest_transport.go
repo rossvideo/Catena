@@ -349,9 +349,9 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// so one transport can shut down without impacting streams owned by others.
 	transportContext := t.retrieveMetadataFromRequest(r)
 
-	conn, res := t.runtime.RegisterTransportConnection(t, transportContext)
-	if res.Code != catena.StatusCodeOk {
-		val, res := catena.ReplyError[catena.Value](res.Code, res.Error)
+	conn, result := t.runtime.RegisterTransportConnection(t, transportContext)
+	if result.IsError() {
+		val, res := catena.ReplyError[catena.Value](result.Code, result.Error)
 		t.writeHTTPResult(w, res, val)
 		return
 	}
@@ -406,7 +406,7 @@ func (t *RestTransport) registerRoutes() {
 
 		slotStr := parts[2]
 		slot, err := catena.ValidateSlotString(slotStr)
-		if err.Code != catena.StatusCodeOk {
+		if err.IsError() {
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid slot number")
 			t.writeHTTPResult(w, res, val)
 			return
@@ -416,8 +416,8 @@ func (t *RestTransport) registerRoutes() {
 		if len(parts) == 3 && r.Method == http.MethodGet {
 			// GET /st2138-api/v1/{slot} - Get device info
 			transportContext := t.retrieveMetadataFromRequest(r)
-			device, res := t.runtime.InvokeGetDeviceHandler(slot, transportContext)
-			t.writeHTTPResult(w, res, device)
+			device, result := t.runtime.InvokeGetDeviceHandler(slot, transportContext)
+			t.writeHTTPResult(w, result, device)
 			return
 		}
 
@@ -487,10 +487,9 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 
 	logger.Info("GetPopulatedSlots")
 	transportContext := t.retrieveMetadataFromRequest(r)
-	slots, err := t.runtime.GetSlots(transportContext)
-	if err.Code != catena.StatusCodeOk {
-		val, res := catena.ReplyError[catena.Value](err.Code, err.Error)
-		t.writeHTTPResult(w, res, val)
+	slots, result := t.runtime.GetSlots(transportContext)
+	if result.IsError() {
+		t.writeHTTPResult(w, result, nil)
 		return
 	}
 	uint32Slots := make([]uint32, len(slots))
@@ -520,16 +519,16 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 
 	case http.MethodPut:
 		// Read request body
-		reqValue, err := ReadRequestJSON(r)
-		if err.Code != catena.StatusCodeOk {
-			logger.Error("failed to read request", "error", err)
+		reqValue, status := ReadRequestJSON(r)
+		if status.IsError() {
+			logger.Error("failed to read request", "error", status)
 			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
 			return
 		}
 
 		// Convert proto value to native Go type
 		nativeValue, errProto := catena.FromProto(reqValue)
-		if errProto.Code != catena.StatusCodeOk {
+		if errProto.IsError() {
 			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid request body")
 			t.writeHTTPResult(w, res, val)
@@ -555,9 +554,9 @@ func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	entries, err := ReadMultiSetValuesRequestJSON(r)
-	if err.Code != catena.StatusCodeOk {
-		logger.Error("failed to read request", "error", err)
+	entries, status := ReadMultiSetValuesRequestJSON(r)
+	if status.IsError() {
+		logger.Error("failed to read request", "error", status)
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
 		return
 	}
@@ -714,16 +713,16 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	// Read command payload
 	var payload any
 	if r.ContentLength > 0 {
-		reqValue, err := ReadRequestJSON(r)
-		if err.Code != catena.StatusCodeOk {
-			logger.Error("failed to read command payload", "error", err)
+		reqValue, status := ReadRequestJSON(r)
+		if status.IsError() {
+			logger.Error("failed to read command payload", "error", status)
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
 			return
 		}
 		var errProto catena.StatusResult
 		payload, errProto = catena.FromProto(reqValue)
-		if errProto.Code != catena.StatusCodeOk {
+		if errProto.IsError() {
 			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
@@ -732,9 +731,9 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	cmdResult, res := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
-	if res.Code != catena.StatusCodeOk {
-		t.writeHTTPResult(w, res, catena.Value{})
+	cmdResult, status := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
+	if status.IsError() {
+		t.writeHTTPResult(w, status, catena.Value{})
 		return
 	}
 

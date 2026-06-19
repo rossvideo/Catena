@@ -54,7 +54,7 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res.Code != StatusCodeOk {
+	if res.IsError() {
 		t.Fatalf("RegisterConnection returned error: %v", res)
 	}
 	if conn == nil {
@@ -93,7 +93,7 @@ func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
 	}
 
 	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, initialUpdate)
-	if res.Code != StatusCodeOk {
+	if res.IsError() {
 		t.Fatalf("RegisterConnection returned error: %v", res)
 	}
 	if conn == nil {
@@ -119,12 +119,12 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	conn1, res1 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res1.Code != StatusCodeOk || conn1 == nil {
+	if res1.IsError() || conn1 == nil {
 		t.Fatal("first connection should succeed")
 	}
 
 	conn2, res2 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res2.Code != StatusCodeOk || conn2 == nil {
+	if res2.IsError() || conn2 == nil {
 		t.Fatal("second connection should succeed")
 	}
 
@@ -139,7 +139,7 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 
 	cq.deregisterConnection(conn1.ID)
 	conn4, res4 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res4.Code != StatusCodeOk || conn4 == nil {
+	if res4.IsError() || conn4 == nil {
 		t.Error("should be able to connect after one disconnects")
 	}
 }
@@ -156,7 +156,7 @@ func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 
 	cq.setMaxConnections(2)
 	conn3, res3 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
-	if res3.Code != StatusCodeOk || conn3 == nil {
+	if res3.IsError() || conn3 == nil {
 		t.Error("should succeed after increasing limit")
 	}
 }
