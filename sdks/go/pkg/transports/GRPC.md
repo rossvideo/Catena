@@ -48,7 +48,8 @@ Currently unimplemented (returns `Unimplemented`):
 RPC methods invoke the same handlers registered on `catena.Server`:
 
 - `DeviceRequest` -> `RegisterGetDeviceHandler`
-- `GetValue` / `SetValue` / `MultiSetValue` -> `RegisterGetValueHandler`, `RegisterSetValueHandler`
+- `GetValue` -> `RegisterGetValueHandler`
+- `SetValue` / `MultiSetValue` -> `RegisterSetValueHandler` (the handler receives `[]SetValueEntry`; `SetValue` delivers a one-element slice, `MultiSetValue` delivers the full slice for atomic application)
 - `ExternalObjectRequest` -> `RegisterGetAssetHandler`
 - `ExecuteCommand` -> `RegisterExecuteCommandHandler`
 - `ParamInfoRequest` -> `RegisterParamInfoHandler`

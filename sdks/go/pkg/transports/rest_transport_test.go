@@ -155,13 +155,27 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "set value",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *RestTransport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness", `{"int32_value": 42}`, headers)
+				assertStatus(t, rec, http.StatusNoContent)
+			},
+		},
+		{
+			name: "set values",
+			setup: func(t *testing.T, runtime *stubServerRuntime) {
+				runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+					assertContext(t, ctx)
+					return catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+			},
+			run: func(t *testing.T, transport *RestTransport) {
+				rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
+					`{"values":[{"oid":"a","value":{"int32_value":1}}]}`, headers)
 				assertStatus(t, rec, http.StatusNoContent)
 			},
 		},
@@ -330,13 +344,16 @@ func TestRestTransport_SetValue_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
-		if v, ok := value.(int32); !ok || v != 42 {
-			t.Errorf("expected value int32(42), got %v (%T)", value, value)
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
 		}
-		if fqoid != "brightness" {
-			t.Errorf("expected fqoid 'brightness', got %s", fqoid)
+		if v, ok := entries[0].Value.(int32); !ok || v != 42 {
+			t.Errorf("expected value int32(42), got %v (%T)", entries[0].Value, entries[0].Value)
+		}
+		if entries[0].Fqoid != "brightness" {
+			t.Errorf("expected fqoid 'brightness', got %s", entries[0].Fqoid)
 		}
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
@@ -352,7 +369,7 @@ func TestRestTransport_SetValue_InvalidContentType(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
@@ -367,6 +384,111 @@ func TestRestTransport_SetValue_InvalidContentType(t *testing.T) {
 	if handlerCalled {
 		t.Error("registered handler should not have been called")
 	}
+}
+
+func TestRestTransport_SetValues_Route(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	var got []catena.SetValueEntry
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		got = values
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
+		}
+		return catena.StatusResult{Code: catena.StatusCodeOk}
+	}
+
+	body := `{"values":[{"oid":"ipv4","value":{"string_value":"192.168.1.1"}},{"oid":"brightness","value":{"int32_value":42}}]}`
+	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
+	assertStatus(t, rec, http.StatusNoContent)
+
+	if len(got) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(got))
+	}
+	if got[0].Fqoid != "ipv4" {
+		t.Errorf("expected entry[0] fqoid 'ipv4', got %s", got[0].Fqoid)
+	}
+	if v, ok := got[0].Value.(string); !ok || v != "192.168.1.1" {
+		t.Errorf("expected entry[0] value '192.168.1.1', got %v (%T)", got[0].Value, got[0].Value)
+	}
+	if got[1].Fqoid != "brightness" {
+		t.Errorf("expected entry[1] fqoid 'brightness', got %s", got[1].Fqoid)
+	}
+	if v, ok := got[1].Value.(int32); !ok || v != 42 {
+		t.Errorf("expected entry[1] value int32(42), got %v (%T)", got[1].Value, got[1].Value)
+	}
+}
+
+func TestRestTransport_SetValues_DeliversAllEntries(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	callCount := 0
+	var got []catena.SetValueEntry
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		callCount++
+		got = values
+		return catena.StatusResult{Code: catena.StatusCodeOk}
+	}
+
+	body := `{"values":[{"oid":"a","value":{"int32_value":1}},{"oid":"b","value":{"int32_value":2}}]}`
+	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
+	assertStatus(t, rec, http.StatusNoContent)
+	if callCount != 1 {
+		t.Errorf("expected handler called once, got %d", callCount)
+	}
+	if len(got) != 2 {
+		t.Errorf("expected 2 entries delivered to handler, got %d", len(got))
+	}
+}
+
+func TestRestTransport_SetValues_InvalidContentType(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	handlerCalled := false
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		handlerCalled = true
+		return catena.StatusResult{Code: catena.StatusCodeOk}
+	}
+
+	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
+		`{"values":[]}`, map[string]string{"Content-Type": "text/plain"})
+	assertStatus(t, rec, http.StatusBadRequest)
+	if errMsg := assertHasError(t, rec); errMsg != "invalid request body" {
+		t.Errorf("expected error 'invalid request body', got %s", errMsg)
+	}
+	if handlerCalled {
+		t.Error("handler should not have been called")
+	}
+}
+
+func TestRestTransport_SetValues_MalformedBody(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", `{"values": not-json}`)
+	assertStatus(t, rec, http.StatusBadRequest)
+}
+
+func TestRestTransport_SetValues_FromProtoError(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	body := `{"values":[{"oid":"param","value":{"struct_variant_value":{"variant_name":"test"}}}]}`
+	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
+	assertStatus(t, rec, http.StatusBadRequest)
+}
+
+func TestRestTransport_SetValues_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/values", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+}
+
+func TestRestTransport_SetValues_HandlerError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodeNotFound, "not found")
+	}
+
+	body := `{"values":[{"oid":"a","value":{"int32_value":1}}]}`
+	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
+	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestRestTransport_GetAsset_Route(t *testing.T) {
@@ -828,7 +950,7 @@ func TestRouting_EdgeCases(t *testing.T) {
 
 func TestValueEndpoint_Methods(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
 
