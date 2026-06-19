@@ -54,7 +54,7 @@ func TestConnectionPropsDefaults(t *testing.T) {
 		"<comment>DashBoard Device Connection Settings</comment>",
 		"<entry key=\"base-url\">http://localhost/</entry>",
 		"<entry key=\"serviceUrl\">service:catena-device</entry>",
-		"<entry key=\"equipmentType\">st2138-rest</entry>",
+		"<entry key=\"equipmentType\">st2138-grpc</entry>",
 		"<entry key=\"address\">localhost</entry>",
 		"<entry key=\"port\">6254</entry>",
 		"<entry key=\"connectionType\">TCP</entry>",
