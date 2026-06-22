@@ -861,6 +861,18 @@ func main() {
 	// Advertises this device so DashBoard can resolve and populate the
 	// connection dialog. Works for both REST and gRPC devices.
 	dashboardOpts := options.Dashboard
+	switch dashboardOpts.Protocol {
+	case catena.ProtocolST2138Catena, catena.ProtocolST2138Grpc:
+		if !options.UseGrpc && options.UseRest {
+			logger.Warning("Dashboard configured for gRPC but only REST transport enabled - switching to REST protocol for dashboard connection props")
+			dashboardOpts.Protocol = catena.ProtocolST2138Rest
+		}
+	case catena.ProtocolST2138Rest:
+		if options.UseGrpc && !options.UseRest {
+			logger.Warning("Dashboard configured for REST but only gRPC transport enabled - switching to gRPC protocol for dashboard connection props")
+			dashboardOpts.Protocol = catena.ProtocolST2138Grpc
+		}
+	}
 	connectionProps := catena.NewConnectionProps(dashboardOpts)
 	connectionPropsURL := fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint())
 	if err := connectionProps.Start(); err != nil {
