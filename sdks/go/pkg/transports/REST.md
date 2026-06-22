@@ -5,9 +5,9 @@
 ## Constructor
 
 ```go
-rest := transports.NewRestTransport(8080)
-// or
-rest := transports.NewDefaultRestTransport() // 8080
+rest := transports.NewRestTransport(config.RestOptions{Port: 9080})
+// or with defaults
+rest := transports.NewRestTransport(config.DefaultRestOptions())
 ```
 
 Register it on the shared server:
@@ -26,6 +26,7 @@ Core routes:
 - `GET /st2138-api/v1/{slot}` - DeviceRequest equivalent
 - `GET /st2138-api/v1/{slot}/value/{oid}` - GetValue
 - `PUT /st2138-api/v1/{slot}/value/{oid}` - SetValue
+- `PUT /st2138-api/v1/{slot}/values` - SetValues (MultiSetValue)
 - `GET /st2138-api/v1/{slot}/asset/{oid}` - ExternalObjectRequest equivalent
 - `POST /st2138-api/v1/{slot}/command/{oid}` - ExecuteCommand
 - `GET /st2138-api/v1/{slot}/param-info/{oid...}` - unary param info
@@ -44,7 +45,8 @@ Fallback and root behavior:
 REST routes invoke handlers registered on `catena.Server`:
 
 - Device route -> `RegisterGetDeviceHandler`
-- Value routes -> `RegisterGetValueHandler`, `RegisterSetValueHandler`
+- Value routes -> `RegisterGetValueHandler`, `RegisterSetValueHandler` (the set route delivers a one-element `[]SetValueEntry`)
+- Values route -> `RegisterSetValueHandler` (delivers the full `[]SetValueEntry` for atomic application)
 - Asset route -> `RegisterGetAssetHandler`
 - Command route -> `RegisterExecuteCommandHandler`
 - Param-info routes -> `RegisterParamInfoHandler`
@@ -75,7 +77,7 @@ srv.BroadcastUpdate(slot, "product/version", "1.2.3")
 Client side:
 
 ```javascript
-const source = new EventSource("http://localhost:8080/st2138-api/v1/connect");
+const source = new EventSource("http://localhost:9080/st2138-api/v1/connect");
 source.onmessage = (event) => {
   const update = JSON.parse(event.data);
   console.log(update);

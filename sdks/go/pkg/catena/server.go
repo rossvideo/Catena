@@ -121,7 +121,17 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 // Handler function types used by both REST and gRPC servers.
 type DeviceHandler func(slot uint16, ctx HandlerContext) (Device, StatusResult)
 type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult)
-type SetValueHandler func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult
+
+// SetValueEntry is a single fqoid/value pair within a SetValue request.
+type SetValueEntry struct {
+	Fqoid string
+	Value any
+}
+
+// SetValueHandler applies one or more parameter values for a slot. Single-value
+// endpoints invoke it with a one-element slice; multi-value endpoints pass the
+// full slice so the handler can apply them atomically (all-or-nothing).
+type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
@@ -197,7 +207,7 @@ type ServerRuntime interface {
 	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
 	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult)
 	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
-	InvokeSetValueHandler(value any, slot uint16, fqoid string, transportContext TransportContext) StatusResult
+	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
@@ -635,7 +645,11 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 	return ReplyError[Value](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, transportContext TransportContext) StatusResult {
+// InvokeSetValueHandler applies one or more parameter values for a slot. The
+// registered SetValueHandler receives the full slice of entries so it can apply
+// them atomically; single-value endpoints pass a one-element slice. Access
+// checks run once for the whole batch.
+func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != StatusCodeOk {
 		return res
@@ -653,11 +667,11 @@ func (s *server) InvokeSetValueHandler(value any, slot uint16, fqoid string, tra
 	s.mu.Unlock()
 
 	if ok {
-		return handler(value, slot, fqoid, handlerContext)
+		return handler(slot, entries, handlerContext)
 	}
 	// TODO: lookup default handler for slot
-	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "count", len(entries))
+	return StatusWithCode(StatusCodeNotFound, "no SetValue handler registered for slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {

@@ -50,6 +50,8 @@ func TestDefaultOptions(t *testing.T) {
 	opts := defaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
+		Rest: RestOptions{Port: 9080},
+		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
 			IsDev:          false,
 			MaxConnections: 100,
@@ -70,6 +72,16 @@ func TestDefaultOptions(t *testing.T) {
 			WriteToFile:    true,
 			WriteToConsole: true,
 			UseJSON:        false,
+		},
+		Dashboard: DashboardOptions{
+			ServiceHostname: "localhost",
+			Port:            8080,
+			ServicePort:     6254,
+			ServiceTLS:      false,
+			Protocol:        ProtocolST2138Grpc,
+			RefreshInterval: 30000,
+			ServiceName:     "service:catena-device",
+			Endpoint:        "/connect/connection-props.xml",
 		},
 	}) {
 		t.Errorf("defaultRuntimeOptions() returned unexpected value: %+v", opts)
@@ -99,6 +111,18 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			WriteToConsole: true,
 			UseJSON:        true,
 		},
+		Dashboard: DashboardOptions{
+			ServiceHostname: "test-host",
+			Port:            8080,
+			ServicePort:     6254,
+			ServiceTLS:      true,
+			Protocol:        ProtocolST2138Grpc,
+			RefreshInterval: 30000,
+			NodeName:        "test-node",
+			NodeID:          "test-id",
+			ServiceName:     "service:test",
+			Endpoint:        "/connect/connection-props.xml",
+		},
 	}
 
 	var buf bytes.Buffer
@@ -125,6 +149,13 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 	want := map[string]any{
 		"use_grpc": false,
 		"use_rest": false,
+		"rest": map[string]any{
+			"port": json.Number("0"),
+		},
+		"grpc": map[string]any{
+			"port":       json.Number("0"),
+			"reflection": false,
+		},
 		"server": map[string]any{
 			"dev":             true,
 			"max_connections": json.Number("123"),
@@ -145,6 +176,18 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			"write_to_file":    true,
 			"write_to_console": true,
 			"use_json":         true,
+		},
+		"dashboard": map[string]any{
+			"service_hostname": "test-host",
+			"port":             json.Number("8080"),
+			"service_port":     json.Number("6254"),
+			"service_tls":      true,
+			"protocol":         "st2138-grpc",
+			"refresh_interval": json.Number("30000"),
+			"node_name":        "test-node",
+			"node_id":          "test-id",
+			"service_name":     "service:test",
+			"endpoint":         "/connect/connection-props.xml",
 		},
 	}
 
@@ -200,5 +243,18 @@ func TestJwtValidationOptions_LogValue_DefaultAllowedAlgs(t *testing.T) {
 
 	if got["allowed_algs"] != "ES256" {
 		t.Fatalf("allowed_algs mismatch: got %v, want ES256", got["allowed_algs"])
+	}
+}
+
+func TestDefaultOptions_TransportFlags(t *testing.T) {
+	opts := defaultRuntimeOptions()
+	if opts.Grpc.Reflection != false {
+		t.Errorf("expected default Grpc.Reflection=false, got %v", opts.Grpc.Reflection)
+	}
+	if opts.UseGrpc != false {
+		t.Errorf("expected default UseGrpc=false, got %v", opts.UseGrpc)
+	}
+	if opts.UseRest != false {
+		t.Errorf("expected default UseRest=false, got %v", opts.UseRest)
 	}
 }

@@ -27,6 +27,7 @@ import (
     "syscall"
 
     "github.com/rossvideo/catena/sdks/go/pkg/catena"
+    "github.com/rossvideo/catena/sdks/go/pkg/config"
     "github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
@@ -38,11 +39,11 @@ func main() {
         return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeUnimplemented, "implement me")
     })
 
-    if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
+    if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcOptions())); err != nil {
         panic(err)
     }
 
-    rest := transports.NewDefaultRestTransport()
+    rest := transports.NewRestTransport(config.DefaultRestOptions())
     if err := srv.RegisterTransport(rest); err != nil {
         panic(err)
     }
@@ -76,7 +77,7 @@ Both transports invoke the same registered handlers from `catena.ServerRuntime`:
 
 - `RegisterGetDeviceHandler`
 - `RegisterGetValueHandler`
-- `RegisterSetValueHandler`
+- `RegisterSetValueHandler` (handles both single and multi set requests; single endpoints deliver a one-element `[]SetValueEntry`, multi endpoints deliver the full slice)
 - `RegisterGetAssetHandler`
 - `RegisterExecuteCommandHandler`
 - `RegisterParamInfoHandler`
@@ -137,7 +138,7 @@ Caller guidance:
 
 ## Defaults
 
-- REST default port: `8080`
+- REST default port: `9080`
 - gRPC default port: `6254`
 - gRPC reflection default: disabled
 

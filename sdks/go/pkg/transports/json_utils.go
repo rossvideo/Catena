@@ -202,6 +202,51 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 	return v, catena.StatusResult{Code: catena.StatusCodeOk}
 }
 
+// ReadMultiSetValuesRequestJSON reads and unmarshals a SetValues request body of
+// the form {"values":[{"oid":"...","value":{<Value oneof>}}, ...]} into a slice
+// of catena.SetValueEntry. The body is parsed directly into a
+// protos.MultiSetValuePayload; the body's slot field (if present) is ignored
+// since the slot is taken from the request path.
+func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, catena.StatusResult) {
+	defer r.Body.Close()
+
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "" {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "missing Content-Type header"}
+	}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
+	}
+	if mediaType != "application/json" {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
+	}
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
+	}
+
+	payload := &protos.MultiSetValuePayload{}
+	if err := (protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}).Unmarshal(data, payload); err != nil {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to unmarshal request body: %v", err)}
+	}
+
+	entries := make([]catena.SetValueEntry, 0, len(payload.GetValues()))
+	for i, sv := range payload.GetValues() {
+		nativeValue, convErr := catena.FromProto(sv.GetValue())
+		if convErr.Code != catena.StatusCodeOk {
+			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid value at index %d: %v", i, convErr.Error)}
+		}
+
+		entries = append(entries, catena.SetValueEntry{Fqoid: sv.GetOid(), Value: nativeValue})
+	}
+
+	return entries, catena.StatusResult{Code: catena.StatusCodeOk}
+}
+
 // --- Device JSON cleanup via fastjson AST ---
 
 // zeroFields lists device fields that the SMPTE schema forbids when at their
