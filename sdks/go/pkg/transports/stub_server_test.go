@@ -55,7 +55,7 @@ type stubServerRuntime struct {
 	getSlotsFn               func(ctx catena.TransportContext) ([]uint16, catena.StatusResult)
 	getDeviceFn              func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult)
 	getValueFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult)
-	setValueFn               func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
+	setValueFn               func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult
 	getAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
 	commandFn                func(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
@@ -110,11 +110,11 @@ func (s *stubServerRuntime) InvokeGetValueHandler(slot uint16, fqoid string, ctx
 	return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "GetValue handler not implemented")
 }
 
-func (s *stubServerRuntime) InvokeSetValueHandler(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+func (s *stubServerRuntime) InvokeSetValueHandler(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 	if s.setValueFn != nil {
-		return s.setValueFn(value, slot, fqoid, ctx)
+		return s.setValueFn(slot, entries, ctx)
 	}
-	s.panicf("SetValue handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	s.panicf("SetValue handler not implemented in stubServerRuntime for slot %d, count %d", slot, len(entries))
 	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 

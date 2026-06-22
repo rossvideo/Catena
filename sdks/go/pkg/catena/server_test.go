@@ -736,10 +736,13 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 	transportContext := validTestTransportContext(nil)
 
 	handlerCalled := false
-	srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+	srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
 		handlerCalled = true
-		if value != int32(42) {
-			t.Errorf("expected value int32(42), got %v", value)
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		if entries[0].Value != int32(42) {
+			t.Errorf("expected value int32(42), got %v", entries[0].Value)
 		}
 		if ctx.Token == nil || ctx.Token.Raw != transportContext.AccessToken {
 			t.Errorf("expected parsed token from access token")
@@ -750,7 +753,7 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeSetValueHandler(int32(42), 0, "test/param", transportContext)
+	status := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, transportContext)
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -766,6 +769,63 @@ func TestServer_RegisterSetValueHandler(t *testing.T) {
 	}
 	if !slices.Contains(slots, uint16(0)) {
 		t.Error("slot 0 should be registered in server slots")
+	}
+}
+
+func TestServer_InvokeSetValueHandler_MultipleEntries(t *testing.T) {
+	srv := newTestServer(t, true)
+	transportContext := validTestTransportContext(nil)
+
+	callCount := 0
+	var got []SetValueEntry
+	srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+		callCount++
+		got = entries
+		if !ctx.HasReadScope("all") {
+			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
+		}
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	entries := []SetValueEntry{
+		{Fqoid: "a", Value: int32(1)},
+		{Fqoid: "b", Value: int32(2)},
+	}
+	status := srv.InvokeSetValueHandler(0, entries, transportContext)
+
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status, got %v", status.Code)
+	}
+	if callCount != 1 {
+		t.Errorf("expected handler called once with the full batch, got %d", callCount)
+	}
+	if len(got) != 2 {
+		t.Errorf("expected 2 entries delivered to handler, got %d", len(got))
+	}
+
+	slots, status := srv.GetSlots(validTestTransportContext(nil))
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
+	}
+	if !slices.Contains(slots, uint16(0)) {
+		t.Error("slot 0 should be registered in server slots")
+	}
+}
+
+func TestServer_InvokeSetValueHandler_HandlerError(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+		return StatusWithCode(StatusCodeInvalidArgument, "bad value")
+	})
+
+	entries := []SetValueEntry{
+		{Fqoid: "a", Value: int32(1)},
+		{Fqoid: "b", Value: int32(2)},
+	}
+	status := srv.InvokeSetValueHandler(0, entries, validTestTransportContext(nil))
+	if status.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected InvalidArgument status, got %v", status.Code)
 	}
 }
 
@@ -917,11 +977,22 @@ func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T)
 			name:      "set value",
 			scopeKind: "write",
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", noWriteContext)
+				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, noWriteContext)
+			},
+		},
+		{
+			name:      "multi set value",
+			scopeKind: "write",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "a", Value: int32(1)}, {Fqoid: "b", Value: int32(2)}}, noWriteContext)
 			},
 		},
 		{
@@ -1013,11 +1084,21 @@ func TestServer_EndpointsReturnResolveHandlerContextError(t *testing.T) {
 		{
 			name: "set value",
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", invalidContext)
+				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, invalidContext)
+			},
+		},
+		{
+			name: "multi set value",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "a", Value: int32(1)}, {Fqoid: "b", Value: int32(2)}}, invalidContext)
 			},
 		},
 		{
@@ -1138,11 +1219,22 @@ func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testin
 			name:     "set value",
 			endpoint: EndpointSetValue,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", transportContext)
+				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, transportContext)
+			},
+		},
+		{
+			name:     "multi set value",
+			endpoint: EndpointSetValue,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "a", Value: int32(1)}, {Fqoid: "b", Value: int32(2)}}, transportContext)
 			},
 		},
 		{
@@ -1325,7 +1417,7 @@ func TestServer_InvokeSetValueHandler_NoHandler(t *testing.T) {
 		t.Errorf("expected 0 slots, got %d", len(slots))
 	}
 
-	status = srv.InvokeSetValueHandler(42, 0, "test/param", validTestTransportContext(nil))
+	status = srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, validTestTransportContext(nil))
 
 	// no handler should return StatusCodeNotFound status
 	if status.Code != StatusCodeNotFound {
@@ -1548,11 +1640,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			name:              "set value",
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterSetValueHandler(0, func(value any, slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeSetValueHandler(int32(42), 0, "test/param", TransportContext{})
+				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, TransportContext{})
 			},
 		},
 		{

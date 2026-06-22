@@ -48,10 +48,28 @@ import (
 )
 
 type RuntimeOptions struct {
-	UseGrpc bool `env:"USE_GRPC" flag:"use-grpc"`
-	UseRest bool `env:"USE_REST" flag:"use-rest"`
-	Server  ServerOptions
-	Logger  LoggerOptions
+	UseGrpc   bool `env:"USE_GRPC" flag:"use-grpc"`
+	UseRest   bool `env:"USE_REST" flag:"use-rest"`
+	Rest      RestOptions
+	Grpc      GrpcOptions
+	Server    ServerOptions
+	Logger    LoggerOptions
+	Dashboard DashboardOptions
+}
+
+// RestOptions configures the REST transport.
+type RestOptions struct {
+	// Port is the TCP port the REST/HTTP server listens on (default 9080).
+	Port int `env:"REST_PORT" flag:"rest-port"`
+}
+
+// GrpcOptions configures the gRPC transport.
+type GrpcOptions struct {
+	// Port is the TCP port the gRPC server listens on (default 6254).
+	Port int `env:"GRPC_PORT" flag:"grpc-port"`
+	// Reflection enables the gRPC server reflection service, which lets tools
+	// like grpcurl discover services at runtime (default false).
+	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
 }
 
 type ServerOptions struct {
@@ -93,6 +111,48 @@ func (o JwtValidationOptions) ResolvedAllowedAlgs() []string {
 	return append([]string(nil), o.AllowedAlgs...)
 }
 
+// ConnectionProtocol identifies the Catena transport advertised to DashBoard.
+type ConnectionProtocol string
+
+const (
+	// ProtocolST2138Rest advertises a ST 2138 REST device.
+	ProtocolST2138Rest ConnectionProtocol = "st2138-rest"
+	// ProtocolST2138Grpc advertises a ST 2138 gRPC device.
+	ProtocolST2138Grpc ConnectionProtocol = "st2138-grpc"
+	// ProtocolST2138Catena advertises a legacy "catena" device.
+	ProtocolST2138Catena ConnectionProtocol = "catena"
+)
+
+// DashboardOptions configures the DashBoard connection-props HTTP server that
+// advertises this device for the "Detect Frame Information" workflow. It is
+// transport-agnostic and can front either a REST or gRPC Catena device.
+//
+// DashboardOptions must be initialized before use.
+// Prefer config.InitOptions or config.DefaultDashboardOptions().
+type DashboardOptions struct {
+	// ServiceHostname is the address advertised to DashBoard (default "localhost").
+	ServiceHostname string `env:"DASHBOARD_SERVICE_HOSTNAME" flag:"dashboard-service-hostname"`
+	// Port is the port the connection-props HTTP server listens on (default 8080).
+	Port int `env:"DASHBOARD_PORT" flag:"dashboard-port"`
+	// ServicePort is the Catena service port advertised to DashBoard (default 6254).
+	ServicePort int `env:"DASHBOARD_SERVICE_PORT" flag:"dashboard-service-port"`
+	// ServiceTLS controls whether the advertised connection uses TLS/SSL (default false).
+	ServiceTLS bool `env:"DASHBOARD_SERVICE_TLS_ENABLED" flag:"dashboard-service-tls-enabled"`
+	// Protocol is the transport being advertised (used for logging and the
+	// advertised equipmentType).
+	Protocol ConnectionProtocol `env:"DASHBOARD_PROTOCOL" flag:"dashboard-protocol"`
+	// RefreshInterval is the DashBoard refresh interval in milliseconds (default 30000).
+	RefreshInterval uint32
+	// NodeName is the optional human-readable node name.
+	NodeName string `env:"DASHBOARD_NODE_NAME" flag:"dashboard-node-name"`
+	// NodeID is the optional unique node identifier.
+	NodeID string `env:"DASHBOARD_NODE_ID" flag:"dashboard-node-id"`
+	// ServiceName is the advertised service URL (default "service:catena-device").
+	ServiceName string `env:"DASHBOARD_SERVICE_NAME" flag:"dashboard-service-name"`
+	// Endpoint is the path served (default "/connect/connection-props.xml").
+	Endpoint string `env:"DASHBOARD_ENDPOINT" flag:"dashboard-endpoint"`
+}
+
 type LoggerOptions struct {
 	// AppName is used in log file naming
 	AppName string
@@ -112,11 +172,37 @@ type LoggerOptions struct {
 
 func defaultRuntimeOptions() RuntimeOptions {
 	return RuntimeOptions{
-		UseGrpc: false,
-		UseRest: false,
-		Server:  DefaultServerOptions(),
-		Logger:  DefaultLoggerOptions(),
+		UseGrpc:   false,
+		UseRest:   false,
+		Rest:      DefaultRestOptions(),
+		Grpc:      DefaultGrpcOptions(),
+		Server:    DefaultServerOptions(),
+		Logger:    DefaultLoggerOptions(),
+		Dashboard: DefaultDashboardOptions(),
 	}
+}
+
+// DefaultDashboardOptions returns sensible defaults for the DashBoard
+// connection-props server.
+func DefaultDashboardOptions() DashboardOptions {
+	return DashboardOptions{
+		ServiceHostname: "localhost",
+		Port:            8080,
+		ServicePort:     6254,
+		ServiceTLS:      false,
+		Protocol:        ProtocolST2138Grpc,
+		RefreshInterval: 30000,
+		ServiceName:     "service:catena-device",
+		Endpoint:        "/connect/connection-props.xml",
+	}
+}
+
+func DefaultRestOptions() RestOptions {
+	return RestOptions{Port: 9080}
+}
+
+func DefaultGrpcOptions() GrpcOptions {
+	return GrpcOptions{Port: 6254, Reflection: false}
 }
 
 func DefaultServerOptions() ServerOptions {
@@ -154,9 +240,12 @@ func DefaultLoggerOptions() LoggerOptions {
 
 // make sure all options types implement slog.LogValuer for structured logging of the config
 var _ slog.LogValuer = RuntimeOptions{}
+var _ slog.LogValuer = RestOptions{}
+var _ slog.LogValuer = GrpcOptions{}
 var _ slog.LogValuer = ServerOptions{}
 var _ slog.LogValuer = JwtValidationOptions{}
 var _ slog.LogValuer = LoggerOptions{}
+var _ slog.LogValuer = DashboardOptions{}
 
 func (o JwtValidationOptions) LogValue() slog.Value {
 	return slog.GroupValue(
@@ -189,11 +278,42 @@ func (o LoggerOptions) LogValue() slog.Value {
 	)
 }
 
+func (o RestOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+	)
+}
+
+func (o GrpcOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+		slog.Bool("reflection", o.Reflection),
+	)
+}
+
+func (o DashboardOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("service_hostname", o.ServiceHostname),
+		slog.Int("port", o.Port),
+		slog.Int("service_port", o.ServicePort),
+		slog.Bool("service_tls", o.ServiceTLS),
+		slog.String("protocol", string(o.Protocol)),
+		slog.Uint64("refresh_interval", uint64(o.RefreshInterval)),
+		slog.String("node_name", o.NodeName),
+		slog.String("node_id", o.NodeID),
+		slog.String("service_name", o.ServiceName),
+		slog.String("endpoint", o.Endpoint),
+	)
+}
+
 func (o RuntimeOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Bool("use_grpc", o.UseGrpc),
 		slog.Bool("use_rest", o.UseRest),
+		slog.Any("rest", o.Rest),
+		slog.Any("grpc", o.Grpc),
 		slog.Any("server", o.Server),
 		slog.Any("logger", o.Logger),
+		slog.Any("dashboard", o.Dashboard),
 	)
 }

@@ -48,6 +48,7 @@ import (
 	"net"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/grpc"
@@ -63,18 +64,18 @@ type GrpcTransport struct {
 	listener      net.Listener
 	runtime       catena.ServerRuntime
 
-	// configs maybe becomes a struct
-	port       uint16
+	port       int
 	reflection bool
 }
 
 var _ catena.Transport = (*GrpcTransport)(nil)
 
-func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
+// NewGrpcTransport creates a new gRPC transport with the given configuration.
+func NewGrpcTransport(cfg config.GrpcOptions) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
-		port:          port,
-		reflection:    reflectionEnabled,
+		port:          cfg.Port,
+		reflection:    cfg.Reflection,
 	}
 	transport.catenaService.transport = transport
 	transport.grpcServer = grpc.NewServer(
@@ -84,20 +85,13 @@ func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
 
 	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
 
-	if reflectionEnabled {
+	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
 		logger.Info("gRPC server created with reflection enabled")
 	} else {
 		logger.Info("gRPC server created")
 	}
 	return transport
-}
-
-func NewDefaultGrpcTransport() *GrpcTransport {
-	return NewGrpcTransport(
-		6254,  // default port
-		false, // reflection disabled by default for security
-	)
 }
 
 func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRuntime) error {
@@ -336,7 +330,8 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 	}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
+	entries := []catena.SetValueEntry{{Fqoid: fqoid, Value: nativeValue}}
+	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
 	if result.Error != "" {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -352,11 +347,10 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	// TODO server should get a direct handler for this to make it a atomic operation, rather than looping and invoking the single set handler multiple times
-
 	logger.Info("MultiSetValue", "slot", slot, "count", len(req.Values))
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 
+	entries := make([]catena.SetValueEntry, 0, len(req.Values))
 	for _, setValue := range req.Values {
 		fqoid := setValue.Oid
 
@@ -366,11 +360,13 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
 		}
 
-		result := s.transport.runtime.InvokeSetValueHandler(nativeValue, slot, fqoid, transportContext)
-		if result.Error != "" {
-			logger.Error("MultiSetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
-			return nil, status.Error(ToGRPCCode(result.Code), result.Error)
-		}
+		entries = append(entries, catena.SetValueEntry{Fqoid: fqoid, Value: nativeValue})
+	}
+
+	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
+	if result.Error != "" {
+		logger.Error("MultiSetValue handler error", "slot", slot, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
 	return &protos.Empty{}, nil

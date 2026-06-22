@@ -57,6 +57,7 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -98,7 +99,7 @@ func setupTestGrpcTransport(t *testing.T, slots []uint16, opts ...testGrpcTransp
 	}
 
 	lis := bufconn.Listen(bufSize)
-	transport := NewGrpcTransport(cfg.port, cfg.reflection)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: int(cfg.port), Reflection: cfg.reflection})
 	runtime := makeStubServerRuntime(t)
 	runtime.isDev = cfg.isDev
 	runtime.slots = slots
@@ -155,7 +156,7 @@ func assertGRPCError(t *testing.T, err error, expectedCode codes.Code) {
 // =============================================================================
 
 func TestNewGrpcTransport(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: 1234, Reflection: false})
 
 	if transport == nil {
 		t.Fatal("NewGrpcTransport returned nil")
@@ -174,16 +175,23 @@ func TestNewGrpcTransport(t *testing.T) {
 	}
 }
 
-func TestNewDefaultGrpcTransport(t *testing.T) {
-	transport := NewDefaultGrpcTransport()
+func TestDefaultGrpcOptions(t *testing.T) {
+	cfg := config.DefaultGrpcOptions()
+	transport := NewGrpcTransport(cfg)
 	if transport == nil {
-		t.Fatal("NewDefaultGrpcTransport returned nil")
+		t.Fatal("NewGrpcTransport returned nil")
 	}
 	if transport.catenaService == nil {
 		t.Error("catenaService is nil")
 	}
 	if transport.grpcServer == nil {
 		t.Error("grpcServer is nil")
+	}
+	if transport.port != 6254 {
+		t.Errorf("expected default port 6254, got %d", transport.port)
+	}
+	if transport.reflection != false {
+		t.Errorf("expected reflection false, got %v", transport.reflection)
 	}
 }
 
@@ -248,7 +256,7 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "multi set value",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
@@ -598,10 +606,13 @@ func TestGrpcTransport_SetValue_Success(t *testing.T) {
 	defer cleanup()
 
 	receivedValue := any(nil)
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
-		receivedValue = value
-		if fqoid != "device.param1" {
-			t.Errorf("expected fqoid 'device.param1', got %s", fqoid)
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		receivedValue = entries[0].Value
+		if entries[0].Fqoid != "device.param1" {
+			t.Errorf("expected fqoid 'device.param1', got %s", entries[0].Fqoid)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -657,7 +668,7 @@ func TestGrpcTransport_SetValue_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 	}
 
@@ -678,8 +689,10 @@ func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	var got []catena.SetValueEntry
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
+		got = values
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -693,8 +706,11 @@ func TestGrpcTransport_MultiSetValue_Success(t *testing.T) {
 	})
 	assertNoError(t, err)
 
-	if callCount != 3 {
-		t.Errorf("expected handler to be called 3 times, got %d", callCount)
+	if callCount != 1 {
+		t.Errorf("expected handler to be called once, got %d", callCount)
+	}
+	if len(got) != 3 {
+		t.Errorf("expected 3 entries delivered to handler, got %d", len(got))
 	}
 }
 
@@ -718,13 +734,9 @@ func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
-		// Fail on second value
-		if callCount == 2 {
-			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "second value invalid")
-		}
-		return catena.StatusWithCode(catena.StatusCodeOk, "")
+		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value invalid")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -737,9 +749,8 @@ func TestGrpcTransport_MultiSetValue_HandlerError(t *testing.T) {
 	})
 	assertGRPCCode(t, err, codes.InvalidArgument, "handler error")
 
-	// Verify processing stopped at second value
-	if callCount != 2 {
-		t.Errorf("expected handler called 2 times (stopped at error), got %d", callCount)
+	if callCount != 1 {
+		t.Errorf("expected handler called once, got %d", callCount)
 	}
 }
 
@@ -749,8 +760,10 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	var got []catena.SetValueEntry
+	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
+		got = values
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -766,8 +779,11 @@ func TestGrpcTransport_MultiSetValue_EmptyValues(t *testing.T) {
 		t.Fatalf("MultiSetValue with empty values failed: %v", err)
 	}
 
-	if callCount != 0 {
-		t.Errorf("expected handler not to be called, got %d calls", callCount)
+	if callCount != 1 {
+		t.Errorf("expected handler to be called once, got %d calls", callCount)
+	}
+	if len(got) != 0 {
+		t.Errorf("expected 0 entries delivered to handler, got %d", len(got))
 	}
 }
 
@@ -1328,7 +1344,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "value out of range",
 			grpcCode:   codes.InvalidArgument,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 				}
 			},
@@ -1349,7 +1365,7 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "multi set failed",
 			grpcCode:   codes.FailedPrecondition,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.setValueFn = func(value any, slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+				runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodeFailedPrecondition, "multi set failed")
 				}
 			},
@@ -1897,7 +1913,7 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	shutdownCalled := false
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: 0, Reflection: false})
 	runtime := makeStubServerRuntime(t)
 	runtime.slots = []uint16{0, 1}
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -1989,7 +2005,7 @@ func TestGrpcTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: 0, Reflection: false})
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2054,7 +2070,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: 0, Reflection: false})
 	runtime := makeStubServerRuntime(t)
 	runtime.WithConnection(makeTestConnection(1))
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2096,7 +2112,7 @@ func TestGrpcTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 }
 
 func TestGrpcTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
-	transport := NewGrpcTransport(1234, false)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: 1234, Reflection: false})
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -2138,7 +2154,7 @@ func TestGrpcTransport_Start_PortAlreadyInUse(t *testing.T) {
 	port := portListener.Addr().(*net.TCPAddr).Port
 	defer portListener.Close()
 
-	transport := NewGrpcTransport(uint16(port), false)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: port, Reflection: false})
 
 	runtime := makeStubServerRuntime(t)
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2170,7 +2186,7 @@ func TestGrpcTransport_MultipleClients_RealNetwork(t *testing.T) {
 	// Use port 0 so net.Listen picks an available port; read the bound
 	// address back from the listener after Start to avoid a TOCTOU race
 	// between Close() and rebind.
-	transport := NewGrpcTransport(0, false)
+	transport := NewGrpcTransport(config.GrpcOptions{Port: 0, Reflection: false})
 
 	runtime.shutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
 		if gotTransport != transport {
