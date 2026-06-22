@@ -24,13 +24,13 @@
   },
   "homepage": "https://github.com/rossvideo/Catena#readme",
   "dependencies": {
-    "ajv": "^8.8.2",
+    "ajv": "^8.18.0",
     "ajv-formats": "^2.1.1",
     "commander": "^12.0.0",
     "json-source-map": "^0.6.1",
-    "protobufjs": "^7.5.4",
+    "protobufjs": "^7.6.3",
     "smpte-validator": "file:../../smpte/tools",
-    "yaml": "^2.7.0"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "jest": "^30.2.0",
