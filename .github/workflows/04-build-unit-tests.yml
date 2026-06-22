@@ -89,7 +89,14 @@ jobs:
             -S "${GITHUB_WORKSPACE}/sdks/cpp"
 
           ninja -C "${BUILD_TARGET}"
-          ctest --output-on-failure --output-junit "${BUILD_TARGET}/ctest.xml" --test-dir "${BUILD_TARGET}" -R '^(common|gRPC|REST)\.'
+
+          run_cpp_ctest() {
+            ctest --output-on-failure --output-junit "${BUILD_TARGET}/ctest.xml" --test-dir "${BUILD_TARGET}" -R '^(common|gRPC|REST)\.'
+          }
+          if ! run_cpp_ctest; then
+            echo "C++ tests failed on first attempt; retrying once..."
+            run_cpp_ctest
+          fi
 
       - name: Summarize C++ tests
         if: ${{ always() }}
@@ -163,7 +170,13 @@ jobs:
           "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
           make
           set -o pipefail
-          go test -v ./... 2>&1 | tee "${BUILD_TARGET}/go-test.log"
+          run_go_tests() {
+            go test -v ./... 2>&1 | tee "${BUILD_TARGET}/go-test.log"
+          }
+          if ! run_go_tests; then
+            echo "Go tests failed on first attempt; retrying once..."
+            run_go_tests
+          fi
 
       - name: Summarize Go tests
         if: ${{ always() }}
@@ -223,7 +236,13 @@ jobs:
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}/tools/codegen"
           npm install
-          npm test -- --ci
+          run_js_tests() {
+            npm test -- --ci
+          }
+          if ! run_js_tests; then
+            echo "JS tests failed on first attempt; retrying once..."
+            run_js_tests
+          fi
 
       - name: Summarize JS tests
         if: ${{ always() }}

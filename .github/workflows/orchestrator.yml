@@ -126,7 +126,7 @@ jobs:
               "/orgs/rossvideo/packages/container/${package_name}/versions" \
               --paginate | jq -r \
               --arg prefix "$tag_prefix" \
-              '.[] | select(any(.metadata.container.tags[]?; startswith($prefix))) | .id' |
+              '.[] | select((any(.metadata.container.tags[]?; startswith($prefix))) and (all(.metadata.container.tags[]?; . != "develop"))) | .id' |
             while read -r version_id; do
               [[ -n "$version_id" ]] || continue
               echo "Deleting package version ${version_id} for ${package_name} matching ${tag_prefix}*"
