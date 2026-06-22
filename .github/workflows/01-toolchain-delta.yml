@@ -190,10 +190,14 @@ jobs:
           else
             if [[ "${{ needs.detect.outputs.cpp_changed }}" == "true" ]]; then
               BUILD_CPP=true
+              CPP_IMAGE="$CPP_PR"
+              CPP_PUBLISH_TAG="$CPP_PR"
             fi
 
             if [[ "${{ needs.detect.outputs.go_changed }}" == "true" ]]; then
               BUILD_GO=true
+              GO_IMAGE="$GO_PR"
+              GO_PUBLISH_TAG="$GO_PR"
             fi
           fi
 
