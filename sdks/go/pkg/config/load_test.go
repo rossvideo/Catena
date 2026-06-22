@@ -256,9 +256,9 @@ func TestInitOptions_Transport(t *testing.T) {
 	// test if loading errors.
 	init := func(t *testing.T, args ...string) RuntimeOptions {
 		t.Helper()
-		opts, err := InitOptionsPrefix("test_app", "TESTCFG", args)
+		opts, err := InitOptions("test_app", args, WithPrefix("TESTCFG"))
 		if err != nil {
-			t.Fatalf("InitOptionsPrefix() failed: %v", err)
+			t.Fatalf("InitOptions() failed: %v", err)
 		}
 		return opts
 	}

@@ -247,7 +247,7 @@ func TestJwtValidationOptions_LogValue_DefaultAllowedAlgs(t *testing.T) {
 }
 
 func TestDefaultOptions_TransportFlags(t *testing.T) {
-	opts := defaultRuntimeOptions()
+	opts := DefaultRuntimeOptions()
 	if opts.Grpc.Reflection != false {
 		t.Errorf("expected default Grpc.Reflection=false, got %v", opts.Grpc.Reflection)
 	}
