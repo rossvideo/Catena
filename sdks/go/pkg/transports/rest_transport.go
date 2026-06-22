@@ -212,7 +212,7 @@ func (t *RestTransport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg str
 // is a route-level choice, not a handler outcome, so it lives here in the
 // transport rather than in StatusCode.
 func (t *RestTransport) writeHTTPStatusResultNoBody(w http.ResponseWriter, result catena.StatusResult) {
-	if result.Code == catena.StatusCodeOk && result.Error == "" {
+	if result.IsOk() {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
