@@ -19,6 +19,12 @@ on:
       pr_tag:
         description: Legacy PR-scoped identifier.
         value: ${{ jobs.detect.outputs.pr_tag }}
+      cpp_tag:
+        description: C++ toolchain tag (computed at build time).
+        value: ${{ jobs.detect.outputs.cpp_tag }}
+      go_tag:
+        description: Go toolchain tag (computed at build time).
+        value: ${{ jobs.detect.outputs.go_tag }}
       cpp_image:
         description: Selected C++ toolchain image for downstream jobs.
         value: ${{ jobs.resolve.outputs.cpp_image }}
@@ -204,12 +210,20 @@ jobs:
               BUILD_CPP=true
               CPP_IMAGE="$CPP_PR"
               CPP_PUBLISH_TAG="$CPP_PR"
+            elif ! image_exists "$CPP_DEVELOP"; then
+              BUILD_CPP=true
+              CPP_IMAGE="$CPP_DEVELOP"
+              CPP_PUBLISH_TAG="$CPP_DEVELOP"
             fi
 
             if [[ "${{ needs.detect.outputs.go_changed }}" == "true" ]]; then
               BUILD_GO=true
               GO_IMAGE="$GO_PR"
               GO_PUBLISH_TAG="$GO_PR"
+            elif ! image_exists "$GO_DEVELOP"; then
+              BUILD_GO=true
+              GO_IMAGE="$GO_DEVELOP"
+              GO_PUBLISH_TAG="$GO_DEVELOP"
             fi
           fi
 

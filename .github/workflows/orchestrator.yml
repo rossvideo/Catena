@@ -64,6 +64,7 @@ jobs:
 
   stage6_finalize_toolchain_tags:
     name: "6 - Finalize Toolchain Tags"
+    needs: stage1_toolchain_delta
     if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
     runs-on: ubuntu-latest
     permissions:
@@ -72,12 +73,6 @@ jobs:
       actions: write
       pull-requests: read
     steps:
-      - name: Checkout PR head
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          submodules: recursive
-
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -94,6 +89,8 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           MERGED: ${{ github.event.pull_request.merged }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          CPP_TAG: ${{ needs.stage1_toolchain_delta.outputs.cpp_tag }}
+          GO_TAG: ${{ needs.stage1_toolchain_delta.outputs.go_tag }}
         shell: bash
         run: |
           set -euo pipefail
@@ -101,21 +98,6 @@ jobs:
           image_exists() {
             docker buildx imagetools inspect "$1" >/dev/null 2>&1
           }
-
-          hash_files() {
-            sha256sum "$@" | sha256sum | cut -c1-12
-          }
-
-          CPP_HASH=$(hash_files \
-            .devcontainer/cpp/toolchain.dockerfile \
-            .devcontainer/cpp/toolchain.env \
-            smpte/install-tooling.sh)
-          GO_HASH=$(hash_files \
-            .devcontainer/go/toolchain.dockerfile \
-            .devcontainer/go/toolchain.env \
-            .devcontainer/go/go.mod \
-            .devcontainer/go/go.sum \
-            smpte/install-tooling.sh)
 
           delete_matching_pr_tags() {
             local package_name="$1"
@@ -139,9 +121,9 @@ jobs:
 
           for lang in cpp go; do
             if [[ "$lang" == "cpp" ]]; then
-              PR_TAG="pr-${PR_NUMBER}-${CPP_HASH}"
+              PR_TAG="$CPP_TAG"
             else
-              PR_TAG="pr-${PR_NUMBER}-${GO_HASH}"
+              PR_TAG="$GO_TAG"
             fi
 
             PR_IMAGE="ghcr.io/rossvideo/catena-${lang}-toolchain:${PR_TAG}"

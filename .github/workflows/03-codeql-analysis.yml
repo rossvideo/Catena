@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 35
     runs-on: ubuntu-latest
     container:
-      image: ${{ inputs.cpp_image }}
+      image: ${{ inputs.cpp_image || 'ghcr.io/rossvideo/catena-cpp-toolchain:develop' }}
       options: --user root:root
     permissions:
       security-events: write
@@ -76,7 +76,7 @@ jobs:
     timeout-minutes: 35
     runs-on: ubuntu-latest
     container:
-      image: ${{ inputs.go_image }}
+      image: ${{ inputs.go_image || 'ghcr.io/rossvideo/catena-go-toolchain:develop' }}
       options: --user root:root
     permissions:
       security-events: write
