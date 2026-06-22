@@ -172,17 +172,29 @@ jobs:
           GO_PUBLISH_TAG="$GO_DEVELOP"
 
           if [[ "${{ inputs.run_mode }}" == "pr" ]]; then
-            if image_exists "$CPP_PR"; then
-              CPP_IMAGE="$CPP_PR"
-            elif [[ "${{ needs.detect.outputs.cpp_changed }}" == "true" ]] || ! image_exists "$CPP_DEVELOP"; then
+            if [[ "${{ needs.detect.outputs.cpp_changed }}" == "true" ]]; then
+              if image_exists "$CPP_PR"; then
+                CPP_IMAGE="$CPP_PR"
+              else
+                BUILD_CPP=true
+                CPP_IMAGE="$CPP_PR"
+                CPP_PUBLISH_TAG="$CPP_PR"
+              fi
+            elif ! image_exists "$CPP_DEVELOP"; then
               BUILD_CPP=true
               CPP_IMAGE="$CPP_PR"
               CPP_PUBLISH_TAG="$CPP_PR"
             fi
 
-            if image_exists "$GO_PR"; then
-              GO_IMAGE="$GO_PR"
-            elif [[ "${{ needs.detect.outputs.go_changed }}" == "true" ]] || ! image_exists "$GO_DEVELOP"; then
+            if [[ "${{ needs.detect.outputs.go_changed }}" == "true" ]]; then
+              if image_exists "$GO_PR"; then
+                GO_IMAGE="$GO_PR"
+              else
+                BUILD_GO=true
+                GO_IMAGE="$GO_PR"
+                GO_PUBLISH_TAG="$GO_PR"
+              fi
+            elif ! image_exists "$GO_DEVELOP"; then
               BUILD_GO=true
               GO_IMAGE="$GO_PR"
               GO_PUBLISH_TAG="$GO_PR"
