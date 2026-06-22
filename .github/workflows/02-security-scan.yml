@@ -34,6 +34,8 @@ jobs:
           submodules: recursive
 
       - name: Run Trivy vulnerability scanner in repo mode
+        id: trivy_scan
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: fs
@@ -45,22 +47,35 @@ jobs:
           skip-dirs: .git,build,coverage,docs,unittests,smpte
           skip-files: pom.xml
 
+      - name: Run Trivy vulnerability scanner in repo mode for policy checks
+        id: trivy_json
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: fs
+          cache: "false"
+          ignore-unfixed: true
+          format: json
+          output: trivy-results.json
+          severity: HIGH,CRITICAL
+          skip-dirs: .git,build,coverage,docs,unittests,smpte
+          skip-files: pom.xml
+          skip-setup-trivy: true
+
       - name: Comment Trivy findings on PR
-        if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+        if: ${{ always() && github.event_name == 'pull_request' && github.event.action != 'closed' }}
         uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
-            const sarif = JSON.parse(fs.readFileSync('trivy-results.sarif', 'utf8'));
-            
-            if (!sarif.runs || sarif.runs.length === 0 || !sarif.runs[0].results) {
-              console.log('No Trivy issues found');
+            if (!fs.existsSync('trivy-results.json')) {
+              console.log('No Trivy results file found; skipping PR comment');
               return;
             }
+            const report = JSON.parse(fs.readFileSync('trivy-results.json', 'utf8'));
             
-            const results = sarif.runs[0].results;
-            if (results.length === 0) {
-              console.log('No HIGH/CRITICAL issues found');
+            if (!report.Results || report.Results.length === 0) {
+              console.log('No Trivy issues found');
               return;
             }
             
@@ -69,19 +84,24 @@ jobs:
               marker,
               '## 🔒 Trivy Security Scan - HIGH/CRITICAL Issues',
               '',
-              '| Severity | Component | Issue |',
-              '| --- | --- | --- |'
+              '| Severity | Component | Installed | Fixed | Issue |',
+              '| --- | --- | --- | --- | --- |'
             ];
             
-            results.forEach(result => {
-              const severity = result.level || 'UNKNOWN';
-              const ruleId = result.ruleId || 'N/A';
-              const message = result.message?.text || 'No description';
-              lines.push(`| ${severity} | \`${ruleId}\` | ${message} |`);
-            });
+            for (const result of report.Results) {
+              const target = result.Target || 'N/A';
+              for (const vuln of result.Vulnerabilities || []) {
+                const severity = vuln.Severity || 'UNKNOWN';
+                const ruleId = vuln.VulnerabilityID || 'N/A';
+                const installed = vuln.InstalledVersion || 'N/A';
+                const fixed = vuln.FixedVersion || 'none';
+                const message = vuln.Title || 'No description';
+                lines.push(`| ${severity} | \`${ruleId}\` | ${target} | ${installed} | ${fixed} | ${message} |`);
+              }
+            }
             
             lines.push('');
-            lines.push(`Found ${results.length} HIGH/CRITICAL issue(s). Please review and fix before merge.`);
+            lines.push('Findings with a fixed version will fail the workflow. Findings without a fixed version fail only when the vulnerable target is new in this PR.');
             
             const body = lines.join('\n');
             const { owner, repo } = context.repo;
@@ -102,11 +122,71 @@ jobs:
             }
 
       - name: Upload SARIF results to Security tab
-        if: ${{ github.event_name != 'pull_request' || github.event.action == 'closed' }}
+        if: ${{ always() && (github.event_name != 'pull_request' || github.event.action == 'closed') && hashFiles('trivy-results.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results.sarif
           category: Trivy Scan Results
+
+      - name: Enforce Trivy policy
+        if: ${{ always() }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+
+            if (!fs.existsSync('trivy-results.json')) {
+              core.setFailed('Trivy JSON report missing; cannot evaluate vulnerability policy.');
+              return;
+            }
+
+            const report = JSON.parse(fs.readFileSync('trivy-results.json', 'utf8'));
+            const results = report.Results || [];
+            const isPullRequest = Boolean(context.payload.pull_request && context.payload.pull_request.number);
+            let changedFiles = [];
+
+            if (isPullRequest) {
+              const { owner, repo } = context.repo;
+              const pull_number = context.payload.pull_request.number;
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner,
+                repo,
+                pull_number,
+                per_page: 100,
+              });
+              changedFiles = files.map((file) => file.filename);
+            }
+
+            const touchedByPr = (target) => {
+              if (!isPullRequest || !target) {
+                return false;
+              }
+              return changedFiles.some((file) => file === target || file.endsWith(target) || target.endsWith(file));
+            };
+
+            const blockers = [];
+
+            for (const result of results) {
+              const target = result.Target || 'N/A';
+              for (const vuln of result.Vulnerabilities || []) {
+                const fixedVersion = (vuln.FixedVersion || '').trim();
+                if (fixedVersion) {
+                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} in ${target} has a fixed version (${fixedVersion})`);
+                  continue;
+                }
+
+                if (touchedByPr(target)) {
+                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} in ${target} was introduced or modified in this PR and has no fixed version`);
+                }
+              }
+            }
+
+            if (blockers.length > 0) {
+              core.setFailed([
+                'Trivy policy blocked this PR:',
+                ...blockers.map((entry) => `- ${entry}`),
+              ].join('\n'));
+            }
 
   report_security:
     name: Report Security Results
