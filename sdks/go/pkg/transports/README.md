@@ -27,6 +27,7 @@ import (
     "syscall"
 
     "github.com/rossvideo/catena/sdks/go/pkg/catena"
+    "github.com/rossvideo/catena/sdks/go/pkg/config"
     "github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
@@ -38,11 +39,11 @@ func main() {
         return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeUnimplemented, "implement me")
     })
 
-    if err := srv.RegisterTransport(transports.NewDefaultGrpcTransport()); err != nil {
+    if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcOptions())); err != nil {
         panic(err)
     }
 
-    rest := transports.NewDefaultRestTransport()
+    rest := transports.NewRestTransport(config.DefaultRestOptions())
     if err := srv.RegisterTransport(rest); err != nil {
         panic(err)
     }

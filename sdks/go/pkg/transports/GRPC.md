@@ -5,9 +5,9 @@
 ## Constructor
 
 ```go
-grpcTransport := transports.NewGrpcTransport(6254, false)
-// or
-grpcTransport := transports.NewDefaultGrpcTransport() // 6254, reflection disabled
+grpcTransport := transports.NewGrpcTransport(config.GrpcOptions{Port: 6254, Reflection: false})
+// or with defaults
+grpcTransport := transports.NewGrpcTransport(config.DefaultGrpcOptions())
 ```
 
 Register it on the shared server:
@@ -96,7 +96,7 @@ In production mode, detailed error text is sanitized to status code names.
 Reflection can be enabled at construction time:
 
 ```go
-grpcTransport := transports.NewGrpcTransport(6254, true)
+grpcTransport := transports.NewGrpcTransport(config.GrpcOptions{Port: 6254, Reflection: true})
 ```
 
 When enabled, tools such as `grpcurl` can discover services and methods dynamically.
