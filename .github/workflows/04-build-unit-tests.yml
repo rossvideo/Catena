@@ -228,7 +228,6 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: tools/codegen/package-lock.json, smpte/tools/package-lock.json
       
       - name: Build SMPTE artifacts
         shell: bash

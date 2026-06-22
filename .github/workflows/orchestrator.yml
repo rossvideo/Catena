@@ -25,7 +25,6 @@ name: "Orchestrator CI"
 jobs:
   stage1_toolchain_delta:
     name: "1 - Delta Toolchains"
-    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
     uses: ./.github/workflows/01-toolchain-delta.yml
     with:
       run_mode: ${{ github.event_name == 'workflow_dispatch' && (inputs.force_toolchain_update && 'force' || 'manual') || 'pr' }}
