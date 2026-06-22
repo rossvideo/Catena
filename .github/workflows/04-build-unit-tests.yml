@@ -161,17 +161,20 @@ jobs:
           set -euo pipefail
           export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
 
+          echo "Building OpenAPI"
           cd "${GITHUB_WORKSPACE}/smpte"
           ./build-openapi.sh
+          echo "Done building OpenAPI"
 
           mkdir -p "${BUILD_TARGET}"
           cd "${GITHUB_WORKSPACE}/sdks/go"
           git config --global --add safe.directory /__w/Catena/Catena
           "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
-          make
+
           set -o pipefail
           run_go_tests() {
-            go test -v ./... 2>&1 | tee "${BUILD_TARGET}/go-test.log"
+            cd "${GITHUB_WORKSPACE}/sdks/go"
+            make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html 2>&1 | tee "${BUILD_TARGET}/go-test.log"
           }
           if ! run_go_tests; then
             echo "Go tests failed on first attempt; retrying once..."
