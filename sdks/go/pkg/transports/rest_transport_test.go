@@ -502,6 +502,9 @@ func TestRestTransport_GetAsset_Route(t *testing.T) {
 	asset, _ := catena.ToAsset(dp, true)
 
 	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+		if fqoid != "logo" {
+			t.Errorf("expected fqoid 'logo', got %s", fqoid)
+		}
 		return catena.Reply(asset)
 	}
 
@@ -1345,6 +1348,9 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	asset, _ := catena.ToAsset(dp, true)
 
 	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+		if fqoid != "test.txt" {
+			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
+		}
 		return catena.Reply(asset)
 	}
 
@@ -1376,6 +1382,9 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	asset, _ := catena.ToAsset(dp, true)
 
 	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+		if fqoid != "test.txt" {
+			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
+		}
 		return catena.Reply(asset)
 	}
 
@@ -1410,6 +1419,9 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T)
 	asset, _ := catena.ToAsset(dp, true)
 
 	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+		if fqoid != "test.txt" {
+			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
+		}
 		return catena.Reply(asset)
 	}
 
@@ -1707,8 +1719,8 @@ func TestRestTransport_ParamInfo_UnaryRoute(t *testing.T) {
 		handlerCalled = true
 		// Mirroring the C++ controller, REST builds the fqoid by prepending "/"
 		// to each path segment after the endpoint.
-		if oidPrefix != "/text_box" {
-			t.Errorf("expected oidPrefix '/text_box', got %s", oidPrefix)
+		if oidPrefix != "text_box" {
+			t.Errorf("expected oidPrefix 'text_box', got %s", oidPrefix)
 		}
 		if recursive {
 			t.Error("expected recursive=false for unary call")
@@ -1752,8 +1764,8 @@ func TestRestTransport_ParamInfo_NestedFqoid(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/parent/child", "")
 	assertStatus(t, rec, http.StatusOK)
-	if receivedOidPrefix != "/parent/child" {
-		t.Errorf("expected oidPrefix '/parent/child', got %s", receivedOidPrefix)
+	if receivedOidPrefix != "parent/child" {
+		t.Errorf("expected oidPrefix 'parent/child', got %s", receivedOidPrefix)
 	}
 }
 
@@ -1870,8 +1882,8 @@ func TestRestTransport_ParamInfo_StreamRoute(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		if oidPrefix != "/parent" {
-			t.Errorf("expected oidPrefix '/parent', got %s", oidPrefix)
+		if oidPrefix != "parent" {
+			t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
 		}
 		if !recursive {
 			t.Error("expected recursive=true")
