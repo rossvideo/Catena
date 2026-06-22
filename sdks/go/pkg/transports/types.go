@@ -41,8 +41,10 @@ package transports
 
 import "github.com/rossvideo/catena/sdks/go/pkg/config"
 
-// GrpcOptions configures a GrpcTransport (listen port and reflection support).
 type GrpcOptions = config.GrpcOptions
-
-// RestOptions configures a RestTransport (listen port).
 type RestOptions = config.RestOptions
+
+var (
+	DefaultGrpcOptions = config.DefaultGrpcOptions
+	DefaultRestOptions = config.DefaultRestOptions
+)

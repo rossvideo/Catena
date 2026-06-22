@@ -56,6 +56,4 @@ var (
 	DefaultServerOptions        = config.DefaultServerOptions
 	DefaultJwtValidationOptions = config.DefaultJwtValidationOptions
 	DefaultDashboardOptions     = config.DefaultDashboardOptions
-	DefaultGrpcOptions          = config.DefaultGrpcOptions
-	DefaultRestOptions          = config.DefaultRestOptions
 )
