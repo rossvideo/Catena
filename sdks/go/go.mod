@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	github.com/MicahParks/jwkset v0.5.19 // indirect
+	github.com/MicahParks/jwkset v0.6.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/text v0.32.0 // indirect

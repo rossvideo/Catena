@@ -149,5 +149,8 @@
         "span": "cpp",
         "typeindex": "cpp"
     },
-    "java.compile.nullAnalysis.mode": "disabled"
+    "java.compile.nullAnalysis.mode": "disabled",
+    "chat.tools.terminal.autoApprove": {
+        "npm install": true
+    }
 }

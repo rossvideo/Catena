@@ -8,6 +8,9 @@
         "node": "^20.7.0",
         "yaml": "^2.8.3"
     },
+    "overrides": {
+        "fast-uri": "3.1.2"
+    },
     "scripts": {
         "clang-format": "find . -regex '.*\\.\\(cpp\\|h\\|js\\|json\\|java\\)' -exec clang-format -style=file -i {} \\;",
         "clang-format-windows": "powershell -NoProfile -ExecutionPolicy Unrestricted -Command scripts/clang-format.ps1"
