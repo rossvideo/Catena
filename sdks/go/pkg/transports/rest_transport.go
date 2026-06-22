@@ -166,7 +166,7 @@ func (t *RestTransport) isDevMode() bool {
 func (t *RestTransport) writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := ToHTTPStatus(result.Code)
 
-	if result.Error != "" {
+	if result.IsError() {
 		// Set status code BEFORE writing error body
 		w.WriteHeader(httpStatus)
 
@@ -212,7 +212,7 @@ func (t *RestTransport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg str
 // is a route-level choice, not a handler outcome, so it lives here in the
 // transport rather than in StatusCode.
 func (t *RestTransport) writeHTTPStatusResultNoBody(w http.ResponseWriter, result catena.StatusResult) {
-	if result.Code == catena.StatusCodeOk && result.Error == "" {
+	if result.IsOk() {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -227,7 +227,7 @@ func (t *RestTransport) writeHTTPStatusResult(w http.ResponseWriter, result cate
 	// Set status code BEFORE writing body
 	w.WriteHeader(httpStatus)
 
-	if result.Error != "" {
+	if result.IsError() {
 		// Only return detailed error messages in dev mode
 		if t.isDevMode() {
 			json.NewEncoder(w).Encode(map[string]string{"error": result.Error})
@@ -399,7 +399,7 @@ func (t *RestTransport) registerRoutes() {
 
 		slotStr := parts[2]
 		slot, err := catena.ValidateSlotString(slotStr)
-		if err.Code != catena.StatusCodeOk {
+		if err.IsError() {
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid slot number")
 			t.writeHTTPResult(w, res, val)
 			return
@@ -409,8 +409,8 @@ func (t *RestTransport) registerRoutes() {
 		if len(parts) == 3 && r.Method == http.MethodGet {
 			// GET /st2138-api/v1/{slot} - Get device info
 			transportContext := t.retrieveMetadataFromRequest(r)
-			device, res := t.runtime.InvokeGetDeviceHandler(slot, transportContext)
-			t.writeHTTPResult(w, res, device)
+			device, result := t.runtime.InvokeGetDeviceHandler(slot, transportContext)
+			t.writeHTTPResult(w, result, device)
 			return
 		}
 
@@ -480,10 +480,9 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 
 	logger.Info("GetPopulatedSlots")
 	transportContext := t.retrieveMetadataFromRequest(r)
-	slots, err := t.runtime.GetSlots(transportContext)
-	if err.Code != catena.StatusCodeOk {
-		val, res := catena.ReplyError[catena.Value](err.Code, err.Error)
-		t.writeHTTPResult(w, res, val)
+	slots, result := t.runtime.GetSlots(transportContext)
+	if result.IsError() {
+		t.writeHTTPResult(w, result, nil)
 		return
 	}
 	uint32Slots := make([]uint32, len(slots))
@@ -568,9 +567,9 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 
 	fqoid := strings.Join(pathParts, "/")
 	transportContext := t.retrieveMetadataFromRequest(r)
-	asset, res := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
+	asset, result := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
 
-	if res.Error == "" {
+	if result.IsOk() {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
 			targetEncoding, encRes := catena.ParsePayloadEncoding(compressionStr)
 			if encRes.Code != catena.StatusCodeOk {
@@ -587,7 +586,7 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	t.writeHTTPResult(w, res, asset)
+	t.writeHTTPResult(w, result, asset)
 }
 
 // handleParamInfoEndpoint handles param info requests and streaming (SSE).
@@ -623,9 +622,9 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	infos, res := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
-	if res.Code != catena.StatusCodeOk {
-		t.writeHTTPStatusResult(w, res)
+	infos, result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
@@ -722,9 +721,9 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	cmdResult, res := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
-	if res.Code != catena.StatusCodeOk {
-		t.writeHTTPResult(w, res, catena.Value{})
+	cmdResult, status := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
+	if status.IsError() {
+		t.writeHTTPResult(w, status, catena.Value{})
 		return
 	}
 

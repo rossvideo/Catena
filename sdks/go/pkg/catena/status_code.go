@@ -53,6 +53,14 @@ type StatusResult struct {
 	Error string
 }
 
+func (s StatusResult) IsOk() bool {
+	return s.Code == StatusCodeOk
+}
+
+func (s StatusResult) IsError() bool {
+	return s.Code != StatusCodeOk
+}
+
 const (
 	// StatusCodeOk indicates the operation completed successfully.
 	StatusCodeOk StatusCode = 0

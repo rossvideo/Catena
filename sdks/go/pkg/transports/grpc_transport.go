@@ -266,7 +266,7 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot, transportContext)
-	if res.Error != "" {
+	if res.IsError() {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
 	}
@@ -299,7 +299,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid, transportContext)
-	if result.Error != "" {
+	if result.IsError() {
 		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
@@ -332,7 +332,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	entries := []catena.SetValueEntry{{Fqoid: fqoid, Value: nativeValue}}
 	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
-	if result.Error != "" {
+	if result.IsError() {
 		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
@@ -364,7 +364,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 	}
 
 	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
-	if result.Error != "" {
+	if result.IsError() {
 		logger.Error("MultiSetValue handler error", "slot", slot, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
@@ -385,7 +385,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
-	if result.Error != "" {
+	if result.IsError() {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
@@ -422,7 +422,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
-	if result.Error != "" {
+	if result.IsError() {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
@@ -449,10 +449,10 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	infos, res := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
-	if res.Error != "" {
-		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", res.Error)
-		return status.Error(ToGRPCCode(res.Code), res.Error)
+	infos, result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
+	if result.IsError() {
+		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
+		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
 	if len(infos) == 0 {
