@@ -60,7 +60,7 @@ jobs:
             sha256sum "$@" | sha256sum | cut -c1-12
           }
 
-          if [[ "${{ inputs.run_mode }}" == "pr" ]]; then
+          if [[ "${{ inputs.run_mode }}" == "pr" || "${{ inputs.run_mode }}" == "closed" ]]; then
             HEAD_SHA="${{ github.event.pull_request.head.sha }}"
             PR_NUMBER="${{ github.event.pull_request.number }}"
           else
@@ -82,7 +82,7 @@ jobs:
             .devcontainer/go/go.sum \
             smpte/install-tooling.sh)
 
-          if [[ "${{ inputs.run_mode }}" == "pr" ]]; then
+          if [[ "${{ inputs.run_mode }}" == "pr" || "${{ inputs.run_mode }}" == "closed" ]]; then
             echo "cpp_tag=pr-${PR_NUMBER}-${CPP_HASH}" >> "$GITHUB_OUTPUT"
             echo "go_tag=pr-${PR_NUMBER}-${GO_HASH}" >> "$GITHUB_OUTPUT"
           else
@@ -204,6 +204,22 @@ jobs:
               BUILD_GO=true
               GO_IMAGE="$GO_PR"
               GO_PUBLISH_TAG="$GO_PR"
+            fi
+          elif [[ "${{ inputs.run_mode }}" == "closed" ]]; then
+            if image_exists "$CPP_DEVELOP"; then
+              CPP_IMAGE="$CPP_DEVELOP"
+            else
+              BUILD_CPP=true
+              CPP_IMAGE="$CPP_DEVELOP"
+              CPP_PUBLISH_TAG="$CPP_DEVELOP"
+            fi
+
+            if image_exists "$GO_DEVELOP"; then
+              GO_IMAGE="$GO_DEVELOP"
+            else
+              BUILD_GO=true
+              GO_IMAGE="$GO_DEVELOP"
+              GO_PUBLISH_TAG="$GO_DEVELOP"
             fi
           else
             if [[ "${{ needs.detect.outputs.cpp_changed }}" == "true" ]]; then

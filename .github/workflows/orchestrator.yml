@@ -27,7 +27,7 @@ jobs:
     name: "1 - Delta Toolchains"
     uses: ./.github/workflows/01-toolchain-delta.yml
     with:
-      run_mode: ${{ github.event_name == 'workflow_dispatch' && (inputs.force_toolchain_update && 'force' || 'manual') || 'pr' }}
+      run_mode: ${{ github.event_name == 'workflow_dispatch' && (inputs.force_toolchain_update && 'force' || 'manual') || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged && 'pr' || github.event_name == 'pull_request' && github.event.action == 'closed' && 'closed' || 'pr') }}
 
   stage2_security:
     name: "2 - Security Scanning"
