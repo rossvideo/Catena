@@ -34,7 +34,7 @@ jobs:
 
       - name: Detect changed paths
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             cpp:
@@ -131,7 +131,7 @@ jobs:
 
       - name: Upload C++ test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: unit-test-summary-cpp
           path: cpp-test-summary.md
@@ -203,7 +203,7 @@ jobs:
 
       - name: Upload Go test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: unit-test-summary-go
           path: go-test-summary.md
@@ -228,7 +228,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: tools/package-lock.json
+          cache-dependency-path: tools/codegen/package-lock.json
       
       - name: Build SMPTE artifacts
         shell: bash
@@ -274,7 +274,7 @@ jobs:
                   tests = int(root.attrib.get('tests', 0))
                   failures = int(root.attrib.get('failures', 0))
                   errors = int(root.attrib.get('errors', 0))
-                skipped = int(root.attrib.get('skipped', 0))
+                  skipped = int(root.attrib.get('skipped', 0))
               else:
                   tests = int(root.attrib.get('tests', 0))
                   failures = int(root.attrib.get('failures', 0))
@@ -292,7 +292,7 @@ jobs:
 
       - name: Upload JS test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: unit-test-summary-js
           path: js-test-summary.md
@@ -309,7 +309,7 @@ jobs:
     steps:
       - name: Download unit test summaries
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: unit-test-summary-*
           path: unit-test-summaries
@@ -360,7 +360,7 @@ jobs:
           } > unit-test-comment.md
 
       - name: Comment on unit test results
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');

@@ -1,6 +1,8 @@
 name: "03 CodeQL Analysis"
 
 "on":
+  push:
+    branches: ["develop"]
   workflow_call:
     inputs:
       cpp_image:
@@ -31,10 +33,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Configure git safe directory
+        shell: bash
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: c-cpp
+          build-mode: manual
 
       - name: Build C++
         shell: bash
@@ -82,6 +89,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Configure git safe directory
+        shell: bash
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Install file utility
         run: sudo apt-get update && sudo apt-get install -y file
 
@@ -89,6 +100,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: go
+          build-mode: manual
 
       - name: Build Go
         shell: bash
@@ -101,7 +113,6 @@ jobs:
 
           mkdir -p "${BUILD_TARGET}"
           cd "${GITHUB_WORKSPACE}/sdks/go"
-          git config --global --add safe.directory /__w/Catena/Catena
           "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
           make
 
@@ -129,6 +140,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: javascript
+          build-mode: none
 
       - name: Analyze JavaScript
         uses: github/codeql-action/analyze@v4
@@ -146,7 +158,7 @@ jobs:
     steps:
       - name: Comment on CodeQL failures
         if: ${{ needs.codeql_cpp.result != 'success' || needs.codeql_go.result != 'success' || needs.codeql_js.result != 'success' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const marker = '<!-- ci-comment:codeql -->';

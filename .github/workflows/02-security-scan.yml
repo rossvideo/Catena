@@ -37,6 +37,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: fs
+          cache: "false"
           ignore-unfixed: true
           format: sarif
           output: trivy-results.sarif
@@ -46,7 +47,7 @@ jobs:
 
       - name: Comment Trivy findings on PR
         if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -118,7 +119,7 @@ jobs:
     steps:
       - name: Comment on security failures
         if: ${{ needs.verify_dependabot.result != 'success' || needs.trivy.result != 'success' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const marker = '<!-- ci-comment:security -->';
