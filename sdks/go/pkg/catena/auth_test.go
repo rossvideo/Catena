@@ -424,7 +424,7 @@ func TestExtractTokenScopes_NonMapClaims(t *testing.T) {
 
 	readScopes, writeScopes, status := extractTokenScopes(token)
 
-	if status.IsError() {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK status, got %v", status)
 	}
 	if len(readScopes) != 0 {
@@ -444,7 +444,7 @@ func TestExtractTokenScopes_MissingScopeClaim(t *testing.T) {
 
 	readScopes, writeScopes, status := extractTokenScopes(token)
 
-	if status.IsError() {
+	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK status, got %v", status)
 	}
 	if len(readScopes) != 0 {

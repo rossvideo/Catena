@@ -200,7 +200,7 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 // ToAsset converts DataPayload to Asset by building the proto directly
 func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 	protoPayload, res := dataPayloadToProto(dp)
-	if res.IsError() {
+	if res.Code != StatusCodeOk {
 		return Asset{asset: nil}, res
 	}
 

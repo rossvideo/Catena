@@ -97,7 +97,7 @@ const (
 
 func ToValue(v any) (Value, StatusResult) {
 	val, res := ToProto(v)
-	if res.IsError() {
+	if res.Code != StatusCodeOk {
 		return Value{}, StatusResult{Code: res.Code, Error: "ToValue: " + res.Error}
 	}
 	return Value{Value: val}, StatusResult{Code: StatusCodeOk}
@@ -111,7 +111,7 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	switch val := v.(type) {
 	case DataPayload:
 		pdp, res := dataPayloadToProto(val)
-		if res.IsError() {
+		if res.Code != StatusCodeOk {
 			return nil, res
 		}
 		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}, StatusResult{Code: StatusCodeOk}
@@ -138,7 +138,7 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 		fields := make(map[string]*protos.Value)
 		for k, v := range val {
 			res, sr := ToProto(v)
-			if sr.IsError() {
+			if sr.Code != StatusCodeOk {
 				return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert map field %s: %s", k, sr.Error)}
 			}
 			fields[k] = res
@@ -153,7 +153,7 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 			fields := make(map[string]*protos.Value)
 			for k, v := range m {
 				res, sr := ToProto(v)
-				if sr.IsError() {
+				if sr.Code != StatusCodeOk {
 					return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert map field %s: %s", k, sr.Error)}
 				}
 				fields[k] = res
@@ -166,7 +166,7 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil StructVariantValue.Value"}
 		}
 		protoVal, sr := ToProto(val.Value)
-		if sr.IsError() {
+		if sr.Code != StatusCodeOk {
 			return nil, StatusResult{Code: sr.Code, Error: "failed to convert StructVariantValue.Value: " + sr.Error}
 		}
 		return &protos.Value{Kind: &protos.Value_StructVariantValue{StructVariantValue: &protos.StructVariantValue{
@@ -180,7 +180,7 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 		var structVariants []*protos.StructVariantValue
 		for _, sv := range val {
 			protoVal, sr := ToProto(sv.Value)
-			if sr.IsError() {
+			if sr.Code != StatusCodeOk {
 				return nil, StatusResult{Code: sr.Code, Error: "failed to convert StructVariantValue.Value in array: " + sr.Error}
 			}
 			structVariants = append(structVariants, &protos.StructVariantValue{
@@ -240,7 +240,7 @@ func FromProto(pv *protos.Value) (any, StatusResult) {
 		m := make(map[string]any, len(fields))
 		for k, v := range fields {
 			val, sr := FromProto(v)
-			if sr.IsError() {
+			if sr.Code != StatusCodeOk {
 				return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert struct field %s: %s", k, sr.Error)}
 			}
 			m[k] = val
@@ -254,7 +254,7 @@ func FromProto(pv *protos.Value) (any, StatusResult) {
 			m := make(map[string]any, len(fields))
 			for k, v := range fields {
 				val, sr := FromProto(v)
-					if sr.IsError() {
+				if sr.Code != StatusCodeOk {
 					return nil, StatusResult{Code: sr.Code, Error: fmt.Sprintf("failed to convert struct field %s: %s", k, sr.Error)}
 				}
 				m[k] = val
@@ -265,7 +265,7 @@ func FromProto(pv *protos.Value) (any, StatusResult) {
 	case *protos.Value_StructVariantValue:
 		sv := pv.GetStructVariantValue()
 		val, sr := FromProto(sv.GetValue())
-		if sr.IsError() {
+		if sr.Code != StatusCodeOk {
 			return nil, StatusResult{Code: sr.Code, Error: "failed to convert struct variant value: " + sr.Error}
 		}
 		return StructVariantValue{
@@ -277,7 +277,7 @@ func FromProto(pv *protos.Value) (any, StatusResult) {
 		arr := make([]StructVariantValue, 0, len(list))
 		for _, sv := range list {
 			val, sr := FromProto(sv.GetValue())
-			if sr.IsError() {
+			if sr.Code != StatusCodeOk {
 				return nil, StatusResult{Code: sr.Code, Error: "failed to convert struct variant value: " + sr.Error}
 			}
 			arr = append(arr, StructVariantValue{

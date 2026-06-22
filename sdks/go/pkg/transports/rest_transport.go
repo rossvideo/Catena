@@ -212,7 +212,7 @@ func (t *RestTransport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg str
 // is a route-level choice, not a handler outcome, so it lives here in the
 // transport rather than in StatusCode.
 func (t *RestTransport) writeHTTPStatusResultNoBody(w http.ResponseWriter, result catena.StatusResult) {
-	if result.IsOk() {
+	if result.Code == catena.StatusCodeOk && result.Error == "" {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -342,9 +342,9 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// so one transport can shut down without impacting streams owned by others.
 	transportContext := t.retrieveMetadataFromRequest(r)
 
-	conn, result := t.runtime.RegisterTransportConnection(t, transportContext)
-	if result.IsError() {
-		val, res := catena.ReplyError[catena.Value](result.Code, result.Error)
+	conn, res := t.runtime.RegisterTransportConnection(t, transportContext)
+	if res.Code != catena.StatusCodeOk {
+		val, res := catena.ReplyError[catena.Value](res.Code, res.Error)
 		t.writeHTTPResult(w, res, val)
 		return
 	}
@@ -512,16 +512,16 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 
 	case http.MethodPut:
 		// Read request body
-		reqValue, status := ReadRequestJSON(r)
-		if status.IsError() {
-			logger.Error("failed to read request", "error", status)
+		reqValue, err := ReadRequestJSON(r)
+		if err.Code != catena.StatusCodeOk {
+			logger.Error("failed to read request", "error", err)
 			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
 			return
 		}
 
 		// Convert proto value to native Go type
 		nativeValue, errProto := catena.FromProto(reqValue)
-		if errProto.IsError() {
+		if errProto.Code != catena.StatusCodeOk {
 			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid request body")
 			t.writeHTTPResult(w, res, val)
@@ -547,9 +547,9 @@ func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	entries, status := ReadMultiSetValuesRequestJSON(r)
-	if status.IsError() {
-		logger.Error("failed to read request", "error", status)
+	entries, err := ReadMultiSetValuesRequestJSON(r)
+	if err.Code != catena.StatusCodeOk {
+		logger.Error("failed to read request", "error", err)
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
 		return
 	}
@@ -572,12 +572,12 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 	if result.IsOk() {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
 			targetEncoding, encRes := catena.ParsePayloadEncoding(compressionStr)
-			if encRes.IsError() {
+			if encRes.Code != catena.StatusCodeOk {
 				val, errRes := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, encRes.Error)
 				t.writeHTTPResult(w, errRes, val)
 				return
 			}
-			if tcRes := catena.TranscodeAssetPayload(&asset, targetEncoding); tcRes.IsError() {
+			if tcRes := catena.TranscodeAssetPayload(&asset, targetEncoding); tcRes.Code != catena.StatusCodeOk {
 				logger.Error("failed to transcode asset payload", "error", tcRes.Error)
 				val, errRes := catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to transcode payload: "+tcRes.Error)
 				t.writeHTTPResult(w, errRes, val)
@@ -703,16 +703,16 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	// Read command payload
 	var payload any
 	if r.ContentLength > 0 {
-		reqValue, status := ReadRequestJSON(r)
-		if status.IsError() {
-			logger.Error("failed to read command payload", "error", status)
+		reqValue, err := ReadRequestJSON(r)
+		if err.Code != catena.StatusCodeOk {
+			logger.Error("failed to read command payload", "error", err)
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
 			return
 		}
 		var errProto catena.StatusResult
 		payload, errProto = catena.FromProto(reqValue)
-		if errProto.IsError() {
+		if errProto.Code != catena.StatusCodeOk {
 			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
 			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
