@@ -504,7 +504,12 @@ func BuildDevices(counter *CounterState, slotParams map[uint16]*sync.Map) map[ui
 }
 
 func main() {
-	options, err := config.InitOptions("oneofeverything", os.Args[1:])
+	defaultOptions := catena.DefaultRuntimeOptions()
+	// customize the dashboard defaults
+	defaultOptions.Dashboard.NodeID = "one-of-everything-a4:bb:6d:6a:6f:a3"
+	defaultOptions.Dashboard.NodeName = "One of Everything Demo"
+
+	options, err := config.InitOptions("oneofeverything", os.Args[1:], config.WithDefaults(defaultOptions))
 	if err != nil {
 		if errors.Is(err, config.ErrHelp) {
 			os.Exit(0)
@@ -856,13 +861,6 @@ func main() {
 	// Advertises this device so DashBoard can resolve and populate the
 	// connection dialog. Works for both REST and gRPC devices.
 	dashboardOpts := options.Dashboard
-	dashboardOpts.Protocol = catena.ProtocolST2138Rest
-	if options.UseGrpc {
-		dashboardOpts.Protocol = catena.ProtocolST2138Grpc
-	}
-	dashboardOpts.RefreshInterval = 30000
-	dashboardOpts.NodeName = "One of Everything Demo"
-	dashboardOpts.NodeID = "one-of-everything-a4:bb:6d:6a:6f:a3"
 	connectionProps := catena.NewConnectionProps(dashboardOpts)
 	connectionPropsURL := fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint())
 	if err := connectionProps.Start(); err != nil {
