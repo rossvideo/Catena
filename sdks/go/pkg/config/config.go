@@ -50,9 +50,26 @@ import (
 type RuntimeOptions struct {
 	UseGrpc   bool `env:"USE_GRPC" flag:"use-grpc"`
 	UseRest   bool `env:"USE_REST" flag:"use-rest"`
+	Rest      RestOptions
+	Grpc      GrpcOptions
 	Server    ServerOptions
 	Logger    LoggerOptions
 	Dashboard DashboardOptions
+}
+
+// RestOptions configures the REST transport.
+type RestOptions struct {
+	// Port is the TCP port the REST/HTTP server listens on (default 9080).
+	Port int `env:"REST_PORT" flag:"rest-port"`
+}
+
+// GrpcOptions configures the gRPC transport.
+type GrpcOptions struct {
+	// Port is the TCP port the gRPC server listens on (default 6254).
+	Port int `env:"GRPC_PORT" flag:"grpc-port"`
+	// Reflection enables the gRPC server reflection service, which lets tools
+	// like grpcurl discover services at runtime (default false).
+	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
 }
 
 type ServerOptions struct {
@@ -157,6 +174,8 @@ func defaultRuntimeOptions() RuntimeOptions {
 	return RuntimeOptions{
 		UseGrpc:   false,
 		UseRest:   false,
+		Rest:      DefaultRestOptions(),
+		Grpc:      DefaultGrpcOptions(),
 		Server:    DefaultServerOptions(),
 		Logger:    DefaultLoggerOptions(),
 		Dashboard: DefaultDashboardOptions(),
@@ -176,6 +195,14 @@ func DefaultDashboardOptions() DashboardOptions {
 		ServiceName:     "service:catena-device",
 		Endpoint:        "/connect/connection-props.xml",
 	}
+}
+
+func DefaultRestOptions() RestOptions {
+	return RestOptions{Port: 9080}
+}
+
+func DefaultGrpcOptions() GrpcOptions {
+	return GrpcOptions{Port: 6254, Reflection: false}
 }
 
 func DefaultServerOptions() ServerOptions {
@@ -213,6 +240,8 @@ func DefaultLoggerOptions() LoggerOptions {
 
 // make sure all options types implement slog.LogValuer for structured logging of the config
 var _ slog.LogValuer = RuntimeOptions{}
+var _ slog.LogValuer = RestOptions{}
+var _ slog.LogValuer = GrpcOptions{}
 var _ slog.LogValuer = ServerOptions{}
 var _ slog.LogValuer = JwtValidationOptions{}
 var _ slog.LogValuer = LoggerOptions{}
@@ -249,6 +278,19 @@ func (o LoggerOptions) LogValue() slog.Value {
 	)
 }
 
+func (o RestOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+	)
+}
+
+func (o GrpcOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+		slog.Bool("reflection", o.Reflection),
+	)
+}
+
 func (o DashboardOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("service_hostname", o.ServiceHostname),
@@ -268,6 +310,8 @@ func (o RuntimeOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Bool("use_grpc", o.UseGrpc),
 		slog.Bool("use_rest", o.UseRest),
+		slog.Any("rest", o.Rest),
+		slog.Any("grpc", o.Grpc),
 		slog.Any("server", o.Server),
 		slog.Any("logger", o.Logger),
 		slog.Any("dashboard", o.Dashboard),

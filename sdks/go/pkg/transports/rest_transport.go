@@ -50,6 +50,7 @@ import (
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -64,26 +65,18 @@ type RestTransport struct {
 	fallbackHandler FallbackHandler
 
 	port int
-
-	// future configs
-	// tls: TlsConfig etc.
 }
 
 var _ catena.Transport = (*RestTransport)(nil)
 
-func NewRestTransport(port int) *RestTransport {
+// NewRestTransport creates a new REST transport with the given configuration.
+func NewRestTransport(cfg config.RestOptions) *RestTransport {
 	t := &RestTransport{
-		port: port,
+		port: cfg.Port,
 		mux:  http.NewServeMux(),
 	}
 	t.registerRoutes()
 	return t
-}
-
-func NewDefaultRestTransport() *RestTransport {
-	return NewRestTransport(
-		9080, // port
-	)
 }
 
 // Start starts the HTTP server on the specified port using this server's mux
