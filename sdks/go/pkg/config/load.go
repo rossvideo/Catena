@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -90,6 +90,10 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 		// runtime options
 		extractBool("USE_GRPC", "use-grpc", "Enable gRPC transport", &opts.UseGrpc).
 		extractBool("USE_REST", "use-rest", "Enable REST transport", &opts.UseRest).
+		// transport options
+		extractInt("REST_PORT", "rest-port", "Port the REST transport listens on", &opts.Rest.Port).
+		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
+		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
 		//server options
 		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		extractBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
@@ -98,6 +102,16 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 		extractString("JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
 		extractString("JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
 		extractBool("JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
+		// DashBoard connection-props options
+		extractString("DASHBOARD_SERVICE_HOSTNAME", "dashboard-service-hostname", "Advertised hostname/address for DashBoard connection props", &opts.Dashboard.ServiceHostname).
+		extractInt("DASHBOARD_PORT", "dashboard-port", "Port for the DashBoard connection-props HTTP server", &opts.Dashboard.Port).
+		extractInt("DASHBOARD_SERVICE_PORT", "dashboard-service-port", "Catena service port advertised to DashBoard", &opts.Dashboard.ServicePort).
+		extractBool("DASHBOARD_SERVICE_TLS_ENABLED", "dashboard-service-tls-enabled", "Whether the advertised DashBoard connection uses TLS", &opts.Dashboard.ServiceTLS).
+		extractConnectionProtocol("DASHBOARD_PROTOCOL", "dashboard-protocol", "Transport advertised to DashBoard (st2138-rest, st2138-grpc, catena)", &opts.Dashboard.Protocol).
+		extractString("DASHBOARD_SERVICE_NAME", "dashboard-service-name", "Advertised service URL for DashBoard connection props", &opts.Dashboard.ServiceName).
+		extractString("DASHBOARD_NODE_NAME", "dashboard-node-name", "Human-readable node name advertised to DashBoard", &opts.Dashboard.NodeName).
+		extractString("DASHBOARD_NODE_ID", "dashboard-node-id", "Unique node identifier advertised to DashBoard", &opts.Dashboard.NodeID).
+		extractString("DASHBOARD_ENDPOINT", "dashboard-endpoint", "Path served by the DashBoard connection-props HTTP server", &opts.Dashboard.Endpoint).
 		// logging options
 		extractBool("SILENT", "silent", "Suppress all log output", &opts.Logger.Silent).
 		extractString("LOG_DIR", "log-dir", "Directory for log files", &opts.Logger.LogDir).
@@ -192,6 +206,20 @@ func (l *configLoader) extractString(envName, cliName, usage string, val *string
 	// dummy passthrough parser func
 	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, func(s string) (string, error) {
 		return s, nil
+	})
+	return l
+}
+
+func (l *configLoader) extractConnectionProtocol(envName, cliName, usage string, val *ConnectionProtocol) *configLoader {
+	// custom parser that validates the protocol against the known values
+	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, func(s string) (ConnectionProtocol, error) {
+		switch ConnectionProtocol(s) {
+		case ProtocolST2138Rest, ProtocolST2138Grpc, ProtocolST2138Catena:
+			return ConnectionProtocol(s), nil
+		default:
+			return "", fmt.Errorf("%q is not a valid protocol (valid: %s, %s, %s)", s,
+				ProtocolST2138Rest, ProtocolST2138Grpc, ProtocolST2138Catena)
+		}
 	})
 	return l
 }
