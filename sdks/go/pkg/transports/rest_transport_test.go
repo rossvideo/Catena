@@ -53,13 +53,13 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/protobuf/proto"
 )
 
 func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
-	// create and start the transport
-	transport := NewRestTransport(8080)
+	transport := NewRestTransport(config.RestOptions{Port: 8080})
 	stubRuntime := makeStubServerRuntime(tb)
 	stubRuntime.isDev = true
 	transport.runtime = stubRuntime
@@ -68,7 +68,7 @@ func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
 
 func TestRestTransport_NewRestTransport(t *testing.T) {
 	expected := 1234
-	transport := NewRestTransport(expected)
+	transport := NewRestTransport(config.RestOptions{Port: expected})
 	if transport == nil {
 		t.Fatal("NewRestTransport returned nil")
 	}
@@ -77,10 +77,11 @@ func TestRestTransport_NewRestTransport(t *testing.T) {
 	}
 }
 
-func TestRestTransport_NewDefaultTransport(t *testing.T) {
-	transport := NewDefaultRestTransport()
+func TestRestTransport_DefaultRestOptions(t *testing.T) {
+	cfg := config.DefaultRestOptions()
+	transport := NewRestTransport(cfg)
 	if transport == nil {
-		t.Fatal("NewDefaultRestTransport returned nil")
+		t.Fatal("NewRestTransport returned nil")
 	}
 	if transport.port != 9080 {
 		t.Errorf("expected default port 9080, got %d", transport.port)

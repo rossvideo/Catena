@@ -247,6 +247,155 @@ func TestInitOptions(t *testing.T) {
 	})
 }
 
+// TestInitOptions_Transport groups the transport-related option resolution
+// (REST/gRPC ports, gRPC reflection, and the UseRest/UseGrpc toggles) into a
+// single collapsible test so the env-var, default, and CLI-override behaviour
+// can be browsed together.
+func TestInitOptions_Transport(t *testing.T) {
+	// init runs InitOptionsPrefix with the shared test app/prefix, failing the
+	// test if loading errors.
+	init := func(t *testing.T, args ...string) RuntimeOptions {
+		t.Helper()
+		opts, err := InitOptionsPrefix("test_app", "TESTCFG", args)
+		if err != nil {
+			t.Fatalf("InitOptionsPrefix() failed: %v", err)
+		}
+		return opts
+	}
+
+	t.Run("rest port from env", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_PORT", "9090")
+		if opts := init(t); opts.Rest.Port != 9090 {
+			t.Errorf("expected Rest.Port 9090 from env var, got %d", opts.Rest.Port)
+		}
+	})
+
+	t.Run("grpc port from env", func(t *testing.T) {
+		t.Setenv("TESTCFG_GRPC_PORT", "7000")
+		if opts := init(t); opts.Grpc.Port != 7000 {
+			t.Errorf("expected Grpc.Port 7000 from env var, got %d", opts.Grpc.Port)
+		}
+	})
+
+	// GrpcReflection uses the package's lenient bool parsing, so "1" and "yes"
+	// resolve to true (unlike the legacy strict v == "true" behaviour).
+	t.Run("grpc reflection from env", func(t *testing.T) {
+		tests := []struct {
+			value    string
+			expected bool
+		}{
+			{"true", true},
+			{"false", false},
+			{"1", true},
+			{"yes", true},
+		}
+		for _, tt := range tests {
+			t.Run(tt.value, func(t *testing.T) {
+				t.Setenv("TESTCFG_GRPC_REFLECTION", tt.value)
+				if opts := init(t); opts.Grpc.Reflection != tt.expected {
+					t.Errorf("expected Grpc.Reflection=%v for %q, got %v", tt.expected, tt.value, opts.Grpc.Reflection)
+				}
+			})
+		}
+	})
+
+	t.Run("use grpc from env", func(t *testing.T) {
+		tests := []struct {
+			value    string
+			expected bool
+		}{
+			{"true", true},
+			{"false", false},
+			{"1", true},
+		}
+		for _, tt := range tests {
+			t.Run(tt.value, func(t *testing.T) {
+				t.Setenv("TESTCFG_USE_GRPC", tt.value)
+				if opts := init(t); opts.UseGrpc != tt.expected {
+					t.Errorf("expected UseGrpc=%v for %q, got %v", tt.expected, tt.value, opts.UseGrpc)
+				}
+			})
+		}
+	})
+
+	t.Run("use rest from env", func(t *testing.T) {
+		tests := []struct {
+			value    string
+			expected bool
+		}{
+			{"true", true},
+			{"false", false},
+		}
+		for _, tt := range tests {
+			t.Run(tt.value, func(t *testing.T) {
+				t.Setenv("TESTCFG_USE_REST", tt.value)
+				if opts := init(t); opts.UseRest != tt.expected {
+					t.Errorf("expected UseRest=%v for %q, got %v", tt.expected, tt.value, opts.UseRest)
+				}
+			})
+		}
+	})
+
+	t.Run("rest port defaults when unset", func(t *testing.T) {
+		if opts := init(t); opts.Rest.Port != 9080 {
+			t.Errorf("expected default Rest.Port 9080 when env var unset, got %d", opts.Rest.Port)
+		}
+	})
+
+	t.Run("grpc port defaults when unset", func(t *testing.T) {
+		if opts := init(t); opts.Grpc.Port != 6254 {
+			t.Errorf("expected default Grpc.Port 6254 when env var unset, got %d", opts.Grpc.Port)
+		}
+	})
+
+	t.Run("transport ports are independent", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_PORT", "5001")
+		t.Setenv("TESTCFG_GRPC_PORT", "5002")
+		opts := init(t)
+		if opts.Rest.Port != 5001 {
+			t.Errorf("expected Rest.Port=5001, got %d", opts.Rest.Port)
+		}
+		if opts.Grpc.Port != 5002 {
+			t.Errorf("expected Grpc.Port=5002, got %d", opts.Grpc.Port)
+		}
+	})
+
+	t.Run("boolean fields combined", func(t *testing.T) {
+		t.Setenv("TESTCFG_USE_GRPC", "true")
+		t.Setenv("TESTCFG_USE_REST", "true")
+		t.Setenv("TESTCFG_GRPC_REFLECTION", "true")
+		opts := init(t)
+		if !opts.UseGrpc {
+			t.Error("expected UseGrpc=true")
+		}
+		if !opts.UseRest {
+			t.Error("expected UseRest=true")
+		}
+		if !opts.Grpc.Reflection {
+			t.Error("expected GrpcReflection=true")
+		}
+	})
+
+	t.Run("port boundary values", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_PORT", "1")
+		t.Setenv("TESTCFG_GRPC_PORT", "65535")
+		opts := init(t)
+		if opts.Rest.Port != 1 {
+			t.Errorf("expected Rest.Port=1 (min valid), got %d", opts.Rest.Port)
+		}
+		if opts.Grpc.Port != 65535 {
+			t.Errorf("expected Grpc.Port=65535 (max valid), got %d", opts.Grpc.Port)
+		}
+	})
+
+	t.Run("cli overrides transport port env", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_PORT", "9090")
+		if opts := init(t, "--rest-port=4444"); opts.Rest.Port != 4444 {
+			t.Errorf("expected CLI flag to override env (Rest.Port=4444), got %d", opts.Rest.Port)
+		}
+	})
+}
+
 func makeTestLoader(t *testing.T) *configLoader {
 	t.Helper()
 	return &configLoader{

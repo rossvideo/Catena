@@ -137,6 +137,10 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		// runtime options
 		extractBool("USE_GRPC", "use-grpc", "Enable gRPC transport", &opts.UseGrpc).
 		extractBool("USE_REST", "use-rest", "Enable REST transport", &opts.UseRest).
+		// transport options
+		extractInt("REST_PORT", "rest-port", "Port the REST transport listens on", &opts.Rest.Port).
+		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
+		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
 		//server options
 		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		extractBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).

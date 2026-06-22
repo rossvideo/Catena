@@ -50,6 +50,8 @@ func TestDefaultOptions(t *testing.T) {
 	opts := DefaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
+		Rest: RestOptions{Port: 9080},
+		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
 			IsDev:          false,
 			MaxConnections: 100,
@@ -147,6 +149,13 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 	want := map[string]any{
 		"use_grpc": false,
 		"use_rest": false,
+		"rest": map[string]any{
+			"port": json.Number("0"),
+		},
+		"grpc": map[string]any{
+			"port":       json.Number("0"),
+			"reflection": false,
+		},
 		"server": map[string]any{
 			"dev":             true,
 			"max_connections": json.Number("123"),
@@ -234,5 +243,18 @@ func TestJwtValidationOptions_LogValue_DefaultAllowedAlgs(t *testing.T) {
 
 	if got["allowed_algs"] != "ES256" {
 		t.Fatalf("allowed_algs mismatch: got %v, want ES256", got["allowed_algs"])
+	}
+}
+
+func TestDefaultOptions_TransportFlags(t *testing.T) {
+	opts := defaultRuntimeOptions()
+	if opts.Grpc.Reflection != false {
+		t.Errorf("expected default Grpc.Reflection=false, got %v", opts.Grpc.Reflection)
+	}
+	if opts.UseGrpc != false {
+		t.Errorf("expected default UseGrpc=false, got %v", opts.UseGrpc)
+	}
+	if opts.UseRest != false {
+		t.Errorf("expected default UseRest=false, got %v", opts.UseRest)
 	}
 }

@@ -48,6 +48,7 @@ import (
 	"net"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/grpc"
@@ -63,18 +64,18 @@ type GrpcTransport struct {
 	listener      net.Listener
 	runtime       catena.ServerRuntime
 
-	// configs maybe becomes a struct
-	port       uint16
+	port       int
 	reflection bool
 }
 
 var _ catena.Transport = (*GrpcTransport)(nil)
 
-func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
+// NewGrpcTransport creates a new gRPC transport with the given configuration.
+func NewGrpcTransport(cfg config.GrpcOptions) *GrpcTransport {
 	transport := &GrpcTransport{
 		catenaService: &catenaService{},
-		port:          port,
-		reflection:    reflectionEnabled,
+		port:          cfg.Port,
+		reflection:    cfg.Reflection,
 	}
 	transport.catenaService.transport = transport
 	transport.grpcServer = grpc.NewServer(
@@ -84,20 +85,13 @@ func NewGrpcTransport(port uint16, reflectionEnabled bool) *GrpcTransport {
 
 	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
 
-	if reflectionEnabled {
+	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
 		logger.Info("gRPC server created with reflection enabled")
 	} else {
 		logger.Info("gRPC server created")
 	}
 	return transport
-}
-
-func NewDefaultGrpcTransport() *GrpcTransport {
-	return NewGrpcTransport(
-		6254,  // default port
-		false, // reflection disabled by default for security
-	)
 }
 
 func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRuntime) error {
