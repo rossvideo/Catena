@@ -222,12 +222,6 @@ jobs:
         uses: actions/checkout@v5
         with:
           submodules: recursive
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: "npm"
       
       - name: Build SMPTE artifacts
         shell: bash
@@ -235,7 +229,7 @@ jobs:
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}/smpte"
           ./install-tooling.sh
-          npm ci
+          npm install
           ./build-openapi.sh
       
       - name: Run codegen tests
@@ -244,7 +238,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}/tools/codegen"
-          npm ci
+          npm install
           run_js_tests() {
             npm test -- --ci
           }
