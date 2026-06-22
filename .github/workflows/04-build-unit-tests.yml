@@ -174,7 +174,7 @@ jobs:
           set -o pipefail
           run_go_tests() {
             cd "${GITHUB_WORKSPACE}/sdks/go"
-            make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html 2>&1 | tee "${BUILD_TARGET}/go-test.log"
+            make VERBOSE=1 COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html 2>&1 | tee "${BUILD_TARGET}/go-test.log"
           }
           if ! run_go_tests; then
             echo "Go tests failed on first attempt; retrying once..."
