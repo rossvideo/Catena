@@ -72,6 +72,8 @@ jobs:
               console.log('No Trivy results file found; skipping PR comment');
               return;
             }
+            console.log(trivy-results.json);
+
             const report = JSON.parse(fs.readFileSync('trivy-results.json', 'utf8'));
             
             if (!report.Results || report.Results.length === 0) {
