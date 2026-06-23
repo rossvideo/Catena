@@ -45,7 +45,6 @@ import (
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 type stubServerRuntime struct {
@@ -60,7 +59,8 @@ type stubServerRuntime struct {
 	getAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
 	commandFn                func(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
-	languagePackFn           func(slot uint16, language string, ctx catena.TransportContext) (*protos.DeviceComponent_ComponentLanguagePack, catena.StatusResult)
+	languagePackFn           func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult)
+	languagePackMutationFn   func(slot uint16, language string, operation catena.LanguagePackMutationOperation, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult
 	registerTransportConnFn  func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult)
 	deregisterConnFn         func(connID int)
 	shutdownTransportConnsFn func(ctx context.Context, transport catena.Transport)
@@ -144,12 +144,20 @@ func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string
 	return nil, catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
-func (s *stubServerRuntime) InvokeLanguagePackHandler(slot uint16, language string, ctx catena.TransportContext) (*protos.DeviceComponent_ComponentLanguagePack, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeLanguagePackHandler(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
 	if s.languagePackFn != nil {
 		return s.languagePackFn(slot, language, ctx)
 	}
 	s.panicf("LanguagePack handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
-	return nil, catena.StatusWithCode(catena.StatusCodeInternal, "LanguagePack handler not implemented")
+	return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeInternal, "LanguagePack handler not implemented")
+}
+
+func (s *stubServerRuntime) InvokeLanguagePackMutationHandler(slot uint16, language string, operation catena.LanguagePackMutationOperation, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+	if s.languagePackMutationFn != nil {
+		return s.languagePackMutationFn(slot, language, operation, languagePack, ctx)
+	}
+	s.panicf("LanguagePack mutation handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
+	return catena.StatusWithCode(catena.StatusCodeInternal, "LanguagePack mutation handler not implemented")
 }
 
 func (s *stubServerRuntime) RegisterTransportConnection(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
