@@ -382,7 +382,7 @@ jobs:
     steps:
       - name: Download unit test summaries
         continue-on-error: true
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: unit-test-summary-*
           path: unit-test-summaries
@@ -455,7 +455,7 @@ jobs:
       - name: Download develop baseline summaries
         if: ${{ steps.find_baseline.outputs.run_id != '' }}
         continue-on-error: true
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.find_baseline.outputs.run_id }}
