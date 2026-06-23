@@ -211,7 +211,7 @@ jobs:
 
           mkdir -p "${BUILD_TARGET}"
           cd "${GITHUB_WORKSPACE}/sdks/go"
-          git config --global --add safe.directory /__w/Catena/Catena
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
 
           set -o pipefail
