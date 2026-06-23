@@ -327,7 +327,6 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	options.Server.AuthzEnabled = false // disable JWT scope checks for local demo use
 	closeLogger, err := logger.Init(options.Logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
