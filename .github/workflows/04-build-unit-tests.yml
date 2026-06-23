@@ -174,7 +174,7 @@ jobs:
 
       - name: Upload C++ test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-summary-cpp
           path: cpp-test-summary.md
@@ -262,7 +262,7 @@ jobs:
 
       - name: Upload Go test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-summary-go
           path: go-test-summary.md
@@ -364,7 +364,7 @@ jobs:
 
       - name: Upload JS test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-summary-js
           path: js-test-summary.md
@@ -382,7 +382,7 @@ jobs:
     steps:
       - name: Download unit test summaries
         continue-on-error: true
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: unit-test-summary-*
           path: unit-test-summaries
@@ -390,7 +390,7 @@ jobs:
 
       - name: Find latest successful develop baseline
         id: find_baseline
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -455,7 +455,7 @@ jobs:
       - name: Download develop baseline summaries
         if: ${{ steps.find_baseline.outputs.run_id != '' }}
         continue-on-error: true
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.find_baseline.outputs.run_id }}
@@ -542,7 +542,7 @@ jobs:
           } > unit-test-comment.md
 
       - name: Comment on unit test results
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');

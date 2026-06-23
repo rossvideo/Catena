@@ -35,7 +35,7 @@ jobs:
       contents: read
     steps:
       - name: Dispatch orchestrator on main
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -126,6 +126,50 @@ jobs:
             docker buildx imagetools inspect "$1" >/dev/null 2>&1
           }
 
+          rerun_open_pr_orchestrators() {
+            local open_prs
+
+            if ! open_prs=$(gh api "repos/$REPOSITORY/pulls" \
+              -f state=open \
+              -f base=develop \
+              --paginate \
+              --jq '.[] | select(.head.repo.full_name == "'"$REPOSITORY"'") | [.number, .head.ref, .head.sha] | @tsv' 2>/dev/null); then
+              echo "Skipping PR reruns: GITHUB_TOKEN cannot enumerate open pull requests in this workflow context"
+              echo "Use a GitHub App or PAT-backed token if cross-PR reruns must be enforced here"
+              return 0
+            fi
+
+            if [[ -z "$open_prs" ]]; then
+              echo "No open in-repo pull requests found for rerun"
+              return 0
+            fi
+
+            while IFS=$'\t' read -r pr_number pr_ref pr_sha; do
+              [[ -n "$pr_number" ]] || continue
+              echo "Re-running orchestrator CI for PR #${pr_number} (${pr_ref} @ ${pr_sha})"
+
+              if ! run_id=$(gh api "repos/$REPOSITORY/actions/workflows/orchestrator.yml/runs" \
+                -f event=pull_request \
+                -f head_sha="$pr_sha" \
+                --paginate 2>/dev/null | jq -rs \
+                --argjson pr_number "$pr_number" \
+                '[.[].workflow_runs[]? | select(any(.pull_requests[]?; .number == $pr_number))] | sort_by(.created_at) | reverse | .[0].id // empty'); then
+                echo "Unable to query prior pull_request runs for PR #${pr_number}; skipping rerun"
+                continue
+              fi
+
+              if [[ -z "$run_id" || "$run_id" == "null" ]]; then
+                echo "No prior pull_request run found for PR #${pr_number} with matching workflow association; skipping"
+                continue
+              fi
+
+              echo "Re-running workflow run ${run_id} for PR #${pr_number}"
+              if ! gh api "repos/$REPOSITORY/actions/runs/${run_id}/rerun" --method POST >/dev/null 2>&1; then
+                echo "Unable to rerun workflow run ${run_id} for PR #${pr_number}; skipping"
+              fi
+            done <<< "$open_prs"
+          }
+
           delete_matching_pr_tags() {
             local package_name="$1"
             local tag_prefix="$2"
@@ -174,19 +218,4 @@ jobs:
             exit 0
           fi
 
-          gh api "repos/$REPOSITORY/pulls" -f state=open -f base=develop --paginate --jq '.[] | select(.head.repo.full_name == "'"$REPOSITORY"'") | [.number, .head.ref, .head.sha] | @tsv' |
-          while IFS=$'\t' read -r pr_number pr_ref pr_sha; do
-            echo "Re-running orchestrator CI for PR #${pr_number} (${pr_ref} @ ${pr_sha})"
-            run_id=$(gh api "repos/$REPOSITORY/actions/workflows/orchestrator.yml/runs" \
-              -f event=pull_request \
-              -f head_sha="$pr_sha" \
-              --paginate | jq -rs \
-              --argjson pr_number "$pr_number" \
-              '[.[].workflow_runs[]? | select(any(.pull_requests[]?; .number == $pr_number))] | sort_by(.created_at) | reverse | .[0].id // empty')
-            if [[ -z "$run_id" || "$run_id" == "null" ]]; then
-              echo "No prior pull_request run found for PR #${pr_number} with matching workflow association; skipping"
-              continue
-            fi
-            echo "Re-running workflow run ${run_id} for PR #${pr_number}"
-            gh api "repos/$REPOSITORY/actions/runs/${run_id}/rerun" --method POST
-          done
+          rerun_open_pr_orchestrators
