@@ -43,7 +43,9 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "monitor scope required")
 		}
 
+		state.mu.RLock()
 		v, ok := state.slotOneParams.Load(fqoid)
+		state.mu.RUnlock()
 		return replyValue(fqoid, v, ok)
 	})
 
@@ -150,6 +152,9 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		if !ctx.HasWriteScope(catena.ScopeMon) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "monitor scope required")
 		}
+
+		state.mu.Lock()
+		defer state.mu.Unlock()
 
 		for _, entry := range entries {
 			if entry.Value == nil {

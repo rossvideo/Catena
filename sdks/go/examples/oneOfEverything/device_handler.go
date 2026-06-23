@@ -124,7 +124,9 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 	case 1:
 		// Slot 1 intentionally stores its business data in a sync.Map to show
 		// adopters they can back handlers with any application data structure,
-		// not just typed fields like slots 0 and 2 use.
+		// not just typed fields like slots 0 and 2 use. Hold state.mu so
+		// multi-key reads stay consistent with concurrent SetValue updates.
+		state.mu.RLock()
 		resolution := "1920x1080"
 		if value, ok := state.slotOneParams.Load("resolution"); ok {
 			if typed, ok := value.(string); ok {
@@ -149,6 +151,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				saturation = typed
 			}
 		}
+		state.mu.RUnlock()
 		productParam := catena.NewParamStruct(map[string]any{
 			"name":               "Map-Backed Slot 1 Product",
 			"vendor":             "Ross Video",
@@ -228,7 +231,13 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 	case 2:
 		// Slot 2: prefix-dispatched identity/audio params plus FLOAT32, arrays,
 		// BINARY, STRUCT_VARIANT, STRUCT_ARRAY, STRUCT_VARIANT_ARRAY examples.
+		// Hold state.mu through param building: copied slices and maps alias
+		// ExampleState backing storage, and SetValue holds the write lock for
+		// the full handler. Release only after ToMap serializes values so
+		// GetDevice cannot observe torn array/map data (same pattern as slot 2
+		// GetValue, which keeps RLock through catena.ToValue).
 		state.mu.RLock()
+		defer state.mu.RUnlock()
 		productValue := state.slotTwoProduct
 		volume := state.volume
 		muted := state.muted
@@ -242,7 +251,6 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		sampleStructVariant := state.sampleStructVariant
 		sampleStructArray := state.sampleStructArray
 		sampleStructVariantArray := state.sampleStructVariantArray
-		state.mu.RUnlock()
 		productParam := catena.NewParamStruct(productValue).
 			WithReadOnly(true).
 			WithParam("name", catena.NewParamString("")).
