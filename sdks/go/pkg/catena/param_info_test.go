@@ -139,3 +139,113 @@ func TestParamInfo_ZeroValue(t *testing.T) {
 		t.Errorf("expected array_length 0, got %d", pi.GetArrayLength())
 	}
 }
+
+func TestParamInfosForRequest_RootNonRecursive(t *testing.T) {
+	infos, res := ParamInfosForRequest("", testDeviceDefinition(), false)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+
+	assertParamInfoOids(t, infos, []string{"alpha", "numbers", "parent"})
+}
+
+func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
+	infos, res := ParamInfosForRequest("/parent", testDeviceDefinition(), true)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+
+	assertParamInfoOids(t, infos, []string{"parent", "parent/child"})
+	if infos[0].GetParamType() != ParamTypeStruct {
+		t.Errorf("expected parent type STRUCT, got %v", infos[0].GetParamType())
+	}
+	if infos[0].GetArrayLength() != 0 {
+		t.Errorf("expected non-array parent array_length 0, got %d", infos[0].GetArrayLength())
+	}
+}
+
+func TestParamInfosForRequest_ArrayLengthFromValue(t *testing.T) {
+	infos, res := ParamInfosForRequest("/numbers", testDeviceDefinition(), false)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+	if infos[0].GetArrayLength() != 3 {
+		t.Errorf("expected array_length 3 from value length, got %d", infos[0].GetArrayLength())
+	}
+}
+
+func TestParamInfosForRequest_IgnoresDescriptorArrayLengthField(t *testing.T) {
+	device := testDeviceDefinition()
+	numbers := device["params"].(map[string]any)["numbers"].(map[string]any)
+	numbers["array_length"] = 99
+
+	infos, res := ParamInfosForRequest("/numbers", device, false)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+	if infos[0].GetArrayLength() != 3 {
+		t.Errorf("expected descriptor array_length to be ignored, got %d", infos[0].GetArrayLength())
+	}
+}
+
+func TestParamInfosForRequest_MissingParam(t *testing.T) {
+	infos, res := ParamInfosForRequest("missing", testDeviceDefinition(), false)
+	if res.Code != StatusCodeNotFound {
+		t.Fatalf("expected NOT_FOUND, got %v: %s", res.Code, res.Error)
+	}
+	if len(infos) != 0 {
+		t.Fatalf("expected no infos, got %d", len(infos))
+	}
+}
+
+func TestParamInfosForRequest_InvalidDeviceParams(t *testing.T) {
+	_, res := ParamInfosForRequest("", map[string]any{}, false)
+	if res.Code != StatusCodeInternal {
+		t.Fatalf("expected INTERNAL, got %v: %s", res.Code, res.Error)
+	}
+}
+
+func testDeviceDefinition() map[string]any {
+	return map[string]any{
+		"params": map[string]any{
+			"parent": map[string]any{
+				"type": ParamTypeStruct,
+				"name": map[string]any{
+					"display_strings": map[string]any{"en": "Parent"},
+				},
+				"params": map[string]any{
+					"child": map[string]any{
+						"type": ParamTypeString,
+					},
+				},
+			},
+			"alpha": map[string]any{
+				"type": ParamTypeInt32,
+				"name": map[string]any{
+					"display_strings": map[string]string{"en": "Alpha"},
+				},
+			},
+			"numbers": map[string]any{
+				"type": ParamTypeInt32Array,
+				"value": map[string]any{
+					"int32_array_values": map[string]any{
+						"ints": []int32{1, 2, 3},
+					},
+				},
+			},
+		},
+	}
+}
+
+func assertParamInfoOids(t *testing.T, infos []ParamInfo, expected []string) {
+	t.Helper()
+
+	if len(infos) != len(expected) {
+		t.Fatalf("expected %d infos, got %d", len(expected), len(infos))
+	}
+	for i, oid := range expected {
+		if infos[i].GetOid() != oid {
+			t.Errorf("expected oid[%d] %q, got %q", i, oid, infos[i].GetOid())
+		}
+	}
+}
