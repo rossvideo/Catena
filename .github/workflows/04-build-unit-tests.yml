@@ -397,14 +397,26 @@ jobs:
             const workflowId = '04-build-unit-tests.yml';
             const currentRunId = Number(process.env.GITHUB_RUN_ID);
 
-            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-              owner,
-              repo,
-              workflow_id: workflowId,
-              branch: 'develop',
-              status: 'completed',
-              per_page: 100,
-            });
+            const isNotFound = (error) => error && (error.status === 404 || error.response?.status === 404);
+
+            let runs = [];
+            try {
+              runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+                owner,
+                repo,
+                workflow_id: workflowId,
+                branch: 'develop',
+                status: 'completed',
+                per_page: 100,
+              });
+            } catch (error) {
+              if (isNotFound(error)) {
+                core.notice(`Workflow or runs not found for ${workflowId} on develop; skipping baseline lookup.`);
+                core.setOutput('run_id', '');
+                return;
+              }
+              throw error;
+            }
 
             let baselineRunId = '';
             for (const run of runs) {
@@ -412,12 +424,21 @@ jobs:
                 continue;
               }
 
-              const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
-                owner,
-                repo,
-                run_id: run.id,
-                per_page: 100,
-              });
+              let artifacts = [];
+              try {
+                artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+                  owner,
+                  repo,
+                  run_id: run.id,
+                  per_page: 100,
+                });
+              } catch (error) {
+                if (isNotFound(error)) {
+                  core.notice(`Artifacts not found for run ${run.id}; checking older run.`);
+                  continue;
+                }
+                throw error;
+              }
 
               const hasSummaryArtifact = artifacts.some((artifact) => (
                 !artifact.expired && artifact.name && artifact.name.startsWith('unit-test-summary-')
