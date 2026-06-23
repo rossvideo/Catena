@@ -54,7 +54,8 @@ jobs:
         with:
           scan-type: fs
           cache: "false"
-          ignore-unfixed: true
+          # Policy needs unfixed findings to decide whether newly introduced risk should block PRs.
+          ignore-unfixed: false
           format: json
           output: trivy-results.json
           severity: HIGH,CRITICAL
@@ -72,10 +73,9 @@ jobs:
               console.log('No Trivy results file found; skipping PR comment');
               return;
             }
-            console.log(trivy-results.json);
 
             const report = JSON.parse(fs.readFileSync('trivy-results.json', 'utf8'));
-            
+
             if (!report.Results || report.Results.length === 0) {
               console.log('No Trivy issues found');
               return;
@@ -86,8 +86,8 @@ jobs:
               marker,
               '## 🔒 Trivy Security Scan - HIGH/CRITICAL Issues',
               '',
-              '| Severity | Component | Installed | Fixed | Issue |',
-              '| --- | --- | --- | --- | --- |'
+              '| Severity | Rule | Target | Installed | Fixed | Issue |',
+              '| --- | --- | --- | --- | --- | --- |'
             ];
             
             for (const result of report.Results) {
@@ -97,9 +97,13 @@ jobs:
                 const ruleId = vuln.VulnerabilityID || 'N/A';
                 const installed = vuln.InstalledVersion || 'N/A';
                 const fixed = vuln.FixedVersion || 'none';
-                const message = vuln.Title || 'No description';
+                const message = (vuln.Title || 'No description').replace(/\|/g, '\\|');
                 lines.push(`| ${severity} | \`${ruleId}\` | ${target} | ${installed} | ${fixed} | ${message} |`);
               }
+            }
+
+            if (lines.length === 5) {
+              lines.push('| ✅ | - | - | - | - | No HIGH/CRITICAL findings |');
             }
             
             lines.push('');
@@ -146,6 +150,8 @@ jobs:
             const results = report.Results || [];
             const isPullRequest = Boolean(context.payload.pull_request && context.payload.pull_request.number);
             let changedFiles = [];
+            const normalizePath = (value) => (value || '').replace(/^\.\//, '').trim();
+            const extractTargetPath = (target) => normalizePath(String(target || '').split(' (')[0]);
 
             if (isPullRequest) {
               const { owner, repo } = context.repo;
@@ -156,14 +162,18 @@ jobs:
                 pull_number,
                 per_page: 100,
               });
-              changedFiles = files.map((file) => file.filename);
+              changedFiles = files.map((file) => normalizePath(file.filename));
             }
 
             const touchedByPr = (target) => {
               if (!isPullRequest || !target) {
                 return false;
               }
-              return changedFiles.some((file) => file === target || file.endsWith(target) || target.endsWith(file));
+              const targetPath = extractTargetPath(target);
+              if (!targetPath) {
+                return false;
+              }
+              return changedFiles.some((file) => file === targetPath || file.endsWith(targetPath) || targetPath.endsWith(file));
             };
 
             const blockers = [];
