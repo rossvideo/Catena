@@ -1173,6 +1173,220 @@ func TestToProto_CopiesInputData(t *testing.T) {
 	}
 }
 
+// TestFromProto_CopiesProtoData verifies that FromProto clones mutable proto data.
+// Mutating the source proto after conversion must not change the returned native value.
+func TestFromProto_CopiesProtoData(t *testing.T) {
+	tests := []struct {
+		name   string
+		assert func(t *testing.T)
+	}{
+		{
+			name: "[]int32",
+			assert: func(t *testing.T) {
+				ints := []int32{1, 2, 3}
+				pv := &protos.Value{Kind: &protos.Value_Int32ArrayValues{
+					Int32ArrayValues: &protos.Int32List{Ints: ints},
+				}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				ints[0] = 99
+				got := result.([]int32)
+				if got[0] == 99 {
+					t.Errorf("expected []int32 copy, got[0]=%d after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "[]float32",
+			assert: func(t *testing.T) {
+				floats := []float32{1.1, 2.2}
+				pv := &protos.Value{Kind: &protos.Value_Float32ArrayValues{
+					Float32ArrayValues: &protos.Float32List{Floats: floats},
+				}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				floats[0] = 9.9
+				got := result.([]float32)
+				if got[0] == 9.9 {
+					t.Errorf("expected []float32 copy, got[0]=%v after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "[]string",
+			assert: func(t *testing.T) {
+				strings := []string{"a", "b"}
+				pv := &protos.Value{Kind: &protos.Value_StringArrayValues{
+					StringArrayValues: &protos.StringList{Strings: strings},
+				}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				strings[0] = "mutated"
+				got := result.([]string)
+				if got[0] == "mutated" {
+					t.Errorf("expected []string copy, got[0]=%q after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "map[string]any nested []int32",
+			assert: func(t *testing.T) {
+				nested := []int32{1, 2}
+				pv := &protos.Value{Kind: &protos.Value_StructValue{StructValue: &protos.StructValue{
+					Fields: map[string]*protos.Value{
+						"arr": {Kind: &protos.Value_Int32ArrayValues{
+							Int32ArrayValues: &protos.Int32List{Ints: nested},
+						}},
+					},
+				}}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				nested[0] = 99
+				got := result.(map[string]any)["arr"].([]int32)
+				if got[0] == 99 {
+					t.Errorf("expected nested []int32 copy, got[0]=%d after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "[]map[string]any nested []int32",
+			assert: func(t *testing.T) {
+				nested := []int32{1, 2}
+				pv := &protos.Value{Kind: &protos.Value_StructArrayValues{StructArrayValues: &protos.StructList{
+					StructValues: []*protos.StructValue{{
+						Fields: map[string]*protos.Value{
+							"arr": {Kind: &protos.Value_Int32ArrayValues{
+								Int32ArrayValues: &protos.Int32List{Ints: nested},
+							}},
+						},
+					}},
+				}}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				nested[0] = 99
+				got := result.([]map[string]any)[0]["arr"].([]int32)
+				if got[0] == 99 {
+					t.Errorf("expected nested []int32 copy, got[0]=%d after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "StructVariantValue nested []string",
+			assert: func(t *testing.T) {
+				nested := []string{"a", "b"}
+				pv := &protos.Value{Kind: &protos.Value_StructVariantValue{StructVariantValue: &protos.StructVariantValue{
+					StructVariantType: "variant",
+					Value: &protos.Value{Kind: &protos.Value_StringArrayValues{
+						StringArrayValues: &protos.StringList{Strings: nested},
+					}},
+				}}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				nested[0] = "mutated"
+				got := result.(StructVariantValue).Value.([]string)
+				if got[0] == "mutated" {
+					t.Errorf("expected nested []string copy, got[0]=%q after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "[]StructVariantValue",
+			assert: func(t *testing.T) {
+				pv := &protos.Value{Kind: &protos.Value_StructVariantArrayValues{StructVariantArrayValues: &protos.StructVariantList{
+					StructVariants: []*protos.StructVariantValue{{
+						StructVariantType: "A",
+						Value:             &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 1}},
+					}},
+				}}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				pv.GetStructVariantArrayValues().StructVariants[0].StructVariantType = "mutated"
+				pv.GetStructVariantArrayValues().StructVariants[0].Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 99}}
+				got := result.([]StructVariantValue)
+				if got[0].StructVariantType != "A" || got[0].Value != int32(1) {
+					t.Errorf("expected struct variant array copy, got %+v after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "DataPayload.Payload",
+			assert: func(t *testing.T) {
+				payload := []byte("hello")
+				pv := &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{
+					Kind: &protos.DataPayload_Payload{Payload: payload},
+				}}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				payload[0] = 'X'
+				got := result.(DataPayload).Payload
+				if len(got) > 0 && got[0] == 'X' {
+					t.Errorf("expected DataPayload.Payload copy, got[0]=%q after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "DataPayload.Digest",
+			assert: func(t *testing.T) {
+				digest := []byte{0x01, 0x02}
+				payload := []byte("data")
+				pv := &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{
+					Digest: digest,
+					Kind:   &protos.DataPayload_Payload{Payload: payload},
+				}}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				digest[0] = 0xff
+				got := result.(DataPayload).Digest
+				if len(got) > 0 && got[0] == 0xff {
+					t.Errorf("expected DataPayload.Digest copy, got[0]=%#x after proto mutation", got[0])
+				}
+			},
+		},
+		{
+			name: "DataPayload.Metadata",
+			assert: func(t *testing.T) {
+				metadata := map[string]string{"content-type": "text/plain"}
+				payload := []byte("data")
+				pv := &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{
+					Metadata: metadata,
+					Kind:     &protos.DataPayload_Payload{Payload: payload},
+				}}}
+				result, res := FromProto(pv)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("FromProto error: %s", res.Error)
+				}
+				metadata["content-type"] = "application/json"
+				got := result.(DataPayload).Metadata
+				if got["content-type"] == "application/json" {
+					t.Errorf("expected DataPayload.Metadata copy, got %q after proto mutation", got["content-type"])
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, tt.assert)
+	}
+}
+
 func TestParamTypeConstants(t *testing.T) {
 	// Verify ParamType constants are properly aliased
 	tests := []struct {

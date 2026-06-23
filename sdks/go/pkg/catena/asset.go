@@ -199,6 +199,24 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 	return pdp, StatusResult{Code: StatusCodeOk}
 }
 
+func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
+	if pdp == nil {
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil DataPayload"}
+	}
+	dp := DataPayload{
+		Metadata:        maps.Clone(pdp.GetMetadata()),
+		Digest:          slices.Clone(pdp.GetDigest()),
+		PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
+	}
+	switch k := pdp.GetKind().(type) {
+	case *protos.DataPayload_Url:
+		dp.Url = k.Url
+	case *protos.DataPayload_Payload:
+		dp.Payload = slices.Clone(k.Payload)
+	}
+	return dp, StatusResult{Code: StatusCodeOk}
+}
+
 // ToAsset converts DataPayload to Asset by building the proto directly
 func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 	protoPayload, res := dataPayloadToProto(dp)

@@ -254,9 +254,7 @@ func (s *ExampleState) slotZeroProductValue(fqoid string) (any, bool) {
 
 func (s *ExampleState) slotTwoProductValue(fqoid string) (any, bool) {
 	// Slot 2 product subtree lookup; prefix-dispatched from value_handlers.
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
+	// Caller must hold s.mu.RLock for the duration of catena.ToValue on the result.
 	switch fqoid {
 	case "product":
 		return s.slotTwoProduct, true

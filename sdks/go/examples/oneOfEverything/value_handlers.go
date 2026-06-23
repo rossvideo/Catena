@@ -55,15 +55,14 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "operation scope required")
 		}
 
+		state.mu.RLock()
+		defer state.mu.RUnlock()
+
 		var v any
 		var ok bool
 		if strings.HasPrefix(fqoid, "product") {
 			v, ok = state.slotTwoProductValue(fqoid)
-			return replyValue(fqoid, v, ok)
-		}
-
-		state.mu.RLock()
-		if fqoid == "volume" {
+		} else if fqoid == "volume" {
 			v, ok = state.volume, true
 		} else if fqoid == "muted" {
 			v, ok = state.muted, true
@@ -95,7 +94,6 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		} else if fqoid == "sample_float" {
 			v, ok = state.sampleFloat, true
 		}
-		state.mu.RUnlock()
 
 		return replyValue(fqoid, v, ok)
 	})
@@ -182,7 +180,8 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	})
 
 	// Slot 2: writes use prefix-based dispatch and keep product params read-only.
-	// This handler requires operation-scope write access.
+	// Validate every entry before applying any so the batch is all-or-nothing;
+	// broadcast only after all applies succeed.
 	srv.RegisterSetValueHandler(2, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
 		logger.Info("SetValue", "slot", slot, "count", len(entries))
 		if !ctx.HasWriteScope(catena.ScopeOp) {
@@ -199,11 +198,12 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		state.mu.RUnlock()
 
 		state.mu.Lock()
-		defer state.mu.Unlock()
 		for _, entry := range entries {
-			if status := slotTwoApplySet(entry.Fqoid, entry.Value, state); status.Code != catena.StatusCodeOk {
-				return status
-			}
+			slotTwoApplySet(entry.Fqoid, entry.Value, state)
+		}
+		state.mu.Unlock()
+
+		for _, entry := range entries {
 			logger.Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
 			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeMon)
 		}

@@ -205,29 +205,18 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	}
 }
 
-// FromProto converts protos.Value to native Go types
+// FromProto converts protos.Value to native Go types with deep-copied backing data.
+//
+// For supported value kinds, the returned native value does not alias proto-owned
+// slices, maps, or payload buffers, so callers may retain the result in long-lived
+// state and freely reuse or discard the source proto after FromProto returns.
 func FromProto(pv *protos.Value) (any, StatusResult) {
 	if pv == nil {
 		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil Value"}
 	}
 	switch pv.GetKind().(type) {
 	case *protos.Value_DataPayload:
-		pdp := pv.GetDataPayload()
-		if pdp == nil {
-			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil DataPayload in Value"}
-		}
-		dp := DataPayload{
-			Metadata:        pdp.GetMetadata(),
-			Digest:          pdp.GetDigest(),
-			PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
-		}
-		switch k := pdp.GetKind().(type) {
-		case *protos.DataPayload_Url:
-			dp.Url = k.Url
-		case *protos.DataPayload_Payload:
-			dp.Payload = k.Payload
-		}
-		return dp, StatusResult{Code: StatusCodeOk}
+		return dataPayloadFromProto(pv.GetDataPayload())
 	case *protos.Value_UndefinedValue:
 		return UndefinedValue(pv.GetUndefinedValue()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_EmptyValue:
@@ -239,11 +228,11 @@ func FromProto(pv *protos.Value) (any, StatusResult) {
 	case *protos.Value_StringValue:
 		return pv.GetStringValue(), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_Int32ArrayValues:
-		return pv.GetInt32ArrayValues().GetInts(), StatusResult{Code: StatusCodeOk}
+		return slices.Clone(pv.GetInt32ArrayValues().GetInts()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_Float32ArrayValues:
-		return pv.GetFloat32ArrayValues().GetFloats(), StatusResult{Code: StatusCodeOk}
+		return slices.Clone(pv.GetFloat32ArrayValues().GetFloats()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_StringArrayValues:
-		return pv.GetStringArrayValues().GetStrings(), StatusResult{Code: StatusCodeOk}
+		return slices.Clone(pv.GetStringArrayValues().GetStrings()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_StructValue:
 		fields := pv.GetStructValue().GetFields()
 		m := make(map[string]any, len(fields))
