@@ -206,21 +206,14 @@ jobs:
               GO_PUBLISH_TAG="$GO_PR"
             fi
           elif [[ "${{ inputs.run_mode }}" == "closed" ]]; then
-            if image_exists "$CPP_DEVELOP"; then
-              CPP_IMAGE="$CPP_DEVELOP"
-            else
-              BUILD_CPP=true
-              CPP_IMAGE="$CPP_DEVELOP"
-              CPP_PUBLISH_TAG="$CPP_DEVELOP"
-            fi
-
-            if image_exists "$GO_DEVELOP"; then
-              GO_IMAGE="$GO_DEVELOP"
-            else
-              BUILD_GO=true
-              GO_IMAGE="$GO_DEVELOP"
-              GO_PUBLISH_TAG="$GO_DEVELOP"
-            fi
+            # Closed PR runs (unmerged PR close) must never build/push toolchain images.
+            # Stage 6 handles merged PR promotion from existing PR-scoped tags.
+            CPP_IMAGE="$CPP_DEVELOP"
+            GO_IMAGE="$GO_DEVELOP"
+            BUILD_CPP=false
+            BUILD_GO=false
+            CPP_PUBLISH_TAG="$CPP_DEVELOP"
+            GO_PUBLISH_TAG="$GO_DEVELOP"
           else
             if [[ "${{ needs.detect.outputs.cpp_changed }}" == "true" ]]; then
               BUILD_CPP=true
@@ -253,7 +246,7 @@ jobs:
   build_cpp_toolchain:
     name: Build C++ toolchain
     needs: [detect, resolve]
-    if: needs.resolve.outputs.build_cpp == 'true'
+    if: inputs.run_mode != 'closed' && needs.resolve.outputs.build_cpp == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -312,7 +305,7 @@ jobs:
   build_go_toolchain:
     name: Build Go toolchain
     needs: [detect, resolve]
-    if: needs.resolve.outputs.build_go == 'true'
+    if: inputs.run_mode != 'closed' && needs.resolve.outputs.build_go == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

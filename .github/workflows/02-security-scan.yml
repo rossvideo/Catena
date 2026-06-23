@@ -181,14 +181,16 @@ jobs:
             for (const result of results) {
               const target = result.Target || 'N/A';
               for (const vuln of result.Vulnerabilities || []) {
+                const pkg = vuln.PkgName || vuln.PkgID || 'unknown-package';
+                const installedVersion = (vuln.InstalledVersion || 'unknown').trim();
                 const fixedVersion = (vuln.FixedVersion || '').trim();
                 if (fixedVersion) {
-                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} in ${target} has a fixed version (${fixedVersion})`);
+                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} | ${pkg} ${installedVersion} in ${target} has a fixed version (${fixedVersion})`);
                   continue;
                 }
 
                 if (touchedByPr(target)) {
-                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} in ${target} was introduced or modified in this PR and has no fixed version`);
+                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} | ${pkg} ${installedVersion} in ${target} was introduced or modified in this PR and has no fixed version`);
                 }
               }
             }
