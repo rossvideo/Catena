@@ -13,7 +13,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// definition around for ParamInfo requests.
 	srv.RegisterParamInfoHandler(0, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext) ([]catena.ParamInfo, catena.StatusResult) {
 		logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
-		return slotZeroParamInfos(fqoid, recursive, state)
+		return slotZeroParamInfos(fqoid, recursive)
 	})
 
 	// Slot 1: generate the current device definition and delegate to the SDK
@@ -39,24 +39,14 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	})
 }
 
-func slotZeroParamInfos(fqoid string, recursive bool, state *ExampleState) ([]catena.ParamInfo, catena.StatusResult) {
+func slotZeroParamInfos(fqoid string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
 	switch fqoid {
 	case "":
-		return []catena.ParamInfo{
-			newSlotZeroProductParamInfo(),
-			newCounterParamInfo(),
-			newRunningParamInfo(),
-		}, catena.StatusWithCode(catena.StatusCodeOk, "")
-	case "product":
-		infos := []catena.ParamInfo{newSlotZeroProductParamInfo()}
-		if recursive {
-			infos = append(infos,
-				catena.NewParamInfo("product/name", nil, catena.ParamTypeString, "", 0),
-				catena.NewParamInfo("product/vendor", nil, catena.ParamTypeString, "", 0),
-				catena.NewParamInfo("product/version", nil, catena.ParamTypeString, "", 0),
-			)
-		}
+		infos := slotZeroProductParamInfos(recursive)
+		infos = append(infos, newCounterParamInfo(), newRunningParamInfo())
 		return infos, catena.StatusWithCode(catena.StatusCodeOk, "")
+	case "product":
+		return slotZeroProductParamInfos(recursive), catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "product/name":
 		return []catena.ParamInfo{catena.NewParamInfo("product/name", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "product/vendor":
@@ -203,6 +193,18 @@ func newCounterParamInfo() catena.ParamInfo {
 
 func newSlotZeroProductParamInfo() catena.ParamInfo {
 	return catena.NewParamInfo("product", nil, catena.ParamTypeStruct, "", 0)
+}
+
+func slotZeroProductParamInfos(recursive bool) []catena.ParamInfo {
+	infos := []catena.ParamInfo{newSlotZeroProductParamInfo()}
+	if recursive {
+		infos = append(infos,
+			catena.NewParamInfo("product/name", nil, catena.ParamTypeString, "", 0),
+			catena.NewParamInfo("product/vendor", nil, catena.ParamTypeString, "", 0),
+			catena.NewParamInfo("product/version", nil, catena.ParamTypeString, "", 0),
+		)
+	}
+	return infos
 }
 
 func newRunningParamInfo() catena.ParamInfo {

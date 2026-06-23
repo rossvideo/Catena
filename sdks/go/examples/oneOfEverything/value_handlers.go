@@ -73,9 +73,9 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			case "struct_example":
 				v, ok = state.structExample, true
 			case "struct_example/number":
-				v, ok = state.structExample["number"], true
+				v, ok = state.structExample["number"]
 			case "struct_example/text":
-				v, ok = state.structExample["text"], true
+				v, ok = state.structExample["text"]
 			}
 		} else if strings.HasPrefix(fqoid, "sample_struct_variant_array") {
 			v, ok = slotTwoSampleStructVariantArrayValue(fqoid, state.sampleStructVariantArray)
@@ -180,29 +180,26 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	})
 
 	// Slot 2: writes use prefix-based dispatch and keep product params read-only.
-	// Validate every entry before applying any so the batch is all-or-nothing;
-	// broadcast only after all applies succeed.
+	// Hold state.mu for the whole handler so validate, apply, and broadcast see
+	// the same snapshot; validate every entry before applying any (all-or-nothing).
 	srv.RegisterSetValueHandler(2, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
 		logger.Info("SetValue", "slot", slot, "count", len(entries))
 		if !ctx.HasWriteScope(catena.ScopeOp) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "operation scope required")
 		}
 
-		state.mu.RLock()
+		state.mu.Lock()
+		defer state.mu.Unlock()
+
 		for _, entry := range entries {
 			if status := slotTwoValidateSet(entry.Fqoid, entry.Value, state); status.Code != catena.StatusCodeOk {
-				state.mu.RUnlock()
 				return status
 			}
 		}
-		state.mu.RUnlock()
 
-		state.mu.Lock()
 		for _, entry := range entries {
 			slotTwoApplySet(entry.Fqoid, entry.Value, state)
 		}
-		state.mu.Unlock()
-
 		for _, entry := range entries {
 			logger.Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
 			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeMon)
