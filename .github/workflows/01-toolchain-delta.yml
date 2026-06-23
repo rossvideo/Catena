@@ -49,7 +49,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
 
       - name: Compute changed files
         id: detect
@@ -257,6 +257,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           submodules: recursive
+          ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v4
@@ -316,6 +317,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           submodules: recursive
+          ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v4
