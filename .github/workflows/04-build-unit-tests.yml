@@ -376,6 +376,7 @@ jobs:
     if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       issues: write
       pull-requests: write
     steps:
@@ -385,6 +386,60 @@ jobs:
         with:
           pattern: unit-test-summary-*
           path: unit-test-summaries
+          merge-multiple: true
+
+      - name: Find latest successful develop baseline
+        id: find_baseline
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const workflowId = '04-build-unit-tests.yml';
+            const currentRunId = Number(process.env.GITHUB_RUN_ID);
+
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              owner,
+              repo,
+              workflow_id: workflowId,
+              branch: 'develop',
+              status: 'completed',
+              per_page: 100,
+            });
+
+            let baselineRunId = '';
+            for (const run of runs) {
+              if (run.conclusion !== 'success' || run.id === currentRunId) {
+                continue;
+              }
+
+              const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+                owner,
+                repo,
+                run_id: run.id,
+                per_page: 100,
+              });
+
+              const hasSummaryArtifact = artifacts.some((artifact) => (
+                !artifact.expired && artifact.name && artifact.name.startsWith('unit-test-summary-')
+              ));
+
+              if (hasSummaryArtifact) {
+                baselineRunId = String(run.id);
+                break;
+              }
+            }
+
+            core.setOutput('run_id', baselineRunId);
+
+      - name: Download develop baseline summaries
+        if: ${{ steps.find_baseline.outputs.run_id != '' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_baseline.outputs.run_id }}
+          pattern: unit-test-summary-*
+          path: baseline-unit-test-summaries
           merge-multiple: true
 
       - name: Build unit test PR comment
@@ -402,12 +457,44 @@ jobs:
             fi
             echo ''
           }
+
+          extract_coverage_value() {
+            local summary_file="$1"
+            if [[ ! -f "$summary_file" ]]; then
+              return 0
+            fi
+            grep -E '^- Coverage:' "$summary_file" | head -n1 | sed -E 's/^- Coverage:[[:space:]]*([0-9]+(\.[0-9]+)?)%.*/\1/'
+          }
+
+          emit_coverage_delta() {
+            local _label="$1"
+            local current_summary_file="$2"
+            local baseline_summary_file="$3"
+
+            local current_cov
+            local baseline_cov
+            current_cov="$(extract_coverage_value "$current_summary_file")"
+            baseline_cov="$(extract_coverage_value "$baseline_summary_file")"
+
+            if [[ -z "$current_cov" || -z "$baseline_cov" ]]; then
+              echo "- Coverage delta vs develop: unavailable"
+              return 0
+            fi
+
+            local delta
+            delta="$(awk -v current="$current_cov" -v baseline="$baseline_cov" 'BEGIN { printf "%+.2f", current - baseline }')"
+
+            echo "- Coverage delta vs develop: ${delta}% (${current_cov}% vs ${baseline_cov}%)"
+          }
+
           {
             echo '<!-- ci-comment:unit-tests -->'
             echo '## Unit Test Results'
             echo ''
             if [[ '${{ needs.detect_changes.outputs.cpp_changed }}' == 'true' || '${{ inputs.force_cpp_tests }}' == 'true' ]]; then
               emit_summary unit-test-summaries/cpp-test-summary.md '### C++ Build and Tests'
+              emit_coverage_delta 'C++' unit-test-summaries/cpp-test-summary.md baseline-unit-test-summaries/cpp-test-summary.md
+              echo ''
             else
               echo '### C++ Build and Tests'
               echo '- Result: not run'
@@ -416,6 +503,8 @@ jobs:
 
             if [[ '${{ needs.detect_changes.outputs.go_changed }}' == 'true' || '${{ inputs.force_go_tests }}' == 'true' ]]; then
               emit_summary unit-test-summaries/go-test-summary.md '### Go Build and Tests'
+              emit_coverage_delta 'Go' unit-test-summaries/go-test-summary.md baseline-unit-test-summaries/go-test-summary.md
+              echo ''
             else
               echo '### Go Build and Tests'
               echo '- Result: not run'
