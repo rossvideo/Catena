@@ -36,7 +36,7 @@ jobs:
       - name: Run Trivy vulnerability scanner in repo mode
         id: trivy_scan
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           cache: "false"
@@ -50,7 +50,7 @@ jobs:
       - name: Run Trivy vulnerability scanner in repo mode for policy checks
         id: trivy_json
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           cache: "false"
