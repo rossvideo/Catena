@@ -103,6 +103,9 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// entry before applying any so the batch is all-or-nothing.
 	srv.RegisterSetValueHandler(0, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
 		logger.Info("SetValue", "slot", slot, "count", len(entries))
+		if !ctx.HasWriteScope(catena.ScopeCfg) {
+			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "configuration scope required")
+		}
 
 		for _, entry := range entries {
 			if entry.Value == nil {
