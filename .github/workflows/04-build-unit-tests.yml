@@ -1,0 +1,564 @@
+name: "04 Build and Unit Tests"
+
+"on":
+  workflow_call:
+    inputs:
+      cpp_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      go_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-go-toolchain:develop
+      force_cpp_tests:
+        required: false
+        type: boolean
+        default: false
+      force_go_tests:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect_changes:
+    name: Detect language changes
+    runs-on: ubuntu-latest
+    outputs:
+      cpp_changed: ${{ steps.filter.outputs.cpp }}
+      go_changed: ${{ steps.filter.outputs.go }}
+      js_changed: ${{ steps.filter.outputs.js }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            cpp:
+              - 'sdks/cpp/**'
+              - 'unittests/cpp/**'
+            go:
+              - 'sdks/go/**'
+              - 'smpte'
+            js:
+              - 'tools/codegen/**'
+
+  test_cpp:
+    name: C++ Build and Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.cpp_changed == 'true' || inputs.force_cpp_tests
+    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: ${{ inputs.cpp_image }}
+      options: --user root:root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Build and test C++
+        id: run_cpp_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          export CMAKE_BUILD_TYPE=Debug
+          export CONNECTIONS='gRPC;REST'
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cmake -G Ninja \
+            -DBUILD_DOC=OFF \
+            -DBARE_EXAMPLES=ON \
+            -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+            -DCONNECTIONS="${CONNECTIONS}" \
+            -DCOVERAGE=ON \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DLOG_DIR="${HOME}/Catena/logs" \
+            -B "${BUILD_TARGET}" \
+            -S "${GITHUB_WORKSPACE}/sdks/cpp"
+
+          ninja -C "${BUILD_TARGET}"
+
+          run_cpp_ctest() {
+            ctest --output-on-failure --output-junit "${BUILD_TARGET}/ctest.xml" --test-dir "${BUILD_TARGET}" -R '^(common|gRPC|REST)\.'
+          }
+          if ! run_cpp_ctest; then
+            echo "C++ tests failed on first attempt; retrying once..."
+            run_cpp_ctest
+          fi
+
+      - name: Generate C++ coverage report
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          gcovr \
+            --cobertura "${BUILD_TARGET}/coverage.xml" \
+            --lcov "${BUILD_TARGET}/coverage.info" || true
+
+      - name: Summarize C++ tests
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          output_path = os.path.join(os.environ['GITHUB_WORKSPACE'], 'cpp-test-summary.md')
+          xml_path = os.path.join(os.environ['BUILD_TARGET'], 'ctest.xml')
+          coverage_xml_path = os.path.join(os.environ['BUILD_TARGET'], 'coverage.xml')
+          outcome = '${{ steps.run_cpp_tests.outcome }}'
+
+          tests = failures = errors = skipped = 0
+          coverage = 'n/a'
+          failed_tests = []
+          if os.path.exists(xml_path):
+              root = ET.parse(xml_path).getroot()
+              tests = int(root.attrib.get('tests', 0))
+              failures = int(root.attrib.get('failures', 0))
+              errors = int(root.attrib.get('errors', 0))
+              skipped = int(root.attrib.get('skipped', 0))
+
+              for testcase in root.findall('.//testcase'):
+                has_failure = testcase.find('failure') is not None
+                has_error = testcase.find('error') is not None
+                if has_failure or has_error:
+                  classname = testcase.attrib.get('classname', '').strip()
+                  name = testcase.attrib.get('name', '').strip()
+                  label = f"{classname}.{name}" if classname else name
+                  if label:
+                    failed_tests.append(label)
+
+              # Keep insertion order while removing duplicates.
+              failed_tests = list(dict.fromkeys(failed_tests))
+
+          if os.path.exists(coverage_xml_path):
+              root = ET.parse(coverage_xml_path).getroot()
+              line_rate = root.attrib.get('line-rate')
+              if line_rate is not None:
+                  try:
+                      coverage = f"{float(line_rate) * 100:.2f}%"
+                  except ValueError:
+                      coverage = 'n/a'
+
+          with open(output_path, 'w', encoding='utf-8') as handle:
+              handle.write('### C++ Build and Tests\n')
+              handle.write(f'- Result: {outcome}\n')
+              handle.write(f'- Tests: {tests}\n')
+              handle.write(f'- Failures: {failures}\n')
+              handle.write(f'- Errors: {errors}\n')
+              handle.write(f'- Skipped: {skipped}\n')
+              handle.write(f'- Coverage: {coverage}\n')
+              if failed_tests:
+                limit = 20
+                handle.write('- Failed tests:\n')
+                for test_name in failed_tests[:limit]:
+                  handle.write(f'  - {test_name}\n')
+                if len(failed_tests) > limit:
+                  handle.write(f'  - ... and {len(failed_tests) - limit} more\n')
+          PY
+
+      - name: Upload C++ test summary
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: unit-test-summary-cpp
+          path: cpp-test-summary.md
+          if-no-files-found: error
+
+  test_go:
+    name: Go Build and Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.go_changed == 'true' || inputs.force_go_tests
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: ${{ inputs.go_image }}
+      options: --user root:root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Build and test Go
+        id: run_go_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
+
+          echo "Building OpenAPI"
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+
+          mkdir -p "${BUILD_TARGET}"
+          cd "${GITHUB_WORKSPACE}/sdks/go"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+
+          set -o pipefail
+          run_go_tests() {
+            cd "${GITHUB_WORKSPACE}/sdks/go"
+            make VERBOSE=1 COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html 2>&1 | tee "${BUILD_TARGET}/go-test.log"
+          }
+          if ! run_go_tests; then
+            echo "Go tests failed on first attempt; retrying once..."
+            run_go_tests
+          fi
+
+      - name: Summarize Go tests
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
+          LOG_FILE="${BUILD_TARGET}/go-test.log"
+          PASS_COUNT=0
+          FAIL_COUNT=0
+          COVERAGE="n/a"
+          FAILED_TESTS_FILE="${BUILD_TARGET}/go-failed-tests.txt"
+          : > "${FAILED_TESTS_FILE}"
+          if [[ -f "$LOG_FILE" ]]; then
+            PASS_COUNT=$(grep -c '^--- PASS:' "$LOG_FILE" || true)
+            FAIL_COUNT=$(grep -c '^--- FAIL:' "$LOG_FILE" || true)
+            grep '^--- FAIL:' "$LOG_FILE" | sed -E 's/^--- FAIL: ([^ ]+).*/\1/' > "${FAILED_TESTS_FILE}" || true
+          fi
+          if [[ -f "${GITHUB_WORKSPACE}/sdks/go/go_coverage.out" ]]; then
+            COVERAGE=$(cd "${GITHUB_WORKSPACE}/sdks/go" && go tool cover -func=go_coverage.out | tail -1 | awk '{print $3}')
+          fi
+          {
+            echo '### Go Build and Tests'
+            echo '- Result: ${{ steps.run_go_tests.outcome }}'
+            echo "- Passed tests: ${PASS_COUNT}"
+            echo "- Failed tests: ${FAIL_COUNT}"
+            echo "- Coverage: ${COVERAGE}"
+            if [[ -s "${FAILED_TESTS_FILE}" ]]; then
+              echo '- Failed tests:'
+              awk '!seen[$0]++ { print }' "${FAILED_TESTS_FILE}" | head -20 | sed 's/^/  - /'
+              TOTAL_FAILED_NAMES=$(awk '!seen[$0]++ { count++ } END { print count + 0 }' "${FAILED_TESTS_FILE}")
+              if (( TOTAL_FAILED_NAMES > 20 )); then
+                echo "  - ... and $(( TOTAL_FAILED_NAMES - 20 )) more"
+              fi
+            fi
+          } > go-test-summary.md
+
+      - name: Upload Go test summary
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: unit-test-summary-go
+          path: go-test-summary.md
+          if-no-files-found: error
+
+  test_js:
+    name: Codegen JS Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.js_changed == 'true'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      
+      - name: Build SMPTE artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./install-tooling.sh
+          npm install
+          ./build-openapi.sh
+      
+      - name: Run codegen tests
+        id: run_js_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/tools/codegen"
+          npm install
+          run_js_tests() {
+            npm test -- --ci
+          }
+          if ! run_js_tests; then
+            echo "JS tests failed on first attempt; retrying once..."
+            run_js_tests
+          fi
+
+      - name: Summarize JS tests
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          output_path = os.path.join(os.environ['GITHUB_WORKSPACE'], 'js-test-summary.md')
+          xml_path = os.path.join(os.environ['GITHUB_WORKSPACE'], 'tools', 'codegen', 'junit.xml')
+          outcome = '${{ steps.run_js_tests.outcome }}'
+
+          tests = failures = errors = skipped = 0
+          failed_tests = []
+          if os.path.exists(xml_path):
+              root = ET.parse(xml_path).getroot()
+              if root.tag == 'testsuites':
+                  tests = int(root.attrib.get('tests', 0))
+                  failures = int(root.attrib.get('failures', 0))
+                  errors = int(root.attrib.get('errors', 0))
+                  skipped = int(root.attrib.get('skipped', 0))
+              else:
+                  tests = int(root.attrib.get('tests', 0))
+                  failures = int(root.attrib.get('failures', 0))
+                  errors = int(root.attrib.get('errors', 0))
+                  skipped = int(root.attrib.get('skipped', 0))
+
+              for testcase in root.findall('.//testcase'):
+                has_failure = testcase.find('failure') is not None
+                has_error = testcase.find('error') is not None
+                if has_failure or has_error:
+                  classname = testcase.attrib.get('classname', '').strip()
+                  name = testcase.attrib.get('name', '').strip()
+                  label = f"{classname}.{name}" if classname else name
+                  if label:
+                    failed_tests.append(label)
+
+              failed_tests = list(dict.fromkeys(failed_tests))
+
+          with open(output_path, 'w', encoding='utf-8') as handle:
+              handle.write('### JS Codegen Tests\n')
+              handle.write(f'- Result: {outcome}\n')
+              handle.write(f'- Tests: {tests}\n')
+              handle.write(f'- Failures: {failures}\n')
+              handle.write(f'- Errors: {errors}\n')
+              handle.write(f'- Skipped: {skipped}\n')
+              if failed_tests:
+                limit = 20
+                handle.write('- Failed tests:\n')
+                for test_name in failed_tests[:limit]:
+                  handle.write(f'  - {test_name}\n')
+                if len(failed_tests) > limit:
+                  handle.write(f'  - ... and {len(failed_tests) - limit} more\n')
+          PY
+
+      - name: Upload JS test summary
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: unit-test-summary-js
+          path: js-test-summary.md
+          if-no-files-found: error
+
+  report_unit_tests:
+    name: Report Unit Test Results
+    needs: [detect_changes, test_cpp, test_go, test_js]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Download unit test summaries
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          pattern: unit-test-summary-*
+          path: unit-test-summaries
+          merge-multiple: true
+
+      - name: Find latest successful develop baseline
+        id: find_baseline
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const workflowId = 'orchestrator.yml';
+            const currentRunId = Number(process.env.GITHUB_RUN_ID);
+
+            const isNotFound = (error) => error && (error.status === 404 || error.response?.status === 404);
+
+            let runs = [];
+            try {
+              runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+                owner,
+                repo,
+                workflow_id: workflowId,
+                branch: 'develop',
+                status: 'completed',
+                per_page: 100,
+              });
+            } catch (error) {
+              if (isNotFound(error)) {
+                core.notice(`Workflow or runs not found for ${workflowId} on develop; skipping baseline lookup.`);
+                core.setOutput('run_id', '');
+                return;
+              }
+              throw error;
+            }
+
+            let baselineRunId = '';
+            for (const run of runs) {
+              if (run.conclusion !== 'success' || run.id === currentRunId) {
+                continue;
+              }
+
+              let artifacts = [];
+              try {
+                artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+                  owner,
+                  repo,
+                  run_id: run.id,
+                  per_page: 100,
+                });
+              } catch (error) {
+                if (isNotFound(error)) {
+                  core.notice(`Artifacts not found for run ${run.id}; checking older run.`);
+                  continue;
+                }
+                throw error;
+              }
+
+              const hasSummaryArtifact = artifacts.some((artifact) => (
+                !artifact.expired && artifact.name && artifact.name.startsWith('unit-test-summary-')
+              ));
+
+              if (hasSummaryArtifact) {
+                baselineRunId = String(run.id);
+                break;
+              }
+            }
+
+            core.setOutput('run_id', baselineRunId);
+
+      - name: Download develop baseline summaries
+        if: ${{ steps.find_baseline.outputs.run_id != '' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_baseline.outputs.run_id }}
+          pattern: unit-test-summary-*
+          path: baseline-unit-test-summaries
+          merge-multiple: true
+
+      - name: Build unit test PR comment
+        shell: bash
+        run: |
+          set -euo pipefail
+          emit_summary() {
+            local summary_file="$1"
+            local heading="$2"
+            if [[ -f "$summary_file" ]]; then
+              cat "$summary_file"
+            else
+              echo "$heading"
+              echo '- Result: summary unavailable'
+            fi
+            echo ''
+          }
+
+          extract_coverage_value() {
+            local summary_file="$1"
+            if [[ ! -f "$summary_file" ]]; then
+              return 0
+            fi
+            grep -E '^- Coverage:' "$summary_file" | head -n1 | sed -E 's/^- Coverage:[[:space:]]*([0-9]+(\.[0-9]+)?)%.*/\1/'
+          }
+
+          emit_coverage_delta() {
+            local _label="$1"
+            local current_summary_file="$2"
+            local baseline_summary_file="$3"
+
+            local current_cov
+            local baseline_cov
+            current_cov="$(extract_coverage_value "$current_summary_file")"
+            baseline_cov="$(extract_coverage_value "$baseline_summary_file")"
+
+            if [[ -z "$current_cov" || -z "$baseline_cov" ]]; then
+              echo "- Coverage delta vs develop: unavailable"
+              return 0
+            fi
+
+            local delta
+            delta="$(awk -v current="$current_cov" -v baseline="$baseline_cov" 'BEGIN { printf "%+.2f", current - baseline }')"
+
+            echo "- Coverage delta vs develop: ${delta}% (${current_cov}% vs ${baseline_cov}%)"
+          }
+
+          {
+            echo '<!-- ci-comment:unit-tests -->'
+            echo '## Unit Test Results'
+            echo ''
+            if [[ '${{ needs.detect_changes.outputs.cpp_changed }}' == 'true' || '${{ inputs.force_cpp_tests }}' == 'true' ]]; then
+              emit_summary unit-test-summaries/cpp-test-summary.md '### C++ Build and Tests'
+              emit_coverage_delta 'C++' unit-test-summaries/cpp-test-summary.md baseline-unit-test-summaries/cpp-test-summary.md
+              echo ''
+            else
+              echo '### C++ Build and Tests'
+              echo '- Result: not run'
+              echo ''
+            fi
+
+            if [[ '${{ needs.detect_changes.outputs.go_changed }}' == 'true' || '${{ inputs.force_go_tests }}' == 'true' ]]; then
+              emit_summary unit-test-summaries/go-test-summary.md '### Go Build and Tests'
+              emit_coverage_delta 'Go' unit-test-summaries/go-test-summary.md baseline-unit-test-summaries/go-test-summary.md
+              echo ''
+            else
+              echo '### Go Build and Tests'
+              echo '- Result: not run'
+              echo ''
+            fi
+
+            if [[ '${{ needs.detect_changes.outputs.js_changed }}' == 'true' ]]; then
+              emit_summary unit-test-summaries/js-test-summary.md '### JS Codegen Tests'
+            else
+              echo '### JS Codegen Tests'
+              echo '- Result: not run'
+              echo ''
+            fi
+          } > unit-test-comment.md
+
+      - name: Comment on unit test results
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- ci-comment:unit-tests -->';
+            const body = fs.readFileSync('unit-test-comment.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

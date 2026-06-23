@@ -1,0 +1,365 @@
+name: "01 Toolchain Delta"
+
+on:
+  workflow_call:
+    inputs:
+      run_mode:
+        required: true
+        type: string
+    outputs:
+      toolchain_changed:
+        description: Whether any toolchain files changed.
+        value: ${{ jobs.detect.outputs.toolchain_changed }}
+      cpp_changed:
+        description: Whether C++ toolchain files changed.
+        value: ${{ jobs.detect.outputs.cpp_changed }}
+      go_changed:
+        description: Whether Go toolchain files changed.
+        value: ${{ jobs.detect.outputs.go_changed }}
+      pr_tag:
+        description: Legacy PR-scoped identifier.
+        value: ${{ jobs.detect.outputs.pr_tag }}
+      cpp_tag:
+        description: C++ toolchain tag (computed at build time).
+        value: ${{ jobs.detect.outputs.cpp_tag }}
+      go_tag:
+        description: Go toolchain tag (computed at build time).
+        value: ${{ jobs.detect.outputs.go_tag }}
+      cpp_image:
+        description: Selected C++ toolchain image for downstream jobs.
+        value: ${{ jobs.resolve.outputs.cpp_image }}
+      go_image:
+        description: Selected Go toolchain image for downstream jobs.
+        value: ${{ jobs.resolve.outputs.go_image }}
+
+jobs:
+  detect:
+    name: Detect toolchain changes
+    runs-on: ubuntu-latest
+    outputs:
+      toolchain_changed: ${{ steps.detect.outputs.toolchain_changed }}
+      cpp_changed: ${{ steps.detect.outputs.cpp_changed }}
+      go_changed: ${{ steps.detect.outputs.go_changed }}
+      pr_tag: ${{ steps.detect.outputs.pr_tag }}
+      cpp_tag: ${{ steps.detect.outputs.cpp_tag }}
+      go_tag: ${{ steps.detect.outputs.go_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Compute changed files
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          hash_files() {
+            sha256sum "$@" | sha256sum | cut -c1-12
+          }
+
+          if [[ "${{ inputs.run_mode }}" == "pr" || "${{ inputs.run_mode }}" == "closed" ]]; then
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+          else
+            HEAD_SHA="${GITHUB_SHA}"
+            PR_NUMBER="manual"
+          fi
+
+          SHORT_SHA="${HEAD_SHA:0:12}"
+          echo "pr_tag=pr-${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+          CPP_HASH=$(hash_files \
+            .devcontainer/cpp/toolchain.dockerfile \
+            .devcontainer/cpp/toolchain.env \
+            smpte/install-tooling.sh)
+          GO_HASH=$(hash_files \
+            .devcontainer/go/toolchain.dockerfile \
+            .devcontainer/go/toolchain.env \
+            .devcontainer/go/go.mod \
+            .devcontainer/go/go.sum \
+            smpte/install-tooling.sh)
+
+          if [[ "${{ inputs.run_mode }}" == "pr" || "${{ inputs.run_mode }}" == "closed" ]]; then
+            echo "cpp_tag=pr-${PR_NUMBER}-${CPP_HASH}" >> "$GITHUB_OUTPUT"
+            echo "go_tag=pr-${PR_NUMBER}-${GO_HASH}" >> "$GITHUB_OUTPUT"
+          else
+            echo "cpp_tag=manual-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+            echo "go_tag=manual-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [[ "${{ inputs.run_mode }}" == "force" ]]; then
+            echo "Manual force enabled: rebuilding both toolchains"
+            echo "cpp_changed=true" >> "$GITHUB_OUTPUT"
+            echo "go_changed=true" >> "$GITHUB_OUTPUT"
+            echo "toolchain_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "${{ inputs.run_mode }}" == "manual" ]]; then
+            BASE_REF="origin/develop"
+            git fetch origin develop --depth=1
+            DIFF_FILES="$(git diff --name-only "$BASE_REF"...HEAD || true)"
+          else
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            DIFF_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" || true)"
+          fi
+
+          echo "Changed files:"
+          echo "$DIFF_FILES"
+
+          CPP_CHANGED=false
+          GO_CHANGED=false
+
+          if echo "$DIFF_FILES" | grep -Eq '^(\.devcontainer/cpp/(toolchain\.dockerfile|toolchain\.env)|smpte/install-tooling\.sh)$'; then
+            CPP_CHANGED=true
+          fi
+          if echo "$DIFF_FILES" | grep -Eq '^(\.devcontainer/go/(toolchain\.dockerfile|toolchain\.env|go\.mod|go\.sum)|smpte/install-tooling\.sh)$'; then
+            GO_CHANGED=true
+          fi
+
+          TOOLCHAIN_CHANGED=false
+          if [[ "$CPP_CHANGED" == "true" || "$GO_CHANGED" == "true" ]]; then
+            TOOLCHAIN_CHANGED=true
+          fi
+
+          echo "cpp_changed=$CPP_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "go_changed=$GO_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "toolchain_changed=$TOOLCHAIN_CHANGED" >> "$GITHUB_OUTPUT"
+
+  resolve:
+    name: Resolve toolchain tags
+    needs: detect
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      cpp_image: ${{ steps.resolve.outputs.cpp_image }}
+      go_image: ${{ steps.resolve.outputs.go_image }}
+      build_cpp: ${{ steps.resolve.outputs.build_cpp }}
+      build_go: ${{ steps.resolve.outputs.build_go }}
+      cpp_publish_tag: ${{ steps.resolve.outputs.cpp_publish_tag }}
+      go_publish_tag: ${{ steps.resolve.outputs.go_publish_tag }}
+    steps:
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve images and publish tags
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_exists() {
+            docker buildx imagetools inspect "$1" >/dev/null 2>&1
+          }
+
+          CPP_DEVELOP="ghcr.io/rossvideo/catena-cpp-toolchain:develop"
+          GO_DEVELOP="ghcr.io/rossvideo/catena-go-toolchain:develop"
+          CPP_PR="ghcr.io/rossvideo/catena-cpp-toolchain:${{ needs.detect.outputs.cpp_tag }}"
+          GO_PR="ghcr.io/rossvideo/catena-go-toolchain:${{ needs.detect.outputs.go_tag }}"
+
+          BUILD_CPP=false
+          BUILD_GO=false
+          CPP_IMAGE="$CPP_DEVELOP"
+          GO_IMAGE="$GO_DEVELOP"
+          CPP_PUBLISH_TAG="$CPP_DEVELOP"
+          GO_PUBLISH_TAG="$GO_DEVELOP"
+
+          if [[ "${{ inputs.run_mode }}" == "pr" ]]; then
+            if [[ "${{ needs.detect.outputs.cpp_changed }}" == "true" ]]; then
+              if image_exists "$CPP_PR"; then
+                CPP_IMAGE="$CPP_PR"
+              else
+                BUILD_CPP=true
+                CPP_IMAGE="$CPP_PR"
+                CPP_PUBLISH_TAG="$CPP_PR"
+              fi
+            elif ! image_exists "$CPP_DEVELOP"; then
+              BUILD_CPP=true
+              CPP_IMAGE="$CPP_PR"
+              CPP_PUBLISH_TAG="$CPP_PR"
+            fi
+
+            if [[ "${{ needs.detect.outputs.go_changed }}" == "true" ]]; then
+              if image_exists "$GO_PR"; then
+                GO_IMAGE="$GO_PR"
+              else
+                BUILD_GO=true
+                GO_IMAGE="$GO_PR"
+                GO_PUBLISH_TAG="$GO_PR"
+              fi
+            elif ! image_exists "$GO_DEVELOP"; then
+              BUILD_GO=true
+              GO_IMAGE="$GO_PR"
+              GO_PUBLISH_TAG="$GO_PR"
+            fi
+          elif [[ "${{ inputs.run_mode }}" == "closed" ]]; then
+            # Closed PR runs (unmerged PR close) must never build/push toolchain images.
+            # Stage 6 handles merged PR promotion from existing PR-scoped tags.
+            CPP_IMAGE="$CPP_DEVELOP"
+            GO_IMAGE="$GO_DEVELOP"
+            BUILD_CPP=false
+            BUILD_GO=false
+            CPP_PUBLISH_TAG="$CPP_DEVELOP"
+            GO_PUBLISH_TAG="$GO_DEVELOP"
+          else
+            if [[ "${{ needs.detect.outputs.cpp_changed }}" == "true" ]]; then
+              BUILD_CPP=true
+              CPP_IMAGE="$CPP_PR"
+              CPP_PUBLISH_TAG="$CPP_PR"
+            elif ! image_exists "$CPP_DEVELOP"; then
+              BUILD_CPP=true
+              CPP_IMAGE="$CPP_DEVELOP"
+              CPP_PUBLISH_TAG="$CPP_DEVELOP"
+            fi
+
+            if [[ "${{ needs.detect.outputs.go_changed }}" == "true" ]]; then
+              BUILD_GO=true
+              GO_IMAGE="$GO_PR"
+              GO_PUBLISH_TAG="$GO_PR"
+            elif ! image_exists "$GO_DEVELOP"; then
+              BUILD_GO=true
+              GO_IMAGE="$GO_DEVELOP"
+              GO_PUBLISH_TAG="$GO_DEVELOP"
+            fi
+          fi
+
+          echo "cpp_image=$CPP_IMAGE" >> "$GITHUB_OUTPUT"
+          echo "go_image=$GO_IMAGE" >> "$GITHUB_OUTPUT"
+          echo "build_cpp=$BUILD_CPP" >> "$GITHUB_OUTPUT"
+          echo "build_go=$BUILD_GO" >> "$GITHUB_OUTPUT"
+          echo "cpp_publish_tag=$CPP_PUBLISH_TAG" >> "$GITHUB_OUTPUT"
+          echo "go_publish_tag=$GO_PUBLISH_TAG" >> "$GITHUB_OUTPUT"
+
+  build_cpp_toolchain:
+    name: Build C++ toolchain
+    needs: [detect, resolve]
+    if: inputs.run_mode != 'closed' && needs.resolve.outputs.build_cpp == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR (manual mode only)
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build C++ toolchain image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .devcontainer/cpp/toolchain.dockerfile
+          push: true
+          tags: ${{ needs.resolve.outputs.cpp_publish_tag }}
+
+      - name: Remove superseded C++ PR tags
+        if: ${{ inputs.run_mode == 'pr' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_NAME: catena-cpp-toolchain
+          TAG_PREFIX: ${{ needs.detect.outputs.pr_tag }}-
+          CURRENT_TAG: ${{ needs.detect.outputs.cpp_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions" \
+            --paginate | jq -r \
+            --arg prefix "$TAG_PREFIX" \
+            --arg current "$CURRENT_TAG" \
+            '.[] | select(any(.metadata.container.tags[]?; startswith($prefix) and . != $current)) | .id' |
+          while read -r version_id; do
+            [[ -n "$version_id" ]] || continue
+            echo "Deleting superseded package version ${version_id} for ${PACKAGE_NAME}"
+            gh api \
+              --method DELETE \
+              -H "Accept: application/vnd.github+json" \
+              "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions/${version_id}"
+          done
+
+  build_go_toolchain:
+    name: Build Go toolchain
+    needs: [detect, resolve]
+    if: inputs.run_mode != 'closed' && needs.resolve.outputs.build_go == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR (manual mode only)
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Go toolchain image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .devcontainer/go/toolchain.dockerfile
+          push: true
+          tags: ${{ needs.resolve.outputs.go_publish_tag }}
+
+      - name: Remove superseded Go PR tags
+        if: ${{ inputs.run_mode == 'pr' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_NAME: catena-go-toolchain
+          TAG_PREFIX: ${{ needs.detect.outputs.pr_tag }}-
+          CURRENT_TAG: ${{ needs.detect.outputs.go_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions" \
+            --paginate | jq -r \
+            --arg prefix "$TAG_PREFIX" \
+            --arg current "$CURRENT_TAG" \
+            '.[] | select(any(.metadata.container.tags[]?; startswith($prefix) and . != $current)) | .id' |
+          while read -r version_id; do
+            [[ -n "$version_id" ]] || continue
+            echo "Deleting superseded package version ${version_id} for ${PACKAGE_NAME}"
+            gh api \
+              --method DELETE \
+              -H "Accept: application/vnd.github+json" \
+              "/orgs/rossvideo/packages/container/${PACKAGE_NAME}/versions/${version_id}"
+          done

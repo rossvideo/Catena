@@ -1,0 +1,191 @@
+name: "03 CodeQL Analysis"
+
+"on":
+  push:
+    branches: ["develop"]
+  workflow_call:
+    inputs:
+      cpp_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      go_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-go-toolchain:develop
+
+jobs:
+  codeql_cpp:
+    name: CodeQL C/C++
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.cpp_image || 'ghcr.io/rossvideo/catena-cpp-toolchain:develop' }}
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Configure git safe directory
+        shell: bash
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: c-cpp
+          build-mode: manual
+
+      - name: Build C++
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          export CONNECTIONS="gRPC"
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cmake -G Ninja \
+            -DUNIT_TESTING=OFF \
+            -DBUILD_DOC=OFF \
+            -DCATENA_MODEL=lite \
+            -DCONNECTIONS="${CONNECTIONS}" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DLOG_DIR="${HOME}/Catena/logs" \
+            -B "${BUILD_TARGET}" \
+            -S "${GITHUB_WORKSPACE}/sdks/cpp"
+          ninja -C "${BUILD_TARGET}"
+
+      - name: Analyze C/C++
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:c-cpp
+
+  codeql_go:
+    name: CodeQL Go
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.go_image || 'ghcr.io/rossvideo/catena-go-toolchain:develop' }}
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Configure git safe directory
+        shell: bash
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install file utility
+        run: sudo apt-get update && sudo apt-get install -y file
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: go
+          build-mode: manual
+
+      - name: Build Go
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cd "${GITHUB_WORKSPACE}/sdks/go"
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+          make
+
+      - name: Analyze Go
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:go
+
+  codeql_js:
+    name: CodeQL JavaScript
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript
+          build-mode: none
+
+      - name: Analyze JavaScript
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:javascript
+
+  report_codeql:
+    name: Report CodeQL Results
+    needs: [codeql_cpp, codeql_go, codeql_js]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment on CodeQL failures
+        if: ${{ needs.codeql_cpp.result != 'success' || needs.codeql_go.result != 'success' || needs.codeql_js.result != 'success' }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- ci-comment:codeql -->';
+            const lines = [
+              marker,
+              '## CodeQL Issues',
+              '',
+              '| Language | Result |',
+              '| --- | --- |',
+              `| C/C++ | ${JSON.stringify('${{ needs.codeql_cpp.result }}')} |`,
+              `| Go | ${JSON.stringify('${{ needs.codeql_go.result }}')} |`,
+              `| JavaScript | ${JSON.stringify('${{ needs.codeql_js.result }}')} |`,
+              '',
+              'Review the failed CodeQL jobs in this workflow run for details.'
+            ];
+            const body = lines.join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

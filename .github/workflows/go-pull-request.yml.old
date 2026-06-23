@@ -2,22 +2,6 @@ name: Go Code Analysis
 # this runs the workflow on PR and make sure that the code is tested and analyzed
 
 on:
-  push:
-    branches: ["develop"]
-    paths:
-      - 'sdks/go/**'
-      # Submodule bumps update the gitlink at smpte only (nested paths are not parent-repo paths).
-      - 'smpte'
-      #- 'unittests/go/**'
-      #- 'tools/codegen/**'
-  pull_request:
-    paths:
-      - 'sdks/go/**'
-      # Submodule bumps update the gitlink at smpte only (nested paths are not parent-repo paths).
-      - 'smpte'
-      #- 'unittests/go/**'
-      #- 'tools/codegen/**'
-      - '.github/workflows/go-pull-request.yml'
   workflow_dispatch:
 
 jobs:
