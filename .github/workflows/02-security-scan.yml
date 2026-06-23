@@ -65,7 +65,7 @@ jobs:
 
       - name: Comment Trivy findings on PR
         if: ${{ always() && github.event_name == 'pull_request' && github.event.action != 'closed' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -136,7 +136,7 @@ jobs:
 
       - name: Enforce Trivy policy
         if: ${{ always() }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -213,7 +213,7 @@ jobs:
     steps:
       - name: Comment on security failures
         if: ${{ needs.verify_dependabot.result != 'success' || needs.trivy.result != 'success' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const marker = '<!-- ci-comment:security -->';
