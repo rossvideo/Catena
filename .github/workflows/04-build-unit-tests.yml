@@ -174,7 +174,7 @@ jobs:
 
       - name: Upload C++ test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-summary-cpp
           path: cpp-test-summary.md
@@ -262,7 +262,7 @@ jobs:
 
       - name: Upload Go test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-summary-go
           path: go-test-summary.md
@@ -364,7 +364,7 @@ jobs:
 
       - name: Upload JS test summary
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-summary-js
           path: js-test-summary.md
