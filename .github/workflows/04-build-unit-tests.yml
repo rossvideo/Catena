@@ -390,7 +390,7 @@ jobs:
 
       - name: Find latest successful develop baseline
         id: find_baseline
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -542,7 +542,7 @@ jobs:
           } > unit-test-comment.md
 
       - name: Comment on unit test results
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
