@@ -242,7 +242,7 @@ jobs:
             grep '^--- FAIL:' "$LOG_FILE" | sed -E 's/^--- FAIL: ([^ ]+).*/\1/' > "${FAILED_TESTS_FILE}" || true
           fi
           if [[ -f "${GITHUB_WORKSPACE}/sdks/go/go_coverage.out" ]]; then
-            COVERAGE=$(go tool cover -func="${GITHUB_WORKSPACE}/sdks/go/go_coverage.out" | tail -1 | awk '{print $3}')
+            COVERAGE=$(cd "${GITHUB_WORKSPACE}/sdks/go" && go tool cover -func=go_coverage.out | tail -1 | awk '{print $3}')
           fi
           {
             echo '### Go Build and Tests'
