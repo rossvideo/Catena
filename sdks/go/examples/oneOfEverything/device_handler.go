@@ -39,7 +39,9 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 	switch slot {
 	case 0:
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
+		state.mu.RLock()
 		productValue, _ := state.slotZeroProductValue("product")
+		state.mu.RUnlock()
 		productParam := catena.NewParamStruct(productValue.(map[string]any)).
 			WithReadOnly(true).
 			WithParam("name", catena.NewParamString("")).

@@ -232,9 +232,7 @@ func (s *ExampleState) sampleIntArrayValue() []int32 {
 
 func (s *ExampleState) slotZeroProductValue(fqoid string) (any, bool) {
 	// Slot 0 product subtree lookup; called from value_handlers case switch.
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
+	// Caller must hold s.mu.RLock for the duration of catena.ToValue on the result.
 	switch fqoid {
 	case "product":
 		return s.slotZeroProduct, true

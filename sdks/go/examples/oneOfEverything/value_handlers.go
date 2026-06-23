@@ -20,18 +20,19 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
-		var v any
-		var ok bool
 		switch fqoid {
 		case "product", "product/name", "product/vendor", "product/version":
-			v, ok = state.slotZeroProductValue(fqoid)
+			state.mu.RLock()
+			defer state.mu.RUnlock()
+			v, ok := state.slotZeroProductValue(fqoid)
+			return replyValue(fqoid, v, ok)
 		case "counter":
-			v, ok = counter.GetValue(), true
+			return replyValue(fqoid, counter.GetValue(), true)
 		case "running":
-			v, ok = counter.RunningInt32(), true
+			return replyValue(fqoid, counter.RunningInt32(), true)
+		default:
+			return replyValue(fqoid, nil, false)
 		}
-
-		return replyValue(fqoid, v, ok)
 	})
 
 	// Slot 1: direct sync.Map lookup. This demonstrates map-backed state where
