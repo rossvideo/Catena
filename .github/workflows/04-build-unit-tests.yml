@@ -394,7 +394,7 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const workflowId = '04-build-unit-tests.yml';
+            const workflowId = 'orchestrator.yml';
             const currentRunId = Number(process.env.GITHUB_RUN_ID);
 
             const isNotFound = (error) => error && (error.status === 404 || error.response?.status === 404);
