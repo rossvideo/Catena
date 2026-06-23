@@ -422,14 +422,15 @@ func main() {
 	}
 
 	// --- Transports ---
-	// Register one or both; the same handlers serve REST (port 8080) and gRPC (6254).
+	// Register one or both; the same handlers serve REST and gRPC on their configured ports.
 	if options.UseGrpc {
 		// Reflection enabled so grpcurl works without -proto (local demo only).
 		if err := srv.RegisterTransport(transports.NewGrpcTransport(options.Grpc)); err != nil {
 			logger.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
-		logGrpcEndpointGuide("localhost:6254", sampleAsset)
+		grpcAddr := fmt.Sprintf("localhost:%d", options.Grpc.Port)
+		logGrpcEndpointGuide(grpcAddr, sampleAsset)
 	} else {
 		logger.Info("gRPC transport disabled by config")
 	}
@@ -514,7 +515,7 @@ func main() {
 	logger.Info("")
 	logger.Info("[ gRPC transport ]", "status", status(options.UseGrpc))
 	if options.UseGrpc {
-		grpcAddr := fmt.Sprintf("localhost:%d", options.Dashboard.ServicePort)
+		grpcAddr := fmt.Sprintf("localhost:%d", options.Grpc.Port)
 		logger.Info("    address", "value", grpcAddr)
 		logger.Info("    query", "command", "grpcurl -plaintext "+grpcAddr+" list")
 	}
