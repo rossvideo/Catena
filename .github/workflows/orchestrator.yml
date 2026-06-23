@@ -180,9 +180,9 @@ jobs:
             run_id=$(gh api "repos/$REPOSITORY/actions/workflows/orchestrator.yml/runs" \
               -f event=pull_request \
               -f head_sha="$pr_sha" \
-              --paginate | jq -r \
+              --paginate | jq -rs \
               --argjson pr_number "$pr_number" \
-              'map(select(any(.pull_requests[]?; .number == $pr_number))) | sort_by(.created_at) | reverse | .[0].id // empty')
+              '[.[].workflow_runs[]? | select(any(.pull_requests[]?; .number == $pr_number))] | sort_by(.created_at) | reverse | .[0].id // empty')
             if [[ -z "$run_id" || "$run_id" == "null" ]]; then
               echo "No prior pull_request run found for PR #${pr_number} with matching workflow association; skipping"
               continue
