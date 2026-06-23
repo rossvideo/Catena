@@ -28,7 +28,7 @@ name: "Orchestrator CI"
 jobs:
   dispatch_main_daily:
     name: "0 - Dispatch Main Daily Run"
-    if: ${{ github.event_name == 'schedule' && github.event.schedule == '0 0 * * *' }}
+    if: ${{ github.event_name == 'schedule' && github.event.schedule == '0 0 * * *' && github.ref != 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
