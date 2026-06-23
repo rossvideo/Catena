@@ -45,7 +45,7 @@ jobs:
       go_tag: ${{ steps.detect.outputs.go_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -254,7 +254,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
@@ -314,7 +314,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
