@@ -234,7 +234,7 @@
 	<dependency>
 	    <groupId>io.jsonwebtoken</groupId>
 	    <artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson if Gson is preferred -->
-	    <version>0.12.6</version>
+	    <version>0.13.0</version>
 	    <scope>runtime</scope>
 	</dependency>
 	<!-- Uncomment this next dependency if you are using:
