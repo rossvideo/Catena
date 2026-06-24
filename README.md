@@ -1,5 +1,6 @@
 # ca·te·na
 
+
 > /kəˈtēnə/
 > a connected series of related things
 
