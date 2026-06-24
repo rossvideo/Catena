@@ -163,7 +163,7 @@ Generally you can run tests + coverage with:
 
 4. Ensure all CI checks pass.
 
-5. Request a review from the code owners.
+5. When your PR is ready for review, add the **Ready For Review** label. This signals to maintainers and triggers automated analysis.
 
 ### PR Guidelines
 
@@ -181,6 +181,12 @@ Generally you can run tests + coverage with:
 - Only maintainers can merge pull requests.
 - Reviewers may ask you to cover low-hanging untested paths even if overall coverage meets the threshold.
 - Expect feedback within a few business days. If you haven't heard back, feel free to ping on the PR.
+
+### Review Rounds
+
+1. Add the **Ready For Review** label when your PR is ready.
+2. Reviewers will remove the label when requesting changes.
+3. After addressing feedback, re-add the label and use GitHub's **Re-request review** button to notify your reviewer.
 
 ---
 
