@@ -15,7 +15,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <io.grpc.version>1.75.0</io.grpc.version>
+    <io.grpc.version>1.82.1</io.grpc.version>
     <com.google.protobuf.version>4.35.1</com.google.protobuf.version>
   </properties>
 
@@ -39,7 +39,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.15.0</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -139,17 +139,17 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.15.4</version>
+        <version>2.22.0</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.15.4</version>
+        <version>2.22.0</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.15.4</version>
+        <version>2.22</version>
       </dependency>
       <!-- Force secure Commons versions to fix CVE-2024-47554 and CVE-2025-48924 -->
       <dependency>
@@ -201,12 +201,12 @@
     <dependency>
       <groupId>com.google.j2objc</groupId>
       <artifactId>j2objc-annotations</artifactId>
-      <version>3.0.0</version> <!-- prevent downgrade of version in guava -->
+      <version>3.1</version> <!-- prevent downgrade of version in guava -->
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.11.0</version> <!-- prevent downgrade via protobuf-java-util -->
+      <version>2.14.0</version> <!-- prevent downgrade via protobuf-java-util -->
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -234,7 +234,7 @@
 	<dependency>
 	    <groupId>io.jsonwebtoken</groupId>
 	    <artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson if Gson is preferred -->
-	    <version>0.12.6</version>
+	    <version>0.13.0</version>
 	    <scope>runtime</scope>
 	</dependency>
 	<!-- Uncomment this next dependency if you are using:
