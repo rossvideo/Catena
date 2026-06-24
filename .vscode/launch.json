@@ -6,7 +6,7 @@
         "name": "Debug Go example",
         "request": "launch",
         "mode": "debug",
-        "program": "${workspaceFolder}/sdks/go/examples/oneOfEverything",
+        "program": "${workspaceFolder}/sdks/go/examples/${input:pickGoService}",
         "preLaunchTask": "Generate Protobufs",
         "cwd": "${workspaceFolder}",
         "args": [],
@@ -227,19 +227,10 @@
       "description": "Select Go program to debug",
       "type": "pickString",
       "options": [
-        "getDevice/rest",
-        "getDevice/grpc",
-        "getSetValue/rest",
-        "getSetValue/grpc",
-        "executeCommand/rest",
-        "getAsset/rest",
-        "getAsset/grpc",
-        "oneOfEverything/rest",
-        "oneOfEverything/grpc",
-        "paramInfo/rest",
-        "paramInfo/grpc"
+        "hello_world",
+        "oneOfEverything"
       ],
-      "default": "getSetValue/rest"
+      "default": "hello_world"
     },
     {
       "id": "pickDeviceModel",

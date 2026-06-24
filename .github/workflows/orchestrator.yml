@@ -1,0 +1,221 @@
+name: "Orchestrator CI"
+
+"on":
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: ["develop"]
+  schedule:
+    - cron: "0 0 * * *"
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+    inputs:
+      force_toolchain_update:
+        description: Force toolchain rebuild/update.
+        required: false
+        type: boolean
+        default: false
+      force_cpp_tests:
+        description: Force the C++ build and unit tests to run.
+        required: false
+        type: boolean
+        default: false
+      force_go_tests:
+        description: Force the Go build and unit tests to run.
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  dispatch_main_daily:
+    name: "0 - Dispatch Main Daily Run"
+    if: ${{ github.event_name == 'schedule' && github.event.schedule == '0 0 * * *' && github.ref != 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Dispatch orchestrator on main
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            await github.rest.actions.createWorkflowDispatch({
+              owner,
+              repo,
+              workflow_id: 'orchestrator.yml',
+              ref: 'main',
+              inputs: {
+                force_toolchain_update: 'false',
+                force_cpp_tests: 'true',
+                force_go_tests: 'true',
+              },
+            });
+
+  stage1_toolchain_delta:
+    name: "1 - Delta Toolchains"
+    uses: ./.github/workflows/01-toolchain-delta.yml
+    with:
+      run_mode: ${{ github.event_name == 'workflow_dispatch' && (inputs.force_toolchain_update && 'force' || 'manual') || (github.event_name == 'schedule' && 'manual') || (github.event_name == 'pull_request' && github.event.action == 'closed' && 'closed' || 'pr') }}
+
+  stage2_security:
+    name: "2 - Security Scanning"
+    needs: stage1_toolchain_delta
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
+    uses: ./.github/workflows/02-security-scan.yml
+
+  stage3_codeql:
+    name: "3 - Code Analysis"
+    needs: stage1_toolchain_delta
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
+    uses: ./.github/workflows/03-codeql-analysis.yml
+    with:
+      cpp_image: ${{ needs.stage1_toolchain_delta.outputs.cpp_image }}
+      go_image: ${{ needs.stage1_toolchain_delta.outputs.go_image }}
+
+  stage4_build_tests:
+    name: "4 - Build and Unit Tests"
+    needs: stage1_toolchain_delta
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
+    uses: ./.github/workflows/04-build-unit-tests.yml
+    with:
+      cpp_image: ${{ needs.stage1_toolchain_delta.outputs.cpp_image }}
+      go_image: ${{ needs.stage1_toolchain_delta.outputs.go_image }}
+      force_cpp_tests: ${{ github.event_name == 'schedule' || needs.stage1_toolchain_delta.outputs.cpp_changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_cpp_tests) }}
+      force_go_tests: ${{ github.event_name == 'schedule' || needs.stage1_toolchain_delta.outputs.go_changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_go_tests) }}
+
+  stage5_docs:
+    name: "5 - Update Docs"
+    needs: [stage2_security, stage3_codeql, stage4_build_tests]
+    if: ${{ always() && (github.event_name != 'pull_request' || github.event.action != 'closed') && needs.stage2_security.result == 'success' && needs.stage3_codeql.result == 'success' && needs.stage4_build_tests.result == 'success' }}
+    uses: ./.github/workflows/05-docs-update.yml
+
+  stage6_finalize_toolchain_tags:
+    name: "6 - Finalize Toolchain Tags"
+    needs: stage1_toolchain_delta
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+      pull-requests: read
+    steps:
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Finalize PR toolchain tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CPP_TAG: ${{ needs.stage1_toolchain_delta.outputs.cpp_tag }}
+          GO_TAG: ${{ needs.stage1_toolchain_delta.outputs.go_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_exists() {
+            docker buildx imagetools inspect "$1" >/dev/null 2>&1
+          }
+
+          rerun_open_pr_orchestrators() {
+            local open_prs
+
+            if ! open_prs=$(gh api "repos/$REPOSITORY/pulls" \
+              -f state=open \
+              -f base=develop \
+              --paginate \
+              --jq '.[] | select(.head.repo.full_name == "'"$REPOSITORY"'") | [.number, .head.ref, .head.sha] | @tsv' 2>/dev/null); then
+              echo "Skipping PR reruns: GITHUB_TOKEN cannot enumerate open pull requests in this workflow context"
+              echo "Use a GitHub App or PAT-backed token if cross-PR reruns must be enforced here"
+              return 0
+            fi
+
+            if [[ -z "$open_prs" ]]; then
+              echo "No open in-repo pull requests found for rerun"
+              return 0
+            fi
+
+            while IFS=$'\t' read -r pr_number pr_ref pr_sha; do
+              [[ -n "$pr_number" ]] || continue
+              echo "Re-running orchestrator CI for PR #${pr_number} (${pr_ref} @ ${pr_sha})"
+
+              if ! run_id=$(gh api "repos/$REPOSITORY/actions/workflows/orchestrator.yml/runs" \
+                -f event=pull_request \
+                -f head_sha="$pr_sha" \
+                --paginate 2>/dev/null | jq -rs \
+                --argjson pr_number "$pr_number" \
+                '[.[].workflow_runs[]? | select(any(.pull_requests[]?; .number == $pr_number))] | sort_by(.created_at) | reverse | .[0].id // empty'); then
+                echo "Unable to query prior pull_request runs for PR #${pr_number}; skipping rerun"
+                continue
+              fi
+
+              if [[ -z "$run_id" || "$run_id" == "null" ]]; then
+                echo "No prior pull_request run found for PR #${pr_number} with matching workflow association; skipping"
+                continue
+              fi
+
+              echo "Re-running workflow run ${run_id} for PR #${pr_number}"
+              if ! gh api "repos/$REPOSITORY/actions/runs/${run_id}/rerun" --method POST >/dev/null 2>&1; then
+                echo "Unable to rerun workflow run ${run_id} for PR #${pr_number}; skipping"
+              fi
+            done <<< "$open_prs"
+          }
+
+          delete_matching_pr_tags() {
+            local package_name="$1"
+            local tag_prefix="$2"
+
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              "/orgs/rossvideo/packages/container/${package_name}/versions" \
+              --paginate | jq -r \
+              --arg prefix "$tag_prefix" \
+              '.[] | select((any(.metadata.container.tags[]?; startswith($prefix))) and (all(.metadata.container.tags[]?; . != "develop"))) | .id' |
+            while read -r version_id; do
+              [[ -n "$version_id" ]] || continue
+              echo "Deleting package version ${version_id} for ${package_name} matching ${tag_prefix}*"
+              gh api \
+                --method DELETE \
+                -H "Accept: application/vnd.github+json" \
+                "/orgs/rossvideo/packages/container/${package_name}/versions/${version_id}"
+            done
+          }
+
+          for lang in cpp go; do
+            if [[ "$lang" == "cpp" ]]; then
+              PR_TAG="$CPP_TAG"
+            else
+              PR_TAG="$GO_TAG"
+            fi
+
+            PR_IMAGE="ghcr.io/rossvideo/catena-${lang}-toolchain:${PR_TAG}"
+            DEVELOP_IMAGE="ghcr.io/rossvideo/catena-${lang}-toolchain:develop"
+
+            if ! image_exists "$PR_IMAGE"; then
+              echo "No PR image found for $lang at $PR_IMAGE"
+              continue
+            fi
+
+            if [[ "$MERGED" == "true" ]]; then
+              echo "Promoting $PR_IMAGE to $DEVELOP_IMAGE"
+              docker buildx imagetools create --tag "$DEVELOP_IMAGE" "$PR_IMAGE"
+              delete_matching_pr_tags "catena-${lang}-toolchain" "pr-${PR_NUMBER}-"
+            else
+              delete_matching_pr_tags "catena-${lang}-toolchain" "pr-${PR_NUMBER}-"
+            fi
+          done
+
+          if [[ "$MERGED" != "true" ]]; then
+            exit 0
+          fi
+
+          rerun_open_pr_orchestrators

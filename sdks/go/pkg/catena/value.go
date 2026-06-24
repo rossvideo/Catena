@@ -41,6 +41,7 @@ package catena
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -95,6 +96,14 @@ const (
 	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
 )
 
+// ToValue converts v into a Value with its own deep-copied backing data.
+//
+// For supported input types, the returned Value does not alias caller-owned
+// slices, maps, or payload buffers, so callers may release locks and freely
+// mutate or discard the original input after ToValue returns.
+//
+// Callers must still prevent concurrent mutation of v while this function is
+// running.
 func ToValue(v any) (Value, StatusResult) {
 	val, res := ToProto(v)
 	if res.Code != StatusCodeOk {
@@ -126,11 +135,11 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	case string:
 		return &protos.Value{Kind: &protos.Value_StringValue{StringValue: val}}, StatusResult{Code: StatusCodeOk}
 	case []int32:
-		return &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: val}}}, StatusResult{Code: StatusCodeOk}
+		return &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: slices.Clone(val)}}}, StatusResult{Code: StatusCodeOk}
 	case []float32:
-		return &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: val}}}, StatusResult{Code: StatusCodeOk}
+		return &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: slices.Clone(val)}}}, StatusResult{Code: StatusCodeOk}
 	case []string:
-		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: val}}}, StatusResult{Code: StatusCodeOk}
+		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: slices.Clone(val)}}}, StatusResult{Code: StatusCodeOk}
 	case map[string]any:
 		if len(val) == 0 {
 			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil or empty map[string]any"}
@@ -196,29 +205,18 @@ func ToProto(v any) (*protos.Value, StatusResult) {
 	}
 }
 
-// FromProto converts protos.Value to native Go types
+// FromProto converts protos.Value to native Go types with deep-copied backing data.
+//
+// For supported value kinds, the returned native value does not alias proto-owned
+// slices, maps, or payload buffers, so callers may retain the result in long-lived
+// state and freely reuse or discard the source proto after FromProto returns.
 func FromProto(pv *protos.Value) (any, StatusResult) {
 	if pv == nil {
 		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil Value"}
 	}
 	switch pv.GetKind().(type) {
 	case *protos.Value_DataPayload:
-		pdp := pv.GetDataPayload()
-		if pdp == nil {
-			return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil DataPayload in Value"}
-		}
-		dp := DataPayload{
-			Metadata:        pdp.GetMetadata(),
-			Digest:          pdp.GetDigest(),
-			PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
-		}
-		switch k := pdp.GetKind().(type) {
-		case *protos.DataPayload_Url:
-			dp.Url = k.Url
-		case *protos.DataPayload_Payload:
-			dp.Payload = k.Payload
-		}
-		return dp, StatusResult{Code: StatusCodeOk}
+		return dataPayloadFromProto(pv.GetDataPayload())
 	case *protos.Value_UndefinedValue:
 		return UndefinedValue(pv.GetUndefinedValue()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_EmptyValue:
@@ -230,11 +228,11 @@ func FromProto(pv *protos.Value) (any, StatusResult) {
 	case *protos.Value_StringValue:
 		return pv.GetStringValue(), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_Int32ArrayValues:
-		return pv.GetInt32ArrayValues().GetInts(), StatusResult{Code: StatusCodeOk}
+		return slices.Clone(pv.GetInt32ArrayValues().GetInts()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_Float32ArrayValues:
-		return pv.GetFloat32ArrayValues().GetFloats(), StatusResult{Code: StatusCodeOk}
+		return slices.Clone(pv.GetFloat32ArrayValues().GetFloats()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_StringArrayValues:
-		return pv.GetStringArrayValues().GetStrings(), StatusResult{Code: StatusCodeOk}
+		return slices.Clone(pv.GetStringArrayValues().GetStrings()), StatusResult{Code: StatusCodeOk}
 	case *protos.Value_StructValue:
 		fields := pv.GetStructValue().GetFields()
 		m := make(map[string]any, len(fields))

@@ -1,0 +1,245 @@
+name: "02 Security Scan"
+
+"on":
+  workflow_call:
+
+jobs:
+  verify_dependabot:
+    name: Verify Dependabot Configuration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Require dependabot config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .github/dependabot.yml
+
+  trivy:
+    name: Trivy vulnerability scanner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        id: trivy_scan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          cache: "false"
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          skip-dirs: .git,build,coverage,docs,unittests,smpte
+          skip-files: pom.xml
+
+      - name: Run Trivy vulnerability scanner in repo mode for policy checks
+        id: trivy_json
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          cache: "false"
+          # Policy needs unfixed findings to decide whether newly introduced risk should block PRs.
+          ignore-unfixed: false
+          format: json
+          output: trivy-results.json
+          severity: HIGH,CRITICAL
+          skip-dirs: .git,build,coverage,docs,unittests,smpte
+          skip-files: pom.xml
+          skip-setup-trivy: true
+
+      - name: Comment Trivy findings on PR
+        if: ${{ always() && github.event_name == 'pull_request' && github.event.action != 'closed' }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('trivy-results.json')) {
+              console.log('No Trivy results file found; skipping PR comment');
+              return;
+            }
+
+            const report = JSON.parse(fs.readFileSync('trivy-results.json', 'utf8'));
+
+            if (!report.Results || report.Results.length === 0) {
+              console.log('No Trivy issues found');
+              return;
+            }
+            
+            const marker = '<!-- ci-comment:trivy -->';
+            const lines = [
+              marker,
+              '## 🔒 Trivy Security Scan - HIGH/CRITICAL Issues',
+              '',
+              '| Severity | Rule | Target | Installed | Fixed | Issue |',
+              '| --- | --- | --- | --- | --- | --- |'
+            ];
+            
+            for (const result of report.Results) {
+              const target = result.Target || 'N/A';
+              for (const vuln of result.Vulnerabilities || []) {
+                const severity = vuln.Severity || 'UNKNOWN';
+                const ruleId = vuln.VulnerabilityID || 'N/A';
+                const installed = vuln.InstalledVersion || 'N/A';
+                const fixed = vuln.FixedVersion || 'none';
+                const message = (vuln.Title || 'No description').replace(/\|/g, '\\|');
+                lines.push(`| ${severity} | \`${ruleId}\` | ${target} | ${installed} | ${fixed} | ${message} |`);
+              }
+            }
+
+            if (lines.length === 5) {
+              lines.push('| ✅ | - | - | - | - | No HIGH/CRITICAL findings |');
+            }
+            
+            lines.push('');
+            lines.push('Findings with a fixed version will fail the workflow. Findings without a fixed version fail only when the vulnerable target is new in this PR.');
+            
+            const body = lines.join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Upload SARIF results to Security tab
+        if: ${{ always() && (github.event_name != 'pull_request' || github.event.action == 'closed') && hashFiles('trivy-results.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results.sarif
+          category: Trivy Scan Results
+
+      - name: Enforce Trivy policy
+        if: ${{ always() }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+
+            if (!fs.existsSync('trivy-results.json')) {
+              core.setFailed('Trivy JSON report missing; cannot evaluate vulnerability policy.');
+              return;
+            }
+
+            const report = JSON.parse(fs.readFileSync('trivy-results.json', 'utf8'));
+            const results = report.Results || [];
+            const isPullRequest = Boolean(context.payload.pull_request && context.payload.pull_request.number);
+            let changedFiles = [];
+            const normalizePath = (value) => (value || '').replace(/^\.\//, '').trim();
+            const extractTargetPath = (target) => normalizePath(String(target || '').split(' (')[0]);
+
+            if (isPullRequest) {
+              const { owner, repo } = context.repo;
+              const pull_number = context.payload.pull_request.number;
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner,
+                repo,
+                pull_number,
+                per_page: 100,
+              });
+              changedFiles = files.map((file) => normalizePath(file.filename));
+            }
+
+            const touchedByPr = (target) => {
+              if (!isPullRequest || !target) {
+                return false;
+              }
+              const targetPath = extractTargetPath(target);
+              if (!targetPath) {
+                return false;
+              }
+              return changedFiles.some((file) => file === targetPath || file.endsWith(targetPath) || targetPath.endsWith(file));
+            };
+
+            const blockers = [];
+
+            for (const result of results) {
+              const target = result.Target || 'N/A';
+              for (const vuln of result.Vulnerabilities || []) {
+                const pkg = vuln.PkgName || vuln.PkgID || 'unknown-package';
+                const installedVersion = (vuln.InstalledVersion || 'unknown').trim();
+                const fixedVersion = (vuln.FixedVersion || '').trim();
+                if (fixedVersion) {
+                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} | ${pkg} ${installedVersion} in ${target} has a fixed version (${fixedVersion})`);
+                  continue;
+                }
+
+                if (touchedByPr(target)) {
+                  blockers.push(`${vuln.VulnerabilityID || 'N/A'} | ${pkg} ${installedVersion} in ${target} was introduced or modified in this PR and has no fixed version`);
+                }
+              }
+            }
+
+            if (blockers.length > 0) {
+              core.setFailed([
+                'Trivy policy blocked this PR:',
+                ...blockers.map((entry) => `- ${entry}`),
+              ].join('\n'));
+            }
+
+  report_security:
+    name: Report Security Results
+    needs: [verify_dependabot, trivy]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment on security failures
+        if: ${{ needs.verify_dependabot.result != 'success' || needs.trivy.result != 'success' }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const marker = '<!-- ci-comment:security -->';
+            const lines = [
+              marker,
+              '## Security Scan Issues',
+              '',
+              '| Check | Result |',
+              '| --- | --- |',
+              `| Dependabot configuration | ${JSON.stringify('${{ needs.verify_dependabot.result }}')} |`,
+              `| Trivy scan | ${JSON.stringify('${{ needs.trivy.result }}')} |`,
+              '',
+              'Review the failed security jobs in this workflow run for details.'
+            ];
+            const body = lines.join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

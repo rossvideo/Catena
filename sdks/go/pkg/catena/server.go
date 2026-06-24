@@ -811,6 +811,9 @@ func (s *server) ConnectionCount() int {
 // BroadcastUpdate converts a native Go value into a proto PushUpdates message
 // and sends it to all connected streaming clients. Business logic calls this with
 // plain Go types; the proto serialization is handled internally.
+// The value is deep-copied internally, so callers may release locks and freely
+// mutate or discard the original input after BroadcastUpdate returns.
+// Callers must still prevent concurrent mutation of value while this function is running.
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
 	protoValue, res := ToProto(value)
 	if res.Code != StatusCodeOk {

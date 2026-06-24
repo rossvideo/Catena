@@ -493,3 +493,18 @@ func TestToDevice_FloatRangeConstraint(t *testing.T) {
 	}
 }
 
+func TestProtoMessageToMap_Param(t *testing.T) {
+	param := NewParamInt32(42).WithName(NewPolyglotText("en", "Brightness")).Proto
+
+	definition, err := protoMessageToMap("test", param)
+	if err != nil {
+		t.Fatalf("protoMessageToMap error: %v", err)
+	}
+	if definition["name"] == nil {
+		t.Fatal("expected param name in map definition")
+	}
+	if definition["value"] == nil {
+		t.Fatal("expected param value in map definition")
+	}
+}
+

@@ -1,0 +1,256 @@
+name: "03 CodeQL Analysis"
+
+"on":
+  push:
+    branches: ["develop"]
+  workflow_call:
+    inputs:
+      cpp_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      go_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-go-toolchain:develop
+
+jobs:
+  detect_changes:
+    name: Detect language changes
+    runs-on: ubuntu-latest
+    outputs:
+      cpp_changed: ${{ steps.detect.outputs.cpp_changed }}
+      go_changed: ${{ steps.detect.outputs.go_changed }}
+      js_changed: ${{ steps.detect.outputs.js_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Detect changed paths
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
+            echo "Running all CodeQL languages on develop"
+            echo "cpp_changed=true" >> "$GITHUB_OUTPUT"
+            echo "go_changed=true" >> "$GITHUB_OUTPUT"
+            echo "js_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            DIFF_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" || true)"
+          else
+            git fetch origin develop --depth=1
+            DIFF_FILES="$(git diff --name-only origin/develop...HEAD || true)"
+          fi
+
+          echo "Changed files:"
+          echo "$DIFF_FILES"
+
+          CPP_CHANGED=false
+          GO_CHANGED=false
+          JS_CHANGED=false
+
+          if echo "$DIFF_FILES" | grep -Eq '^(sdks/cpp/|unittests/cpp/|smpte/)'; then
+            CPP_CHANGED=true
+          fi
+          if echo "$DIFF_FILES" | grep -Eq '^(sdks/go/|smpte/)'; then
+            GO_CHANGED=true
+          fi
+          if echo "$DIFF_FILES" | grep -Eq '^(tools/codegen/|package\.json$)'; then
+            JS_CHANGED=true
+          fi
+
+          echo "cpp_changed=$CPP_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "go_changed=$GO_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "js_changed=$JS_CHANGED" >> "$GITHUB_OUTPUT"
+
+  codeql_cpp:
+    name: CodeQL C/C++
+    needs: detect_changes
+    if: ${{ github.ref == 'refs/heads/develop' || needs.detect_changes.outputs.cpp_changed == 'true' }}
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.cpp_image || 'ghcr.io/rossvideo/catena-cpp-toolchain:develop' }}
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Configure git safe directory
+        shell: bash
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: c-cpp
+          build-mode: manual
+
+      - name: Build C++
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          export CONNECTIONS="gRPC"
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cmake -G Ninja \
+            -DUNIT_TESTING=OFF \
+            -DBUILD_DOC=OFF \
+            -DCATENA_MODEL=lite \
+            -DCONNECTIONS="${CONNECTIONS}" \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DLOG_DIR="${HOME}/Catena/logs" \
+            -B "${BUILD_TARGET}" \
+            -S "${GITHUB_WORKSPACE}/sdks/cpp"
+          ninja -C "${BUILD_TARGET}"
+
+      - name: Analyze C/C++
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:c-cpp
+
+  codeql_go:
+    name: CodeQL Go
+    needs: detect_changes
+    if: ${{ github.ref == 'refs/heads/develop' || needs.detect_changes.outputs.go_changed == 'true' }}
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.go_image || 'ghcr.io/rossvideo/catena-go-toolchain:develop' }}
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Configure git safe directory
+        shell: bash
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install file utility
+        run: sudo apt-get update && sudo apt-get install -y file
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: go
+          build-mode: manual
+
+      - name: Build Go
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cd "${GITHUB_WORKSPACE}/sdks/go"
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+          make
+
+      - name: Analyze Go
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:go
+
+  codeql_js:
+    name: CodeQL JavaScript
+    needs: detect_changes
+    if: ${{ github.ref == 'refs/heads/develop' || needs.detect_changes.outputs.js_changed == 'true' }}
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript
+          build-mode: none
+
+      - name: Analyze JavaScript
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:javascript
+
+  report_codeql:
+    name: Report CodeQL Results
+    needs: [detect_changes, codeql_cpp, codeql_go, codeql_js]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment on CodeQL failures
+        if: ${{ contains(fromJson('["failure","cancelled","timed_out","action_required"]'), needs.codeql_cpp.result) || contains(fromJson('["failure","cancelled","timed_out","action_required"]'), needs.codeql_go.result) || contains(fromJson('["failure","cancelled","timed_out","action_required"]'), needs.codeql_js.result) }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const marker = '<!-- ci-comment:codeql -->';
+            const lines = [
+              marker,
+              '## CodeQL Issues',
+              '',
+              '| Language | Result |',
+              '| --- | --- |',
+              `| C/C++ | ${JSON.stringify('${{ needs.codeql_cpp.result }}')} |`,
+              `| Go | ${JSON.stringify('${{ needs.codeql_go.result }}')} |`,
+              `| JavaScript | ${JSON.stringify('${{ needs.codeql_js.result }}')} |`,
+              '',
+              'Review the failed CodeQL jobs in this workflow run for details.'
+            ];
+            const body = lines.join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

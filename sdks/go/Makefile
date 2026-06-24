@@ -1,4 +1,4 @@
-CMDS := oneOfEverything
+CMDS := oneOfEverything hello_world
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 

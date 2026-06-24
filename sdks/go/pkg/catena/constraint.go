@@ -39,6 +39,7 @@
 package catena
 
 import (
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -46,6 +47,27 @@ import (
 // every constraint kind defined in the protocol.
 type Constraint struct {
 	Proto *protos.Constraint
+}
+
+// ToMap converts a Constraint into the map shape accepted by ToDevice. This is
+// useful when constructing device["constraints"] with the SDK's Constraint builders.
+func (c *Constraint) ToMap() map[string]any {
+	if c == nil || c.Proto == nil {
+		logger.Error("Constraint.ToMap: nil Constraint")
+		return map[string]any{}
+	}
+
+	definition, err := protoMessageToMap("Constraint.ToMap", c.Proto)
+	if err != nil {
+		logger.Error("Constraint.ToMap: failed to convert constraint", "error", err)
+		return map[string]any{}
+	}
+	normalizeConstraintMap(definition, c.Proto)
+	return definition
+}
+
+func normalizeConstraintMap(definition map[string]any, constraint *protos.Constraint) {
+	definition["type"] = constraint.GetType()
 }
 
 // --- Input types for constraint builders ---
