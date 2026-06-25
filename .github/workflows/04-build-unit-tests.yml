@@ -252,7 +252,6 @@ jobs:
           path: |
             ${{ env.BUILD_TARGET }}/go-tests.xml
             ${{ env.COVERAGE_DIR }}/go_coverage.xml
-            go-test-summary.md
           if-no-files-found: error
 
   test_js:
