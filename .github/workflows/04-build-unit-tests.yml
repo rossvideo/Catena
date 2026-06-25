@@ -240,9 +240,20 @@ jobs:
 
       - uses: actions/upload-code-coverage@v1
         with:
-          file: ${{ vars.COVERAGE_DIR }}/go_coverage.xml
+          file: ${{ env.COVERAGE_DIR }}/go_coverage.xml
           language: Go
           label: code-coverage/go
+
+      - name: Upload Go test artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-summary-go
+          path: |
+            ${{ env.BUILD_TARGET }}/go-tests.xml
+            ${{ env.COVERAGE_DIR }}/go_coverage.xml
+            go-test-summary.md
+          if-no-files-found: error
 
       # - name: Summarize Go tests
       #   if: ${{ always() }}
