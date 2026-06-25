@@ -54,7 +54,7 @@ clean-protos:
 	rm -rf "$(GENERATED_DIR)"
 
 # Test targets
-.PHONY: test race coverage coverage-html coverage-lcov clean-coverage
+.PHONY: test race coverage coverage-html coverage-lcov coverage-cobertura clean-coverage
 
 # Exclude generated protos from tests + coverage accounting
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
