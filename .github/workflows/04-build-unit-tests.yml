@@ -54,9 +54,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
+      pull-requests: write
+      code-quality: write
     container:
       image: ${{ inputs.cpp_image }}
       options: --user root:root
+    env:
+      BUILD_TARGET: ${{ github.workspace }}/build/cpp
+      CMAKE_BUILD_TYPE: Debug
+      CONNECTIONS: 'gRPC;REST'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -68,9 +75,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
-          export CMAKE_BUILD_TYPE=Debug
-          export CONNECTIONS='gRPC;REST'
 
           cd "${GITHUB_WORKSPACE}/smpte"
           ./build-openapi.sh
