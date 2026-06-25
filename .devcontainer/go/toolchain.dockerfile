@@ -76,7 +76,9 @@ RUN go install \
     google.golang.org/grpc/cmd/protoc-gen-go-grpc \
     github.com/axw/gocov/gocov \
     github.com/matm/gocov-html/cmd/gocov-html \
-    github.com/jandelgado/gcov2lcov
+    github.com/jandelgado/gcov2lcov \
+    gotest.tools/gotestsum \
+    github.com/boumenot/gocover-cobertura
 
 ENV GOBIN=
 
