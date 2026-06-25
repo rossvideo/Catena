@@ -248,90 +248,78 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: unit-test-summary-go
+          name: unit-test-artifacts-go
           path: |
             ${{ env.BUILD_TARGET }}/go-tests.xml
             ${{ env.COVERAGE_DIR }}/go_coverage.xml
             go-test-summary.md
           if-no-files-found: error
 
-      # - name: Summarize Go tests
-      #   if: ${{ always() }}
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     export BUILD_TARGET="${GITHUB_WORKSPACE}/build/go"
-      #     python3 - <<'PY'
-      #     import os
-      #     import xml.etree.ElementTree as ET
-      #     import subprocess
+  test_js:
+    name: Codegen JS Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.js_changed == 'true'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      code-quality: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
 
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 24
 
-      #     go_sdk_dir = os.path.join(os.environ['GITHUB_WORKSPACE'], 'sdks', 'go')
-      #     output_path = os.path.join(os.environ['GITHUB_WORKSPACE'], 'go-test-summary.md')
-      #     xml_path = os.path.join(os.environ['BUILD_TARGET'], 'go-tests.xml')
-      #     coverage_out = os.path.join(go_sdk_dir, 'go_coverage.out')
-      #     outcome = '${{ steps.run_go_tests.outcome }}'
+      - name: Build SMPTE artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./install-tooling.sh
+          npm ci
+          ./build-openapi.sh
+      
+      - name: Run codegen tests
+        id: run_js_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/tools/codegen"
+          npm ci
+          run_js_tests() {
+            npm test -- --ci
+          }
+          if ! run_js_tests; then
+            echo "JS tests failed on first attempt; retrying once..."
+            run_js_tests
+          fi
 
-      #     tests = failures = skipped = errors = 0
-      #     coverage = 'n/a'
-      #     failed_tests = []
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: (!cancelled())
+        with:
+          files: ${{ github.workspace }}/tools/codegen/junit.xml
+          check-name: Codegen JS Unit Tests
 
-      #     # Read counts and failed test names from JUnit XML
-      #     if os.path.exists(xml_path):
-      #         root = ET.parse(xml_path).getroot()
-      #         tests = int(root.attrib.get('tests', 0))
-      #         failures = int(root.attrib.get('failures', 0))
-      #         errors = int(root.attrib.get('errors', 0))
+      - uses: actions/upload-code-coverage@v1
+        with:
+          file: ${{ github.workspace }}/tools/codegen/coverage/cobertura-coverage.xml
+          language: JavaScript
+          label: code-coverage/js
 
-      #         for testcase in root.findall('.//testcase'):
-      #             if testcase.find('skipped') is not None:
-      #                 skipped += 1
-      #             has_failure = testcase.find('failure') is not None
-      #             has_error = testcase.find('error') is not None
-      #             if has_failure or has_error:
-      #                 classname = testcase.attrib.get('classname', '').strip()
-      #                 name = testcase.attrib.get('name', '').strip()
-      #                 label = f"{classname}.{name}" if classname else name
-      #                 if label:
-      #                     failed_tests.append(label)
-      #         failed_tests = list(dict.fromkeys(failed_tests))
-
-      #     # Get coverage percentage
-      #     if os.path.exists(coverage_out):
-      #         try:
-      #             result = subprocess.run(
-      #                 ['go', 'tool', 'cover', f'-func={coverage_out}'],
-      #                 capture_output=True, text=True, cwd=go_sdk_dir
-      #             )
-      #             if result.returncode == 0:
-      #                 last_line = result.stdout.strip().splitlines()[-1]
-      #                 coverage = last_line.split()[-1]
-      #         except Exception:
-      #             pass
-
-      #     passed = tests - failures - skipped - errors
-
-      #     with open(output_path, 'w', encoding='utf-8') as handle:
-      #         handle.write('### Go Build and Tests\n')
-      #         handle.write(f'- Result: {outcome}\n')
-      #         handle.write(f'- Passed tests: {passed}\n')
-      #         handle.write(f'- Failed tests: {failures}\n')
-      #         handle.write(f'- Skipped tests: {skipped}\n')
-      #         handle.write(f'- Coverage: {coverage}\n')
-      #         if failed_tests:
-      #             limit = 20
-      #             handle.write('- Failed tests:\n')
-      #             for test_name in failed_tests[:limit]:
-      #                 handle.write(f'  - {test_name}\n')
-      #             if len(failed_tests) > limit:
-      #                 handle.write(f'  - ... and {len(failed_tests) - limit} more\n')
-      #     PY
-
-      - name: Upload Go test summary
+      - name: Upload JS test artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: unit-test-summary-go
-          path: go-test-summary.md
+          name: unit-test-artifacts-js
+          path: |
+            ${{ github.workspace }}/tools/codegen/junit.xml
+            ${{ github.workspace }}/tools/codegen/coverage/cobertura-coverage.xml
           if-no-files-found: error
