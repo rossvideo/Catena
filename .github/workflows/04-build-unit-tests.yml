@@ -194,6 +194,7 @@ jobs:
     container:
       image: ${{ inputs.go_image }}
       options: --user root:root
+
     env:
       BUILD_TARGET: ${{ github.workspace }}/build/go
       COVERAGE_DIR: ${{ github.workspace }}/sdks/go
@@ -239,7 +240,7 @@ jobs:
 
       - uses: actions/upload-code-coverage@v1
         with:
-          file: $COVERAGE_DIR/go_coverage.xml
+          file: ${{ vars.COVERAGE_DIR }}/go_coverage.xml
           language: Go
           label: code-coverage/go
 
