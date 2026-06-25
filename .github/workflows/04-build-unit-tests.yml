@@ -276,6 +276,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 24
+          cache: "npm"
+          cache-dependency-path: tools/package-lock.json
 
       - name: Build SMPTE artifacts
         shell: bash
@@ -283,7 +285,6 @@ jobs:
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}/smpte"
           ./install-tooling.sh
-          npm ci
           ./build-openapi.sh
       
       - name: Run codegen tests
