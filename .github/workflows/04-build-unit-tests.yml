@@ -236,7 +236,7 @@ jobs:
         if: (!cancelled())
         with:
           files: ${{ github.workspace }}/build/go/go-tests.xml
-          check-name: Go Unit Tests
+          check_name: Go Unit Tests
 
       - uses: actions/upload-code-coverage@v1
         with:
@@ -307,7 +307,7 @@ jobs:
         if: (!cancelled())
         with:
           files: ${{ github.workspace }}/tools/codegen/junit.xml
-          check-name: Codegen JS Unit Tests
+          check_name: Codegen JS Unit Tests
 
       - uses: actions/upload-code-coverage@v1
         with:
