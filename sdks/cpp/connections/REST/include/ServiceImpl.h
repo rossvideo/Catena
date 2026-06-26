@@ -185,6 +185,10 @@ class ServiceImpl : public catena::REST::IServiceImpl {
      */
     const std::string& version() const override { return version_; }
     /**
+     * @brief Returns the actual port the service is bound to.
+     */
+    uint16_t listeningPort() const { return port_; }
+    /**
      * @brief Starts the API.
      */
     void run() override;
