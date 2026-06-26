@@ -82,7 +82,7 @@ class gRPCServiceImplTests : public testing::Test {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
         // Creating the gRPC server.
-        builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
+        builder_.AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials(), &selectedPort_);
         cq_ = builder_.AddCompletionQueue();
         ServiceConfig config = ServiceConfig()
             .set_EOPath(EOPath_)
@@ -97,6 +97,7 @@ class gRPCServiceImplTests : public testing::Test {
         ASSERT_EQ(service_->registrySize(), 14) << "ServiceImpl failed to register " << 14 - service_->registrySize() << " CallData objects";
         cqthread_ = std::make_unique<std::thread>([&]() { service_->processEvents(); });
         // Creating the gRPC client.
+        serverAddr_ = "127.0.0.1:" + std::to_string(selectedPort_);
         channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
         client_ = st2138::CatenaService::NewStub(channel_);
     }
@@ -121,7 +122,8 @@ class gRPCServiceImplTests : public testing::Test {
     std::streambuf* oldCout_;
 
     // Address used for gRPC tests.
-    std::string serverAddr_ = "0.0.0.0:50051";
+    std::string serverAddr_ = "";
+    int selectedPort_ = 0;
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;
@@ -191,7 +193,7 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     ServiceConfig config;
     // Adding completion queue
     grpc::ServerBuilder builder;
-    builder.AddListeningPort("0.0.0.0:50051", grpc::InsecureServerCredentials());
+    builder.AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials());
     auto cq = builder.AddCompletionQueue();
     config.cq = cq.get();
     // Adding devices
