@@ -13,7 +13,7 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMa
     if (context.stream()) {
         writer_ = std::make_unique<catena::REST::SSEWriter>(socket, context.origin());
     } else {
-        writer_ = std::make_unique<catena::REST::SocketWriter>(socket, context.origin(), true);
+        writer_ = std::make_unique<catena::REST::SocketWriter>(socket, context.origin());
     }
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 
@@ -23,6 +23,7 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, SlotMa
 void DeviceRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
     catena::exception_with_status rc{"", catena::StatusCode::OK};
+    st2138::Device unaryDevice{};
     try {
         bool shallowCopy = true; // controls whether shallow copy or deep copy is used
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
@@ -71,7 +72,43 @@ void DeviceRequest::proceed() {
                         std::lock_guard lg(dm->mutex());
                         component = serializer_->getNext();
                     }
-                    writer_->sendResponse(rc, component);
+                    if (context_.stream()) {
+                        // streams are easy, just send the device
+                        writer_->sendResponse(rc, component);
+                    } else {
+                        // unary we have to build up the proper Device message
+                        if (component.has_device()) {
+                            // THIS IS ASSUMING THAT THE DEVICE COMPONENT IS ALWAYS THE
+                            // FIRST COMPONENT IN THE SERIALIZATION
+                            unaryDevice = component.device();
+                        } else if (component.has_param()) {
+                            unaryDevice.mutable_params()->insert({component.param().oid(), component.param().param()});
+                        } else if (component.has_shared_constraint()) {
+                            unaryDevice.mutable_constraints()->insert({component.shared_constraint().oid(), component.shared_constraint().constraint()});
+                        } else if (component.has_menu()) {
+                            // split the menu's oid into group and menu
+                            std::string menuOid = component.menu().oid();
+                            size_t pos = menuOid.find('/');
+                            if (pos == std::string::npos) {
+                                // TODO decide the appropriate error handling here
+                                continue;
+                            }
+                            std::string group = menuOid.substr(0, pos);
+                            std::string menu = menuOid.substr(pos + 1);
+                            // make sure the group exists in the device, if not create it
+                            st2138::MenuGroup menuGroup{};
+                            if (!unaryDevice.menu_groups().contains(group)) {
+                                unaryDevice.mutable_menu_groups()->insert({group, menuGroup});
+                            } else {
+                                menuGroup = unaryDevice.menu_groups().at(group);
+                            }
+                            menuGroup.mutable_menus()->insert({menu, component.menu().menu()});
+                        } else if (component.has_command()) {
+                            unaryDevice.mutable_commands()->insert({component.command().oid(), component.command().command()});
+                        } else if (component.has_language_pack()) {
+                            unaryDevice.mutable_language_packs()->mutable_packs()->insert({component.language_pack().language(), component.language_pack().language_pack()});
+                        }
+                    }
                 }
             } else {
                 rc = catena::exception_with_status{"Illegal state", catena::StatusCode::INTERNAL};
@@ -86,8 +123,14 @@ void DeviceRequest::proceed() {
     } catch (...) {
         rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     }
-    // empty msg signals unary to send response. Does nothing for stream.
-    writer_->sendResponse(rc);
+
+    if (context_.stream()) {
+        // required to send errors.
+        writer_->sendResponse(rc);
+    } else {
+        // send the full response if not streaming, otherwise the last message has already been sent
+        writer_->sendResponse(rc, unaryDevice);
+    }
 
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());

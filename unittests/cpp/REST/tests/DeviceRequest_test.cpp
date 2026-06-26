@@ -100,10 +100,10 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
                 expVals_.begin()->mutable_language_pack()->set_language("language_test");
             case 2:
                 expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
-                expVals_.begin()->mutable_menu()->set_oid("menu_test");
+                expVals_.begin()->mutable_menu()->set_oid("menu_group/menu_test");
             case 1:
                 expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
-                expVals_.begin()->mutable_device()->set_slot(slot_);
+                expVals_.begin()->mutable_device()->set_slot(1);
         }
     }
     /*
@@ -111,16 +111,50 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
      */
     void testCall() {
         endpoint_->proceed();
-        std::vector<std::string> jsonBodies;
-        for (const auto& expVal : expVals_) {
-            jsonBodies.push_back("");
-            auto status = google::protobuf::util::MessageToJsonString(expVal, &jsonBodies.back());
-            ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
-        }
         if (stream_) {
+            std::vector<std::string> jsonBodies;
+            for (const auto& expVal : expVals_) {
+                jsonBodies.push_back("");
+                auto status = google::protobuf::util::MessageToJsonString(expVal, &jsonBodies.back());
+                ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+            }
             EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
         } else {
-            EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBodies));
+            if (!expVals_.empty()) {
+                // the first item in expVals_ is the device
+                st2138::Device device = expVals_.front().device();
+                // go through the rest of expVals_ and add them to the device
+                for (size_t i = 1; i < expVals_.size(); ++i) {
+                    const st2138::DeviceComponent& comp = expVals_[i];
+                    if (comp.has_command()) {
+                        device.mutable_commands()->insert({comp.command().oid(), comp.command().command()});
+                    } else if (comp.has_param()) {
+                        device.mutable_params()->insert({comp.param().oid(), comp.param().param()});
+                    } else if (comp.has_shared_constraint()) {
+                        device.mutable_constraints()->insert({comp.shared_constraint().oid(), comp.shared_constraint().constraint()});
+                    } else if (comp.has_language_pack()) {
+                        device.mutable_language_packs()->mutable_packs()->insert({comp.language_pack().language(), comp.language_pack().language_pack()});
+                    } else if (comp.has_menu()) {
+                        // split the menu's oid into group and menu
+                        std::string menuOid = comp.menu().oid();
+                        size_t pos = menuOid.find('/');
+                        ASSERT_NE(pos, std::string::npos) << "Menu oid does not contain a group: " << menuOid;
+                        std::string group = menuOid.substr(0, pos);
+                        std::string menu = menuOid.substr(pos + 1);
+                        // make sure the group exists in the device, if not create it
+                        st2138::MenuGroup menuGroup{};
+                        if (!device.menu_groups().contains(group)) {
+                            device.mutable_menu_groups()->insert({group, menuGroup});
+                        } else {
+                            menuGroup = device.menu_groups().at(group);
+                        }
+                        menuGroup.mutable_menus()->insert({menu, comp.menu().menu()});
+                    }
+                }
+                auto status = google::protobuf::util::MessageToJsonString(device, &jsonBody_);
+                ASSERT_TRUE(status.ok()) << "Failed to convert expected device to JSON";
+            }
+            EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBody_));
         }
     }
 
@@ -192,6 +226,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Stream) {
 // Test 1.3: Test proceed with authz enabled and a valid token.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
     authzEnabled_ = true;
+    initExpVal(1);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
@@ -199,8 +234,11 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
             EXPECT_EQ(dl, st2138::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
-            EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
-            EXPECT_CALL(*mockSerializer, getNext()).Times(0);
+            EXPECT_CALL(*mockSerializer, hasMore())
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(false));
+            EXPECT_CALL(*mockSerializer, getNext())
+                .WillOnce(testing::Return(expVals_[0]));
             return mockSerializer;
         }));
     // Calling proceed and testing the output
@@ -209,6 +247,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
 
 // Test 1.4: Test proceed with Subscriptions
 TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
+    initExpVal(1);
     std::set<std::string> expectedSubscribedOids = {"param1", "param2", "param3"};
     MockSubscriptionManager mockSubManager;
     // Set up expectations for subscription mode
@@ -219,12 +258,15 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
         .WillOnce(testing::Return(expectedSubscribedOids));
     // Set up expectation for getComponentSerializer to verify subscribed OIDs are passed
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&expectedSubscribedOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
+        .WillOnce(testing::Invoke([this, &expectedSubscribedOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(subscribedOids, expectedSubscribedOids);
             EXPECT_EQ(dl, st2138::Device_DetailLevel_SUBSCRIPTIONS);
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
-            EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
-            EXPECT_CALL(*mockSerializer, getNext()).Times(0);
+            EXPECT_CALL(*mockSerializer, hasMore())
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(false));
+            EXPECT_CALL(*mockSerializer, getNext())
+                .WillOnce(testing::Return(expVals_[0]));
             return mockSerializer;
         }));
     // Calling proceed and testing the output
