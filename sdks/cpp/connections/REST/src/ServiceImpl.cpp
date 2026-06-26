@@ -41,6 +41,9 @@ ServiceImpl::ServiceImpl(const ServiceConfig& config)
       router_{Router::getInstance()},
       connectionQueue_{config.maxConnections} {
 
+    // Preserve the actual bound port value reported by the acceptor.
+    port_ = acceptor_.local_endpoint().port();
+
     if (authorizationEnabled_) { LOG(INFO) <<"Authorization enabled."; }
     // Adding dms to slotMap.
     for (auto dm : config.dms) {
