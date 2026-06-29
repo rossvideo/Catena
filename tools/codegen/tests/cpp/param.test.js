@@ -381,6 +381,66 @@ describe('Param class', () => {
     expect(args).toContain('nullptr');
   });
 
+  test('descriptor precision defaults to 2 for FLOAT32', () => {
+    const descriptor = {
+      slot: 1,
+      detail_level: 'FULL',
+      access_scopes: ['test:op'],
+      default_scope: 'test:op',
+      params: {
+        gain: { type: 'FLOAT32' }
+      }
+    };
+    const { params } = createMockDeviceWithParams(descriptor, 'Test');
+    const args = params.gain.descriptor.getArgs('');
+    expect(args).toMatch(/,\s*2,\s*false,\s*nullptr$/);
+  });
+
+  test('descriptor precision uses explicit precision for FLOAT32', () => {
+    const descriptor = {
+      slot: 1,
+      detail_level: 'FULL',
+      access_scopes: ['test:op'],
+      default_scope: 'test:op',
+      params: {
+        gain: { type: 'FLOAT32', precision: 5 }
+      }
+    };
+    const { params } = createMockDeviceWithParams(descriptor, 'Test');
+    const args = params.gain.descriptor.getArgs('');
+    expect(args).toMatch(/,\s*5,\s*false,\s*nullptr$/);
+  });
+
+  test('descriptor precision defaults to 2 for FLOAT32_ARRAY', () => {
+    const descriptor = {
+      slot: 1,
+      detail_level: 'FULL',
+      access_scopes: ['test:op'],
+      default_scope: 'test:op',
+      params: {
+        gains: { type: 'FLOAT32_ARRAY' }
+      }
+    };
+    const { params } = createMockDeviceWithParams(descriptor, 'Test');
+    const args = params.gains.descriptor.getArgs('');
+    expect(args).toMatch(/,\s*2,\s*false,\s*nullptr$/);
+  });
+
+  test('descriptor precision is 0 for non-float types even when precision is provided', () => {
+    const descriptor = {
+      slot: 1,
+      detail_level: 'FULL',
+      access_scopes: ['test:op'],
+      default_scope: 'test:op',
+      params: {
+        count: { type: 'INT32', precision: 9 }
+      }
+    };
+    const { params } = createMockDeviceWithParams(descriptor, 'Test');
+    const args = params.count.descriptor.getArgs('');
+    expect(args).toMatch(/,\s*0,\s*false,\s*nullptr$/);
+  });
+
   test('getFieldInfoTypes returns FieldInfo tuple types', () => {
     const types = params.product.getFieldInfoTypes();
     expect(types).toContain('FieldInfo<');
