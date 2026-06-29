@@ -25,6 +25,7 @@ func logGrpcEndpointGuide(host, sampleAsset string) {
 	logEndpointLine("GetPopulatedSlots", fmt.Sprintf("grpcurl -plaintext -d '{}' %s st2138.CatenaService/GetPopulatedSlots", host))
 	logEndpointLine("DeviceRequest", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0}' %s st2138.CatenaService/DeviceRequest", host))
 	logEndpointLine("GetValue", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"oid\":\"counter\"}' %s st2138.CatenaService/GetValue", host))
+	logEndpointLine("GetParam", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"oid\":\"/counter\"}' %s st2138.CatenaService/GetParam", host))
 	logEndpointLine("SetValue", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"value\":{\"oid\":\"counter\",\"value\":{\"int32_value\":5}}}' %s st2138.CatenaService/SetValue", host))
 	logEndpointLine("MultiSetValue", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"values\":[{\"oid\":\"counter\",\"value\":{\"int32_value\":5}}]}' %s st2138.CatenaService/MultiSetValue", host))
 	logEndpointLine("ExternalObjectRequest", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"oid\":\"%s\"}' %s st2138.CatenaService/ExternalObjectRequest", assetOID, host))
