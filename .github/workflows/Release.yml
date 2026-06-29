@@ -33,6 +33,9 @@ on:
     types: [closed]
     branches: [main]
 
+  pull_request_review:
+    types: [submitted]
+
 # ══════════════════════════════════════════════════════════════════════════════
 # PHASE 1 JOBS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -221,14 +224,35 @@ jobs:
           | Branch      | \`$BRANCH_NAME\` |
           | Base        | \`main\` |
 
-          ### What happens when this PR is approved and merged
-          1. The release branch will be squash-merged back into \`develop\`.
-          2. A GitHub release tagged \`$NEW_VERSION\` will be created on \`main\`.
-          3. Toolchain containers will be retagged \`develop → latest\`.
+          ### What happens when this PR is approved
+          1. The release branch will be merged into \`main\`.
+          2. The release branch will be squash-merged back into \`develop\`.
+          3. A GitHub release tagged \`$NEW_VERSION\` will be created on \`main\`.
+          4. Toolchain containers will be retagged \`develop → latest\`.
 
-          > ⚠️ **Closing this PR without merging will cancel the release.**")
+          > ⚠️ **Closing this PR without approveal will cancel the release.**")
 
           echo "✅ Release PR opened: $PR_URL"
+
+
+  merge_release_pr:
+    name: "1f - Merge Release PR"
+    if: github.event_name == 'pull_request_review' &&
+      github.event.review.state == 'approved' &&
+      startsWith(github.event.pull_request.head.ref, 'release-v') &&
+      github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Merge the release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" --merge --admin --repo "${{ github.repository }}"
+
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PHASE 2 JOBS
