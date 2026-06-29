@@ -268,14 +268,21 @@ jobs:
           fi
 
           ORIG_ALLOW_MERGE=$(gh api "repos/${{ github.repository }}" --jq '.allow_merge_commit')
+          ORIG_DELETE_BRANCH_ON_MERGE=$(gh api "repos/${{ github.repository }}" --jq '.delete_branch_on_merge')
           echo "orig_allow_merge=$ORIG_ALLOW_MERGE" >> "$GITHUB_OUTPUT"
+          echo "orig_delete_branch_on_merge=$ORIG_DELETE_BRANCH_ON_MERGE" >> "$GITHUB_OUTPUT"
           echo "Current allow_merge_commit=$ORIG_ALLOW_MERGE"
+          echo "Current delete_branch_on_merge=$ORIG_DELETE_BRANCH_ON_MERGE"
 
-          if [[ "$ORIG_ALLOW_MERGE" != "true" ]]; then
-            gh api -X PATCH "repos/${{ github.repository }}" -f allow_merge_commit=true >/dev/null
+          if [[ "$ORIG_ALLOW_MERGE" != "true" ]] || [[ "$ORIG_DELETE_BRANCH_ON_MERGE" != "false" ]]; then
+            gh api -X PATCH "repos/${{ github.repository }}" \
+              -f allow_merge_commit=true \
+              -f delete_branch_on_merge=false >/dev/null
             echo "✅ Temporarily enabled allow_merge_commit=true"
+            echo "✅ Temporarily set delete_branch_on_merge=false"
           else
             echo "ℹ️  allow_merge_commit already enabled"
+            echo "ℹ️  delete_branch_on_merge already disabled"
           fi
 
       - name: Merge the release PR (merge commit)
@@ -290,6 +297,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
           ORIG_ALLOW_MERGE: ${{ steps.enable_merge_commits.outputs.orig_allow_merge }}
+          ORIG_DELETE_BRANCH_ON_MERGE: ${{ steps.enable_merge_commits.outputs.orig_delete_branch_on_merge }}
         run: |
           set -euo pipefail
 
@@ -298,12 +306,12 @@ jobs:
             exit 1
           fi
 
-          if [[ "$ORIG_ALLOW_MERGE" == "true" ]]; then
-            echo "ℹ️  Original allow_merge_commit was true; no restore needed"
-          else
-            gh api -X PATCH "repos/${{ github.repository }}" -f allow_merge_commit=false >/dev/null
-            echo "✅ Restored allow_merge_commit=false"
-          fi
+          gh api -X PATCH "repos/${{ github.repository }}" \
+            -f allow_merge_commit="$ORIG_ALLOW_MERGE" \
+            -f delete_branch_on_merge="$ORIG_DELETE_BRANCH_ON_MERGE" >/dev/null
+
+          echo "✅ Restored allow_merge_commit=$ORIG_ALLOW_MERGE"
+          echo "✅ Restored delete_branch_on_merge=$ORIG_DELETE_BRANCH_ON_MERGE"
 
 
 
