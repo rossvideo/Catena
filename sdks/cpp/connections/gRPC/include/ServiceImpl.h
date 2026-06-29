@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -34,8 +34,9 @@
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @author keon.foster@rossvideo.com
+ * @date 2026-02-19
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -65,8 +66,8 @@
 #include <IParam.h>
 #include <IDevice.h>
 #include <Authorizer.h>
-#include <SharedFlags.h>
 #include <SubscriptionManager.h>
+#include <Config.h>
 #include <rpc/ConnectionQueue.h>
 
 // std
@@ -102,6 +103,14 @@ namespace gRPC {
  */
 class ServiceConfig {
   public:
+    /**
+     * @brief Constructor for GRPC Service Config. Device pointers and completion queue must be added manually.
+     */
+    ServiceConfig() {
+      this->EOPath = config::static_root;
+      this->maxConnections = config::max_connections;
+      this->authz = config::authz;
+    }
     /**
      * @brief Sets the completion queue.
      * @param cq A pointer to the completion queue

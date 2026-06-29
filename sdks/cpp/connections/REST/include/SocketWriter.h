@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -152,6 +152,7 @@ const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::PERMISSION_DENIED,   {403, "Forbidden"}},
     {catena::StatusCode::NOT_FOUND,           {404, "Not Found"}},
     {catena::StatusCode::METHOD_NOT_ALLOWED,  {405, "Method Not Allowed"}},
+    {catena::StatusCode::DEADLINE_EXCEEDED,   {408, "Request Timeout"}},
     {catena::StatusCode::CONFLICT,            {409, "Conflict"}},
     {catena::StatusCode::ABORTED,             {409, "Conflict"}},
     {catena::StatusCode::FAILED_PRECONDITION, {412, "Precondition Failed"}},
@@ -167,7 +168,7 @@ const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::DO_NOT_USE,          {500, "Internal Server Error"}},
     {catena::StatusCode::SERVICE_UNAVAILABLE, {503, "Service Unavailable"}},
     {catena::StatusCode::UNAVAILABLE,         {503, "Service Unavailable"}},
-    {catena::StatusCode::GATEWAY_TIMEOUT,     {504, "Gateway Timeout"}},
+    {catena::StatusCode::GATEWAY_TIMEOUT,     {504, "Gateway Timeout"}}
 };
 
 }; // Namespace REST

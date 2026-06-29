@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -31,8 +31,9 @@
 /**
  * @brief This file is for testing the Authorizer.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/20
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-20
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #include "MockParam.h"
@@ -41,7 +42,7 @@
 #include "Enums.h"
 #include "CommonTestHelpers.h"
 #include <Logger.h>
-#include "SharedFlags.h"
+#include "Config.h"
 
 // gtest
 #include <gtest/gtest.h>
@@ -72,8 +73,7 @@ class AuthorizationTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
-        Logger::init("AuthorizationTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "AuthorizationTest");
     }
 
     static void TearDownTestSuite() {

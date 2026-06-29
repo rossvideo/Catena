@@ -1,0 +1,685 @@
+name: Release
+
+# ══════════════════════════════════════════════════════════════════════════════
+# This workflow implements the full Catena release process in two phases:
+#
+#   PHASE 1 — Manual trigger from the develop branch
+#     0. Validate that the workflow was triggered from develop.
+#     1. Validate the incoming version against VERSION.txt.
+#     2. Create a release branch and update VERSION.txt.
+#     3. Open a PR targeting main named "release-v<major>.<minor>.<patch>".
+#
+#   PHASE 2 — Triggered automatically when the release PR is closed on main
+#     If merged:
+#       4. Squash-merge the release branch into develop.
+#          └─ If the squash merge fails, automatically revert the main merge.
+#       5a. Create a GitHub release (tagged on main) with grouped release notes.
+#       5b. Retag toolchain containers develop → latest  (parallel with 5a).
+#     If closed without merging:
+#       → Release is cancelled; nothing further happens.
+# ══════════════════════════════════════════════════════════════════════════════
+
+on:
+  # Phase 1 — manually triggered; must be run from the develop branch.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version — format: v<major>.<minor>.<patch>  (e.g. v1.4.9)"
+        required: true
+        type: string
+
+  # Phase 2 — fires when any PR targeting main is closed (merged or abandoned).
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+  pull_request_review:
+    types: [submitted]
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 1 JOBS
+# ══════════════════════════════════════════════════════════════════════════════
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 0: Validate the incoming branch.
+  # ────────────────────────────────────────────────────────────────────────────
+  check_branch:
+    name: "0 - Validate Branch"
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != "develop" ]]; then
+            echo "❌ Release workflow must be triggered from the develop branch."
+            echo "   Current branch: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+          echo "✅ Triggered from develop branch — proceeding with release."
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 1: Validate the incoming version and open the release PR.
+  # ────────────────────────────────────────────────────────────────────────────
+  create_release_pr:
+    name: "1 - Validate Version & Create Release PR"
+    needs: check_branch
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # push the release branch
+      pull-requests: write  # open the PR
+
+    steps:
+
+      # ── Step 1a: Validate the version string format ─────────────────────────
+      - name: Validate version input format
+        id: validate_input
+        run: |
+          VERSION="${{ inputs.version }}"
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format: '$VERSION'"
+            echo "   Expected: v<major>.<minor>.<patch>  (e.g. v1.4.9)"
+            exit 1
+          fi
+          stripped="${VERSION#v}"
+          IFS='.' read -r INPUT_MAJOR INPUT_MINOR INPUT_PATCH <<< "$stripped"
+          echo "input_major=$INPUT_MAJOR" >> "$GITHUB_OUTPUT"
+          echo "input_minor=$INPUT_MINOR" >> "$GITHUB_OUTPUT"
+          echo "input_patch=$INPUT_PATCH" >> "$GITHUB_OUTPUT"
+          echo "✅ Version format valid: $VERSION"
+
+      # ── Step 1b: Check out the develop branch ───────────────────────────────
+      - name: Checkout develop
+        uses: actions/checkout@v5
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Step 1c: Parse VERSION.txt and validate the incoming version ─────────
+      #
+      # Rules (from spec):
+      #   - major must be >= current and at most current+1 (never less, never +2)
+      #   - minor follows the same rule within the same major
+      #   - When major/minor match, patch is always current+1 (input patch ignored)
+      #   - When minor is bumped, patch resets to 0
+      #   - When major is bumped, minor must be 0 and patch resets to 0
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Validate version against VERSION.txt and compute new version
+        id: compute_version
+        env:
+          INPUT_MAJOR: ${{ steps.validate_input.outputs.input_major }}
+          INPUT_MINOR: ${{ steps.validate_input.outputs.input_minor }}
+          INPUT_PATCH: ${{ steps.validate_input.outputs.input_patch }}
+        run: |
+          set -euo pipefail
+
+          # VERSION.txt can contain a format like:  cpp-v0.0.19-37-1770915378
+          # Extract the first occurrence of v<M>.<m>.<p>
+          RAW="$(cat VERSION.txt)"
+          echo "Current VERSION.txt: $RAW"
+
+          SEMVER=$(echo "$RAW" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          if [[ -z "$SEMVER" ]]; then
+            echo "❌ Cannot parse a semantic version from VERSION.txt: '$RAW'"
+            exit 1
+          fi
+          stripped="${SEMVER#v}"
+          IFS='.' read -r CUR_MAJOR CUR_MINOR CUR_PATCH <<< "$stripped"
+          echo "Parsed current version: $CUR_MAJOR.$CUR_MINOR.$CUR_PATCH"
+
+          # ── Major validation ────────────────────────────────────────────────
+          if (( INPUT_MAJOR < CUR_MAJOR )); then
+            echo "❌ Input major ($INPUT_MAJOR) is less than current major ($CUR_MAJOR)"
+            exit 1
+          fi
+          if (( INPUT_MAJOR > CUR_MAJOR + 1 )); then
+            echo "❌ Input major ($INPUT_MAJOR) jumps more than +1 above current ($CUR_MAJOR)"
+            exit 1
+          fi
+
+          # ── Determine new version based on which component changed ──────────
+          if (( INPUT_MAJOR == CUR_MAJOR + 1 )); then
+            # Major bump: minor must be 0, patch resets to 0
+            if (( INPUT_MINOR != 0 )); then
+              echo "❌ When bumping major, minor must be 0 (got $INPUT_MINOR)"
+              exit 1
+            fi
+            NEW_MINOR=0
+            NEW_PATCH=0
+
+          else
+            # Same major — validate minor
+            if (( INPUT_MINOR < CUR_MINOR )); then
+              echo "❌ Input minor ($INPUT_MINOR) is less than current minor ($CUR_MINOR)"
+              exit 1
+            fi
+            if (( INPUT_MINOR > CUR_MINOR + 1 )); then
+              echo "❌ Input minor ($INPUT_MINOR) jumps more than +1 above current ($CUR_MINOR)"
+              exit 1
+            fi
+            NEW_MINOR=$INPUT_MINOR
+
+            if (( INPUT_MINOR == CUR_MINOR + 1 )); then
+              # Minor bump: patch resets to 0
+              NEW_PATCH=0
+            else
+              # Same major.minor: patch is always current+1 (input patch is ignored)
+              NEW_PATCH=$(( CUR_PATCH + 1 ))
+              if [[ "$INPUT_PATCH" != "$NEW_PATCH" ]]; then
+                echo "ℹ️  Input patch ($INPUT_PATCH) ignored — using current+1 ($NEW_PATCH)"
+              fi
+            fi
+          fi
+
+          NEW_VERSION="v${INPUT_MAJOR}.${NEW_MINOR}.${NEW_PATCH}"
+          BRANCH_NAME="release-${NEW_VERSION}"
+          echo "✅ New version: $NEW_VERSION  →  branch: $BRANCH_NAME"
+
+          echo "new_version=$NEW_VERSION"   >> "$GITHUB_OUTPUT"
+          echo "branch_name=$BRANCH_NAME"   >> "$GITHUB_OUTPUT"
+
+      # ── Step 1d: Create the release branch and update VERSION.txt ───────────
+      - name: Create release branch and update VERSION.txt
+        env:
+          NEW_VERSION: ${{ steps.compute_version.outputs.new_version }}
+          BRANCH_NAME: ${{ steps.compute_version.outputs.branch_name }}
+        run: |
+          set -euo pipefail
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+
+          # Branch off develop
+          git checkout -b "$BRANCH_NAME"
+
+          # Write the clean semantic version to VERSION.txt
+          echo "$NEW_VERSION" > VERSION.txt
+          git add VERSION.txt
+          git commit -m "chore(release): bump version to $NEW_VERSION"
+          git push origin "$BRANCH_NAME"
+
+          echo "✅ Pushed branch '$BRANCH_NAME' with VERSION.txt = $NEW_VERSION"
+
+      # ── Step 1e: Open the release PR targeting main ──────────────────────────
+      - name: Create release PR targeting main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.compute_version.outputs.new_version }}
+          BRANCH_NAME: ${{ steps.compute_version.outputs.branch_name }}
+        run: |
+          set -euo pipefail
+
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "$BRANCH_NAME" \
+            --body "## Release $NEW_VERSION
+
+          This is an automated release PR created by the **Release** workflow.
+
+          | Field       | Value |
+          |-------------|-------|
+          | Version     | \`$NEW_VERSION\` |
+          | Branch      | \`$BRANCH_NAME\` |
+          | Base        | \`main\` |
+
+          ### What happens when this PR is approved
+          1. The release branch will be merged into \`main\`.
+          2. The release branch will be squash-merged back into \`develop\`.
+          3. A GitHub release tagged \`$NEW_VERSION\` will be created on \`main\`.
+          4. Toolchain containers will be retagged \`develop → latest\`.
+
+          > ⚠️ **Closing this PR without approveal will cancel the release.**")
+
+          echo "✅ Release PR opened: $PR_URL"
+
+
+  merge_release_pr:
+    name: "1f - Merge Release PR"
+    if: github.event_name == 'pull_request_review' &&
+      github.event.review.state == 'approved' &&
+      startsWith(github.event.pull_request.head.ref, 'release-v') &&
+      github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Temporarily enable merge commits on repository
+        id: enable_merge_commits
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "❌ Missing required secret: REPO_ADMIN_TOKEN"
+            echo "   Create a repo/org secret with admin rights to update merge settings."
+            exit 1
+          fi
+
+          ORIG_ALLOW_MERGE=$(gh api "repos/${{ github.repository }}" --jq '.allow_merge_commit')
+          echo "orig_allow_merge=$ORIG_ALLOW_MERGE" >> "$GITHUB_OUTPUT"
+          echo "Current allow_merge_commit=$ORIG_ALLOW_MERGE"
+
+          if [[ "$ORIG_ALLOW_MERGE" != "true" ]]; then
+            gh api -X PATCH "repos/${{ github.repository }}" -f allow_merge_commit=true >/dev/null
+            echo "✅ Temporarily enabled allow_merge_commit=true"
+          else
+            echo "ℹ️  allow_merge_commit already enabled"
+          fi
+
+      - name: Merge the release PR (merge commit)
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh pr merge "${{ github.event.pull_request.number }}" --merge --admin --repo "${{ github.repository }}"
+
+      - name: Restore merge-commit repository setting
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+          ORIG_ALLOW_MERGE: ${{ steps.enable_merge_commits.outputs.orig_allow_merge }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "⚠️  REPO_ADMIN_TOKEN missing during cleanup; cannot restore setting"
+            exit 1
+          fi
+
+          if [[ "$ORIG_ALLOW_MERGE" == "true" ]]; then
+            echo "ℹ️  Original allow_merge_commit was true; no restore needed"
+          else
+            gh api -X PATCH "repos/${{ github.repository }}" -f allow_merge_commit=false >/dev/null
+            echo "✅ Restored allow_merge_commit=false"
+          fi
+
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 2 JOBS
+# These jobs run when a PR targeting main is closed.
+# They are gated on the PR head branch starting with "release-v".
+# ══════════════════════════════════════════════════════════════════════════════
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 2: Detect whether this closed PR is a release PR and whether it merged.
+  # ────────────────────────────────────────────────────────────────────────────
+  detect_release_pr:
+    name: "2 - Detect Release PR Outcome"
+    if: |
+      github.event_name == 'pull_request' &&
+      startsWith(github.event.pull_request.head.ref, 'release-v') &&
+      github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    outputs:
+      merged:         ${{ steps.check.outputs.merged }}
+      new_version:    ${{ steps.check.outputs.new_version }}
+      release_branch: ${{ steps.check.outputs.release_branch }}
+
+    steps:
+      - name: Check PR outcome
+        id: check
+        run: |
+          MERGED="${{ github.event.pull_request.merged }}"
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          VERSION="${BRANCH#release-}"
+
+          echo "merged=$MERGED"          >> "$GITHUB_OUTPUT"
+          echo "new_version=$VERSION"    >> "$GITHUB_OUTPUT"
+          echo "release_branch=$BRANCH"  >> "$GITHUB_OUTPUT"
+
+          if [[ "$MERGED" == "true" ]]; then
+            echo "✅ Release PR merged — proceeding with release for $VERSION"
+          else
+            echo "ℹ️  Release PR closed without merging — release $VERSION cancelled."
+          fi
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 3: Squash-merge the release branch into develop.
+  #
+  # On failure: attempt to revert the main merge commit to keep main/develop
+  # in sync.  If the revert itself fails (e.g. protected branch requires a PR),
+  # the step exits non-zero so the failure is clearly visible in the run log.
+  # ────────────────────────────────────────────────────────────────────────────
+  squash_merge_develop:
+    name: "3 - Squash-Merge Release into Develop"
+    needs: detect_release_pr
+    if: needs.detect_release_pr.outputs.merged == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # push to develop (and potentially revert on main)
+
+    env:
+      NEW_VERSION:    ${{ needs.detect_release_pr.outputs.new_version }}
+      RELEASE_BRANCH: ${{ needs.detect_release_pr.outputs.release_branch }}
+      PR_MERGE_SHA:   ${{ github.event.pull_request.merge_commit_sha }}
+
+    steps:
+
+      # Check out develop with full history so we can merge
+      - name: Checkout develop
+        uses: actions/checkout@v5
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+
+      # ── Squash-merge the release PR changes into develop ──────────────────────
+      #
+      # After the PR merges into main, the head branch may be auto-deleted.
+      # Use the PR merge commit instead of trying to fetch the deleted branch.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Squash-merge release branch into develop
+        id: squash_merge
+        run: |
+          set -euo pipefail
+
+          # Fetch main to access the PR merge commit
+          git fetch origin main
+
+          # Use the merge commit from the PR event, or fallback to main tip
+          COMMIT_TO_MERGE="${PR_MERGE_SHA:-}"
+          if [[ -z "$COMMIT_TO_MERGE" ]]; then
+            COMMIT_TO_MERGE=$(git rev-parse origin/main)
+            echo "⚠️  merge_commit_sha missing; falling back to origin/main tip: $COMMIT_TO_MERGE"
+          fi
+
+          # Squash-merge the PR's changes into develop.
+          # If the integration commit is a merge commit, squash the diff from
+          # first parent to merge commit to capture exactly what landed on main.
+          PARENT_COUNT=$(git rev-list --parents -n 1 "$COMMIT_TO_MERGE" | awk '{print NF-1}')
+          if (( PARENT_COUNT > 1 )); then
+            echo "Detected merge commit ($COMMIT_TO_MERGE); squashing first-parent range ${COMMIT_TO_MERGE}^1..${COMMIT_TO_MERGE}"
+            git merge --squash "${COMMIT_TO_MERGE}^1" "$COMMIT_TO_MERGE"
+          elif (( PARENT_COUNT == 1 )); then
+            echo "Detected single-parent commit ($COMMIT_TO_MERGE); squashing commit directly"
+            git merge --squash "$COMMIT_TO_MERGE"
+          else
+            echo "❌ Unexpected parent count ($PARENT_COUNT) for $COMMIT_TO_MERGE"
+            exit 1
+          fi
+
+          # Check if there are staged changes to commit
+          if git diff --cached --quiet; then
+            # No changes to commit — develop already contains all release changes
+            echo "ℹ️  No new changes to commit — develop already contains release changes"
+          else
+            # Commit and push the squash merge
+            git commit -m "chore(release): squash merge $NEW_VERSION into develop [skip ci]"
+            git push origin develop
+            echo "✅ Squash-merged release changes into develop"
+          fi
+
+      # ── Rollback: revert the main merge if the squash into develop failed ────
+      #
+      # NOTE: This step requires the workflow token to have push access to main
+      # (or the branch protection must allow admin bypass / a PAT must be used).
+      # If direct push is not allowed, consider creating a revert PR instead.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: "[ROLLBACK] Revert main merge on squash failure"
+        if: failure() && steps.squash_merge.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
+        run: |
+          set -euo pipefail
+          echo "⚠️  Squash merge into develop failed — reverting main merge for $NEW_VERSION"
+
+          git fetch origin main
+          git checkout -B main-revert-work origin/main
+
+          # Prefer the PR integration commit from the event payload.
+          # Fallback to main tip only if the payload did not include it.
+          COMMIT_TO_REVERT="${PR_MERGE_SHA:-}"
+          if [[ -z "$COMMIT_TO_REVERT" ]]; then
+            COMMIT_TO_REVERT=$(git rev-parse origin/main)
+            echo "⚠️  merge_commit_sha missing; falling back to origin/main tip: $COMMIT_TO_REVERT"
+          fi
+
+          # Ensure the commit exists and is on main before attempting a revert.
+          git rev-parse --verify "$COMMIT_TO_REVERT^{commit}" >/dev/null
+          if ! git merge-base --is-ancestor "$COMMIT_TO_REVERT" origin/main; then
+            echo "❌ Commit $COMMIT_TO_REVERT is not on origin/main; aborting rollback."
+            exit 1
+          fi
+
+          PARENT_COUNT=$(git rev-list --parents -n 1 "$COMMIT_TO_REVERT" | awk '{print NF-1}')
+          echo "Reverting commit: $COMMIT_TO_REVERT (parents=$PARENT_COUNT)"
+
+          if (( PARENT_COUNT > 1 )); then
+            # Merge commit path (traditional merge PR)
+            git revert --mainline 1 --no-edit "$COMMIT_TO_REVERT"
+          elif (( PARENT_COUNT == 1 )); then
+            # Single-parent commit path (squash/rebase PR)
+            git revert --no-edit "$COMMIT_TO_REVERT"
+          else
+            echo "❌ Unexpected parent count ($PARENT_COUNT) for $COMMIT_TO_REVERT"
+            exit 1
+          fi
+
+          git push origin HEAD:main
+
+          echo "✅ Reverted main integration commit ($COMMIT_TO_REVERT)."
+          echo "❌ Release $NEW_VERSION was rolled back. Please investigate and retry."
+          exit 1  # Fail the job so the run is marked as failed
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 4: Build release notes and create the GitHub release on main.
+  # Runs after squash_merge_develop succeeds.
+  # ────────────────────────────────────────────────────────────────────────────
+  create_github_release:
+    name: "4 - Create GitHub Release"
+    needs: [detect_release_pr, squash_merge_develop]
+    if: >
+      needs.detect_release_pr.outputs.merged == 'true' &&
+      needs.squash_merge_develop.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # create release and upload artifacts
+      pull-requests: read  # fetch PR titles for release notes
+
+    env:
+      NEW_VERSION: ${{ needs.detect_release_pr.outputs.new_version }}
+      GH_TOKEN:    ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+
+      # ── Build release notes ───────────────────────────────────────────────────
+      #
+      # Collects every PR merged into main since the previous tag.
+      # Includes only PR titles that start with "[" and groups them by [TAG].
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Build release notes from merged PRs
+        id: release_notes
+        run: |
+          set -euo pipefail
+
+          # Find the most recent semver tag on main (used as the comparison base)
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
+          if [[ -z "$PREV_TAG" ]]; then
+            echo "No previous semver tag found — including all commits"
+            LOG_RANGE="HEAD"
+          else
+            echo "Previous tag: $PREV_TAG"
+            LOG_RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Extract PR numbers from merge commit messages (GitHub format: "... (#NNN)")
+          PR_NUMBERS=$(git log "$LOG_RANGE" --oneline | grep -oE '\(#[0-9]+\)' | tr -d '(#)' | sort -un)
+          echo "PR numbers found: $(echo "$PR_NUMBERS" | tr '\n' ' ')"
+
+          # Fetch PR titles and bucket them by [TAG]
+          declare -A GROUPS
+          while IFS= read -r PR_NUM; do
+            [[ -z "$PR_NUM" ]] && continue
+
+            TITLE=$(gh pr view "$PR_NUM" --json title --jq '.title' 2>/dev/null || true)
+            [[ -z "$TITLE" ]] && continue
+
+            # Only include titles that start with "[" — extract the group tag
+            if [[ "$TITLE" =~ ^\[([^]]+)\] ]]; then
+              GROUP_KEY="${BASH_REMATCH[1]}"
+              GROUPS["$GROUP_KEY"]+="- $TITLE"$'\n'
+              echo "  ✅ [$GROUP_KEY] $TITLE"
+            else
+              echo "  ⏭  Skipped (no [tag]): $TITLE"
+            fi
+          done <<< "$PR_NUMBERS"
+
+          # Render markdown grouped by [TAG], sorted alphabetically
+          {
+            echo "## What's Changed in $NEW_VERSION"
+            echo ""
+            if [[ ${#GROUPS[@]} -eq 0 ]]; then
+              echo "_No tagged PR titles found since the last release._"
+            else
+              for KEY in $(echo "${!GROUPS[@]}" | tr ' ' '\n' | sort); do
+                echo "### [$KEY]"
+                echo "${GROUPS[$KEY]}"
+              done
+            fi
+          } > /tmp/release_notes.md
+
+          echo "── Release notes preview ──"
+          cat /tmp/release_notes.md
+
+      # ── Create the GitHub release ─────────────────────────────────────────────
+      - name: Create GitHub release
+        run: |
+          set -euo pipefail
+
+          RELEASE_DATE=$(date +"%Y/%m/%d")
+          RELEASE_TITLE="Catena version $NEW_VERSION made on $RELEASE_DATE"
+
+          gh release create "$NEW_VERSION" \
+            --target main \
+            --title "$RELEASE_TITLE" \
+            --notes-file /tmp/release_notes.md
+
+          echo "✅ GitHub release created: $RELEASE_TITLE"
+
+      # ── Generate and attach a container image manifest ────────────────────────
+      #
+      # This manifest lists the toolchain images that are part of this release.
+      # Add further artifacts below this step as needed.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Generate container image manifest and attach to release
+        run: |
+          set -euo pipefail
+
+          MANIFEST="container-images.txt"
+          cat > "$MANIFEST" <<EOF
+          # Catena toolchain container images — release $NEW_VERSION
+          # Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          ghcr.io/rossvideo/catena-cpp-toolchain:$NEW_VERSION
+          ghcr.io/rossvideo/catena-go-toolchain:$NEW_VERSION
+          EOF
+
+          echo "Manifest contents:"
+          cat "$MANIFEST"
+
+          gh release upload "$NEW_VERSION" "$MANIFEST" --clobber
+          echo "✅ Container manifest attached to release $NEW_VERSION"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 5: Retag toolchain containers  develop → latest  (and → $NEW_VERSION).
+  #
+  # Runs in parallel with create_github_release.
+  # Failures here are warnings only — the release is NOT blocked.
+  # ────────────────────────────────────────────────────────────────────────────
+  retag_toolchain_containers:
+    name: "5 - Retag Toolchain Containers (develop → latest)"
+    needs: [detect_release_pr, squash_merge_develop]
+    if: >
+      needs.detect_release_pr.outputs.merged == 'true' &&
+      needs.squash_merge_develop.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write  # push retagged images to GHCR
+      contents: read
+
+    env:
+      NEW_VERSION: ${{ needs.detect_release_pr.outputs.new_version }}
+
+    steps:
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Retag C++ toolchain ───────────────────────────────────────────────────
+      #
+      # Source:  ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      # Targets: ghcr.io/rossvideo/catena-cpp-toolchain:latest
+      #          ghcr.io/rossvideo/catena-cpp-toolchain:<new_version>
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Retag cpp toolchain  develop → latest + ${{ env.NEW_VERSION }}
+        id: retag_cpp
+        continue-on-error: true  # retag failure is a warning, not a release blocker
+        run: |
+          set -euo pipefail
+          SRC="ghcr.io/rossvideo/catena-cpp-toolchain:develop"
+
+          docker buildx imagetools create \
+            --tag "ghcr.io/rossvideo/catena-cpp-toolchain:latest" \
+            --tag "ghcr.io/rossvideo/catena-cpp-toolchain:$NEW_VERSION" \
+            "$SRC"
+
+          echo "✅ cpp toolchain retagged → latest and $NEW_VERSION"
+
+      # ── Retag Go toolchain ────────────────────────────────────────────────────
+      #
+      # Source:  ghcr.io/rossvideo/catena-go-toolchain:develop
+      # Targets: ghcr.io/rossvideo/catena-go-toolchain:latest
+      #          ghcr.io/rossvideo/catena-go-toolchain:<new_version>
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Retag go toolchain  develop → latest + ${{ env.NEW_VERSION }}
+        id: retag_go
+        continue-on-error: true  # retag failure is a warning, not a release blocker
+        run: |
+          set -euo pipefail
+          SRC="ghcr.io/rossvideo/catena-go-toolchain:develop"
+
+          docker buildx imagetools create \
+            --tag "ghcr.io/rossvideo/catena-go-toolchain:latest" \
+            --tag "ghcr.io/rossvideo/catena-go-toolchain:$NEW_VERSION" \
+            "$SRC"
+
+          echo "✅ go toolchain retagged → latest and $NEW_VERSION"
+
+      # ── Surface a clear warning if either retag failed ───────────────────────
+      - name: Report retag results
+        if: steps.retag_cpp.outcome == 'failure' || steps.retag_go.outcome == 'failure'
+        run: |
+          echo "⚠️  One or more container retag operations failed:"
+          echo "     cpp retag : ${{ steps.retag_cpp.outcome }}"
+          echo "     go  retag : ${{ steps.retag_go.outcome }}"
+          echo ""
+          echo "The GitHub release was created successfully."
+          echo "Please retag the following images manually:"
+          echo "  ghcr.io/rossvideo/catena-cpp-toolchain:develop  →  latest / $NEW_VERSION"
+          echo "  ghcr.io/rossvideo/catena-go-toolchain:develop   →  latest / $NEW_VERSION"
+          # Not exiting non-zero — retag failure is explicitly non-blocking per spec

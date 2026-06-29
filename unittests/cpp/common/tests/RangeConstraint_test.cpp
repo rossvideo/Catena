@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -30,10 +30,11 @@
 
 /**
  * @brief This file is for testing the RangeConstraint.cpp file.
- * @author benjamin.whitten@rossvideo.com 
- * @author (Nelson Daniels) nelson.daniels@rossvideo.com 
- * @date 25/10/01
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author benjamin.whitten@rossvideo.com
+ * @author (Nelson Daniels) nelson.daniels@rossvideo.com
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-20
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // gtest
@@ -41,8 +42,9 @@
 #include <gmock/gmock.h>
 
 #include "MockDevice.h"
+#include "Config.h"
 #include "Logger.h"
-#include "SharedFlags.h"
+#include "CommonTestHelpers.h"
 
 #include "RangeConstraint.h"
 
@@ -53,8 +55,7 @@ class RangeConstraintTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
-        Logger::init("RangeConstraintTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RangeConstraintTest");
     }
 
     static void TearDownTestSuite() {
@@ -261,7 +262,21 @@ TEST_F(RangeConstraintTest, RangeConstraint_FloatSatisfied) {
     // Invalid
     src.set_float32_value(3.25);
     EXPECT_FALSE(constraint.satisfied(src)) << "Constraint should not be satisfied by invalid value 3.25 with step 0.5";
+    constraint = RangeConstraint<float>(-10, 10, 0.1, "test_oid", false);
+    for (int testInt = -1000; testInt <= 1000; testInt += 10) {
+        // valid right on the step
+        float testVal = testInt / 100.0f;
+        src.set_float32_value(testVal);
+        EXPECT_TRUE(constraint.satisfied(src)) << "Constraint should be satisfied by valid value " << testVal;
+        // test the invalid values in between the steps
+        for (int between = 1; between <= 9; between += 1) {
+            testVal = ((testInt + between) / 100.0f) ;
+            src.set_float32_value(testVal);
+            EXPECT_FALSE(constraint.satisfied(src)) << "Constraint should not be satisfied by invalid value " << testVal;
+        }
+    }
 }
+
 /* 
  * TEST 2.3 - Testing Float RangeConstraint apply
  */
@@ -287,14 +302,54 @@ TEST_F(RangeConstraintTest, RangeConstraint_FloatApply) {
     { // Invalid - % step != 0
     src.set_float32_value(3.25);
     st2138::Value res = constraint.apply(src);
-    EXPECT_EQ(res.float32_value(), 3) << "Constraint should set invalid value 3.25 to 3";
+    EXPECT_EQ(res.float32_value(), 3.5) << "Constraint should set invalid value 3.25 to 3.5";
     }
+    // some more testing for floating point precision issues
+    min = -10; max = 10; step = 0.1;
+    constraint = RangeConstraint<float>(min, max, step, "test_oid", false);
+    for (int expected = -1000; expected <= 1000; expected += 10) {
+        const float testVal = expected / 100.0f;
+        src.set_float32_value(testVal);
+        st2138::Value res = constraint.apply(src);
+        // just care about the value being close enough to the expected value due to floating point precision issues
+        EXPECT_NEAR(res.float32_value(), testVal, 0.0001f) << "Constraint should not change valid value " << testVal;
+    }
+    // testing in between values
+    // -9.99 -> -10.0, -9.98 -> -10.0, -9.94 -> -9.9, -9.91 -> -9.9 ...,  9.96 -> 10.0
+    for (int expected = -1000; expected <= 1000; expected += 10) {
+        for (int between = -4; between <= 4; between += 1) {
+            // shift decimal place to cause precision issues
+            const float testVal = ((expected + between) / 100.0f) ;
+            src.set_float32_value(testVal);
+            st2138::Value res = constraint.apply(src);
+            EXPECT_NEAR(res.float32_value(), expected / 100.0f, 0.0001f) << "Constraint should set invalid value " << testVal << " to " << expected / 100.0f;
+        }
+    }
+    // "exactly" in between is undefined, so we'll check either up or down
+    for (int expected = -1000; expected < 1000; expected += 10) {
+        const float testVal = (expected + 5) / 100.0f;
+        src.set_float32_value(testVal);
+        st2138::Value res = constraint.apply(src);
+        const float resVal = res.float32_value();
+        EXPECT_TRUE(std::abs(resVal - (expected / 100.0f)) < 0.0001f || std::abs(resVal - ((expected + 10) / 100.0f)) < 0.0001f) << "Constraint should set invalid value " << testVal << " to either " << expected / 100.0f << " or " << (expected + 10) / 100.0f;
+    }
+    min = -10; max = 10; step = 7;
+    constraint = RangeConstraint<float>(min, max, step, "test_oid", false);
+    // make sure apply doesn't go under the min when rounding to the nearest step
+    src.set_float32_value(-9);
+    st2138::Value res = constraint.apply(src);
+    EXPECT_EQ(res.float32_value(), -10) << "Constraint should set invalid value -9 to -10";
+    // make sure apply doesn't go over the max when rounding to the nearest step
+    // naive rounding would round 9 to 11 which is over the max
+    src.set_float32_value(9);
+    res = constraint.apply(src);
+    EXPECT_EQ(res.float32_value(), 10) << "Constraint should set invalid value 9 to 10";
 }
 /* 
  * TEST 2.4 - Testing Float RangeConstraint toProto
  */
 TEST_F(RangeConstraintTest, RangeConstraint_FloatToProto) {
-    int32_t min = 0.5, max = 9.5, step = 0.5, displayMin = 2, displayMax = 8;
+    float min = 0.5, max = 9.5, step = 0.5, displayMin = 2, displayMax = 8;
     RangeConstraint<float> constraint(min, max, step, displayMin, displayMax, "test_oid", false);
     st2138::Constraint protoConstraint;
     constraint.toProto(protoConstraint);

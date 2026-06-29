@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,7 +33,7 @@
  * @brief Interface for the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @author keon.foster@rossvideo.com
- * @date 2026/01/20
+ * @date 2026/02/11
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -64,6 +64,7 @@ enum RESTMethod : uint32_t { Method_NONE, Method_GET, Method_POST, Method_PUT, M
 
 const long DEFAULT_REQUEST_START = 0;
 const long DEFAULT_REQUEST_RECEIVED = 0;
+const uint32_t DEFAULT_TIMEOUT = REST_READ_TIMEOUT_MS; // value is in milliseconds
 
 /**
  * @brief Interface for the SocketReader class.
@@ -84,8 +85,9 @@ class ISocketReader {
      * @brief Populates variables using information read from the inputted
      * socket.
      * @param socket The socket to read from.
+     * @param timeout How long to read for in ms before cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    virtual void read(tcp::socket& socket) = 0;
+    virtual void read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout = DEFAULT_TIMEOUT) = 0;
     /**
      * @brief Returns the HTTP method of the request.
      */

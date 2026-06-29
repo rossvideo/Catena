@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -32,20 +32,19 @@
  * @brief This file is for testing the ServiceImpl.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2025/11/03
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-20
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // common
+#include <Config.h>
 #include <Logger.h>
-#include <SharedFlags.h>
+#include "CommonTestHelpers.h"
 
 // gtest
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-// std
-#include <atomic>
 
 // mock classes
 #include "MockDevice.h"
@@ -61,8 +60,7 @@ class RESTServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
-        Logger::init("RESTServiceImplTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTServiceImplTest");
     }
 
     static void TearDownTestSuite() {
@@ -74,15 +72,14 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        // Assign a unique port per test instance
-        port_ = s_next_port.fetch_add(1);
         ServiceConfig config = ServiceConfig()
             .add_dm(&dm_)
             .set_EOPath(EOPath_)
             .set_authz(authzEnabled_)
             .set_maxConnections(1)
-            .set_port(port_);
+            .set_port(0);
         service_.reset(new ServiceImpl(config));
+        port_ = service_->listeningPort();
     }
 
     /*
@@ -125,11 +122,7 @@ class RESTServiceImplTests : public testing::Test {
 
     // We really don't care about uninteresting function errors here.
     testing::NiceMock<MockDevice> dm_;
-
-    static std::atomic<uint16_t> s_next_port;
 };
-
-std::atomic<uint16_t> RESTServiceImplTests::s_next_port{50050};
 
 /*
  * TEST 1 - Test ServiceConfig set_dms() and add_dm()
@@ -166,7 +159,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     config.dms.push_back(&dm1);
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     config.dms.push_back(&dm2);
-    config.port = port_ + 2;
+    config.port = 0;
     // Creating a service with a duplicate slot.
     EXPECT_THROW(ServiceImpl newService{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }

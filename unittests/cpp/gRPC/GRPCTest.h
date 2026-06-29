@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -32,8 +32,9 @@
  * @brief A parent class for gRPC test fixtures.
  * @author christian.twarogn@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
- * @date 25/06/18
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-19
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 #pragma once
@@ -57,9 +58,9 @@
 #include <grpcpp/grpcpp.h>
 
 // common
+#include <Config.h>
 #include <Status.h>
 #include <Logger.h>
-#include <SharedFlags.h>
 
 namespace catena {
 namespace gRPC {
@@ -101,10 +102,13 @@ class GRPCTest : public ::testing::Test {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         
         // Creating the gRPC server.
-        builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
+        builder_.AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials(), &selectedPort_);
         cq_ = builder_.AddCompletionQueue();
         builder_.RegisterService(&service_);
         server_ = builder_.BuildAndStart();
+
+        // Build the client address from the actual bound server port.
+        serverAddr_ = "127.0.0.1:" + std::to_string(selectedPort_);
 
         // Creating the gRPC client.
         channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
@@ -158,7 +162,8 @@ class GRPCTest : public ::testing::Test {
     catena::exception_with_status expRc_{"", catena::StatusCode::OK};
 
     // Address used for gRPC tests.
-    std::string serverAddr_ = "0.0.0.0:50051";
+    std::string serverAddr_ = "";
+    int selectedPort_ = 0;
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;

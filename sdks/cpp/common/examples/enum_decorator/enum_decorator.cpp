@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -31,16 +31,17 @@
 /**
  * @brief Example program to demonstrate ENUMDECORATOR macros
  * @file enum_decorator.cpp
- * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-02-24
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // common
 #include <patterns/EnumDecorator.h>
 #include <Logger.h>
 #include <iostream>
-#include <absl/flags/parse.h>
-#include <absl/flags/usage.h>
+#include <Config.h>
 
 // example using the ENUMDECORATOR macros
 // DRY by defining a macro as an argument for the ENUMDECORATOR macros
@@ -97,8 +98,10 @@ const Primes::FwdMap Primes::fwdMap_ = {
 };
 
 int main (int argc, char** argv) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    const auto [exit, code] = catena::common::config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("enum_decorator");
     
     // default constructor, sets value to zero

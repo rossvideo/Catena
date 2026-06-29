@@ -1,0 +1,293 @@
+name: Create and publish a Docker images
+on:
+  workflow_dispatch:
+env:
+  REGISTRY: ghcr.io 
+
+jobs: 
+  check-if-toolchain-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      toolchain_changed: ${{ steps.matrix.outputs.toolchain_changed }}
+      matrix_to_build: ${{ steps.matrix.outputs.build }}
+      matrix_to_merge: ${{ steps.matrix.outputs.merge }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Check cpp toolchain
+        id: cpp
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            toolchain:
+              - '.devcontainer/cpp/toolchain.dockerfile'
+              - '.devcontainer/cpp/toolchain.env'
+
+      - name: Check go toolchain
+        id: go
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            toolchain:
+              - '.devcontainer/go/toolchain.dockerfile'
+              - '.devcontainer/go/toolchain.env'
+              - '.devcontainer/go/go.mod'
+              - '.devcontainer/go/go.sum'
+
+      - name: create matrix
+        id: matrix
+        run: |
+          set -e
+
+          ON_MAIN=false
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            ON_MAIN=true
+          fi
+
+          CPP_CHANGED="${{ steps.cpp.outputs.toolchain }}"
+          GO_CHANGED="${{ steps.go.outputs.toolchain }}"
+
+          if [[ "$ON_MAIN" == "true" ]]; then
+            CPP_CHANGED=true
+            GO_CHANGED=true
+          fi
+
+          TOOLCHAIN_CHANGED=false
+          if [[ "$CPP_CHANGED" == "true" ]]; then
+            TOOLCHAIN_CHANGED=true
+          fi
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            TOOLCHAIN_CHANGED=true
+          fi
+          echo "toolchain_changed=$TOOLCHAIN_CHANGED" >> "$GITHUB_OUTPUT"
+          if [[ "$TOOLCHAIN_CHANGED" == "false" ]]; then
+            echo "No changes to toolchain, skipping build"
+            echo 'build=[{"toolchain":"none","platform":"none","runner":"ubuntu-latest"}]' >> "$GITHUB_OUTPUT"
+            echo 'merge=[{"toolchain":"none"}]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          output='['
+          if [[ "$CPP_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"cpp","platform":"linux/amd64","runner":"ubuntu-latest"},'
+            output+='{"toolchain":"cpp","platform":"linux/arm64","runner":"ubuntu-24.04-arm"}'
+            if [[ "$GO_CHANGED" == "true" ]]; then
+              output+=','
+            fi
+          fi
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"go","platform":"linux/amd64","runner":"ubuntu-latest"}'
+          fi
+          output+=']'
+          echo "build=$output" >> "$GITHUB_OUTPUT"
+
+          output='['
+          if [[ "$CPP_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"cpp"}'
+            if [[ "$GO_CHANGED" == "true" ]]; then
+              output+=','
+            fi
+          fi
+          if [[ "$GO_CHANGED" == "true" ]]; then
+            output+='{"toolchain":"go"}'
+          fi
+          output+=']'
+          echo "merge=$output" >> "$GITHUB_OUTPUT"
+  
+  build-and-push-toolchain:
+    needs:
+      - check-if-toolchain-changed
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.check-if-toolchain-changed.outputs.matrix_to_build) }}
+
+    runs-on: ${{ matrix.runner }}
+    if: ${{ needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' }}
+    env:
+      IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+      #
+    steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          labels: |
+            org.opencontainers.image.version=latest
+
+      - name: Print stuff
+        run: |
+          echo "IMAGE_NAME: ${{ env.IMAGE_NAME }}"
+          echo "REGISTRY: ${{ env.REGISTRY }}"
+          echo "tags: ${{ env.REGISTRY_IMAGE }}:latest"
+          echo "labels: ${{ steps.meta.outputs.labels }}"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: ${{ matrix.platform }}
+          context: .
+          file: .devcontainer/${{ matrix.toolchain }}/toolchain.dockerfile
+          tags: "${{ env.REGISTRY_IMAGE }}"
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+      
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.push.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+      - name: Upload digest as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.toolchain }}-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-digests:
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' }}
+    needs:
+      - build-and-push-toolchain
+      - check-if-toolchain-changed
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.check-if-toolchain-changed.outputs.matrix_to_merge) }}
+    env:
+      IMAGE_NAME: catena-${{ matrix.toolchain }}-toolchain
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+      #
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Prepare
+        run: |
+          echo "REGISTRY_IMAGE=${{ env.REGISTRY }}/rossvideo/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.toolchain }}-*
+          merge-multiple: true
+      
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Resolve image version
+        id: version
+        run: |
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then
+            VERSION="latest"
+          else
+            VERSION_FILE="sdks/${{ matrix.toolchain }}/VERSION.txt"
+            if [[ -f "$VERSION_FILE" ]]; then
+              RAW="$(cat "$VERSION_FILE" | tr -d ' \n')"
+              VERSION="$(sed -n 's/.*\(v[0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' <<< "$RAW")"
+
+              if [[ -z "$VERSION" ]]; then
+                echo "Version pattern not found, falling back"
+                VERSION="unversioned"
+              fi
+            else
+              VERSION="unversioned"
+            fi
+          fi
+
+          echo "Resolved version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }} 
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+          
+  trigger-build-examples:
+    runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() && (
+      needs.check-if-toolchain-changed.outputs.toolchain_changed == 'false' || 
+      (needs.check-if-toolchain-changed.outputs.toolchain_changed == 'true' && needs.build-and-push-toolchain.result == 'success' && needs.merge-digests.result == 'success')
+      ) }}
+    needs:
+      - check-if-toolchain-changed
+      - build-and-push-toolchain
+      - merge-digests
+    steps:
+      - name: Create JWT
+        uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          repositories: Catena-deployments
+          owner: rossvideo
+        
+      - name: Trigger examples build workflow
+        run: |
+          gh api --method POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/rossvideo/Catena-deployments/dispatches \
+            -f 'event_type=build-examples' \
+            -F 'client_payload[ref]=${{ github.ref }}'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}

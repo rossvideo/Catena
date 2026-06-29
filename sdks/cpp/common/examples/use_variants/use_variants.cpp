@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -30,7 +30,8 @@
 
 /**
  * @file use_variants.cpp
- * @author john.naylor@rossvideo.com
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author Keon Foster (keon.foster@rossvideo.com)
  * @brief Demonstrates the variant param type
  *
  * It does not support any connections so is not a complete example
@@ -39,7 +40,7 @@
  * It presumes the reader has understood the start_here and use_structs
  * example and builds on that. Less chatty comments.
  * 
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // device model
@@ -51,6 +52,7 @@
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
 #include <Authorizer.h>
+#include <Config.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -61,7 +63,6 @@ using namespace use_variants;
 using catena::common::ParamTag;
 #include <iostream>
 #include <Logger.h>
-#include <absl/flags/parse.h>
 
 void printCoordinate(const Coordinates_elem& coord) {
     std::visit([](auto&& arg) {
@@ -77,8 +78,10 @@ void printCoordinate(const Coordinates_elem& coord) {
 }
 
 int main (int argc, char** argv) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
+    const auto [exit, code] = config::initConfigVariables(argc, argv);
+    if (exit) {
+        return code;
+    }
     Logger::init("use_variants");
 
     // // lock the model

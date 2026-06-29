@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -32,8 +32,9 @@
  * @file ServiceCredentials_test.cpp
  * @brief This file is for testing the gRPC ServiceCredentials.cpp file.
  * @author Jason Chen (jason.chen@rossvideo.com)
- * @date 2025-11-03
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-20
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // gtest
@@ -75,8 +76,7 @@ class gRPCServiceCredentialsTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
-        Logger::init("gRPCServiceCredentialsTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCServiceCredentialsTest");
     }
 
     static void TearDownTestSuite() {
@@ -87,10 +87,10 @@ class gRPCServiceCredentialsTests : public testing::Test {
         setenv("TEST_CERT_PATH", "/tmp/testcerts", 1);
 
         // Set flags for credential logic
-        absl::SetFlag(&FLAGS_secure_comms, "tls");
-        absl::SetFlag(&FLAGS_certs, "/tmp/testcerts");
-        absl::SetFlag(&FLAGS_key_file, "server.key");
-        absl::SetFlag(&FLAGS_cert_file, "server.crt");
+        config::secure_comms = "tls";
+        config::certs = "/tmp/testcerts";
+        config::cert_file = "server.crt";
+        config::key_file = "server.key";
 
         // Initialize metadata containers
         input_metadata_.clear();
@@ -100,10 +100,11 @@ class gRPCServiceCredentialsTests : public testing::Test {
         // Unset environment variables
         unsetenv("TEST_CERT_PATH");
         // Reset flags
-        absl::SetFlag(&FLAGS_secure_comms, "off");
-        absl::SetFlag(&FLAGS_certs, "");
-        absl::SetFlag(&FLAGS_key_file, "");
-        absl::SetFlag(&FLAGS_cert_file, "");
+        config::secure_comms = "off";
+        config::certs = "";
+        config::cert_file = "";
+        config::key_file = "";
+
         // Clear metadata containers
         input_metadata_.clear();
     }
@@ -196,10 +197,10 @@ TEST(gRPCExpandEnvVariablesTest, NoEnvVarInString) {
 }
 
 /*
- * TEST 7 - Test with FLAGS_secure_comms set to off
+ * TEST 7 - Test with config::secure_comms set to off
  */
 TEST_F(gRPCServiceCredentialsTests, FlagsSecureCommsOff) {
-    absl::SetFlag(&FLAGS_secure_comms, "off");
+    config::secure_comms = "off";
 
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
@@ -208,11 +209,11 @@ TEST_F(gRPCServiceCredentialsTests, FlagsSecureCommsOff) {
 }
 
 /*
- * TEST 8 - Test with FLAGS_secure_comms set to tls and mutual_authc set to false.
+ * TEST 8 - Test with config::secure_comms set to tls and config::mutual_authc set to false.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcFalse) {
-    absl::SetFlag(&FLAGS_secure_comms, "tls");
-    absl::SetFlag(&FLAGS_mutual_authc, false);
+TEST_F(gRPCServiceCredentialsTests, MutualAuthcFalse) {
+    config::secure_comms = "tls";
+    config::mutual_authc = false;
 
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
@@ -222,11 +223,11 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcFalse) {
 }
 
 /*
- * TEST 9 - Test with FLAGS_secure_comms set to tls and mutual_authc set to true.
+ * TEST 9 - Test with config::secure_comms set to tls and config::mutual_authc set to true.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcTrue) {
-    absl::SetFlag(&FLAGS_secure_comms, "tls");
-    absl::SetFlag(&FLAGS_mutual_authc, true);
+TEST_F(gRPCServiceCredentialsTests, MutualAuthcTrue) {
+    config::secure_comms = "tls";
+    config::mutual_authc = true;
 
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
@@ -236,15 +237,15 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_mutual_authcTrue) {
 }
 
 /*
- * TEST 10 - Test with FLAGS_secure_comms set to tls and private_ca set to false.
+ * TEST 10 - Test with config::secure_comms set to tls and config::private_ca set to false.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caFalse) {
-    absl::SetFlag(&FLAGS_secure_comms, "tls");
-    absl::SetFlag(&FLAGS_private_ca, false);
-    absl::SetFlag(&FLAGS_certs, "/tmp/testcerts");
-    absl::SetFlag(&FLAGS_ca_file, "ca.crt");
-    absl::SetFlag(&FLAGS_key_file, "server.key");
-    absl::SetFlag(&FLAGS_cert_file, "server.crt");
+TEST_F(gRPCServiceCredentialsTests, PrivateCaFalse) {
+    config::secure_comms = "tls";
+    config::private_ca = false;
+    config::certs = "/tmp/testcerts";
+    config::ca_file = "ca.crt";
+    config::key_file = "server.key";
+    config::cert_file = "server.crt";
 
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
@@ -254,15 +255,15 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caFalse) {
 }
 
 /*
- * TEST 11 - Test with FLAGS_secure_comms set to tls and private_ca set to true.
+ * TEST 11 - Test with config::secure_comms set to tls and config::private_ca set to true.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caTrue) {
-    absl::SetFlag(&FLAGS_secure_comms, "tls");
-    absl::SetFlag(&FLAGS_private_ca, true);
-    absl::SetFlag(&FLAGS_certs, "/tmp/testcerts");
-    absl::SetFlag(&FLAGS_ca_file, "ca.crt");
-    absl::SetFlag(&FLAGS_key_file, "server.key");
-    absl::SetFlag(&FLAGS_cert_file, "server.crt");
+TEST_F(gRPCServiceCredentialsTests, PrivateCaTrue) {
+    config::secure_comms = "tls";
+    config::private_ca = true;
+    config::certs = "/tmp/testcerts";
+    config::ca_file = "ca.crt";
+    config::key_file = "server.key";
+    config::cert_file = "server.crt";
 
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
@@ -272,14 +273,14 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_private_caTrue) {
 }
 
 /*
- * TEST 12 - Test with FLAGS_secure_comms set to tls and FLAGS_authz set to false.
+ * TEST 12 - Test with config::secure_comms set to tls and config::authz set to false.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_authzFalse) {
-    absl::SetFlag(&FLAGS_secure_comms, "tls");
-    absl::SetFlag(&FLAGS_authz, false);
-    absl::SetFlag(&FLAGS_certs, "/tmp/testcerts");
-    absl::SetFlag(&FLAGS_key_file, "server.key");
-    absl::SetFlag(&FLAGS_cert_file, "server.crt");
+TEST_F(gRPCServiceCredentialsTests, AuthzFalse) {
+    config::secure_comms = "tls";
+    config::authz = false;
+    config::certs = "/tmp/testcerts";
+    config::key_file = "server.key";
+    config::cert_file = "server.crt";
     
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
@@ -289,14 +290,15 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzFalse) {
 }
 
 /*
- * TEST 13 - Test with FLAGS_secure_comms set to tls and FLAGS_authz set to true.
+ * TEST 13 - Test with config::secure_comms set to tls and config::authz set to true.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_authzTrue) {
-    absl::SetFlag(&FLAGS_secure_comms, "tls");
-    absl::SetFlag(&FLAGS_authz, true);
-    absl::SetFlag(&FLAGS_certs, "/tmp/testcerts");
-    absl::SetFlag(&FLAGS_key_file, "server.key");
-    absl::SetFlag(&FLAGS_cert_file, "server.crt");
+TEST_F(gRPCServiceCredentialsTests, AuthzTrue) {
+    config::secure_comms = "tls";
+    config::private_ca = true;
+    config::certs = "/tmp/testcerts";
+    config::ca_file = "ca.crt";
+    config::key_file = "server.key";
+    config::cert_file = "server.crt";
     
     // Setting expectations
     auto creds = catena::gRPC::getServerCredentials();
@@ -306,10 +308,10 @@ TEST_F(gRPCServiceCredentialsTests, FLAGS_authzTrue) {
 }
 
 /*
- * TEST 14 - Test with FLAGS_secure_comms set to an invalid value.
+ * TEST 14 - Test with config::secure_comms set to an invalid value.
  */
-TEST_F(gRPCServiceCredentialsTests, FLAGS_secure_commsInvalidValue) {
-    absl::SetFlag(&FLAGS_secure_comms, "invalid_value");
+TEST_F(gRPCServiceCredentialsTests, SecureCommsInvalidValue) {
+    config::secure_comms = "invalid_value";
 
     // Setting expectations
     EXPECT_THROW(catena::gRPC::getServerCredentials(), std::invalid_argument);

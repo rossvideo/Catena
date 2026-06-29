@@ -19,9 +19,6 @@ using catena::REST::ServiceImpl;
 
 using catena::REST::Connect;
 
-// Defining the port flag from SharedFlags.h
-ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
-
 // (UNUSED) expand env variables
 // GCOVR_EXCL_START
 void expandEnvVariables(std::string &str) {
@@ -43,6 +40,9 @@ ServiceImpl::ServiceImpl(const ServiceConfig& config)
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), config.port)},
       router_{Router::getInstance()},
       connectionQueue_{config.maxConnections} {
+
+    // Preserve the actual bound port value reported by the acceptor.
+    port_ = acceptor_.local_endpoint().port();
 
     if (authorizationEnabled_) { LOG(INFO) <<"Authorization enabled."; }
     // Adding dms to slotMap.
@@ -85,11 +85,13 @@ vdk::signal<void()> catena::REST::Connect::shutdownSignal_;
 void ServiceImpl::run() {
     // TLS handled by Envoyproxy
     shutdown_ = false;
+    auto guard = boost::asio::make_work_guard(io_context_.get_executor());
+    std::thread runner([this](){ io_context_.run(); });
 
     while (!shutdown_) {
         // Waiting for a connection.
-        tcp::socket socket(io_context_);
-        acceptor_.accept(socket);
+        auto socket = std::make_shared<tcp::socket>(io_context_);
+        acceptor_.accept(*socket);
         // Once a connection is made, increment activeRequests and handle async.
         {
             std::lock_guard<std::mutex> lock(activeRequestMutex_);
@@ -106,13 +108,13 @@ void ServiceImpl::run() {
                     // Returning empty response with options to the client if required.
                     if (context.method() == Method_OPTIONS) {
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
-                        SocketWriter(socket, context.origin()).sendResponse(rc);
+                        SocketWriter(*socket, context.origin()).sendResponse(rc);
                     // Sending an empty 200 OK response for health check.
                     } else if (context.method() == Method_GET && context.endpoint() == "/health") {
-                        SocketWriter(socket, context.origin()).sendResponse(rc);
+                        SocketWriter(*socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
-                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dms_);
+                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, *socket, context, dms_);
                         request->proceed();
                     // ERROR
                     } else { 
@@ -139,7 +141,7 @@ void ServiceImpl::run() {
             if (rc.status != catena::StatusCode::OK) {
                 // Try ensures that we don't fail to decrement active requests.
                 try {
-                    SocketWriter writer(socket);
+                    SocketWriter writer(*socket);
                     writer.sendResponse(rc);
                 } catch (...) {}
             }
@@ -147,7 +149,7 @@ void ServiceImpl::run() {
             {
                 std::lock_guard<std::mutex> lock(activeRequestMutex_);
                 activeRequests_ -= 1;
-                VLOG(1) << "Active requests remaining: " << activeRequests_;
+                LOG(DEBUG) << "Active requests remaining: " << activeRequests_;
             }
         }).detach();
     }
@@ -157,8 +159,10 @@ void ServiceImpl::run() {
     while(activeRequests_ > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
+    
     // Once active requests are done, close the acceptor and io_context.
+    guard.reset();
+    runner.join();
     io_context_.stop();
     acceptor_.close();
 }

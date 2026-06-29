@@ -21,7 +21,7 @@ RUN . /root/toolchain.env \
     libssl-dev=$OPENSSL_VERSION \
     doxygen=$DOXYGEN_VERSION \
     valgrind=$VALGRIND_VERSION \
-    curl=$CURL_VERSION \
+    curl \
     ca-certificates \
     wget \
     && curl -sL https://deb.nodesource.com/setup_${NODEJS_VERSION}.x -o /tmp/nodesource_setup.sh \
@@ -38,7 +38,7 @@ RUN . /root/toolchain.env \
     && sudo tar -C /usr/local -xzf ${GO_VERSION}.tar.gz \
     && rm ${GO_VERSION}.tar.gz
 
-ENV PATH="/usr/local/go/bin:${PATH}"
+ENV PATH=$PATH:/usr/local/go/bin
 
 # Install Docker & Docker Compose
 RUN . /root/toolchain.env \
@@ -55,6 +55,25 @@ RUN . /root/toolchain.env \
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 WORKDIR /root/smpte
 RUN ./install-tooling.sh
+
+# Install protobuf compiler and Go tools
+RUN . /root/toolchain.env \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y protobuf-compiler=${PROTOBUF_COMPILER_VERSION} \
+    && apt-get clean
+
+ENV GOBIN=/usr/local/bin
+
+WORKDIR /toolchain
+
+COPY .devcontainer/go/go.mod .devcontainer/go/go.sum ./
+
+RUN go mod download
+
+# will install all the tools from the toolchain's go.mod
+RUN go install tool
+
+ENV GOBIN=
 
 USER ubuntu
 WORKDIR /home/ubuntu

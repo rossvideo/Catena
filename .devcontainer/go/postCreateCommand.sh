@@ -5,16 +5,14 @@ BUILD_TARGET=$2
 ROOT_DIR=$3
 
 cd ${ROOT_DIR}/sdks/go
-make protos
+make protos-all
 
 cd ${ROOT_DIR}
-rm -rf ${ROOT_DIR}/go.work ${ROOT_DIR}/go.work.sum
-go work init ./sdks/go ./build/go
-go work edit -go=1.24
-go work edit -toolchain=go1.24.11
-go work sync
-
+# should exist cause of volume mount, but just in case
+mkdir -p ${BUILD_TARGET}
+# volume mount might belong to root
 sudo chown -R ${USER_NAME}:${USER_NAME} ${BUILD_TARGET}
+
 cd ${ROOT_DIR}/sdks/go
 go mod tidy
 go mod download

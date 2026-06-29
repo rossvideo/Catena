@@ -104,33 +104,22 @@ golang () {
 
   if [ "$clean" = true ]; then
     echo "Cleaning Go build cache..."
-    go clean -testcache
+    make clean-coverage
   fi
 
   # Download dependencies
   go mod download
 
-  # Run tests with coverage (use count mode for hit counts)
-  COVERAGE_FILE="$HOME/Catena/coverage/go_coverage.out"
-  mkdir -p ~/Catena/coverage
-
+  # build the make command for coverage
+  MAKE_COMMAND="make coverage"
   if [ "$verbose" = true ]; then
-    go test ./pkg/... ./internal/... -v -coverpkg=./pkg/...,./internal -coverprofile="$COVERAGE_FILE" -covermode=count
-  else
-    go test ./pkg/... ./internal/... -coverpkg=./pkg/...,./internal -coverprofile="$COVERAGE_FILE" -covermode=count
+    MAKE_COMMAND="$MAKE_COMMAND VERBOSE=1"
   fi
-
-  # Show coverage summary
-  echo ""
-  echo "Go Coverage Summary:"
-  go tool cover -func="$COVERAGE_FILE" | tail -1
-
-  # Generate HTML report if requested
+  MAKE_COMMAND="$MAKE_COMMAND coverage-lcov"
   if [ "$html_report" = true ]; then
-    echo "Generating HTML report with hit counts..."
-    gocov convert "$COVERAGE_FILE" | gocov-html > ~/Catena/coverage/go_coverage.html
-    echo "Go HTML coverage report (with hit counts): ~/Catena/coverage/go_coverage.html"
+    MAKE_COMMAND="$MAKE_COMMAND coverage-html"
   fi
+  $MAKE_COMMAND
 }
 
 
@@ -142,8 +131,7 @@ echo ~/Catena/${BUILD_TARGET}
 
 if [ "$BUILD_TARGET" == "build/cpp" ]; then
   # run the javascript tests/coverage
-  #TODO: fix how this is ran
-  javascript
+  (javascript)
   cpp "$@"
 elif [ "$BUILD_TARGET" == "build/go" ]; then
   golang

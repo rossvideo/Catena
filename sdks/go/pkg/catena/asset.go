@@ -33,21 +33,57 @@
  * @file asset.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2026-02-04
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2026-03-09
  */
 
 package catena
 
 import (
+	"bytes"
+	"compress/gzip"
+	"compress/zlib"
+	"crypto/sha256"
 	"fmt"
+	"io"
+	"io/fs"
+	"maps"
+	"mime"
+	"os"
+	"path/filepath"
+	"slices"
+	"strconv"
+	"strings"
 
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
-	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// CatenaAsset wraps protos.ExternalObjectPayload for asset handling
-type CatenaAsset struct {
+// Encoding represents a payload compression encoding.
+type Encoding int32
+
+const (
+	EncodingUncompressed Encoding = 0
+	EncodingGzip         Encoding = 1
+	EncodingDeflate      Encoding = 2
+)
+
+func (e Encoding) String() string {
+	switch e {
+	case EncodingUncompressed:
+		return "UNCOMPRESSED"
+	case EncodingGzip:
+		return "GZIP"
+	case EncodingDeflate:
+		return "DEFLATE"
+	default:
+		return fmt.Sprintf("Encoding(%d)", int32(e))
+	}
+}
+
+// Asset wraps protos.ExternalObjectPayload for asset handling
+type Asset struct {
 	asset *protos.ExternalObjectPayload
 }
 
@@ -56,51 +92,299 @@ type CatenaAsset struct {
 type DataPayload struct {
 	Metadata        map[string]string // Information about the payload (e.g. content-type, filename)
 	Digest          []byte            // SHA-256 digest of the payload
-	PayloadEncoding int32             // 0=UNCOMPRESSED, 1=GZIP, 2=DEFLATE
+	PayloadEncoding Encoding          // Compression encoding for the payload
 	Payload         []byte            // Embedded binary data (use this OR Url, not both)
 	Url             string            // URL to external resource (use this OR Payload, not both)
 }
 
-// ToCatenaAsset converts DataPayload to CatenaAsset by building the proto directly
-func ToCatenaAsset(dp DataPayload, cachable bool) (CatenaAsset, error) {
-	// Build the proto DataPayload directly
-	protoPayload := &protos.DataPayload{
-		Metadata:        dp.Metadata,
-		Digest:          dp.Digest,
+// ToPayload creates a DataPayload from raw bytes with metadata and auto-computed SHA-256 digest.
+// This is the primary helper for creating asset payloads from in-memory data.
+func ToPayload(data []byte, contentType string, filename string) DataPayload {
+	hash := sha256.Sum256(data)
+	return DataPayload{
+		Payload:         data,
+		PayloadEncoding: EncodingUncompressed,
+		Metadata: map[string]string{
+			"content-type": contentType,
+			"file-name":    filename,
+			"size":         strconv.Itoa(len(data)),
+		},
+		Digest: hash[:],
+	}
+}
+
+// ToPayloadFromPath creates a DataPayload by reading a file from disk.
+// Implemented by treating the file's directory as an fs.FS and delegating to ToPayloadFromFS.
+func ToPayloadFromPath(path string) (DataPayload, error) {
+	dir := filepath.Dir(path)
+	name := filepath.Base(path)
+	return ToPayloadFromFS(os.DirFS(dir), name)
+}
+
+// ToPayloadFromFS creates a DataPayload by reading a file from an fs.FS (e.g. embed.FS).
+// Encoding is auto-detected from the file extension: .gz → GZIP, .zz → DEFLATE.
+func ToPayloadFromFS(fsys fs.FS, path string) (DataPayload, error) {
+	data, err := fs.ReadFile(fsys, path)
+	if err != nil {
+		return DataPayload{}, fmt.Errorf("failed to read file from FS: %w", err)
+	}
+
+	// Use forward slashes for base name in case path is from embed (always /)
+	name := path
+	if i := strings.LastIndex(name, "/"); i >= 0 {
+		name = name[i+1:]
+	}
+	contentType := mime.TypeByExtension(filepath.Ext(name))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	dp := ToPayload(data, contentType, name)
+	dp.PayloadEncoding = PayloadEncodingFromExt(name)
+	return dp, nil
+}
+
+// LoadPayloadsFromEmbed walks an embedded filesystem from root and returns a map of
+func LoadPayloadsFromEmbed(embedFS fs.FS, root string) (map[string]DataPayload, error) {
+	out := make(map[string]DataPayload)
+	err := fs.WalkDir(embedFS, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		payload, err := ToPayloadFromFS(embedFS, path)
+		if err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			relPath = filepath.Base(path)
+		}
+		assetID := strings.ReplaceAll(relPath, string(filepath.Separator), "/")
+		out[assetID] = payload
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ToPayloadFromURL creates a DataPayload with a URL reference (no embedded data).
+// Use this when the asset is hosted externally and shouldn't be embedded.
+func ToPayloadFromURL(url string) DataPayload {
+	return DataPayload{
+		Url: url,
+	}
+}
+
+// dataPayloadToProto converts a DataPayload to its proto representation.
+func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
+	pdp := &protos.DataPayload{
+		Metadata:        maps.Clone(dp.Metadata),
+		Digest:          slices.Clone(dp.Digest),
 		PayloadEncoding: protos.DataPayload_PayloadEncoding(dp.PayloadEncoding),
 	}
 
-	// Handle oneof: either url or payload (not both)
 	if dp.Url != "" && len(dp.Payload) == 0 {
-		protoPayload.Kind = &protos.DataPayload_Url{Url: dp.Url}
+		pdp.Kind = &protos.DataPayload_Url{Url: dp.Url}
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
-		protoPayload.Kind = &protos.DataPayload_Payload{Payload: dp.Payload}
+		pdp.Kind = &protos.DataPayload_Payload{Payload: slices.Clone(dp.Payload)}
 	} else {
-		return CatenaAsset{asset: nil}, fmt.Errorf("either payload or url must be provided in DataPayload, but not both")
+		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload, but not both"}
 	}
 
-	// Build the ExternalObjectPayload
+	return pdp, StatusResult{Code: StatusCodeOk}
+}
+
+func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
+	if pdp == nil {
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil DataPayload"}
+	}
+	dp := DataPayload{
+		Metadata:        maps.Clone(pdp.GetMetadata()),
+		Digest:          slices.Clone(pdp.GetDigest()),
+		PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
+	}
+	switch k := pdp.GetKind().(type) {
+	case *protos.DataPayload_Url:
+		dp.Url = k.Url
+	case *protos.DataPayload_Payload:
+		dp.Payload = slices.Clone(k.Payload)
+	}
+	return dp, StatusResult{Code: StatusCodeOk}
+}
+
+// ToAsset converts DataPayload to Asset by building the proto directly
+func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
+	protoPayload, res := dataPayloadToProto(dp)
+	if res.Code != StatusCodeOk {
+		return Asset{asset: nil}, res
+	}
+
 	asset := &protos.ExternalObjectPayload{
 		Cachable: cachable,
 		Payload:  protoPayload,
 	}
 
-	return CatenaAsset{asset: asset}, nil
+	return Asset{asset: asset}, StatusResult{Code: StatusCodeOk}
 }
 
 // GetProtoAsset returns the underlying protos.ExternalObjectPayload
-func (ca CatenaAsset) GetProtoAsset() *protos.ExternalObjectPayload {
+func (ca Asset) GetProtoAsset() *protos.ExternalObjectPayload {
 	return ca.asset
 }
 
-// ToJSON converts CatenaAsset to JSON bytes using protojson
-func (ca CatenaAsset) ToJSON() ([]byte, error) {
-	if ca.asset == nil {
-		return nil, nil
+func compressGzipTo(w io.Writer, data []byte) error {
+	gw := gzip.NewWriter(w)
+	if _, err := gw.Write(data); err != nil {
+		return fmt.Errorf("gzip write: %w", err)
+	}
+	if err := gw.Close(); err != nil {
+		return fmt.Errorf("gzip close: %w", err)
+	}
+	return nil
+}
+
+// CompressGzip compresses data using gzip format.
+func CompressGzip(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := compressGzipTo(&buf, data); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func compressDeflateTo(w io.Writer, data []byte) error {
+	zw := zlib.NewWriter(w)
+	if _, err := zw.Write(data); err != nil {
+		return fmt.Errorf("zlib write: %w", err)
+	}
+	if err := zw.Close(); err != nil {
+		return fmt.Errorf("zlib close: %w", err)
+	}
+	return nil
+}
+
+// CompressDeflate compresses data using zlib (deflate) format.
+func CompressDeflate(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := compressDeflateTo(&buf, data); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// DecompressGzip decompresses gzip-encoded data.
+func DecompressGzip(data []byte) ([]byte, error) {
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("gzip reader: %w", err)
+	}
+	defer r.Close()
+	return io.ReadAll(r)
+}
+
+// DecompressDeflate decompresses zlib (deflate)-encoded data.
+func DecompressDeflate(data []byte) ([]byte, error) {
+	r, err := zlib.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("zlib reader: %w", err)
+	}
+	defer r.Close()
+	return io.ReadAll(r)
+}
+
+// DecodePayload decompresses payload bytes according to the given encoding.
+func DecodePayload(data []byte, encoding Encoding) ([]byte, error) {
+	switch encoding {
+	case EncodingGzip:
+		return DecompressGzip(data)
+	case EncodingDeflate:
+		return DecompressDeflate(data)
+	case EncodingUncompressed:
+		return data, nil
+	default:
+		return nil, fmt.Errorf("unsupported encoding: %v", encoding)
+	}
+}
+
+// EncodePayload compresses raw data according to the given encoding.
+func EncodePayload(data []byte, encoding Encoding) ([]byte, error) {
+	switch encoding {
+	case EncodingGzip:
+		return CompressGzip(data)
+	case EncodingDeflate:
+		return CompressDeflate(data)
+	case EncodingUncompressed:
+		return data, nil
+	default:
+		return nil, fmt.Errorf("unsupported encoding: %v", encoding)
+	}
+}
+
+// ParsePayloadEncoding converts a string (e.g. "GZIP", "DEFLATE", "UNCOMPRESSED")
+// to the corresponding encoding constant.
+func ParsePayloadEncoding(s string) (Encoding, StatusResult) {
+	switch strings.ToUpper(strings.TrimSpace(s)) {
+	case "UNCOMPRESSED", "":
+		return EncodingUncompressed, StatusResult{Code: StatusCodeOk}
+	case "GZIP":
+		return EncodingGzip, StatusResult{Code: StatusCodeOk}
+	case "DEFLATE":
+		return EncodingDeflate, StatusResult{Code: StatusCodeOk}
+	default:
+		return EncodingUncompressed, StatusResult{Code: StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid payload encoding: %s", s)}
+	}
+}
+
+// PayloadEncodingFromExt returns the payload encoding implied by a file extension.
+// ".gz" → GZIP, ".zz" → DEFLATE, anything else → UNCOMPRESSED.
+func PayloadEncodingFromExt(filename string) Encoding {
+	switch filepath.Ext(filename) {
+	case ".gz":
+		return EncodingGzip
+	case ".zz":
+		return EncodingDeflate
+	default:
+		return EncodingUncompressed
+	}
+}
+
+// TranscodeAssetPayload decodes the asset's current payload encoding and
+// re-encodes it to targetEncoding, modifying the asset in place.
+// If the asset is already in the target encoding, this is a no-op.
+func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
+	original := asset.GetProtoAsset()
+	if original == nil || original.GetPayload() == nil {
+		return StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no payload"}
 	}
 
-	return (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(ca.asset)
+	dp := original.GetPayload()
+	currentEncoding := Encoding(dp.GetPayloadEncoding())
+
+	if currentEncoding == targetEncoding {
+		return StatusResult{Code: StatusCodeOk}
+	}
+
+	rawData, err := DecodePayload(dp.GetPayload(), currentEncoding)
+	if err != nil {
+		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("decode: %v", err)}
+	}
+
+	encodedData, err := EncodePayload(rawData, targetEncoding)
+	if err != nil {
+		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("encode: %v", err)}
+	}
+
+	cloned := proto.Clone(original).(*protos.ExternalObjectPayload)
+	cloned.Payload.Kind = &protos.DataPayload_Payload{Payload: encodedData}
+	cloned.Payload.PayloadEncoding = protos.DataPayload_PayloadEncoding(targetEncoding)
+	newDigest := sha256.Sum256(encodedData)
+	cloned.Payload.Digest = newDigest[:]
+	asset.asset = cloned
+
+	return StatusResult{Code: StatusCodeOk}
 }

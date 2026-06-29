@@ -1,11 +1,22 @@
 module github.com/rossvideo/catena/sdks/go
 
-go 1.24
+go 1.25.0
 
-toolchain go1.24.11
+toolchain go1.25.10
 
-require github.com/rossvideo/catena/build/go v0.0.0
+require (
+	github.com/MicahParks/keyfunc/v3 v3.8.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/valyala/fastjson v1.6.10
+	google.golang.org/grpc v1.81.1
+	google.golang.org/protobuf v1.36.11
+)
 
-require google.golang.org/protobuf v1.36.11
-
-replace github.com/rossvideo/catena/build/go => ../../build/go
+require (
+	github.com/MicahParks/jwkset v0.11.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/time v0.9.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
+)

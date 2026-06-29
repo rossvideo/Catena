@@ -1,0 +1,251 @@
+name: Go Code Analysis
+# this runs the workflow on PR and make sure that the code is tested and analyzed
+
+on:
+  workflow_dispatch:
+
+jobs:
+  Trivy:
+    name: Trivy vulnerability scanner (25 seconds)
+    timeout-minutes: 2
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          skip-dirs: '.git,build,coverage,docs,sdks/java,sdks/cpp,unittests'
+          skip-files: 'pom.xml'
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results.sarif
+          category: 'Trivy Scan Results'
+
+  CodeQL:
+    name: CodeQL Analysis (5-10 minutes)
+    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['go']
+
+    env:
+      CMAKE_BUILD_TYPE: ''
+      CONNECTIONS: REST
+      BUILD_TARGET: ${{ github.workspace }}/build/go
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Install file utility # go needs this for CodeQL
+        run: sudo apt-get update && sudo apt-get install -y file
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          debug: true
+
+      - name: Build OpenAPI and Go Dependencies
+        run: |
+          echo "Building OpenAPI"
+          cd ${GITHUB_WORKSPACE}/smpte
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+          mkdir -p ${BUILD_TARGET} 
+
+          # Setup Go environment
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          git config --global --add safe.directory /__w/Catena/Catena
+          
+          ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh root ${BUILD_TARGET} ${GITHUB_WORKSPACE}
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          make
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
+
+      - name: Upload error and fatal logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-logs
+          path: |
+            logs/*error*.log
+            logs/*fatal*.log
+          if-no-files-found: ignore
+          retention-days: 1
+
+  Go-Unit-Tests:
+    name: Run Go Unit Tests and Coverage (2-5 minutes)
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+    
+    env:
+      CMAKE_BUILD_TYPE: ''
+      CONNECTIONS: REST
+      BUILD_TARGET: ${{ github.workspace }}/build/go
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Build OpenAPI and Go Dependencies
+        run: |
+          echo "Building OpenAPI"
+          cd ${GITHUB_WORKSPACE}/smpte
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+          mkdir -p ${BUILD_TARGET} 
+
+          # Setup Go environment
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          git config --global --add safe.directory /__w/Catena/Catena
+
+          ${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh root ${BUILD_TARGET} ${GITHUB_WORKSPACE}
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          make
+
+      - name: Run unit tests with coverage
+        run: |
+          # Create non-root user for testing
+          useradd -m -s /bin/bash testuser 2>/dev/null || true
+          
+          # Ensure workspace is owned by testuser
+          chown -R testuser:testuser ${GITHUB_WORKSPACE}
+          
+          # Run tests as non-root to properly test permission errors
+          # Using runuser to preserve environment including PATH
+          runuser -u testuser -- bash -c "cd ${GITHUB_WORKSPACE}/sdks/go && make COVERAGE_DIR=${GITHUB_WORKSPACE}/sdks/go coverage coverage-html"
+
+      - name: Generate coverage report
+        run: |
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          mv go_coverage.html go_detailed.html
+          go tool cover -func=go_coverage.out > go_coverage.txt
+          go tool cover -html=go_coverage.out -o go_coverage.html
+
+      - name: Display coverage summary
+        run: |
+          cd ${GITHUB_WORKSPACE}/sdks/go
+          echo "### Go Test Coverage Summary"
+          go tool cover -func=go_coverage.out | tail -1
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage-report
+          path: |
+            sdks/go/go_coverage.txt
+            sdks/go/go_coverage.out
+            sdks/go/go_coverage.html
+            sdks/go/go_detailed.html
+          retention-days: 30
+
+  Proto-Check:
+    name: Verify Go Protos Match SMPTE Definitions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    container:
+      image: ghcr.io/rossvideo/catena-go-toolchain:latest
+      options: --user root:root
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Generate Go protos from SMPTE submodule
+        working-directory: sdks/go
+        run: |
+          GENERATED_DIR=$RUNNER_TEMP/generated-protos
+          echo "GENERATED_DIR=$GENERATED_DIR" >> $GITHUB_ENV
+          mkdir -p $GENERATED_DIR
+          make GENERATED_DIR=$GENERATED_DIR protos-all
+
+      - name: Compare generated protos with committed protos
+        run: |
+          echo "Comparing generated protos with committed protos..."
+          echo ""
+          
+          COMMITTED_DIR="${GITHUB_WORKSPACE}/sdks/go/pkg/protos"
+          
+          # Check if directories exist
+          if [ ! -d "${COMMITTED_DIR}" ]; then
+            echo "ERROR: Committed protos directory does not exist: ${COMMITTED_DIR}"
+            exit 1
+          fi
+          
+          if [ ! -d "${GENERATED_DIR}" ]; then
+            echo "ERROR: Generated protos directory does not exist: ${GENERATED_DIR}"
+            exit 1
+          fi
+          
+          echo "Generated files:"
+          ls -la "${GENERATED_DIR}"
+          echo ""
+          echo "Committed files:"
+          ls -la "${COMMITTED_DIR}"
+          echo ""
+          
+          # Run diff and capture output
+          DIFF_OUTPUT=$(diff -rq "${GENERATED_DIR}" "${COMMITTED_DIR}" 2>&1) || true
+          
+          if [ -n "${DIFF_OUTPUT}" ]; then
+            echo "=========================================="
+            echo "PROTO MISMATCH DETECTED!"
+            echo "=========================================="
+            echo ""
+            echo "The generated Go protos do not match the committed protos."
+            echo "This means the SMPTE submodule proto definitions have changed"
+            echo "but the Go protos have not been regenerated."
+            echo ""
+            echo "Differences found:"
+            echo "${DIFF_OUTPUT}"
+            echo ""
+            echo "Detailed diff:"
+            diff -r "${GENERATED_DIR}" "${COMMITTED_DIR}" || true
+            echo ""
+            echo "=========================================="
+            echo "To fix this, run the following commands locally:"
+            echo ""
+            echo "  cd sdks/go"
+            echo "  make clean-protos"
+            echo "  make GENERATED_DIR=$GENERATED_DIR protos-all"
+            echo ""
+            echo "Then commit the regenerated proto files."
+            echo "=========================================="
+            exit 1
+          else
+            echo "SUCCESS: Generated protos match committed protos."
+          fi

@@ -40,19 +40,9 @@ RUN groupadd -g $USER_GID $USER_NAME && \
 # Add user to sudoers
 RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-RUN sudo apt-get update && sudo apt-get install -y protobuf-compiler
-
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
 USER ${USER_NAME}
 
-RUN go install golang.org/x/tools/gopls@latest \
-    && go install github.com/go-delve/delve/cmd/dlv@latest \
-    && go install google.golang.org/protobuf/cmd/protoc-gen-go@latest \
-    && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest \
-    && go install github.com/axw/gocov/gocov@latest \
-    && go install github.com/matm/gocov-html/cmd/gocov-html@latest
-    
-RUN export PATH="$PATH:$(go env GOPATH)/bin"
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]

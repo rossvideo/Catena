@@ -7,11 +7,14 @@
         "request": "launch",
         "mode": "debug",
         "program": "${workspaceFolder}/sdks/go/examples/${input:pickGoService}",
+        "preLaunchTask": "Generate Protobufs",
         "cwd": "${workspaceFolder}",
         "args": [],
         "env": {
           "CATENA_LOG_LEVEL": "DEBUG", // Set log level to DEBUG
-          "CATENA_ENV": "dev",
+          "CATENA_DEV_MODE": "true", // Enable development mode for more descriptive errors in transport responses
+          "CATENA_USE_GRPC": "true",
+          "CATENA_USE_REST": "true",
         }
       },
       {
@@ -224,12 +227,10 @@
       "description": "Select Go program to debug",
       "type": "pickString",
       "options": [
-        "getDevice_REST",
-        "executeCommand_REST",
-        "getAsset_REST",
-        "getSetValue_REST"
+        "hello_world",
+        "oneOfEverything"
       ],
-      "default": "getSetValue_REST"
+      "default": "hello_world"
     },
     {
       "id": "pickDeviceModel",
@@ -325,6 +326,7 @@
         "unittests/common/common_Logger_test",
         "unittests/common/common_GenericFactory_test",
         "unittests/common/common_EnumDecorator_test",
+        "unittests/common/common_ConnectionProps_test",
         "unittests/gRPC/gRPC_ParamInfoRequest_test",
         "unittests/gRPC/gRPC_UpdateSubscriptions_test",
         "unittests/gRPC/gRPC_DeviceRequest_test",
@@ -374,7 +376,8 @@
         "use_menus_REST",
         "structs_with_authz_REST",
         "one_of_everything_REST",
-        "structs_with_authz_JSON_REST"
+        "structs_with_authz_JSON_REST",
+        "simple_audiodeck_JSON_REST"
       ],
       "default": "status_update_REST"
     }

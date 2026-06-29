@@ -1,0 +1,280 @@
+name: "04 Build and Unit Tests"
+
+"on":
+  workflow_call:
+    inputs:
+      cpp_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      go_image:
+        required: false
+        type: string
+        default: ghcr.io/rossvideo/catena-go-toolchain:develop
+      force_cpp_tests:
+        required: false
+        type: boolean
+        default: false
+      force_go_tests:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  detect_changes:
+    name: Detect language changes
+    runs-on: ubuntu-latest
+    outputs:
+      cpp_changed: ${{ steps.filter.outputs.cpp }}
+      go_changed: ${{ steps.filter.outputs.go }}
+      js_changed: ${{ steps.filter.outputs.js }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            cpp:
+              - 'sdks/cpp/**'
+              - 'unittests/cpp/**'
+            go:
+              - 'sdks/go/**'
+              - 'smpte'
+            js:
+              - 'tools/codegen/**'
+
+  test_cpp:
+    name: C++ Build and Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.cpp_changed == 'true' || inputs.force_cpp_tests
+    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      code-quality: write
+    container:
+      image: ${{ inputs.cpp_image }}
+      options: --user root:root
+    env:
+      BUILD_TARGET: ${{ github.workspace }}/build/cpp
+      CMAKE_BUILD_TYPE: Debug
+      CONNECTIONS: 'gRPC;REST'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Build and test C++
+        id: run_cpp_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+
+          mkdir -p "${BUILD_TARGET}"
+          cmake -G Ninja \
+            -DBUILD_DOC=OFF \
+            -DBARE_EXAMPLES=ON \
+            -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+            -DCONNECTIONS="${CONNECTIONS}" \
+            -DCOVERAGE=ON \
+            -DCMAKE_INSTALL_PREFIX=/usr/local/.local \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
+            -DLOG_DIR="${HOME}/Catena/logs" \
+            -B "${BUILD_TARGET}" \
+            -S "${GITHUB_WORKSPACE}/sdks/cpp"
+
+          ninja -C "${BUILD_TARGET}"
+
+          run_cpp_ctest() {
+            ctest --output-on-failure --output-junit "${BUILD_TARGET}/ctest.xml" --test-dir "${BUILD_TARGET}" -R '^(common|gRPC|REST)\.'
+          }
+          if ! run_cpp_ctest; then
+            echo "C++ tests failed on first attempt; retrying once..."
+            run_cpp_ctest
+          fi
+
+      - name: Generate C++ coverage report
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
+          gcovr \
+            --cobertura "${BUILD_TARGET}/coverage.xml" \
+            --lcov "${BUILD_TARGET}/coverage.info" || true
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: (!cancelled())
+        with:
+          files: ${{ github.workspace }}/build/cpp/ctest.xml
+          check_name: C++ Unit Tests
+
+      - uses: actions/upload-code-coverage@v1
+        with:
+          file: ${{ env.BUILD_TARGET }}/coverage.xml
+          language: C++
+          label: code-coverage/cpp
+
+      - name: Upload C++ test artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-artifacts-cpp
+          path: |
+            ${{ env.BUILD_TARGET }}/ctest.xml
+            ${{ env.BUILD_TARGET }}/coverage.xml
+          if-no-files-found: error
+
+  test_go:
+    name: Go Build and Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.go_changed == 'true' || inputs.force_go_tests
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      code-quality: write
+    container:
+      image: ${{ inputs.go_image }}
+      options: --user root:root
+
+    env:
+      BUILD_TARGET: ${{ github.workspace }}/build/go
+      COVERAGE_DIR: ${{ github.workspace }}/sdks/go
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Build and test Go
+        id: run_go_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Building OpenAPI"
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./build-openapi.sh
+          echo "Done building OpenAPI"
+
+          mkdir -p "${BUILD_TARGET}"
+          cd "${GITHUB_WORKSPACE}/sdks/go"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+
+          set -o pipefail
+          GOTESTSUM_OPTS="--junitfile ${BUILD_TARGET}/go-tests.xml"
+          run_go_tests() {
+            cd "${GITHUB_WORKSPACE}/sdks/go"
+            make VERBOSE=1 COVERAGE_DIR=${COVERAGE_DIR} GOTESTSUM_OPTS="${GOTESTSUM_OPTS}" coverage coverage-html coverage-cobertura 2>&1 | tee "${BUILD_TARGET}/go-test.log"
+          }
+          if ! run_go_tests; then
+            echo "Go tests failed on first attempt; retrying once..."
+            run_go_tests
+          fi
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: (!cancelled())
+        with:
+          files: ${{ github.workspace }}/build/go/go-tests.xml
+          check_name: Go Unit Tests
+
+      - uses: actions/upload-code-coverage@v1
+        with:
+          file: ${{ env.COVERAGE_DIR }}/go_coverage.xml
+          language: Go
+          label: code-coverage/go
+
+      - name: Upload Go test artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-artifacts-go
+          path: |
+            ${{ env.BUILD_TARGET }}/go-tests.xml
+            ${{ env.COVERAGE_DIR }}/go_coverage.xml
+          if-no-files-found: error
+
+  test_js:
+    name: Codegen JS Tests
+    needs: detect_changes
+    if: needs.detect_changes.outputs.js_changed == 'true'
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      code-quality: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "24.17.0"
+          cache: "npm"
+          cache-dependency-path: tools/codegen/package-lock.json
+
+      - name: Build SMPTE artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/smpte"
+          ./install-tooling.sh
+          ./build-openapi.sh
+      
+      - name: Run codegen tests
+        id: run_js_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/tools/codegen"
+          npm ci
+          run_js_tests() {
+            npm test -- --ci
+          }
+          if ! run_js_tests; then
+            echo "JS tests failed on first attempt; retrying once..."
+            run_js_tests
+          fi
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: (!cancelled())
+        with:
+          files: ${{ github.workspace }}/tools/codegen/junit.xml
+          check_name: Codegen JS Unit Tests
+
+      - uses: actions/upload-code-coverage@v1
+        with:
+          file: ${{ github.workspace }}/tools/codegen/coverage/cobertura-coverage.xml
+          language: JavaScript
+          label: code-coverage/js
+
+      - name: Upload JS test artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-artifacts-js
+          path: |
+            ${{ github.workspace }}/tools/codegen/junit.xml
+            ${{ github.workspace }}/tools/codegen/coverage/cobertura-coverage.xml
+          if-no-files-found: error

@@ -33,7 +33,8 @@
  * @file device.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
- * @date 2026-02-04
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2026-03-16
  */
 
 package catena
@@ -43,8 +44,9 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
-	"github.com/rossvideo/catena/build/go/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // DetailLevel represents how much of the device model to deliver
@@ -61,61 +63,52 @@ const (
 	DetailLevelUnset         DetailLevel = protos.Device_UNSET
 )
 
-// CatenaDevice wraps protos.Device for device model handling
-type CatenaDevice struct {
-	device   *protos.Device
-	jsonData []byte // Cached JSON representation
+// Device wraps protos.Device for device model handling
+type Device struct {
+	device *protos.Device
 }
 
-// ToCatenaDevice converts a Go map/struct to CatenaDevice
+// ToDevice converts a Go map/struct to Device
 // This allows developers to work with native Go types and convert to the protobuf format
-func ToCatenaDevice(m map[string]any) (CatenaDevice, error) {
-	device, jsonData, err := toProtoDevice(m)
+func ToDevice(m map[string]any) (Device, error) {
+	device, err := toProtoDevice(m)
 	if err != nil {
-		return CatenaDevice{jsonData: nil}, fmt.Errorf("ToCatenaDevice: %w", err)
+		return Device{}, fmt.Errorf("ToDevice: %w", err)
 	}
-	return CatenaDevice{device: device, jsonData: jsonData}, nil
+	return Device{device: device}, nil
 }
 
 // toProtoDevice converts native Go types to protos.Device
 // For complex nested types (params, constraints, etc.), uses JSON marshaling
 // to leverage protojson's automatic conversion and validation
-// Returns the device, cached JSON data, and any error
-func toProtoDevice(m map[string]any) (*protos.Device, []byte, error) {
-	// For complex types, use JSON marshaling to handle nested structures
+func toProtoDevice(m map[string]any) (*protos.Device, error) {
 	jsonData, err := json.Marshal(m)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal map to JSON: %w", err)
+		return nil, fmt.Errorf("failed to marshal map to JSON: %w", err)
 	}
 
 	device := &protos.Device{}
 	if err := protojson.Unmarshal(jsonData, device); err != nil {
-		return nil, nil, fmt.Errorf("failed to unmarshal JSON to Device proto: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal JSON to Device proto: %w", err)
 	}
 
-	return device, jsonData, nil
+	return device, nil
+}
+
+func protoMessageToMap(context string, msg proto.Message) (map[string]any, error) {
+	jsonData, err := protojson.MarshalOptions{UseProtoNames: true}.Marshal(msg)
+	if err != nil {
+		return nil, fmt.Errorf("%s: marshal proto: %w", context, err)
+	}
+
+	var definition map[string]any
+	if err := json.Unmarshal(jsonData, &definition); err != nil {
+		return nil, fmt.Errorf("%s: unmarshal map: %w", context, err)
+	}
+	return definition, nil
 }
 
 // GetProtoDevice returns the underlying protos.Device
-func (cd CatenaDevice) GetProtoDevice() *protos.Device {
+func (cd Device) GetProtoDevice() *protos.Device {
 	return cd.device
-}
-
-// ToJSON converts CatenaDevice to JSON bytes using protojson
-// Uses cached JSON if available, otherwise generates new JSON
-func (cd CatenaDevice) ToJSON() ([]byte, error) {
-	if cd.device == nil {
-		return nil, nil
-	}
-
-	// Return cached JSON if available
-	if cd.jsonData != nil {
-		return cd.jsonData, nil
-	}
-
-	// Generate JSON from protobuf if not cached
-	return (protojson.MarshalOptions{
-		UseProtoNames:   true,
-		EmitUnpopulated: false,
-	}).Marshal(cd.device)
 }

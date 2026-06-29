@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2026 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,11 +33,11 @@
  * @brief This file is for testing the ParamInfoRequest.cpp file.
  * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  * @author Jason Chen (jason.chen@rossvideo.com)
- * @date 2025-12-01
- * @copyright Copyright © 2025 Ross Video Ltd
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-03-20
+ * @copyright Copyright © 2026 Ross Video Ltd
  */
 
-#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
@@ -56,8 +56,7 @@ protected:
     
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
-        Logger::init("RESTParamInfoRequestTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTParamInfoRequestTest");
     }
 
     static void TearDownTestSuite() {
@@ -278,46 +277,18 @@ TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsStream) {
     EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
 }
 
-// Test 1.2: Get all top-level parameters without recursion as a unary response.
+// Test 1.2: Unary response without fqoid is rejected.
 TEST_F(RESTParamInfoRequestTests, ParamInfoRequest_getTopLevelParamsUnary) {
-    // Remake the endpoint with stream set to false
     stream_ = false;
+    fqoid_ = "";
+    expRc_ = catena::exception_with_status("Unary request must include fqoid", catena::StatusCode::INVALID_ARGUMENT);
     endpoint_.reset(makeOne());
-    
-    // Setup mock parameters
-    catena::REST::test::ParamInfo param1_info{ .oid = "param1", .type = st2138::ParamType::STRING };
-    catena::REST::test::ParamInfo param2_info{ .oid = "param2", .type = st2138::ParamType::STRING };
-    auto desc1 = ParamHierarchyBuilder::createDescriptor("/" + param1_info.oid);
-    auto desc2 = ParamHierarchyBuilder::createDescriptor("/" + param2_info.oid);
-    
-    // Create ParamInfo structs
-    catena::REST::test::ParamInfo param1_info_struct{param1_info.oid, param1_info.type};
-    catena::REST::test::ParamInfo param2_info_struct{param2_info.oid, param2_info.type};
 
-    auto param1 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(*param1, param1_info_struct, *desc1.descriptor);
-
-    auto param2 = std::make_unique<MockParam>();
-    catena::REST::test::setupMockParam(*param2, param2_info_struct, *desc2.descriptor);
-
-    std::vector<std::unique_ptr<IParam>> top_level_params;
-    top_level_params.push_back(std::move(param1));
-    top_level_params.push_back(std::move(param2));
-
-    // Setup mock expectations
-    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_))
-        .WillOnce(testing::Invoke([&top_level_params](catena::exception_with_status& status, const IAuthorizer&) -> std::vector<std::unique_ptr<IParam>> {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(top_level_params);
-        }));
+    EXPECT_CALL(dm0_, getTopLevelParams(testing::_, testing::_)).Times(0);
 
     endpoint_->proceed();
 
-    // Match expected and actual responses
-    std::vector<std::string> jsonBodies;
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param1_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param2_info));
-    EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBodies));
+    EXPECT_EQ(readResponse(), expectedResponse(expRc_));
 }
 
 // Test 1.3: Get top-level parameters with error returned from getTopLevelParams

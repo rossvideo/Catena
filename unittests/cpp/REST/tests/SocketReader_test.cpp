@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,22 +33,26 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author keon.foster@rossvideo.com
- * @date 2026/01/26
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 // Common
 #include <SubscriptionManager.h>
 #include <Logger.h>
-#include <SharedFlags.h>
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 #include "MockServiceImpl.h"
 #include "MockSubscriptionManager.h"
 
 // REST
 #include "SocketReader.h"
+
+// std
+#include <thread>
+#include <vector>
 
 using namespace catena::REST;
 
@@ -57,8 +61,7 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        absl::SetFlag(&FLAGS_log_dir, UNITTEST_LOG_DIR);
-        Logger::init("RESTSocketReaderTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTSocketReaderTest");
     }
 
     static void TearDownTestSuite() {
@@ -100,7 +103,13 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
         // Writing the request to the socket and reading.
         writeRequest(method, slot, endpoint, fqoid, stream, fields,
                      jwsToken, origin, detailLevel, language, requestStart, "application/json", jsonBody);
-        socketReader.read(serverSocket_);
+        io_context_.restart();
+        auto work = boost::asio::make_work_guard(io_context_);
+        std::thread runner([this](){ io_context_.run(); });
+        socketReader.read(serverSocketPtr);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        work.reset();
+        runner.join();
         // Validating the results.
         if (!authz) { jwsToken = ""; }
         if (detailLevel ==  st2138::Device_DetailLevel_UNSET) {
@@ -136,6 +145,8 @@ class RESTSocketReaderTests : public testing::Test, public RESTTest {
 
     // The SocketReader object.
     SocketReader socketReader{&service_};
+
+    std::shared_ptr<tcp::socket> serverSocketPtr = std::make_shared<tcp::socket>(std::move(serverSocket_));
 };
 
 /*
@@ -269,11 +280,10 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointLanguages) {
     testCall(catena::REST::Method_GET, 1, "/langauges", "", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0", "");
 }
 
-/* 
+/*
  * TEST 13 - Testing with a long json body.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
-    // SocketReader should be able to handle json bodies of any length.
     testCall(catena::REST::Method_GET, 1, "/test-call", "/test/oid", false, {}, false, "", "*", st2138::Device_DetailLevel_NONE, "en", "0", std::string(10000, 'a'));
 }
 
@@ -313,8 +323,13 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderCaseInsensitive) {
                                 "content-length",    // lower-case
                                 "ReQuEsT-sTaRt",    // mixed-case
                                 "ConTenT-tYpE");    // mixed-case
-
-    socketReader.read(serverSocket_);
+    io_context_.restart();
+    auto work = boost::asio::make_work_guard(io_context_);
+    std::thread runner([this](){ io_context_.run(); });
+    socketReader.read(serverSocketPtr);
+    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    work.reset();
+    runner.join();
     // Validate results identical to normal case
     EXPECT_EQ(socketReader.method(), method);
     EXPECT_EQ(socketReader.slot(), slot);
@@ -366,7 +381,12 @@ TEST_F(RESTSocketReaderTests, SocketReader_HeaderWithoutColonIgnored) {
                                 "Content-Type",
                                 /*extraHeaderLines=*/{"This-Is-A-Bad-Header-Without-Colon"});
 
-    socketReader.read(serverSocket_);
+    io_context_.restart();
+    auto work = boost::asio::make_work_guard(io_context_);
+    std::thread runner([this](){ io_context_.run(); });
+    socketReader.read(serverSocketPtr);
+    work.reset();
+    runner.join();
     // Validate results identical to normal case; malformed header should be ignored
     EXPECT_EQ(socketReader.method(), method);
     EXPECT_EQ(socketReader.slot(), slot);
@@ -400,26 +420,31 @@ TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentType) {
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
     const std::string jsonBody = "{test_json_body}";
     std::map<std::string, std::string> headers;
+    io_context_.restart();
+    auto work = boost::asio::make_work_guard(io_context_);
+    std::thread runner([this](){ io_context_.run(); });
     // Testing with invalid
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/xml"});
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
     // Testing with typo
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/josn"});
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
     // Testing with same prefix but invalid
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json=patch+json"});
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
     // Testing with missing header
     headers["Content-Length"] = std::to_string(10);
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, "", headers);
-    EXPECT_THROW(socketReader.read(serverSocket_), catena::exception_with_status);
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
+    work.reset();
+    runner.join();
 }
 
 /**
  * TEST 19 - Valid Content-Type doesn't throw exception
  */
 TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
-        // Enable authz so Authorization header is parsed.
+    // Enable authz so Authorization header is parsed.
     EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
     const RESTMethod method = catena::REST::Method_GET;
     const uint32_t slot = 1;
@@ -429,25 +454,30 @@ TEST_F(RESTSocketReaderTests, SocketReader_ValidContentType) {
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
     const std::string jsonBody = "";
     std::map<std::string, std::string> headers;
+    io_context_.restart();
+    auto work = boost::asio::make_work_guard(io_context_);
+    std::thread runner([this](){ io_context_.run(); });
     // Testing with valid
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json"});
-    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    EXPECT_NO_THROW(socketReader.read(serverSocketPtr));
     // Testing with extra parameter
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: application/json; charset=utf-8"});
-    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    EXPECT_NO_THROW(socketReader.read(serverSocketPtr));
     // Testing case-insensitive
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Type: aPpliCatIon/jSon"});
-    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    EXPECT_NO_THROW(socketReader.read(serverSocketPtr));
     // Testing no body or header
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, "", headers);
-    EXPECT_NO_THROW(socketReader.read(serverSocket_));
+    EXPECT_NO_THROW(socketReader.read(serverSocketPtr));
+    work.reset();
+    runner.join();
 }
 
 /**
  * TEST 20 - Missing Request-Start sets to default
  */
 TEST_F(RESTSocketReaderTests, SocketReader_MissingRequestStart) {
-        // Enable authz so Authorization header is parsed.
+    // Enable authz so Authorization header is parsed.
     EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
     const RESTMethod method = catena::REST::Method_GET;
     const uint32_t slot = 1;
@@ -457,7 +487,352 @@ TEST_F(RESTSocketReaderTests, SocketReader_MissingRequestStart) {
     const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
     const std::string jsonBody = "";
     std::map<std::string, std::string> headers;
+    io_context_.restart();
+    auto work = boost::asio::make_work_guard(io_context_);
+    std::thread runner([this](){ io_context_.run(); });
     // Testing with valid
     writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers);
+    socketReader.read(serverSocketPtr);
     EXPECT_EQ(socketReader.requestStart(), DEFAULT_REQUEST_START);
+    work.reset();
+    runner.join();
+}
+
+/*
+ * TEST 21 - Invalid Content-Length throws exception
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_InvalidContentLength) {
+    // Enable authz so Authorization header is parsed.
+    EXPECT_CALL(service_, authorizationEnabled()).WillRepeatedly(testing::Return(true));
+    const RESTMethod method = catena::REST::Method_GET;
+    const uint32_t slot = 1;
+    const std::string endpoint = "/test-call";
+    const std::string fqoid = "/test/oid";
+    const bool stream = false;
+    const std::unordered_map<std::string, std::string> fields = {{"test-field-1", "1"}, {"test-field-2", "2"}};
+    const std::string jsonBody = "{test_json_body}";
+    std::map<std::string, std::string> headers;
+    headers["Content-Type"] = "application/json";
+    io_context_.restart();
+    auto work = boost::asio::make_work_guard(io_context_.get_executor());
+    std::thread runner([this]() { io_context_.run(); });
+    // Test with invalid character
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1a23", "Authorization: Bearer test"});
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
+    // Test with invalid character at end
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123a", "Authorization: Bearer test"});
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
+    // Test with float
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 123.123", "Authorization: Bearer test"});    
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
+    // Test with negative value
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: -16", "Authorization: Bearer test"});    
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
+    // Test with too large
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 2147483648", "Authorization: Bearer test"});
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
+    EXPECT_TRUE(socketReader.jsonBody().empty());
+    EXPECT_TRUE(socketReader.jwsToken().empty());
+    // Test with incorrect Content-Length
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 0"});    
+    EXPECT_THROW(socketReader.read(serverSocketPtr), catena::exception_with_status);
+    EXPECT_EQ(socketReader.detailLevel(), st2138::Device_DetailLevel_UNSET);
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1"});    
+    EXPECT_THROW(socketReader.read(serverSocketPtr, 50), catena::exception_with_status);
+    EXPECT_EQ(socketReader.detailLevel(), st2138::Device_DetailLevel_UNSET);
+    writeRequestWithHeaders(method, slot, endpoint, fqoid, stream, fields, jsonBody, headers, {"Content-Length: 1000"});    
+    EXPECT_THROW(socketReader.read(serverSocketPtr, 50), catena::exception_with_status);
+    EXPECT_EQ(socketReader.detailLevel(), st2138::Device_DetailLevel_UNSET);
+    work.reset();
+    runner.join();
+}
+
+/*
+ * Test 22 - Concurrent requests processed correctly
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_MultipleActiveRequests) {
+    constexpr std::size_t N = 5;
+    // Large body to force read_with_timeout() and test coroutines running on same io_context
+    constexpr std::size_t body_size = 10000;
+    const std::string body(body_size, 'a');
+    boost::asio::io_context ioc;
+    tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 0));
+    auto endpoint = acceptor.local_endpoint();
+
+    // Connecting clients to sockets
+    std::vector<tcp::socket> clients;
+    std::vector<std::shared_ptr<tcp::socket>> servers;
+    clients.reserve(N);
+    servers.reserve(N);
+    for (std::size_t i = 0; i < N; ++i) {
+        clients.emplace_back(ioc);
+        servers.emplace_back(std::make_shared<tcp::socket>(ioc));
+        clients.back().connect(endpoint);
+        acceptor.accept(*(servers.back()));
+    }
+
+    // Build RESTMethodMap reverse map on main thread so worker threads don't race on lazy init.
+    (void)RESTMethodMap().getReverseMap();
+
+    // Running IOC on seperate thread, mimics ServiceImpl
+    auto work = boost::asio::make_work_guard(ioc);
+    std::thread runner([&ioc]() { ioc.run(); });
+    // Handling connections on dedicated threads; each thread has its own mock to avoid concurrent mock access.
+    std::vector<std::thread> threads;
+    std::vector<std::exception_ptr> exceptions(N);
+    for (std::size_t i = 0; i < N; ++i) {
+        threads.emplace_back([i, &clients, &servers, &exceptions, &body, body_size]() {
+            try {
+                MockSubscriptionManager thread_sm;
+                std::string thread_eopath = "/test/eo/path";
+                std::string thread_version = "v1";
+                MockServiceImpl thread_service;
+                EXPECT_CALL(thread_service, subscriptionManager()).WillRepeatedly(testing::ReturnRef(thread_sm));
+                EXPECT_CALL(thread_service, EOPath()).WillRepeatedly(testing::ReturnRef(thread_eopath));
+                EXPECT_CALL(thread_service, version()).WillRepeatedly(testing::ReturnRef(thread_version));
+                EXPECT_CALL(thread_service, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+
+                std::string request = RESTMethodMap().getForwardMap().at(Method_GET)
+                    + " /st2138-api/" + thread_version + "/1/test-call/oid/" + std::to_string(i)
+                    + " HTTP/1.1\r\n"
+                    "Origin: *\r\n"
+                    "User-Agent: test_agent\r\n"
+                    "Request-Start: 0\r\n"
+                    "Detail-Level: NONE\r\n"
+                    "Language: en\r\n"
+                    "Content-Type: application/json\r\n"
+                    "Content-Length: " + std::to_string(body_size) + "\r\n"
+                    "\r\n" + body;
+                boost::asio::write(clients[i], boost::asio::buffer(request));
+
+                SocketReader reader(&thread_service);
+                reader.read(servers[i]);
+
+                EXPECT_EQ(reader.slot(), 1u);
+                EXPECT_EQ(reader.endpoint(), "/test-call");
+                EXPECT_EQ(reader.fqoid(), "/oid/" + std::to_string(i));
+                EXPECT_EQ(reader.stream(), false);
+                EXPECT_EQ(reader.origin(), "*");
+                EXPECT_EQ(reader.detailLevel(), st2138::Device_DetailLevel_NONE);
+                EXPECT_EQ(reader.jsonBody(), body);
+                EXPECT_TRUE(reader.requestReceived() > 0);
+                EXPECT_EQ(reader.method(), Method_GET);
+            } catch (...) {
+                exceptions[i] = std::current_exception();
+            }
+        });
+    }
+    // Clean up
+    for (auto& t : threads) {
+        t.join();
+    }
+    work.reset();
+    runner.join();
+    for (std::size_t i = 0; i < N; ++i) {
+        if (exceptions[i]) {
+            std::rethrow_exception(exceptions[i]);
+        }
+    }
+}
+
+/*
+ * Test 23 - Multiple Incorrect requests timeout
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_MultipleIncorrectActiveRequests) {
+    constexpr std::size_t N = 5;
+    // Sample body to read
+    constexpr std::size_t body_size = 10;
+    const std::string body(body_size, 'a');
+    boost::asio::io_context ioc;
+    tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 0));
+    auto endpoint = acceptor.local_endpoint();
+
+    // Connecting clients to sockets
+    std::vector<tcp::socket> clients;
+    std::vector<std::shared_ptr<tcp::socket>> servers;
+    clients.reserve(N);
+    servers.reserve(N);
+    for (std::size_t i = 0; i < N; ++i) {
+        clients.emplace_back(ioc);
+        servers.emplace_back(std::make_shared<tcp::socket>(ioc));
+        clients.back().connect(endpoint);
+        acceptor.accept(*(servers.back()));
+    }
+
+    // Build RESTMethodMap reverse map on main thread so worker threads don't race on lazy init.
+    (void)RESTMethodMap().getReverseMap();
+
+    // Running IOC on seperate thread, mimics ServiceImpl
+    auto work = boost::asio::make_work_guard(ioc);
+    std::thread runner([&ioc]() { ioc.run(); });
+    // Handling connections on dedicated threads; each thread has its own mock to avoid concurrent mock access.
+    std::vector<std::thread> threads;
+    std::vector<std::exception_ptr> exceptions(N);
+    for (std::size_t i = 0; i < N; ++i) {
+        threads.emplace_back([i, &clients, &servers, &exceptions, &body]() {
+            try {
+                MockSubscriptionManager thread_sm;
+                std::string thread_eopath = "/test/eo/path";
+                std::string thread_version = "v1";
+                MockServiceImpl thread_service;
+                EXPECT_CALL(thread_service, subscriptionManager()).WillRepeatedly(testing::ReturnRef(thread_sm));
+                EXPECT_CALL(thread_service, EOPath()).WillRepeatedly(testing::ReturnRef(thread_eopath));
+                EXPECT_CALL(thread_service, version()).WillRepeatedly(testing::ReturnRef(thread_version));
+                EXPECT_CALL(thread_service, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+
+                std::string request = RESTMethodMap().getForwardMap().at(Method_GET)
+                    + " /st2138-api/" + thread_version + "/1/test-call/oid/" + std::to_string(i)
+                    + " HTTP/1.1\r\n"
+                    "Origin: *\r\n"
+                    "User-Agent: test_agent\r\n"
+                    "Request-Start: 0\r\n"
+                    "Detail-Level: NONE\r\n"
+                    "Language: en\r\n"
+                    "Content-Type: application/json\r\n"
+                    "Content-Length: 100\r\n" // Incorrect value to cause hang
+                    "\r\n" + body;
+                boost::asio::write(clients[i], boost::asio::buffer(request));
+
+                SocketReader reader(&thread_service);
+                EXPECT_THROW(reader.read(servers[i], 50), catena::exception_with_status);
+            } catch (...) {
+                exceptions[i] = std::current_exception();
+            }
+        });
+    }
+    for (auto& t : threads) {
+        t.join();
+    }
+    work.reset();
+    runner.join();
+    for (std::size_t i = 0; i < N; ++i) {
+        if (exceptions[i]) {
+            std::rethrow_exception(exceptions[i]);
+        }
+    }
+}
+
+/*
+ * Test 24 - Missing end of headers timedout
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_MissingEndHeaders){
+    std::string request = RESTMethodMap().getForwardMap().at(Method_GET)
+    + " /st2138-api/v1/1/test-call/oid/" + 
+    + " HTTP/1.1\r\n"
+    "Origin: *\r\n"
+    "User-Agent: test_agent\r\n"
+    "Request-Start: 0\r\n"
+    "Detail-Level: NONE\r\n"
+    "Language: en\r\n"
+    "Content-Type: application/json\r\n"
+    "Content-Length: 100\r\n"; // Missing empty line
+    boost::asio::write(clientSocket_, boost::asio::buffer(request));
+    io_context_.restart();
+    auto work = boost::asio::make_work_guard(io_context_);
+    std::thread runner([this](){ io_context_.run(); });
+    EXPECT_THROW(socketReader.read(serverSocketPtr, 50), catena::exception_with_status);
+    work.reset();
+    runner.join();
+}
+
+/*
+ * Test 25 - read_with_timeout read error
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_ReadErrors) {
+    boost::asio::io_context ioc;
+    tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 0));
+    tcp::socket client(ioc);
+    auto server = std::make_shared<tcp::socket>(ioc);
+    client.connect(acceptor.local_endpoint());
+    acceptor.accept(*server);
+
+    std::string request = RESTMethodMap().getForwardMap().at(Method_GET)
+        + " /st2138-api/v1/1/test-call/oid/"
+        + " HTTP/1.1\r\n"
+          "Origin: *\r\n"
+          "User-Agent: test_agent\r\n"
+          "Request-Start: 0\r\n"
+          "Detail-Level: NONE\r\n"
+          "Language: en\r\n"
+          "Content-Type: application/json\r\n"
+          "Content-Length: 100\r\n\r\n"; // No body -> hang on read_with_timeout
+    boost::asio::write(client, boost::asio::buffer(request));
+    boost::system::error_code close_ec;
+    client.close(close_ec);
+
+    MockSubscriptionManager sm_local;
+    MockServiceImpl service_local;
+    EXPECT_CALL(service_local, subscriptionManager()).WillRepeatedly(testing::ReturnRef(sm_local));
+    EXPECT_CALL(service_local, EOPath()).WillRepeatedly(testing::ReturnRef(EOPath_));
+    EXPECT_CALL(service_local, version()).WillRepeatedly(testing::ReturnRef(version_));
+    EXPECT_CALL(service_local, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+
+    SocketReader reader(&service_local);
+    auto work = boost::asio::make_work_guard(ioc);
+    std::thread runner([&ioc]() { ioc.run(); });
+
+    try {
+        reader.read(server, 60000);
+        FAIL() << "expected exception_with_status";
+    } catch (const catena::exception_with_status& e) {
+        EXPECT_EQ(e.status, catena::StatusCode::UNKNOWN);
+    }
+
+    work.reset();
+    runner.join();
+}
+
+/*
+ * Test 26 - read_until_with_timeout read error
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_ReadUntilErrors) {
+    boost::asio::io_context ioc;
+    tcp::acceptor acceptor(ioc, tcp::endpoint(tcp::v4(), 0));
+    tcp::socket client(ioc);
+    auto server = std::make_shared<tcp::socket>(ioc);
+    client.connect(acceptor.local_endpoint());
+    acceptor.accept(*server);
+
+    std::string request = RESTMethodMap().getForwardMap().at(Method_GET)
+        + " /st2138-api/v1/1/test-call/oid/"
+        + " HTTP/1.1\r\n"
+          "Origin: *\r\n"
+          "User-Agent: test_agent\r\n"
+          "Request-Start: 0\r\n"
+          "Detail-Level: NONE\r\n"
+          "Language: en\r\n"
+          "Content-Type: application/json\r\n"
+          "Content-Length: 100\r\n"; // Missing final blank line; delimiter never arrives
+    boost::asio::write(client, boost::asio::buffer(request));
+    boost::system::error_code close_ec;
+    client.close(close_ec);
+
+    MockSubscriptionManager sm_local;
+    MockServiceImpl service_local;
+    EXPECT_CALL(service_local, subscriptionManager()).WillRepeatedly(testing::ReturnRef(sm_local));
+    EXPECT_CALL(service_local, EOPath()).WillRepeatedly(testing::ReturnRef(EOPath_));
+    EXPECT_CALL(service_local, version()).WillRepeatedly(testing::ReturnRef(version_));
+    EXPECT_CALL(service_local, authorizationEnabled()).WillRepeatedly(testing::Return(false));
+
+    SocketReader reader(&service_local);
+    auto work = boost::asio::make_work_guard(ioc);
+    std::thread runner([&ioc]() { ioc.run(); });
+
+    try {
+        reader.read(server, 60000);
+        FAIL() << "expected exception_with_status";
+    } catch (const catena::exception_with_status& e) {
+        EXPECT_EQ(e.status, catena::StatusCode::UNKNOWN);
+    }
+
+    work.reset();
+    runner.join();
 }
