@@ -314,10 +314,17 @@ jobs:
 
           # --squash stages all changes from the release branch as a single commit
           git merge --squash "origin/$RELEASE_BRANCH"
-          git commit -m "chore(release): squash merge $NEW_VERSION into develop [skip ci]"
-          git push origin develop
 
-          echo "✅ Squash-merged '$RELEASE_BRANCH' into develop"
+          # Check if there are staged changes to commit
+          if git diff --cached --quiet; then
+            # No changes to commit — develop already contains all release branch changes
+            echo "ℹ️  No new changes to commit — develop already contains release branch changes"
+          else
+            # Commit and push the squash merge
+            git commit -m "chore(release): squash merge $NEW_VERSION into develop [skip ci]"
+            git push origin develop
+            echo "✅ Squash-merged '$RELEASE_BRANCH' into develop"
+          fi
 
       # ── Rollback: revert the main merge if the squash into develop failed ────
       #
@@ -398,6 +405,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          fetch-tags: true
 
       # ── Build release notes ───────────────────────────────────────────────────
       #
