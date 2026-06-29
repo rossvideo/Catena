@@ -140,9 +140,13 @@ jobs:
 
           # ── Determine new version based on which component changed ──────────
           if (( INPUT_MAJOR == CUR_MAJOR + 1 )); then
-            # Major bump: minor must be 0, patch resets to 0
+            # Major bump: minor and patch must both be 0
             if (( INPUT_MINOR != 0 )); then
               echo "❌ When bumping major, minor must be 0 (got $INPUT_MINOR)"
+              exit 1
+            fi
+            if (( INPUT_PATCH != 0 )); then
+              echo "❌ When bumping major, patch must be 0 (got $INPUT_PATCH)"
               exit 1
             fi
             NEW_MINOR=0
@@ -161,7 +165,11 @@ jobs:
             NEW_MINOR=$INPUT_MINOR
 
             if (( INPUT_MINOR == CUR_MINOR + 1 )); then
-              # Minor bump: patch resets to 0
+              # Minor bump: patch must be 0
+              if (( INPUT_PATCH != 0 )); then
+                echo "❌ When bumping minor, patch must be 0 (got $INPUT_PATCH)"
+                exit 1
+              fi
               NEW_PATCH=0
             else
               # Same major.minor: patch is always current+1 (input patch is ignored)
@@ -339,7 +347,7 @@ jobs:
           fi
 
   # ────────────────────────────────────────────────────────────────────────────
-  # Job 3: Squash-merge the release branch into develop.
+  # Job 3: Squash-merge the existing release branch into develop.
   #
   # On failure: attempt to revert the main merge commit to keep main/develop
   # in sync.  If the revert itself fails (e.g. protected branch requires a PR),
@@ -359,65 +367,53 @@ jobs:
       PR_MERGE_SHA:   ${{ github.event.pull_request.merge_commit_sha }}
 
     steps:
-
-      # Check out develop with full history so we can merge
-      - name: Checkout develop
-        uses: actions/checkout@v5
-        with:
-          ref: develop
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure git
-        run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name  "github-actions[bot]"
-
-      # ── Squash-merge the release PR changes into develop ──────────────────────
+      # ── Squash-merge existing release branch into develop via PR ──────────────
       #
-      # After the PR merges into main, the head branch may be auto-deleted.
-      # Use the PR merge commit instead of trying to fetch the deleted branch.
+      # Reuse the release branch created in phase 1 (release-vX.Y.Z).
+      # This avoids creating a second sync branch/commit path.
+      # the branch is squash-merged into develop, and the branch is deleted after merge.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: Squash-merge release branch into develop
+      - name: Squash-merge existing release branch into develop
         id: squash_merge
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
         run: |
           set -euo pipefail
 
-          # Fetch main to access the PR merge commit
-          git fetch origin main
-
-          # Use the merge commit from the PR event, or fallback to main tip
-          COMMIT_TO_MERGE="${PR_MERGE_SHA:-}"
-          if [[ -z "$COMMIT_TO_MERGE" ]]; then
-            COMMIT_TO_MERGE=$(git rev-parse origin/main)
-            echo "⚠️  merge_commit_sha missing; falling back to origin/main tip: $COMMIT_TO_MERGE"
-          fi
-
-          # Squash-merge the PR's changes into develop.
-          # If the integration commit is a merge commit, squash the diff from
-          # first parent to merge commit to capture exactly what landed on main.
-          PARENT_COUNT=$(git rev-list --parents -n 1 "$COMMIT_TO_MERGE" | awk '{print NF-1}')
-          if (( PARENT_COUNT > 1 )); then
-            echo "Detected merge commit ($COMMIT_TO_MERGE); squashing first-parent range ${COMMIT_TO_MERGE}^1..${COMMIT_TO_MERGE}"
-            git merge --squash "${COMMIT_TO_MERGE}^1" "$COMMIT_TO_MERGE"
-          elif (( PARENT_COUNT == 1 )); then
-            echo "Detected single-parent commit ($COMMIT_TO_MERGE); squashing commit directly"
-            git merge --squash "$COMMIT_TO_MERGE"
-          else
-            echo "❌ Unexpected parent count ($PARENT_COUNT) for $COMMIT_TO_MERGE"
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "❌ Missing required secret: REPO_ADMIN_TOKEN"
+            echo "   This job needs it to merge a sync PR into protected 'develop'."
             exit 1
           fi
 
-          # Check if there are staged changes to commit
-          if git diff --cached --quiet; then
-            # No changes to commit — develop already contains all release changes
-            echo "ℹ️  No new changes to commit — develop already contains release changes"
-          else
-            # Commit and push the squash merge
-            git commit -m "chore(release): squash merge $NEW_VERSION into develop [skip ci]"
-            git push origin develop
-            echo "✅ Squash-merged release changes into develop"
+          # Ensure the release branch still exists remotely.
+          if ! gh api "repos/${{ github.repository }}/branches/${RELEASE_BRANCH}" >/dev/null 2>&1; then
+            echo "❌ Release branch '$RELEASE_BRANCH' not found on origin."
+            echo "   Ensure release branches are not auto-deleted before develop sync."
+            exit 1
           fi
+
+          EXISTING_PR_URL=$(gh pr list \
+            --head "$RELEASE_BRANCH" \
+            --base develop \
+            --state open \
+            --json url \
+            --jq '.[0].url')
+
+          if [[ -n "${EXISTING_PR_URL:-}" ]]; then
+            PR_URL="$EXISTING_PR_URL"
+            echo "ℹ️  Reusing existing develop-sync PR: $PR_URL"
+          else
+            PR_URL=$(gh pr create \
+              --base develop \
+              --head "$RELEASE_BRANCH" \
+              --title "chore(release): sync $NEW_VERSION into develop" \
+              --body "Automated sync PR for release $NEW_VERSION.\n\nThis PR reuses the existing release branch and squash-merges it into develop.")
+            echo "✅ Opened develop-sync PR: $PR_URL"
+          fi
+
+          gh pr merge "$PR_URL" --squash --admin --delete-branch --repo "${{ github.repository }}"
+          echo "✅ Synced release branch into develop via PR (--squash)"
 
       # ── Rollback: revert the main merge if the squash into develop failed ────
       #
@@ -428,7 +424,7 @@ jobs:
       - name: "[ROLLBACK] Revert main merge on squash failure"
         if: failure() && steps.squash_merge.outcome == 'failure'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
           PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
         run: |
           set -euo pipefail
