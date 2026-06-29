@@ -11,6 +11,7 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
     // Check if message is not Empty so we don't send empty body
     if (httpStatus.first < 300 && msg.GetTypeName() != "st2138.Empty")  {
         google::protobuf::util::JsonPrintOptions options; // Default options
+        options.preserve_proto_field_names = true; // Preserve proto field names
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
         if (!status.ok()) { // GCOVR_EXCL_START
@@ -67,6 +68,7 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
     std::string jsonOutput = "";
     if (msg.GetTypeName() != "st2138.Empty")  {
         google::protobuf::util::JsonPrintOptions options; // Default options
+        options.preserve_proto_field_names = true; // Preserve proto field names
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
         if (!status.ok()) { // GCOVR_EXCL_START

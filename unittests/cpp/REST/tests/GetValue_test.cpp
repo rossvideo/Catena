@@ -86,8 +86,7 @@ class RESTGetValueTests : public RESTEndpointTest {
         endpoint_->proceed();
         std::string expJson = "";
         if (!expVal_.string_value().empty()) {
-            auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson);
-            ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+            protoToJsonString(expVal_, expJson);
         }
         EXPECT_EQ(readResponse(), expectedResponse(expRc_, expJson));
     }

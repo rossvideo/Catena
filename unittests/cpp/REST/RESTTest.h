@@ -363,6 +363,20 @@ class RESTTest {
                ", open: " + std::to_string(readSocket_->is_open());
     }
 
+    /**
+     * @brief Converts a protobuf message to a JSON string. Uses the imporant
+     * option to preserve proto field names that keeps the names snake_case instead
+     * of converting them to camelCase, which is required by the st2138 spec.
+     * @param msg The protobuf message to convert.
+     * @param jsonStr The output string to hold the JSON representation of the message.
+     * @throws std::runtime_error with an ASSERT_TRUE if the conversion fails.
+     */
+    inline void protoToJsonString(const google::protobuf::Message& msg, std::string& jsonStr) {
+        google::protobuf::util::JsonPrintOptions options{.preserve_proto_field_names = true};
+        auto status = google::protobuf::util::MessageToJsonString(msg, &jsonStr, options);
+        ASSERT_TRUE(status.ok()) << "Failed to convert message to JSON";
+    }
+
     std::string origin_ = "*";
     // Read/write helper variables.
     boost::asio::io_context io_context_;

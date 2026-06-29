@@ -115,8 +115,7 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
             std::vector<std::string> jsonBodies;
             for (const auto& expVal : expVals_) {
                 jsonBodies.push_back("");
-                auto status = google::protobuf::util::MessageToJsonString(expVal, &jsonBodies.back());
-                ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+                protoToJsonString(expVal, jsonBodies.back());
             }
             EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
         } else {
@@ -151,8 +150,7 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
                         menuGroup.mutable_menus()->insert({menu, comp.menu().menu()});
                     }
                 }
-                auto status = google::protobuf::util::MessageToJsonString(device, &jsonBody_);
-                ASSERT_TRUE(status.ok()) << "Failed to convert expected device to JSON";
+                protoToJsonString(device, jsonBody_);
             }
             EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBody_));
         }

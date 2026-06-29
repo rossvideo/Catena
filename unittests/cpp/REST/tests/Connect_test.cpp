@@ -104,8 +104,7 @@ protected:
             }
         }
         std::string slotJson;
-        google::protobuf::util::JsonPrintOptions options;
-        auto status = google::protobuf::util::MessageToJsonString(populatedSlots, &slotJson, options);
+        protoToJsonString(populatedSlots, slotJson);
         return slotJson;
     }
 
@@ -118,8 +117,7 @@ protected:
         auto* valueObj = paramValue->mutable_value();
         valueObj->set_string_value(value);
         std::string updateJson;
-        google::protobuf::util::JsonPrintOptions options;
-        auto status = google::protobuf::util::MessageToJsonString(updateResponse, &updateJson, options);
+        protoToJsonString(updateResponse, updateJson);
         return updateJson;
     }
 
@@ -135,8 +133,7 @@ protected:
             (*pack->mutable_words())[key] = value;
         }
         std::string updateJson;
-        google::protobuf::util::JsonPrintOptions options;
-        auto status = google::protobuf::util::MessageToJsonString(updateResponse, &updateJson, options);
+        protoToJsonString(updateResponse, updateJson);
         return updateJson;
     }
 
