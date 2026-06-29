@@ -35,21 +35,37 @@ jobs:
       contents: read
     steps:
       - name: Dispatch orchestrator on main
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
-            await github.rest.actions.createWorkflowDispatch({
-              owner,
-              repo,
-              workflow_id: 'orchestrator.yml',
-              ref: 'main',
-              inputs: {
-                force_toolchain_update: 'false',
-                force_cpp_tests: 'true',
-                force_go_tests: 'true',
-              },
-            });
+            try {
+              await github.request('POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches', {
+                owner,
+                repo,
+                workflow_id: 'orchestrator.yml',
+                ref: 'main',
+                inputs: {
+                  force_toolchain_update: 'false',
+                  force_cpp_tests: 'true',
+                  force_go_tests: 'true',
+                },
+                headers: {
+                  'X-GitHub-Api-Version': '2022-11-28',
+                },
+              });
+              core.info('Dispatched orchestrator.yml on main successfully');
+            } catch (error) {
+              const message = error?.message ?? '';
+              const status = Number(error?.status ?? 0);
+              if (status === 422 && message.includes("Workflow does not have 'workflow_dispatch' trigger")) {
+                core.warning(
+                  'Skipping main dispatch: orchestrator workflow on main does not currently expose workflow_dispatch'
+                );
+              } else {
+                throw error;
+              }
+            }
 
   stage1_toolchain_delta:
     name: "1 - Delta Toolchains"
