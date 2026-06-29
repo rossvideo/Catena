@@ -45,7 +45,7 @@ jobs:
       go_tag: ${{ steps.detect.outputs.go_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -254,7 +254,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
@@ -270,7 +270,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build C++ toolchain image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: .devcontainer/cpp/toolchain.dockerfile
@@ -314,7 +314,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           ref: ${{ (inputs.run_mode == 'pr' || inputs.run_mode == 'closed') && github.event.pull_request.head.sha || github.sha }}
@@ -330,7 +330,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Go toolchain image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: .devcontainer/go/toolchain.dockerfile

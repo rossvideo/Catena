@@ -47,9 +47,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"mime"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -181,20 +183,38 @@ func ToPayloadFromURL(url string) DataPayload {
 // dataPayloadToProto converts a DataPayload to its proto representation.
 func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 	pdp := &protos.DataPayload{
-		Metadata:        dp.Metadata,
-		Digest:          dp.Digest,
+		Metadata:        maps.Clone(dp.Metadata),
+		Digest:          slices.Clone(dp.Digest),
 		PayloadEncoding: protos.DataPayload_PayloadEncoding(dp.PayloadEncoding),
 	}
 
 	if dp.Url != "" && len(dp.Payload) == 0 {
 		pdp.Kind = &protos.DataPayload_Url{Url: dp.Url}
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
-		pdp.Kind = &protos.DataPayload_Payload{Payload: dp.Payload}
+		pdp.Kind = &protos.DataPayload_Payload{Payload: slices.Clone(dp.Payload)}
 	} else {
 		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload, but not both"}
 	}
 
 	return pdp, StatusResult{Code: StatusCodeOk}
+}
+
+func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
+	if pdp == nil {
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil DataPayload"}
+	}
+	dp := DataPayload{
+		Metadata:        maps.Clone(pdp.GetMetadata()),
+		Digest:          slices.Clone(pdp.GetDigest()),
+		PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
+	}
+	switch k := pdp.GetKind().(type) {
+	case *protos.DataPayload_Url:
+		dp.Url = k.Url
+	case *protos.DataPayload_Payload:
+		dp.Payload = slices.Clone(k.Payload)
+	}
+	return dp, StatusResult{Code: StatusCodeOk}
 }
 
 // ToAsset converts DataPayload to Asset by building the proto directly

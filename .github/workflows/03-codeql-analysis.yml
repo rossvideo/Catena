@@ -24,7 +24,7 @@ jobs:
       js_changed: ${{ steps.detect.outputs.js_changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: recursive
@@ -90,7 +90,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -148,7 +148,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -197,7 +197,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -223,7 +223,7 @@ jobs:
     steps:
       - name: Comment on CodeQL failures
         if: ${{ contains(fromJson('["failure","cancelled","timed_out","action_required"]'), needs.codeql_cpp.result) || contains(fromJson('["failure","cancelled","timed_out","action_required"]'), needs.codeql_go.result) || contains(fromJson('["failure","cancelled","timed_out","action_required"]'), needs.codeql_js.result) }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const marker = '<!-- ci-comment:codeql -->';

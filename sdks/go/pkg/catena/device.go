@@ -44,6 +44,7 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -92,6 +93,19 @@ func toProtoDevice(m map[string]any) (*protos.Device, error) {
 	}
 
 	return device, nil
+}
+
+func protoMessageToMap(context string, msg proto.Message) (map[string]any, error) {
+	jsonData, err := protojson.MarshalOptions{UseProtoNames: true}.Marshal(msg)
+	if err != nil {
+		return nil, fmt.Errorf("%s: marshal proto: %w", context, err)
+	}
+
+	var definition map[string]any
+	if err := json.Unmarshal(jsonData, &definition); err != nil {
+		return nil, fmt.Errorf("%s: unmarshal map: %w", context, err)
+	}
+	return definition, nil
 }
 
 // GetProtoDevice returns the underlying protos.Device

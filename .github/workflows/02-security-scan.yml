@@ -11,7 +11,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Require dependabot config
         shell: bash
@@ -29,14 +29,14 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Run Trivy vulnerability scanner in repo mode
         id: trivy_scan
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           cache: "false"
@@ -50,7 +50,7 @@ jobs:
       - name: Run Trivy vulnerability scanner in repo mode for policy checks
         id: trivy_json
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           cache: "false"
@@ -65,7 +65,7 @@ jobs:
 
       - name: Comment Trivy findings on PR
         if: ${{ always() && github.event_name == 'pull_request' && github.event.action != 'closed' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -136,7 +136,7 @@ jobs:
 
       - name: Enforce Trivy policy
         if: ${{ always() }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -213,7 +213,7 @@ jobs:
     steps:
       - name: Comment on security failures
         if: ${{ needs.verify_dependabot.result != 'success' || needs.trivy.result != 'success' }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const marker = '<!-- ci-comment:security -->';
