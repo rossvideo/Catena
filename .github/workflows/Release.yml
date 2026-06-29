@@ -304,26 +304,38 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
 
-      # ── Squash-merge the release branch into develop ─────────────────────────
+      # ── Squash-merge the release PR changes into develop ──────────────────────
+      #
+      # After the PR merges into main, the head branch may be auto-deleted.
+      # Use the PR merge commit instead of trying to fetch the deleted branch.
+      # ─────────────────────────────────────────────────────────────────────────
       - name: Squash-merge release branch into develop
         id: squash_merge
         run: |
           set -euo pipefail
 
-          git fetch origin main "$RELEASE_BRANCH"
+          # Fetch main to access the PR merge commit
+          git fetch origin main
 
-          # --squash stages all changes from the release branch as a single commit
-          git merge --squash "origin/$RELEASE_BRANCH"
+          # Use the merge commit from the PR event, or fallback to main tip
+          COMMIT_TO_MERGE="${PR_MERGE_SHA:-}"
+          if [[ -z "$COMMIT_TO_MERGE" ]]; then
+            COMMIT_TO_MERGE=$(git rev-parse origin/main)
+            echo "⚠️  merge_commit_sha missing; falling back to origin/main tip: $COMMIT_TO_MERGE"
+          fi
+
+          # Squash-merge the PR's changes into develop
+          git merge --squash "$COMMIT_TO_MERGE"
 
           # Check if there are staged changes to commit
           if git diff --cached --quiet; then
-            # No changes to commit — develop already contains all release branch changes
-            echo "ℹ️  No new changes to commit — develop already contains release branch changes"
+            # No changes to commit — develop already contains all release changes
+            echo "ℹ️  No new changes to commit — develop already contains release changes"
           else
             # Commit and push the squash merge
             git commit -m "chore(release): squash merge $NEW_VERSION into develop [skip ci]"
             git push origin develop
-            echo "✅ Squash-merged '$RELEASE_BRANCH' into develop"
+            echo "✅ Squash-merged release changes into develop"
           fi
 
       # ── Rollback: revert the main merge if the squash into develop failed ────
