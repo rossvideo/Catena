@@ -348,8 +348,20 @@ jobs:
             echo "⚠️  merge_commit_sha missing; falling back to origin/main tip: $COMMIT_TO_MERGE"
           fi
 
-          # Squash-merge the PR's changes into develop
-          git merge --squash "$COMMIT_TO_MERGE"
+          # Squash-merge the PR's changes into develop.
+          # If the integration commit is a merge commit, squash the diff from
+          # first parent to merge commit to capture exactly what landed on main.
+          PARENT_COUNT=$(git rev-list --parents -n 1 "$COMMIT_TO_MERGE" | awk '{print NF-1}')
+          if (( PARENT_COUNT > 1 )); then
+            echo "Detected merge commit ($COMMIT_TO_MERGE); squashing first-parent range ${COMMIT_TO_MERGE}^1..${COMMIT_TO_MERGE}"
+            git merge --squash "${COMMIT_TO_MERGE}^1" "$COMMIT_TO_MERGE"
+          elif (( PARENT_COUNT == 1 )); then
+            echo "Detected single-parent commit ($COMMIT_TO_MERGE); squashing commit directly"
+            git merge --squash "$COMMIT_TO_MERGE"
+          else
+            echo "❌ Unexpected parent count ($PARENT_COUNT) for $COMMIT_TO_MERGE"
+            exit 1
+          fi
 
           # Check if there are staged changes to commit
           if git diff --cached --quiet; then
