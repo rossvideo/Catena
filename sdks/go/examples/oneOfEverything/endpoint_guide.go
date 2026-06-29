@@ -47,6 +47,7 @@ func logRestEndpointGuide(sampleAsset string) {
 	logEndpointLine("DeviceRequest", "GET  /st2138-api/v1/{slot}")
 	logEndpointLine("GetValue", "GET  /st2138-api/v1/{slot}/value/{oid}")
 	logEndpointLine("SetValue", "PUT  /st2138-api/v1/{slot}/value/{oid}")
+	logEndpointLine("GetParam", "GET  /st2138-api/v1/{slot}/param/{oid}")
 	logEndpointLine("ExternalObjectRequest", fmt.Sprintf("GET  /st2138-api/v1/{slot}/asset/%s", assetOID))
 	logEndpointLine("ExternalObjectRequest (GZIP)", fmt.Sprintf("GET  /st2138-api/v1/{slot}/asset/%s?compression=GZIP", assetOID))
 	logEndpointLine("ExternalObjectRequest (DEFLATE)", fmt.Sprintf("GET  /st2138-api/v1/{slot}/asset/%s?compression=DEFLATE", assetOID))
