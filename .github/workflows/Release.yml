@@ -380,8 +380,16 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────────
       - name: Squash-merge release branch into develop
         id: squash_merge
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
         run: |
           set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "❌ Missing required secret: REPO_ADMIN_TOKEN"
+            echo "   This job needs it to merge a sync PR into protected 'develop'."
+            exit 1
+          fi
 
           # Fetch main to access the PR merge commit
           git fetch origin main
@@ -413,10 +421,41 @@ jobs:
             # No changes to commit — develop already contains all release changes
             echo "ℹ️  No new changes to commit — develop already contains release changes"
           else
-            # Commit and push the squash merge
+            # Commit the squash result on a temporary branch,
+            # then merge that branch into develop using squash.
             git commit -m "chore(release): squash merge $NEW_VERSION into develop [skip ci]"
-            git push origin develop
-            echo "✅ Squash-merged release changes into develop"
+
+            SYNC_BRANCH="release-sync-${NEW_VERSION}-to-develop"
+            git checkout -B "$SYNC_BRANCH"
+            git push -f origin "$SYNC_BRANCH"
+
+            EXISTING_PR_URL=$(gh pr list \
+              --head "$SYNC_BRANCH" \
+              --base develop \
+              --state open \
+              --json url \
+              --jq '.[0].url')
+
+            if [[ -n "${EXISTING_PR_URL:-}" ]]; then
+              PR_URL="$EXISTING_PR_URL"
+              echo "ℹ️  Reusing existing sync PR: $PR_URL"
+            else
+              PR_URL=$(gh pr create \
+                --base develop \
+                --head "$SYNC_BRANCH" \
+                --title "chore(release): sync $NEW_VERSION into develop" \
+                --body "Automated sync PR for release $NEW_VERSION.\n\nThis PR contains the squash-merged release changes from main into develop.")
+              echo "✅ Opened sync PR: $PR_URL"
+            fi
+
+            ALLOW_SQUASH=$(gh api "repos/${{ github.repository }}" --jq '.allow_squash_merge')
+            if [[ "$ALLOW_SQUASH" != "true" ]]; then
+              echo "❌ Repository must have squash merge enabled for this workflow"
+              exit 1
+            fi
+
+            gh pr merge "$PR_URL" --squash --admin --repo "${{ github.repository }}"
+            echo "✅ Synced release changes into develop via PR (--squash)"
           fi
 
       # ── Rollback: revert the main merge if the squash into develop failed ────
