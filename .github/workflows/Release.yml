@@ -59,6 +59,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────────
   create_release_pr:
     name: "1 - Validate Version & Create Release PR"
+    needs: check_branch
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
@@ -286,6 +287,7 @@ jobs:
     env:
       NEW_VERSION:    ${{ needs.detect_release_pr.outputs.new_version }}
       RELEASE_BRANCH: ${{ needs.detect_release_pr.outputs.release_branch }}
+      PR_MERGE_SHA:   ${{ github.event.pull_request.merge_commit_sha }}
 
     steps:
 
@@ -327,6 +329,7 @@ jobs:
         if: failure() && steps.squash_merge.outcome == 'failure'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
         run: |
           set -euo pipefail
           echo "⚠️  Squash merge into develop failed — reverting main merge for $NEW_VERSION"
@@ -334,14 +337,38 @@ jobs:
           git fetch origin main
           git checkout -B main-revert-work origin/main
 
-          # The PR merge commit is the current tip of main; revert it
-          MERGE_COMMIT=$(git rev-parse origin/main)
-          echo "Reverting merge commit: $MERGE_COMMIT"
+          # Prefer the PR integration commit from the event payload.
+          # Fallback to main tip only if the payload did not include it.
+          COMMIT_TO_REVERT="${PR_MERGE_SHA:-}"
+          if [[ -z "$COMMIT_TO_REVERT" ]]; then
+            COMMIT_TO_REVERT=$(git rev-parse origin/main)
+            echo "⚠️  merge_commit_sha missing; falling back to origin/main tip: $COMMIT_TO_REVERT"
+          fi
 
-          git revert --mainline 1 --no-edit "$MERGE_COMMIT"
+          # Ensure the commit exists and is on main before attempting a revert.
+          git rev-parse --verify "$COMMIT_TO_REVERT^{commit}" >/dev/null
+          if ! git merge-base --is-ancestor "$COMMIT_TO_REVERT" origin/main; then
+            echo "❌ Commit $COMMIT_TO_REVERT is not on origin/main; aborting rollback."
+            exit 1
+          fi
+
+          PARENT_COUNT=$(git rev-list --parents -n 1 "$COMMIT_TO_REVERT" | awk '{print NF-1}')
+          echo "Reverting commit: $COMMIT_TO_REVERT (parents=$PARENT_COUNT)"
+
+          if (( PARENT_COUNT > 1 )); then
+            # Merge commit path (traditional merge PR)
+            git revert --mainline 1 --no-edit "$COMMIT_TO_REVERT"
+          elif (( PARENT_COUNT == 1 )); then
+            # Single-parent commit path (squash/rebase PR)
+            git revert --no-edit "$COMMIT_TO_REVERT"
+          else
+            echo "❌ Unexpected parent count ($PARENT_COUNT) for $COMMIT_TO_REVERT"
+            exit 1
+          fi
+
           git push origin HEAD:main
 
-          echo "✅ Reverted main merge commit ($MERGE_COMMIT)."
+          echo "✅ Reverted main integration commit ($COMMIT_TO_REVERT)."
           echo "❌ Release $NEW_VERSION was rolled back. Please investigate and retry."
           exit 1  # Fail the job so the run is marked as failed
 
