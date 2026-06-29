@@ -140,9 +140,13 @@ jobs:
 
           # ── Determine new version based on which component changed ──────────
           if (( INPUT_MAJOR == CUR_MAJOR + 1 )); then
-            # Major bump: minor must be 0, patch resets to 0
+            # Major bump: minor and patch must both be 0
             if (( INPUT_MINOR != 0 )); then
               echo "❌ When bumping major, minor must be 0 (got $INPUT_MINOR)"
+              exit 1
+            fi
+            if (( INPUT_PATCH != 0 )); then
+              echo "❌ When bumping major, patch must be 0 (got $INPUT_PATCH)"
               exit 1
             fi
             NEW_MINOR=0
@@ -161,7 +165,11 @@ jobs:
             NEW_MINOR=$INPUT_MINOR
 
             if (( INPUT_MINOR == CUR_MINOR + 1 )); then
-              # Minor bump: patch resets to 0
+              # Minor bump: patch must be 0
+              if (( INPUT_PATCH != 0 )); then
+                echo "❌ When bumping minor, patch must be 0 (got $INPUT_PATCH)"
+                exit 1
+              fi
               NEW_PATCH=0
             else
               # Same major.minor: patch is always current+1 (input patch is ignored)
