@@ -154,6 +154,19 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			},
 		},
 		{
+			name: "get param",
+			setup: func(t *testing.T, runtime *stubServerRuntime) {
+				runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
+					assertContext(t, ctx)
+					return catena.NewParamInt32(42), catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+			},
+			run: func(t *testing.T, transport *RestTransport) {
+				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/param/brightness", "", headers)
+				assertStatus(t, rec, http.StatusOK)
+			},
+		},
+		{
 			name: "set value",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
@@ -339,6 +352,69 @@ func TestRestTransport_GetValue_Route(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/value/brightness", "")
 	assertStatus(t, rec, http.StatusOK)
+}
+
+func TestRestTransport_GetParam_Route(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	handlerCalled := false
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
+		handlerCalled = true
+		if fqoid != "text_box" {
+			t.Errorf("expected fqoid 'text_box', got %s", fqoid)
+		}
+		param := catena.NewParamString("Hello, World!").
+			WithName(catena.NewPolyglotText("en", "Text Box").With("es", "Caja de Texto"))
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/text_box", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+	assertBodyContains(t, rec, `"oid":"text_box"`)
+	assertBodyContains(t, rec, `"string_value":"Hello, World!"`)
+	assertBodyContains(t, rec, `"type":"STRING"`)
+}
+
+func TestRestTransport_GetParam_NestedFqoid(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
+		if fqoid != "parent/child" {
+			t.Errorf("expected fqoid 'parent/child', got %s", fqoid)
+		}
+		return catena.NewParamInt32(7), catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/parent/child", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertBodyContains(t, rec, `"oid":"parent/child"`)
+}
+
+func TestRestTransport_GetParam_MissingFqoid(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param", "")
+	assertStatus(t, rec, http.StatusBadRequest)
+}
+
+func TestRestTransport_GetParam_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/param/text_box", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+}
+
+func TestRestTransport_GetParam_HandlerError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/missing", "")
+	assertStatus(t, rec, http.StatusNotFound)
 }
 
 func TestRestTransport_SetValue_Route(t *testing.T) {
