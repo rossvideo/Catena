@@ -597,6 +597,82 @@ func TestGrpcTransport_GetValue_HandlerError(t *testing.T) {
 }
 
 // =============================================================================
+// Test: GetParam
+// =============================================================================
+
+func TestGrpcTransport_GetParam_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
+		handlerCalled = true
+		if fqoid != "/counter" {
+			t.Errorf("expected fqoid '/counter', got %s", fqoid)
+		}
+		param := catena.NewParamInt32(21).
+			WithName(catena.NewPolyglotText("en", "Counter")).
+			WithMinimalSet(true)
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	resp, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "/counter"})
+	assertNoError(t, err)
+
+	if !handlerCalled {
+		t.Error("handler was not called")
+	}
+	if resp.GetOid() != "counter" {
+		t.Errorf("expected response oid 'counter', got %q", resp.GetOid())
+	}
+	param := resp.GetParam()
+	if param == nil {
+		t.Fatal("expected param, got nil")
+	}
+	if param.GetType() != protos.ParamType_INT32 {
+		t.Errorf("expected type INT32, got %v", param.GetType())
+	}
+	if param.GetValue().GetInt32Value() != 21 {
+		t.Errorf("expected value 21, got %d", param.GetValue().GetInt32Value())
+	}
+	if !param.GetMinimalSet() {
+		t.Error("expected minimalSet=true")
+	}
+}
+
+func TestGrpcTransport_GetParam_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 999999, Oid: "/counter"})
+	assertGRPCCode(t, err, codes.InvalidArgument, "slot exceeds uint16 max")
+}
+
+func TestGrpcTransport_GetParam_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "/missing"})
+	assertGRPCCode(t, err, codes.NotFound, "handler error")
+}
+
+// =============================================================================
 // Test: SetValue
 // =============================================================================
 
@@ -1381,15 +1457,6 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			},
 		},
 		{
-			name:       "GetParam",
-			devMessage: "GetParam not implemented",
-			grpcCode:   codes.Unimplemented,
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "device.param1"})
-				return err
-			},
-		},
-		{
 			name:       "AddLanguage",
 			devMessage: "AddLanguage not implemented",
 			grpcCode:   codes.Unimplemented,
@@ -1652,16 +1719,6 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 		name     string
 		callFunc func(protos.CatenaServiceClient, context.Context) error
 	}{
-		{
-			name: "GetParam",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.GetParam(ctx, &protos.GetParamPayload{
-					Slot: 0,
-					Oid:  "device.param1",
-				})
-				return err
-			},
-		},
 		{
 			name: "UpdateSubscriptions",
 			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {

@@ -46,6 +46,7 @@ import (
 	"fmt"
 	"maps"
 	"net"
+	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
@@ -430,10 +431,31 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	return stream.Send(cmdResult.GetProtoResponse())
 }
 
-// GetParam returns a single parameter's metadata
+// GetParam returns a single parameter (metadata + value)
 func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error) {
-	// This would need additional handler support in BaseServer for param metadata
-	return nil, status.Error(codes.Unimplemented, "GetParam not implemented")
+	slot, err := catena.ValidateSlot(req.Slot)
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	fqoid := req.Oid
+	logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	param, result := s.transport.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
+	if result.IsError() {
+		logger.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+	if param == nil || param.Proto == nil {
+		logger.Error("GetParam returned nil param", "slot", slot, "fqoid", fqoid)
+		return nil, status.Error(codes.Internal, "param returned nil")
+	}
+
+	return &protos.DeviceComponent_ComponentParam{
+		Oid:   strings.TrimPrefix(fqoid, "/"),
+		Param: param.Proto,
+	}, nil
 }
 
 // ParamInfoRequest streams parameter information for the given slot and OID prefix.
