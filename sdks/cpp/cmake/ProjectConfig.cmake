@@ -41,14 +41,27 @@ endfunction()
 # Parse version information from VERSION.txt
 function(setup_version_info CATENA_CPP_ROOT_DIR)
     # Read and parse version string
-    file(READ ${CATENA_CPP_ROOT_DIR}/VERSION.txt VERSION_STRING)
+    file(READ ${CATENA_CPP_ROOT_DIR}/../../VERSION.txt VERSION_STRING)
     string(STRIP ${VERSION_STRING} VERSION_STRING)
-    
-    # Extract version and timestamp
-    string(FIND "${VERSION_STRING}" "-" SPLIT_AT REVERSE)
-    string(SUBSTRING "${VERSION_STRING}" 0 ${SPLIT_AT} CATENA_CPP_VERSION)
-    math(EXPR TIMESTAMP_START "${SPLIT_AT} + 1")
-    string(SUBSTRING "${VERSION_STRING}" ${TIMESTAMP_START} -1 CATENA_CPP_TIMESTAMP)
+
+    # Expected format: v<major>.<minor>.<patch>
+    if(NOT VERSION_STRING MATCHES "^v[0-9]+\\.[0-9]+\\.[0-9]+$")
+        message(FATAL_ERROR "Invalid VERSION.txt format: '${VERSION_STRING}'. Expected format: v<major>.<minor>.<patch>")
+    endif()
+    set(CATENA_CPP_VERSION ${VERSION_STRING})
+
+    # Timestamp comes from the last commit that changed VERSION.txt.
+    execute_process(
+        COMMAND git -C ${CATENA_CPP_ROOT_DIR}/../.. log -1 --format=%ct -- VERSION.txt
+        OUTPUT_VARIABLE CATENA_CPP_TIMESTAMP
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE VERSION_GIT_RESULT
+        ERROR_QUIET
+    )
+    if(NOT VERSION_GIT_RESULT EQUAL 0 OR "${CATENA_CPP_TIMESTAMP}" STREQUAL "")
+        message(WARNING "Could not read VERSION.txt git history timestamp; using current UTC build time.")
+        string(TIMESTAMP CATENA_CPP_TIMESTAMP "%Y%m%d%H%M%S" UTC)
+    endif()
     
     # Set compile definitions and display info
     add_compile_definitions(CATENA_CPP_VERSION=${CATENA_CPP_VERSION})
