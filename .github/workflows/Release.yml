@@ -416,7 +416,7 @@ jobs:
       - name: "[ROLLBACK] Revert main merge on squash failure"
         if: failure() && steps.squash_merge.outcome == 'failure'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
           PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
         run: |
           set -euo pipefail
