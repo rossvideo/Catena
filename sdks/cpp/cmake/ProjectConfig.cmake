@@ -50,8 +50,18 @@ function(setup_version_info CATENA_CPP_ROOT_DIR)
     endif()
     set(CATENA_CPP_VERSION ${VERSION_STRING})
 
-    # Timestamp is the last edit time of VERSION.txt.
-    file(TIMESTAMP ${CATENA_CPP_ROOT_DIR}/../../VERSION.txt CATENA_CPP_TIMESTAMP UTC)
+    # Timestamp comes from the last commit that changed VERSION.txt.
+    execute_process(
+        COMMAND git -C ${CATENA_CPP_ROOT_DIR}/../.. log -1 --format=%ct -- VERSION.txt
+        OUTPUT_VARIABLE CATENA_CPP_TIMESTAMP
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE VERSION_GIT_RESULT
+        ERROR_QUIET
+    )
+    if(NOT VERSION_GIT_RESULT EQUAL 0 OR "${CATENA_CPP_TIMESTAMP}" STREQUAL "")
+        message(WARNING "Could not read VERSION.txt git history timestamp; using current UTC build time.")
+        string(TIMESTAMP CATENA_CPP_TIMESTAMP "%Y%m%d%H%M%S" UTC)
+    endif()
     
     # Set compile definitions and display info
     add_compile_definitions(CATENA_CPP_VERSION=${CATENA_CPP_VERSION})
