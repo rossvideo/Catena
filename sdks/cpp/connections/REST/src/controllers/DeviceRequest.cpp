@@ -95,14 +95,12 @@ void DeviceRequest::proceed() {
                             }
                             std::string group = menuOid.substr(0, pos);
                             std::string menu = menuOid.substr(pos + 1);
-                            // make sure the group exists in the device, if not create it
-                            st2138::MenuGroup menuGroup{};
+                            // make sure the group exists in the device, should be there from the device chunk
                             if (!unaryDevice.menu_groups().contains(group)) {
-                                unaryDevice.mutable_menu_groups()->insert({group, menuGroup});
-                            } else {
-                                menuGroup = unaryDevice.menu_groups().at(group);
+                                LOG(ERROR) << "Menu group " << group << " not found in device";
+                                continue;
                             }
-                            menuGroup.mutable_menus()->insert({menu, component.menu().menu()});
+                            unaryDevice.mutable_menu_groups()->at(group).mutable_menus()->insert({menu, component.menu().menu()});
                         } else if (component.has_command()) {
                             unaryDevice.mutable_commands()->insert({component.command().oid(), component.command().command()});
                         } else if (component.has_language_pack()) {

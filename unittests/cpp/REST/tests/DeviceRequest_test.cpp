@@ -104,6 +104,13 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
             case 1:
                 expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
                 expVals_.begin()->mutable_device()->set_slot(1);
+                if (expNum >= 2) {
+                    // the device component actually has the menu_group defs
+                    st2138::MenuGroup menuGroup{};
+                    menuGroup.set_order(1);
+                    menuGroup.mutable_name()->mutable_display_strings()->insert({"en", "Menu Group Test"});
+                    expVals_[0].mutable_device()->mutable_menu_groups()->insert({"menu_group", menuGroup});
+                }
         }
     }
     /*
@@ -117,42 +124,26 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
                 jsonBodies.push_back("");
                 protoToJsonString(expVal, jsonBodies.back());
             }
-            EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
+            EXPECT_EQ(readSseResponse(jsonBodies.size()), expectedSSEResponse(expRc_, jsonBodies));
         } else {
             if (!expVals_.empty()) {
                 // the first item in expVals_ is the device
                 st2138::Device device = expVals_.front().device();
-                // go through the rest of expVals_ and add them to the device
-                for (size_t i = 1; i < expVals_.size(); ++i) {
-                    const st2138::DeviceComponent& comp = expVals_[i];
-                    if (comp.has_command()) {
-                        device.mutable_commands()->insert({comp.command().oid(), comp.command().command()});
-                    } else if (comp.has_param()) {
-                        device.mutable_params()->insert({comp.param().oid(), comp.param().param()});
-                    } else if (comp.has_shared_constraint()) {
-                        device.mutable_constraints()->insert({comp.shared_constraint().oid(), comp.shared_constraint().constraint()});
-                    } else if (comp.has_language_pack()) {
-                        device.mutable_language_packs()->mutable_packs()->insert({comp.language_pack().language(), comp.language_pack().language_pack()});
-                    } else if (comp.has_menu()) {
-                        // split the menu's oid into group and menu
-                        std::string menuOid = comp.menu().oid();
-                        size_t pos = menuOid.find('/');
-                        ASSERT_NE(pos, std::string::npos) << "Menu oid does not contain a group: " << menuOid;
-                        std::string group = menuOid.substr(0, pos);
-                        std::string menu = menuOid.substr(pos + 1);
-                        // make sure the group exists in the device, if not create it
-                        st2138::MenuGroup menuGroup{};
-                        if (!device.menu_groups().contains(group)) {
-                            device.mutable_menu_groups()->insert({group, menuGroup});
-                        } else {
-                            menuGroup = device.menu_groups().at(group);
-                        }
-                        menuGroup.mutable_menus()->insert({menu, comp.menu().menu()});
-                    }
+                switch (expVals_.size()) {
+                    case 6:
+                        device.mutable_commands()->insert({expVals_[5].command().oid(), expVals_[5].command().command()});
+                    case 5:
+                        device.mutable_params()->insert({expVals_[4].param().oid(), expVals_[4].param().param()});
+                    case 4:
+                        device.mutable_constraints()->insert({expVals_[3].shared_constraint().oid(), expVals_[3].shared_constraint().constraint()});
+                    case 3:
+                        device.mutable_language_packs()->mutable_packs()->insert({expVals_[2].language_pack().language(), expVals_[2].language_pack().language_pack()});
+                    case 2:
+                        device.mutable_menu_groups()->at("menu_group").mutable_menus()->insert({"menu_test", expVals_[1].menu().menu()});
                 }
                 protoToJsonString(device, jsonBody_);
             }
-            EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBody_));
+            EXPECT_EQ(readTotalResponse(), expectedResponse(expRc_, jsonBody_));
         }
     }
 
@@ -169,7 +160,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Create) {
 // --- 1. PROCEED TESTS ---
 // Test 1.1: Test proceed unary response with multiple components
 TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
-    initExpVal(3);
+    initExpVal(6);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
         .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
@@ -181,11 +172,17 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
                 .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(false));
             EXPECT_CALL(*mockSerializer, getNext())
                 .WillOnce(testing::Return(expVals_[0]))
                 .WillOnce(testing::Return(expVals_[1]))
-                .WillOnce(testing::Return(expVals_[2]));
+                .WillOnce(testing::Return(expVals_[2]))
+                .WillOnce(testing::Return(expVals_[3]))
+                .WillOnce(testing::Return(expVals_[4]))
+                .WillOnce(testing::Return(expVals_[5]));
             return mockSerializer;
         }));
     // Calling proceed and testing the output
