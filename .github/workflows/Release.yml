@@ -246,11 +246,56 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Merge the release PR
+      - name: Temporarily enable merge commits on repository
+        id: enable_merge_commits
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
         run: |
+          set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "❌ Missing required secret: REPO_ADMIN_TOKEN"
+            echo "   Create a repo/org secret with admin rights to update merge settings."
+            exit 1
+          fi
+
+          ORIG_ALLOW_MERGE=$(gh api "repos/${{ github.repository }}" --jq '.allow_merge_commit')
+          echo "orig_allow_merge=$ORIG_ALLOW_MERGE" >> "$GITHUB_OUTPUT"
+          echo "Current allow_merge_commit=$ORIG_ALLOW_MERGE"
+
+          if [[ "$ORIG_ALLOW_MERGE" != "true" ]]; then
+            gh api -X PATCH "repos/${{ github.repository }}" -f allow_merge_commit=true >/dev/null
+            echo "✅ Temporarily enabled allow_merge_commit=true"
+          else
+            echo "ℹ️  allow_merge_commit already enabled"
+          fi
+
+      - name: Merge the release PR (merge commit)
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
           gh pr merge "${{ github.event.pull_request.number }}" --merge --admin --repo "${{ github.repository }}"
+
+      - name: Restore merge-commit repository setting
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+          ORIG_ALLOW_MERGE: ${{ steps.enable_merge_commits.outputs.orig_allow_merge }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "⚠️  REPO_ADMIN_TOKEN missing during cleanup; cannot restore setting"
+            exit 1
+          fi
+
+          if [[ "$ORIG_ALLOW_MERGE" == "true" ]]; then
+            echo "ℹ️  Original allow_merge_commit was true; no restore needed"
+          else
+            gh api -X PATCH "repos/${{ github.repository }}" -f allow_merge_commit=false >/dev/null
+            echo "✅ Restored allow_merge_commit=false"
+          fi
 
 
 
