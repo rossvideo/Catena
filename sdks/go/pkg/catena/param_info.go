@@ -41,7 +41,6 @@ package catena
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -93,115 +92,47 @@ func ToParamInfo(m map[string]any) (ParamInfo, error) {
 }
 
 // ParamInfosForRequest builds ParamInfo responses for the requested FQOID from
-// a device definition map containing a "params" subtree.
-func ParamInfosForRequest(fqoid string, deviceDefinition map[string]any, recursive bool) ([]ParamInfo, StatusResult) {
-	params, ok := deviceDefinition["params"].(map[string]any)
-	if !ok {
-		return []ParamInfo{}, StatusWithCode(StatusCodeInternal, "invalid device params structure")
+// a Device's params subtree.
+func ParamInfosForRequest(fqoid string, device *Device, recursive bool) ([]ParamInfo, StatusResult) {
+	if device == nil || device.device == nil {
+		return []ParamInfo{}, StatusWithCode(StatusCodeInternal, "invalid device")
 	}
 
 	oid := strings.TrimPrefix(fqoid, "/")
-	return paramInfosForRequest(params, oid, recursive)
+	return paramInfosForRequest(device.device.GetParams(), oid, recursive)
 }
 
-func paramDisplayName(paramInfo map[string]any) PolyglotText {
-	nameInfo, ok := paramInfo["name"].(map[string]any)
-	if !ok {
+func paramDisplayName(param *protos.Param) PolyglotText {
+	displayStrings := param.GetName().GetDisplayStrings()
+	if len(displayStrings) == 0 {
 		return nil
 	}
-
-	if displayStrings, ok := nameInfo["display_strings"].(map[string]string); ok {
-		return PolyglotText(displayStrings)
-	}
-
-	displayStrings, ok := nameInfo["display_strings"].(map[string]any)
-	if !ok {
-		return nil
-	}
-
-	name := PolyglotText{}
-	for lang, text := range displayStrings {
-		if s, ok := text.(string); ok {
-			name.With(lang, s)
-		}
-	}
-	if len(name) == 0 {
-		return nil
-	}
-	return name
+	return PolyglotText(displayStrings)
 }
 
-func paramArrayLength(paramInfo map[string]any) uint32 {
-	paramType, ok := paramInfo["type"].(ParamType)
-	if !ok || !isArrayParamType(paramType) {
+func paramArrayLength(param *protos.Param) uint32 {
+	value := param.GetValue()
+	switch param.GetType() {
+	case ParamTypeInt32Array:
+		return uint32(len(value.GetInt32ArrayValues().GetInts()))
+	case ParamTypeFloat32Array:
+		return uint32(len(value.GetFloat32ArrayValues().GetFloats()))
+	case ParamTypeStringArray:
+		return uint32(len(value.GetStringArrayValues().GetStrings()))
+	case ParamTypeStructArray:
+		return uint32(len(value.GetStructArrayValues().GetStructValues()))
+	case ParamTypeStructVariantArray:
+		return uint32(len(value.GetStructVariantArrayValues().GetStructVariants()))
+	default:
 		return 0
 	}
-
-	value, ok := paramInfo["value"].(map[string]any)
-	if !ok {
-		return 0
-	}
-
-	for _, field := range []struct {
-		valueKey string
-		listKey  string
-	}{
-		{valueKey: "int32_array_values", listKey: "ints"},
-		{valueKey: "float32_array_values", listKey: "floats"},
-		{valueKey: "string_array_values", listKey: "strings"},
-		{valueKey: "struct_array_values", listKey: "struct_values"},
-		{valueKey: "struct_variant_array_values", listKey: "struct_variants"},
-	} {
-		list, ok := value[field.valueKey].(map[string]any)
-		if !ok {
-			continue
-		}
-		if length, ok := repeatedFieldLength(list[field.listKey]); ok {
-			return length
-		}
-	}
-
-	return 0
 }
 
-func isArrayParamType(paramType ParamType) bool {
-	switch paramType {
-	case ParamTypeInt32Array, ParamTypeFloat32Array, ParamTypeStringArray, ParamTypeStructArray, ParamTypeStructVariantArray:
-		return true
-	default:
-		return false
-	}
+func newParamInfoFromDescriptor(oid string, param *protos.Param) ParamInfo {
+	return NewParamInfo(oid, paramDisplayName(param), param.GetType(), param.GetTemplateOid(), paramArrayLength(param))
 }
 
-func repeatedFieldLength(value any) (uint32, bool) {
-	rv := reflect.ValueOf(value)
-	if !rv.IsValid() {
-		return 0, false
-	}
-	switch rv.Kind() {
-	case reflect.Array, reflect.Slice:
-		return uint32(rv.Len()), true
-	default:
-		return 0, false
-	}
-}
-
-func newParamInfoFromDescriptor(oid string, paramInfo map[string]any) ParamInfo {
-	paramType, ok := paramInfo["type"].(ParamType)
-	if !ok {
-		paramType = ParamTypeUndefined
-	}
-
-	templateOID, _ := paramInfo["template_oid"].(string)
-	return NewParamInfo(oid, paramDisplayName(paramInfo), paramType, templateOID, paramArrayLength(paramInfo))
-}
-
-func childParamMap(paramInfo map[string]any) map[string]any {
-	children, _ := paramInfo["params"].(map[string]any)
-	return children
-}
-
-func flattenParamInfos(params map[string]any, prefix string, recursive bool) []ParamInfo {
+func flattenParamInfos(params map[string]*protos.Param, prefix string, recursive bool) []ParamInfo {
 	keys := make([]string, 0, len(params))
 	for key := range params {
 		keys = append(keys, key)
@@ -210,8 +141,8 @@ func flattenParamInfos(params map[string]any, prefix string, recursive bool) []P
 
 	infos := make([]ParamInfo, 0, len(keys))
 	for _, key := range keys {
-		paramInfo, ok := params[key].(map[string]any)
-		if !ok {
+		param := params[key]
+		if param == nil {
 			continue
 		}
 
@@ -219,10 +150,10 @@ func flattenParamInfos(params map[string]any, prefix string, recursive bool) []P
 		if prefix != "" {
 			oid = prefix + "/" + key
 		}
-		infos = append(infos, newParamInfoFromDescriptor(oid, paramInfo))
+		infos = append(infos, newParamInfoFromDescriptor(oid, param))
 
 		if recursive {
-			if children := childParamMap(paramInfo); children != nil {
+			if children := param.GetParams(); len(children) > 0 {
 				infos = append(infos, flattenParamInfos(children, oid, true)...)
 			}
 		}
@@ -230,43 +161,38 @@ func flattenParamInfos(params map[string]any, prefix string, recursive bool) []P
 	return infos
 }
 
-func findParamDescriptor(params map[string]any, oid string) (map[string]any, bool) {
+func findParamDescriptor(params map[string]*protos.Param, oid string) (*protos.Param, bool) {
 	if oid == "" {
 		return nil, false
 	}
 
 	pathParts := strings.Split(oid, "/")
-	var paramInfo map[string]any
+	var param *protos.Param
 	for _, part := range pathParts {
-		nextParam, exists := params[part]
-		if !exists {
+		next, exists := params[part]
+		if !exists || next == nil {
 			return nil, false
 		}
-
-		var ok bool
-		paramInfo, ok = nextParam.(map[string]any)
-		if !ok {
-			return nil, false
-		}
-		params = childParamMap(paramInfo)
+		param = next
+		params = param.GetParams()
 	}
 
-	return paramInfo, true
+	return param, true
 }
 
-func paramInfosForRequest(params map[string]any, oid string, recursive bool) ([]ParamInfo, StatusResult) {
+func paramInfosForRequest(params map[string]*protos.Param, oid string, recursive bool) ([]ParamInfo, StatusResult) {
 	if oid == "" {
 		return flattenParamInfos(params, "", recursive), StatusWithCode(StatusCodeOk, "")
 	}
 
-	paramInfo, ok := findParamDescriptor(params, oid)
+	param, ok := findParamDescriptor(params, oid)
 	if !ok {
 		return []ParamInfo{}, StatusWithCode(StatusCodeNotFound, "param not found: "+oid)
 	}
 
-	result := []ParamInfo{newParamInfoFromDescriptor(oid, paramInfo)}
+	result := []ParamInfo{newParamInfoFromDescriptor(oid, param)}
 	if recursive {
-		if children := childParamMap(paramInfo); children != nil {
+		if children := param.GetParams(); len(children) > 0 {
 			result = append(result, flattenParamInfos(children, oid, true)...)
 		}
 	}

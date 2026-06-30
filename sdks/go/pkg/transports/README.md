@@ -35,8 +35,9 @@ func main() {
     srv := catena.NewServer(100) // max concurrent push connections
 
     // Register handlers once. All registered transports share this runtime.
-    srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
-        return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeUnimplemented, "implement me")
+    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
+        device := catena.NewDevice(slot, "My Device", "Ross Video", "1.0.0", "SN-0001")
+        return catena.Reply(*device)
     })
 
     if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcOptions())); err != nil {
@@ -49,8 +50,8 @@ func main() {
     }
 
     // Optional custom fallback endpoints on REST.
-    rest.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-        return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "endpoint not found")
+    rest.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
+        return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "endpoint not found")
     })
 
     ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

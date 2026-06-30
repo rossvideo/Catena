@@ -59,17 +59,14 @@ func TestReply_Value(t *testing.T) {
 }
 
 func TestReply_Device(t *testing.T) {
-	deviceMap := map[string]any{
-		"slot":         uint32(0),
-		"detail_level": DetailLevelFull,
-	}
-	device, _ := ToDevice(deviceMap)
+	device := *NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithDetailLevel(DetailLevelFull)
 	result, status := Reply(device)
 
 	if status.Code != StatusCodeOk {
 		t.Errorf("Reply status code = %d, want %d", status.Code, StatusCodeOk)
 	}
-	if result.GetProtoDevice() == nil {
+	if result.ToProtoDevice() == nil {
 		t.Error("Reply result device should not be nil")
 	}
 }
@@ -127,7 +124,7 @@ func TestReplyError_Device(t *testing.T) {
 	if status.Error != "internal error" {
 		t.Errorf("ReplyError status error = %q, want 'internal error'", status.Error)
 	}
-	if result.GetProtoDevice() != nil {
+	if result.ToProtoDevice() != nil {
 		t.Error("ReplyError result device should be nil (zero value)")
 	}
 }

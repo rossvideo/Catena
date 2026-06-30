@@ -146,7 +146,7 @@ func TestParamInfosForRequest_RootNonRecursive(t *testing.T) {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 
-	assertParamInfoOids(t, infos, []string{"alpha", "numbers", "parent"})
+	assertParamInfoOids(t, infos, []string{"alpha", "numbers", "parent", "product"})
 }
 
 func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
@@ -174,20 +174,6 @@ func TestParamInfosForRequest_ArrayLengthFromValue(t *testing.T) {
 	}
 }
 
-func TestParamInfosForRequest_IgnoresDescriptorArrayLengthField(t *testing.T) {
-	device := testDeviceDefinition()
-	numbers := device["params"].(map[string]any)["numbers"].(map[string]any)
-	numbers["array_length"] = 99
-
-	infos, res := ParamInfosForRequest("/numbers", device, false)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
-	}
-	if infos[0].GetArrayLength() != 3 {
-		t.Errorf("expected descriptor array_length to be ignored, got %d", infos[0].GetArrayLength())
-	}
-}
-
 func TestParamInfosForRequest_MissingParam(t *testing.T) {
 	infos, res := ParamInfosForRequest("missing", testDeviceDefinition(), false)
 	if res.Code != StatusCodeNotFound {
@@ -198,43 +184,21 @@ func TestParamInfosForRequest_MissingParam(t *testing.T) {
 	}
 }
 
-func TestParamInfosForRequest_InvalidDeviceParams(t *testing.T) {
-	_, res := ParamInfosForRequest("", map[string]any{}, false)
+func TestParamInfosForRequest_NilDevice(t *testing.T) {
+	_, res := ParamInfosForRequest("", nil, false)
 	if res.Code != StatusCodeInternal {
 		t.Fatalf("expected INTERNAL, got %v: %s", res.Code, res.Error)
 	}
 }
 
-func testDeviceDefinition() map[string]any {
-	return map[string]any{
-		"params": map[string]any{
-			"parent": map[string]any{
-				"type": ParamTypeStruct,
-				"name": map[string]any{
-					"display_strings": map[string]any{"en": "Parent"},
-				},
-				"params": map[string]any{
-					"child": map[string]any{
-						"type": ParamTypeString,
-					},
-				},
-			},
-			"alpha": map[string]any{
-				"type": ParamTypeInt32,
-				"name": map[string]any{
-					"display_strings": map[string]string{"en": "Alpha"},
-				},
-			},
-			"numbers": map[string]any{
-				"type": ParamTypeInt32Array,
-				"value": map[string]any{
-					"int32_array_values": map[string]any{
-						"ints": []int32{1, 2, 3},
-					},
-				},
-			},
-		},
-	}
+func testDeviceDefinition() *Device {
+	return NewDevice(0, "Test", "Ross Video", "1.0", "SN-0001").
+		WithParam("parent", NewParamStruct().
+			WithName(NewPolyglotText("en", "Parent")).
+			WithParam("child", NewParamString(""))).
+		WithParam("alpha", NewParamInt32(0).
+			WithName(NewPolyglotText("en", "Alpha"))).
+		WithParam("numbers", NewParamInt32Array([]int32{1, 2, 3}))
 }
 
 func assertParamInfoOids(t *testing.T, infos []ParamInfo, expected []string) {
