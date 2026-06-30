@@ -642,7 +642,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
-	if !proto.Equal(actual.GetProtoDevice(), expected.GetProtoDevice()) {
+	if !proto.Equal(actual.ToProtoDevice(), expected.ToProtoDevice()) {
 		t.Errorf("expected device %v, got %v", expected, actual)
 	}
 

@@ -77,7 +77,7 @@ func TestNewParamString(t *testing.T) {
 }
 
 func TestNewParamStruct(t *testing.T) {
-	p := NewParamStruct(nil).Proto
+	p := NewParamStruct().Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
@@ -262,7 +262,7 @@ func TestWithClientHint(t *testing.T) {
 
 func TestWithParam_Struct(t *testing.T) {
 	child := NewParamInt32(10).WithName(NewPolyglotText("en", "child"))
-	p := NewParamStruct(nil).WithParam("brightness", child).Proto
+	p := NewParamStruct().WithParam("brightness", child).Proto
 
 	sub := p.GetParams()["brightness"]
 	if sub == nil {
@@ -275,7 +275,7 @@ func TestWithParam_Struct(t *testing.T) {
 
 func TestWithParam_DeepClone(t *testing.T) {
 	child := NewParamInt32(1)
-	parent := NewParamStruct(nil).WithParam("x", child).Proto
+	parent := NewParamStruct().WithParam("x", child).Proto
 
 	child.SetValue(int32(999))
 	if parent.GetParams()["x"].GetValue().GetInt32Value() != 1 {
@@ -295,7 +295,7 @@ func TestWithParam_Nil(t *testing.T) {
 	// Passing a nil sub-param must not panic and must not add an entry,
 	// preserving the contract that method chaining is never interrupted
 	// by error handling.
-	cp := NewParamStruct(nil).WithParam("x", nil)
+	cp := NewParamStruct().WithParam("x", nil)
 	p := cp.Proto
 	if len(p.GetParams()) != 0 {
 		t.Error("expected nil sub-param to be a no-op")
@@ -416,7 +416,7 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 		func() *Param { return NewParamInt32(0) },
 		func() *Param { return NewParamFloat32(0) },
 		func() *Param { return NewParamString("") },
-		func() *Param { return NewParamStruct(nil) },
+		func() *Param { return NewParamStruct() },
 	} {
 		p := factory().WithConstraint(c).Proto
 		if p.GetConstraint() == nil {
@@ -590,7 +590,7 @@ func TestWithValue_Struct(t *testing.T) {
 	if res.Code != StatusCodeOk {
 		t.Fatal(res.Error)
 	}
-	p := NewParamStruct(nil).WithValue(v).Proto
+	p := NewParamStruct().WithValue(v).Proto
 	fields := p.GetValue().GetStructValue().GetFields()
 	if fields["name"].GetStringValue() != "test" {
 		t.Errorf("expected struct field 'name'='test', got %q", fields["name"].GetStringValue())
@@ -667,7 +667,7 @@ func TestGetValue_OK(t *testing.T) {
 }
 
 func TestGetValue_Nil(t *testing.T) {
-	cp := NewParamStruct(nil)
+	cp := NewParamStruct()
 	v, res := cp.GetValue()
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK for nil value, got %v: %s", res.Code, res.Error)
@@ -678,7 +678,7 @@ func TestGetValue_Nil(t *testing.T) {
 }
 
 func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
-	cp := NewParamStruct(nil)
+	cp := NewParamStruct()
 	input := map[string]any{"x": int32(1), "y": int32(2)}
 	res := cp.SetValue(input)
 	if res.Code != StatusCodeOk {
@@ -699,21 +699,13 @@ func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
 
 // --- Typed factory value tests ---
 
-func TestNewParamStruct_WithValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"a": int32(1)}).Proto
-	fields := p.GetValue().GetStructValue().GetFields()
-	if fields["a"].GetInt32Value() != 1 {
-		t.Errorf("expected struct field 'a'=1, got %d", fields["a"].GetInt32Value())
-	}
-}
-
 func TestNewParamStruct_NoValue(t *testing.T) {
-	p := NewParamStruct(nil).Proto
+	p := NewParamStruct().Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
 	if p.GetValue() != nil {
-		t.Error("expected nil value when no arg provided")
+		t.Error("expected nil value; struct values come from sub-params")
 	}
 }
 
@@ -873,7 +865,7 @@ func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
 }
 
 func TestWithParam_SelfReference(t *testing.T) {
-	cp := NewParamStruct(nil)
+	cp := NewParamStruct()
 	cp.WithParam("self", cp)
 	sub := cp.Proto.GetParams()["self"]
 	if sub == nil {
@@ -882,16 +874,6 @@ func TestWithParam_SelfReference(t *testing.T) {
 }
 
 // --- Error path tests ---
-
-func TestNewParamStruct_InvalidValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"bad": struct{}{}}).Proto
-	if p.GetType() != protos.ParamType_STRUCT {
-		t.Errorf("expected STRUCT, got %v", p.GetType())
-	}
-	if p.GetValue() != nil {
-		t.Error("expected nil value when conversion fails")
-	}
-}
 
 func TestNewParamStructVariant_InvalidValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "t", Value: struct{}{}}
@@ -1040,91 +1022,23 @@ func TestSetValue_InvalidThenValid(t *testing.T) {
 	}
 }
 
-func TestParamToMap_ForDeviceDefinition(t *testing.T) {
-	param := NewParamStruct(map[string]any{
-		"number": int32(7),
-		"text":   "hello",
-	}).
+func TestWithParam_StructValuesFromSubParams(t *testing.T) {
+	param := NewParamStruct().
 		WithName(NewPolyglotText("en", "Struct Example")).
-		WithParam("number", NewParamInt32(0).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
-		WithParam("text", NewParamString(""))
+		WithParam("number", NewParamInt32(7).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
+		WithParam("text", NewParamString("hello"))
 
-	definition := param.ToMap()
-	if got, want := definition["type"], protos.ParamType_STRUCT; got != want {
-		t.Fatalf("expected top-level type %v, got %v", want, got)
+	if param.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Fatalf("expected STRUCT, got %v", param.Proto.GetType())
 	}
-
-	childDefinitions, ok := definition["params"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected child params map, got %#v", definition["params"])
+	number := param.Proto.GetParams()["number"]
+	if number.GetValue().GetInt32Value() != 7 {
+		t.Errorf("expected number sub-param value 7, got %d", number.GetValue().GetInt32Value())
 	}
-	numberDefinition, ok := childDefinitions["number"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected number child definition, got %#v", childDefinitions["number"])
+	if number.GetConstraint().GetInt32Range().GetMaxValue() != 10 {
+		t.Fatal("expected nested int32 range constraint max 10")
 	}
-	if got, want := numberDefinition["type"], protos.ParamType_INT32; got != want {
-		t.Fatalf("expected number type %v, got %v", want, got)
-	}
-
-	constraintDefinition, ok := numberDefinition["constraint"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected inline constraint map, got %#v", numberDefinition["constraint"])
-	}
-	if got, want := constraintDefinition["type"], protos.Constraint_INT_RANGE; got != want {
-		t.Fatalf("expected constraint type %v, got %v", want, got)
-	}
-
-	device, err := ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": DetailLevelFull,
-		"params": map[string]any{
-			"struct_example": definition,
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice with Param.ToMap output error: %v", err)
-	}
-
-	structParam := device.GetProtoDevice().GetParams()["struct_example"]
-	if structParam.GetType() != protos.ParamType_STRUCT {
-		t.Fatalf("expected STRUCT param, got %v", structParam.GetType())
-	}
-	if structParam.GetParams()["number"].GetConstraint().GetInt32Range().GetMaxValue() != 10 {
-		t.Fatalf("expected nested int32 range constraint max 10")
-	}
-}
-
-func TestParamToMap_NilParam(t *testing.T) {
-	var param *Param
-	if definition := param.ToMap(); len(definition) != 0 {
-		t.Fatalf("expected empty map for nil Param, got %#v", definition)
-	}
-}
-
-func TestParamToMap_NilProto(t *testing.T) {
-	param := &Param{}
-	if definition := param.ToMap(); len(definition) != 0 {
-		t.Fatalf("expected empty map for Param with nil Proto, got %#v", definition)
-	}
-}
-
-func TestNormalizeParamMap_SkipsInvalidChildDefinition(t *testing.T) {
-	param := NewParamStruct(map[string]any{
-		"number": int32(1),
-	}).WithParam("number", NewParamInt32(1)).Proto
-
-	definition := map[string]any{
-		"params": map[string]any{
-			"number": "not-a-map",
-		},
-	}
-
-	normalizeParamMap(definition, param)
-
-	if got, want := definition["type"], protos.ParamType_STRUCT; got != want {
-		t.Fatalf("expected parent type %v, got %v", want, got)
-	}
-	if definition["params"].(map[string]any)["number"] != "not-a-map" {
-		t.Fatal("expected invalid child definition to be left unchanged")
+	if param.Proto.GetParams()["text"].GetValue().GetStringValue() != "hello" {
+		t.Errorf("expected text sub-param value 'hello', got %q", param.Proto.GetParams()["text"].GetValue().GetStringValue())
 	}
 }

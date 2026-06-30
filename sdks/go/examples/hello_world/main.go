@@ -73,28 +73,15 @@ func (s *helloWorldState) Set(value string) {
 	s.value = value
 }
 
-func buildDevice() map[string]any {
-	return map[string]any{
-		"slot":              uint32(slot),
-		"detail_level":      catena.DetailLevelFull,
-		"multi_set_enabled": true,
-		"subscriptions":     true,
-		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-		"default_scope":     "st2138:op",
-		"params": map[string]any{
-			helloWorldOID: map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Hello World",
-					},
-				},
-				"type": catena.ParamTypeString,
-				"value": map[string]any{
-					"string_value": helloWorld.Get(),
-				},
-			},
-		},
-	}
+func buildDevice() *catena.Device {
+	return catena.NewDevice(slot, "Hello World", "Ross Video", "1.0.0", "SN-HELLO-0001").
+		WithDetailLevel(catena.DetailLevelFull).
+		WithMultiSetEnabled(true).
+		WithSubscriptions(true).
+		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
+		WithDefaultScope("st2138:op").
+		WithParam(helloWorldOID, catena.NewParamString(helloWorld.Get()).
+			WithName(catena.NewPolyglotText("en", "Hello World")))
 }
 
 func main() {
@@ -109,12 +96,7 @@ func main() {
 
 	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
 		logger.Info("GetDevice", "slot", slot)
-		device, err := catena.ToDevice(buildDevice())
-		if err != nil {
-			logger.Error("Failed to convert device", "slot", slot, "error", err)
-			return catena.ReplyError[catena.Device](catena.StatusCodeInternal, "failed to convert device")
-		}
-		return catena.Reply(device)
+		return catena.Reply(*buildDevice())
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {

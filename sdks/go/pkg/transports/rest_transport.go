@@ -253,12 +253,12 @@ func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int)
 
 // writeDeviceResult writes a Device as JSON
 func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus int) {
-	if device.GetProtoDevice() == nil {
+	if device.ToProtoDevice() == nil {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	b, err := MarshalDeviceJSON(device.GetProtoDevice())
+	b, err := MarshalDeviceJSON(device.ToProtoDevice())
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
 		w.Header().Set("Content-Type", "application/json")

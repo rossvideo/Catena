@@ -40,12 +40,10 @@
 package catena
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -63,52 +61,154 @@ const (
 	DetailLevelUnset         DetailLevel = protos.Device_UNSET
 )
 
-// Device wraps protos.Device for device model handling
+// SDKVersion is the Catena Go SDK version reported in the device's mandatory
+// product struct (the "catena_sdk_version" field).
+const SDKVersion = "1.0.0"
+
+// CatenaSDKURL identifies the Catena SDK in the device's mandatory product
+// struct (the "catena_sdk" field).
+const CatenaSDKURL = "https://github.com/rossvideo/Catena"
+
+// Device wraps protos.Device and exposes a fluent builder API.
 type Device struct {
 	device *protos.Device
 }
 
-// ToDevice converts a Go map/struct to Device
-// This allows developers to work with native Go types and convert to the protobuf format
-func ToDevice(m map[string]any) (Device, error) {
-	device, err := toProtoDevice(m)
-	if err != nil {
-		return Device{}, fmt.Errorf("ToDevice: %w", err)
-	}
-	return Device{device: device}, nil
+// NewDevice creates a Device for the given slot and seeds the mandatory
+// "product" struct param with the supplied identity fields. The product param
+// is read-only and scoped to st2138:mon. Additional fields are populated with
+// the chainable With* methods.
+func NewDevice(slot uint16, name, vendor, version, serialNumber string) *Device {
+	cd := &Device{device: &protos.Device{}}
+	cd.device.Slot = uint32(slot)
+	cd.WithParam("product",
+		NewParamStruct().
+			WithReadOnly(true).
+			WithAccessScope(ScopeMon).
+			WithParam("name", NewParamString(name)).
+			WithParam("vendor", NewParamString(vendor)).
+			WithParam("version", NewParamString(version)).
+			WithParam("serial_number", NewParamString(serialNumber)).
+			WithParam("catena_sdk_version", NewParamString(SDKVersion)).
+			WithParam("catena_sdk", NewParamString(CatenaSDKURL)))
+	return cd
 }
 
-// toProtoDevice converts native Go types to protos.Device
-// For complex nested types (params, constraints, etc.), uses JSON marshaling
-// to leverage protojson's automatic conversion and validation
-func toProtoDevice(m map[string]any) (*protos.Device, error) {
-	jsonData, err := json.Marshal(m)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal map to JSON: %w", err)
+// WithParam inserts param into the device's params map, keyed by oid. The
+// param's proto is deep-copied so later builder mutations on the caller's Param
+// do not affect entries already added. A nil param is ignored.
+func (cd *Device) WithParam(oid string, param *Param) *Device {
+	if param == nil || param.Proto == nil {
+		logger.Warning("Device.WithParam called with nil param; ignoring", "oid", oid)
+		return cd
 	}
-
-	device := &protos.Device{}
-	if err := protojson.Unmarshal(jsonData, device); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON to Device proto: %w", err)
+	if cd.device.Params == nil {
+		cd.device.Params = map[string]*protos.Param{}
 	}
-
-	return device, nil
+	cd.device.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
+	return cd
 }
 
-func protoMessageToMap(context string, msg proto.Message) (map[string]any, error) {
-	jsonData, err := protojson.MarshalOptions{UseProtoNames: true}.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("%s: marshal proto: %w", context, err)
+// WithCommand inserts command into the device's commands map, keyed by oid. The
+// command's proto is deep-copied. A nil command is ignored.
+func (cd *Device) WithCommand(oid string, command *Param) *Device {
+	if command == nil || command.Proto == nil {
+		logger.Warning("Device.WithCommand called with nil command; ignoring", "oid", oid)
+		return cd
 	}
-
-	var definition map[string]any
-	if err := json.Unmarshal(jsonData, &definition); err != nil {
-		return nil, fmt.Errorf("%s: unmarshal map: %w", context, err)
+	if cd.device.Commands == nil {
+		cd.device.Commands = map[string]*protos.Param{}
 	}
-	return definition, nil
+	cd.device.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
+	return cd
 }
 
-// GetProtoDevice returns the underlying protos.Device
-func (cd Device) GetProtoDevice() *protos.Device {
+// WithConstraint inserts a shared constraint into the device's constraints map,
+// keyed by oid. The constraint's proto is deep-copied. A nil constraint is
+// ignored. Params can reference shared constraints via NewConstraintRefOid.
+func (cd *Device) WithConstraint(oid string, constraint *Constraint) *Device {
+	if constraint == nil || constraint.Proto == nil {
+		logger.Warning("Device.WithConstraint called with nil constraint; ignoring", "oid", oid)
+		return cd
+	}
+	if cd.device.Constraints == nil {
+		cd.device.Constraints = map[string]*protos.Constraint{}
+	}
+	cd.device.Constraints[oid] = proto.Clone(constraint.Proto).(*protos.Constraint)
+	return cd
+}
+
+// WithMenuGroup inserts a menu group into the device's menu_groups map, keyed
+// by oid. The group's proto is deep-copied. A nil group is ignored.
+func (cd *Device) WithMenuGroup(oid string, group *MenuGroup) *Device {
+	if group == nil || group.Proto == nil {
+		logger.Warning("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
+		return cd
+	}
+	if cd.device.MenuGroups == nil {
+		cd.device.MenuGroups = map[string]*protos.MenuGroup{}
+	}
+	cd.device.MenuGroups[oid] = proto.Clone(group.Proto).(*protos.MenuGroup)
+	return cd
+}
+
+// WithLanguagePack inserts a language pack into the device's language_packs map,
+// keyed by language code (e.g. "en"). Replaces any existing pack at that code.
+func (cd *Device) WithLanguagePack(code, name string, words map[string]string) *Device {
+	if cd.device.LanguagePacks == nil {
+		cd.device.LanguagePacks = &protos.LanguagePacks{}
+	}
+	if cd.device.LanguagePacks.Packs == nil {
+		cd.device.LanguagePacks.Packs = map[string]*protos.LanguagePack{}
+	}
+	copied := make(map[string]string, len(words))
+	for k, v := range words {
+		copied[k] = v
+	}
+	cd.device.LanguagePacks.Packs[code] = &protos.LanguagePack{
+		Name:  name,
+		Words: copied,
+	}
+	return cd
+}
+
+// WithDetailLevel sets how much of the device model to deliver.
+func (cd *Device) WithDetailLevel(level DetailLevel) *Device {
+	cd.device.DetailLevel = level
+	return cd
+}
+
+// WithMultiSetEnabled sets whether the device supports multi-set requests.
+func (cd *Device) WithMultiSetEnabled(enabled bool) *Device {
+	cd.device.MultiSetEnabled = enabled
+	return cd
+}
+
+// WithSubscriptions sets whether the device supports subscriptions.
+func (cd *Device) WithSubscriptions(subscriptions bool) *Device {
+	cd.device.Subscriptions = subscriptions
+	return cd
+}
+
+// WithAccessScopes sets the device's access scopes, replacing any existing ones.
+func (cd *Device) WithAccessScopes(scopes ...string) *Device {
+	cd.device.AccessScopes = scopes
+	return cd
+}
+
+// WithDefaultScope sets the device's default access scope.
+func (cd *Device) WithDefaultScope(scope string) *Device {
+	cd.device.DefaultScope = scope
+	return cd
+}
+
+// ToProtoDevice returns the underlying protos.Device for gRPC responses.
+func (cd Device) ToProtoDevice() *protos.Device {
 	return cd.device
+}
+
+// ToJSON serializes the device to its REST JSON representation using proto
+// field names.
+func (cd Device) ToJSON() ([]byte, error) {
+	return protojson.MarshalOptions{UseProtoNames: true}.Marshal(cd.device)
 }
