@@ -66,6 +66,7 @@ const (
 	EndpointGetAsset
 	EndpointExecuteCommand
 	EndpointParamInfo
+	EndpointLanguagePack
 	EndpointConnect
 )
 
@@ -135,6 +136,17 @@ type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerConte
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
+type LanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
+type LanguagePackMutationOperation int
+
+const (
+	LanguagePackMutationAdd LanguagePackMutationOperation = iota
+	LanguagePackMutationUpdate
+	LanguagePackMutationDelete
+)
+
+type LanguagePackMutationHandler func(slot uint16, language string, operation LanguagePackMutationOperation, languagePack LanguagePack, ctx HandlerContext) StatusResult
+
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
@@ -190,6 +202,8 @@ type Server interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
+	RegisterLanguagePackHandler(slot uint16, handler LanguagePackHandler)
+	RegisterLanguagePackMutationHandler(slot uint16, handler LanguagePackMutationHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
 
@@ -211,6 +225,8 @@ type ServerRuntime interface {
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
+	InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult)
+	InvokeLanguagePackMutationHandler(slot uint16, language string, operation LanguagePackMutationOperation, languagePack LanguagePack, transportContext TransportContext) StatusResult
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -220,27 +236,29 @@ var _ Server = (*server)(nil)
 var _ ServerRuntime = (*server)(nil)
 
 type server struct {
-	options                ServerOptions
-	mu                     sync.Mutex
-	ctx                    context.Context
-	ctxCancel              context.CancelFunc
-	authzEnabled           bool
-	jwtValidator           jwtValidatorInterface
-	maxShutdownWait        time.Duration
-	shutdown               bool
-	stopped                chan struct{}
-	slots                  map[uint16]struct{}
-	getDeviceHandlers      map[uint16]DeviceHandler
-	getValueHandlers       map[uint16]GetValueHandler
-	setValueHandlers       map[uint16]SetValueHandler
-	getAssetHandlers       map[uint16]GetAssetHandler
-	executeCommandHandlers map[uint16]ExecuteCommandHandler
-	paramInfoHandlers      map[uint16]ParamInfoHandler
-	heartbeatHandlers      map[uint16]HeartbeatHandler
-	accessHandler          AccessHandler // optional fallback for slots without specific handlers
-	connectionQueue        connectionQueueInterface
-	heartbeat              *Heartbeat
-	transports             []Transport
+	options                      ServerOptions
+	mu                           sync.Mutex
+	ctx                          context.Context
+	ctxCancel                    context.CancelFunc
+	authzEnabled                 bool
+	jwtValidator                 jwtValidatorInterface
+	maxShutdownWait              time.Duration
+	shutdown                     bool
+	stopped                      chan struct{}
+	slots                        map[uint16]struct{}
+	getDeviceHandlers            map[uint16]DeviceHandler
+	getValueHandlers             map[uint16]GetValueHandler
+	setValueHandlers             map[uint16]SetValueHandler
+	getAssetHandlers             map[uint16]GetAssetHandler
+	executeCommandHandlers       map[uint16]ExecuteCommandHandler
+	paramInfoHandlers            map[uint16]ParamInfoHandler
+	languagePackHandlers         map[uint16]LanguagePackHandler
+	languagePackMutationHandlers map[uint16]LanguagePackMutationHandler
+	heartbeatHandlers            map[uint16]HeartbeatHandler
+	accessHandler                AccessHandler // optional fallback for slots without specific handlers
+	connectionQueue              connectionQueueInterface
+	heartbeat                    *Heartbeat
+	transports                   []Transport
 }
 
 func NewServer(opts config.ServerOptions) (Server, error) {
@@ -257,25 +275,27 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 	}
 
 	return &server{
-		options:                opts,
-		ctx:                    ctx,
-		ctxCancel:              cancel,
-		authzEnabled:           opts.AuthzEnabled,
-		jwtValidator:           validator,
-		maxShutdownWait:        defaultServerMaxShutdownWait, // override in unittests if needed
-		shutdown:               false,
-		stopped:                make(chan struct{}),
-		slots:                  make(map[uint16]struct{}),
-		getDeviceHandlers:      make(map[uint16]DeviceHandler),
-		getValueHandlers:       make(map[uint16]GetValueHandler),
-		setValueHandlers:       make(map[uint16]SetValueHandler),
-		getAssetHandlers:       make(map[uint16]GetAssetHandler),
-		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
-		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
-		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
-		accessHandler:          allowAllAccessHandler,
-		connectionQueue:        newConnectionQueue(opts.MaxConnections),
-		transports:             []Transport{},
+		options:                      opts,
+		ctx:                          ctx,
+		ctxCancel:                    cancel,
+		authzEnabled:                 opts.AuthzEnabled,
+		jwtValidator:                 validator,
+		maxShutdownWait:              defaultServerMaxShutdownWait, // override in unittests if needed
+		shutdown:                     false,
+		stopped:                      make(chan struct{}),
+		slots:                        make(map[uint16]struct{}),
+		getDeviceHandlers:            make(map[uint16]DeviceHandler),
+		getValueHandlers:             make(map[uint16]GetValueHandler),
+		setValueHandlers:             make(map[uint16]SetValueHandler),
+		getAssetHandlers:             make(map[uint16]GetAssetHandler),
+		executeCommandHandlers:       make(map[uint16]ExecuteCommandHandler),
+		paramInfoHandlers:            make(map[uint16]ParamInfoHandler),
+		languagePackHandlers:         make(map[uint16]LanguagePackHandler),
+		languagePackMutationHandlers: make(map[uint16]LanguagePackMutationHandler),
+		heartbeatHandlers:            make(map[uint16]HeartbeatHandler),
+		accessHandler:                allowAllAccessHandler,
+		connectionQueue:              newConnectionQueue(opts.MaxConnections),
+		transports:                   []Transport{},
 	}, nil
 }
 
@@ -575,6 +595,28 @@ func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	}
 }
 
+func (s *server) RegisterLanguagePackHandler(slot uint16, handler LanguagePackHandler) {
+	s.mu.Lock()
+	s.languagePackHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
+func (s *server) RegisterLanguagePackMutationHandler(slot uint16, handler LanguagePackMutationHandler) {
+	s.mu.Lock()
+	s.languagePackMutationHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
 func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
 	s.mu.Lock()
 	s.heartbeatHandlers[slot] = handler
@@ -747,6 +789,58 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	// TODO: lookup default handler for slot
 	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
 	return nil, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return LanguagePack{}, res
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return LanguagePack{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	if !s.isAccessAllowed(EndpointLanguagePack, handlerContext) {
+		return LanguagePack{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.languagePackHandlers[slot]
+	s.mu.Unlock()
+
+	if ok && handler != nil {
+		return handler(slot, language, handlerContext)
+	}
+
+	logger.Warning("LanguagePackHandler called - no handler registered for this slot", "slot", slot, "language", language)
+	return LanguagePack{}, StatusWithCode(StatusCodeNotFound, "LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeLanguagePackMutationHandler(slot uint16, language string, operation LanguagePackMutationOperation, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return res
+	}
+
+	if !s.hasWriteAccess(handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	if !s.isAccessAllowed(EndpointLanguagePack, handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.languagePackMutationHandlers[slot]
+	s.mu.Unlock()
+
+	if ok && handler != nil {
+		return handler(slot, language, operation, languagePack, handlerContext)
+	}
+
+	logger.Warning("LanguagePackMutationHandler called - no handler registered for this slot", "slot", slot, "language", language)
+	return StatusWithCode(StatusCodeNotFound, "LanguagePack mutation handler not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
