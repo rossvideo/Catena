@@ -271,7 +271,7 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 		return status.Error(ToGRPCCode(res.Code), res.Error)
 	}
 
-	protoDevice := device.GetProtoDevice()
+	protoDevice := device.ToProtoDevice()
 	if protoDevice == nil {
 		logger.Error("DeviceRequest device returned nil", "slot", slot)
 		return status.Error(codes.Internal, "device returned nil")

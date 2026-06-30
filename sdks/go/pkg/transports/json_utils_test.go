@@ -662,25 +662,12 @@ func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
 // --- MarshalDeviceJSON tests (migrated from catena/device_test.go) ---
 
 func TestMarshalDeviceJSON(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-		"params": map[string]any{
-			"brightness": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Brightness",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice error: %v", err)
-	}
+	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+		WithDetailLevel(catena.DetailLevelFull).
+		WithParam("brightness", catena.NewParamInt32(0).
+			WithName(catena.NewPolyglotText("en", "Brightness")))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -698,23 +685,11 @@ func TestMarshalDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-		"params": map[string]any{
-			"volume": map[string]any{
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 0,
-				},
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice error: %v", err)
-	}
+	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+		WithDetailLevel(catena.DetailLevelFull).
+		WithParam("volume", catena.NewParamInt32(0))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -742,13 +717,8 @@ func TestMarshalDeviceJSON_Nil(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot": uint32(5),
-	})
-	if err != nil {
-		t.Fatalf("ToDevice: %v", err)
-	}
-	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	cd := catena.NewDevice(5, "Test Device", "Ross Video", "1.0", "SN-0001")
+	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -759,14 +729,9 @@ func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-	})
-	if err != nil {
-		t.Fatalf("ToDevice: %v", err)
-	}
-	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+		WithDetailLevel(catena.DetailLevelFull)
+	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -775,7 +740,7 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 	if !strings.Contains(body, `"slot":0`) {
 		t.Errorf("expected slot:0; got %s", body)
 	}
-	for _, field := range []string{"params", "constraints", "commands", "menu_groups", "language_packs"} {
+	for _, field := range []string{"constraints", "commands", "menu_groups", "language_packs"} {
 		if strings.Contains(body, `"`+field+`":{}`) {
 			t.Errorf("empty %s should be stripped; got %s", field, body)
 		}
@@ -783,23 +748,10 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot": uint32(0),
-		"params": map[string]any{
-			"brightness": map[string]any{
-				"type": catena.ParamTypeInt32,
-			},
-		},
-		"commands": map[string]any{
-			"reboot": map[string]any{
-				"type": catena.ParamTypeEmpty,
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice: %v", err)
-	}
-	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+		WithParam("brightness", catena.NewParamInt32(0)).
+		WithCommand("reboot", catena.NewParamEmpty())
+	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -902,52 +854,21 @@ func TestCleanDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":              uint32(0),
-		"detail_level":      catena.DetailLevelFull,
-		"multi_set_enabled": true,
-		"subscriptions":     true,
-		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-		"default_scope":     "st2138:op",
-		"params": map[string]any{
-			"brightness": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Brightness",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-				"constraint": map[string]any{
-					"ref_oid": "brightness_range",
-				},
-				"read_only": false,
-				"widget":    "SLIDER",
-			},
-		},
-		"constraints": map[string]any{
-			"brightness_range": map[string]any{
-				"int32_range": map[string]any{
-					"min_value": int32(0),
-					"max_value": int32(100),
-				},
-			},
-		},
-		"commands": map[string]any{
-			"reboot": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Reboot Device",
-					},
-				},
-				"type": catena.ParamTypeEmpty,
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice error: %v", err)
-	}
+	cd := catena.NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithDetailLevel(catena.DetailLevelFull).
+		WithMultiSetEnabled(true).
+		WithSubscriptions(true).
+		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
+		WithDefaultScope("st2138:op").
+		WithParam("brightness", catena.NewParamInt32(0).
+			WithName(catena.NewPolyglotText("en", "Brightness")).
+			WithConstraint(catena.NewConstraintRefOid("brightness_range")).
+			WithWidget("SLIDER")).
+		WithConstraint("brightness_range", catena.NewConstraintInt32Range(0, 100, 1)).
+		WithCommand("reboot", catena.NewParamEmpty().
+			WithName(catena.NewPolyglotText("en", "Reboot Device")))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
