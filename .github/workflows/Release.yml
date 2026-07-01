@@ -90,7 +90,7 @@ jobs:
 
       # ── Step 1b: Check out the develop branch ───────────────────────────────
       - name: Checkout develop
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: develop
           fetch-depth: 0
@@ -498,7 +498,7 @@ jobs:
     steps:
 
       - name: Checkout main
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
