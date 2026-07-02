@@ -612,7 +612,7 @@ func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Reque
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
-	if param == nil || param.Proto == nil {
+	if param.Proto == nil {
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "param returned nil"))
 		return
 	}

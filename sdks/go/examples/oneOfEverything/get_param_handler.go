@@ -9,10 +9,10 @@ import (
 // parameter (metadata + current value) for a single OID, unlike GetValue (value
 // only) or ParamInfo (descriptor only).
 func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
-	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx catena.HandlerContext) (*catena.Param, catena.StatusResult) {
+	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Param, catena.StatusResult) {
 		logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 		if !ctx.HasReadScope(catena.ScopeCfg) {
-			return nil, catena.StatusWithCode(catena.StatusCodePermissionDenied, "configuration scope required")
+			return catena.Param{}, catena.StatusWithCode(catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
 		switch fqoid {
@@ -23,15 +23,15 @@ func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *E
 					With("fr", "Compteur").
 					With("ja", "カウンター")).
 				WithMinimalSet(true)
-			return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
 		case "running", "/running":
 			param := catena.NewParamInt32(counter.RunningInt32()).
 				WithName(catena.NewPolyglotText("en", "Counter Running Status")).
 				WithReadOnly(true).
 				WithMinimalSet(true)
-			return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
 		default:
-			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
+			return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 		}
 	})
 }

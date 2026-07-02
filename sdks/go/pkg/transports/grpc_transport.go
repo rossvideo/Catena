@@ -447,7 +447,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 		logger.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
-	if param == nil || param.Proto == nil {
+	if param.Proto == nil {
 		logger.Error("GetParam returned nil param", "slot", slot, "fqoid", fqoid)
 		return nil, status.Error(codes.Internal, "param returned nil")
 	}

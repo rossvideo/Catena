@@ -606,7 +606,7 @@ func TestGrpcTransport_GetParam_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "/counter" {
 			t.Errorf("expected fqoid '/counter', got %s", fqoid)
@@ -614,7 +614,7 @@ func TestGrpcTransport_GetParam_Success(t *testing.T) {
 		param := catena.NewParamInt32(21).
 			WithName(catena.NewPolyglotText("en", "Counter")).
 			WithMinimalSet(true)
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -661,8 +661,8 @@ func TestGrpcTransport_GetParam_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (*catena.Param, catena.StatusResult) {
-		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)

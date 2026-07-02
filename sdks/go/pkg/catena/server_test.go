@@ -738,7 +738,7 @@ func TestServer_RegisterGetParamHandler(t *testing.T) {
 	expected := NewParamInt32(42)
 
 	handlerCalled := false
-	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult) {
+	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -752,7 +752,7 @@ func TestServer_RegisterGetParamHandler(t *testing.T) {
 		if !ctx.HasReadScope("all") {
 			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
 		}
-		return expected, StatusResult{Code: StatusCodeOk}
+		return *expected, StatusResult{Code: StatusCodeOk}
 	})
 
 	actual, status := srv.InvokeGetParamHandler(0, "test/param", transportContext)
@@ -763,8 +763,8 @@ func TestServer_RegisterGetParamHandler(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
-	if actual == nil {
-		t.Fatal("expected non-nil param")
+	if actual.Proto == nil {
+		t.Fatal("expected non-nil param proto")
 	}
 	if !proto.Equal(actual.Proto, expected.Proto) {
 		t.Errorf("expected param %v, got %v", expected, actual)
@@ -790,8 +790,8 @@ func TestServer_RegisterGetParamHandler_SendsSlotsAdded(t *testing.T) {
 		},
 	}
 
-	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult) {
-		return NewParamInt32(0), StatusResult{Code: StatusCodeOk}
+	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+		return *NewParamInt32(0), StatusResult{Code: StatusCodeOk}
 	})
 
 	if len(updates) != 1 {
@@ -826,24 +826,24 @@ func TestServer_InvokeGetParamHandler_NoHandler(t *testing.T) {
 	if status.Code != StatusCodeNotFound {
 		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
 	}
-	if param != nil {
-		t.Errorf("expected nil param when no handler is registered, got %+v", param)
+	if param.Proto != nil {
+		t.Errorf("expected empty param when no handler is registered, got %+v", param)
 	}
 }
 
 func TestServer_InvokeGetParamHandler_HandlerError(t *testing.T) {
 	srv := newTestServer(t, true)
 
-	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult) {
-		return nil, StatusWithCode(StatusCodeNotFound, "param not found")
+	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+		return Param{}, StatusWithCode(StatusCodeNotFound, "param not found")
 	})
 
 	param, status := srv.InvokeGetParamHandler(0, "missing", validTestTransportContext(nil))
 	if status.Code != StatusCodeNotFound {
 		t.Errorf("expected NotFound status, got %v", status.Code)
 	}
-	if param != nil {
-		t.Errorf("expected nil param on handler error, got %+v", param)
+	if param.Proto != nil {
+		t.Errorf("expected empty param on handler error, got %+v", param)
 	}
 }
 
@@ -1069,9 +1069,9 @@ func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T)
 			name:      "get param",
 			scopeKind: "read",
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
 					*handlerCalled = true
-					return NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
+					return *NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeGetParamHandler(0, "test/param", noReadContext)
 				return status
@@ -1212,9 +1212,9 @@ func TestServer_EndpointsReturnResolveHandlerContextError(t *testing.T) {
 		{
 			name: "get param",
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
 					*handlerCalled = true
-					return NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
+					return *NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeGetParamHandler(0, "test/param", invalidContext)
 				return status
@@ -1358,9 +1358,9 @@ func TestServer_EndpointsReturnPermissionDeniedWhenAccessHandlerDenies(t *testin
 			name:     "get param",
 			endpoint: EndpointGetParam,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
 					*handlerCalled = true
-					return NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
+					return *NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeGetParamHandler(0, "test/param", transportContext)
 				return status
@@ -1791,9 +1791,9 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			name:              "get param",
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
 					*handlerCalled = true
-					return NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
+					return *NewParamInt32(0), StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeGetParamHandler(0, "test/param", TransportContext{})
 				return status
