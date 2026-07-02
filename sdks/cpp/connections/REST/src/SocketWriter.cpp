@@ -1,4 +1,5 @@
 #include <SocketWriter.h>
+#include <RestJsonFormatter.h>
 #include <Logger.h>
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
@@ -10,15 +11,13 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
     std::string jsonOutput = "";
     // Check if message is not Empty so we don't send empty body
     if (httpStatus.first < 300 && msg.GetTypeName() != "st2138.Empty")  {
-        google::protobuf::util::JsonPrintOptions options; // Default options
-        options.preserve_proto_field_names = true; // Preserve proto field names
-        auto status = MessageToJsonString(msg, &jsonOutput, options);
+        auto rc = RestJsonFormatter::getInstance().format(msg, jsonOutput);
 
-        if (!status.ok()) { // GCOVR_EXCL_START
+        if (rc.status != catena::StatusCode::OK) { // GCOVR_EXCL_START
             /* If conversion fails, this error maps to bad request.
              * This should be impossible to get to without failing on function
              * call first*/
-            httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
+            httpStatus = codeMap_.at(rc.status);
             // GCOVR_EXCL_STOP
         } else { // Otherwise add the output to response.
             if (jsonBody_.empty()) {
@@ -67,15 +66,13 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
     // Convert message to JSON
     std::string jsonOutput = "";
     if (msg.GetTypeName() != "st2138.Empty")  {
-        google::protobuf::util::JsonPrintOptions options; // Default options
-        options.preserve_proto_field_names = true; // Preserve proto field names
-        auto status = MessageToJsonString(msg, &jsonOutput, options);
+        auto rc = RestJsonFormatter::getInstance().format(msg, jsonOutput);
 
-        if (!status.ok()) { // GCOVR_EXCL_START
+        if (rc.status != catena::StatusCode::OK) { // GCOVR_EXCL_START
             /* If conversion fails, this error maps to bad request.
              * This should be impossible to get to without failing on function
              * call first*/
-            httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
+            httpStatus = codeMap_.at(rc.status);
             jsonOutput = "";
             // GCOVR_EXCL_STOP
         }

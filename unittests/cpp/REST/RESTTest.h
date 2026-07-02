@@ -66,12 +66,33 @@ using boost::asio::ip::tcp;
 
 // REST
 #include "SocketWriter.h"
+#include "RestJsonFormatter.h"
 #include "interface/ICallData.h"
 
 using namespace catena::common;
 
 namespace catena {
 namespace REST {
+
+/*
+ * RAII guard that disables all RestJsonFormatter rules (options + post passes)
+ * for its lifetime, restoring them on destruction. REST tests build their
+ * expected JSON with sparse protobuf serialization (protoToJsonString), so
+ * bypassing the formatter keeps those expectations valid and confines fixer
+ * coverage to RestJsonFormatter_test.
+ */
+class ScopedFormatterBypass {
+  public:
+    ScopedFormatterBypass() : saved_(RestJsonFormatter::getInstance().snapshot()) {
+        RestJsonFormatter::getInstance().restore({});
+    }
+    ~ScopedFormatterBypass() { RestJsonFormatter::getInstance().restore(std::move(saved_)); }
+    ScopedFormatterBypass(const ScopedFormatterBypass&) = delete;
+    ScopedFormatterBypass& operator=(const ScopedFormatterBypass&) = delete;
+
+  private:
+    RestJsonFormatter::RuleTable saved_;
+};
 
 /*
  * Surface level RESTTest class inherited by test fixtures to provide functions
@@ -467,6 +488,10 @@ class RESTTest {
     tcp::socket clientSocket_{io_context_};
     tcp::socket serverSocket_{io_context_};
     tcp::acceptor acceptor_{io_context_, tcp::endpoint(tcp::v4(), 0)};
+
+    // Disables RestJsonFormatter post-processing for the lifetime of the test
+    // so expectations built with sparse protoToJsonString remain valid.
+    ScopedFormatterBypass formatterBypass_;
 
   private:
     tcp::socket* writeSocket_ = nullptr;
