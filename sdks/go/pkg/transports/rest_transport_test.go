@@ -417,6 +417,43 @@ func TestRestTransport_GetParam_HandlerError(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
+// TestRestTransport_GetParam_EmitsZeroValues verifies the param response keeps
+// meaningful proto3 zero values that the default (omit-empty) marshaller drops:
+// a constraint's min_value:0 and a current value of 0.
+func TestRestTransport_GetParam_EmitsZeroValues(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		param := catena.NewParamInt32(0).
+			WithName(catena.NewPolyglotText("en", "Zero")).
+			WithConstraint(catena.NewConstraintInt32Range(0, 100, 1))
+		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/zero", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+	assertBodyContains(t, rec, `"oid":"zero"`)
+	assertBodyContains(t, rec, `"min_value":0`)
+	assertBodyContains(t, rec, `"int32_value":0`)
+}
+
+// TestRestTransport_GetParam_EmitsEmptyStringValue verifies that a current
+// value of "" survives the empty-strip pass (it is detached and reattached).
+func TestRestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		param := catena.NewParamString("").
+			WithName(catena.NewPolyglotText("en", "Empty"))
+		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/empty", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertBodyContains(t, rec, `"string_value":""`)
+}
+
 func TestRestTransport_SetValue_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 

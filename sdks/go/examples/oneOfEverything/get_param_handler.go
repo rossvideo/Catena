@@ -16,20 +16,10 @@ func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *E
 		}
 
 		switch fqoid {
-		case "counter":
-			param := catena.NewParamInt32(counter.GetValue()).
-				WithName(catena.NewPolyglotText("en", "Counter").
-					With("es", "Contador").
-					With("fr", "Compteur").
-					With("ja", "カウンター")).
-				WithMinimalSet(true)
-			return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		case "counter", "/counter":
+			return *makeCounterParam(counter), catena.StatusWithCode(catena.StatusCodeOk, "")
 		case "running", "/running":
-			param := catena.NewParamInt32(counter.RunningInt32()).
-				WithName(catena.NewPolyglotText("en", "Counter Running Status")).
-				WithReadOnly(true).
-				WithMinimalSet(true)
-			return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return *makeRunningParam(counter), catena.StatusWithCode(catena.StatusCodeOk, "")
 		default:
 			return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 		}

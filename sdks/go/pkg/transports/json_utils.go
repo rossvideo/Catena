@@ -93,6 +93,23 @@ func MarshalDeviceJSON(device *protos.Device) ([]byte, error) {
 	return cleanDeviceJSON(data)
 }
 
+// MarshalComponentParamJSON marshals a GetParam response (component param) to
+// JSON with the same SMPTE-compliant treatment as MarshalDeviceJSON. It uses
+// EmitUnpopulated so proto3 defaults that are meaningful for a param survive
+// (e.g. a constraint's min_value:0, or a current value of 0/0.0/""), then
+// strips the schema-forbidden extras. Without this the shared marshaller would
+// drop those zero-valued fields, since it is a bare Param outside a Device.
+func MarshalComponentParamJSON(component *protos.DeviceComponent_ComponentParam) ([]byte, error) {
+	if component == nil {
+		return nil, nil
+	}
+	data, err := deviceMarshalOpts.Marshal(component)
+	if err != nil {
+		return nil, err
+	}
+	return cleanComponentParamJSON(data)
+}
+
 // MarshalAssetJSON marshals a protos.ExternalObjectPayload to JSON.
 func MarshalAssetJSON(asset *protos.ExternalObjectPayload) ([]byte, error) {
 	if asset == nil {
@@ -265,6 +282,50 @@ func cleanDeviceJSON(data []byte) ([]byte, error) {
 	deleteZeroFields(v)
 	deleteResponseFromParams(v)
 	deleteEmptyValues(v)
+
+	return v.MarshalTo(nil), nil
+}
+
+// cleanComponentParamJSON strips the same schema-forbidden extras as
+// cleanDeviceJSON but for a component param's {"oid":...,"param":{...}} shape.
+// The param's current "value" is detached before the empty-strip pass and
+// reattached afterward, so a value of 0/0.0/"" is always preserved even though
+// deleteEmptyValues would otherwise collapse an empty string/object value.
+func cleanComponentParamJSON(data []byte) ([]byte, error) {
+	var p fastjson.Parser
+	v, err := p.ParseBytes(data)
+	if err != nil {
+		return nil, fmt.Errorf("cleanComponentParamJSON parse: %w", err)
+	}
+
+	deleteZeroFields(v)
+
+	// "response" is only valid on commands; strip it from the param subtree.
+	if paramVal := v.Get("param"); paramVal != nil {
+		deleteResponseFalse(paramVal)
+	}
+
+	// Preserve the current value across the empty-strip pass. An int32:0 stays
+	// on its own, but an empty string_value:"" would be collapsed to {} and
+	// then removed, dropping the value the caller asked for.
+	var savedValue *fastjson.Value
+	if paramVal := v.Get("param"); paramVal != nil {
+		if val := paramVal.Get("value"); val != nil && val.Type() == fastjson.TypeObject {
+			savedValue = val
+			paramVal.Del("value")
+		}
+	}
+
+	deleteEmptyValues(v)
+
+	if savedValue != nil {
+		paramVal := v.Get("param")
+		if paramVal == nil {
+			v.Set("param", fastjson.MustParse(`{}`))
+			paramVal = v.Get("param")
+		}
+		paramVal.Set("value", savedValue)
+	}
 
 	return v.MarshalTo(nil), nil
 }

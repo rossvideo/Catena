@@ -621,8 +621,19 @@ func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Reque
 		Oid:   strings.TrimPrefix(fqoid, "/"),
 		Param: param.Proto,
 	}
-	if err := WriteProtoJSON(w, component, http.StatusOK); err != nil {
-		logger.Error("failed to write param response", "error", err)
+	// Use the device-style marshaller so meaningful proto3 zero values survive
+	// (e.g. constraint min_value:0, or a current value of 0/0.0/"").
+	b, err := MarshalComponentParamJSON(component)
+	if err != nil {
+		logger.Error("failed to marshal param response", "error", err)
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "failed to marshal param response"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if _, writeErr := w.Write(b); writeErr != nil {
+		logger.Error("failed to write param response", "error", writeErr)
 	}
 }
 
