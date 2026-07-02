@@ -16,7 +16,7 @@ func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *E
 		}
 
 		switch fqoid {
-		case "counter", "/counter":
+		case "counter":
 			param := catena.NewParamInt32(counter.GetValue()).
 				WithName(catena.NewPolyglotText("en", "Counter").
 					With("es", "Contador").
