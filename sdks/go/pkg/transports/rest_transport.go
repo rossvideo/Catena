@@ -425,6 +425,8 @@ func (t *RestTransport) registerRoutes() {
 				t.handleAssetEndpoint(w, r, slot, parts[4:])
 			case "command":
 				t.handleCommandEndpoint(w, r, slot, parts[4:])
+			case "param":
+				t.handleParamEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
 			default:
@@ -587,6 +589,41 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	t.writeHTTPResult(w, result, asset)
+}
+
+// handleParamEndpoint handles GET /st2138-api/v1/{slot}/param/{fqoid} (GetParam).
+// It returns the full parameter (metadata + value) as a component_param object
+// of the form {"oid": ..., "param": {...}}.
+func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if r.Method != http.MethodGet {
+		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+		return
+	}
+
+	fqoid := strings.Join(pathParts, "/")
+	if fqoid == "" {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include fqoid"))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	param, result := t.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+	if param == nil || param.Proto == nil {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "param returned nil"))
+		return
+	}
+
+	component := &protos.DeviceComponent_ComponentParam{
+		Oid:   strings.TrimPrefix(fqoid, "/"),
+		Param: param.Proto,
+	}
+	if err := WriteProtoJSON(w, component, http.StatusOK); err != nil {
+		logger.Error("failed to write param response", "error", err)
+	}
 }
 
 // handleParamInfoEndpoint handles param info requests and streaming (SSE).

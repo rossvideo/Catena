@@ -62,6 +62,7 @@ const (
 	EndpointGetSlots EndpointType = iota
 	EndpointGetDevice
 	EndpointGetValue
+	EndpointGetParam
 	EndpointSetValue
 	EndpointGetAsset
 	EndpointExecuteCommand
@@ -121,6 +122,9 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 // Handler function types used by both REST and gRPC servers.
 type DeviceHandler func(slot uint16, ctx HandlerContext) (Device, StatusResult)
 type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult)
+
+// GetParamHandler returns the full parameter (metadata + value) for a slot/fqoid.
+type GetParamHandler func(slot uint16, fqoid string, ctx HandlerContext) (*Param, StatusResult)
 
 // SetValueEntry is a single fqoid/value pair within a SetValue request.
 type SetValueEntry struct {
@@ -186,6 +190,7 @@ type Server interface {
 
 	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
+	RegisterGetParamHandler(slot uint16, handler GetParamHandler)
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
@@ -207,6 +212,7 @@ type ServerRuntime interface {
 	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
 	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult)
 	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
+	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (*Param, StatusResult)
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
@@ -232,6 +238,7 @@ type server struct {
 	slots                  map[uint16]struct{}
 	getDeviceHandlers      map[uint16]DeviceHandler
 	getValueHandlers       map[uint16]GetValueHandler
+	getParamHandlers       map[uint16]GetParamHandler
 	setValueHandlers       map[uint16]SetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
@@ -268,6 +275,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		slots:                  make(map[uint16]struct{}),
 		getDeviceHandlers:      make(map[uint16]DeviceHandler),
 		getValueHandlers:       make(map[uint16]GetValueHandler),
+		getParamHandlers:       make(map[uint16]GetParamHandler),
 		setValueHandlers:       make(map[uint16]SetValueHandler),
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
@@ -531,6 +539,17 @@ func (s *server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
 	}
 }
 
+func (s *server) RegisterGetParamHandler(slot uint16, handler GetParamHandler) {
+	s.mu.Lock()
+	s.getParamHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
 func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	s.mu.Lock()
 	s.setValueHandlers[slot] = handler
@@ -643,6 +662,31 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 	// TODO: lookup default handler for slot
 	logger.Warning("GetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
 	return ReplyError[Value](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (*Param, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return nil, res
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointGetParam, handlerContext) {
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.getParamHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, fqoid, handlerContext)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("GetParamHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
+	return nil, StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
 // InvokeSetValueHandler applies one or more parameter values for a slot. The
