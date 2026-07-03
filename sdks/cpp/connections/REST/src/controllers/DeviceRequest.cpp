@@ -89,17 +89,21 @@ void DeviceRequest::proceed() {
                             // split the menu's oid into group and menu
                             std::string menuOid = component.menu().oid();
                             size_t pos = menuOid.find('/');
+                            // GCOVR_EXCL_START - this should never happen, but if it does, we just skip the menu
                             if (pos == std::string::npos) {
-                                // TODO decide the appropriate error handling here
+                                LOG(WARNING) << "Menu oid " << menuOid << " does not contain a group";
                                 continue;
                             }
+                            // GCOVR_EXCL_STOP
                             std::string group = menuOid.substr(0, pos);
                             std::string menu = menuOid.substr(pos + 1);
                             // make sure the group exists in the device, should be there from the device chunk
-                            if (!unaryDevice.menu_groups().contains(group)) {
-                                LOG(ERROR) << "Menu group " << group << " not found in device";
+                            // GCOVR_EXCL_START - this should never happen, but if it does, we just skip the menu
+                            if (!unaryDevice.menu_groups().contains(group)) { 
+                                LOG(WARNING) << "Menu group " << group << " not found in device";
                                 continue;
                             }
+                            // GCOVR_EXCL_STOP
                             unaryDevice.mutable_menu_groups()->at(group).mutable_menus()->insert({menu, component.menu().menu()});
                         } else if (component.has_command()) {
                             unaryDevice.mutable_commands()->insert({component.command().oid(), component.command().command()});

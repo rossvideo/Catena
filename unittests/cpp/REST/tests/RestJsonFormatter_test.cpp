@@ -110,6 +110,12 @@ TEST(JsonFixers, StripEmptyValues_KeepsArrayElementsButCleansThem) {
     EXPECT_EQ(v.serialize(), R"({"arr":[{},{"y":"keep"}]})");
 }
 
+TEST(JsonFixers, StripEmptyValues_NonObjectOrArrayIsNoOp) {
+    picojson::value v = parse(R"("string")");
+    EXPECT_FALSE(stripEmptyValues(v));
+    EXPECT_EQ(v.serialize(), R"("string")");
+}
+
 TEST(JsonFixers, StripZeroFields_RemovesNamedZerosOnly) {
     picojson::value v = parse(
         R"({"precision":0,"max_length":0,"total_length":5,"value":0,"nested":{"precision":0,"keep":1}})");
