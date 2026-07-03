@@ -41,6 +41,7 @@
 using namespace catena::common;
 
 void MenuGroup::toProto(::st2138::MenuGroup& menuGroup, bool shallow = false) const {
+    menuGroup.set_order(order_);
     for (const auto& [lang, name] : name_.displayStrings()) {
         (*menuGroup.mutable_name()->mutable_display_strings())[lang] = name;
     }

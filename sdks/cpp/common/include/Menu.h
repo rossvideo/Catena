@@ -104,13 +104,14 @@ class Menu : public IMenu {
      * @param comand_oids The menu's command members
      * @param client_hints map of client hints
      * @param oid the oid of the menu
+     * @param order The display order of the menu.
      * @param menuGroup the menu group to add the menu to
      */
     Menu(const catena::common::PolyglotText::ListInitializer name, bool hidden, bool disabled,
          const OidInitializer param_oids,
          const OidInitializer command_oids,
          const PairInitializer& client_hints, 
-         std::string oid, IMenuGroup& menuGroup);
+         std::string oid, int32_t order, IMenuGroup& menuGroup);
 
 
     /**
@@ -144,6 +145,10 @@ class Menu : public IMenu {
      * @brief A collection of client hints for use with this menu.
      */
     std::unordered_map<std::string, std::string> client_hints_;
+    /**
+     * @brief The display order of the menu.
+     */
+    int32_t order_ = 0;
 };
 
 

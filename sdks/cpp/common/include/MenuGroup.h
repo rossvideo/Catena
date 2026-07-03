@@ -82,10 +82,11 @@ class MenuGroup : public IMenuGroup {
     /**
      * @brief Construct a Menu Group from a list of Menus.
      * @param oid The oid of the Menu Group.
+     * @param order The display order of the Menu Group.
      * @param name The name of the Menu Group.
      * @param dev The device to add the menu group to.
      */
-    MenuGroup(std::string oid, const PolyglotText::ListInitializer name, IDevice& dev) : name_{name} {
+    MenuGroup(std::string oid, int32_t order, const PolyglotText::ListInitializer name, IDevice& dev) : order_{order}, name_{name} {
         dev.addItem(oid, this);
     }
 
@@ -127,6 +128,10 @@ class MenuGroup : public IMenuGroup {
      * @brief A map of the menu group's menus.
      */
     MenuMap menus_;
+    /**
+     * @brief The display order of the menu group.
+     */
+    int32_t order_ = 0;
 };
 
 

@@ -82,8 +82,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
     void initPayload(uint32_t slot, const std::string& oid, const std::string& value, bool respond = true) {
         slot_ = slot;
         fqoid_ = oid;
-        auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
-        ASSERT_TRUE(status.ok()) << "Failed to convert Value to JSON";
+        protoToJsonString(inVal_, jsonBody_);
         respond_ = respond;
     }
 
@@ -121,8 +120,7 @@ class RESTExecuteCommandTests : public RESTEndpointTest {
         if (respond_) {
             for (const auto& expVal : expVals_) {
                 jsonBodies.push_back("");
-                auto status = google::protobuf::util::MessageToJsonString(expVal, &jsonBodies.back());
-                ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+                protoToJsonString(expVal, jsonBodies.back());
             }
         }
         // Response format based on stream or unary.
