@@ -16,9 +16,9 @@ func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *E
 		}
 
 		switch fqoid {
-		case "counter", "/counter":
+		case "counter":
 			return *makeCounterParam(counter), catena.StatusWithCode(catena.StatusCodeOk, "")
-		case "running", "/running":
+		case "running":
 			return *makeRunningParam(counter), catena.StatusWithCode(catena.StatusCodeOk, "")
 		default:
 			return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
