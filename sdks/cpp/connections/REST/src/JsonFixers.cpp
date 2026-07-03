@@ -39,21 +39,21 @@ namespace REST {
 namespace {
 
 /*
- * True if v holds a JSON number equal to zero. picojson's is<double>() is true
+ * True if val holds a JSON number equal to zero. picojson's is<double>() is true
  * for both number- and int64-stored values, and get<double>() reads either,
  * so this works regardless of how the number was stored.
  */
-bool isZeroNumber(picojson::value& v) {
-    return v.is<double>() && v.get<double>() == 0.0;
+bool isZeroNumber(picojson::value& val) {
+    return val.is<double>() && val.get<double>() == 0.0;
 }
 
 /*
  * Recursively deletes "response": false from an object tree. Mirrors the Go
  * reference deleteResponseFalse: only object-valued members are recursed into.
  */
-void deleteResponseFalse(picojson::value& v) {
-    if (!v.is<picojson::object>()) { return; }
-    auto& obj = v.get<picojson::object>();
+void deleteResponseFalse(picojson::value& val) {
+    if (!val.is<picojson::object>()) { return; }
+    auto& obj = val.get<picojson::object>();
     bool needsDelete = false;
     for (auto& kv : obj) {
         if (kv.first == "response" && kv.second.is<bool>() && !kv.second.get<bool>()) {
@@ -78,13 +78,13 @@ bool shouldDeleteValue(picojson::value& val) {
 
 }  // namespace
 
-void stripZeroFields(picojson::value& v, const std::set<std::string>& fields) {
-    if (v.is<picojson::array>()) {
-        for (auto& e : v.get<picojson::array>()) { stripZeroFields(e, fields); }
+void stripZeroFields(picojson::value& val, const std::set<std::string>& fields) {
+    if (val.is<picojson::array>()) {
+        for (auto& e : val.get<picojson::array>()) { stripZeroFields(e, fields); }
         return;
     }
-    if (!v.is<picojson::object>()) { return; }
-    auto& obj = v.get<picojson::object>();
+    if (!val.is<picojson::object>()) { return; }
+    auto& obj = val.get<picojson::object>();
     for (auto it = obj.begin(); it != obj.end();) {
         picojson::value& val = it->second;
         if (val.is<picojson::object>() || val.is<picojson::array>()) {
@@ -98,17 +98,17 @@ void stripZeroFields(picojson::value& v, const std::set<std::string>& fields) {
     }
 }
 
-void stripResponseFalseUnderParams(picojson::value& v) {
-    if (!v.is<picojson::object>()) { return; }
-    auto& obj = v.get<picojson::object>();
+void stripResponseFalseUnderParams(picojson::value& val) {
+    if (!val.is<picojson::object>()) { return; }
+    auto& obj = val.get<picojson::object>();
     auto it = obj.find("params");
     if (it == obj.end() || !it->second.is<picojson::object>()) { return; }
     deleteResponseFalse(it->second);
 }
 
-bool stripEmptyValues(picojson::value& v) {
-    if (v.is<picojson::object>()) {
-        auto& obj = v.get<picojson::object>();
+bool stripEmptyValues(picojson::value& val) {
+    if (val.is<picojson::object>()) {
+        auto& obj = val.get<picojson::object>();
         for (auto it = obj.begin(); it != obj.end();) {
             if (shouldDeleteValue(it->second)) {
                 it = obj.erase(it);
@@ -118,8 +118,8 @@ bool stripEmptyValues(picojson::value& v) {
         }
         return obj.empty();
     }
-    if (v.is<picojson::array>()) {
-        auto& arr = v.get<picojson::array>();
+    if (val.is<picojson::array>()) {
+        auto& arr = val.get<picojson::array>();
         for (auto& e : arr) { stripEmptyValues(e); }
         return arr.empty();
     }
@@ -132,6 +132,7 @@ void injectIfAbsent(picojson::value& root, const std::string& key, const picojso
     if (obj.find(key) == obj.end()) { obj[key] = val; }
 }
 
+// post process Device messages
 void fixDevice(const google::protobuf::Message& /*msg*/, std::string& json) {
     picojson::value root;
     const std::string err = picojson::parse(root, json);
@@ -142,6 +143,7 @@ void fixDevice(const google::protobuf::Message& /*msg*/, std::string& json) {
     json = root.serialize();
 }
 
+// post process PushUpdates messages
 void fixPushUpdates(const google::protobuf::Message& msg, std::string& json) {
     const auto* pu = dynamic_cast<const st2138::PushUpdates*>(&msg);
     if (pu == nullptr) { return; }  // GCOVR_EXCL_LINE - only registered for PushUpdates

@@ -188,7 +188,9 @@ TEST(JsonFixers, FixPushUpdates_InjectsSlotZeroWhenAbsent) {
 
 TEST(JsonFixers, FixPushUpdates_KeepsExistingSlot) {
     st2138::PushUpdates pu;
-    pu.set_slot(7);
+    // use a different number in proto to prove it ignores the proto
+    // and preserves the JSON value instead.
+    pu.set_slot(4);
     std::string json = R"({"slot":7,"value":{"oid":"x"}})";
     fixPushUpdates(pu, json);
     EXPECT_EQ(json, R"({"slot":7,"value":{"oid":"x"}})");
@@ -196,7 +198,7 @@ TEST(JsonFixers, FixPushUpdates_KeepsExistingSlot) {
 
 TEST(JsonFixers, FixPushUpdates_IgnoresNonPushUpdatesMessage) {
     st2138::Value notPush;
-    notPush.set_string_value("hi");
+    notPush.set_string_value("ignore me");
     std::string json = R"({"string_value":"hi"})";
     fixPushUpdates(notPush, json);
     EXPECT_EQ(json, R"({"string_value":"hi"})");

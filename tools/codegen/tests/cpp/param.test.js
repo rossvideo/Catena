@@ -426,20 +426,22 @@ describe('Param class', () => {
     expect(args).toMatch(/,\s*2,\s*false,\s*nullptr$/);
   });
 
-  test('descriptor precision is 0 for non-float types even when precision is provided', () => {
-    const descriptor = {
-      slot: 1,
-      detail_level: 'FULL',
-      access_scopes: ['test:op'],
-      default_scope: 'test:op',
-      params: {
-        count: { type: 'INT32', precision: 9 }
-      }
-    };
-    const { params } = createMockDeviceWithParams(descriptor, 'Test');
-    const args = params.count.descriptor.getArgs('');
-    expect(args).toMatch(/,\s*0,\s*false,\s*nullptr$/);
-  });
+  for (const type of ['INT32', 'INT32_ARRAY', 'STRING', 'STRING_ARRAY',, 'STRUCT', 'STRUCT_ARRAY', 'STRUCT_VARIANT', 'STRUCT_VARIANT_ARRAY']) {
+    test(`descriptor precision is 0 for non-float types even when precision is provided (${type})`, () => {
+      const descriptor = {
+        slot: 1,
+        detail_level: 'FULL',
+        access_scopes: ['test:op'],
+        default_scope: 'test:op',
+        params: {
+          non_float: { type: type, precision: 9 },
+        }
+      };
+      const { params } = createMockDeviceWithParams(descriptor, 'Test');
+      const args = params.non_float.descriptor.getArgs('');
+      expect(args).toMatch(/,\s*0,\s*false,\s*nullptr$/);
+    });
+  }
 
   test('getFieldInfoTypes returns FieldInfo tuple types', () => {
     const types = params.product.getFieldInfoTypes();
