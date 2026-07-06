@@ -13,8 +13,6 @@ SECURITY_REPORT="$REPORT_DIR/SECURITY_REPORT.md"
 CPP_JSON_REPORT="$REPORT_DIR/cpp-dependencies-scan.json"
 SYSTEM_JSON_REPORT="$REPORT_DIR/system-packages-scan.json"
 HTML_REPORT="$REPORT_DIR/security-report.html"
-JAVA_DIR="$SCRIPT_DIR/../sdks/java"
-JAVA_JSON_REPORT="$REPORT_DIR/java-security-scan.json"
 
 # === Ensure Trivy is installed ===
 if [ ! -f "$TRIVY_BIN" ]; then
@@ -34,11 +32,6 @@ echo "📍 Directory: $(pwd)"
 echo "🔍 Running filesystem vulnerability scan..."
 "$TRIVY_BIN" fs . --format table --skip-files unittests/cpp/common/CommonTestHelpers.h --ignorefile $SCRIPT_DIR/.trivyignore
 
-echo ""
-echo "🔍 Scanning Java dependencies in sdks/java..."
-if [ -d "$JAVA_DIR" ]; then
-    "$TRIVY_BIN" fs "$JAVA_DIR" --scanners vuln --format json --output "$JAVA_JSON_REPORT"
-fi
 echo ""
 echo "🔍 Scanning C++ build dependencies..."
 if [ -d "build/cpp" ]; then
@@ -60,14 +53,14 @@ echo ""
 echo "📝 Generating security report..."
 
 # Get vulnerability counts from JSON
-if [ -f "$CPP_JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ] || [ -f "$SYSTEM_JSON_REPORT" ]; then
+if [ -f "$CPP_JSON_REPORT" ] || [ -f "$SYSTEM_JSON_REPORT" ]; then
     VULN_COUNTS=$(python3 -c "
 import json
 import sys
 import os
 try:
     all_findings = []
-    for json_file in [ '$CPP_JSON_REPORT', '$JAVA_JSON_REPORT', '$SYSTEM_JSON_REPORT']:
+    for json_file in [ '$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT']:
         if os.path.exists(json_file):
             with open(json_file, 'r') as f:
                 data = json.load(f)
@@ -136,7 +129,7 @@ The security scan identified **$TOTAL_VULNS total vulnerabilities** in the proje
 EOF
 
 # Add detailed vulnerability information if JSON report exists
-if { [ -f "$CPP_JSON_REPORT" ] || [ -f "$JAVA_JSON_REPORT" ] || [ -f "$SYSTEM_JSON_REPORT" ]; } && [ $TOTAL_VULNS -gt 0 ]; then
+if { [ -f "$CPP_JSON_REPORT" ] || [ -f "$SYSTEM_JSON_REPORT" ]; } && [ $TOTAL_VULNS -gt 0 ]; then
     # Add vulnerability summary table
     echo "### 🚨 Vulnerability Summary Table" >> "$SECURITY_REPORT"
     echo "" >> "$SECURITY_REPORT"
@@ -147,13 +140,11 @@ import os
 
 try:
     cpp_findings = []
-    java_findings = []
     system_findings = []
     
     # Process all JSON reports
     json_files = [
         ('$CPP_JSON_REPORT', cpp_findings),
-        ('$JAVA_JSON_REPORT', java_findings), 
         ('$SYSTEM_JSON_REPORT', system_findings)
     ]
     
@@ -213,7 +204,7 @@ try:
     
     # Sort findings by severity within each category
     severity_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
-    for findings_list in [cpp_findings, java_findings, system_findings]:
+    for findings_list in [cpp_findings, system_findings]:
         findings_list.sort(key=lambda x: severity_order.get(x['severity'], 4))
     
     # Print table header
