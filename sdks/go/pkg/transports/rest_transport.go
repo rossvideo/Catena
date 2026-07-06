@@ -605,10 +605,6 @@ func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Reque
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include fqoid"))
 		return
 	}
-	if strings.HasPrefix(fqoid, "/") {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "fqoid must not start with '/'"))
-		return
-	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
 	param, result := t.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)

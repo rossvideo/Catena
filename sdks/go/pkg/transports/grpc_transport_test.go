@@ -672,23 +672,6 @@ func TestGrpcTransport_GetParam_HandlerError(t *testing.T) {
 	assertGRPCCode(t, err, codes.NotFound, "handler error")
 }
 
-func TestGrpcTransport_GetParam_LeadingSlashRejected(t *testing.T) {
-	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
-	defer cleanup()
-
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
-		t.Error("handler must not be called for fqoid with leading slash")
-		return catena.Param{}, catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	client, cleanup := setupGRPCClient(t, ctx, lis)
-	defer cleanup()
-
-	_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "/counter"})
-	assertGRPCCode(t, err, codes.InvalidArgument, "leading slash")
-}
-
 // =============================================================================
 // Test: SetValue
 // =============================================================================

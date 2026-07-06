@@ -46,7 +46,6 @@ import (
 	"fmt"
 	"maps"
 	"net"
-	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
@@ -440,11 +439,6 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 
 	fqoid := req.Oid
 	logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
-
-	if strings.HasPrefix(fqoid, "/") {
-		logger.Error("GetParam invalid fqoid with leading slash", "slot", slot, "fqoid", fqoid)
-		return nil, status.Error(codes.InvalidArgument, "fqoid must not start with '/'")
-	}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	param, result := s.transport.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
