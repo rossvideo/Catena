@@ -128,6 +128,54 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 	if _, ok := cd.ToProtoDevice().GetParams()["nothing"]; ok {
 		t.Error("expected nil param to be ignored")
 	}
+
+	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithParam("nothing", &Param{})
+	if _, ok := cd.ToProtoDevice().GetParams()["nothing"]; ok {
+		t.Error("expected param with nil Proto to be ignored")
+	}
+}
+
+func TestDevice_WithCommand_Nil(t *testing.T) {
+	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithCommand("nothing", nil)
+	if _, ok := cd.ToProtoDevice().GetCommands()["nothing"]; ok {
+		t.Error("expected nil command to be ignored")
+	}
+
+	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithCommand("nothing", &Param{})
+	if _, ok := cd.ToProtoDevice().GetCommands()["nothing"]; ok {
+		t.Error("expected command with nil Proto to be ignored")
+	}
+}
+
+func TestDevice_WithConstraint_Nil(t *testing.T) {
+	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithConstraint("nothing", nil)
+	if _, ok := cd.ToProtoDevice().GetConstraints()["nothing"]; ok {
+		t.Error("expected nil constraint to be ignored")
+	}
+
+	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithConstraint("nothing", &Constraint{})
+	if _, ok := cd.ToProtoDevice().GetConstraints()["nothing"]; ok {
+		t.Error("expected constraint with nil Proto to be ignored")
+	}
+}
+
+func TestDevice_WithMenuGroup_Nil(t *testing.T) {
+	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithMenuGroup("nothing", nil)
+	if _, ok := cd.ToProtoDevice().GetMenuGroups()["nothing"]; ok {
+		t.Error("expected nil menu group to be ignored")
+	}
+
+	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithMenuGroup("nothing", &MenuGroup{})
+	if _, ok := cd.ToProtoDevice().GetMenuGroups()["nothing"]; ok {
+		t.Error("expected menu group with nil Proto to be ignored")
+	}
 }
 
 func TestDevice_WithConstraints(t *testing.T) {
@@ -358,6 +406,24 @@ func TestDevice_WithFloatRangeConstraint(t *testing.T) {
 	}
 	if floatRange.GetMaxValue() != 12.0 {
 		t.Errorf("expected max_value 12.0, got %v", floatRange.GetMaxValue())
+	}
+}
+
+func TestDevice_WithSharedConstraint(t *testing.T) {
+	constraint := NewConstraintStringChoice(true, "SDI", "HDMI", "IP")
+
+	device := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+		WithConstraint("input_source", constraint)
+
+	stringChoice := device.ToProtoDevice().GetConstraints()["input_source"].GetStringChoice()
+	if stringChoice == nil {
+		t.Fatal("expected string_choice constraint")
+	}
+	if !stringChoice.GetStrict() {
+		t.Fatal("expected strict string choice")
+	}
+	if got := len(stringChoice.GetChoices()); got != 3 {
+		t.Fatalf("expected 3 choices, got %d", got)
 	}
 }
 

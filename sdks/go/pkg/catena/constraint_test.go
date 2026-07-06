@@ -256,21 +256,3 @@ func TestAlarmSeverityConstants(t *testing.T) {
 		}
 	}
 }
-
-func TestDevice_WithSharedConstraint(t *testing.T) {
-	constraint := NewConstraintStringChoice(true, "SDI", "HDMI", "IP")
-
-	device := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
-		WithConstraint("input_source", constraint)
-
-	stringChoice := device.ToProtoDevice().GetConstraints()["input_source"].GetStringChoice()
-	if stringChoice == nil {
-		t.Fatal("expected string_choice constraint")
-	}
-	if !stringChoice.GetStrict() {
-		t.Fatal("expected strict string choice")
-	}
-	if got := len(stringChoice.GetChoices()); got != 3 {
-		t.Fatalf("expected 3 choices, got %d", got)
-	}
-}
