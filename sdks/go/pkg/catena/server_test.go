@@ -45,14 +45,65 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"google.golang.org/protobuf/proto"
 )
+
+// make sure all endpoint types are covered by the String() method,
+// and that none of them return "Unknown" which is the default for unrecognized values.
+func TestEndpointType_String(t *testing.T) {
+	for e := range endpointTypeMax {
+		name := e.String()
+		if name == "Unknown" {
+			t.Errorf("found endpoint type not covered by String(): %d", e)
+		}
+	}
+}
+
+// assertAllEndpointsCovered fails if any EndpointType is neither exercised by
+// the test (covered) nor deliberately declared out of scope (excluded). This
+// forces a new endpoint to be consciously handled: either add it to the table
+// or exclude it with a reason at the call site. The helper stays generic - it
+// has no knowledge of which endpoints are special.
+func assertAllEndpointsCovered(t *testing.T, covered []EndpointType, excluded ...EndpointType) {
+	t.Helper()
+	for e := range endpointTypeMax {
+		if slices.Contains(covered, e) || slices.Contains(excluded, e) {
+			continue
+		}
+		t.Errorf("endpoint %v (%d) is neither covered nor explicitly excluded by this test", e, int(e))
+	}
+	// Guard against stale exclusions: an endpoint that is both covered and
+	// excluded, or excluded but no longer a real endpoint, signals the call
+	// site drifted and should be cleaned up.
+	for _, e := range excluded {
+		if slices.Contains(covered, e) {
+			t.Errorf("endpoint %v (%d) is both covered and excluded; drop the exclusion", e, int(e))
+		}
+		if e >= endpointTypeMax {
+			t.Errorf("excluded endpoint %d is not a valid EndpointType", int(e))
+		}
+	}
+}
+
+func makeTestJwtToken(t *testing.T, scopes []string) string {
+	t.Helper()
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+		"scope": strings.Join(scopes, " "),
+	})
+	signedToken, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	if err != nil {
+		t.Fatalf("Failed to sign JWT token: %v", err)
+	}
+	return signedToken
+}
 
 const validTestJWT = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InJlYWQgd3JpdGUgYWxsIHN0MjEzODpvcDp3In0."
 const validTestJWTWithoutExecuteCommandScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InJlYWQgd3JpdGUgYWxsIn0."
@@ -605,6 +656,402 @@ func TestServer_Shutdown_Idempotent(t *testing.T) {
 	srv.Shutdown(context.Background())
 
 	// If we reach this point without panicking or erroring, the test passes
+}
+
+func TestServer_RealRegisterHandler(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		notifyCalled := 0
+		srv := newTestServer(t, true)
+		srv.connectionQueue = &stubConnectionQueue{
+			tb: t,
+			notifyFn: func(update *protos.PushUpdates, scope string) {
+				notifyCalled++
+				if !proto.Equal(update, &protos.PushUpdates{
+					Kind: &protos.PushUpdates_SlotsAdded{
+						SlotsAdded: &protos.SlotList{
+							Slots: []uint32{22},
+						},
+					},
+				}) {
+					t.Errorf("expected slots_added update for slot 22, got %v", update)
+				}
+				if scope != "" {
+					// scope should be empty for slots_added notification
+					// because slots_added is not a scope-based notification
+					t.Errorf("expected empty scope for slots_added notification, got %q", scope)
+				}
+			}}
+		storeCalled := 0
+		srv.realRegisterHandler(22, func() {
+			storeCalled++
+			if _, exists := srv.slots[22]; exists {
+				t.Error("expected store to run before slot was registered in server slots")
+			}
+		})
+		if notifyCalled != 1 {
+			t.Errorf("expected notify function to be called once during registration, got %d", notifyCalled)
+		}
+		if storeCalled != 1 {
+			t.Errorf("expected store function to be called once during registration, got %d", storeCalled)
+		}
+		if _, exists := srv.slots[22]; !exists {
+			t.Error("expected slot 22 to be registered in server slots")
+		}
+	})
+
+	t.Run("DuplicateSlot", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.connectionQueue = &stubConnectionQueue{
+			tb: t,
+			notifyFn: func(update *protos.PushUpdates, scope string) {
+				t.Error("expected no notify function to be called for duplicate slot registration")
+			},
+		}
+		srv.slots[22] = struct{}{} // pre-register slot 22 to simulate duplicate
+		storeCalled := 0
+		srv.realRegisterHandler(22, func() {
+			storeCalled++
+		})
+		// make sure store is still called
+		if storeCalled != 1 {
+			t.Errorf("expected store function to be called once during registration, got %d", storeCalled)
+		}
+	})
+}
+
+func TestServer_RegisterEndpoint(t *testing.T) {
+	// Each Register* method delegates to s.registerHandlerFn and stores its
+	// handler in a specific map. register calls the method under test with a
+	// stub handler (never invoked); has reports whether that handler landed in
+	// the correct map for the slot.
+	tests := []struct {
+		name     string
+		register func(srv *server, slot uint16)
+		has      func(srv *server, slot uint16) bool
+	}{
+		{
+			name: "GetDeviceHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterGetDeviceHandler(slot, func(uint16, HandlerContext) (Device, StatusResult) {
+					return Reply(Device{})
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.getDeviceHandlers[slot] != nil },
+		},
+		{
+			name: "GetValueHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterGetValueHandler(slot, func(uint16, string, HandlerContext) (Value, StatusResult) {
+					return Reply(Value{})
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.getValueHandlers[slot] != nil },
+		},
+		{
+			name: "SetValueHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterSetValueHandler(slot, func(uint16, []SetValueEntry, HandlerContext) StatusResult {
+					return StatusWithCode(StatusCodeOk, "")
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.setValueHandlers[slot] != nil },
+		},
+		{
+			name: "GetAssetHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterGetAssetHandler(slot, func(uint16, string, HandlerContext) (Asset, StatusResult) {
+					return Reply(Asset{})
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.getAssetHandlers[slot] != nil },
+		},
+		{
+			name: "ExecuteCommandHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterExecuteCommandHandler(slot, func(uint16, string, any, HandlerContext) (CommandResult, StatusResult) {
+					return CommandNoResponse()
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.executeCommandHandlers[slot] != nil },
+		},
+		{
+			name: "ParamInfoHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterParamInfoHandler(slot, func(uint16, string, bool, HandlerContext) ([]ParamInfo, StatusResult) {
+					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.paramInfoHandlers[slot] != nil },
+		},
+		{
+			name: "HeartbeatHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterHeartbeatHandler(slot, func(uint16) {})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.heartbeatHandlers[slot] != nil },
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := newTestServer(t, true)
+			var gotSlot uint16
+			called := 0
+			srv.registerHandlerFn = func(slot uint16, store func()) {
+				called++
+				gotSlot = slot
+				// call the provided store to simulate storing the handler
+				store()
+			}
+
+			const slot = 42
+			tt.register(srv, slot)
+
+			if called != 1 {
+				t.Fatalf("expected registerHandlerFn to be called once, but it was called %d times", called)
+			}
+			if gotSlot != slot {
+				t.Errorf("expected slot %d, got %d", slot, gotSlot)
+			}
+			if !tt.has(srv, slot) {
+				t.Errorf("expected handler to be registered for slot %d in the correct map", slot)
+			}
+		})
+	}
+}
+
+func TestServer_RealInvokeGate(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		transportContext := validTestTransportContext(nil)
+
+		// just make a basic call with valid everything
+		ctx, res := srv.realInvokeGate(transportContext, EndpointGetDevice, false)
+		if res.IsError() {
+			t.Errorf("expected no error from realInvokeGate, got %v", res)
+		}
+		// on success the gate must hand back a populated HandlerContext
+		if ctx.Token == nil {
+			t.Error("expected populated HandlerContext on success, got empty token")
+		}
+	})
+
+	t.Run("SuccessWrite", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		// validTestJWT carries st2138:op:w, so it satisfies write access
+		transportContext := validTestTransportContext(nil)
+
+		ctx, res := srv.realInvokeGate(transportContext, EndpointSetValue, true)
+		if res.IsError() {
+			t.Errorf("expected no error from realInvokeGate with write scope, got %v", res)
+		}
+		if ctx.Token == nil {
+			t.Error("expected populated HandlerContext on success, got empty token")
+		}
+	})
+
+	t.Run("InvalidTransportContext", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		transportContext := validTestTransportContext(nil)
+
+		// simulate an invalid transport context
+		transportContext.AccessToken = "invalid"
+
+		_, res := srv.realInvokeGate(transportContext, EndpointGetDevice, false)
+		if res.IsOk() {
+			t.Errorf("expected error from realInvokeGate with invalid transport context, got %v", res)
+		}
+	})
+
+	t.Run("NoReadScope", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		transportContext := validTestTransportContext(nil)
+
+		transportContext.AccessToken = makeTestJwtToken(t, []string{}) // no scopes
+
+		_, res := srv.realInvokeGate(transportContext, EndpointGetDevice, false)
+		if res.IsOk() {
+			t.Errorf("expected error from realInvokeGate with no read scope, got %v", res)
+		}
+	})
+
+	t.Run("NoWriteScope", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		transportContext := validTestTransportContext(nil)
+
+		// read scope only (st2138:op without :w), so write access must be denied
+		transportContext.AccessToken = makeTestJwtToken(t, []string{ScopeOp})
+
+		_, res := srv.realInvokeGate(transportContext, EndpointSetValue, true)
+		if res.IsOk() {
+			t.Errorf("expected error from realInvokeGate with no write scope, got %v", res)
+		}
+	})
+
+	t.Run("DeniedFromAccessAllowed", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		transportContext := validTestTransportContext(nil)
+
+		handlerCalled := 0
+		srv.RegisterAccessHandler(func(endpoint EndpointType, ctx HandlerContext) bool {
+			if endpoint != EndpointGetDevice {
+				t.Errorf("expected endpoint %v, got %v", EndpointGetDevice, endpoint)
+			}
+			if ctx.Token == nil {
+				t.Errorf("expected parsed token from access token")
+			}
+			handlerCalled++
+			return false // deny access
+		})
+
+		_, res := srv.realInvokeGate(transportContext, EndpointGetDevice, false)
+		if res.IsOk() {
+			t.Errorf("expected error from realInvokeGate with access denied, got %v", res)
+		}
+		if handlerCalled != 1 {
+			t.Errorf("expected access handler to be called once, got %d", handlerCalled)
+		}
+	})
+}
+
+func TestServer_InvokeHandler(t *testing.T) {
+	// just an empty token ref, so we can compare by reference later
+	testToken := &jwt.Token{}
+	handlerContext := HandlerContext{
+		Token: testToken,
+	}
+	dummyGate := func(transportContext TransportContext, endpoint EndpointType, write bool) (HandlerContext, StatusResult) {
+		return handlerContext, StatusResult{Code: StatusCodeOk}
+	}
+
+	// basic run through of the invokeHandler helper function
+	t.Run("FindsHandler", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.invokeGateFn = dummyGate
+		transportContext := validTestTransportContext(nil)
+
+		handlerCalled := 0
+		_, res := invokeHandler(srv, transportContext, EndpointGetDevice, false,
+			map[uint16]func(){
+				11: func() {
+					// since we can't == funcs, make a func we can test
+					handlerCalled++
+				},
+			}, 11, "", func(call func(), ctx HandlerContext) (struct{}, StatusResult) {
+				// call the call func to test if its the right one
+				call()
+				if ctx.Token != testToken {
+					t.Errorf("expected handler context to be passed through, got %v", ctx.Token)
+				}
+				return struct{}{}, StatusResult{Code: StatusCodeOk}
+			},
+		)
+		if handlerCalled != 1 {
+			t.Errorf("expected handler to be called once, got %d", handlerCalled)
+		}
+		if res.IsError() {
+			t.Errorf("expected no error from invokeHandler, got %v", res)
+		}
+	})
+
+	t.Run("GateError", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.invokeGateFn = func(transportContext TransportContext, endpoint EndpointType, write bool) (HandlerContext, StatusResult) {
+			return HandlerContext{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "TEST_ERROR"}
+		}
+		transportContext := validTestTransportContext(nil)
+		_, res := invokeHandler(srv, transportContext, EndpointGetDevice, false, map[uint16]func(){},
+			11, "", func(call func(), ctx HandlerContext) (struct{}, StatusResult) {
+				t.Error("expected gate error to short-circuit handler invocation, but handler was called")
+				return struct{}{}, StatusResult{Code: StatusCodeOk}
+			})
+		if res.IsOk() {
+			t.Error("expected error from invokeHandler due to gate error, got OK")
+		}
+		if res.Error != "TEST_ERROR" {
+			t.Errorf("expected error message 'TEST_ERROR', got %q", res.Error)
+		}
+	})
+
+	t.Run("HandlerNotFound", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.invokeGateFn = dummyGate
+		transportContext := validTestTransportContext(nil)
+		_, res := invokeHandler(srv, transportContext, EndpointGetDevice, false, map[uint16]func(){},
+			11, "", func(call func(), ctx HandlerContext) (struct{}, StatusResult) {
+				t.Error("expected handler not found to short-circuit handler invocation, but handler was called")
+				return struct{}{}, StatusResult{Code: StatusCodeOk}
+			})
+		if res.IsOk() {
+			t.Error("expected error from invokeHandler due to handler not found, got OK")
+		}
+		if res.Code != StatusCodeNotFound {
+			t.Errorf("expected error code %v for handler not found, got %v", StatusCodeNotFound, res.Code)
+		}
+	})
+}
+
+func TestServer_InvokeEndpointHandler(t *testing.T) {
+	// success for each endpoint
+
+	tests := []struct {
+		endpoint    EndpointType
+		writeAccess bool
+		invoke      func(srv *server, ctx TransportContext)
+	}{
+		{
+			endpoint:    EndpointGetDevice,
+			writeAccess: false,
+		},
+		{
+			endpoint:    EndpointGetValue,
+			writeAccess: false,
+		},
+		{
+			endpoint:    EndpointSetValue,
+			writeAccess: true,
+		},
+		{
+			endpoint:    EndpointGetAsset,
+			writeAccess: false,
+		},
+		{
+			endpoint:    EndpointExecuteCommand,
+			writeAccess: true,
+		},
+		{
+			endpoint:    EndpointParamInfo,
+			writeAccess: false,
+		},
+	}
+
+	endpoints := []EndpointType{}
+	for _, tt := range tests {
+		// track endpoint coverage for the test below
+		endpoints = append(endpoints, tt.endpoint)
+
+		t.Run(string(tt.endpoint), func(t *testing.T) {
+			srv := newTestServer(t, true)
+			transportContext := validTestTransportContext(nil)
+
+			handlerCalled := 0
+			srv.invokeGateFn = func(transportContext TransportContext, endpoint EndpointType, write bool) (HandlerContext, StatusResult) {
+				if endpoint != tt.endpoint {
+					t.Errorf("expected endpoint %v, got %v", tt.endpoint, endpoint)
+				}
+				if write != tt.writeAccess {
+					t.Errorf("expected write access %v, got %v", tt.writeAccess, write)
+				}
+				handlerCalled++
+				return HandlerContext{}, StatusResult{Code: StatusCodeOk}
+			}
+		})
+	}
+
+	// EndpointConnect is intentionally excluded: it is not an invoke-style
+	// endpoint and has no InvokeConnectHandler; it dispatches through
+	// RegisterTransportConnection instead.
+	assertAllEndpointsCovered(t, endpoints, EndpointGetSlots, EndpointConnect)
 }
 
 func TestServer_RegisterGetDeviceHandler(t *testing.T) {
