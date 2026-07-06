@@ -21,14 +21,6 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	}
 }
 
-// productString safely extracts a string field from a product map.
-func productString(product map[string]any, key string) string {
-	if value, ok := product[key].(string); ok {
-		return value
-	}
-	return ""
-}
-
 // buildDeviceDefinition returns the descriptor for one slot. It is a function
 // (not a static YAML file) so every param's value field reflects live state at
 // GetDevice time. device_handler.go calls this and returns the result directly.
@@ -48,12 +40,9 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
 		state.mu.RLock()
 		product := state.slotZeroProduct
-		name := productString(product, "name")
-		vendor := productString(product, "vendor")
-		version := productString(product, "version")
 		state.mu.RUnlock()
 
-		device := catena.NewDevice(0, name, vendor, version, "SN-SLOT0-0001").
+		device := catena.NewDevice(0, product.Name, product.Vendor, product.Version, product.SerialNumber).
 			WithDetailLevel(catena.DetailLevelFull).
 			WithMultiSetEnabled(true).
 			WithSubscriptions(true).
@@ -169,10 +158,10 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		structText, _ := structExample["text"].(string)
 
 		device := catena.NewDevice(2,
-			productString(product, "name"),
-			productString(product, "vendor"),
-			productString(product, "version"),
-			productString(product, "serial_number")).
+			product.Name,
+			product.Vendor,
+			product.Version,
+			product.SerialNumber).
 			WithDetailLevel(catena.DetailLevelFull).
 			WithMultiSetEnabled(true).
 			WithSubscriptions(false).

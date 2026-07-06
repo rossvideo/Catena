@@ -53,6 +53,12 @@ func slotZeroParamInfos(fqoid string, recursive bool) ([]catena.ParamInfo, caten
 		return []catena.ParamInfo{catena.NewParamInfo("product/vendor", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "product/version":
 		return []catena.ParamInfo{catena.NewParamInfo("product/version", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	case "product/serial_number":
+		return []catena.ParamInfo{catena.NewParamInfo("product/serial_number", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	case "product/catena_sdk_version":
+		return []catena.ParamInfo{catena.NewParamInfo("product/catena_sdk_version", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	case "product/catena_sdk":
+		return []catena.ParamInfo{catena.NewParamInfo("product/catena_sdk", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "counter":
 		return []catena.ParamInfo{newCounterParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "running":
@@ -202,6 +208,9 @@ func slotZeroProductParamInfos(recursive bool) []catena.ParamInfo {
 			catena.NewParamInfo("product/name", nil, catena.ParamTypeString, "", 0),
 			catena.NewParamInfo("product/vendor", nil, catena.ParamTypeString, "", 0),
 			catena.NewParamInfo("product/version", nil, catena.ParamTypeString, "", 0),
+			catena.NewParamInfo("product/serial_number", nil, catena.ParamTypeString, "", 0),
+			catena.NewParamInfo("product/catena_sdk_version", nil, catena.ParamTypeString, "", 0),
+			catena.NewParamInfo("product/catena_sdk", nil, catena.ParamTypeString, "", 0),
 		)
 	}
 	return infos

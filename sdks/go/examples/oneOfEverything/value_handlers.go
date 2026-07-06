@@ -20,12 +20,14 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
-		switch fqoid {
-		case "product", "product/name", "product/vendor", "product/version":
+		if strings.HasPrefix(fqoid, "product") {
 			state.mu.RLock()
 			defer state.mu.RUnlock()
 			v, ok := state.slotZeroProductValue(fqoid)
 			return replyValue(fqoid, v, ok)
+		}
+
+		switch fqoid {
 		case "counter":
 			return replyValue(fqoid, counter.GetValue(), true)
 		case "running":

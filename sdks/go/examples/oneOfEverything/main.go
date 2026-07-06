@@ -64,6 +64,7 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -152,15 +153,19 @@ var slotList = []uint16{0, 1, 2} // every handler file iterates this to register
 // intentionally uses a different storage style so adopters can pick a pattern:
 //   - slot 0 fields + CounterState: explicit typed fields, manual switch handlers
 //   - slot 1 slotOneParams sync.Map: map-backed params, direct key lookup
-//   - slot 2 typed fields + product map: prefix-based dispatch in value_handlers
+//   - slot 2 typed fields + product: prefix-based dispatch in value_handlers
+//
+// Product identity is stored as a catena.Product so GetDevice (via NewDevice)
+// and GetValue (via catena.ProductValues) report identical product metadata,
+// including the SDK-managed catena_sdk / catena_sdk_version fields.
 //
 // Slot 2's sample_* fields demonstrate the remaining Catena param types (except DATA).
 type ExampleState struct {
 	mu                       sync.RWMutex
-	slotZeroProduct          map[string]any
+	slotZeroProduct          catena.Product
 	sampleIntArray           []int32
 	slotOneParams            *sync.Map
-	slotTwoProduct           map[string]any
+	slotTwoProduct           catena.Product
 	volume                   int32
 	muted                    int32
 	deviceName               string
@@ -178,20 +183,19 @@ func NewExampleState() *ExampleState {
 	// Defaults here are what GetValue returns on first request and what
 	// buildDeviceDefinition embeds into each param's initial "value" field.
 	state := &ExampleState{
-		slotZeroProduct: map[string]any{
-			"name":    "Counter Slot 0 Product",
-			"vendor":  "Ross Video",
-			"version": "1.0.0",
+		slotZeroProduct: catena.Product{
+			Name:         "Counter Slot 0 Product",
+			Vendor:       "Ross Video",
+			Version:      "1.0.0",
+			SerialNumber: "SN-SLOT0-0001",
 		},
 		sampleIntArray: []int32{1, 2, 3, 4},
 		slotOneParams:  &sync.Map{},
-		slotTwoProduct: map[string]any{
-			"name":               "Prefix Slot 2 Product",
-			"vendor":             "Ross Video",
-			"version":            "1.0.0",
-			"catena_sdk":         "github.com/rossvideo/catena/sdks/go",
-			"catena_sdk_version": "v0.1.0",
-			"serial_number":      "SN12345678",
+		slotTwoProduct: catena.Product{
+			Name:         "Prefix Slot 2 Product",
+			Vendor:       "Ross Video",
+			Version:      "1.0.0",
+			SerialNumber: "SN12345678",
 		},
 		volume:     75,
 		muted:      0,
@@ -230,53 +234,34 @@ func (s *ExampleState) sampleIntArrayValue() []int32 {
 	return s.sampleIntArray
 }
 
-func (s *ExampleState) slotZeroProductValue(fqoid string) (any, bool) {
-	// Slot 0 product subtree lookup; called from value_handlers case switch.
-	// Caller must hold s.mu.RLock for the duration of catena.ToValue on the result.
-	switch fqoid {
-	case "product":
-		return s.slotZeroProduct, true
-	case "product/name":
-		value, ok := s.slotZeroProduct["name"]
-		return value, ok
-	case "product/vendor":
-		value, ok := s.slotZeroProduct["vendor"]
-		return value, ok
-	case "product/version":
-		value, ok := s.slotZeroProduct["version"]
-		return value, ok
-	default:
+// productValue resolves a product/* FQOID against a catena.Product using
+// catena.ProductValues, so the values returned match exactly what NewDevice
+// advertised in the device descriptor (including the SDK-managed catena_sdk /
+// catena_sdk_version fields). Returns the whole product map for the bare
+// "product" oid.
+func productValue(product catena.Product, fqoid string) (any, bool) {
+	values := catena.ProductValues(product)
+	if fqoid == "product" {
+		return values, true
+	}
+	field, ok := strings.CutPrefix(fqoid, "product/")
+	if !ok {
 		return nil, false
 	}
+	value, found := values[field]
+	return value, found
+}
+
+func (s *ExampleState) slotZeroProductValue(fqoid string) (any, bool) {
+	// Slot 0 product subtree lookup; called from value_handlers.
+	// Caller must hold s.mu.RLock for the duration of catena.ToValue on the result.
+	return productValue(s.slotZeroProduct, fqoid)
 }
 
 func (s *ExampleState) slotTwoProductValue(fqoid string) (any, bool) {
 	// Slot 2 product subtree lookup; prefix-dispatched from value_handlers.
 	// Caller must hold s.mu.RLock for the duration of catena.ToValue on the result.
-	switch fqoid {
-	case "product":
-		return s.slotTwoProduct, true
-	case "product/name":
-		value, ok := s.slotTwoProduct["name"]
-		return value, ok
-	case "product/vendor":
-		value, ok := s.slotTwoProduct["vendor"]
-		return value, ok
-	case "product/version":
-		value, ok := s.slotTwoProduct["version"]
-		return value, ok
-	case "product/catena_sdk":
-		value, ok := s.slotTwoProduct["catena_sdk"]
-		return value, ok
-	case "product/catena_sdk_version":
-		value, ok := s.slotTwoProduct["catena_sdk_version"]
-		return value, ok
-	case "product/serial_number":
-		value, ok := s.slotTwoProduct["serial_number"]
-		return value, ok
-	default:
-		return nil, false
-	}
+	return productValue(s.slotTwoProduct, fqoid)
 }
 
 func (s *ExampleState) sampleFloatArrayValue() []float32 {

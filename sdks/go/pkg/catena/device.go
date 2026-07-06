@@ -81,16 +81,12 @@ type Device struct {
 func NewDevice(slot uint16, name, vendor, version, serialNumber string) *Device {
 	cd := &Device{device: &protos.Device{}}
 	cd.device.Slot = uint32(slot)
-	cd.WithParam("product",
-		NewParamStruct().
-			WithReadOnly(true).
-			WithAccessScope(ScopeMon).
-			WithParam("name", NewParamString(name)).
-			WithParam("vendor", NewParamString(vendor)).
-			WithParam("version", NewParamString(version)).
-			WithParam("serial_number", NewParamString(serialNumber)).
-			WithParam("catena_sdk_version", NewParamString(SDKVersion)).
-			WithParam("catena_sdk", NewParamString(CatenaSDKURL)))
+	cd.WithParam("product", ProductParam(Product{
+		Name:         name,
+		Vendor:       vendor,
+		Version:      version,
+		SerialNumber: serialNumber,
+	}))
 	return cd
 }
 
