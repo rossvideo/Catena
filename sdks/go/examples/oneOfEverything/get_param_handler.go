@@ -43,17 +43,18 @@ func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *E
 
 // lookupParam resolves a (possibly nested, slash-delimited) fqoid against a
 // device's top-level params, descending into sub-params for each path segment.
-// A leading slash is tolerated. It returns the matching proto param, or false
-// if any segment is missing.
+// The fqoid is not normalized: a leading, trailing, or doubled slash yields an
+// empty segment that matches no param, so malformed fqoids are rejected here
+// exactly as the transports and GetValue reject them. It returns the matching
+// proto param, or false if the fqoid is empty or any segment is missing.
 func lookupParam(device *protos.Device, fqoid string) (*protos.Param, bool) {
-	trimmed := strings.Trim(fqoid, "/")
-	if trimmed == "" {
+	if fqoid == "" {
 		return nil, false
 	}
 
 	params := device.GetParams()
 	var current *protos.Param
-	for _, segment := range strings.Split(trimmed, "/") {
+	for _, segment := range strings.Split(fqoid, "/") {
 		p, ok := params[segment]
 		if !ok {
 			return nil, false
