@@ -731,6 +731,34 @@ func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
 	}
 }
 
+func TestMarshalDeviceJSON_EmptyStringValuePreserved(t *testing.T) {
+	cd, err := catena.ToDevice(map[string]any{
+		"slot":         uint32(0),
+		"detail_level": catena.DetailLevelFull,
+		"params": map[string]any{
+			"label": map[string]any{
+				"type": catena.ParamTypeString,
+				"value": map[string]any{
+					"string_value": "",
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("ToDevice error: %v", err)
+	}
+
+	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	if err2 != nil {
+		t.Fatalf("MarshalDeviceJSON error: %v", err2)
+	}
+
+	body := string(jsonData)
+	if !strings.Contains(body, `"string_value":""`) {
+		t.Errorf("expected empty string_value to be preserved, got %s", body)
+	}
+}
+
 func TestMarshalDeviceJSON_Nil(t *testing.T) {
 	jsonData, err := MarshalDeviceJSON(nil)
 	if err != nil {
@@ -857,9 +885,14 @@ func TestCleanDeviceJSON(t *testing.T) {
 		},
 		{
 			name:     "strip multiple patterns",
-			input:    `{"a":null,"b":{},"c":[],"d":"","e":1}`,
-			contains: []string{`"e":1`},
-			excludes: []string{`"a"`, `"b"`, `"c"`, `"d"`},
+			input:    `{"a":null,"b":{},"c":[],"widget":"","string_value":"","e":1}`,
+			contains: []string{`"e":1`, `"string_value":""`},
+			excludes: []string{`"a"`, `"b"`, `"c"`, `"widget"`},
+		},
+		{
+			name:     "preserve non-targeted empty string",
+			input:    `{"string_value":"","type":"STRING"}`,
+			contains: []string{`"string_value":""`, `"type":"STRING"`},
 		},
 		{
 			name:     "nested null stripped",
@@ -869,9 +902,9 @@ func TestCleanDeviceJSON(t *testing.T) {
 		},
 		{
 			name:     "strip empty fields inside array element objects",
-			input:    `{"menu_groups":{"main":{"items":[{"name":"item1","description":"","metadata":null,"extras":{},"tags":[]}]}}}`,
+			input:    `{"menu_groups":{"main":{"items":[{"name":"item1","widget":"","metadata":null,"extras":{},"tags":[]}]}}}`,
 			contains: []string{`"items"`, `"name":"item1"`},
-			excludes: []string{`"description"`, `"metadata"`, `"extras"`, `"tags"`},
+			excludes: []string{`"widget"`, `"metadata"`, `"extras"`, `"tags"`},
 		},
 		{
 			name:     "strip empty fields in nested array of arrays of objects",

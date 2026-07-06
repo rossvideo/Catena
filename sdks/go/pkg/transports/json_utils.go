@@ -266,9 +266,15 @@ func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, cat
 
 // --- Device JSON cleanup via fastjson AST ---
 
-// zeroFields lists device fields that the SMPTE schema forbids when at their
+// zeroFields lists numeric fields that the SMPTE schema forbids when at their
 // proto3 default of 0 (meaning "unset/unlimited").
 var zeroFields = []string{"precision", "max_length", "total_length"}
+
+// emptyStringFields lists string metadata fields that should be omitted when at
+// their proto3 default of "". This is a targeted allow-list rather than a blanket
+// empty-string strip: a param's actual "string_value" of "" is a legitimate value
+// and must be preserved, so it is intentionally absent here.
+var emptyStringFields = []string{"widget", "access_scope", "template_oid", "default_scope"}
 
 // cleanDeviceJSON parses protojson output, strips unwanted fields, and
 // re-serializes. Uses fastjson for efficient in-place manipulation.
@@ -279,18 +285,18 @@ func cleanDeviceJSON(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("cleanDeviceJSON parse: %w", err)
 	}
 
-	deleteZeroFields(v)
+	deleteDefaultFields(v)
 	deleteResponseFromParams(v)
-	deleteEmptyValues(v)
+	deleteEmptyFields(v)
 
 	return v.MarshalTo(nil), nil
 }
 
 // cleanComponentParamJSON strips the same schema-forbidden extras as
 // cleanDeviceJSON but for a component param's {"oid":...,"param":{...}} shape.
-// The param's current "value" is detached before the empty-strip pass and
-// reattached afterward, so a value of 0/0.0/"" is always preserved even though
-// deleteEmptyValues would otherwise collapse an empty string/object value.
+// Because deleteEmptyFields no longer touches strings and deleteDefaultFields
+// only targets named metadata fields, a current value of 0/0.0/"" survives
+// without special handling.
 func cleanComponentParamJSON(data []byte) ([]byte, error) {
 	var p fastjson.Parser
 	v, err := p.ParseBytes(data)
@@ -298,41 +304,24 @@ func cleanComponentParamJSON(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("cleanComponentParamJSON parse: %w", err)
 	}
 
-	deleteZeroFields(v)
+	deleteDefaultFields(v)
 
 	// "response" is only valid on commands; strip it from the param subtree.
 	if paramVal := v.Get("param"); paramVal != nil {
 		deleteResponseFalse(paramVal)
 	}
 
-	// Preserve the current value across the empty-strip pass. An int32:0 stays
-	// on its own, but an empty string_value:"" would be collapsed to {} and
-	// then removed, dropping the value the caller asked for.
-	var savedValue *fastjson.Value
-	if paramVal := v.Get("param"); paramVal != nil {
-		if val := paramVal.Get("value"); val != nil && val.Type() == fastjson.TypeObject {
-			savedValue = val
-			paramVal.Del("value")
-		}
-	}
-
-	deleteEmptyValues(v)
-
-	if savedValue != nil {
-		paramVal := v.Get("param")
-		if paramVal == nil {
-			v.Set("param", fastjson.MustParse(`{}`))
-			paramVal = v.Get("param")
-		}
-		paramVal.Set("value", savedValue)
-	}
+	deleteEmptyFields(v)
 
 	return v.MarshalTo(nil), nil
 }
 
-// deleteZeroFields recursively walks the JSON tree and removes fields whose
-// names are in zeroFields and whose values are the number 0.
-func deleteZeroFields(v *fastjson.Value) {
+// deleteDefaultFields recursively walks the JSON tree and removes fields that
+// are at a schema-forbidden default: numeric fields named in zeroFields whose
+// value is 0, and string fields named in emptyStringFields whose value is "".
+// Both are targeted by field name so that meaningful zero values elsewhere
+// (e.g. a constraint's min_value:0 or a param's string_value:"") are preserved.
+func deleteDefaultFields(v *fastjson.Value) {
 	if v.Type() != fastjson.TypeObject {
 		return
 	}
@@ -352,11 +341,21 @@ func deleteZeroFields(v *fastjson.Value) {
 					break
 				}
 			}
+		case fastjson.TypeString:
+			if len(val.GetStringBytes()) == 0 {
+				k := string(key)
+				for _, sf := range emptyStringFields {
+					if k == sf {
+						toDelete = append(toDelete, k)
+						break
+					}
+				}
+			}
 		case fastjson.TypeObject:
-			deleteZeroFields(val)
+			deleteDefaultFields(val)
 		case fastjson.TypeArray:
 			for _, elem := range val.GetArray() {
-				deleteZeroFields(elem)
+				deleteDefaultFields(elem)
 			}
 		}
 	})
@@ -405,13 +404,16 @@ func deleteResponseFalse(v *fastjson.Value) {
 	}
 }
 
-// deleteEmptyValues recursively removes keys whose values are null, {}, [],
-// or "". Returns true if the value itself is considered empty after
-// deletions (object with no remaining keys, or empty array), enabling
-// cascading removal by the caller. Object elements within arrays are
-// cleaned in place; array elements are not removed even if they become
-// empty, to avoid shifting indices.
-func deleteEmptyValues(v *fastjson.Value) bool {
+// deleteEmptyFields recursively removes object fields whose values are null,
+// {}, or []. ("Fields" refers to JSON key/value pairs; it deliberately does not
+// touch a value that is an empty string - see emptyStringFields/deleteDefaultFields
+// for targeted empty-string removal, so that a param's string_value of "" is
+// preserved.) Returns true if the value itself is considered empty after
+// deletions (object with no remaining keys, or empty array), enabling cascading
+// removal by the caller. Object elements within arrays are cleaned in place;
+// array elements are not removed even if they become empty, to avoid shifting
+// indices.
+func deleteEmptyFields(v *fastjson.Value) bool {
 	switch v.Type() {
 	case fastjson.TypeObject:
 		obj, err := v.Object()
@@ -421,7 +423,7 @@ func deleteEmptyValues(v *fastjson.Value) bool {
 
 		var toDelete []string
 		obj.Visit(func(key []byte, val *fastjson.Value) {
-			if shouldDeleteValue(val) {
+			if shouldDeleteField(val) {
 				toDelete = append(toDelete, string(key))
 			}
 		})
@@ -438,7 +440,7 @@ func deleteEmptyValues(v *fastjson.Value) bool {
 
 	case fastjson.TypeArray:
 		for _, elem := range v.GetArray() {
-			deleteEmptyValues(elem)
+			deleteEmptyFields(elem)
 		}
 		return len(v.GetArray()) == 0
 
@@ -447,14 +449,12 @@ func deleteEmptyValues(v *fastjson.Value) bool {
 	}
 }
 
-func shouldDeleteValue(val *fastjson.Value) bool {
+func shouldDeleteField(val *fastjson.Value) bool {
 	switch val.Type() {
 	case fastjson.TypeNull:
 		return true
-	case fastjson.TypeString:
-		return len(val.GetStringBytes()) == 0
 	case fastjson.TypeObject, fastjson.TypeArray:
-		return deleteEmptyValues(val)
+		return deleteEmptyFields(val)
 	default:
 		return false
 	}
