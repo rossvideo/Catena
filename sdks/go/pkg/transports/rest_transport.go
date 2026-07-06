@@ -618,7 +618,7 @@ func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	component := &protos.DeviceComponent_ComponentParam{
-		Oid:   strings.TrimPrefix(fqoid, "/"),
+		Oid:   strings.Trim(fqoid, "/"),
 		Param: param.Proto,
 	}
 	// Use the device-style marshaller so meaningful proto3 zero values survive

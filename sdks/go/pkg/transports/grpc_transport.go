@@ -453,7 +453,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 	}
 
 	return &protos.DeviceComponent_ComponentParam{
-		Oid:   strings.TrimPrefix(fqoid, "/"),
+		Oid:   strings.Trim(fqoid, "/"),
 		Param: param.Proto,
 	}, nil
 }
