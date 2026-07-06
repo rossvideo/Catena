@@ -441,6 +441,11 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 	fqoid := req.Oid
 	logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
+	if strings.HasPrefix(fqoid, "/") {
+		logger.Error("GetParam invalid fqoid with leading slash", "slot", slot, "fqoid", fqoid)
+		return nil, status.Error(codes.InvalidArgument, "fqoid must not start with '/'")
+	}
+
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	param, result := s.transport.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
 	if result.IsError() {
@@ -453,7 +458,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 	}
 
 	return &protos.DeviceComponent_ComponentParam{
-		Oid:   strings.Trim(fqoid, "/"),
+		Oid:   fqoid,
 		Param: param.Proto,
 	}, nil
 }

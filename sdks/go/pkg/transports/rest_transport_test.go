@@ -406,6 +406,24 @@ func TestRestTransport_GetParam_MethodNotAllowed(t *testing.T) {
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
+// A path with an empty segment (e.g. /param//counter) yields pathParts that
+// join to an fqoid with a leading slash. Fqoids never start with '/', so this
+// is rejected rather than silently normalized. The handler is exercised
+// directly because http.ServeMux collapses "//" in the URL before routing.
+func TestRestTransport_GetParam_LeadingSlashRejected(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		t.Error("handler must not be called for fqoid with leading slash")
+		return catena.Param{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/param/x", nil)
+	rec := httptest.NewRecorder()
+	transport.handleParamEndpoint(rec, req, 0, []string{"", "counter"})
+	assertStatus(t, rec, http.StatusBadRequest)
+}
+
 func TestRestTransport_GetParam_HandlerError(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
