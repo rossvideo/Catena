@@ -214,7 +214,6 @@ try:
     # Print findings by source
     sources = [
         ('C++ Dependencies', cpp_findings), 
-        ('Java Dependencies', java_findings), 
         ('System Packages', system_findings)
     ]
     
@@ -252,7 +251,7 @@ import json
 import sys
 import os
 try:
-    json_files = ['$CPP_JSON_REPORT', '$JAVA_JSON_REPORT', '$SYSTEM_JSON_REPORT']
+    json_files = ['$CPP_JSON_REPORT', '$SYSTEM_JSON_REPORT']
     for json_file in json_files:
         if not os.path.exists(json_file):
             continue
@@ -324,7 +323,6 @@ fi)
 - **Files Scanned:** All project files and dependencies
 - **Report Locations:** 
   - C++ Dependencies: \`$CPP_JSON_REPORT\`
-  - Java Dependencies: \`$JAVA_JSON_REPORT\`  
   - System Packages: \`$SYSTEM_JSON_REPORT\`
 - **Last Updated:** $(date)
 
@@ -336,7 +334,6 @@ fi)
 
 # View detailed JSON reports
 cat $CPP_JSON_REPORT | python3 -m json.tool
-cat $JAVA_JSON_REPORT | python3 -m json.tool
 cat $SYSTEM_JSON_REPORT | python3 -m json.tool
 
 # Check for specific vulnerability
