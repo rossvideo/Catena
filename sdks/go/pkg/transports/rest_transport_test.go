@@ -1246,6 +1246,28 @@ func TestRestTransport_Start(t *testing.T) {
 	transport.Shutdown(ctx)
 }
 
+func TestRestTransport_Start_BindError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	// Occupy a port so the transport's synchronous bind fails with
+	// "address already in use".
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
+	}
+	defer listener.Close()
+	port := listener.Addr().(*net.TCPAddr).Port
+
+	transport.port = port
+	err = transport.Start(context.Background(), runtime)
+	if err == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		transport.Shutdown(ctx)
+		t.Fatal("expected Start to return a bind error, got nil")
+	}
+}
+
 func TestRestTransport_Shutdown_NotStarted(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	runtime.shutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
