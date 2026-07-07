@@ -26,7 +26,7 @@ func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *E
 				return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 			}
 
-			param, found := lookupParam(device.ToProtoDevice(), fqoid)
+			param, found := lookupParam(device.Proto, fqoid)
 			if !found {
 				return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 			}

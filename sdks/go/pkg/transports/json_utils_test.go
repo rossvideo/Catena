@@ -707,11 +707,11 @@ func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyStringValuePreserved(t *testing.T) {
-	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+	cd := catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull).
 		WithParam("label", catena.NewParamString(""))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -782,7 +782,7 @@ func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMenuMetadataStringsStripped(t *testing.T) {
-	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+	cd := catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull).
 		WithParam("brightness", catena.NewParamInt32(0)).
 		WithMenuGroup("config", catena.NewMenuGroup().
@@ -792,7 +792,7 @@ func TestMarshalDeviceJSON_EmptyMenuMetadataStringsStripped(t *testing.T) {
 				WithParamOids("/brightness").
 				WithClientHint("ui-url", "")))
 
-	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
