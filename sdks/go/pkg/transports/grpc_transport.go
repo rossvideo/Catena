@@ -228,6 +228,7 @@ func (t *GrpcTransport) retrieveMetadataFromContext(ctx context.Context) catena.
 	transportContext := catena.TransportContext{
 		AccessToken: accessToken,
 		Metadata:    metadataMap,
+		Ctx:         ctx,
 	}
 
 	return transportContext

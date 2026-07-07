@@ -165,6 +165,7 @@ func (t *RestTransport) retrieveMetadataFromRequest(r *http.Request) catena.Tran
 	transportContext := catena.TransportContext{
 		AccessToken: r.Header.Get("Authorization"),
 		Metadata:    maps.Clone(r.Header), // include all headers as metadata for now; could be filtered in the future if needed
+		Ctx:         r.Context(),
 	}
 	return transportContext
 }

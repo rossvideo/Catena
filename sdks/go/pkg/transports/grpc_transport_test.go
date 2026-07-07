@@ -218,6 +218,9 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 		if got := ctx.Metadata["x-test-tenant"]; len(got) != 1 || got[0] != tenant {
 			t.Errorf("expected tenant metadata %q, got %v", tenant, got)
 		}
+		if ctx.Ctx == nil {
+			t.Error("expected the request context to be propagated, got nil")
+		}
 	}
 
 	tests := []struct {

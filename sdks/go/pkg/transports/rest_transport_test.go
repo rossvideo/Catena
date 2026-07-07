@@ -105,6 +105,9 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		if got := ctx.Metadata["Authorization"]; len(got) != 1 || got[0] != headers["Authorization"] {
 			t.Errorf("expected Authorization metadata %q, got %v", headers["Authorization"], got)
 		}
+		if ctx.Ctx == nil {
+			t.Error("expected the request context to be propagated, got nil")
+		}
 	}
 
 	tests := []struct {
