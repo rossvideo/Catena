@@ -45,7 +45,6 @@ jobs:
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
           skip-dirs: .git,build,coverage,docs,unittests,smpte
-          skip-files: pom.xml
 
       - name: Run Trivy vulnerability scanner in repo mode for policy checks
         id: trivy_json
@@ -60,7 +59,6 @@ jobs:
           output: trivy-results.json
           severity: HIGH,CRITICAL
           skip-dirs: .git,build,coverage,docs,unittests,smpte
-          skip-files: pom.xml
           skip-setup-trivy: true
 
       - name: Comment Trivy findings on PR

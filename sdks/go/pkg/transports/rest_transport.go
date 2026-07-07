@@ -45,6 +45,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -82,6 +83,16 @@ func NewRestTransport(cfg config.RestOptions) *RestTransport {
 // Start starts the HTTP server on the specified port using this server's mux
 func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
 	addr := fmt.Sprintf(":%d", t.port)
+	// Bind synchronously so that startup errors (privileged port, address
+	// already in use, invalid address, etc.) are returned to the caller
+	// instead of only being logged asynchronously after Start has already
+	// reported success. This mirrors ConnectionProps.Start.
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		logger.Error("REST Transport failed to listen", "address", addr, "error", err)
+		return fmt.Errorf("REST transport failed to listen on %s: %w", addr, err)
+	}
+
 	t.server = &http.Server{
 		Addr:    addr,
 		Handler: t.mux,
@@ -89,10 +100,10 @@ func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime)
 	t.runtime = runtime
 
 	// http server does not use context
-	// listen and serve blocks so do it in a goroutine
+	// serve blocks so do it in a goroutine
 	go func() {
 		logger.Info("REST Transport listening", "address", addr)
-		err := t.server.ListenAndServe()
+		err := t.server.Serve(listener)
 		if err != nil && err != http.ErrServerClosed {
 			logger.Error("HTTP server error", "error", err)
 		}
