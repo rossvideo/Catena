@@ -47,15 +47,8 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			WithParam("name", catena.NewParamString("")).
 			WithParam("vendor", catena.NewParamString("")).
 			WithParam("version", catena.NewParamString("")).ToMap()
-		counterParam := catena.NewParamInt32(counter.GetValue()).
-			WithName(catena.NewPolyglotText("en", "Counter")).ToMap()
-		runningParam := catena.NewParamInt32(counter.RunningInt32()).
-			WithName(catena.NewPolyglotText("en", "Counter Running Status")).
-			WithReadOnly(true).
-			WithConstraint(catena.NewConstraintInt32Choice([]catena.Int32Choice{
-				{Value: 0, Name: catena.NewPolyglotText("en", "Not Counting")},
-				{Value: 1, Name: catena.NewPolyglotText("en", "Counting")},
-			})).ToMap()
+		counterParam := makeCounterParam(counter).ToMap()
+		runningParam := makeRunningParam(counter).ToMap()
 		startCommand := catena.NewParamEmpty().
 			WithName(catena.NewPolyglotText("en", "Start Counter")).ToMap()
 		stopCommand := catena.NewParamEmpty().

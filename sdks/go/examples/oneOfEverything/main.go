@@ -387,6 +387,7 @@ func main() {
 	registerAccessHandler(srv)                                           // EndpointAccess gate
 	registerDeviceHandlers(srv, counter, state)                          // GetDevice → buildDeviceDefinition
 	registerValueHandlers(srv, counter, state)                           // GetValue / SetValue
+	registerGetParamHandlers(srv, counter, state)                        // GetParam
 	registerCommandHandler(srv, counter, broadcastRunning, counterScope) // ExecuteCommand
 	registerAssetHandlers(srv, assets)                                   // ExternalObjectRequest
 	registerParamInfoHandlers(srv, counter, state)                       // ParamInfoRequest
