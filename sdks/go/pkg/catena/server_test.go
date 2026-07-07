@@ -773,14 +773,20 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 	// Each Register* method delegates to s.registerHandlerFn and stores its
 	// handler in a specific map. register calls the method under test with a
 	// stub handler (never invoked); has reports whether that handler landed in
-	// the correct map for the slot.
+	// the correct map for the slot. endpoint records which EndpointType the
+	// handler serves so assertAllEndpointsCovered can prove every endpoint has a
+	// registration path; notAnEndpoint opts a case out of that accounting for
+	// handlers (like heartbeat) that are registered per-slot but are not
+	// EndpointTypes.
 	tests := []struct {
-		name     string
-		register func(srv *server, slot uint16)
-		has      func(srv *server, slot uint16) bool
+		name          string
+		endpoint      EndpointType
+		notAnEndpoint bool
+		register      func(srv *server, slot uint16)
+		has           func(srv *server, slot uint16) bool
 	}{
 		{
-			name: "GetDeviceHandler",
+			endpoint: EndpointGetDevice,
 			register: func(srv *server, slot uint16) {
 				srv.RegisterGetDeviceHandler(slot, func(uint16, HandlerContext) (Device, StatusResult) {
 					return Reply(Device{})
@@ -789,7 +795,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.getDeviceHandlers[slot] != nil },
 		},
 		{
-			name: "GetValueHandler",
+			endpoint: EndpointGetValue,
 			register: func(srv *server, slot uint16) {
 				srv.RegisterGetValueHandler(slot, func(uint16, string, HandlerContext) (Value, StatusResult) {
 					return Reply(Value{})
@@ -798,7 +804,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.getValueHandlers[slot] != nil },
 		},
 		{
-			name: "SetValueHandler",
+			endpoint: EndpointSetValue,
 			register: func(srv *server, slot uint16) {
 				srv.RegisterSetValueHandler(slot, func(uint16, []SetValueEntry, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
@@ -807,7 +813,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.setValueHandlers[slot] != nil },
 		},
 		{
-			name: "GetParamHandler",
+			endpoint: EndpointGetParam,
 			register: func(srv *server, slot uint16) {
 				srv.RegisterGetParamHandler(slot, func(uint16, string, HandlerContext) (Param, StatusResult) {
 					return Reply(Param{})
@@ -816,7 +822,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.getParamHandlers[slot] != nil },
 		},
 		{
-			name: "GetAssetHandler",
+			endpoint: EndpointGetAsset,
 			register: func(srv *server, slot uint16) {
 				srv.RegisterGetAssetHandler(slot, func(uint16, string, HandlerContext) (Asset, StatusResult) {
 					return Reply(Asset{})
@@ -825,7 +831,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.getAssetHandlers[slot] != nil },
 		},
 		{
-			name: "ExecuteCommandHandler",
+			endpoint: EndpointExecuteCommand,
 			register: func(srv *server, slot uint16) {
 				srv.RegisterExecuteCommandHandler(slot, func(uint16, string, any, HandlerContext) (CommandResult, StatusResult) {
 					return CommandNoResponse()
@@ -834,7 +840,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.executeCommandHandlers[slot] != nil },
 		},
 		{
-			name: "ParamInfoHandler",
+			endpoint: EndpointParamInfo,
 			register: func(srv *server, slot uint16) {
 				srv.RegisterParamInfoHandler(slot, func(uint16, string, bool, HandlerContext) ([]ParamInfo, StatusResult) {
 					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
@@ -843,7 +849,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.paramInfoHandlers[slot] != nil },
 		},
 		{
-			name: "HeartbeatHandler",
+			name:          "HeartbeatHandler",
+			notAnEndpoint: true, // heartbeat is a server-driven timer, not an EndpointType
 			register: func(srv *server, slot uint16) {
 				srv.RegisterHeartbeatHandler(slot, func(uint16) {})
 			},
@@ -851,8 +858,26 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		},
 	}
 
+	// Every EndpointType must have a Register* path exercised above.
+	// EndpointGetSlots and EndpointConnect are server-driven endpoints with no
+	// per-slot Register* method, so they are explicitly out of scope here.
+	covered := make([]EndpointType, 0, len(tests))
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		if tt.notAnEndpoint {
+			continue
+		}
+		covered = append(covered, tt.endpoint)
+	}
+	assertAllEndpointsCovered(t, covered, EndpointGetSlots, EndpointConnect)
+
+	for _, tt := range tests {
+		var name string
+		if tt.notAnEndpoint {
+			name = tt.name
+		} else {
+			name = tt.endpoint.String()
+		}
+		t.Run(name, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			var gotSlot uint16
 			called := 0
