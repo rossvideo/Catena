@@ -807,6 +807,15 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.setValueHandlers[slot] != nil },
 		},
 		{
+			name: "GetParamHandler",
+			register: func(srv *server, slot uint16) {
+				srv.RegisterGetParamHandler(slot, func(uint16, string, HandlerContext) (Param, StatusResult) {
+					return Reply(Param{})
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.getParamHandlers[slot] != nil },
+		},
+		{
 			name: "GetAssetHandler",
 			register: func(srv *server, slot uint16) {
 				srv.RegisterGetAssetHandler(slot, func(uint16, string, HandlerContext) (Asset, StatusResult) {
@@ -1335,6 +1344,42 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 	})
 }
 
+func TestServer_InvokeGetParamHandler(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
+		mockInvokeGateFn(t, srv, EndpointGetParam, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+
+		expected := Param{}
+		handlerCalled := 0
+		srv.getParamHandlers[22] = func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+			handlerCalled++
+			if slot != 22 {
+				t.Errorf("expected slot 22, got %d", slot)
+			}
+			if fqoid != "test/param" {
+				t.Errorf("expected fqoid 'test/param', got %s", fqoid)
+			}
+			if ctx.Token != knownCtx.Token {
+				t.Error("expected the gate's handler context to be passed through to the handler")
+			}
+			return Reply(expected)
+		}
+
+		actual, status := srv.InvokeGetParamHandler(22, "test/param", validTestTransportContext(nil))
+
+		if handlerCalled != 1 {
+			t.Errorf("expected handler to be called once, got %d", handlerCalled)
+		}
+		if status.IsError() {
+			t.Errorf("expected OK status, got %v", status)
+		}
+		if !proto.Equal(actual.Proto, expected.Proto) {
+			t.Errorf("expected value %v, got %v", expected, actual)
+		}
+	})
+}
+
 func TestServer_InvokeGetAssetHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		srv := newTestServer(t, true)
@@ -1505,6 +1550,17 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, invalidContext)
+			},
+		},
+		{
+			endpoint: EndpointGetParam,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetParamHandler(0, func(uint16, string, HandlerContext) (Param, StatusResult) {
+					*handlerCalled = true
+					return Reply(Param{})
+				})
+				_, status := srv.InvokeGetParamHandler(0, "test/param", invalidContext)
+				return status
 			},
 		},
 		{
@@ -1757,6 +1813,18 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, TransportContext{})
+			},
+		},
+		{
+			endpoint:          EndpointGetParam,
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+					*handlerCalled = true
+					return Reply(Param{})
+				})
+				_, status := srv.InvokeGetParamHandler(0, "test/param", TransportContext{})
+				return status
 			},
 		},
 		{

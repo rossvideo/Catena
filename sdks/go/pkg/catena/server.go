@@ -63,6 +63,7 @@ const (
 	EndpointGetSlots EndpointType = iota
 	EndpointGetDevice
 	EndpointGetValue
+	EndpointGetParam
 	EndpointSetValue
 	EndpointGetAsset
 	EndpointExecuteCommand
@@ -88,6 +89,8 @@ func (e EndpointType) String() string {
 		return "GetValue"
 	case EndpointSetValue:
 		return "SetValue"
+	case EndpointGetParam:
+		return "GetParam"
 	case EndpointGetAsset:
 		return "GetAsset"
 	case EndpointExecuteCommand:
@@ -168,6 +171,9 @@ func (ctx HandlerContext) release() {
 type DeviceHandler func(slot uint16, ctx HandlerContext) (Device, StatusResult)
 type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult)
 
+// GetParamHandler returns the full parameter (metadata + value) for a slot/fqoid.
+type GetParamHandler func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult)
+
 // SetValueEntry is a single fqoid/value pair within a SetValue request.
 type SetValueEntry struct {
 	Fqoid string
@@ -232,6 +238,7 @@ type Server interface {
 
 	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
+	RegisterGetParamHandler(slot uint16, handler GetParamHandler)
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
@@ -253,6 +260,7 @@ type ServerRuntime interface {
 	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
 	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult)
 	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
+	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult)
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
@@ -278,6 +286,7 @@ type server struct {
 	slots                  map[uint16]struct{}
 	getDeviceHandlers      map[uint16]DeviceHandler
 	getValueHandlers       map[uint16]GetValueHandler
+	getParamHandlers       map[uint16]GetParamHandler
 	setValueHandlers       map[uint16]SetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
@@ -321,6 +330,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		slots:                  make(map[uint16]struct{}),
 		getDeviceHandlers:      make(map[uint16]DeviceHandler),
 		getValueHandlers:       make(map[uint16]GetValueHandler),
+		getParamHandlers:       make(map[uint16]GetParamHandler),
 		setValueHandlers:       make(map[uint16]SetValueHandler),
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
@@ -680,6 +690,10 @@ func (s *server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
 	s.registerHandlerFn(slot, func() { s.getValueHandlers[slot] = handler })
 }
 
+func (s *server) RegisterGetParamHandler(slot uint16, handler GetParamHandler) {
+	s.registerHandlerFn(slot, func() { s.getParamHandlers[slot] = handler })
+}
+
 func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	s.registerHandlerFn(slot, func() { s.setValueHandlers[slot] = handler })
 }
@@ -721,6 +735,14 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 	return invokeHandler(s, transportContext, EndpointGetValue, false, s.getValueHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler GetValueHandler, ctx HandlerContext) (Value, StatusResult) {
+			return handler(slot, fqoid, ctx)
+		})
+}
+
+func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult) {
+	return invokeHandler(s, transportContext, EndpointGetParam, false, s.getParamHandlers, slot,
+		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler GetParamHandler, ctx HandlerContext) (Param, StatusResult) {
 			return handler(slot, fqoid, ctx)
 		})
 }
