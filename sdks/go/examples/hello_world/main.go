@@ -74,7 +74,7 @@ func (s *helloWorldState) Set(value string) {
 }
 
 func buildDevice() *catena.Device {
-	return catena.NewDevice(slot, "Hello World", "Ross Video", "1.0.0", "SN-HELLO-0001").
+	return catena.NewDevice(slot).
 		WithDetailLevel(catena.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
@@ -93,6 +93,15 @@ func main() {
 		logger.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
 	}
+
+	// The SDK owns the mandatory product struct: register it once and the SDK
+	// injects it into GetDevice and answers product/* on GetValue / ParamInfo.
+	srv.RegisterProductStruct(slot, catena.ProductStruct{
+		Name:         "Hello World",
+		Vendor:       "Ross Video",
+		Version:      "1.0.0",
+		SerialNumber: "SN-HELLO-0001",
+	})
 
 	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
 		logger.Info("GetDevice", "slot", slot)

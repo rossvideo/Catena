@@ -130,7 +130,7 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 					assertContext(t, ctx)
-					device := *catena.NewDevice(slot, "Test Device", "Ross Video", "1.0", "SN-0001")
+					device := *catena.NewDevice(slot)
 					return catena.Reply(device)
 				}
 			},
@@ -288,7 +288,7 @@ func TestRestTransport_GetDevice_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	device := *catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+	device := *catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull)
 
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
@@ -1116,7 +1116,7 @@ func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
-	device := *catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001")
+	device := *catena.NewDevice(0)
 	rec := httptest.NewRecorder()
 	writeDeviceResult(rec, device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
@@ -1634,7 +1634,7 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 }
 
 func TestWriteDeviceResult_WriteError(t *testing.T) {
-	device := *catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001")
+	device := *catena.NewDevice(0)
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 

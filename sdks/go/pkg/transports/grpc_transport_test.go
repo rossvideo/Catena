@@ -274,7 +274,7 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 					assertContext(t, ctx)
-					device := *catena.NewDevice(slot, "Test Device", "Ross Video", "1.0", "SN-0001")
+					device := *catena.NewDevice(slot)
 					return catena.Reply(device)
 				}
 			},
@@ -402,7 +402,7 @@ func TestGrpcTransport_DeviceRequest_Success(t *testing.T) {
 	handlerCalled := false
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
-		device := *catena.NewDevice(slot, "Test Device", "Ross Video", "1.0", "SN-0001").
+		device := *catena.NewDevice(slot).
 			WithDetailLevel(catena.DetailLevelFull)
 		return catena.Reply(device)
 	}
@@ -2038,7 +2038,7 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
-		device := *catena.NewDevice(slot, "Test Device", "Ross Video", "1.0", "SN-0001").
+		device := *catena.NewDevice(slot).
 			WithDetailLevel(catena.DetailLevelFull)
 		return catena.Reply(device)
 	}

@@ -61,12 +61,12 @@ const (
 	DetailLevelUnset         DetailLevel = protos.Device_UNSET
 )
 
-// SDKVersion is the Catena Go SDK version reported in the device's mandatory
-// product struct (the "catena_sdk_version" field).
+// SDKVersion is the Catena Go SDK version reported in the SDK-managed product
+// struct (the "catena_sdk_version" field).
 const SDKVersion = "1.0.0"
 
-// CatenaSDKURL identifies the Catena SDK in the device's mandatory product
-// struct (the "catena_sdk" field).
+// CatenaSDKURL identifies the Catena SDK in the SDK-managed product struct (the
+// "catena_sdk" field).
 const CatenaSDKURL = "https://github.com/rossvideo/Catena"
 
 // Device wraps protos.Device and exposes a fluent builder API.
@@ -74,20 +74,15 @@ type Device struct {
 	device *protos.Device
 }
 
-// NewDevice creates a Device for the given slot and seeds the mandatory
-// "product" struct param with the supplied identity fields. The product param
-// is read-only and scoped to st2138:mon. Additional fields are populated with
-// the chainable With* methods.
-func NewDevice(slot uint16, name, vendor, version, serialNumber string) *Device {
-	cd := &Device{device: &protos.Device{}}
-	cd.device.Slot = uint32(slot)
-	cd.WithParam("product", ProductParam(Product{
-		Name:         name,
-		Vendor:       vendor,
-		Version:      version,
-		SerialNumber: serialNumber,
-	}))
-	return cd
+// NewDevice creates an empty Device for the given slot. Params, commands,
+// constraints, and menus are attached with the chainable With* methods.
+//
+// The mandatory "product" struct is managed by the SDK: register it once with
+// Server.RegisterProductStruct and the SDK injects it into the device on
+// GetDevice and serves it on GetValue / ParamInfo. NewDevice does not deal with
+// the product struct.
+func NewDevice(slot uint16) *Device {
+	return &Device{device: &protos.Device{Slot: uint32(slot)}}
 }
 
 // WithParam inserts param into the device's params map, keyed by oid. The

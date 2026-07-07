@@ -20,13 +20,6 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
-		if strings.HasPrefix(fqoid, "product") {
-			state.mu.RLock()
-			defer state.mu.RUnlock()
-			v, ok := state.slotZeroProductValue(fqoid)
-			return replyValue(fqoid, v, ok)
-		}
-
 		switch fqoid {
 		case "counter":
 			return replyValue(fqoid, counter.GetValue(), true)
@@ -65,9 +58,7 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 
 		var v any
 		var ok bool
-		if strings.HasPrefix(fqoid, "product") {
-			v, ok = state.slotTwoProductValue(fqoid)
-		} else if fqoid == "volume" {
+		if fqoid == "volume" {
 			v, ok = state.volume, true
 		} else if fqoid == "muted" {
 			v, ok = state.muted, true
@@ -116,9 +107,6 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			if entry.Value == nil {
 				logger.Error("SetValue nil value", "slot", slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value for "+entry.Fqoid)
-			}
-			if strings.HasPrefix(entry.Fqoid, "product") {
-				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "product params are read-only")
 			}
 
 			switch entry.Fqoid {
@@ -279,9 +267,6 @@ func slotTwoValidateSet(fqoid string, value any, state *ExampleState) catena.Sta
 	if value == nil {
 		logger.Error("SetValue nil value", "slot", uint16(2), "fqoid", fqoid)
 		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value for "+fqoid)
-	}
-	if strings.HasPrefix(fqoid, "product") {
-		return catena.StatusWithCode(catena.StatusCodePermissionDenied, "product params are read-only")
 	}
 
 	switch {

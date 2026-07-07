@@ -59,7 +59,7 @@ func TestReply_Value(t *testing.T) {
 }
 
 func TestReply_Device(t *testing.T) {
-	device := *NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	device := *NewDevice(0).
 		WithDetailLevel(DetailLevelFull)
 	result, status := Reply(device)
 

@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Product struct helpers for the Catena SDK.
+ * @brief SDK-managed product struct for the Catena SDK.
  * @file product.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
@@ -37,10 +37,21 @@
 
 package catena
 
-// Product carries the mandatory device product identity fields. The
+import (
+	"strings"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+)
+
+// productOid is the OID of the mandatory product struct param.
+const productOid = "product"
+
+// ProductStruct carries the mandatory device product identity fields. The
 // catena_sdk and catena_sdk_version fields are managed by the SDK
-// (SDKVersion / CatenaSDKURL), so callers do not supply them.
-type Product struct {
+// (SDKVersion / CatenaSDKURL), so callers do not supply them. Register one per
+// slot with Server.RegisterProductStruct and the SDK serves it on GetDevice,
+// GetValue, and ParamInfo, and rejects writes to it on SetValue.
+type ProductStruct struct {
 	Name         string
 	Vendor       string
 	Version      string
@@ -58,10 +69,9 @@ const (
 )
 
 // ProductParam builds the mandatory read-only "product" STRUCT param from p,
-// including the SDK-managed catena_sdk and catena_sdk_version sub-params.
-// NewDevice uses this to seed every device; call it directly only if you need
-// the param on its own.
-func ProductParam(p Product) *Param {
+// including the SDK-managed catena_sdk and catena_sdk_version sub-params. The
+// SDK uses this to seed the product param into the device on GetDevice.
+func ProductParam(p ProductStruct) *Param {
 	return NewParamStruct().
 		WithReadOnly(true).
 		WithAccessScope(ScopeMon).
@@ -75,9 +85,8 @@ func ProductParam(p Product) *Param {
 
 // ProductValues returns the product field values keyed by their sub-OID,
 // matching the sub-params built by ProductParam (including the SDK-managed
-// catena_sdk and catena_sdk_version fields). Use it in GetValue handlers so the
-// values reported for product/* stay in sync with the device descriptor.
-func ProductValues(p Product) map[string]any {
+// catena_sdk and catena_sdk_version fields).
+func ProductValues(p ProductStruct) map[string]any {
 	return map[string]any{
 		ProductOidName:             p.Name,
 		ProductOidVendor:           p.Vendor,
@@ -86,4 +95,45 @@ func ProductValues(p Product) map[string]any {
 		ProductOidCatenaSDKVersion: SDKVersion,
 		ProductOidCatenaSDK:        CatenaSDKURL,
 	}
+}
+
+// isProductOid reports whether fqoid targets the product struct or one of its
+// sub-fields (e.g. "product" or "product/name").
+func isProductOid(fqoid string) bool {
+	fqoid = strings.TrimPrefix(fqoid, "/")
+	return fqoid == productOid || strings.HasPrefix(fqoid, productOid+"/")
+}
+
+// productValueForOid resolves a product FQOID (the whole struct for "product",
+// or a single field for "product/<field>") to a Value from p.
+func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
+	fqoid = strings.TrimPrefix(fqoid, "/")
+	values := ProductValues(p)
+
+	var native any
+	if fqoid == productOid {
+		native = values
+	} else {
+		field := strings.TrimPrefix(fqoid, productOid+"/")
+		value, ok := values[field]
+		if !ok {
+			return ReplyError[Value](StatusCodeNotFound, "parameter not found: "+fqoid)
+		}
+		native = value
+	}
+
+	value, res := ToValue(native)
+	if res.Code != StatusCodeOk {
+		return ReplyError[Value](StatusCodeInternal, "failed to convert product value")
+	}
+	return Reply(value)
+}
+
+// productParamInfosForOid builds ParamInfo responses for a product FQOID by
+// reusing the standard params-subtree walker over the SDK-built product param.
+func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult) {
+	device := &Device{device: &protos.Device{
+		Params: map[string]*protos.Param{productOid: ProductParam(p).Proto},
+	}}
+	return ParamInfosForRequest(oidPrefix, device, recursive)
 }

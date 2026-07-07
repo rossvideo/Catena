@@ -34,9 +34,17 @@ import (
 func main() {
     srv := catena.NewServer(100) // max concurrent push connections
 
+    // The SDK manages the mandatory product struct; register it once per slot.
+    srv.RegisterProductStruct(0, catena.ProductStruct{
+        Name:         "My Device",
+        Vendor:       "Ross Video",
+        Version:      "1.0.0",
+        SerialNumber: "SN-0001",
+    })
+
     // Register handlers once. All registered transports share this runtime.
     srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
-        device := catena.NewDevice(slot, "My Device", "Ross Video", "1.0.0", "SN-0001")
+        device := catena.NewDevice(slot)
         return catena.Reply(*device)
     })
 
@@ -83,6 +91,8 @@ Both transports invoke the same registered handlers from `catena.ServerRuntime`:
 - `RegisterExecuteCommandHandler`
 - `RegisterParamInfoHandler`
 - `RegisterHeartbeatHandler`
+
+The mandatory product struct is managed by the SDK, not by a handler: call `RegisterProductStruct(slot, catena.ProductStruct{...})` and the SDK injects it into GetDevice and serves product/* on GetValue and ParamInfo (rejecting writes).
 
 Use `BroadcastUpdate(slot, fqoid, value)` to fan out push updates to all active REST and gRPC stream clients.
 

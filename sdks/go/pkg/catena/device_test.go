@@ -47,7 +47,7 @@ import (
 )
 
 func TestNewDevice_Basic(t *testing.T) {
-	cd := NewDevice(3, "Camera", "Ross Video", "1.0", "SN-12345")
+	cd := NewDevice(3)
 	proto := cd.ToProtoDevice()
 	if proto == nil {
 		t.Fatal("expected non-nil proto device")
@@ -56,42 +56,15 @@ func TestNewDevice_Basic(t *testing.T) {
 		t.Errorf("expected slot 3, got %v", proto.GetSlot())
 	}
 
-	product, ok := proto.GetParams()["product"]
-	if !ok {
-		t.Fatal("expected mandatory 'product' param")
-	}
-	if product.GetType() != protos.ParamType_STRUCT {
-		t.Errorf("expected product to be a STRUCT param, got %v", product.GetType())
-	}
-	if !product.GetReadOnly() {
-		t.Error("expected product param to be read-only")
-	}
-	if product.GetAccessScope() != ScopeMon {
-		t.Errorf("expected product access scope %q, got %q", ScopeMon, product.GetAccessScope())
-	}
-
-	subParams := product.GetParams()
-	expected := map[string]string{
-		"name":               "Camera",
-		"vendor":             "Ross Video",
-		"version":            "1.0",
-		"serial_number":      "SN-12345",
-		"catena_sdk_version": SDKVersion,
-		"catena_sdk":         CatenaSDKURL,
-	}
-	for oid, want := range expected {
-		child, ok := subParams[oid]
-		if !ok {
-			t.Fatalf("expected product sub-param %q", oid)
-		}
-		if got := child.GetValue().GetStringValue(); got != want {
-			t.Errorf("product/%s = %q, want %q", oid, got, want)
-		}
+	// The product struct is managed by the SDK (RegisterProductStruct), not by
+	// NewDevice, so a freshly built device has no product param.
+	if _, ok := proto.GetParams()["product"]; ok {
+		t.Error("did not expect NewDevice to create a 'product' param")
 	}
 }
 
 func TestNewDevice_WithParams(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithParam("brightness", NewParamInt32(50).
 			WithName(NewPolyglotText("en", "Brightness")).
 			WithWidget("SLIDER"))
@@ -110,7 +83,7 @@ func TestNewDevice_WithParams(t *testing.T) {
 
 func TestDevice_WithParam_DeepCopies(t *testing.T) {
 	param := NewParamInt32(1)
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithParam("counter", param)
 
 	// Mutating the original param after WithParam must not affect the device.
@@ -123,13 +96,13 @@ func TestDevice_WithParam_DeepCopies(t *testing.T) {
 }
 
 func TestDevice_WithParam_Nil(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithParam("nothing", nil)
 	if _, ok := cd.ToProtoDevice().GetParams()["nothing"]; ok {
 		t.Error("expected nil param to be ignored")
 	}
 
-	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd = NewDevice(0).
 		WithParam("nothing", &Param{})
 	if _, ok := cd.ToProtoDevice().GetParams()["nothing"]; ok {
 		t.Error("expected param with nil Proto to be ignored")
@@ -137,13 +110,13 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 }
 
 func TestDevice_WithCommand_Nil(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithCommand("nothing", nil)
 	if _, ok := cd.ToProtoDevice().GetCommands()["nothing"]; ok {
 		t.Error("expected nil command to be ignored")
 	}
 
-	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd = NewDevice(0).
 		WithCommand("nothing", &Param{})
 	if _, ok := cd.ToProtoDevice().GetCommands()["nothing"]; ok {
 		t.Error("expected command with nil Proto to be ignored")
@@ -151,13 +124,13 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 }
 
 func TestDevice_WithConstraint_Nil(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithConstraint("nothing", nil)
 	if _, ok := cd.ToProtoDevice().GetConstraints()["nothing"]; ok {
 		t.Error("expected nil constraint to be ignored")
 	}
 
-	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd = NewDevice(0).
 		WithConstraint("nothing", &Constraint{})
 	if _, ok := cd.ToProtoDevice().GetConstraints()["nothing"]; ok {
 		t.Error("expected constraint with nil Proto to be ignored")
@@ -165,13 +138,13 @@ func TestDevice_WithConstraint_Nil(t *testing.T) {
 }
 
 func TestDevice_WithMenuGroup_Nil(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithMenuGroup("nothing", nil)
 	if _, ok := cd.ToProtoDevice().GetMenuGroups()["nothing"]; ok {
 		t.Error("expected nil menu group to be ignored")
 	}
 
-	cd = NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd = NewDevice(0).
 		WithMenuGroup("nothing", &MenuGroup{})
 	if _, ok := cd.ToProtoDevice().GetMenuGroups()["nothing"]; ok {
 		t.Error("expected menu group with nil Proto to be ignored")
@@ -179,7 +152,7 @@ func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 }
 
 func TestDevice_WithConstraints(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithConstraint("brightness_range", NewConstraintInt32Range(0, 100, 1)).
 		WithConstraint("input_source_choice", NewConstraintStringChoice(false, "SDI", "HDMI", "IP"))
 
@@ -210,7 +183,7 @@ func TestDevice_WithConstraints(t *testing.T) {
 }
 
 func TestDevice_WithLanguagePacks(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"}).
 		WithLanguagePack("fr", "Français", map[string]string{"brightness": "Luminosité"})
 
@@ -231,7 +204,7 @@ func TestDevice_WithLanguagePacks(t *testing.T) {
 }
 
 func TestDevice_WithMenuGroups(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithMenuGroup("video", NewMenuGroup().
 			WithName(NewPolyglotText("en", "Video Settings")).
 			WithMenu("basic", NewMenu().
@@ -252,7 +225,7 @@ func TestDevice_WithMenuGroups(t *testing.T) {
 }
 
 func TestDevice_WithCommands(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithCommand("reboot", NewParamEmpty().
 			WithName(NewPolyglotText("en", "Reboot Device")))
 
@@ -266,7 +239,7 @@ func TestDevice_WithCommands(t *testing.T) {
 }
 
 func TestDevice_ScalarFields(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithDetailLevel(DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
@@ -289,7 +262,8 @@ func TestDevice_ScalarFields(t *testing.T) {
 }
 
 func TestDevice_ToJSON(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345")
+	cd := NewDevice(0).
+		WithParam("brightness", NewParamInt32(50))
 	data, err := cd.ToJSON()
 	if err != nil {
 		t.Fatalf("ToJSON error: %v", err)
@@ -302,8 +276,8 @@ func TestDevice_ToJSON(t *testing.T) {
 	if err := protojson.Unmarshal(data, roundTrip); err != nil {
 		t.Fatalf("failed to unmarshal ToJSON output: %v", err)
 	}
-	if _, ok := roundTrip.GetParams()["product"]; !ok {
-		t.Error("expected 'product' param in ToJSON output")
+	if _, ok := roundTrip.GetParams()["brightness"]; !ok {
+		t.Error("expected 'brightness' param in ToJSON output")
 	}
 }
 
@@ -339,7 +313,7 @@ func TestDetailLevelConstants(t *testing.T) {
 
 func TestNewDevice_CompleteDevice(t *testing.T) {
 	// This test verifies a complete device configuration like the example.
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithDetailLevel(DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
@@ -390,7 +364,7 @@ func TestNewDevice_CompleteDevice(t *testing.T) {
 }
 
 func TestDevice_WithFloatRangeConstraint(t *testing.T) {
-	cd := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := NewDevice(0).
 		WithConstraint("gain_range", NewConstraintFloatRange(-60.0, 12.0, 0.5))
 
 	gainRange, ok := cd.ToProtoDevice().GetConstraints()["gain_range"]
@@ -412,7 +386,7 @@ func TestDevice_WithFloatRangeConstraint(t *testing.T) {
 func TestDevice_WithSharedConstraint(t *testing.T) {
 	constraint := NewConstraintStringChoice(true, "SDI", "HDMI", "IP")
 
-	device := NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	device := NewDevice(0).
 		WithConstraint("input_source", constraint)
 
 	stringChoice := device.ToProtoDevice().GetConstraints()["input_source"].GetStringChoice()

@@ -43,7 +43,7 @@ import "testing"
 // descriptor must exactly match what ProductValues reports to GetValue handlers,
 // including the SDK-managed catena_sdk / catena_sdk_version fields.
 func TestProductParamValuesParity(t *testing.T) {
-	p := Product{
+	p := ProductStruct{
 		Name:         "Camera",
 		Vendor:       "Ross Video",
 		Version:      "1.0",

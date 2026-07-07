@@ -5,6 +5,16 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
+// registerProductStructs hands each slot's mandatory product struct to the SDK.
+// Once registered, the SDK injects the product param into the device on
+// GetDevice and answers GetValue/ParamInfo for product/* (and rejects writes),
+// so none of the value/param-info handlers below deal with product.
+func registerProductStructs(srv catena.Server, state *ExampleState) {
+	srv.RegisterProductStruct(0, state.slotZeroProduct)
+	srv.RegisterProductStruct(1, state.slotOneProduct)
+	srv.RegisterProductStruct(2, state.slotTwoProduct)
+}
+
 func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
 	// GetDeviceHandler returns the complete device descriptor for a slot.
 	// Build the descriptor from the same data model your app uses at runtime;
@@ -38,11 +48,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 	switch slot {
 	case 0:
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
-		state.mu.RLock()
-		product := state.slotZeroProduct
-		state.mu.RUnlock()
-
-		device := catena.NewDevice(0, product.Name, product.Vendor, product.Version, product.SerialNumber).
+		device := catena.NewDevice(0).
 			WithDetailLevel(catena.DetailLevelFull).
 			WithMultiSetEnabled(true).
 			WithSubscriptions(true).
@@ -103,7 +109,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		}
 		state.mu.RUnlock()
 
-		device := catena.NewDevice(1, "Map-Backed Slot 1 Product", "Ross Video", "1.0.0", "SN12345678").
+		device := catena.NewDevice(1).
 			WithDetailLevel(catena.DetailLevelFull).
 			WithMultiSetEnabled(false).
 			WithSubscriptions(true).
@@ -140,7 +146,6 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		// GetValue, which keeps RLock through catena.ToValue).
 		state.mu.RLock()
 		defer state.mu.RUnlock()
-		product := state.slotTwoProduct
 		volume := state.volume
 		muted := state.muted
 		deviceName := state.deviceName
@@ -157,11 +162,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		structNumber, _ := structExample["number"].(int32)
 		structText, _ := structExample["text"].(string)
 
-		device := catena.NewDevice(2,
-			product.Name,
-			product.Vendor,
-			product.Version,
-			product.SerialNumber).
+		device := catena.NewDevice(2).
 			WithDetailLevel(catena.DetailLevelFull).
 			WithMultiSetEnabled(true).
 			WithSubscriptions(false).

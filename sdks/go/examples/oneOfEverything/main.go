@@ -64,7 +64,6 @@ import (
 	"os"
 	"os/signal"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
@@ -153,19 +152,20 @@ var slotList = []uint16{0, 1, 2} // every handler file iterates this to register
 // intentionally uses a different storage style so adopters can pick a pattern:
 //   - slot 0 fields + CounterState: explicit typed fields, manual switch handlers
 //   - slot 1 slotOneParams sync.Map: map-backed params, direct key lookup
-//   - slot 2 typed fields + product: prefix-based dispatch in value_handlers
+//   - slot 2 typed fields: prefix-based dispatch in value_handlers
 //
-// Product identity is stored as a catena.Product so GetDevice (via NewDevice)
-// and GetValue (via catena.ProductValues) report identical product metadata,
-// including the SDK-managed catena_sdk / catena_sdk_version fields.
+// The mandatory product struct is not stored here as params: it is handed to the
+// SDK via Server.RegisterProductStruct (see registerProductStructs), which then
+// serves GetDevice/GetValue/ParamInfo and rejects product writes on its own.
 //
 // Slot 2's sample_* fields demonstrate the remaining Catena param types (except DATA).
 type ExampleState struct {
 	mu                       sync.RWMutex
-	slotZeroProduct          catena.Product
+	slotZeroProduct          catena.ProductStruct
+	slotOneProduct           catena.ProductStruct
+	slotTwoProduct           catena.ProductStruct
 	sampleIntArray           []int32
 	slotOneParams            *sync.Map
-	slotTwoProduct           catena.Product
 	volume                   int32
 	muted                    int32
 	deviceName               string
@@ -183,20 +183,26 @@ func NewExampleState() *ExampleState {
 	// Defaults here are what GetValue returns on first request and what
 	// buildDeviceDefinition embeds into each param's initial "value" field.
 	state := &ExampleState{
-		slotZeroProduct: catena.Product{
+		slotZeroProduct: catena.ProductStruct{
 			Name:         "Counter Slot 0 Product",
 			Vendor:       "Ross Video",
 			Version:      "1.0.0",
 			SerialNumber: "SN-SLOT0-0001",
 		},
-		sampleIntArray: []int32{1, 2, 3, 4},
-		slotOneParams:  &sync.Map{},
-		slotTwoProduct: catena.Product{
+		slotOneProduct: catena.ProductStruct{
+			Name:         "Map-Backed Slot 1 Product",
+			Vendor:       "Ross Video",
+			Version:      "1.0.0",
+			SerialNumber: "SN-SLOT1-0001",
+		},
+		slotTwoProduct: catena.ProductStruct{
 			Name:         "Prefix Slot 2 Product",
 			Vendor:       "Ross Video",
 			Version:      "1.0.0",
 			SerialNumber: "SN12345678",
 		},
+		sampleIntArray: []int32{1, 2, 3, 4},
+		slotOneParams:  &sync.Map{},
 		volume:     75,
 		muted:      0,
 		deviceName: "Demo Device",
@@ -232,36 +238,6 @@ func (s *ExampleState) sampleIntArrayValue() []int32 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.sampleIntArray
-}
-
-// productValue resolves a product/* FQOID against a catena.Product using
-// catena.ProductValues, so the values returned match exactly what NewDevice
-// advertised in the device descriptor (including the SDK-managed catena_sdk /
-// catena_sdk_version fields). Returns the whole product map for the bare
-// "product" oid.
-func productValue(product catena.Product, fqoid string) (any, bool) {
-	values := catena.ProductValues(product)
-	if fqoid == "product" {
-		return values, true
-	}
-	field, ok := strings.CutPrefix(fqoid, "product/")
-	if !ok {
-		return nil, false
-	}
-	value, found := values[field]
-	return value, found
-}
-
-func (s *ExampleState) slotZeroProductValue(fqoid string) (any, bool) {
-	// Slot 0 product subtree lookup; called from value_handlers.
-	// Caller must hold s.mu.RLock for the duration of catena.ToValue on the result.
-	return productValue(s.slotZeroProduct, fqoid)
-}
-
-func (s *ExampleState) slotTwoProductValue(fqoid string) (any, bool) {
-	// Slot 2 product subtree lookup; prefix-dispatched from value_handlers.
-	// Caller must hold s.mu.RLock for the duration of catena.ToValue on the result.
-	return productValue(s.slotTwoProduct, fqoid)
 }
 
 func (s *ExampleState) sampleFloatArrayValue() []float32 {
@@ -370,6 +346,7 @@ func main() {
 	// Each register* function wires one Catena endpoint family. Transports call
 	// these through the SDK runtime; you do not implement HTTP/gRPC routing here.
 	registerAccessHandler(srv)                                           // EndpointAccess gate
+	registerProductStructs(srv, state)                                   // SDK-managed product per slot
 	registerDeviceHandlers(srv, counter, state)                          // GetDevice → buildDeviceDefinition
 	registerValueHandlers(srv, counter, state)                           // GetValue / SetValue
 	registerGetParamHandlers(srv, counter, state)                        // GetParam

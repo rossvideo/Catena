@@ -662,7 +662,7 @@ func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
 // --- MarshalDeviceJSON tests (migrated from catena/device_test.go) ---
 
 func TestMarshalDeviceJSON(t *testing.T) {
-	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+	cd := catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull).
 		WithParam("brightness", catena.NewParamInt32(0).
 			WithName(catena.NewPolyglotText("en", "Brightness")))
@@ -685,7 +685,7 @@ func TestMarshalDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
-	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+	cd := catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull).
 		WithParam("volume", catena.NewParamInt32(0))
 
@@ -733,7 +733,7 @@ func TestMarshalDeviceJSON_Nil(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
-	cd := catena.NewDevice(5, "Test Device", "Ross Video", "1.0", "SN-0001")
+	cd := catena.NewDevice(5)
 	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
@@ -745,7 +745,7 @@ func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
-	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+	cd := catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull)
 	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
 	if err2 != nil {
@@ -764,7 +764,7 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
-	cd := catena.NewDevice(0, "Test Device", "Ross Video", "1.0", "SN-0001").
+	cd := catena.NewDevice(0).
 		WithParam("brightness", catena.NewParamInt32(0)).
 		WithCommand("reboot", catena.NewParamEmpty())
 	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
@@ -926,7 +926,7 @@ func TestCleanDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
-	cd := catena.NewDevice(0, "Camera", "Ross Video", "1.0", "SN-12345").
+	cd := catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).

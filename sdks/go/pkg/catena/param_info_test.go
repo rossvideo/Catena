@@ -146,7 +146,7 @@ func TestParamInfosForRequest_RootNonRecursive(t *testing.T) {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 
-	assertParamInfoOids(t, infos, []string{"alpha", "numbers", "parent", "product"})
+	assertParamInfoOids(t, infos, []string{"alpha", "numbers", "parent"})
 }
 
 func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
@@ -192,7 +192,7 @@ func TestParamInfosForRequest_NilDevice(t *testing.T) {
 }
 
 func testDeviceDefinition() *Device {
-	return NewDevice(0, "Test", "Ross Video", "1.0", "SN-0001").
+	return NewDevice(0).
 		WithParam("parent", NewParamStruct().
 			WithName(NewPolyglotText("en", "Parent")).
 			WithParam("child", NewParamString(""))).
