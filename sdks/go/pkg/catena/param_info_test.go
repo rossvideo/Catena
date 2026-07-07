@@ -57,13 +57,13 @@ func TestNewParamInfo_Basic(t *testing.T) {
 	if pi.GetArrayLength() != 0 {
 		t.Errorf("expected array_length 0, got %d", pi.GetArrayLength())
 	}
-	if pi.GetProtoResponse() == nil {
+	if pi.Proto == nil {
 		t.Fatal("expected non-nil proto response")
 	}
-	if pi.GetProtoInfo() == nil {
+	if pi.Proto.GetInfo() == nil {
 		t.Fatal("expected non-nil proto info")
 	}
-	name := pi.GetProtoInfo().GetName()
+	name := pi.Proto.GetInfo().GetName()
 	if name == nil || name.GetDisplayStrings()["en"] != "Text Box" {
 		t.Errorf("expected display name 'Text Box' for en, got %v", name)
 	}
@@ -71,7 +71,7 @@ func TestNewParamInfo_Basic(t *testing.T) {
 
 func TestNewParamInfo_NilName(t *testing.T) {
 	pi := NewParamInfo("foo", nil, ParamTypeInt32, "", 0)
-	if pi.GetProtoInfo().GetName() != nil {
+	if pi.Proto.GetInfo().GetName() != nil {
 		t.Error("expected nil name when none was provided")
 	}
 }
@@ -126,10 +126,10 @@ func TestToParamInfo_InvalidProto(t *testing.T) {
 
 func TestParamInfo_ZeroValue(t *testing.T) {
 	var pi ParamInfo
-	if pi.GetProtoResponse() != nil {
+	if pi.Proto != nil {
 		t.Error("expected nil proto response for zero value")
 	}
-	if pi.GetProtoInfo() != nil {
+	if pi.Proto.GetInfo() != nil {
 		t.Error("expected nil proto info for zero value")
 	}
 	if pi.GetOid() != "" {

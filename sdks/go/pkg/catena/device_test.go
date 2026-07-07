@@ -48,7 +48,7 @@ import (
 
 func TestNewDevice_Basic(t *testing.T) {
 	cd := NewDevice(3)
-	proto := cd.ToProtoDevice()
+	proto := cd.Proto
 	if proto == nil {
 		t.Fatal("expected non-nil proto device")
 	}
@@ -69,7 +69,7 @@ func TestNewDevice_WithParams(t *testing.T) {
 			WithName(NewPolyglotText("en", "Brightness")).
 			WithWidget("SLIDER"))
 
-	brightness, ok := cd.ToProtoDevice().GetParams()["brightness"]
+	brightness, ok := cd.Proto.GetParams()["brightness"]
 	if !ok {
 		t.Fatal("expected 'brightness' param")
 	}
@@ -87,9 +87,9 @@ func TestDevice_WithParam_DeepCopies(t *testing.T) {
 		WithParam("counter", param)
 
 	// Mutating the original param after WithParam must not affect the device.
-	param.WithValue(Value{Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 999}}})
+	param.WithValue(Value{Proto: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 999}}})
 
-	stored := cd.ToProtoDevice().GetParams()["counter"]
+	stored := cd.Proto.GetParams()["counter"]
 	if stored.GetValue().GetInt32Value() != 1 {
 		t.Errorf("expected stored value to remain 1, got %v", stored.GetValue().GetInt32Value())
 	}
@@ -98,13 +98,13 @@ func TestDevice_WithParam_DeepCopies(t *testing.T) {
 func TestDevice_WithParam_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithParam("nothing", nil)
-	if _, ok := cd.ToProtoDevice().GetParams()["nothing"]; ok {
+	if _, ok := cd.Proto.GetParams()["nothing"]; ok {
 		t.Error("expected nil param to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithParam("nothing", &Param{})
-	if _, ok := cd.ToProtoDevice().GetParams()["nothing"]; ok {
+	if _, ok := cd.Proto.GetParams()["nothing"]; ok {
 		t.Error("expected param with nil Proto to be ignored")
 	}
 }
@@ -112,13 +112,13 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 func TestDevice_WithCommand_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithCommand("nothing", nil)
-	if _, ok := cd.ToProtoDevice().GetCommands()["nothing"]; ok {
+	if _, ok := cd.Proto.GetCommands()["nothing"]; ok {
 		t.Error("expected nil command to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithCommand("nothing", &Param{})
-	if _, ok := cd.ToProtoDevice().GetCommands()["nothing"]; ok {
+	if _, ok := cd.Proto.GetCommands()["nothing"]; ok {
 		t.Error("expected command with nil Proto to be ignored")
 	}
 }
@@ -126,13 +126,13 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 func TestDevice_WithConstraint_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithConstraint("nothing", nil)
-	if _, ok := cd.ToProtoDevice().GetConstraints()["nothing"]; ok {
+	if _, ok := cd.Proto.GetConstraints()["nothing"]; ok {
 		t.Error("expected nil constraint to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithConstraint("nothing", &Constraint{})
-	if _, ok := cd.ToProtoDevice().GetConstraints()["nothing"]; ok {
+	if _, ok := cd.Proto.GetConstraints()["nothing"]; ok {
 		t.Error("expected constraint with nil Proto to be ignored")
 	}
 }
@@ -140,13 +140,13 @@ func TestDevice_WithConstraint_Nil(t *testing.T) {
 func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithMenuGroup("nothing", nil)
-	if _, ok := cd.ToProtoDevice().GetMenuGroups()["nothing"]; ok {
+	if _, ok := cd.Proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected nil menu group to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithMenuGroup("nothing", &MenuGroup{})
-	if _, ok := cd.ToProtoDevice().GetMenuGroups()["nothing"]; ok {
+	if _, ok := cd.Proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected menu group with nil Proto to be ignored")
 	}
 }
@@ -156,7 +156,7 @@ func TestDevice_WithConstraints(t *testing.T) {
 		WithConstraint("brightness_range", NewConstraintInt32Range(0, 100, 1)).
 		WithConstraint("input_source_choice", NewConstraintStringChoice(false, "SDI", "HDMI", "IP"))
 
-	constraints := cd.ToProtoDevice().GetConstraints()
+	constraints := cd.Proto.GetConstraints()
 	if constraints == nil {
 		t.Fatal("expected constraints to be set")
 	}
@@ -187,7 +187,7 @@ func TestDevice_WithLanguagePacks(t *testing.T) {
 		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"}).
 		WithLanguagePack("fr", "Français", map[string]string{"brightness": "Luminosité"})
 
-	packs := cd.ToProtoDevice().GetLanguagePacks().GetPacks()
+	packs := cd.Proto.GetLanguagePacks().GetPacks()
 	if len(packs) != 2 {
 		t.Errorf("expected 2 language packs, got %d", len(packs))
 	}
@@ -211,7 +211,7 @@ func TestDevice_WithMenuGroups(t *testing.T) {
 				WithName(NewPolyglotText("en", "Basic")).
 				WithParamOids("brightness", "contrast")))
 
-	videoGroup, ok := cd.ToProtoDevice().GetMenuGroups()["video"]
+	videoGroup, ok := cd.Proto.GetMenuGroups()["video"]
 	if !ok {
 		t.Fatal("expected 'video' menu group")
 	}
@@ -229,7 +229,7 @@ func TestDevice_WithCommands(t *testing.T) {
 		WithCommand("reboot", NewParamEmpty().
 			WithName(NewPolyglotText("en", "Reboot Device")))
 
-	reboot, ok := cd.ToProtoDevice().GetCommands()["reboot"]
+	reboot, ok := cd.Proto.GetCommands()["reboot"]
 	if !ok {
 		t.Fatal("expected 'reboot' command")
 	}
@@ -246,7 +246,7 @@ func TestDevice_ScalarFields(t *testing.T) {
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op")
 
-	proto := cd.ToProtoDevice()
+	proto := cd.Proto
 	if !proto.GetMultiSetEnabled() {
 		t.Error("expected multi_set_enabled to be true")
 	}
@@ -282,8 +282,8 @@ func TestDevice_ToJSON(t *testing.T) {
 }
 
 func TestDevice_ToProtoDevice_Nil(t *testing.T) {
-	cd := Device{device: nil}
-	if cd.ToProtoDevice() != nil {
+	cd := Device{Proto: nil}
+	if cd.Proto != nil {
 		t.Error("expected nil proto device")
 	}
 }
@@ -333,7 +333,7 @@ func TestNewDevice_CompleteDevice(t *testing.T) {
 			WithName(NewPolyglotText("en", "Reboot Device"))).
 		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"})
 
-	proto := cd.ToProtoDevice()
+	proto := cd.Proto
 	if proto == nil {
 		t.Fatal("expected non-nil proto device")
 	}
@@ -367,7 +367,7 @@ func TestDevice_WithFloatRangeConstraint(t *testing.T) {
 	cd := NewDevice(0).
 		WithConstraint("gain_range", NewConstraintFloatRange(-60.0, 12.0, 0.5))
 
-	gainRange, ok := cd.ToProtoDevice().GetConstraints()["gain_range"]
+	gainRange, ok := cd.Proto.GetConstraints()["gain_range"]
 	if !ok {
 		t.Fatal("expected 'gain_range' constraint")
 	}
@@ -389,7 +389,7 @@ func TestDevice_WithSharedConstraint(t *testing.T) {
 	device := NewDevice(0).
 		WithConstraint("input_source", constraint)
 
-	stringChoice := device.ToProtoDevice().GetConstraints()["input_source"].GetStringChoice()
+	stringChoice := device.Proto.GetConstraints()["input_source"].GetStringChoice()
 	if stringChoice == nil {
 		t.Fatal("expected string_choice constraint")
 	}

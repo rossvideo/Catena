@@ -70,8 +70,9 @@ const SDKVersion = "1.0.0"
 const CatenaSDKURL = "https://github.com/rossvideo/Catena"
 
 // Device wraps protos.Device and exposes a fluent builder API.
+// Proto is the underlying proto message; it may be read or replaced directly.
 type Device struct {
-	device *protos.Device
+	Proto *protos.Device
 }
 
 // NewDevice creates an empty Device for the given slot. Params, commands,
@@ -82,7 +83,7 @@ type Device struct {
 // GetDevice and serves it on GetValue / ParamInfo. NewDevice does not deal with
 // the product struct.
 func NewDevice(slot uint16) *Device {
-	return &Device{device: &protos.Device{Slot: uint32(slot)}}
+	return &Device{Proto: &protos.Device{Slot: uint32(slot)}}
 }
 
 // WithParam inserts param into the device's params map, keyed by oid. The
@@ -93,10 +94,10 @@ func (cd *Device) WithParam(oid string, param *Param) *Device {
 		logger.Warning("Device.WithParam called with nil param; ignoring", "oid", oid)
 		return cd
 	}
-	if cd.device.Params == nil {
-		cd.device.Params = map[string]*protos.Param{}
+	if cd.Proto.Params == nil {
+		cd.Proto.Params = map[string]*protos.Param{}
 	}
-	cd.device.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
+	cd.Proto.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
 	return cd
 }
 
@@ -107,10 +108,10 @@ func (cd *Device) WithCommand(oid string, command *Param) *Device {
 		logger.Warning("Device.WithCommand called with nil command; ignoring", "oid", oid)
 		return cd
 	}
-	if cd.device.Commands == nil {
-		cd.device.Commands = map[string]*protos.Param{}
+	if cd.Proto.Commands == nil {
+		cd.Proto.Commands = map[string]*protos.Param{}
 	}
-	cd.device.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
+	cd.Proto.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
 	return cd
 }
 
@@ -122,10 +123,10 @@ func (cd *Device) WithConstraint(oid string, constraint *Constraint) *Device {
 		logger.Warning("Device.WithConstraint called with nil constraint; ignoring", "oid", oid)
 		return cd
 	}
-	if cd.device.Constraints == nil {
-		cd.device.Constraints = map[string]*protos.Constraint{}
+	if cd.Proto.Constraints == nil {
+		cd.Proto.Constraints = map[string]*protos.Constraint{}
 	}
-	cd.device.Constraints[oid] = proto.Clone(constraint.Proto).(*protos.Constraint)
+	cd.Proto.Constraints[oid] = proto.Clone(constraint.Proto).(*protos.Constraint)
 	return cd
 }
 
@@ -136,27 +137,27 @@ func (cd *Device) WithMenuGroup(oid string, group *MenuGroup) *Device {
 		logger.Warning("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
 		return cd
 	}
-	if cd.device.MenuGroups == nil {
-		cd.device.MenuGroups = map[string]*protos.MenuGroup{}
+	if cd.Proto.MenuGroups == nil {
+		cd.Proto.MenuGroups = map[string]*protos.MenuGroup{}
 	}
-	cd.device.MenuGroups[oid] = proto.Clone(group.Proto).(*protos.MenuGroup)
+	cd.Proto.MenuGroups[oid] = proto.Clone(group.Proto).(*protos.MenuGroup)
 	return cd
 }
 
 // WithLanguagePack inserts a language pack into the device's language_packs map,
 // keyed by language code (e.g. "en"). Replaces any existing pack at that code.
 func (cd *Device) WithLanguagePack(code, name string, words map[string]string) *Device {
-	if cd.device.LanguagePacks == nil {
-		cd.device.LanguagePacks = &protos.LanguagePacks{}
+	if cd.Proto.LanguagePacks == nil {
+		cd.Proto.LanguagePacks = &protos.LanguagePacks{}
 	}
-	if cd.device.LanguagePacks.Packs == nil {
-		cd.device.LanguagePacks.Packs = map[string]*protos.LanguagePack{}
+	if cd.Proto.LanguagePacks.Packs == nil {
+		cd.Proto.LanguagePacks.Packs = map[string]*protos.LanguagePack{}
 	}
 	copied := make(map[string]string, len(words))
 	for k, v := range words {
 		copied[k] = v
 	}
-	cd.device.LanguagePacks.Packs[code] = &protos.LanguagePack{
+	cd.Proto.LanguagePacks.Packs[code] = &protos.LanguagePack{
 		Name:  name,
 		Words: copied,
 	}
@@ -165,41 +166,36 @@ func (cd *Device) WithLanguagePack(code, name string, words map[string]string) *
 
 // WithDetailLevel sets how much of the device model to deliver.
 func (cd *Device) WithDetailLevel(level DetailLevel) *Device {
-	cd.device.DetailLevel = level
+	cd.Proto.DetailLevel = level
 	return cd
 }
 
 // WithMultiSetEnabled sets whether the device supports multi-set requests.
 func (cd *Device) WithMultiSetEnabled(enabled bool) *Device {
-	cd.device.MultiSetEnabled = enabled
+	cd.Proto.MultiSetEnabled = enabled
 	return cd
 }
 
 // WithSubscriptions sets whether the device supports subscriptions.
 func (cd *Device) WithSubscriptions(subscriptions bool) *Device {
-	cd.device.Subscriptions = subscriptions
+	cd.Proto.Subscriptions = subscriptions
 	return cd
 }
 
 // WithAccessScopes sets the device's access scopes, replacing any existing ones.
 func (cd *Device) WithAccessScopes(scopes ...string) *Device {
-	cd.device.AccessScopes = scopes
+	cd.Proto.AccessScopes = scopes
 	return cd
 }
 
 // WithDefaultScope sets the device's default access scope.
 func (cd *Device) WithDefaultScope(scope string) *Device {
-	cd.device.DefaultScope = scope
+	cd.Proto.DefaultScope = scope
 	return cd
-}
-
-// ToProtoDevice returns the underlying protos.Device for gRPC responses.
-func (cd Device) ToProtoDevice() *protos.Device {
-	return cd.device
 }
 
 // ToJSON serializes the device to its REST JSON representation using proto
 // field names.
 func (cd Device) ToJSON() ([]byte, error) {
-	return protojson.MarshalOptions{UseProtoNames: true}.Marshal(cd.device)
+	return protojson.MarshalOptions{UseProtoNames: true}.Marshal(cd.Proto)
 }

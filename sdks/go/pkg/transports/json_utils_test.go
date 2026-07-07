@@ -667,7 +667,7 @@ func TestMarshalDeviceJSON(t *testing.T) {
 		WithParam("brightness", catena.NewParamInt32(0).
 			WithName(catena.NewPolyglotText("en", "Brightness")))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -689,7 +689,7 @@ func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
 		WithDetailLevel(catena.DetailLevelFull).
 		WithParam("volume", catena.NewParamInt32(0))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -734,7 +734,7 @@ func TestMarshalDeviceJSON_Nil(t *testing.T) {
 
 func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 	cd := catena.NewDevice(5)
-	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -747,7 +747,7 @@ func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 	cd := catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull)
-	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -767,7 +767,7 @@ func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
 	cd := catena.NewDevice(0).
 		WithParam("brightness", catena.NewParamInt32(0)).
 		WithCommand("reboot", catena.NewParamEmpty())
-	b, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -940,7 +940,7 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 		WithCommand("reboot", catena.NewParamEmpty().
 			WithName(catena.NewPolyglotText("en", "Reboot Device")))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.ToProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -1093,7 +1093,7 @@ func TestMarshalAssetJSON(t *testing.T) {
 		t.Fatalf("ToAsset error: %v", res.Error)
 	}
 
-	jsonData, err := MarshalAssetJSON(asset.GetProtoAsset())
+	jsonData, err := MarshalAssetJSON(asset.Proto)
 	if err != nil {
 		t.Fatalf("MarshalAssetJSON error: %v", err)
 	}

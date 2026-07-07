@@ -65,7 +65,7 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 
-	params := device.ToProtoDevice().GetParams()
+	params := device.Proto.GetParams()
 	if _, ok := params["brightness"]; !ok {
 		t.Error("expected business-logic 'brightness' param to be preserved")
 	}
@@ -96,7 +96,7 @@ func TestServer_GetDevice_NoProductRegistered(t *testing.T) {
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
-	if _, ok := device.ToProtoDevice().GetParams()["product"]; ok {
+	if _, ok := device.Proto.GetParams()["product"]; ok {
 		t.Error("did not expect a product param when none is registered")
 	}
 }
@@ -122,7 +122,7 @@ func TestServer_GetValue_Product(t *testing.T) {
 		if res.Code != StatusCodeOk {
 			t.Fatalf("%s: expected OK, got %v: %s", fqoid, res.Code, res.Error)
 		}
-		if got := value.Value.GetStringValue(); got != want {
+		if got := value.Proto.GetStringValue(); got != want {
 			t.Errorf("%s = %q, want %q", fqoid, got, want)
 		}
 	}
@@ -132,7 +132,7 @@ func TestServer_GetValue_Product(t *testing.T) {
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
 	}
-	if value.Value.GetStructValue() == nil {
+	if value.Proto.GetStructValue() == nil {
 		t.Error("expected struct value for bare 'product' oid")
 	}
 }
@@ -168,8 +168,8 @@ func TestServer_GetValue_NonProductCallsHandler(t *testing.T) {
 	if !called {
 		t.Error("expected business-logic handler to be called for non-product oid")
 	}
-	if value.Value.GetInt32Value() != 7 {
-		t.Errorf("brightness = %d, want 7", value.Value.GetInt32Value())
+	if value.Proto.GetInt32Value() != 7 {
+		t.Errorf("brightness = %d, want 7", value.Proto.GetInt32Value())
 	}
 }
 

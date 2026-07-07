@@ -250,7 +250,7 @@ func (t *RestTransport) writeHTTPStatusResult(w http.ResponseWriter, result cate
 
 // writeValueResult writes a Value as JSON
 func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int) {
-	protoValue := value.Value
+	protoValue := value.Proto
 	if protoValue == nil {
 		w.WriteHeader(httpStatus)
 		return
@@ -264,12 +264,12 @@ func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int)
 
 // writeDeviceResult writes a Device as JSON
 func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus int) {
-	if device.ToProtoDevice() == nil {
+	if device.Proto == nil {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	b, err := MarshalDeviceJSON(device.ToProtoDevice())
+	b, err := MarshalDeviceJSON(device.Proto)
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
 		w.Header().Set("Content-Type", "application/json")
@@ -287,7 +287,7 @@ func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus i
 
 // writeAssetResult writes an Asset as JSON-encoded ExternalObjectPayload
 func writeAssetResult(w http.ResponseWriter, asset catena.Asset, httpStatus int) {
-	protoAsset := asset.GetProtoAsset()
+	protoAsset := asset.Proto
 	if protoAsset == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -730,7 +730,7 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := WriteProtoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
+	if err := WriteProtoJSON(w, infos[0].Proto, http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
 	}
 }
@@ -758,7 +758,7 @@ func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Requ
 			return
 		default:
 		}
-		protoResp := info.GetProtoResponse()
+		protoResp := info.Proto
 		if protoResp == nil {
 			continue
 		}
@@ -819,7 +819,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		cmdResult, _ = catena.CommandNoResponse()
 	}
 
-	_ = WriteProtoJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
+	_ = WriteProtoJSON(w, cmdResult.Proto, http.StatusOK)
 }
 
 // ToHTTPStatus converts a transport-neutral StatusCode to an HTTP status code.

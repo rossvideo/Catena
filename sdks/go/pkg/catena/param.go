@@ -205,14 +205,14 @@ func NewParamData(payload DataPayload) *Param {
 // DataPayload values are mapped to ParamType_DATA since the two
 // cannot be distinguished from the value alone.
 func NewParamFromValue(v Value) *Param {
-	pt := paramTypeFromValueKind(v.Value)
+	pt := paramTypeFromValueKind(v.Proto)
 	if pt == protos.ParamType_UNDEFINED {
 		logger.Warning("NewParamFromValue: could not infer param type from value; using UNDEFINED")
 	}
 	return &Param{
 		Proto: &protos.Param{
 			Type:  pt,
-			Value: v.Value,
+			Value: v.Proto,
 		},
 	}
 }
@@ -225,12 +225,12 @@ func (cp *Param) WithName(name PolyglotText) *Param {
 }
 
 func (cp *Param) WithValue(v Value) *Param {
-	if !isValueValidForParamType(v.Value, cp.Proto.Type) {
+	if !isValueValidForParamType(v.Proto, cp.Proto.Type) {
 		logger.Warning("WithValue: value kind incompatible with param type; ignoring",
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.Proto.Value = v.Value
+	cp.Proto.Value = v.Proto
 	return cp
 }
 

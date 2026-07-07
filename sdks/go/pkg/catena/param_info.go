@@ -51,9 +51,10 @@ import (
 
 // ParamInfo wraps protos.ParamInfoResponse for parameter info handling.
 // It carries both a ParamInfo descriptor and, for array parameters, the
-// current array length.
+// current array length. Proto is the underlying proto message; it may be read
+// or replaced directly.
 type ParamInfo struct {
-	response *protos.ParamInfoResponse
+	Proto *protos.ParamInfoResponse
 }
 
 // NewParamInfo creates a ParamInfo with the specified fields.
@@ -69,7 +70,7 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 		info.Name = &protos.PolyglotText{DisplayStrings: name}
 	}
 	return ParamInfo{
-		response: &protos.ParamInfoResponse{
+		Proto: &protos.ParamInfoResponse{
 			Info:        info,
 			ArrayLength: arrayLength,
 		},
@@ -88,18 +89,18 @@ func ToParamInfo(m map[string]any) (ParamInfo, error) {
 	if err := protojson.Unmarshal(jsonData, resp); err != nil {
 		return ParamInfo{}, fmt.Errorf("ToParamInfo: unmarshal to proto: %w", err)
 	}
-	return ParamInfo{response: resp}, nil
+	return ParamInfo{Proto: resp}, nil
 }
 
 // ParamInfosForRequest builds ParamInfo responses for the requested FQOID from
 // a Device's params subtree.
 func ParamInfosForRequest(fqoid string, device *Device, recursive bool) ([]ParamInfo, StatusResult) {
-	if device == nil || device.device == nil {
+	if device == nil || device.Proto == nil {
 		return []ParamInfo{}, StatusWithCode(StatusCodeInternal, "invalid device")
 	}
 
 	oid := strings.TrimPrefix(fqoid, "/")
-	return paramInfosForRequest(device.device.GetParams(), oid, recursive)
+	return paramInfosForRequest(device.Proto.GetParams(), oid, recursive)
 }
 
 func paramDisplayName(param *protos.Param) PolyglotText {
@@ -200,38 +201,22 @@ func paramInfosForRequest(params map[string]*protos.Param, oid string, recursive
 	return result, StatusWithCode(StatusCodeOk, "")
 }
 
-// GetProtoResponse returns the underlying protos.ParamInfoResponse.
-func (p ParamInfo) GetProtoResponse() *protos.ParamInfoResponse {
-	return p.response
-}
-
-// GetProtoInfo returns the underlying protos.ParamInfo, or nil if unset.
-func (p ParamInfo) GetProtoInfo() *protos.ParamInfo {
-	if p.response == nil {
-		return nil
-	}
-	return p.response.GetInfo()
-}
-
 // GetOid returns the parameter's OID, or "" if unset.
 func (p ParamInfo) GetOid() string {
-	return p.GetProtoInfo().GetOid()
+	return p.Proto.GetInfo().GetOid()
 }
 
 // GetParamType returns the parameter's type, or UNDEFINED if unset.
 func (p ParamInfo) GetParamType() ParamType {
-	return p.GetProtoInfo().GetType()
+	return p.Proto.GetInfo().GetType()
 }
 
 // GetTemplateOid returns the template OID, or "" if unset.
 func (p ParamInfo) GetTemplateOid() string {
-	return p.GetProtoInfo().GetTemplateOid()
+	return p.Proto.GetInfo().GetTemplateOid()
 }
 
 // GetArrayLength returns the array length for array parameters, or 0 otherwise.
 func (p ParamInfo) GetArrayLength() uint32 {
-	if p.response == nil {
-		return 0
-	}
-	return p.response.GetArrayLength()
+	return p.Proto.GetArrayLength()
 }
