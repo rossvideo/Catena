@@ -505,16 +505,10 @@ func (s *server) hasWriteAccess(handlerContext HandlerContext) bool {
 }
 
 func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
+	// enforce access checks
+	_, res := s.invokeGateFn(transportContext, EndpointGetSlots, false)
+	if res.IsError() {
 		return nil, res
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointGetSlots, handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -717,16 +711,10 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
+	// enforce access checks
+	handlerContext, res := s.invokeGateFn(transportContext, EndpointConnect, false)
+	if res.IsError() {
 		return nil, res
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointConnect, handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
