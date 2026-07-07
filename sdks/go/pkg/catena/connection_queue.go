@@ -143,8 +143,9 @@ func (cq *connectionQueue) deregisterConnection(connID int) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
-	if _, ok := cq.connections[connID]; ok {
+	if conn, ok := cq.connections[connID]; ok {
 		delete(cq.connections, connID)
+		conn.HandlerContext.release()
 		cq.cond.Broadcast()
 		logger.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
 	}
@@ -244,6 +245,7 @@ func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *C
 			defer cq.mu.Unlock()
 			logger.Warning("Connection did not shut down gracefully, forcing close", "connID", connection.ID)
 			delete(cq.connections, connection.ID)
+			connection.HandlerContext.release()
 			cq.cond.Broadcast()
 		case <-done:
 		}

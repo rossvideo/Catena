@@ -876,27 +876,6 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 // context never cancels either parent.
 func TestServer_RequestContext(t *testing.T) {
 
-	assertContextDone := func(t *testing.T, ctx context.Context, wantErr error) {
-		t.Helper()
-		select {
-		case <-ctx.Done():
-			if wantErr != nil && !errors.Is(ctx.Err(), wantErr) {
-				t.Errorf("expected context error %v, got %v", wantErr, ctx.Err())
-			}
-		case <-time.After(time.Second):
-			t.Fatal("expected context to be done, but it was not")
-		}
-	}
-
-	assertContextNotDone := func(t *testing.T, ctx context.Context) {
-		t.Helper()
-		select {
-		case <-ctx.Done():
-			t.Fatalf("expected context to not be done, but it was (err %v)", ctx.Err())
-		default:
-		}
-	}
-
 	t.Run("ServerShutdownCancels", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		reqCtx := t.Context()
@@ -1038,6 +1017,7 @@ func TestServer_RealInvokeGate(t *testing.T) {
 		transportContext := validTestTransportContext(nil)
 
 		handlerCalled := 0
+		var observed context.Context
 		srv.RegisterAccessHandler(func(endpoint EndpointType, ctx HandlerContext) bool {
 			if endpoint != EndpointGetDevice {
 				t.Errorf("expected endpoint %v, got %v", EndpointGetDevice, endpoint)
@@ -1045,6 +1025,9 @@ func TestServer_RealInvokeGate(t *testing.T) {
 			if ctx.Token == nil {
 				t.Errorf("expected parsed token from access token")
 			}
+			observed = ctx.Context()
+			// make sure the ctx is not done yet when the access handler is called
+			assertContextNotDone(t, observed)
 			handlerCalled++
 			return false // deny access
 		})
@@ -1056,6 +1039,44 @@ func TestServer_RealInvokeGate(t *testing.T) {
 		if handlerCalled != 1 {
 			t.Errorf("expected access handler to be called once, got %d", handlerCalled)
 		}
+		// the gate owns cleanup on the denial path: the context it built must be
+		// released before returning, so no caller is left holding it. This also
+		// covers the scope-denial branch, which shares the same release call.
+		if observed == nil {
+			t.Fatal("expected access handler to observe a non-nil request context")
+		}
+		assertContextDone(t, observed, context.Canceled)
+	})
+
+	t.Run("AccessHandlerObservesRequestContext", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		transportContext := validTestTransportContext(nil)
+
+		// the gate must build the request context BEFORE running the access
+		// handler, so a handler that inspects ctx.Context() sees a live context.
+		var observed context.Context
+		srv.RegisterAccessHandler(func(endpoint EndpointType, ctx HandlerContext) bool {
+			observed = ctx.Context()
+			return true
+		})
+
+		handlerContext, res := srv.realInvokeGate(transportContext, EndpointGetDevice, false)
+		if res.IsError() {
+			t.Fatalf("expected OK from realInvokeGate, got %v", res)
+		}
+		defer handlerContext.release()
+
+		if observed == nil {
+			t.Fatal("expected access handler to observe a non-nil request context")
+		}
+		assertContextNotDone(t, observed)
+		// the gate hands that same live context back to the caller
+		if handlerContext.Context() != observed {
+			t.Error("expected the gate to return the context the access handler saw")
+		}
+		// release must cancel it
+		handlerContext.release()
+		assertContextDone(t, observed, context.Canceled)
 	})
 
 	t.Run("AuthzDisabled", func(t *testing.T) {

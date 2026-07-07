@@ -116,6 +116,12 @@ type HandlerContext struct {
 	Metadata     map[string][]string
 	authzEnabled bool
 	ctx          context.Context
+	// ctxCancel tears down ctx and unregisters its shutdown watcher. The gate
+	// builds ctx and stashes cancel here; whoever owns the end of the request
+	// (invokeHandler's defer, GetSlots, or a torn-down streaming Connection)
+	// calls release(). Do not call this field directly - use release() so the
+	// zero HandlerContext (nil cancel) stays safe.
+	ctxCancel context.CancelFunc
 }
 
 func (ctx HandlerContext) HasReadScope(scopeName string) bool {
@@ -147,6 +153,15 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 // context, allowing handlers to respect cancellation and deadlines.
 func (ctx HandlerContext) Context() context.Context {
 	return ctx.ctx
+}
+
+// release cancels the request context and unregisters its shutdown watcher. It
+// is safe to call multiple times and on a zero HandlerContext (nil ctxCancel),
+// so callers can defer it unconditionally after the gate.
+func (ctx HandlerContext) release() {
+	if ctx.ctxCancel != nil {
+		ctx.ctxCancel()
+	}
 }
 
 // Handler function types used by both REST and gRPC servers.
@@ -506,10 +521,11 @@ func (s *server) hasWriteAccess(handlerContext HandlerContext) bool {
 
 func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusResult) {
 	// enforce access checks
-	_, res := s.invokeGateFn(transportContext, EndpointGetSlots, false)
+	handlerContext, res := s.invokeGateFn(transportContext, EndpointGetSlots, false)
 	if res.IsError() {
 		return nil, res
 	}
+	defer handlerContext.release()
 
 	s.mu.Lock()
 	slots := s.getSlotsLocked()
@@ -605,6 +621,9 @@ func invokeHandler[H, T any](
 	if res.IsError() {
 		return zero, res
 	}
+	// The gate built the request context (so the access handler could observe it);
+	// this unary request ends when call returns, so release it here.
+	defer handlerContext.release()
 
 	s.mu.Lock()
 	handler, ok := handlers[slot]
@@ -615,12 +634,6 @@ func invokeHandler[H, T any](
 		logger.Warning("no handler registered for slot", "endpoint", endpoint, "slot", slot)
 		return zero, StatusWithCode(StatusCodeNotFound, notFound)
 	}
-
-	// Hand the handler a context that unblocks on server shutdown or request
-	// cancellation, whichever comes first. cancel runs when this call returns.
-	ctx, cancel := s.requestContext(transportContext.Ctx)
-	defer cancel()
-	handlerContext.ctx = ctx
 
 	return call(handler, handlerContext)
 }
@@ -636,6 +649,14 @@ func (s *server) realInvokeGate(transportContext TransportContext, endpoint Endp
 		return HandlerContext{}, res
 	}
 
+	// Build the request context up front so the access handler (which runs below)
+	// can observe cancellation/deadline via ctx.Context(). Ownership of the cancel
+	// passes to the caller through handlerContext.release(); on the rejection path
+	// below no caller sees it, so we release here.
+	ctx, cancel := s.requestContext(transportContext.Ctx)
+	handlerContext.ctx = ctx
+	handlerContext.ctxCancel = cancel
+
 	granted := false
 	if writeAccess {
 		granted = s.hasWriteAccess(handlerContext)
@@ -643,6 +664,7 @@ func (s *server) realInvokeGate(transportContext TransportContext, endpoint Endp
 		granted = s.hasReadAccess(handlerContext)
 	}
 	if !granted || !s.isAccessAllowed(endpoint, handlerContext) {
+		handlerContext.release()
 		return HandlerContext{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
@@ -766,7 +788,13 @@ func (s *server) RegisterTransportConnection(transport Transport, transportConte
 
 	// register and it will send the initial update to the new connection before returning it
 	// this ensures the transport receives the initial update before it starts processing the connection
-	return s.connectionQueue.registerOwnedConnection(transport, handlerContext, initialUpdate)
+	conn, res := s.connectionQueue.registerOwnedConnection(transport, handlerContext, initialUpdate)
+	if res.IsError() {
+		// the connection was not stored, so no teardown will release it
+		handlerContext.release()
+		return nil, res
+	}
+	return conn, res
 }
 
 // ShutdownTransportConnections allows transports to signal
