@@ -507,4 +507,3 @@ func TestProtoMessageToMap_Param(t *testing.T) {
 		t.Fatal("expected param value in map definition")
 	}
 }
-
