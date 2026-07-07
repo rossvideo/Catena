@@ -110,8 +110,16 @@ type TransportContext struct {
 	Ctx         context.Context
 }
 
-// HandlerContext is the context for a handler function.
-// It contains the token, read and write scopes, and metadata.
+// HandlerContext gives a handler everything it needs to know about the request
+// it is serving. Use it to:
+//   - check the caller's authorization with the scope helpers
+//     (HasReadScope/HasWriteScope/HasAnyReadScope/HasAnyWriteScope). When
+//     authorization is disabled these all return true.
+//   - read the request Metadata (for example, transport headers).
+//   - respect cancellation and deadlines through Context() (see below),
+//     which matters most for long-running or streaming handlers.
+//
+// Treat it as read-only; the server fills it in before your handler runs.
 type HandlerContext struct {
 	Token        *jwt.Token
 	readScopes   map[string]struct{}
@@ -127,6 +135,10 @@ type HandlerContext struct {
 	ctxCancel context.CancelFunc
 }
 
+// HasReadScope reports whether the caller was granted the named read scope.
+// A write grant implies read: holding "foo:w" satisfies HasReadScope("foo") as
+// well as HasWriteScope("foo"). It returns true for every scope when
+// authorization is disabled.
 func (ctx HandlerContext) HasReadScope(scopeName string) bool {
 	if !ctx.authzEnabled {
 		return true
@@ -135,6 +147,8 @@ func (ctx HandlerContext) HasReadScope(scopeName string) bool {
 	return ok
 }
 
+// HasWriteScope reports whether the caller was granted the named write scope.
+// It returns true for every scope when authorization is disabled.
 func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
 	if !ctx.authzEnabled {
 		return true
@@ -143,17 +157,26 @@ func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
 	return ok
 }
 
+// HasAnyWriteScope reports whether the caller holds at least one write scope,
+// i.e. whether they are allowed to make any change at all. Use it as a coarse
+// gate before the more specific HasWriteScope check.
 func (ctx HandlerContext) HasAnyWriteScope() bool {
 	return slices.ContainsFunc(catenaScopes, ctx.HasWriteScope)
 }
 
+// HasAnyReadScope reports whether the caller holds at least one read scope,
+// i.e. whether they are allowed to read anything at all. Use it as a coarse
+// gate before the more specific HasReadScope check.
 func (ctx HandlerContext) HasAnyReadScope() bool {
 	return slices.ContainsFunc(catenaScopes, ctx.HasReadScope)
 }
 
-// Context returns the context.Context associated with the HandlerContext.
-// This context combines the shutdown context of the server and any request-specific
-// context, allowing handlers to respect cancellation and deadlines.
+// Context returns the context.Context for this request. It is Done when either
+// the request (or stream) ends or the server begins shutting down, whichever
+// happens first, and it carries any deadline and values from the request.
+// Long-running and streaming handlers should select on ctx.Done() (or pass ctx
+// to cancellable calls) so they stop promptly when the caller goes away or the
+// server is stopping.
 func (ctx HandlerContext) Context() context.Context {
 	return ctx.ctx
 }
