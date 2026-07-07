@@ -459,10 +459,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
 	}
 
-	readScopes, writeScopes, res := extractTokenScopes(token)
-	if res.Code != StatusCodeOk {
-		return HandlerContext{}, res
-	}
+	readScopes, writeScopes := extractTokenScopes(token)
 
 	handlerContext := HandlerContext{
 		Token:        token,
