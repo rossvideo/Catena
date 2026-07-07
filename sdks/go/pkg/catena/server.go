@@ -45,6 +45,7 @@ import (
 	"fmt"
 	"maps"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -103,6 +104,7 @@ func (e EndpointType) String() string {
 type TransportContext struct {
 	AccessToken string
 	Metadata    map[string][]string
+	Ctx         context.Context
 }
 
 // HandlerContext is the context for a handler function.
@@ -113,6 +115,7 @@ type HandlerContext struct {
 	writeScopes  map[string]struct{}
 	Metadata     map[string][]string
 	authzEnabled bool
+	ctx          context.Context
 }
 
 func (ctx HandlerContext) HasReadScope(scopeName string) bool {
@@ -132,21 +135,18 @@ func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
 }
 
 func (ctx HandlerContext) HasAnyWriteScope() bool {
-	for _, scopeName := range catenaScopes {
-		if ctx.HasWriteScope(scopeName) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(catenaScopes, ctx.HasWriteScope)
 }
 
 func (ctx HandlerContext) HasAnyReadScope() bool {
-	for _, scopeName := range catenaScopes {
-		if ctx.HasReadScope(scopeName) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(catenaScopes, ctx.HasReadScope)
+}
+
+// Context returns the context.Context associated with the HandlerContext.
+// This context combines the shutdown context of the server and any request-specific
+// context, allowing handlers to respect cancellation and deadlines.
+func (ctx HandlerContext) Context() context.Context {
+	return ctx.ctx
 }
 
 // Handler function types used by both REST and gRPC servers.
@@ -560,6 +560,29 @@ func (s *server) realRegisterHandler(slot uint16, store func()) {
 	}
 }
 
+// requestContext derives the context handed to a handler for a single unary
+// request. It is canceled when EITHER the server starts shutting down (s.ctx)
+// or the transport's per-request context (reqCtx) is canceled or times out.
+// reqCtx is the value/deadline parent so request-scoped values and deadlines
+// reach the handler; server shutdown contributes cancellation only.
+//
+// The caller MUST call the returned stop func once the handler returns.
+// Otherwise the AfterFunc registration lingers on s.ctx until server shutdown,
+// leaking one registration per request.
+func (s *server) requestContext(reqCtx context.Context) (context.Context, context.CancelFunc) {
+	if reqCtx == nil {
+		reqCtx = context.Background()
+	}
+	ctx, cancel := context.WithCancel(reqCtx)
+	// When the server context is done, cancel this request context too. stop
+	// unregisters the callback when the request finishes first (the common case).
+	stop := context.AfterFunc(s.ctx, cancel)
+	return ctx, func() {
+		stop()
+		cancel()
+	}
+}
+
 // invokeHandler runs the shared gate-keeping for an endpoint (context
 // resolution, scope + endpoint access checks and handler lookup) and then
 // defers to call for the endpoint-specific handler invocation. The
@@ -592,6 +615,13 @@ func invokeHandler[H, T any](
 		logger.Warning("no handler registered for slot", "endpoint", endpoint, "slot", slot)
 		return zero, StatusWithCode(StatusCodeNotFound, notFound)
 	}
+
+	// Hand the handler a context that unblocks on server shutdown or request
+	// cancellation, whichever comes first. cancel runs when this call returns.
+	ctx, cancel := s.requestContext(transportContext.Ctx)
+	defer cancel()
+	handlerContext.ctx = ctx
+
 	return call(handler, handlerContext)
 }
 

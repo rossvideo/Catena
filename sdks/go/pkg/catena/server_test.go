@@ -236,46 +236,59 @@ func TestServer_ParseTransportContext(t *testing.T) {
 	})
 }
 
-func TestHandlerContext_ScopeChecksUseSeparateReadAndWriteScopes(t *testing.T) {
-	readOnly := HandlerContext{
-		readScopes:   map[string]struct{}{ScopeMon: {}},
-		authzEnabled: true,
-	}
-	if !readOnly.HasReadScope(ScopeMon) {
-		t.Fatal("expected read scope to satisfy read scope check")
-	}
-	if readOnly.HasAnyWriteScope() {
-		t.Fatal("read scope should not satisfy write access")
-	}
-	if readOnly.HasWriteScope(ScopeMon) {
-		t.Fatal("read scope should not satisfy write scope check")
-	}
+func TestHandlerContext(t *testing.T) {
+	t.Run("Context", func(t *testing.T) {
+		handler := HandlerContext{
+			// make a non-trivial context to ensure it is returned unchanged
+			ctx: context.WithValue(context.Background(), struct{}{}, "sentinal"),
+		}
+		// make sure Context() is a straight getter
+		if handler.Context() != handler.ctx {
+			t.Fatal("expected Context() to return the original context")
+		}
+	})
 
-	writeOnly := HandlerContext{
-		writeScopes:  map[string]struct{}{ScopeCfg: {}},
-		authzEnabled: true,
-	}
-	if writeOnly.HasAnyReadScope() {
-		t.Fatal("write scope should not satisfy read access unless it is also in read scopes")
-	}
-	if !writeOnly.HasAnyWriteScope() {
-		t.Fatal("expected write scope to satisfy write access")
-	}
-	if writeOnly.HasReadScope(ScopeCfg) {
-		t.Fatal("write scope should not satisfy read scope check")
-	}
+	t.Run("ScopeChecksUseSeparateReadAndWriteScopes", func(t *testing.T) {
+		readOnly := HandlerContext{
+			readScopes:   map[string]struct{}{ScopeMon: {}},
+			authzEnabled: true,
+		}
+		if !readOnly.HasReadScope(ScopeMon) {
+			t.Fatal("expected read scope to satisfy read scope check")
+		}
+		if readOnly.HasAnyWriteScope() {
+			t.Fatal("read scope should not satisfy write access")
+		}
+		if readOnly.HasWriteScope(ScopeMon) {
+			t.Fatal("read scope should not satisfy write scope check")
+		}
 
-	parsedWrite := HandlerContext{
-		readScopes:   map[string]struct{}{ScopeCfg: {}},
-		writeScopes:  map[string]struct{}{ScopeCfg: {}},
-		authzEnabled: true,
-	}
-	if !parsedWrite.HasAnyReadScope() {
-		t.Fatal("parsed write scope should satisfy read access because parsing adds it to read scopes")
-	}
-	if !parsedWrite.HasAnyWriteScope() {
-		t.Fatal("parsed write scope should satisfy write access")
-	}
+		writeOnly := HandlerContext{
+			writeScopes:  map[string]struct{}{ScopeCfg: {}},
+			authzEnabled: true,
+		}
+		if writeOnly.HasAnyReadScope() {
+			t.Fatal("write scope should not satisfy read access unless it is also in read scopes")
+		}
+		if !writeOnly.HasAnyWriteScope() {
+			t.Fatal("expected write scope to satisfy write access")
+		}
+		if writeOnly.HasReadScope(ScopeCfg) {
+			t.Fatal("write scope should not satisfy read scope check")
+		}
+
+		parsedWrite := HandlerContext{
+			readScopes:   map[string]struct{}{ScopeCfg: {}},
+			writeScopes:  map[string]struct{}{ScopeCfg: {}},
+			authzEnabled: true,
+		}
+		if !parsedWrite.HasAnyReadScope() {
+			t.Fatal("parsed write scope should satisfy read access because parsing adds it to read scopes")
+		}
+		if !parsedWrite.HasAnyWriteScope() {
+			t.Fatal("parsed write scope should satisfy write access")
+		}
+	})
 }
 
 func TestValidateSlot_Valid(t *testing.T) {
@@ -855,6 +868,101 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestServer_RequestContext proves the merged request context is done when
+// either parent finishes (server shutdown or the transport's request context)
+// or when the returned stop func is called - and that cancelling the derived
+// context never cancels either parent.
+func TestServer_RequestContext(t *testing.T) {
+
+	assertContextDone := func(t *testing.T, ctx context.Context, wantErr error) {
+		t.Helper()
+		select {
+		case <-ctx.Done():
+			if wantErr != nil && !errors.Is(ctx.Err(), wantErr) {
+				t.Errorf("expected context error %v, got %v", wantErr, ctx.Err())
+			}
+		case <-time.After(time.Second):
+			t.Fatal("expected context to be done, but it was not")
+		}
+	}
+
+	assertContextNotDone := func(t *testing.T, ctx context.Context) {
+		t.Helper()
+		select {
+		case <-ctx.Done():
+			t.Fatalf("expected context to not be done, but it was (err %v)", ctx.Err())
+		default:
+		}
+	}
+
+	t.Run("ServerShutdownCancels", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		reqCtx := t.Context()
+
+		ctx, stop := srv.requestContext(reqCtx)
+		defer stop()
+
+		assertContextNotDone(t, ctx)
+
+		// server shutdown must propagate to the derived context via AfterFunc
+		srv.ctxCancel()
+
+		assertContextDone(t, ctx, context.Canceled)
+		// the request context is a parent, so it must be untouched
+		assertContextNotDone(t, reqCtx)
+	})
+
+	t.Run("RequestContextCancels", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		reqCtx, reqCancel := context.WithCancel(context.Background())
+
+		ctx, stop := srv.requestContext(reqCtx)
+		defer stop()
+
+		assertContextNotDone(t, ctx)
+
+		// cancelling the transport's request context must done the derived one
+		reqCancel()
+
+		assertContextDone(t, ctx, context.Canceled)
+		// the server context is a parent, so it must be untouched
+		assertContextNotDone(t, srv.ctx)
+	})
+
+	t.Run("StopCancels", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		reqCtx := t.Context()
+
+		ctx, stop := srv.requestContext(reqCtx)
+
+		assertContextNotDone(t, ctx)
+
+		// the returned stop func must done the derived context without
+		// touching either parent
+		stop()
+
+		assertContextDone(t, ctx, context.Canceled)
+		assertContextNotDone(t, reqCtx)
+		assertContextNotDone(t, srv.ctx)
+	})
+
+	t.Run("NilRequestContextStillCancelsOnShutdown", func(t *testing.T) {
+		srv := newTestServer(t, true)
+
+		// a nil request context falls back to Background but must still be
+		// cancelled by server shutdown
+		nilContext := (context.Context)(nil)
+		ctx, stop := srv.requestContext(nilContext)
+		defer stop()
+
+		assertContextNotDone(t, ctx)
+
+		srv.ctxCancel()
+
+		assertContextDone(t, ctx, context.Canceled)
+	})
 }
 
 func TestServer_RealInvokeGate(t *testing.T) {
