@@ -43,6 +43,23 @@ import (
 	"time"
 )
 
+func assertContextDeadlineWithin(t *testing.T, ctx context.Context, maxWait time.Duration) {
+	t.Helper()
+
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		t.Fatal("expected shutdown context with deadline")
+	}
+
+	remaining := time.Until(deadline)
+	if remaining <= 0 {
+		t.Fatalf("expected shutdown context deadline in the future, got %v", remaining)
+	}
+	if remaining > maxWait+250*time.Millisecond {
+		t.Fatalf("expected shutdown deadline within %v, got %v remaining", maxWait, remaining)
+	}
+}
+
 // assertContextDone fails if ctx is not done within a short timeout. When
 // wantErr is non-nil it also checks that ctx.Err() matches it.
 func assertContextDone(t *testing.T, ctx context.Context, wantErr error) {

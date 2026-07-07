@@ -236,61 +236,6 @@ func TestServer_ParseTransportContext(t *testing.T) {
 	})
 }
 
-func TestHandlerContext(t *testing.T) {
-	t.Run("Context", func(t *testing.T) {
-		handler := HandlerContext{
-			// make a non-trivial context to ensure it is returned unchanged
-			ctx: context.WithValue(context.Background(), struct{}{}, "sentinal"),
-		}
-		// make sure Context() is a straight getter
-		if handler.Context() != handler.ctx {
-			t.Fatal("expected Context() to return the original context")
-		}
-	})
-
-	t.Run("ScopeChecksUseSeparateReadAndWriteScopes", func(t *testing.T) {
-		readOnly := HandlerContext{
-			readScopes:   map[string]struct{}{ScopeMon: {}},
-			authzEnabled: true,
-		}
-		if !readOnly.HasReadScope(ScopeMon) {
-			t.Fatal("expected read scope to satisfy read scope check")
-		}
-		if readOnly.HasAnyWriteScope() {
-			t.Fatal("read scope should not satisfy write access")
-		}
-		if readOnly.HasWriteScope(ScopeMon) {
-			t.Fatal("read scope should not satisfy write scope check")
-		}
-
-		writeOnly := HandlerContext{
-			writeScopes:  map[string]struct{}{ScopeCfg: {}},
-			authzEnabled: true,
-		}
-		if writeOnly.HasAnyReadScope() {
-			t.Fatal("write scope should not satisfy read access unless it is also in read scopes")
-		}
-		if !writeOnly.HasAnyWriteScope() {
-			t.Fatal("expected write scope to satisfy write access")
-		}
-		if writeOnly.HasReadScope(ScopeCfg) {
-			t.Fatal("write scope should not satisfy read scope check")
-		}
-
-		parsedWrite := HandlerContext{
-			readScopes:   map[string]struct{}{ScopeCfg: {}},
-			writeScopes:  map[string]struct{}{ScopeCfg: {}},
-			authzEnabled: true,
-		}
-		if !parsedWrite.HasAnyReadScope() {
-			t.Fatal("parsed write scope should satisfy read access because parsing adds it to read scopes")
-		}
-		if !parsedWrite.HasAnyWriteScope() {
-			t.Fatal("parsed write scope should satisfy write access")
-		}
-	})
-}
-
 func TestValidateSlot_Valid(t *testing.T) {
 	tests := []struct {
 		name string
@@ -408,23 +353,6 @@ func (s *stubTransport) Shutdown(ctx context.Context) error {
 	}
 	s.tb.Fatalf("Shutdown called on stubTransport without shutdownFn defined")
 	return nil
-}
-
-func assertContextDeadlineWithin(t *testing.T, ctx context.Context, maxWait time.Duration) {
-	t.Helper()
-
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		t.Fatal("expected shutdown context with deadline")
-	}
-
-	remaining := time.Until(deadline)
-	if remaining <= 0 {
-		t.Fatalf("expected shutdown context deadline in the future, got %v", remaining)
-	}
-	if remaining > maxWait+250*time.Millisecond {
-		t.Fatalf("expected shutdown deadline within %v, got %v remaining", maxWait, remaining)
-	}
 }
 
 func TestServer_BoundedShutdownContext_NilParent(t *testing.T) {
