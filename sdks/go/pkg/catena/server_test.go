@@ -770,8 +770,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointParamInfo,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterParamInfoHandler(slot, func(uint16, string, bool, HandlerContext) ([]ParamInfo, StatusResult) {
-					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
+				srv.RegisterParamInfoHandler(slot, func(uint16, string, bool, HandlerContext, Stream[ParamInfo]) StatusResult {
+					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
 			has: func(srv *server, slot uint16) bool { return srv.paramInfoHandlers[slot] != nil },
@@ -1420,7 +1420,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		handlerCalled := 0
-		srv.paramInfoHandlers[4] = func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
+		srv.paramInfoHandlers[4] = func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult {
 			handlerCalled++
 			if slot != 4 {
 				t.Errorf("expected slot 4, got %d", slot)
@@ -1434,10 +1434,14 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
 			}
-			return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
+			if err := stream.Send(NewParamInfo("test/param", nil, ParamTypeString, "", 0)); err != nil {
+				t.Errorf("unexpected Send error: %v", err)
+			}
+			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		actual, status := srv.InvokeParamInfoHandler(4, "test/param", true, validTestTransportContext(nil))
+		stream := &sliceStream[ParamInfo]{}
+		status := srv.InvokeParamInfoHandler(4, "test/param", true, stream, validTestTransportContext(nil))
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1445,8 +1449,11 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if len(actual) != 0 {
-			t.Errorf("expected 0 param info entries, got %d", len(actual))
+		if len(stream.Items) != 1 {
+			t.Fatalf("expected 1 streamed param info entry, got %d", len(stream.Items))
+		}
+		if got := stream.Items[0].GetProtoInfo().GetOid(); got != "test/param" {
+			t.Errorf("streamed param info oid = %q, want %q", got, "test/param")
 		}
 	})
 }
@@ -1541,12 +1548,11 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointParamInfo,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterParamInfoHandler(0, func(uint16, string, bool, HandlerContext) ([]ParamInfo, StatusResult) {
+				srv.RegisterParamInfoHandler(0, func(uint16, string, bool, HandlerContext, Stream[ParamInfo]) StatusResult {
 					*handlerCalled = true
-					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
+					return StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, invalidContext)
-				return status
+				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, invalidContext)
 			},
 		},
 		{
@@ -1808,12 +1814,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointParamInfo,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
+				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult {
 					*handlerCalled = true
-					return []ParamInfo{}, StatusWithCode(StatusCodeOk, "")
+					return StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeParamInfoHandler(0, "test/param", false, TransportContext{})
-				return status
+				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, TransportContext{})
 			},
 		},
 		{

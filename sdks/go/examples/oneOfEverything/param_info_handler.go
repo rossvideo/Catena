@@ -11,32 +11,51 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// Slot 0: fully manual ParamInfo construction with a switch. This is useful
 	// when an application has only a few params or does not keep a full device
 	// definition around for ParamInfo requests.
-	srv.RegisterParamInfoHandler(0, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext) ([]catena.ParamInfo, catena.StatusResult) {
+	srv.RegisterParamInfoHandler(0, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[catena.ParamInfo]) catena.StatusResult {
 		logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
-		return slotZeroParamInfos(fqoid, recursive)
+		infos, res := slotZeroParamInfos(fqoid, recursive)
+		return streamParamInfos(stream, infos, res)
 	})
 
 	// Slot 1: generate the current device definition and delegate to the SDK
 	// helper. This demonstrates the simplest path when your business logic can
 	// already produce device["params"].
-	srv.RegisterParamInfoHandler(1, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext) ([]catena.ParamInfo, catena.StatusResult) {
+	srv.RegisterParamInfoHandler(1, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[catena.ParamInfo]) catena.StatusResult {
 		logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 
 		deviceInfo, ok := buildDeviceDefinition(slot, counter, state)
 		if !ok {
-			return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+			return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 		}
 
-		return catena.ParamInfosForRequest(fqoid, deviceInfo, recursive)
+		infos, res := catena.ParamInfosForRequest(fqoid, deviceInfo, recursive)
+		return streamParamInfos(stream, infos, res)
 	})
 
 	// Slot 2: prefix-based if statements with manual responses. This is useful
 	// when params are grouped by naming convention or owned by different pieces
 	// of application code.
-	srv.RegisterParamInfoHandler(2, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext) ([]catena.ParamInfo, catena.StatusResult) {
+	srv.RegisterParamInfoHandler(2, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[catena.ParamInfo]) catena.StatusResult {
 		logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
-		return slotTwoParamInfos(fqoid, recursive, state)
+		infos, res := slotTwoParamInfos(fqoid, recursive, state)
+		return streamParamInfos(stream, infos, res)
 	})
+}
+
+// streamParamInfos emits each ParamInfo from a slice-producing helper through
+// the stream, bridging the existing slice-based builders to the streaming
+// handler signature. If res is an error nothing is sent; a Send failure stops
+// the stream and is reported as an internal error.
+func streamParamInfos(stream catena.Stream[catena.ParamInfo], infos []catena.ParamInfo, res catena.StatusResult) catena.StatusResult {
+	if res.IsError() {
+		return res
+	}
+	for _, info := range infos {
+		if err := stream.Send(info); err != nil {
+			return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+		}
+	}
+	return res
 }
 
 func slotZeroParamInfos(fqoid string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {

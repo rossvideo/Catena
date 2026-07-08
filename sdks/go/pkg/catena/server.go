@@ -121,7 +121,13 @@ type SetValueEntry struct {
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
-type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
+
+// ParamInfoHandler streams parameter information for a slot. The handler emits
+// each ParamInfo chunk through stream.Send and returns a terminal StatusResult.
+// A Send error means the chunk could not be delivered - the client may have
+// disconnected, or the transport hit an encoding or write failure - so the
+// handler should stop and return.
+type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
@@ -199,7 +205,7 @@ type ServerRuntime interface {
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
-	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
+	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -711,12 +717,13 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 		})
 }
 
-func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult) {
-	return invokeHandler(s, transportContext, EndpointParamInfo, false, s.paramInfoHandlers, slot,
+func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointParamInfo, false, s.paramInfoHandlers, slot,
 		"ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)),
-		func(handler ParamInfoHandler, ctx HandlerContext) ([]ParamInfo, StatusResult) {
-			return handler(slot, oidPrefix, recursive, ctx)
+		func(handler ParamInfoHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, oidPrefix, recursive, ctx, stream)
 		})
+	return res
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {

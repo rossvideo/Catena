@@ -471,32 +471,12 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	infos, result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
+	adapter := &grpcStream[catena.ParamInfo]{ss: stream}
+	result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
-
-	if len(infos) == 0 {
-		msg := "Parameter not found: " + oidPrefix
-		if oidPrefix == "" {
-			msg = "No top-level parameters found"
-		}
-		return status.Error(codes.NotFound, msg)
-	}
-
-	for _, info := range infos {
-		protoResp := info.GetProtoResponse()
-		if protoResp == nil {
-			logger.Error("ParamInfoRequest handler returned nil response entry", "slot", slot, "oid_prefix", oidPrefix)
-			return status.Error(codes.Internal, "param info entry is nil")
-		}
-		if err := stream.Send(protoResp); err != nil {
-			logger.Error("ParamInfoRequest send error", "slot", slot, "oid_prefix", oidPrefix, "error", err)
-			return err
-		}
-	}
-
 	return nil
 }
 

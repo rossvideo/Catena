@@ -1059,9 +1059,10 @@ func TestGrpcTransport_ParamInfoRequest_HandlerError(t *testing.T) {
 	assertGRPCCode(t, err, codes.NotFound, "handler error at recv")
 }
 
-// TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound verifies that the gRPC
-// transport promotes an OK + empty result to NOT_FOUND.
-func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
+// TestGrpcTransport_ParamInfoRequest_EmptyResult_OK verifies that the gRPC
+// transport treats an OK + empty result as a well-formed empty stream rather
+// than inventing a NOT_FOUND. Handlers own NOT_FOUND for missing oids.
+func TestGrpcTransport_ParamInfoRequest_EmptyResult_OK(t *testing.T) {
 	t.Run("specific oid empty", func(t *testing.T) {
 		ctx := context.Background()
 		_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
@@ -1075,12 +1076,20 @@ func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
 		defer cleanup()
 
 		stream, err := makeParamInfoRequest(t, client, ctx, 0, "missing", false)
-		if err != nil {
-			assertGRPCCode(t, err, codes.NotFound, "empty result at stream creation")
-			return
+		assertNoError(t, err)
+
+		count := 0
+		for {
+			_, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			assertNoError(t, err)
+			count++
 		}
-		_, err = stream.Recv()
-		assertGRPCCode(t, err, codes.NotFound, "empty result at recv")
+		if count != 0 {
+			t.Errorf("expected empty stream, got %d entries", count)
+		}
 	})
 
 	t.Run("top-level empty", func(t *testing.T) {
@@ -1096,12 +1105,20 @@ func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
 		defer cleanup()
 
 		stream, err := makeParamInfoRequest(t, client, ctx, 0, "", false)
-		if err != nil {
-			assertGRPCCode(t, err, codes.NotFound, "empty top-level at stream creation")
-			return
+		assertNoError(t, err)
+
+		count := 0
+		for {
+			_, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			assertNoError(t, err)
+			count++
 		}
-		_, err = stream.Recv()
-		assertGRPCCode(t, err, codes.NotFound, "empty top-level at recv")
+		if count != 0 {
+			t.Errorf("expected empty stream, got %d entries", count)
+		}
 	})
 }
 

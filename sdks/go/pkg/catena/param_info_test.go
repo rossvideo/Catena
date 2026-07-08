@@ -249,3 +249,15 @@ func assertParamInfoOids(t *testing.T, infos []ParamInfo, expected []string) {
 		}
 	}
 }
+
+func TestParamInfo_Wire(t *testing.T) {
+	info := NewParamInfo("gain", nil, ParamTypeInt32, "", 3)
+
+	wire := info.Wire()
+	if wire == nil {
+		t.Fatal("Wire() returned nil")
+	}
+	if wire != info.GetProtoResponse() {
+		t.Error("Wire() should return the same ParamInfoResponse as GetProtoResponse()")
+	}
+}

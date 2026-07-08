@@ -46,6 +46,7 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -272,6 +273,16 @@ func paramInfosForRequest(params map[string]any, oid string, recursive bool) ([]
 	}
 
 	return result, StatusWithCode(StatusCodeOk, "")
+}
+
+// Ensure ParamInfo can be streamed as a Message.
+var _ Message = ParamInfo{}
+
+// Wire returns the underlying protos.ParamInfoResponse as the streamed chunk's
+// wire representation. ParamInfo absorbs the ParamInfoResponse layer, so the
+// response is already the complete, self-contained message for one chunk.
+func (p ParamInfo) Wire() proto.Message {
+	return p.response
 }
 
 // GetProtoResponse returns the underlying protos.ParamInfoResponse.
