@@ -517,8 +517,8 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 }
 
 // handleLanguagesEndpoint handles GET /st2138-api/v1/{slot}/languages (Languages).
-// It returns the language codes supported by the device model as a JSON array of
-// strings, e.g. ["en", "fr", "es", "de"]. An empty result serializes as [].
+// It returns the language codes supported by the device model as a LanguageList,
+// e.g. {"languages":["en","fr","es","de"]}. An empty result serializes as {"languages":[]}.
 func (t *RestTransport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
 	if r.Method != http.MethodGet {
 		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
@@ -536,9 +536,11 @@ func (t *RestTransport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.R
 		languages = []string{}
 	}
 
+	response := &protos.LanguageList{Languages: languages}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(languages); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		logger.Error("failed to write languages response", "error", err)
 	}
 }
