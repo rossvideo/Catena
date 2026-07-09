@@ -100,14 +100,12 @@ func ProductValues(p ProductStruct) map[string]any {
 // isProductOid reports whether fqoid targets the product struct or one of its
 // sub-fields (e.g. "product" or "product/name").
 func isProductOid(fqoid string) bool {
-	fqoid = strings.TrimPrefix(fqoid, "/")
 	return fqoid == productOid || strings.HasPrefix(fqoid, productOid+"/")
 }
 
 // productValueForOid resolves a product FQOID (the whole struct for "product",
 // or a single field for "product/<field>") to a Value from p.
 func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
-	fqoid = strings.TrimPrefix(fqoid, "/")
 	values := ProductValues(p)
 
 	var native any
