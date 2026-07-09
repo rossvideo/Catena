@@ -72,7 +72,7 @@ const (
 // including the SDK-managed catena_sdk and catena_sdk_version sub-params. The
 // SDK uses this to seed the product param into the device on GetDevice.
 func ProductParam(p ProductStruct) *Param {
-	return NewParamStruct().
+	return NewParamStruct(nil).
 		WithReadOnly(true).
 		WithAccessScope(ScopeMon).
 		WithParam(ProductOidName, NewParamString(p.Name)).

@@ -77,9 +77,23 @@ func TestNewParamString(t *testing.T) {
 }
 
 func TestNewParamStruct(t *testing.T) {
-	p := NewParamStruct().Proto
+	p := NewParamStruct(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
+	}
+}
+
+func TestNewParamStruct_WithValue(t *testing.T) {
+	p := NewParamStruct(map[string]any{"x": int32(1), "y": int32(2)}).Proto
+	if p.GetType() != protos.ParamType_STRUCT {
+		t.Fatalf("expected STRUCT, got %v", p.GetType())
+	}
+	fields := p.GetValue().GetStructValue().GetFields()
+	if fields["x"].GetInt32Value() != 1 {
+		t.Errorf("expected field x=1, got %d", fields["x"].GetInt32Value())
+	}
+	if fields["y"].GetInt32Value() != 2 {
+		t.Errorf("expected field y=2, got %d", fields["y"].GetInt32Value())
 	}
 }
 
@@ -262,7 +276,7 @@ func TestWithClientHint(t *testing.T) {
 
 func TestWithParam_Struct(t *testing.T) {
 	child := NewParamInt32(10).WithName(NewPolyglotText("en", "child"))
-	p := NewParamStruct().WithParam("brightness", child).Proto
+	p := NewParamStruct(nil).WithParam("brightness", child).Proto
 
 	sub := p.GetParams()["brightness"]
 	if sub == nil {
@@ -275,7 +289,7 @@ func TestWithParam_Struct(t *testing.T) {
 
 func TestWithParam_DeepClone(t *testing.T) {
 	child := NewParamInt32(1)
-	parent := NewParamStruct().WithParam("x", child).Proto
+	parent := NewParamStruct(nil).WithParam("x", child).Proto
 
 	child.SetValue(int32(999))
 	if parent.GetParams()["x"].GetValue().GetInt32Value() != 1 {
@@ -295,7 +309,7 @@ func TestWithParam_Nil(t *testing.T) {
 	// Passing a nil sub-param must not panic and must not add an entry,
 	// preserving the contract that method chaining is never interrupted
 	// by error handling.
-	cp := NewParamStruct().WithParam("x", nil)
+	cp := NewParamStruct(nil).WithParam("x", nil)
 	p := cp.Proto
 	if len(p.GetParams()) != 0 {
 		t.Error("expected nil sub-param to be a no-op")
@@ -416,7 +430,7 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 		func() *Param { return NewParamInt32(0) },
 		func() *Param { return NewParamFloat32(0) },
 		func() *Param { return NewParamString("") },
-		func() *Param { return NewParamStruct() },
+		func() *Param { return NewParamStruct(nil) },
 	} {
 		p := factory().WithConstraint(c).Proto
 		if p.GetConstraint() == nil {
@@ -590,7 +604,7 @@ func TestWithValue_Struct(t *testing.T) {
 	if res.Code != StatusCodeOk {
 		t.Fatal(res.Error)
 	}
-	p := NewParamStruct().WithValue(v).Proto
+	p := NewParamStruct(nil).WithValue(v).Proto
 	fields := p.GetValue().GetStructValue().GetFields()
 	if fields["name"].GetStringValue() != "test" {
 		t.Errorf("expected struct field 'name'='test', got %q", fields["name"].GetStringValue())
@@ -667,7 +681,7 @@ func TestGetValue_OK(t *testing.T) {
 }
 
 func TestGetValue_Nil(t *testing.T) {
-	cp := NewParamStruct()
+	cp := NewParamStruct(nil)
 	v, res := cp.GetValue()
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK for nil value, got %v: %s", res.Code, res.Error)
@@ -678,7 +692,7 @@ func TestGetValue_Nil(t *testing.T) {
 }
 
 func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
-	cp := NewParamStruct()
+	cp := NewParamStruct(nil)
 	input := map[string]any{"x": int32(1), "y": int32(2)}
 	res := cp.SetValue(input)
 	if res.Code != StatusCodeOk {
@@ -700,12 +714,12 @@ func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
 // --- Typed factory value tests ---
 
 func TestNewParamStruct_NoValue(t *testing.T) {
-	p := NewParamStruct().Proto
+	p := NewParamStruct(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
 	if p.GetValue() != nil {
-		t.Error("expected nil value; struct values come from sub-params")
+		t.Error("expected nil value for a descriptor-only struct (nil map)")
 	}
 }
 
@@ -865,7 +879,7 @@ func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
 }
 
 func TestWithParam_SelfReference(t *testing.T) {
-	cp := NewParamStruct()
+	cp := NewParamStruct(nil)
 	cp.WithParam("self", cp)
 	sub := cp.Proto.GetParams()["self"]
 	if sub == nil {
@@ -1023,7 +1037,7 @@ func TestSetValue_InvalidThenValid(t *testing.T) {
 }
 
 func TestWithParam_StructValuesFromSubParams(t *testing.T) {
-	param := NewParamStruct().
+	param := NewParamStruct(nil).
 		WithName(NewPolyglotText("en", "Struct Example")).
 		WithParam("number", NewParamInt32(7).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
 		WithParam("text", NewParamString("hello"))

@@ -174,7 +174,10 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithName(catena.NewPolyglotText("en", "Muted"))).
 			WithParam("device_name", catena.NewParamString(deviceName).
 				WithName(catena.NewPolyglotText("en", "Device Name"))).
-			WithParam("struct_example", catena.NewParamStruct().
+			WithParam("struct_example", catena.NewParamStruct(map[string]any{
+				"number": structNumber,
+				"text":   structText,
+			}).
 				WithName(catena.NewPolyglotText("en", "Struct Example")).
 				WithParam("number", catena.NewParamInt32(structNumber)).
 				WithParam("text", catena.NewParamString(structText))).

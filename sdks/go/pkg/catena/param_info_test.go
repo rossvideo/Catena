@@ -193,7 +193,7 @@ func TestParamInfosForRequest_NilDevice(t *testing.T) {
 
 func testDeviceDefinition() *Device {
 	return NewDevice(0).
-		WithParam("parent", NewParamStruct().
+		WithParam("parent", NewParamStruct(nil).
 			WithName(NewPolyglotText("en", "Parent")).
 			WithParam("child", NewParamString(""))).
 		WithParam("alpha", NewParamInt32(0).
