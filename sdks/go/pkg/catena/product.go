@@ -38,6 +38,7 @@
 package catena
 
 import (
+	"runtime/debug"
 	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -45,6 +46,43 @@ import (
 
 // productOid is the OID of the mandatory product struct param.
 const productOid = "product"
+
+// sdkModulePath is the SDK's Go module path, used to locate the SDK's resolved
+// version in the running binary's build info.
+const sdkModulePath = "github.com/rossvideo/catena/sdks/go"
+
+// SDKVersion is the Catena Go SDK version reported in the SDK-managed product
+// struct (the "catena_sdk_version" field). It is resolved at startup from the
+// binary's build info (the git tag or pseudo-version Go recorded for the SDK
+// module), so it stays accurate without a hand-maintained constant.
+var SDKVersion = sdkVersion()
+
+// sdkVersion resolves the SDK's version from the running binary's build info.
+// It returns the version Go recorded for the SDK module, falling back to
+// "(devel)" for unversioned local builds and "(unknown)" when build info is
+// unavailable.
+func sdkVersion() string {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "(unknown)"
+	}
+	// When the SDK is imported as a dependency, its resolved version lives in
+	// Deps. When the SDK module is itself the main module (e.g. running its own
+	// tests or examples), the version lives on Main instead.
+	if bi.Main.Path == sdkModulePath && bi.Main.Version != "" {
+		return bi.Main.Version
+	}
+	for _, d := range bi.Deps {
+		if d.Path == sdkModulePath {
+			return d.Version // resolved from the git tag / pseudo-version
+		}
+	}
+	return "(devel)"
+}
+
+// CatenaSDKURL identifies the Catena SDK in the SDK-managed product struct (the
+// "catena_sdk" field).
+const CatenaSDKURL = "https://github.com/rossvideo/Catena"
 
 // ProductStruct carries the mandatory device product identity fields. The
 // catena_sdk and catena_sdk_version fields are managed by the SDK
