@@ -686,7 +686,7 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 		// with the SDK-managed product struct, if one is registered for the slot.
 		if res.Code == StatusCodeOk {
 			if product, has := s.productForSlot(slot); has && device.Proto != nil {
-				device.WithParam(productOid, ProductParam(product))
+				device.WithParam(ProductOid, ProductParam(product))
 			}
 		}
 		return device, res

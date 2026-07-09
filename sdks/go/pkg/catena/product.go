@@ -44,9 +44,6 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// productOid is the OID of the mandatory product struct param.
-const productOid = "product"
-
 // sdkModulePath is the SDK's Go module path, used to locate the SDK's resolved
 // version in the running binary's build info.
 const sdkModulePath = "github.com/rossvideo/catena/sdks/go"
@@ -96,8 +93,10 @@ type ProductStruct struct {
 	SerialNumber string
 }
 
-// Sub-OIDs of the mandatory product struct param.
+// ProductOid is the OID of the mandatory product struct param, and the
+// following are the sub-OIDs of its fields.
 const (
+	ProductOid                 = "product"
 	ProductOidName             = "name"
 	ProductOidVendor           = "vendor"
 	ProductOidVersion          = "version"
@@ -138,7 +137,7 @@ func ProductValues(p ProductStruct) map[string]any {
 // isProductOid reports whether fqoid targets the product struct or one of its
 // sub-fields (e.g. "product" or "product/name").
 func isProductOid(fqoid string) bool {
-	return fqoid == productOid || strings.HasPrefix(fqoid, productOid+"/")
+	return fqoid == ProductOid || strings.HasPrefix(fqoid, ProductOid+"/")
 }
 
 // productValueForOid resolves a product FQOID (the whole struct for "product",
@@ -147,10 +146,10 @@ func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
 	values := ProductValues(p)
 
 	var native any
-	if fqoid == productOid {
+	if fqoid == ProductOid {
 		native = values
 	} else {
-		field := strings.TrimPrefix(fqoid, productOid+"/")
+		field := strings.TrimPrefix(fqoid, ProductOid+"/")
 		value, ok := values[field]
 		if !ok {
 			return ReplyError[Value](StatusCodeNotFound, "parameter not found: "+fqoid)
@@ -169,7 +168,7 @@ func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
 // reusing the standard params-subtree walker over the SDK-built product param.
 func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult) {
 	device := &Device{Proto: &protos.Device{
-		Params: map[string]*protos.Param{productOid: ProductParam(p).Proto},
+		Params: map[string]*protos.Param{ProductOid: ProductParam(p).Proto},
 	}}
 	return ParamInfosForRequest(oidPrefix, device, recursive)
 }
