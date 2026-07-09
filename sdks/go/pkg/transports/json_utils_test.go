@@ -52,6 +52,7 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // errReader is an io.Reader that always fails, used to exercise body-read
@@ -681,6 +682,37 @@ func TestMarshalDeviceJSON(t *testing.T) {
 	}
 	if _, ok := result["params"]; !ok {
 		t.Error("expected 'params' in JSON output")
+	}
+}
+
+func TestDeviceToJSON(t *testing.T) {
+	cd := catena.NewDevice(0).
+		WithParam("brightness", catena.NewParamInt32(50))
+
+	data, err := DeviceToJSON(cd)
+	if err != nil {
+		t.Fatalf("DeviceToJSON error: %v", err)
+	}
+	if len(data) == 0 {
+		t.Fatal("expected non-empty JSON")
+	}
+
+	roundTrip := &protos.Device{}
+	if err := protojson.Unmarshal(data, roundTrip); err != nil {
+		t.Fatalf("failed to unmarshal DeviceToJSON output: %v", err)
+	}
+	if _, ok := roundTrip.GetParams()["brightness"]; !ok {
+		t.Error("expected 'brightness' param in DeviceToJSON output")
+	}
+}
+
+func TestDeviceToJSON_Nil(t *testing.T) {
+	data, err := DeviceToJSON(nil)
+	if err != nil {
+		t.Fatalf("DeviceToJSON(nil) error: %v", err)
+	}
+	if data != nil {
+		t.Errorf("expected nil data for nil device, got %s", data)
 	}
 }
 

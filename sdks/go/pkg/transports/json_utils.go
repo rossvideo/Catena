@@ -118,6 +118,16 @@ func MarshalAssetJSON(asset *protos.ExternalObjectPayload) ([]byte, error) {
 	return protoMarshalOpts.Marshal(asset)
 }
 
+// DeviceToJSON serializes a device to its REST JSON representation using proto
+// field names, without the SMPTE-compliant cleanup that MarshalDeviceJSON
+// applies.
+func DeviceToJSON(device *catena.Device) ([]byte, error) {
+	if device == nil {
+		return nil, nil
+	}
+	return protoMarshalOpts.Marshal(device.Proto)
+}
+
 type jsonPrimitive interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |

@@ -41,8 +41,6 @@ package catena
 import (
 	"testing"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -258,26 +256,6 @@ func TestDevice_ScalarFields(t *testing.T) {
 	}
 	if len(proto.GetAccessScopes()) != 4 {
 		t.Errorf("expected 4 access_scopes, got %d", len(proto.GetAccessScopes()))
-	}
-}
-
-func TestDevice_ToJSON(t *testing.T) {
-	cd := NewDevice(0).
-		WithParam("brightness", NewParamInt32(50))
-	data, err := cd.ToJSON()
-	if err != nil {
-		t.Fatalf("ToJSON error: %v", err)
-	}
-	if len(data) == 0 {
-		t.Fatal("expected non-empty JSON")
-	}
-
-	roundTrip := &protos.Device{}
-	if err := protojson.Unmarshal(data, roundTrip); err != nil {
-		t.Fatalf("failed to unmarshal ToJSON output: %v", err)
-	}
-	if _, ok := roundTrip.GetParams()["brightness"]; !ok {
-		t.Error("expected 'brightness' param in ToJSON output")
 	}
 }
 

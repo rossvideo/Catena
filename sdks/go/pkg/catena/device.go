@@ -42,7 +42,6 @@ package catena
 import (
 	"runtime/debug"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -223,10 +222,4 @@ func (cd *Device) WithAccessScopes(scopes ...string) *Device {
 func (cd *Device) WithDefaultScope(scope string) *Device {
 	cd.Proto.DefaultScope = scope
 	return cd
-}
-
-// ToJSON serializes the device to its REST JSON representation using proto
-// field names.
-func (cd Device) ToJSON() ([]byte, error) {
-	return protojson.MarshalOptions{UseProtoNames: true}.Marshal(cd.Proto)
 }

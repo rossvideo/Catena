@@ -39,13 +39,14 @@ package catena
 import (
 	"testing"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // TestDevice_ProtoRoundtrip builds a Device directly via the exported Proto
-// field and verifies it feeds ToJSON and ParamInfosForRequest correctly.
+// field and verifies it feeds serialization and ParamInfosForRequest correctly.
 func TestDevice_ProtoRoundtrip(t *testing.T) {
 	inner := &protos.Device{
 		Slot: 3,
@@ -62,13 +63,13 @@ func TestDevice_ProtoRoundtrip(t *testing.T) {
 		t.Fatal("Device.Proto is not the assigned pointer")
 	}
 
-	// ToJSON must succeed and round-trip the slot.
-	data, err := d.ToJSON()
+	// The proto must serialize via protojson.
+	data, err := protojson.Marshal(d.Proto)
 	if err != nil {
-		t.Fatalf("ToJSON: %v", err)
+		t.Fatalf("marshal: %v", err)
 	}
 	if len(data) == 0 {
-		t.Error("ToJSON returned empty JSON")
+		t.Error("marshal returned empty JSON")
 	}
 
 	// ParamInfosForRequest must find the "gain" param.
