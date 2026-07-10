@@ -60,6 +60,8 @@ type stubServerRuntime struct {
 	getAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
 	commandFn                func(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
+	addLanguageFn            func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult
+	languagePackFn           func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult)
 	registerTransportConnFn  func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult)
 	deregisterConnFn         func(connID int)
 	shutdownTransportConnsFn func(ctx context.Context, transport catena.Transport)
@@ -149,6 +151,22 @@ func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string
 	}
 	s.panicf("ParamInfo handler not implemented in stubServerRuntime for slot %d, oidPrefix %s", slot, oidPrefix)
 	return nil, catena.StatusResult{Code: catena.StatusCodeInternal}
+}
+
+func (s *stubServerRuntime) InvokeAddLanguageHandler(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+	if s.addLanguageFn != nil {
+		return s.addLanguageFn(slot, language, pack, ctx)
+	}
+	s.panicf("AddLanguage handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
+	return catena.StatusResult{Code: catena.StatusCodeInternal}
+}
+
+func (s *stubServerRuntime) InvokeLanguagePackHandler(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+	if s.languagePackFn != nil {
+		return s.languagePackFn(slot, language, ctx)
+	}
+	s.panicf("LanguagePack handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
+	return catena.LanguagePack{}, catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
 func (s *stubServerRuntime) RegisterTransportConnection(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {

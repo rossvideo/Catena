@@ -945,6 +945,107 @@ func TestServer_InvokeSetValueHandler_HandlerError(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterAddLanguageHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+	transportContext := validTestTransportContext(nil)
+
+	handlerCalled := false
+	srv.RegisterAddLanguageHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
+		handlerCalled = true
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
+		}
+		if language != "nl" {
+			t.Errorf("expected language %q, got %q", "nl", language)
+		}
+		if pack.GetName() != "Global Dutch" {
+			t.Errorf("expected pack name %q, got %q", "Global Dutch", pack.GetName())
+		}
+		if !ctx.HasReadScope("all") {
+			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
+		}
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	pack := NewLanguagePack("Global Dutch", map[string]string{"greeting": "Hallo"})
+	status := srv.InvokeAddLanguageHandler(0, "nl", pack, transportContext)
+
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status, got %v", status.Code)
+	}
+
+	slots, status := srv.GetSlots(validTestTransportContext(nil))
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
+	}
+	if !slices.Contains(slots, uint16(0)) {
+		t.Error("slot 0 should be registered in server slots")
+	}
+}
+
+func TestServer_InvokeAddLanguageHandler_NoHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	status := srv.InvokeAddLanguageHandler(0, "nl", NewLanguagePack("Global Dutch", nil), validTestTransportContext(nil))
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
+	}
+}
+
+func TestServer_RegisterLanguagePackHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+	transportContext := validTestTransportContext(nil)
+
+	handlerCalled := false
+	srv.RegisterLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+		handlerCalled = true
+		if language != "nl" {
+			t.Errorf("expected language %q, got %q", "nl", language)
+		}
+		return NewLanguagePack("Global Dutch", map[string]string{"parting": "Tot ziens"}), StatusWithCode(StatusCodeOk, "")
+	})
+
+	pack, status := srv.InvokeLanguagePackHandler(0, "nl", transportContext)
+
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status, got %v", status.Code)
+	}
+	if pack.GetName() != "Global Dutch" {
+		t.Errorf("expected pack name %q, got %q", "Global Dutch", pack.GetName())
+	}
+	if pack.GetWords()["parting"] != "Tot ziens" {
+		t.Errorf("expected parting %q, got %q", "Tot ziens", pack.GetWords()["parting"])
+	}
+}
+
+func TestServer_InvokeLanguagePackHandler_NoHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	_, status := srv.InvokeLanguagePackHandler(0, "nl", validTestTransportContext(nil))
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
+	}
+}
+
+func TestServer_InvokeLanguagePackHandler_HandlerError(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	srv.RegisterLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+		return LanguagePack{}, StatusWithCode(StatusCodeNotFound, "language not found")
+	})
+
+	_, status := srv.InvokeLanguagePackHandler(0, "zz", validTestTransportContext(nil))
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected NotFound status, got %v", status.Code)
+	}
+}
+
 func TestServer_RegisterGetAssetHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
@@ -1143,6 +1244,29 @@ func TestServer_EndpointsReturnPermissionDeniedWhenScopeCheckFails(t *testing.T)
 				if conn != nil {
 					t.Errorf("expected no connection without read scope, got %+v", conn)
 				}
+				return status
+			},
+		},
+		{
+			name:      "add language",
+			scopeKind: "write",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterAddLanguageHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
+					*handlerCalled = true
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				return srv.InvokeAddLanguageHandler(0, "nl", NewLanguagePack("Global Dutch", nil), noWriteContext)
+			},
+		},
+		{
+			name:      "language pack",
+			scopeKind: "read",
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+					*handlerCalled = true
+					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
+				})
+				_, status := srv.InvokeLanguagePackHandler(0, "nl", noReadContext)
 				return status
 			},
 		},

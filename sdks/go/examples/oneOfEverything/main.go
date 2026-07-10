@@ -172,6 +172,12 @@ type ExampleState struct {
 	sampleStructVariant      catena.StructVariantValue
 	sampleStructArray        []map[string]any
 	sampleStructVariantArray []catena.StructVariantValue
+
+	// languagePacks holds the language packs per slot, keyed by language tag
+	// (e.g. "en", "nl"). AddLanguage inserts/overwrites entries here and
+	// LanguagePackRequest reads them back. Guarded by mu like the rest of the
+	// state.
+	languagePacks map[uint16]map[string]catena.LanguagePack
 }
 
 func NewExampleState() *ExampleState {
@@ -221,7 +227,66 @@ func NewExampleState() *ExampleState {
 	state.slotOneParams.Store("brightness", int32(50))
 	state.slotOneParams.Store("contrast", int32(50))
 	state.slotOneParams.Store("saturation", int32(50))
+
+	// Seed each slot with a "Global English" pack so LanguagePackRequest has
+	// something to return before any AddLanguage call.
+	state.languagePacks = make(map[uint16]map[string]catena.LanguagePack)
+	for _, slot := range slotList {
+		state.languagePacks[slot] = map[string]catena.LanguagePack{
+			"en": catena.NewLanguagePack("Global English", map[string]string{
+				"greeting": "Hello",
+				"parting":  "Goodbye",
+			}),
+		}
+	}
 	return state
+}
+
+// addLanguagePack stores (or overwrites) a language pack for a slot/language.
+func (s *ExampleState) addLanguagePack(slot uint16, language string, pack catena.LanguagePack) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.languagePacks[slot] == nil {
+		s.languagePacks[slot] = make(map[string]catena.LanguagePack)
+	}
+	s.languagePacks[slot][language] = pack
+}
+
+// languagePack returns the stored language pack for a slot/language.
+func (s *ExampleState) languagePack(slot uint16, language string) (catena.LanguagePack, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	packs, ok := s.languagePacks[slot]
+	if !ok {
+		return catena.LanguagePack{}, false
+	}
+	pack, ok := packs[language]
+	return pack, ok
+}
+
+// languagePacksForDevice builds the protojson-shaped language_packs entry for a
+// slot's device definition: {"packs": {"en": {"name": ..., "words": {...}}}}.
+func (s *ExampleState) languagePacksForDevice(slot uint16) map[string]any {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.languagePacksForDeviceLocked(slot)
+}
+
+// languagePacksForDeviceLocked is languagePacksForDevice for callers that
+// already hold s.mu (e.g. slot 2's buildDeviceDefinition branch).
+func (s *ExampleState) languagePacksForDeviceLocked(slot uint16) map[string]any {
+	packs := s.languagePacks[slot]
+	if len(packs) == 0 {
+		return nil
+	}
+	out := make(map[string]any, len(packs))
+	for language, pack := range packs {
+		out[language] = map[string]any{
+			"name":  pack.GetName(),
+			"words": pack.GetWords(),
+		}
+	}
+	return map[string]any{"packs": out}
 }
 
 func (s *ExampleState) sampleIntArrayValue() []int32 {
@@ -391,6 +456,7 @@ func main() {
 	registerCommandHandler(srv, counter, broadcastRunning, counterScope) // ExecuteCommand
 	registerAssetHandlers(srv, assets)                                   // ExternalObjectRequest
 	registerParamInfoHandlers(srv, counter, state)                       // ParamInfoRequest
+	registerLanguageHandlers(srv, state)                                 // AddLanguage / LanguagePackRequest
 	registerHeartbeatHandlers(srv, state)                                // periodic BroadcastUpdate
 
 	srv.StartHeartbeat(5 * time.Second)

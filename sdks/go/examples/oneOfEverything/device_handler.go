@@ -69,6 +69,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				"counter": counterParam,
 				"running": runningParam,
 			},
+			"language_packs": state.languagePacksForDevice(0),
 			"commands": map[string]any{
 				"start": startCommand,
 				"stop":  stopCommand,
@@ -182,6 +183,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				"contrast":   contrastParam,
 				"saturation": saturationParam,
 			},
+			"language_packs": state.languagePacksForDevice(1),
 			"menu_groups": map[string]any{
 				"status": map[string]any{
 					"name": map[string]any{
@@ -306,6 +308,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				"sample_struct_array":         sampleStructArrayParam,
 				"sample_struct_variant_array": sampleStructVariantArrayParam,
 			},
+			"language_packs": state.languagePacksForDeviceLocked(2),
 			"menu_groups": map[string]any{
 				"status": map[string]any{
 					"name": map[string]any{

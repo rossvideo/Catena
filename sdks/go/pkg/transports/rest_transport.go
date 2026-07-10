@@ -440,6 +440,11 @@ func (t *RestTransport) registerRoutes() {
 				t.handleParamEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
+			case "language-pack", "languages":
+				// TODO: implement REST language endpoints per ST 2138-12 §7.11
+				// (AddLanguage, LanguagePackRequest, ListLanguages). gRPC is
+				// implemented; REST is a placeholder for now.
+				t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeUnimplemented, "language endpoints not implemented for REST"))
 			default:
 				val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "unknown endpoint")
 				t.writeHTTPResult(w, res, val)

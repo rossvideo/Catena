@@ -68,6 +68,8 @@ const (
 	EndpointExecuteCommand
 	EndpointParamInfo
 	EndpointConnect
+	EndpointAddLanguage
+	EndpointLanguagePack
 )
 
 type TransportContext struct {
@@ -139,6 +141,13 @@ type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerConte
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
+
+// AddLanguageHandler adds (or overwrites) a language pack for a slot, keyed by
+// the language tag (e.g. "es").
+type AddLanguageHandler func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult
+
+// LanguagePackHandler returns the language pack for a slot and language tag.
+type LanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
@@ -195,6 +204,8 @@ type Server interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
+	RegisterAddLanguageHandler(slot uint16, handler AddLanguageHandler)
+	RegisterLanguagePackHandler(slot uint16, handler LanguagePackHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
 
@@ -217,6 +228,8 @@ type ServerRuntime interface {
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
+	InvokeAddLanguageHandler(slot uint16, language string, pack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult)
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -243,6 +256,8 @@ type server struct {
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
+	addLanguageHandlers    map[uint16]AddLanguageHandler
+	languagePackHandlers   map[uint16]LanguagePackHandler
 	heartbeatHandlers      map[uint16]HeartbeatHandler
 	accessHandler          AccessHandler // optional fallback for slots without specific handlers
 	connectionQueue        connectionQueueInterface
@@ -280,6 +295,8 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
+		addLanguageHandlers:    make(map[uint16]AddLanguageHandler),
+		languagePackHandlers:   make(map[uint16]LanguagePackHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
 		accessHandler:          allowAllAccessHandler,
 		connectionQueue:        newConnectionQueue(opts.MaxConnections),
@@ -594,6 +611,28 @@ func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	}
 }
 
+func (s *server) RegisterAddLanguageHandler(slot uint16, handler AddLanguageHandler) {
+	s.mu.Lock()
+	s.addLanguageHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
+func (s *server) RegisterLanguagePackHandler(slot uint16, handler LanguagePackHandler) {
+	s.mu.Lock()
+	s.languagePackHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
 func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
 	s.mu.Lock()
 	s.heartbeatHandlers[slot] = handler
@@ -791,6 +830,56 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	// TODO: lookup default handler for slot
 	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
 	return nil, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeAddLanguageHandler(slot uint16, language string, pack LanguagePack, transportContext TransportContext) StatusResult {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return res
+	}
+
+	if !s.hasWriteAccess(handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointAddLanguage, handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.addLanguageHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, language, pack, handlerContext)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("AddLanguageHandler called - no handler registered for this slot", "slot", slot, "language", language)
+	return StatusWithCode(StatusCodeNotFound, "no AddLanguage handler registered for slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return LanguagePack{}, res
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return LanguagePack{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointLanguagePack, handlerContext) {
+		return LanguagePack{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.languagePackHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, language, handlerContext)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("LanguagePackHandler called - no handler registered for this slot", "slot", slot, "language", language)
+	return LanguagePack{}, StatusWithCode(StatusCodeNotFound, "no LanguagePack handler registered for slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {

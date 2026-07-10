@@ -33,6 +33,8 @@ func logGrpcEndpointGuide(host, sampleAsset string) {
 	logEndpointLine("ParamInfoRequest (all)", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"oid_prefix\":\"\",\"recursive\":true}' %s st2138.CatenaService/ParamInfoRequest", host))
 	logEndpointLine("ParamInfoRequest (prefix)", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":2,\"oid_prefix\":\"struct_example\",\"recursive\":true}' %s st2138.CatenaService/ParamInfoRequest", host))
 	logEndpointLine("Connect", fmt.Sprintf("grpcurl -plaintext -d '{}' %s st2138.CatenaService/Connect", host))
+	logEndpointLine("AddLanguage", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"language\":\"nl\",\"languagePack\":{\"name\":\"Global Dutch\",\"words\":{\"greeting\":\"Hallo\",\"parting\":\"Tot ziens\"}}}' %s st2138.CatenaService/AddLanguage", host))
+	logEndpointLine("LanguagePackRequest", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"language\":\"nl\"}' %s st2138.CatenaService/LanguagePackRequest", host))
 }
 
 func logRestEndpointGuide(sampleAsset string) {
