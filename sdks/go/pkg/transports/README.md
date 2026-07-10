@@ -92,7 +92,7 @@ Both transports invoke the same registered handlers from `catena.ServerRuntime`:
 - `RegisterParamInfoHandler`
 - `RegisterHeartbeatHandler`
 
-The mandatory product struct is managed by the SDK, not by a handler: call `RegisterProductStruct(slot, catena.ProductStruct{...})` and the SDK injects it into GetDevice and serves product/* on GetValue and ParamInfo (rejecting writes).
+The mandatory product struct is managed by the SDK, not by a handler: call `RegisterProductStruct(slot, catena.ProductStruct{...})` and the SDK will inject it into GetDevice and serve product/* on GetValue and ParamInfo (rejecting writes by default). This means common product handling doesn't need any separate handler fallback. If desired, business logic can still implement its own handler for custom or fallback behavior, but the SDK manages all standard product struct handling and fallback messaging automatically.
 
 Use `BroadcastUpdate(slot, fqoid, value)` to fan out push updates to all active REST and gRPC stream clients.
 

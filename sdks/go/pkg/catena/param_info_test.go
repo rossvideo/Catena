@@ -83,47 +83,6 @@ func TestNewParamInfo_ArrayLength(t *testing.T) {
 	}
 }
 
-func TestToParamInfo_FromMap(t *testing.T) {
-	m := map[string]any{
-		"info": map[string]any{
-			"oid":          "brightness",
-			"type":         "INT32",
-			"template_oid": "tpl-2",
-			"name": map[string]any{
-				"display_strings": map[string]string{
-					"en": "Brightness",
-				},
-			},
-		},
-		"array_length": 0,
-	}
-
-	pi, err := ToParamInfo(m)
-	if err != nil {
-		t.Fatalf("ToParamInfo error: %v", err)
-	}
-	if pi.GetOid() != "brightness" {
-		t.Errorf("expected oid 'brightness', got %s", pi.GetOid())
-	}
-	if pi.GetParamType() != ParamTypeInt32 {
-		t.Errorf("expected type INT32, got %v", pi.GetParamType())
-	}
-	if pi.GetTemplateOid() != "tpl-2" {
-		t.Errorf("expected template_oid 'tpl-2', got %s", pi.GetTemplateOid())
-	}
-}
-
-func TestToParamInfo_InvalidProto(t *testing.T) {
-	m := map[string]any{
-		"info": map[string]any{
-			"type": "NOT_A_TYPE",
-		},
-	}
-	if _, err := ToParamInfo(m); err == nil {
-		t.Error("expected error for invalid ParamType, got nil")
-	}
-}
-
 func TestParamInfo_ZeroValue(t *testing.T) {
 	var pi ParamInfo
 	if pi.Proto != nil {
@@ -150,7 +109,7 @@ func TestParamInfosForRequest_RootNonRecursive(t *testing.T) {
 }
 
 func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
-	infos, res := ParamInfosForRequest("/parent", testDeviceDefinition(), true)
+	infos, res := ParamInfosForRequest("parent", testDeviceDefinition(), true)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -165,7 +124,7 @@ func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
 }
 
 func TestParamInfosForRequest_ArrayLengthFromValue(t *testing.T) {
-	infos, res := ParamInfosForRequest("/numbers", testDeviceDefinition(), false)
+	infos, res := ParamInfosForRequest("numbers", testDeviceDefinition(), false)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}

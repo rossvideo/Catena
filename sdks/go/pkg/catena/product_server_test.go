@@ -189,6 +189,22 @@ func TestServer_SetValue_ProductRejected(t *testing.T) {
 	}
 }
 
+// TestServer_SetValue_ProductRejectedWithoutRegistration verifies writes to
+// product/* are rejected even when no product is registered, since the product
+// struct is always read-only regardless of who manages it.
+func TestServer_SetValue_ProductRejectedWithoutRegistration(t *testing.T) {
+	srv := newTestServer(t, false)
+	srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+		t.Error("business-logic SetValue should not be called for product writes")
+		return StatusWithCode(StatusCodeInternal, "should not happen")
+	})
+
+	res := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "product/name", Value: "hacked"}}, TransportContext{})
+	if res.Code != StatusCodePermissionDenied {
+		t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
+	}
+}
+
 // TestServer_SetValue_NonProductAllowed verifies non-product writes reach the
 // business-logic handler even when a product is registered.
 func TestServer_SetValue_NonProductAllowed(t *testing.T) {

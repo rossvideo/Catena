@@ -39,12 +39,8 @@
 package catena
 
 import (
-	"encoding/json"
-	"fmt"
 	"sort"
 	"strings"
-
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -77,21 +73,6 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 	}
 }
 
-// ToParamInfo converts a Go map to a ParamInfo by marshalling
-// through protojson. The map keys mirror the protos.ParamInfoResponse schema
-func ToParamInfo(m map[string]any) (ParamInfo, error) {
-	jsonData, err := json.Marshal(m)
-	if err != nil {
-		return ParamInfo{}, fmt.Errorf("ToParamInfo: marshal map: %w", err)
-	}
-
-	resp := &protos.ParamInfoResponse{}
-	if err := protojson.Unmarshal(jsonData, resp); err != nil {
-		return ParamInfo{}, fmt.Errorf("ToParamInfo: unmarshal to proto: %w", err)
-	}
-	return ParamInfo{Proto: resp}, nil
-}
-
 // ParamInfosForRequest builds ParamInfo responses for the requested FQOID from
 // a Device's params subtree.
 func ParamInfosForRequest(fqoid string, device *Device, recursive bool) ([]ParamInfo, StatusResult) {
@@ -99,8 +80,7 @@ func ParamInfosForRequest(fqoid string, device *Device, recursive bool) ([]Param
 		return []ParamInfo{}, StatusWithCode(StatusCodeInternal, "invalid device")
 	}
 
-	oid := strings.TrimPrefix(fqoid, "/")
-	return paramInfosForRequest(device.Proto.GetParams(), oid, recursive)
+	return paramInfosForRequest(device.Proto.GetParams(), fqoid, recursive)
 }
 
 func paramDisplayName(param *protos.Param) PolyglotText {

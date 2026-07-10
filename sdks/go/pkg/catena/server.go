@@ -209,6 +209,7 @@ type Server interface {
 	// GetDevice, answers GetValue and ParamInfo for product/*, and rejects
 	// SetValue writes to product/* with StatusCodePermissionDenied — business
 	// logic no longer needs to handle the product struct.
+	// Note: If you do not register a product struct for a slot, requests for product/* values or info will fail with StatusCodeNotFound.
 	RegisterProductStruct(slot uint16, product ProductStruct)
 
 	SetMaxConnections(max int)
@@ -658,8 +659,8 @@ func (s *server) RegisterProductStruct(slot uint16, product ProductStruct) {
 // if any.
 func (s *server) productForSlot(slot uint16) (ProductStruct, bool) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	product, ok := s.productStructs[slot]
-	s.mu.Unlock()
 	return product, ok
 }
 
@@ -684,7 +685,7 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 		device, res := handler(slot, handlerContext)
 		// Overwrite the product/* fields in whatever the business logic returned
 		// with the SDK-managed product struct, if one is registered for the slot.
-		if res.Code == StatusCodeOk {
+		if res.IsOk() {
 			if product, has := s.productForSlot(slot); has && device.Proto != nil {
 				device.WithParam(ProductOid, ProductParam(product))
 			}
@@ -771,13 +772,11 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
-	// The SDK-managed product struct is read-only; reject any write targeting
-	// product/* when a product is registered for the slot.
-	if _, has := s.productForSlot(slot); has {
-		for _, entry := range entries {
-			if isProductOid(entry.Fqoid) {
-				return StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
-			}
+	// The product struct is always read-only; reject any write targeting
+	// product/* regardless of whether the SDK or business logic manages it.
+	for _, entry := range entries {
+		if isProductOid(entry.Fqoid) {
+			return StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
 		}
 	}
 

@@ -36,9 +36,12 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 // GetDevice time. device_handler.go calls this and returns the result directly.
 // Keep param OIDs in sync with value_handlers and param_info_handler.
 //
-// catena.NewDevice seeds the mandatory "product" struct param from the
-// identity fields passed to it; additional params, commands, constraints, and
-// menus are attached with the fluent With* builders.
+// catena.NewDevice(slot) creates an empty device for the slot; params, commands,
+// constraints, and menus are attached with the fluent With* builders. The
+// mandatory "product" struct param is managed by the SDK, not built here:
+// registerProductStructs registers one per slot via Server.RegisterProductStruct
+// and the SDK injects it on GetDevice (so menus may still reference the "product"
+// OID) and serves it on GetValue / ParamInfo.
 //
 // Slot roles:
 //   - 0: counter, commands, constraints, subscriptions, cfg-scope reads
