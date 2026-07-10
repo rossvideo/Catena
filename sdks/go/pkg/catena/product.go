@@ -106,18 +106,25 @@ const (
 )
 
 // ProductParam builds the mandatory read-only "product" STRUCT param from p,
-// including the SDK-managed catena_sdk and catena_sdk_version sub-params. The
-// SDK uses this to seed the product param into the device on GetDevice.
+// including the SDK-managed catena_sdk and catena_sdk_version fields. The field
+// values live in the struct's Value; the sub-params carry only the field
+// descriptors (their STRING type). The SDK uses this to seed the product param
+// into the device on GetDevice.
 func ProductParam(p ProductStruct) *Param {
-	return NewParamStruct(nil).
+	values := ProductValues(p)
+	param := NewParamStruct(values).
 		WithReadOnly(true).
-		WithAccessScope(ScopeMon).
-		WithParam(ProductOidName, NewParamString(p.Name)).
-		WithParam(ProductOidVendor, NewParamString(p.Vendor)).
-		WithParam(ProductOidVersion, NewParamString(p.Version)).
-		WithParam(ProductOidSerialNumber, NewParamString(p.SerialNumber)).
-		WithParam(ProductOidCatenaSDKVersion, NewParamString(SDKVersion)).
-		WithParam(ProductOidCatenaSDK, NewParamString(CatenaSDKURL))
+		WithAccessScope(ScopeMon)
+	for oid := range values {
+		param.WithParam(oid, productFieldDescriptor())
+	}
+	return param
+}
+
+// productFieldDescriptor is a valueless STRING sub-param used to describe a
+// product field. The field's value lives in the parent struct's Value.
+func productFieldDescriptor() *Param {
+	return &Param{Proto: &protos.Param{Type: protos.ParamType_STRING}}
 }
 
 // ProductValues returns the product field values keyed by their sub-OID,
@@ -162,6 +169,27 @@ func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
 		return ReplyError[Value](StatusCodeInternal, "failed to convert product value")
 	}
 	return Reply(value)
+}
+
+// productParamForOid resolves a product FQOID to a Param: the whole struct for
+// "product", or a single STRING field descriptor (with its value) for
+// "product/<field>".
+func productParamForOid(p ProductStruct, fqoid string) (Param, StatusResult) {
+	if fqoid == ProductOid {
+		return *ProductParam(p), StatusWithCode(StatusCodeOk, "")
+	}
+
+	field := strings.TrimPrefix(fqoid, ProductOid+"/")
+	value, ok := ProductValues(p)[field]
+	if !ok {
+		return Param{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+fqoid)
+	}
+
+	pv, res := ToProto(value)
+	if res.Code != StatusCodeOk {
+		return Param{}, StatusWithCode(StatusCodeInternal, "failed to convert product value")
+	}
+	return Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}, StatusWithCode(StatusCodeOk, "")
 }
 
 // productParamInfosForOid builds ParamInfo responses for a product FQOID by

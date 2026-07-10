@@ -36,48 +36,20 @@
 
 package catena
 
-import "testing"
+import (
+	"testing"
 
-// TestProductParamValuesParity guards the invariant behind the "Product SDK
-// fields diverge" bug: the sub-params ProductParam advertises in the device
-// descriptor must exactly match what ProductValues reports to GetValue handlers,
-// including the SDK-managed catena_sdk / catena_sdk_version fields.
-func TestProductParamValuesParity(t *testing.T) {
-	p := ProductStruct{
-		Name:         "Camera",
-		Vendor:       "Ross Video",
-		Version:      "1.0",
-		SerialNumber: "SN-12345",
-	}
+	"google.golang.org/protobuf/proto"
+)
 
-	param := ProductParam(p)
-	values := ProductValues(p)
-
-	subParams := param.Proto.GetParams()
-	if len(subParams) != len(values) {
-		t.Fatalf("sub-param count %d != value count %d", len(subParams), len(values))
-	}
-
-	for oid, child := range subParams {
-		want, ok := values[oid]
-		if !ok {
-			t.Errorf("descriptor advertises %q but ProductValues has no such field", oid)
-			continue
-		}
-		wantStr, ok := want.(string)
-		if !ok {
-			t.Errorf("ProductValues[%q] is not a string: %T", oid, want)
-			continue
-		}
-		if got := child.GetValue().GetStringValue(); got != wantStr {
-			t.Errorf("product/%s: descriptor=%q, value=%q", oid, got, wantStr)
-		}
-	}
-
-	if values[ProductOidCatenaSDK] != CatenaSDKURL {
-		t.Errorf("catena_sdk = %v, want %q", values[ProductOidCatenaSDK], CatenaSDKURL)
-	}
-	if values[ProductOidCatenaSDKVersion] != SDKVersion {
-		t.Errorf("catena_sdk_version = %v, want %q", values[ProductOidCatenaSDKVersion], SDKVersion)
+// TestProductParam_Golden verifies ProductParam builds exactly the expected
+// proto: a read-only STRUCT with STRING field descriptors and all field values
+// (including the SDK-managed catena_sdk / catena_sdk_version fields) carried in
+// the struct's Value. This guards the invariant behind the "Product SDK fields
+// diverge" bug by pinning the full descriptor + value shape.
+func TestProductParam_Golden(t *testing.T) {
+	got := ProductParam(testProduct()).Proto
+	if !proto.Equal(got, expectedProductParam()) {
+		t.Errorf("ProductParam does not match expected golden proto, got %v", got)
 	}
 }

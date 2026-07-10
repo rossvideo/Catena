@@ -36,7 +36,13 @@
 
 package catena
 
-import "testing"
+import (
+	"testing"
+
+	"google.golang.org/protobuf/proto"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+)
 
 func testProduct() ProductStruct {
 	return ProductStruct{
@@ -44,6 +50,39 @@ func testProduct() ProductStruct {
 		Vendor:       "Ross Video",
 		Version:      "1.0",
 		SerialNumber: "SN-12345",
+	}
+}
+
+// expectedProductParam is the golden proto for the SDK-managed product param
+// built from testProduct(): a read-only STRUCT with STRING field descriptors and
+// the field values carried in the struct's Value.
+func expectedProductParam() *protos.Param {
+	return &protos.Param{
+		Type:        protos.ParamType_STRUCT,
+		ReadOnly:    true,
+		AccessScope: ScopeMon,
+		Params: map[string]*protos.Param{
+			ProductOidName:             {Type: protos.ParamType_STRING},
+			ProductOidVendor:           {Type: protos.ParamType_STRING},
+			ProductOidVersion:          {Type: protos.ParamType_STRING},
+			ProductOidSerialNumber:     {Type: protos.ParamType_STRING},
+			ProductOidCatenaSDKVersion: {Type: protos.ParamType_STRING},
+			ProductOidCatenaSDK:        {Type: protos.ParamType_STRING},
+		},
+		Value: &protos.Value{
+			Kind: &protos.Value_StructValue{
+				StructValue: &protos.StructValue{
+					Fields: map[string]*protos.Value{
+						ProductOidName:             {Kind: &protos.Value_StringValue{StringValue: "Camera"}},
+						ProductOidVendor:           {Kind: &protos.Value_StringValue{StringValue: "Ross Video"}},
+						ProductOidVersion:          {Kind: &protos.Value_StringValue{StringValue: "1.0"}},
+						ProductOidSerialNumber:     {Kind: &protos.Value_StringValue{StringValue: "SN-12345"}},
+						ProductOidCatenaSDKVersion: {Kind: &protos.Value_StringValue{StringValue: SDKVersion}},
+						ProductOidCatenaSDK:        {Kind: &protos.Value_StringValue{StringValue: CatenaSDKURL}},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -73,14 +112,8 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 	if !ok {
 		t.Fatal("expected SDK-injected 'product' param")
 	}
-	if product.GetType() != ParamTypeStruct {
-		t.Errorf("expected product STRUCT, got %v", product.GetType())
-	}
-	if got := product.GetParams()["name"].GetValue().GetStringValue(); got != "Camera" {
-		t.Errorf("product/name = %q, want %q", got, "Camera")
-	}
-	if got := product.GetParams()["catena_sdk"].GetValue().GetStringValue(); got != CatenaSDKURL {
-		t.Errorf("product/catena_sdk = %q, want %q", got, CatenaSDKURL)
+	if !proto.Equal(product, expectedProductParam()) {
+		t.Errorf("SDK-injected product param does not match expected, got %v", product)
 	}
 }
 
@@ -132,8 +165,8 @@ func TestServer_GetValue_Product(t *testing.T) {
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
 	}
-	if value.Proto.GetStructValue() == nil {
-		t.Error("expected struct value for bare 'product' oid")
+	if !proto.Equal(value.Proto, expectedProductParam().GetValue()) {
+		t.Errorf("bare 'product' value does not match expected, got %v", value.Proto)
 	}
 }
 
@@ -170,6 +203,63 @@ func TestServer_GetValue_NonProductCallsHandler(t *testing.T) {
 	}
 	if value.Proto.GetInt32Value() != 7 {
 		t.Errorf("brightness = %d, want 7", value.Proto.GetInt32Value())
+	}
+}
+
+// TestServer_GetParam_Product verifies product/* GetParam requests are answered
+// by the SDK without invoking the business-logic GetParam handler.
+func TestServer_GetParam_Product(t *testing.T) {
+	srv := newTestServer(t, false)
+	srv.RegisterProductStruct(0, testProduct())
+	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+		t.Errorf("business-logic GetParam should not be called for %q", fqoid)
+		return Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+	})
+
+	// Bare "product" returns the full golden proto.
+	param, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
+	}
+	if !proto.Equal(param.Proto, expectedProductParam()) {
+		t.Errorf("bare 'product' param does not match expected, got %v", param.Proto)
+	}
+
+	// A single field returns a STRING param carrying that field's value.
+	param, res = srv.InvokeGetParamHandler(0, "product/name", TransportContext{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("product/name: expected OK, got %v: %s", res.Code, res.Error)
+	}
+	if param.Proto.GetType() != ParamTypeString {
+		t.Errorf("product/name type = %v, want STRING", param.Proto.GetType())
+	}
+	if got := param.Proto.GetValue().GetStringValue(); got != "Camera" {
+		t.Errorf("product/name = %q, want %q", got, "Camera")
+	}
+
+	// An unknown field is NotFound.
+	_, res = srv.InvokeGetParamHandler(0, "product/nope", TransportContext{})
+	if res.Code != StatusCodeNotFound {
+		t.Fatalf("product/nope: expected NOT_FOUND, got %v: %s", res.Code, res.Error)
+	}
+}
+
+// TestServer_GetParam_NoProductRegistered verifies product/* GetParam falls
+// through to the business-logic handler when no product is registered.
+func TestServer_GetParam_NoProductRegistered(t *testing.T) {
+	srv := newTestServer(t, false)
+	called := false
+	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+		called = true
+		return *NewParamString("bl"), StatusWithCode(StatusCodeOk, "")
+	})
+
+	_, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+	if !called {
+		t.Error("expected business-logic GetParam to be called when no product registered")
 	}
 }
 

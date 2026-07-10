@@ -743,6 +743,14 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 		return Param{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
+	// The SDK owns product/* when a product struct is registered for the slot;
+	// answer it directly instead of passing to business logic.
+	if isProductOid(fqoid) {
+		if product, has := s.productForSlot(slot); has {
+			return productParamForOid(product, fqoid)
+		}
+	}
+
 	s.mu.Lock()
 	handler, ok := s.getParamHandlers[slot]
 	s.mu.Unlock()
