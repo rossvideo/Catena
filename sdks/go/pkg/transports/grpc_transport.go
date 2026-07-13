@@ -564,12 +564,65 @@ func ToGRPCCode(s catena.StatusCode) codes.Code {
 
 // AddLanguage adds a language pack (optional capability)
 func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguagePayload) (*protos.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "AddLanguage not implemented")
+	slot, err := catena.ValidateSlot(req.Slot)
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	language := req.Language
+	if language == "" {
+		logger.Error("AddLanguage missing language", "slot", slot)
+		return nil, status.Error(codes.InvalidArgument, "language is required")
+	}
+	if req.LanguagePack == nil {
+		logger.Error("AddLanguage missing language pack", "slot", slot, "language", language)
+		return nil, status.Error(codes.InvalidArgument, "language_pack is required")
+	}
+
+	logger.Info("AddLanguage", "slot", slot, "language", language)
+
+	pack := catena.NewLanguagePack().
+		WithName(req.LanguagePack.GetName()).
+		WithWords(req.LanguagePack.GetWords())
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	result := s.transport.runtime.InvokeAddLanguageHandler(slot, language, pack, transportContext)
+	if result.IsError() {
+		logger.Error("AddLanguage handler error", "slot", slot, "language", language, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+
+	return &protos.Empty{}, nil
 }
 
 // LanguagePackRequest returns a language pack
 func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.LanguagePackRequestPayload) (*protos.DeviceComponent_ComponentLanguagePack, error) {
-	return nil, status.Error(codes.Unimplemented, "LanguagePackRequest not implemented")
+	slot, err := catena.ValidateSlot(req.Slot)
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	language := req.Language
+	if language == "" {
+		logger.Error("LanguagePackRequest missing language", "slot", slot)
+		return nil, status.Error(codes.InvalidArgument, "language is required")
+	}
+
+	logger.Info("LanguagePackRequest", "slot", slot, "language", language)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	pack, result := s.transport.runtime.InvokeLanguagePackHandler(slot, language, transportContext)
+	if result.IsError() {
+		logger.Error("LanguagePackRequest handler error", "slot", slot, "language", language, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+
+	// The handler wraps the inner pack (name + words); the gRPC response is the
+	// outer component that also carries the language tag.
+	return &protos.DeviceComponent_ComponentLanguagePack{
+		Language:     language,
+		LanguagePack: pack.Proto,
+	}, nil
 }
 
 // ListLanguages returns the list of available languages
