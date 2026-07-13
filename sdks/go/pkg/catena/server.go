@@ -123,7 +123,7 @@ type SetValueEntry struct {
 // full slice so the handler can apply them atomically (all-or-nothing).
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
+type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult
 
 // ParamInfoHandler streams parameter information for a slot. The handler emits
 // each ParamInfo chunk through stream.Send and returns a terminal StatusResult.
@@ -220,7 +220,7 @@ type ServerRuntime interface {
 	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult)
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
-	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
+	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
@@ -778,12 +778,23 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportConte
 		})
 }
 
-func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult) {
-	return invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, slot,
+func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult {
+	// When the caller opts out of responses, swap in a nullStream so any chunks
+	// the handler sends are discarded here rather than each transport having to
+	// gobble them itself. The handler still receives respond and may skip sending.
+	if !respond {
+		stream = nullStream[CommandResult]{}
+	}
+	// wrap the transport's stream so Send also fails on server shutdown, not just
+	// client disconnect. Cancellation is then transparent to the handler: it just
+	// gets an error from the next Send once the server is shutting down.
+	stream = shutdownStream[CommandResult]{inner: stream, shutdown: s.ctx}
+	_, res := invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, slot,
 		"ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)),
-		func(handler ExecuteCommandHandler, ctx HandlerContext) (CommandResult, StatusResult) {
-			return handler(slot, commandFqoid, payload, ctx)
+		func(handler ExecuteCommandHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, commandFqoid, payload, respond, ctx, stream)
 		})
+	return res
 }
 
 func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult {

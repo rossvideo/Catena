@@ -103,9 +103,10 @@ func (m stubMessage) Wire() proto.Message {
 	return wrapperspb.String(m.value)
 }
 
-func TestCollectStream(t *testing.T) {
-	t.Run("discards chunks beyond max", func(t *testing.T) {
-		stream := &collectStream[stubMessage]{max: 1}
+func TestFirstStream(t *testing.T) {
+	// firstStream retains only the first chunk sent, discarding any subsequent chunks.
+	t.Run("KeepsFirst", func(t *testing.T) {
+		stream := &firstStream[stubMessage]{}
 
 		if err := stream.Send(stubMessage{value: "first"}); err != nil {
 			t.Fatalf("Send(first) returned error: %v", err)
@@ -114,11 +115,32 @@ func TestCollectStream(t *testing.T) {
 			t.Fatalf("Send(second) returned error: %v", err)
 		}
 
-		if len(stream.items) != 1 {
-			t.Fatalf("retained %d chunks, want 1", len(stream.items))
+		if !stream.has {
+			t.Fatal("expected stream to have retained a chunk")
 		}
-		if got := stream.items[0].value; got != "first" {
-			t.Errorf("items[0] value = %q, want %q", got, "first")
+		if got := stream.item.value; got != "first" {
+			t.Errorf("item value = %q, want %q", got, "first")
+		}
+	})
+}
+
+func TestLastStream(t *testing.T) {
+	// lastStream retains only the last sent chunk, discarding any previous ones.
+	t.Run("KeepsLast", func(t *testing.T) {
+		stream := &lastStream[stubMessage]{}
+
+		if err := stream.Send(stubMessage{value: "first"}); err != nil {
+			t.Fatalf("Send(first) returned error: %v", err)
+		}
+		if err := stream.Send(stubMessage{value: "second"}); err != nil {
+			t.Fatalf("Send(second) returned error: %v", err)
+		}
+
+		if !stream.has {
+			t.Fatal("expected stream to have retained a chunk")
+		}
+		if got := stream.item.value; got != "second" {
+			t.Errorf("item value = %q, want %q", got, "second")
 		}
 	})
 }

@@ -148,22 +148,38 @@ func (s *restStream[T]) sendError(result catena.StatusResult) error {
 	return nil
 }
 
-// collectStream is a catena.Stream that accumulates up to max chunks in memory,
-// silently discarding any beyond that. The REST transport uses it for unary
-// requests, where the streaming handler still emits chunks but only the first is
-// written back as a single JSON response, so retaining the rest would just waste
-// memory. Discarding is not an error: Send always returns nil so the handler
-// runs to completion and can still report StatusCodeOk.
-type collectStream[T catena.Message] struct {
-	items []T
-	max   int
+// firstStream retains only the first sent chunk, silently discarding the rest.
+// The REST transport uses it for unary param-info requests, where the streaming
+// handler still emits chunks but only the first is written back as a single JSON
+// response, so retaining the rest would just waste memory. Discarding is not an
+// error: Send always returns nil so the handler runs to completion and can still
+// report StatusCodeOk.
+type firstStream[T catena.Message] struct {
+	item T
+	has  bool
 }
 
-// Send retains the chunk while fewer than max chunks have been collected, and
-// otherwise discards it. It always returns nil.
-func (s *collectStream[T]) Send(chunk T) error {
-	if len(s.items) < s.max {
-		s.items = append(s.items, chunk)
+// Send retains the first chunk and discards any that follow. It always returns nil.
+func (s *firstStream[T]) Send(chunk T) error {
+	if !s.has {
+		s.item = chunk
+		s.has = true
 	}
+	return nil
+}
+
+// lastStream retains only the most recently sent chunk. The REST ExecuteCommand
+// endpoint is unary: the handler may stream several CommandResults, but the HTTP
+// reply carries a single response, so only the final Send is kept (earlier ones
+// are overwritten). Send always returns nil so the handler runs to completion.
+type lastStream[T catena.Message] struct {
+	item T
+	has  bool
+}
+
+// Send overwrites the retained chunk with the latest one. It always returns nil.
+func (s *lastStream[T]) Send(chunk T) error {
+	s.item = chunk
+	s.has = true
 	return nil
 }

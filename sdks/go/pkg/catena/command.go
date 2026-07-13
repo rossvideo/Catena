@@ -40,6 +40,7 @@ package catena
 
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"google.golang.org/protobuf/proto"
 )
 
 // CommandResult wraps protos.CommandResponse, representing the three possible
@@ -47,6 +48,13 @@ import (
 // Proto is the underlying proto message; it may be read or replaced directly.
 type CommandResult struct {
 	Proto *protos.CommandResponse
+}
+
+// ensure CommandResult implements the Message interface.
+var _ Message = CommandResult{}
+
+func (r CommandResult) Wire() proto.Message {
+	return r.Proto
 }
 
 // IsEmpty returns true if this is a no_response result.
@@ -65,28 +73,28 @@ func (r CommandResult) GetException() *protos.Exception {
 	return r.Proto.GetException()
 }
 
-// CommandReply returns a successful command response wrapping a value.
-func CommandReply(value Value) (CommandResult, StatusResult) {
+// CommandValue returns a successful command response wrapping a value.
+func CommandValue(value Value) CommandResult {
 	return CommandResult{
 		Proto: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Response{Response: value.Proto},
 		},
-	}, StatusResult{Code: StatusCodeOk}
+	}
 }
 
 // CommandNoResponse returns an empty command response (no_response).
-func CommandNoResponse() (CommandResult, StatusResult) {
+func CommandNoResponse() CommandResult {
 	return CommandResult{
 		Proto: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
 		},
-	}, StatusResult{Code: StatusCodeOk}
+	}
 }
 
-// CommandExceptionResult returns a command exception response.
+// CommandException returns a command exception response.
 // exType is the exception type, details provides additional context,
 // and errorMessage is a PolyglotText map of language code to display string (may be nil).
-func CommandExceptionResult(exType, details string, errorMessage PolyglotText) (CommandResult, StatusResult) {
+func CommandException(exType, details string, errorMessage PolyglotText) CommandResult {
 	exc := &protos.Exception{
 		Type:    exType,
 		Details: details,
@@ -98,11 +106,5 @@ func CommandExceptionResult(exType, details string, errorMessage PolyglotText) (
 		Proto: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Exception{Exception: exc},
 		},
-	}, StatusResult{Code: StatusCodeOk}
-}
-
-// CommandError returns a transport-level error (not a CommandResponse exception).
-// Use this for infrastructure errors like "handler not found" or "unimplemented".
-func CommandError(code StatusCode, msg string) (CommandResult, StatusResult) {
-	return CommandResult{}, StatusResult{Code: code, Error: msg}
+	}
 }
