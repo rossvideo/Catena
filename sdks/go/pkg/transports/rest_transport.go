@@ -678,7 +678,13 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 			return
 		}
 
-		if err := WriteProtoJSON(w, languagePack.Proto, http.StatusOK); err != nil {
+		// The handler wraps the inner pack (name + words); the REST response is
+		// the outer component that also carries the language tag.
+		component := &protos.DeviceComponent_ComponentLanguagePack{
+			Language:     language,
+			LanguagePack: languagePack.Proto,
+		}
+		if err := WriteProtoJSON(w, component, http.StatusOK); err != nil {
 			logger.Error("failed to write language pack response", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -696,7 +702,7 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 			return
 		}
 
-		languagePack := catena.NewLanguagePack(language).
+		languagePack := catena.NewLanguagePack().
 			WithName(pack.GetName()).
 			WithWords(pack.GetWords())
 

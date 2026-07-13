@@ -1959,7 +1959,7 @@ func TestRestTransportLanguagePackGetSuccess(t *testing.T) {
 			t.Fatalf("expected language es, got %s", language)
 		}
 
-		return catena.NewLanguagePack("es").
+		return catena.NewLanguagePack().
 			WithName("Spanish").
 			WithWords(map[string]string{
 				"greeting": "Hola",
@@ -2016,7 +2016,7 @@ func TestRestTransportLanguagePackPostSuccess(t *testing.T) {
 			t.Fatalf("expected language fr, got %s", language)
 		}
 
-		if languagePack.Proto == nil || languagePack.Proto.GetLanguagePack().GetName() != "French" {
+		if languagePack.Proto == nil || languagePack.GetName() != "French" {
 			t.Fatalf("expected French language pack, got %#v", languagePack.Proto)
 		}
 
@@ -2052,7 +2052,7 @@ func TestRestTransportLanguagePackPutSuccess(t *testing.T) {
 			t.Fatalf("expected language fr, got %s", language)
 		}
 
-		if languagePack.Proto == nil || languagePack.Proto.GetLanguagePack().GetName() != "French Updated" {
+		if languagePack.Proto == nil || languagePack.GetName() != "French Updated" {
 			t.Fatalf("expected updated French language pack, got %#v", languagePack.Proto)
 		}
 

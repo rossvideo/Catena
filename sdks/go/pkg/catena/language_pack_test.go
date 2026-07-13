@@ -39,44 +39,37 @@ package catena
 import "testing"
 
 func TestNewLanguagePack(t *testing.T) {
-	lp := NewLanguagePack("es")
+	lp := NewLanguagePack()
 
 	if lp.Proto == nil {
 		t.Fatal("expected non-nil Proto")
 	}
-	if lp.Proto.GetLanguage() != "es" {
-		t.Errorf("expected language 'es', got %q", lp.Proto.GetLanguage())
-	}
-	if lp.Proto.GetLanguagePack() == nil {
-		t.Fatal("expected non-nil inner LanguagePack")
-	}
 }
 
 func TestLanguagePackBuilder(t *testing.T) {
-	lp := NewLanguagePack("es").
+	lp := NewLanguagePack().
 		WithName("Global Spanish").
 		WithWord("greeting", "Hola").
 		WithWords(map[string]string{"parting": "Adiós", "greeting": "Buenos días"})
 
-	pack := lp.Proto.GetLanguagePack()
-	if pack.GetName() != "Global Spanish" {
-		t.Errorf("expected name 'Global Spanish', got %q", pack.GetName())
+	if lp.GetName() != "Global Spanish" {
+		t.Errorf("expected name 'Global Spanish', got %q", lp.GetName())
 	}
 	// WithWords should merge and overwrite the earlier WithWord entry.
-	if pack.GetWords()["greeting"] != "Buenos días" {
-		t.Errorf("expected greeting 'Buenos días', got %q", pack.GetWords()["greeting"])
+	if lp.GetWords()["greeting"] != "Buenos días" {
+		t.Errorf("expected greeting 'Buenos días', got %q", lp.GetWords()["greeting"])
 	}
-	if pack.GetWords()["parting"] != "Adiós" {
-		t.Errorf("expected parting 'Adiós', got %q", pack.GetWords()["parting"])
+	if lp.GetWords()["parting"] != "Adiós" {
+		t.Errorf("expected parting 'Adiós', got %q", lp.GetWords()["parting"])
 	}
 }
 
 func TestLanguagePackWithWordsInitializesMap(t *testing.T) {
 	// WithWords on a pack whose Words map is still nil must initialize it.
-	lp := NewLanguagePack("de").WithWords(map[string]string{"greeting": "Hallo"})
+	lp := NewLanguagePack().WithWords(map[string]string{"greeting": "Hallo"})
 
-	if lp.Proto.GetLanguagePack().GetWords()["greeting"] != "Hallo" {
-		t.Errorf("expected greeting 'Hallo', got %q", lp.Proto.GetLanguagePack().GetWords()["greeting"])
+	if lp.GetWords()["greeting"] != "Hallo" {
+		t.Errorf("expected greeting 'Hallo', got %q", lp.GetWords()["greeting"])
 	}
 }
 
@@ -84,14 +77,14 @@ func TestLanguagePackBuilderZeroValue(t *testing.T) {
 	// Builder methods must be safe on a zero-value LanguagePack (nil proto).
 	lp := LanguagePack{}.WithName("French").WithWord("greeting", "Bonjour")
 
-	if lp.Proto == nil || lp.Proto.GetLanguagePack() == nil {
+	if lp.Proto == nil {
 		t.Fatal("expected builder to lazily initialize the proto")
 	}
-	if lp.Proto.GetLanguagePack().GetName() != "French" {
-		t.Errorf("expected name 'French', got %q", lp.Proto.GetLanguagePack().GetName())
+	if lp.GetName() != "French" {
+		t.Errorf("expected name 'French', got %q", lp.GetName())
 	}
-	if lp.Proto.GetLanguagePack().GetWords()["greeting"] != "Bonjour" {
-		t.Errorf("expected greeting 'Bonjour', got %q", lp.Proto.GetLanguagePack().GetWords()["greeting"])
+	if lp.GetWords()["greeting"] != "Bonjour" {
+		t.Errorf("expected greeting 'Bonjour', got %q", lp.GetWords()["greeting"])
 	}
 }
 
@@ -104,7 +97,7 @@ func TestServer_RegisterLanguagePackHandler(t *testing.T) {
 		if language != "es" {
 			t.Errorf("expected language 'es', got %s", language)
 		}
-		return NewLanguagePack(language).WithName("Spanish"), StatusResult{Code: StatusCodeOk}
+		return NewLanguagePack().WithName("Spanish"), StatusResult{Code: StatusCodeOk}
 	})
 
 	lp, status := srv.InvokeLanguagePackHandler(0, "es", validTestTransportContext(nil))
@@ -115,8 +108,8 @@ func TestServer_RegisterLanguagePackHandler(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
-	if lp.Proto.GetLanguagePack().GetName() != "Spanish" {
-		t.Errorf("expected Spanish, got %q", lp.Proto.GetLanguagePack().GetName())
+	if lp.GetName() != "Spanish" {
+		t.Errorf("expected Spanish, got %q", lp.GetName())
 	}
 }
 
@@ -132,7 +125,7 @@ func TestServer_RegisterAddLanguageHandler(t *testing.T) {
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeAddLanguageHandler(0, "fr", NewLanguagePack("fr"), validTestTransportContext(nil))
+	status := srv.InvokeAddLanguageHandler(0, "fr", NewLanguagePack(), validTestTransportContext(nil))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -151,7 +144,7 @@ func TestServer_RegisterUpdateLanguageHandler(t *testing.T) {
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeUpdateLanguageHandler(0, "fr", NewLanguagePack("fr"), validTestTransportContext(nil))
+	status := srv.InvokeUpdateLanguageHandler(0, "fr", NewLanguagePack(), validTestTransportContext(nil))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -187,10 +180,10 @@ func TestServer_LanguageHandlersNotRegistered(t *testing.T) {
 	if _, status := srv.InvokeLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
 		t.Errorf("get: expected NotFound, got %v", status.Code)
 	}
-	if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack("es"), ctx); status.Code != StatusCodeNotFound {
+	if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
 		t.Errorf("add: expected NotFound, got %v", status.Code)
 	}
-	if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack("es"), ctx); status.Code != StatusCodeNotFound {
+	if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
 		t.Errorf("update: expected NotFound, got %v", status.Code)
 	}
 	if status := srv.InvokeDeleteLanguageHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
@@ -221,7 +214,7 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack("es"), noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
@@ -232,7 +225,7 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack("es"), noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
@@ -264,7 +257,7 @@ func TestServer_LanguageHandlersAccessDenied(t *testing.T) {
 	t.Run("add", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		srv.RegisterAccessHandler(denyAccess)
-		if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack("es"), ctx); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
@@ -272,7 +265,7 @@ func TestServer_LanguageHandlersAccessDenied(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		srv.RegisterAccessHandler(denyAccess)
-		if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack("es"), ctx); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
