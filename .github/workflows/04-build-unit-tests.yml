@@ -110,27 +110,22 @@ jobs:
         run: |
           set -euo pipefail
           export BUILD_TARGET="${GITHUB_WORKSPACE}/build/cpp"
-          
-          # Check if coverage data exists
-          if find "${BUILD_TARGET}" -name "*.gcda" | grep -q .; then
-            echo "Coverage data found, generating reports..."
-            gcovr \
-              --root "${GITHUB_WORKSPACE}/sdks/cpp" \
+          echo "Coverage data found, generating reports..."
+          gcovr \
+            --filter "${GITHUB_WORKSPACE}/sdks/cpp" \
+            --exclude-directories "test|tests|vendor" \
+            --cobertura "${BUILD_TARGET}/coverage.xml" \
+            --lcov "${BUILD_TARGET}/coverage.info" \
+            "${BUILD_TARGET}" || {
+              echo "Warning: gcovr failed, creating dummy coverage files"
+              gcovr \
               --filter "${GITHUB_WORKSPACE}/sdks/cpp" \
               --exclude-directories "test|tests|vendor" \
               --cobertura "${BUILD_TARGET}/coverage.xml" \
               --lcov "${BUILD_TARGET}/coverage.info" \
-              "${BUILD_TARGET}" || {
-              echo "Warning: gcovr failed, creating dummy coverage files"
-              echo '<?xml version="1.0" ?><coverage version="1.0"></coverage>' > "${BUILD_TARGET}/coverage.xml"
-              touch "${BUILD_TARGET}/coverage.info"
+              --gcov-ignore-parse-errors=negative_hits.warn \
+              "${BUILD_TARGET}"
             }
-          else
-            echo "No coverage data found (.gcda files), creating stub coverage files..."
-            mkdir -p "${BUILD_TARGET}"
-            echo '<?xml version="1.0" ?><coverage version="1.0"><packages></packages></coverage>' > "${BUILD_TARGET}/coverage.xml"
-            touch "${BUILD_TARGET}/coverage.info"
-          fi
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
