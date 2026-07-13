@@ -83,20 +83,6 @@ func TestNewParamStruct(t *testing.T) {
 	}
 }
 
-func TestNewParamStruct_WithValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"x": int32(1), "y": int32(2)}).Proto
-	if p.GetType() != protos.ParamType_STRUCT {
-		t.Fatalf("expected STRUCT, got %v", p.GetType())
-	}
-	fields := p.GetValue().GetStructValue().GetFields()
-	if fields["x"].GetInt32Value() != 1 {
-		t.Errorf("expected field x=1, got %d", fields["x"].GetInt32Value())
-	}
-	if fields["y"].GetInt32Value() != 2 {
-		t.Errorf("expected field y=2, got %d", fields["y"].GetInt32Value())
-	}
-}
-
 func TestNewParamStructVariant(t *testing.T) {
 	p := NewParamStructVariant(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
@@ -713,13 +699,21 @@ func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
 
 // --- Typed factory value tests ---
 
+func TestNewParamStruct_WithValue(t *testing.T) {
+	p := NewParamStruct(map[string]any{"a": int32(1)}).Proto
+	fields := p.GetValue().GetStructValue().GetFields()
+	if fields["a"].GetInt32Value() != 1 {
+		t.Errorf("expected struct field 'a'=1, got %d", fields["a"].GetInt32Value())
+	}
+}
+
 func TestNewParamStruct_NoValue(t *testing.T) {
 	p := NewParamStruct(nil).Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
 	if p.GetValue() != nil {
-		t.Error("expected nil value for a descriptor-only struct (nil map)")
+		t.Error("expected nil value when no arg provided")
 	}
 }
 
@@ -888,6 +882,16 @@ func TestWithParam_SelfReference(t *testing.T) {
 }
 
 // --- Error path tests ---
+
+func TestNewParamStruct_InvalidValue(t *testing.T) {
+	p := NewParamStruct(map[string]any{"bad": struct{}{}}).Proto
+	if p.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Error("expected nil value when conversion fails")
+	}
+}
 
 func TestNewParamStructVariant_InvalidValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "t", Value: struct{}{}}

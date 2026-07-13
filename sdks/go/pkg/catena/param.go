@@ -79,17 +79,11 @@ func NewParamString(value string) *Param {
 	}
 }
 
-// NewParamStruct creates a STRUCT param whose value is built from the given
-// field map. Field descriptors may additionally be attached with WithParam.
-// A nil or empty map yields a descriptor-only struct with no value set.
 func NewParamStruct(value map[string]any) *Param {
 	cp := &Param{
 		Proto: &protos.Param{
 			Type: protos.ParamType_STRUCT,
 		},
-	}
-	if len(value) == 0 {
-		return cp
 	}
 	pv, res := ToProto(value)
 	if res.Code != StatusCodeOk {
