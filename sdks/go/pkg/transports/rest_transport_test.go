@@ -2120,19 +2120,17 @@ func TestRestTransport_Languages_Route(t *testing.T) {
 		t.Error("registered handler was not called")
 	}
 
-	var response struct {
-		Languages []string `json:"languages"`
-	}
+	var response []string
 	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
 		t.Fatalf("invalid JSON response: %v", err)
 	}
 	expected := []string{"en", "fr", "es", "de"}
-	if len(response.Languages) != len(expected) {
-		t.Fatalf("expected %d languages, got %d", len(expected), len(response.Languages))
+	if len(response) != len(expected) {
+		t.Fatalf("expected %d languages, got %d", len(expected), len(response))
 	}
 	for i, lang := range expected {
-		if response.Languages[i] != lang {
-			t.Errorf("language[%d]: expected %q, got %q", i, lang, response.Languages[i])
+		if response[i] != lang {
+			t.Errorf("language[%d]: expected %q, got %q", i, lang, response[i])
 		}
 	}
 }
@@ -2148,14 +2146,15 @@ func TestRestTransport_Languages_EmptyList(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 	assertContentType(t, rec, "application/json")
 
-	var response struct {
-		Languages []string `json:"languages"`
-	}
+	var response []string
 	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
 		t.Fatalf("invalid JSON response: %v", err)
 	}
-	if len(response.Languages) != 0 {
-		t.Errorf("expected empty languages list, got %v", response.Languages)
+	if len(response) != 0 {
+		t.Errorf("expected empty languages list, got %v", response)
+	}
+	if !strings.HasPrefix(strings.TrimSpace(rec.Body.String()), "[") {
+		t.Errorf("expected bare JSON array, got %q", rec.Body.String())
 	}
 }
 
