@@ -238,7 +238,7 @@ jobs:
 
   stage7_trigger_build_examples:
     name: "7 - Trigger Build Examples"
-    needs: stage1_toolchain_delta
+    needs: stage6_finalize_toolchain_tags
     if: ${{ github.ref == 'refs/heads/develop' && ((github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     steps:

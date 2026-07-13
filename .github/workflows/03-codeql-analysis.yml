@@ -16,6 +16,10 @@ name: "03 CodeQL Analysis"
         type: string
         default: ghcr.io/rossvideo/catena-go-toolchain:develop
 
+concurrency:
+  group: codeql-${{ github.event_name }}-${{ github.ref }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   detect_changes:
     name: Detect language changes
