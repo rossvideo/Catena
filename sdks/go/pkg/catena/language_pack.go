@@ -29,11 +29,8 @@
  */
 
 /**
- * @brief A parent class for REST test fixtures.
- * @author benjamin.whitten@rossvideo.com
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @author keon.foster@rossvideo.com
- * @date 2026-02-19
+ * @brief Language pack handling for the Catena SDK.
+ * @file language_pack.go
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -41,27 +38,58 @@ package catena
 
 import "github.com/rossvideo/catena/sdks/go/pkg/protos"
 
-// LanguagePack wraps protos.DeviceComponent_ComponentLanguagePack for language-pack handling.
+// LanguagePack wraps a protos.DeviceComponent_ComponentLanguagePack and exposes
+// a fluent builder API so SDK users don't have to touch protos directly.
 type LanguagePack struct {
-	response *protos.DeviceComponent_ComponentLanguagePack
+	Proto *protos.DeviceComponent_ComponentLanguagePack
 }
 
-// NewLanguagePack creates a LanguagePack response.
-func NewLanguagePack(language string, pack *protos.LanguagePack) LanguagePack {
+// NewLanguagePack creates a LanguagePack for the given language code (e.g. "es").
+func NewLanguagePack(language string) LanguagePack {
 	return LanguagePack{
-		response: &protos.DeviceComponent_ComponentLanguagePack{
+		Proto: &protos.DeviceComponent_ComponentLanguagePack{
 			Language:     language,
-			LanguagePack: pack,
+			LanguagePack: &protos.LanguagePack{},
 		},
 	}
 }
 
-// NewLanguagePackFromProto wraps an existing proto language-pack response.
-func NewLanguagePackFromProto(response *protos.DeviceComponent_ComponentLanguagePack) LanguagePack {
-	return LanguagePack{response: response}
+// WithName sets the human-readable name of the language pack (e.g. "Global Spanish").
+func (lp LanguagePack) WithName(name string) LanguagePack {
+	lp.ensurePack()
+	lp.Proto.LanguagePack.Name = name
+	return lp
 }
 
-// GetProtoResponse returns the underlying protos.DeviceComponent_ComponentLanguagePack.
-func (lp LanguagePack) GetProtoResponse() *protos.DeviceComponent_ComponentLanguagePack {
-	return lp.response
+// WithWord adds or overwrites a single translation entry (e.g. "greeting" -> "Hola").
+func (lp LanguagePack) WithWord(key, value string) LanguagePack {
+	lp.ensurePack()
+	if lp.Proto.LanguagePack.Words == nil {
+		lp.Proto.LanguagePack.Words = map[string]string{}
+	}
+	lp.Proto.LanguagePack.Words[key] = value
+	return lp
+}
+
+// WithWords merges the given translation entries into the language pack.
+func (lp LanguagePack) WithWords(words map[string]string) LanguagePack {
+	lp.ensurePack()
+	if lp.Proto.LanguagePack.Words == nil {
+		lp.Proto.LanguagePack.Words = map[string]string{}
+	}
+	for key, value := range words {
+		lp.Proto.LanguagePack.Words[key] = value
+	}
+	return lp
+}
+
+// ensurePack lazily initializes the wrapped proto so the builder methods are
+// safe to call even on a zero-value LanguagePack.
+func (lp *LanguagePack) ensurePack() {
+	if lp.Proto == nil {
+		lp.Proto = &protos.DeviceComponent_ComponentLanguagePack{}
+	}
+	if lp.Proto.LanguagePack == nil {
+		lp.Proto.LanguagePack = &protos.LanguagePack{}
+	}
 }

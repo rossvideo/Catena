@@ -669,13 +669,16 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 			return
 		}
 
-		protoResp := languagePack.GetProtoResponse()
-		if protoResp == nil {
-			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, "language pack not found"))
+		// A nil proto on an OK result is an internal contract violation by the
+		// handler, not a not-found; surface it as an internal error rather than
+		// overwriting the successful outcome with a 404.
+		if languagePack.Proto == nil {
+			logger.Error("language pack handler returned OK with nil proto", "slot", slot, "language", language)
+			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "language pack response was empty"))
 			return
 		}
 
-		if err := WriteProtoJSON(w, protoResp, http.StatusOK); err != nil {
+		if err := WriteProtoJSON(w, languagePack.Proto, http.StatusOK); err != nil {
 			logger.Error("failed to write language pack response", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -693,18 +696,16 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 			return
 		}
 
-		operation := catena.LanguagePackMutationAdd
-		if r.Method == http.MethodPut {
-			operation = catena.LanguagePackMutationUpdate
-		}
+		languagePack := catena.NewLanguagePack(language).
+			WithName(pack.GetName()).
+			WithWords(pack.GetWords())
 
-		res := t.runtime.InvokeLanguagePackMutationHandler(
-			slot,
-			language,
-			operation,
-			catena.NewLanguagePack(language, pack),
-			transportContext,
-		)
+		var res catena.StatusResult
+		if r.Method == http.MethodPut {
+			res = t.runtime.InvokeUpdateLanguageHandler(slot, language, languagePack, transportContext)
+		} else {
+			res = t.runtime.InvokeAddLanguageHandler(slot, language, languagePack, transportContext)
+		}
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
 			return
@@ -712,13 +713,7 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 		w.WriteHeader(http.StatusNoContent)
 
 	case http.MethodDelete:
-		res := t.runtime.InvokeLanguagePackMutationHandler(
-			slot,
-			language,
-			catena.LanguagePackMutationDelete,
-			catena.LanguagePack{},
-			transportContext,
-		)
+		res := t.runtime.InvokeDeleteLanguageHandler(slot, language, transportContext)
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
 			return

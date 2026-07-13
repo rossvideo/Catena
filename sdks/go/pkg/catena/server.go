@@ -137,15 +137,9 @@ type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset,
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
 type LanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
-type LanguagePackMutationOperation int
-
-const (
-	LanguagePackMutationAdd LanguagePackMutationOperation = iota
-	LanguagePackMutationUpdate
-	LanguagePackMutationDelete
-)
-
-type LanguagePackMutationHandler func(slot uint16, language string, operation LanguagePackMutationOperation, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type AddLanguageHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type UpdateLanguageHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type DeleteLanguageHandler func(slot uint16, language string, ctx HandlerContext) StatusResult
 
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
@@ -203,7 +197,9 @@ type Server interface {
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	RegisterLanguagePackHandler(slot uint16, handler LanguagePackHandler)
-	RegisterLanguagePackMutationHandler(slot uint16, handler LanguagePackMutationHandler)
+	RegisterAddLanguageHandler(slot uint16, handler AddLanguageHandler)
+	RegisterUpdateLanguageHandler(slot uint16, handler UpdateLanguageHandler)
+	RegisterDeleteLanguageHandler(slot uint16, handler DeleteLanguageHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
 
@@ -226,7 +222,9 @@ type ServerRuntime interface {
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
 	InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult)
-	InvokeLanguagePackMutationHandler(slot uint16, language string, operation LanguagePackMutationOperation, languagePack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeAddLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeUpdateLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeDeleteLanguageHandler(slot uint16, language string, transportContext TransportContext) StatusResult
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -253,7 +251,9 @@ type server struct {
 	executeCommandHandlers       map[uint16]ExecuteCommandHandler
 	paramInfoHandlers            map[uint16]ParamInfoHandler
 	languagePackHandlers         map[uint16]LanguagePackHandler
-	languagePackMutationHandlers map[uint16]LanguagePackMutationHandler
+	addLanguageHandlers          map[uint16]AddLanguageHandler
+	updateLanguageHandlers       map[uint16]UpdateLanguageHandler
+	deleteLanguageHandlers       map[uint16]DeleteLanguageHandler
 	heartbeatHandlers            map[uint16]HeartbeatHandler
 	accessHandler                AccessHandler // optional fallback for slots without specific handlers
 	connectionQueue              connectionQueueInterface
@@ -291,7 +291,9 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		executeCommandHandlers:       make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:            make(map[uint16]ParamInfoHandler),
 		languagePackHandlers:         make(map[uint16]LanguagePackHandler),
-		languagePackMutationHandlers: make(map[uint16]LanguagePackMutationHandler),
+		addLanguageHandlers:          make(map[uint16]AddLanguageHandler),
+		updateLanguageHandlers:       make(map[uint16]UpdateLanguageHandler),
+		deleteLanguageHandlers:       make(map[uint16]DeleteLanguageHandler),
 		heartbeatHandlers:            make(map[uint16]HeartbeatHandler),
 		accessHandler:                allowAllAccessHandler,
 		connectionQueue:              newConnectionQueue(opts.MaxConnections),
@@ -606,9 +608,31 @@ func (s *server) RegisterLanguagePackHandler(slot uint16, handler LanguagePackHa
 	}
 }
 
-func (s *server) RegisterLanguagePackMutationHandler(slot uint16, handler LanguagePackMutationHandler) {
+func (s *server) RegisterAddLanguageHandler(slot uint16, handler AddLanguageHandler) {
 	s.mu.Lock()
-	s.languagePackMutationHandlers[slot] = handler
+	s.addLanguageHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
+func (s *server) RegisterUpdateLanguageHandler(slot uint16, handler UpdateLanguageHandler) {
+	s.mu.Lock()
+	s.updateLanguageHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
+func (s *server) RegisterDeleteLanguageHandler(slot uint16, handler DeleteLanguageHandler) {
+	s.mu.Lock()
+	s.deleteLanguageHandlers[slot] = handler
 	newSlot := s.registerSlotLocked(slot)
 	s.mu.Unlock()
 
@@ -817,7 +841,7 @@ func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transpo
 	return LanguagePack{}, StatusWithCode(StatusCodeNotFound, "LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)))
 }
 
-func (s *server) InvokeLanguagePackMutationHandler(slot uint16, language string, operation LanguagePackMutationOperation, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+func (s *server) InvokeAddLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != StatusCodeOk {
 		return res
@@ -832,15 +856,67 @@ func (s *server) InvokeLanguagePackMutationHandler(slot uint16, language string,
 	}
 
 	s.mu.Lock()
-	handler, ok := s.languagePackMutationHandlers[slot]
+	handler, ok := s.addLanguageHandlers[slot]
 	s.mu.Unlock()
 
 	if ok && handler != nil {
-		return handler(slot, language, operation, languagePack, handlerContext)
+		return handler(slot, language, languagePack, handlerContext)
 	}
 
-	logger.Warning("LanguagePackMutationHandler called - no handler registered for this slot", "slot", slot, "language", language)
-	return StatusWithCode(StatusCodeNotFound, "LanguagePack mutation handler not found at slot "+strconv.Itoa(int(slot)))
+	logger.Warning("AddLanguageHandler called - no handler registered for this slot", "slot", slot, "language", language)
+	return StatusWithCode(StatusCodeNotFound, "AddLanguage handler not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeUpdateLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return res
+	}
+
+	if !s.hasWriteAccess(handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	if !s.isAccessAllowed(EndpointLanguagePack, handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.updateLanguageHandlers[slot]
+	s.mu.Unlock()
+
+	if ok && handler != nil {
+		return handler(slot, language, languagePack, handlerContext)
+	}
+
+	logger.Warning("UpdateLanguageHandler called - no handler registered for this slot", "slot", slot, "language", language)
+	return StatusWithCode(StatusCodeNotFound, "UpdateLanguage handler not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeDeleteLanguageHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return res
+	}
+
+	if !s.hasWriteAccess(handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	if !s.isAccessAllowed(EndpointLanguagePack, handlerContext) {
+		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.deleteLanguageHandlers[slot]
+	s.mu.Unlock()
+
+	if ok && handler != nil {
+		return handler(slot, language, handlerContext)
+	}
+
+	logger.Warning("DeleteLanguageHandler called - no handler registered for this slot", "slot", slot, "language", language)
+	return StatusWithCode(StatusCodeNotFound, "DeleteLanguage handler not found at slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
