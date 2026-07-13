@@ -38,6 +38,7 @@ package transports
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -69,6 +70,7 @@ type restStream[T catena.Message] struct {
 	flusher        http.Flusher
 	marshal        func(proto.Message) ([]byte, error)
 	ctx            context.Context
+	devMode        bool
 	headersWritten bool
 	sent           int
 }
@@ -112,6 +114,38 @@ func (s *restStream[T]) writeHeaders() {
 	s.w.WriteHeader(http.StatusOK)
 	s.flusher.Flush()
 	s.headersWritten = true
+}
+
+// sendError reports a StatusResult as an SSE "error" event (per the SseError
+// schema). It is used when an error occurs after the response headers have
+// already been committed - once a 200 is on the wire the HTTP status can no
+// longer change, so the failure is reported in-band as an error event instead.
+// The StatusCode is converted to an HTTP status, and the message follows the
+// same policy as unary errors: the detailed message is only exposed in dev mode,
+// otherwise it is generalized to the standard HTTP status text (a blank message
+// is omitted from the payload). It returns any write/flush error.
+func (s *restStream[T]) sendError(result catena.StatusResult) error {
+	httpStatus := ToHTTPStatus(result.Code)
+	message := http.StatusText(httpStatus)
+	if s.devMode {
+		message = result.Error
+	}
+
+	payload := struct {
+		Code    int    `json:"code"`
+		Message string `json:"message,omitempty"`
+	}{Code: httpStatus, Message: message}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	if _, err := fmt.Fprintf(s.w, "event: error\ndata: %s\n\n", data); err != nil {
+		return err
+	}
+	s.flusher.Flush()
+	return nil
 }
 
 // collectStream is a catena.Stream that accumulates up to max chunks in memory,

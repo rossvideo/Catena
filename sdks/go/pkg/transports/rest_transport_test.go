@@ -2120,7 +2120,8 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 	})
 
 	// hit the branch where BL streams some params, locking in the 200, then the handler returns an error.
-	// The transport must not rewrite the status or append an error payload.
+	// The transport can no longer change the HTTP status, so it reports the failure in-band as an SSE
+	// "error" event carrying the status code (and, in dev mode, the detailed message).
 	t.Run("StreamErrorAfterSomeSent", func(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
@@ -2132,19 +2133,26 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 
 		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/parent/stream?recursive=true", "")
 
-		// The first chunk committed the SSE 200, so the late error can only be
-		// logged - it must not rewrite the status or append an error payload.
+		// The first chunk committed the SSE 200, so the late error is reported as
+		// an SSE "error" event rather than by rewriting the HTTP status.
 		assertStatus(t, rec, http.StatusOK)
 		assertContentType(t, rec, "text/event-stream")
 
 		body := rec.Body.String()
-		if dataCount := strings.Count(body, "data:"); dataCount != 1 {
-			t.Errorf("expected the single sent chunk to remain, got %d data events\nbody:\n%s", dataCount, body)
+		if dataCount := strings.Count(body, "data:"); dataCount != 2 {
+			t.Errorf("expected the sent chunk plus the error event, got %d data events\nbody:\n%s", dataCount, body)
 		}
 		if !strings.Contains(body, `"oid":"parent/child1"`) {
 			t.Errorf("expected the sent chunk in the stream, got body:\n%s", body)
 		}
-		assertBodyNotContains(t, rec, `"error"`)
-		assertBodyNotContains(t, rec, "boom")
+		if !strings.Contains(body, "event: error\n") {
+			t.Errorf("expected an SSE error event, got body:\n%s", body)
+		}
+		if !strings.Contains(body, `"code":500`) {
+			t.Errorf("expected the error event to carry status code 500, got body:\n%s", body)
+		}
+		if !strings.Contains(body, "boom") {
+			t.Errorf("expected the dev-mode error message in the error event, got body:\n%s", body)
+		}
 	})
 }

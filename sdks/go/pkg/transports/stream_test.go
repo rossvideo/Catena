@@ -235,4 +235,70 @@ func TestRestStream(t *testing.T) {
 			t.Errorf("sent = %d, want 0 after a failed write", stream.sent)
 		}
 	})
+
+	t.Run("sendError exposes the detailed message in dev mode", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		stream := &restStream[catena.ParamInfo]{
+			w:       rec,
+			flusher: rec,
+			marshal: MarshalProtoJSON,
+			ctx:     context.Background(),
+			devMode: true,
+		}
+
+		if err := stream.sendError(catena.StatusWithCode(catena.StatusCodeInternal, "boom")); err != nil {
+			t.Fatalf("sendError returned error: %v", err)
+		}
+
+		body := rec.Body.String()
+		if !strings.Contains(body, "event: error\n") {
+			t.Errorf("body missing error event line:\n%s", body)
+		}
+		if !strings.Contains(body, `"code":500`) {
+			t.Errorf("body missing converted status code:\n%s", body)
+		}
+		if !strings.Contains(body, `"message":"boom"`) {
+			t.Errorf("dev mode should expose the detailed message:\n%s", body)
+		}
+	})
+
+	t.Run("sendError generalizes the message outside dev mode", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		stream := &restStream[catena.ParamInfo]{
+			w:       rec,
+			flusher: rec,
+			marshal: MarshalProtoJSON,
+			ctx:     context.Background(),
+			devMode: false,
+		}
+
+		if err := stream.sendError(catena.StatusWithCode(catena.StatusCodeNotFound, "param /foo not found")); err != nil {
+			t.Fatalf("sendError returned error: %v", err)
+		}
+
+		body := rec.Body.String()
+		if !strings.Contains(body, `"code":404`) {
+			t.Errorf("body missing converted status code:\n%s", body)
+		}
+		if !strings.Contains(body, `"message":"Not Found"`) {
+			t.Errorf("non-dev mode should generalize to the status text:\n%s", body)
+		}
+		if strings.Contains(body, "param /foo not found") {
+			t.Errorf("non-dev mode must not leak the detailed message:\n%s", body)
+		}
+	})
+
+	t.Run("sendError propagates a write error", func(t *testing.T) {
+		w := &failingResponseWriter{}
+		stream := &restStream[catena.ParamInfo]{
+			w:       w,
+			flusher: w,
+			marshal: MarshalProtoJSON,
+			ctx:     context.Background(),
+		}
+
+		if err := stream.sendError(catena.StatusWithCode(catena.StatusCodeInternal, "boom")); err == nil {
+			t.Fatal("sendError returned nil, want a write error")
+		}
+	})
 }

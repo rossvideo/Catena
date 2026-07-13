@@ -714,7 +714,9 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 
 // streamParamInfo streams param info entries to the client as Server-Sent
 // Events. The restStream writes SSE headers lazily on the first chunk, so if the
-// handler emits nothing before erroring this method can still report a status.
+// handler emits nothing before erroring this method can still report a status;
+// once chunks have been sent, a later error is reported in-band as an SSE
+// "error" event carrying the HTTP status code.
 func (t *RestTransport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -728,17 +730,19 @@ func (t *RestTransport) streamParamInfo(w http.ResponseWriter, r *http.Request, 
 		flusher: flusher,
 		marshal: MarshalProtoJSON,
 		ctx:     r.Context(),
+		devMode: t.isDevMode(),
 	}
 	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
 
 	if result.IsError() {
-		// Once any chunk has been streamed the HTTP status is committed, so a
-		// late error can only be logged. With nothing sent yet we can still set
-		// the error status.
+		// With nothing sent yet the HTTP status is still uncommitted, so we can
+		// set a normal error status. Once any chunk has been streamed the 200 is
+		// already on the wire, so the error is reported in-band as an SSE "error"
+		// event carrying the status code that would have been returned.
 		if stream.sent == 0 {
 			t.writeHTTPStatusResult(w, result)
-		} else {
-			logger.Error("param-info stream handler error after partial send", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send param-info SSE error event", "slot", slot, "oid_prefix", oidPrefix, "error", err)
 		}
 		return
 	}
