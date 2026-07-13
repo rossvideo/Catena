@@ -9,7 +9,7 @@ import (
 // handler returns the language codes the device model supports; adopters would
 // derive this from their own language packs. Here a small static list is used.
 func registerLanguagesHandlers(srv catena.Server) {
-	supported := []string{"en", "fr", "es", "de"}
+	supported := []string{"en", "fr"}
 	for _, slot := range slotList {
 		srv.RegisterListLanguagesHandler(slot, func(slot uint16, ctx catena.HandlerContext) ([]string, catena.StatusResult) {
 			logger.Info("ListLanguages", "slot", slot)
