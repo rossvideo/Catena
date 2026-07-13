@@ -135,6 +135,7 @@ jobs:
           check_name: C++ Unit Tests
 
       - uses: actions/upload-code-coverage@v1
+        if: ${{ github.ref == 'refs/heads/develop' || github.event_name == 'pull_request' }}
         with:
           file: ${{ env.BUILD_TARGET }}/coverage.xml
           language: C++
@@ -209,6 +210,7 @@ jobs:
           check_name: Go Unit Tests
 
       - uses: actions/upload-code-coverage@v1
+        if: ${{ github.ref == 'refs/heads/develop' || github.event_name == 'pull_request' }}
         with:
           file: ${{ env.COVERAGE_DIR }}/go_coverage.xml
           language: Go
@@ -279,6 +281,7 @@ jobs:
           check_name: Codegen JS Unit Tests
 
       - uses: actions/upload-code-coverage@v1
+        if: ${{ github.ref == 'refs/heads/develop' || github.event_name == 'pull_request' }}
         with:
           file: ${{ github.workspace }}/tools/codegen/coverage/cobertura-coverage.xml
           language: JavaScript
