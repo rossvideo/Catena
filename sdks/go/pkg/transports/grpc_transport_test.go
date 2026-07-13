@@ -650,6 +650,27 @@ func TestGrpcTransport_ListLanguages_HandlerError(t *testing.T) {
 	assertGRPCCode(t, err, codes.NotFound, "handler error")
 }
 
+func TestGrpcTransport_ListLanguages_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		handlerCalled = true
+		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 999999})
+	assertGRPCCode(t, err, codes.InvalidArgument, "invalid slot number")
+	if handlerCalled {
+		t.Error("handler should not be called when slot validation fails")
+	}
+}
+
 // =============================================================================
 // Test: GetParam
 // =============================================================================
