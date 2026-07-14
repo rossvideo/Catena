@@ -5,7 +5,7 @@ import (
 )
 
 // Shared param makers are the single source of truth for slot 0's params. The
-// device descriptor (device_handler.go) calls .ToMap() on each; GetParam
+// device descriptor (device_handler.go) passes each maker to WithParam; GetParam
 // (get_param_handler.go) rebuilds that same device definition and reads the
 // requested OID back out of it. Because both endpoints trace back to these
 // makers, a param can never drift between GetDevice and GetParam.

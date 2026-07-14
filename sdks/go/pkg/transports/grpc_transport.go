@@ -271,7 +271,7 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 		return status.Error(ToGRPCCode(res.Code), res.Error)
 	}
 
-	protoDevice := device.GetProtoDevice()
+	protoDevice := device.Proto
 	if protoDevice == nil {
 		logger.Error("DeviceRequest device returned nil", "slot", slot)
 		return status.Error(codes.Internal, "device returned nil")
@@ -304,7 +304,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	return value.Value, nil
+	return value.Proto, nil
 }
 
 // SetValue sets the value of a parameter
@@ -390,7 +390,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	protoAsset := asset.GetProtoAsset()
+	protoAsset := asset.Proto
 	if protoAsset == nil {
 		logger.Error("ExternalObjectRequest asset returned nil", "slot", slot, "fqoid", fqoid)
 		return status.Error(codes.Internal, "asset returned nil")
@@ -427,7 +427,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	return stream.Send(cmdResult.GetProtoResponse())
+	return stream.Send(cmdResult.Proto)
 }
 
 // GetParam returns a single parameter (metadata + value)
@@ -485,7 +485,7 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 	}
 
 	for _, info := range infos {
-		protoResp := info.GetProtoResponse()
+		protoResp := info.Proto
 		if protoResp == nil {
 			logger.Error("ParamInfoRequest handler returned nil response entry", "slot", slot, "oid_prefix", oidPrefix)
 			return status.Error(codes.Internal, "param info entry is nil")

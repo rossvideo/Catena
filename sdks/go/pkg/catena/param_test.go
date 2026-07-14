@@ -1040,91 +1040,23 @@ func TestSetValue_InvalidThenValid(t *testing.T) {
 	}
 }
 
-func TestParamToMap_ForDeviceDefinition(t *testing.T) {
-	param := NewParamStruct(map[string]any{
-		"number": int32(7),
-		"text":   "hello",
-	}).
+func TestWithParam_StructValuesFromSubParams(t *testing.T) {
+	param := NewParamStruct(nil).
 		WithName(NewPolyglotText("en", "Struct Example")).
-		WithParam("number", NewParamInt32(0).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
-		WithParam("text", NewParamString(""))
+		WithParam("number", NewParamInt32(7).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
+		WithParam("text", NewParamString("hello"))
 
-	definition := param.ToMap()
-	if got, want := definition["type"], protos.ParamType_STRUCT; got != want {
-		t.Fatalf("expected top-level type %v, got %v", want, got)
+	if param.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Fatalf("expected STRUCT, got %v", param.Proto.GetType())
 	}
-
-	childDefinitions, ok := definition["params"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected child params map, got %#v", definition["params"])
+	number := param.Proto.GetParams()["number"]
+	if number.GetValue().GetInt32Value() != 7 {
+		t.Errorf("expected number sub-param value 7, got %d", number.GetValue().GetInt32Value())
 	}
-	numberDefinition, ok := childDefinitions["number"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected number child definition, got %#v", childDefinitions["number"])
+	if number.GetConstraint().GetInt32Range().GetMaxValue() != 10 {
+		t.Fatal("expected nested int32 range constraint max 10")
 	}
-	if got, want := numberDefinition["type"], protos.ParamType_INT32; got != want {
-		t.Fatalf("expected number type %v, got %v", want, got)
-	}
-
-	constraintDefinition, ok := numberDefinition["constraint"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected inline constraint map, got %#v", numberDefinition["constraint"])
-	}
-	if got, want := constraintDefinition["type"], protos.Constraint_INT_RANGE; got != want {
-		t.Fatalf("expected constraint type %v, got %v", want, got)
-	}
-
-	device, err := ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": DetailLevelFull,
-		"params": map[string]any{
-			"struct_example": definition,
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice with Param.ToMap output error: %v", err)
-	}
-
-	structParam := device.GetProtoDevice().GetParams()["struct_example"]
-	if structParam.GetType() != protos.ParamType_STRUCT {
-		t.Fatalf("expected STRUCT param, got %v", structParam.GetType())
-	}
-	if structParam.GetParams()["number"].GetConstraint().GetInt32Range().GetMaxValue() != 10 {
-		t.Fatalf("expected nested int32 range constraint max 10")
-	}
-}
-
-func TestParamToMap_NilParam(t *testing.T) {
-	var param *Param
-	if definition := param.ToMap(); len(definition) != 0 {
-		t.Fatalf("expected empty map for nil Param, got %#v", definition)
-	}
-}
-
-func TestParamToMap_NilProto(t *testing.T) {
-	param := &Param{}
-	if definition := param.ToMap(); len(definition) != 0 {
-		t.Fatalf("expected empty map for Param with nil Proto, got %#v", definition)
-	}
-}
-
-func TestNormalizeParamMap_SkipsInvalidChildDefinition(t *testing.T) {
-	param := NewParamStruct(map[string]any{
-		"number": int32(1),
-	}).WithParam("number", NewParamInt32(1)).Proto
-
-	definition := map[string]any{
-		"params": map[string]any{
-			"number": "not-a-map",
-		},
-	}
-
-	normalizeParamMap(definition, param)
-
-	if got, want := definition["type"], protos.ParamType_STRUCT; got != want {
-		t.Fatalf("expected parent type %v, got %v", want, got)
-	}
-	if definition["params"].(map[string]any)["number"] != "not-a-map" {
-		t.Fatal("expected invalid child definition to be left unchanged")
+	if param.Proto.GetParams()["text"].GetValue().GetStringValue() != "hello" {
+		t.Errorf("expected text sub-param value 'hello', got %q", param.Proto.GetParams()["text"].GetValue().GetStringValue())
 	}
 }

@@ -612,7 +612,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	transportContext := validTestTransportContext(map[string][]string{"tenant": {"test"}})
 
 	expected := Device{
-		device: &protos.Device{},
+		Proto: &protos.Device{},
 	}
 
 	handlerCalled := false
@@ -642,7 +642,7 @@ func TestServer_RegisterGetDeviceHandler(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
-	if !proto.Equal(actual.GetProtoDevice(), expected.GetProtoDevice()) {
+	if !proto.Equal(actual.Proto, expected.Proto) {
 		t.Errorf("expected device %v, got %v", expected, actual)
 	}
 
@@ -717,7 +717,7 @@ func TestServer_RegisterGetValueHandler(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
-	if !proto.Equal(actual.Value, expected.Value) {
+	if !proto.Equal(actual.Proto, expected.Proto) {
 		t.Errorf("expected value %v, got %v", expected, actual)
 	}
 
@@ -968,7 +968,7 @@ func TestServer_RegisterGetAssetHandler(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Errorf("expected OK status, got %v", status.Code)
 	}
-	if !proto.Equal(actual.GetProtoAsset(), expected.GetProtoAsset()) {
+	if !proto.Equal(actual.Proto, expected.Proto) {
 		t.Errorf("expected asset %v, got %v", expected, actual)
 	}
 

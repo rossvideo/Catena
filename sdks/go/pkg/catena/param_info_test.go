@@ -57,13 +57,13 @@ func TestNewParamInfo_Basic(t *testing.T) {
 	if pi.GetArrayLength() != 0 {
 		t.Errorf("expected array_length 0, got %d", pi.GetArrayLength())
 	}
-	if pi.GetProtoResponse() == nil {
+	if pi.Proto == nil {
 		t.Fatal("expected non-nil proto response")
 	}
-	if pi.GetProtoInfo() == nil {
+	if pi.Proto.GetInfo() == nil {
 		t.Fatal("expected non-nil proto info")
 	}
-	name := pi.GetProtoInfo().GetName()
+	name := pi.Proto.GetInfo().GetName()
 	if name == nil || name.GetDisplayStrings()["en"] != "Text Box" {
 		t.Errorf("expected display name 'Text Box' for en, got %v", name)
 	}
@@ -71,7 +71,7 @@ func TestNewParamInfo_Basic(t *testing.T) {
 
 func TestNewParamInfo_NilName(t *testing.T) {
 	pi := NewParamInfo("foo", nil, ParamTypeInt32, "", 0)
-	if pi.GetProtoInfo().GetName() != nil {
+	if pi.Proto.GetInfo().GetName() != nil {
 		t.Error("expected nil name when none was provided")
 	}
 }
@@ -83,53 +83,12 @@ func TestNewParamInfo_ArrayLength(t *testing.T) {
 	}
 }
 
-func TestToParamInfo_FromMap(t *testing.T) {
-	m := map[string]any{
-		"info": map[string]any{
-			"oid":          "brightness",
-			"type":         "INT32",
-			"template_oid": "tpl-2",
-			"name": map[string]any{
-				"display_strings": map[string]string{
-					"en": "Brightness",
-				},
-			},
-		},
-		"array_length": 0,
-	}
-
-	pi, err := ToParamInfo(m)
-	if err != nil {
-		t.Fatalf("ToParamInfo error: %v", err)
-	}
-	if pi.GetOid() != "brightness" {
-		t.Errorf("expected oid 'brightness', got %s", pi.GetOid())
-	}
-	if pi.GetParamType() != ParamTypeInt32 {
-		t.Errorf("expected type INT32, got %v", pi.GetParamType())
-	}
-	if pi.GetTemplateOid() != "tpl-2" {
-		t.Errorf("expected template_oid 'tpl-2', got %s", pi.GetTemplateOid())
-	}
-}
-
-func TestToParamInfo_InvalidProto(t *testing.T) {
-	m := map[string]any{
-		"info": map[string]any{
-			"type": "NOT_A_TYPE",
-		},
-	}
-	if _, err := ToParamInfo(m); err == nil {
-		t.Error("expected error for invalid ParamType, got nil")
-	}
-}
-
 func TestParamInfo_ZeroValue(t *testing.T) {
 	var pi ParamInfo
-	if pi.GetProtoResponse() != nil {
+	if pi.Proto != nil {
 		t.Error("expected nil proto response for zero value")
 	}
-	if pi.GetProtoInfo() != nil {
+	if pi.Proto.GetInfo() != nil {
 		t.Error("expected nil proto info for zero value")
 	}
 	if pi.GetOid() != "" {
@@ -150,7 +109,7 @@ func TestParamInfosForRequest_RootNonRecursive(t *testing.T) {
 }
 
 func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
-	infos, res := ParamInfosForRequest("/parent", testDeviceDefinition(), true)
+	infos, res := ParamInfosForRequest("parent", testDeviceDefinition(), true)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -165,26 +124,12 @@ func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
 }
 
 func TestParamInfosForRequest_ArrayLengthFromValue(t *testing.T) {
-	infos, res := ParamInfosForRequest("/numbers", testDeviceDefinition(), false)
+	infos, res := ParamInfosForRequest("numbers", testDeviceDefinition(), false)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 	if infos[0].GetArrayLength() != 3 {
 		t.Errorf("expected array_length 3 from value length, got %d", infos[0].GetArrayLength())
-	}
-}
-
-func TestParamInfosForRequest_IgnoresDescriptorArrayLengthField(t *testing.T) {
-	device := testDeviceDefinition()
-	numbers := device["params"].(map[string]any)["numbers"].(map[string]any)
-	numbers["array_length"] = 99
-
-	infos, res := ParamInfosForRequest("/numbers", device, false)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
-	}
-	if infos[0].GetArrayLength() != 3 {
-		t.Errorf("expected descriptor array_length to be ignored, got %d", infos[0].GetArrayLength())
 	}
 }
 
@@ -198,43 +143,21 @@ func TestParamInfosForRequest_MissingParam(t *testing.T) {
 	}
 }
 
-func TestParamInfosForRequest_InvalidDeviceParams(t *testing.T) {
-	_, res := ParamInfosForRequest("", map[string]any{}, false)
+func TestParamInfosForRequest_NilDevice(t *testing.T) {
+	_, res := ParamInfosForRequest("", nil, false)
 	if res.Code != StatusCodeInternal {
 		t.Fatalf("expected INTERNAL, got %v: %s", res.Code, res.Error)
 	}
 }
 
-func testDeviceDefinition() map[string]any {
-	return map[string]any{
-		"params": map[string]any{
-			"parent": map[string]any{
-				"type": ParamTypeStruct,
-				"name": map[string]any{
-					"display_strings": map[string]any{"en": "Parent"},
-				},
-				"params": map[string]any{
-					"child": map[string]any{
-						"type": ParamTypeString,
-					},
-				},
-			},
-			"alpha": map[string]any{
-				"type": ParamTypeInt32,
-				"name": map[string]any{
-					"display_strings": map[string]string{"en": "Alpha"},
-				},
-			},
-			"numbers": map[string]any{
-				"type": ParamTypeInt32Array,
-				"value": map[string]any{
-					"int32_array_values": map[string]any{
-						"ints": []int32{1, 2, 3},
-					},
-				},
-			},
-		},
-	}
+func testDeviceDefinition() *Device {
+	return NewDevice(0).
+		WithParam("parent", NewParamStruct(nil).
+			WithName(NewPolyglotText("en", "Parent")).
+			WithParam("child", NewParamString(""))).
+		WithParam("alpha", NewParamInt32(0).
+			WithName(NewPolyglotText("en", "Alpha"))).
+		WithParam("numbers", NewParamInt32Array([]int32{1, 2, 3}))
 }
 
 func assertParamInfoOids(t *testing.T, infos []ParamInfo, expected []string) {

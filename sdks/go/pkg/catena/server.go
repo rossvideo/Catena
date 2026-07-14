@@ -204,6 +204,14 @@ type Server interface {
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
 
+	// RegisterProductStruct hands the mandatory product struct for a slot to the
+	// SDK. Once registered, the SDK injects the product param into the device on
+	// GetDevice, answers GetValue and ParamInfo for product/*, and rejects
+	// SetValue writes to product/* with StatusCodePermissionDenied — business
+	// logic no longer needs to handle the product struct.
+	// Note: If you do not register a product struct for a slot, requests for product/* values or info will fail with StatusCodeNotFound.
+	RegisterProductStruct(slot uint16, product ProductStruct)
+
 	SetMaxConnections(max int)
 	ConnectionCount() int
 	BroadcastUpdate(slot uint16, oid string, value any, scope string)
@@ -252,7 +260,8 @@ type server struct {
 	paramInfoHandlers      map[uint16]ParamInfoHandler
 	listLanguagesHandlers  map[uint16]ListLanguagesHandler
 	heartbeatHandlers      map[uint16]HeartbeatHandler
-	accessHandler          AccessHandler // optional fallback for slots without specific handlers
+	productStructs         map[uint16]ProductStruct // SDK-managed product per slot
+	accessHandler          AccessHandler            // optional fallback for slots without specific handlers
 	connectionQueue        connectionQueueInterface
 	heartbeat              *Heartbeat
 	transports             []Transport
@@ -290,6 +299,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		listLanguagesHandlers:  make(map[uint16]ListLanguagesHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
+		productStructs:         make(map[uint16]ProductStruct),
 		accessHandler:          allowAllAccessHandler,
 		connectionQueue:        newConnectionQueue(opts.MaxConnections),
 		transports:             []Transport{},
@@ -634,6 +644,26 @@ func (s *server) RegisterAccessHandler(handler AccessHandler) {
 	s.mu.Unlock()
 }
 
+func (s *server) RegisterProductStruct(slot uint16, product ProductStruct) {
+	s.mu.Lock()
+	s.productStructs[slot] = product
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
+// productForSlot returns the SDK-managed product struct registered for a slot,
+// if any.
+func (s *server) productForSlot(slot uint16) (ProductStruct, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	product, ok := s.productStructs[slot]
+	return product, ok
+}
+
 func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult) {
 	handlerContext, res := s.resolveHandlerContext(transportContext)
 	if res.Code != StatusCodeOk {
@@ -652,7 +682,15 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 	s.mu.Unlock()
 
 	if ok {
-		return handler(slot, handlerContext)
+		device, res := handler(slot, handlerContext)
+		// Overwrite the product/* fields in whatever the business logic returned
+		// with the SDK-managed product struct, if one is registered for the slot.
+		if res.IsOk() {
+			if product, has := s.productForSlot(slot); has && device.Proto != nil {
+				device.WithParam(ProductOid, ProductParam(product))
+			}
+		}
+		return device, res
 	}
 	// TODO: lookup default handler for slot
 	logger.Warning("GetDeviceHandler called - no handler registered for this slot")
@@ -670,6 +708,14 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 	}
 	if !s.isAccessAllowed(EndpointGetValue, handlerContext) {
 		return ReplyError[Value](StatusCodePermissionDenied, "Permission denied")
+	}
+
+	// The SDK owns product/* when a product struct is registered for the slot;
+	// answer it directly instead of passing to business logic.
+	if isProductOid(fqoid) {
+		if product, has := s.productForSlot(slot); has {
+			return productValueForOid(product, fqoid)
+		}
 	}
 
 	s.mu.Lock()
@@ -695,6 +741,14 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 	}
 	if !s.isAccessAllowed(EndpointGetParam, handlerContext) {
 		return Param{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	// The SDK owns product/* when a product struct is registered for the slot;
+	// answer it directly instead of passing to business logic.
+	if isProductOid(fqoid) {
+		if product, has := s.productForSlot(slot); has {
+			return productParamForOid(product, fqoid)
+		}
 	}
 
 	s.mu.Lock()
@@ -724,6 +778,14 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 	}
 	if !s.isAccessAllowed(EndpointSetValue, handlerContext) {
 		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	// The product struct is always read-only; reject any write targeting
+	// product/* regardless of whether the SDK or business logic manages it.
+	for _, entry := range entries {
+		if isProductOid(entry.Fqoid) {
+			return StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
+		}
 	}
 
 	s.mu.Lock()
@@ -799,6 +861,14 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	}
 	if !s.isAccessAllowed(EndpointParamInfo, handlerContext) {
 		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	// The SDK owns product/* ParamInfo when a product struct is registered for
+	// the slot; answer it directly instead of passing to business logic.
+	if isProductOid(oidPrefix) {
+		if product, has := s.productForSlot(slot); has {
+			return productParamInfosForOid(product, oidPrefix, recursive)
+		}
 	}
 
 	s.mu.Lock()
