@@ -83,8 +83,32 @@ func ParamInfosForRequest(fqoid string, device *Device, recursive bool, stream S
 	if device == nil || device.Proto == nil {
 		return StatusWithCode(StatusCodeInternal, "invalid device")
 	}
+	params := device.Proto.GetParams()
 
-	return paramInfosForRequest(device.Proto.GetParams(), fqoid, recursive, stream)
+	if fqoid == "" {
+		if err := sendParamInfos(params, "", recursive, stream); err != nil {
+			return StatusWithCode(StatusCodeInternal, err.Error())
+		}
+		return StatusWithCode(StatusCodeOk, "")
+	}
+
+	param, ok := findParamDescriptor(params, fqoid)
+	if !ok {
+		return StatusWithCode(StatusCodeNotFound, "param not found: "+fqoid)
+	}
+
+	if err := stream.Send(newParamInfoFromDescriptor(fqoid, param)); err != nil {
+		return StatusWithCode(StatusCodeInternal, err.Error())
+	}
+	if recursive {
+		if children := param.GetParams(); len(children) > 0 {
+			if err := sendParamInfos(children, fqoid, true, stream); err != nil {
+				return StatusWithCode(StatusCodeInternal, err.Error())
+			}
+		}
+	}
+
+	return StatusWithCode(StatusCodeOk, "")
 }
 
 func paramDisplayName(param *protos.Param) PolyglotText {
@@ -169,33 +193,6 @@ func findParamDescriptor(params map[string]*protos.Param, oid string) (*protos.P
 	}
 
 	return param, true
-}
-
-func paramInfosForRequest(params map[string]*protos.Param, oid string, recursive bool, stream Stream[ParamInfo]) StatusResult {
-	if oid == "" {
-		if err := sendParamInfos(params, "", recursive, stream); err != nil {
-			return StatusWithCode(StatusCodeInternal, err.Error())
-		}
-		return StatusWithCode(StatusCodeOk, "")
-	}
-
-	param, ok := findParamDescriptor(params, oid)
-	if !ok {
-		return StatusWithCode(StatusCodeNotFound, "param not found: "+oid)
-	}
-
-	if err := stream.Send(newParamInfoFromDescriptor(oid, param)); err != nil {
-		return StatusWithCode(StatusCodeInternal, err.Error())
-	}
-	if recursive {
-		if children := param.GetParams(); len(children) > 0 {
-			if err := sendParamInfos(children, oid, true, stream); err != nil {
-				return StatusWithCode(StatusCodeInternal, err.Error())
-			}
-		}
-	}
-
-	return StatusWithCode(StatusCodeOk, "")
 }
 
 // Ensure ParamInfo can be streamed as a Message.

@@ -54,55 +54,6 @@ func (stubMessage) Wire() proto.Message {
 	return nil
 }
 
-func TestSliceStream(t *testing.T) {
-	t.Run("collects chunks in order", func(t *testing.T) {
-		stream := &sliceStream[stubMessage]{}
-
-		first := stubMessage{id: 1}
-		second := stubMessage{id: 2}
-
-		if err := stream.Send(first); err != nil {
-			t.Fatalf("Send(first) returned error: %v", err)
-		}
-		if err := stream.Send(second); err != nil {
-			t.Fatalf("Send(second) returned error: %v", err)
-		}
-
-		collected := stream.Items
-		if len(collected) != 2 {
-			t.Fatalf("collected %d chunks, want 2", len(collected))
-		}
-		if got := collected[0].id; got != 1 {
-			t.Errorf("collected[0] id = %d, want %d", got, 1)
-		}
-		if got := collected[1].id; got != 2 {
-			t.Errorf("collected[1] id = %d, want %d", got, 2)
-		}
-	})
-
-	t.Run("returns Err after FailAfter chunks", func(t *testing.T) {
-		wantErr := errors.New("send failed")
-		stream := &sliceStream[stubMessage]{Err: wantErr, FailAfter: 1}
-
-		if err := stream.Send(stubMessage{id: 1}); err != nil {
-			t.Fatalf("Send(first) returned error before FailAfter: %v", err)
-		}
-		if err := stream.Send(stubMessage{id: 2}); !errors.Is(err, wantErr) {
-			t.Fatalf("Send(second) error = %v, want %v", err, wantErr)
-		}
-
-		// Only the chunks accepted before the failure should be recorded.
-		if len(stream.Items) != 1 {
-			t.Fatalf("recorded %d chunks, want 1", len(stream.Items))
-		}
-		if got := stream.Items[0].id; got != 1 {
-			t.Errorf("Items[0] id = %d, want %d", got, 1)
-		}
-	})
-}
-
-var _ Stream[stubMessage] = &sliceStream[stubMessage]{}
-
 func TestShutdownStream(t *testing.T) {
 	t.Run("delegates to inner while shutdown context is live", func(t *testing.T) {
 		inner := &sliceStream[stubMessage]{}
@@ -140,6 +91,63 @@ func TestShutdownStream(t *testing.T) {
 		}
 	})
 }
+
+// This is just testing the test infrastructure
+func TestSliceStream(t *testing.T) {
+	t.Run("collects chunks in order", func(t *testing.T) {
+		stream := &sliceStream[stubMessage]{}
+
+		first := stubMessage{id: 1}
+		second := stubMessage{id: 2}
+		third := stubMessage{id: 3}
+
+		if err := stream.Send(first); err != nil {
+			t.Fatalf("Send(first) returned error: %v", err)
+		}
+		if err := stream.Send(second); err != nil {
+			t.Fatalf("Send(second) returned error: %v", err)
+		}
+		if err := stream.Send(third); err != nil {
+			t.Fatalf("Send(third) returned error: %v", err)
+		}
+
+		collected := stream.Items
+		if len(collected) != 3 {
+			t.Fatalf("collected %d chunks, want 3", len(collected))
+		}
+		if got := collected[0].id; got != 1 {
+			t.Errorf("collected[0] id = %d, want %d", got, 1)
+		}
+		if got := collected[1].id; got != 2 {
+			t.Errorf("collected[1] id = %d, want %d", got, 2)
+		}
+		if got := collected[2].id; got != 3 {
+			t.Errorf("collected[2] id = %d, want %d", got, 3)
+		}
+	})
+
+	t.Run("returns Err after FailAfter chunks", func(t *testing.T) {
+		wantErr := errors.New("send failed")
+		stream := &sliceStream[stubMessage]{Err: wantErr, FailAfter: 1}
+
+		if err := stream.Send(stubMessage{id: 1}); err != nil {
+			t.Fatalf("Send(first) returned error before FailAfter: %v", err)
+		}
+		if err := stream.Send(stubMessage{id: 2}); !errors.Is(err, wantErr) {
+			t.Fatalf("Send(second) error = %v, want %v", err, wantErr)
+		}
+
+		// Only the chunks accepted before the failure should be recorded.
+		if len(stream.Items) != 1 {
+			t.Fatalf("recorded %d chunks, want 1", len(stream.Items))
+		}
+		if got := stream.Items[0].id; got != 1 {
+			t.Errorf("Items[0] id = %d, want %d", got, 1)
+		}
+	})
+}
+
+var _ Stream[stubMessage] = &sliceStream[stubMessage]{}
 
 // SliceStream is an in-memory Stream that collects every chunk it receives.
 // It is intended for tests, where a handler can be driven against a real Stream
