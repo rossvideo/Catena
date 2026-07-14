@@ -277,7 +277,7 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 					assertContext(t, ctx)
-					device, _ := catena.ToDevice(map[string]any{"slot": uint32(slot)})
+					device := *catena.NewDevice(slot)
 					return catena.Reply(device)
 				}
 			},
@@ -405,14 +405,8 @@ func TestGrpcTransport_DeviceRequest_Success(t *testing.T) {
 	handlerCalled := false
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
-		deviceMap := map[string]any{
-			"slot":         uint32(slot),
-			"detail_level": catena.DetailLevelFull,
-		}
-		device, err := catena.ToDevice(deviceMap)
-		if err != nil {
-			t.Fatalf("ToDevice failed: %v", err)
-		}
+		device := *catena.NewDevice(slot).
+			WithDetailLevel(catena.DetailLevelFull)
 		return catena.Reply(device)
 	}
 
@@ -597,6 +591,81 @@ func TestGrpcTransport_GetValue_HandlerError(t *testing.T) {
 
 	_, err := makeGetValueRequest(t, client, ctx, 0, "device.param1")
 	assertGRPCCode(t, err, codes.NotFound, "handler error")
+}
+
+// =============================================================================
+// Test: ListLanguages
+// =============================================================================
+
+func TestGrpcTransport_ListLanguages_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		handlerCalled = true
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
+		}
+		return []string{"en", "fr", "es", "de"}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	resp, err := client.ListLanguages(ctx, &protos.Slot{Slot: 0})
+	assertNoError(t, err)
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+
+	expected := []string{"en", "fr", "es", "de"}
+	if len(resp.GetLanguages()) != len(expected) {
+		t.Fatalf("expected %d languages, got %d", len(expected), len(resp.GetLanguages()))
+	}
+	for i, lang := range expected {
+		if resp.GetLanguages()[i] != lang {
+			t.Errorf("language[%d]: expected %q, got %q", i, lang, resp.GetLanguages()[i])
+		}
+	}
+}
+
+func TestGrpcTransport_ListLanguages_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "no languages handler registered")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 0})
+	assertGRPCCode(t, err, codes.NotFound, "handler error")
+}
+
+func TestGrpcTransport_ListLanguages_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		handlerCalled = true
+		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 999999})
+	assertGRPCCode(t, err, codes.InvalidArgument, "invalid slot number")
+	if handlerCalled {
+		t.Error("handler should not be called when slot validation fails")
+	}
 }
 
 // =============================================================================
@@ -1495,15 +1564,6 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			},
 		},
 		{
-			name:       "ListLanguages",
-			devMessage: "ListLanguages not implemented",
-			grpcCode:   codes.Unimplemented,
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 0})
-				return err
-			},
-		},
-		{
 			name:       "RefreshToken",
 			devMessage: "RefreshToken not implemented",
 			grpcCode:   codes.Unimplemented,
@@ -1771,15 +1831,6 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name: "ListLanguages",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.ListLanguages(ctx, &protos.Slot{
-					Slot: 0,
-				})
-				return err
-			},
-		},
-		{
 			name: "RefreshToken",
 			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RefreshToken(ctx, &protos.RefreshTokenPayload{
@@ -2007,11 +2058,8 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
-		deviceMap := map[string]any{
-			"slot":         uint32(slot),
-			"detail_level": catena.DetailLevelFull,
-		}
-		device, _ := catena.ToDevice(deviceMap)
+		device := *catena.NewDevice(slot).
+			WithDetailLevel(catena.DetailLevelFull)
 		return catena.Reply(device)
 	}
 

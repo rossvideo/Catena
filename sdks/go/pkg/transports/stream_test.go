@@ -46,9 +46,9 @@ import (
 
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // fakeServerStream is a minimal grpc.ServerStream that records the messages
@@ -89,26 +89,36 @@ func (w *failingResponseWriter) Write([]byte) (int, error) { return 0, errors.Ne
 func (w *failingResponseWriter) WriteHeader(status int)    { w.status = status }
 func (w *failingResponseWriter) Flush()                    {}
 
-func testParamInfo(oid string) catena.ParamInfo {
-	return catena.NewParamInfo(oid, nil, catena.ParamTypeInt32, "", 0)
+// stubMessage is a minimal catena.Message for exercising the generic stream
+// adapters without depending on any domain chunk type. Wire returns a real
+// proto (a StringValue carrying value) so the gRPC and REST adapters have a
+// concrete message to send and marshal.
+type stubMessage struct {
+	value string
+}
+
+var _ catena.Message = stubMessage{}
+
+func (m stubMessage) Wire() proto.Message {
+	return wrapperspb.String(m.value)
 }
 
 func TestCollectStream(t *testing.T) {
 	t.Run("discards chunks beyond max", func(t *testing.T) {
-		stream := &collectStream[catena.ParamInfo]{max: 1}
+		stream := &collectStream[stubMessage]{max: 1}
 
-		if err := stream.Send(testParamInfo("first")); err != nil {
+		if err := stream.Send(stubMessage{value: "first"}); err != nil {
 			t.Fatalf("Send(first) returned error: %v", err)
 		}
-		if err := stream.Send(testParamInfo("second")); err != nil {
+		if err := stream.Send(stubMessage{value: "second"}); err != nil {
 			t.Fatalf("Send(second) returned error: %v", err)
 		}
 
 		if len(stream.items) != 1 {
 			t.Fatalf("retained %d chunks, want 1", len(stream.items))
 		}
-		if got := stream.items[0].GetProtoInfo().GetOid(); got != "first" {
-			t.Errorf("items[0] oid = %q, want %q", got, "first")
+		if got := stream.items[0].value; got != "first" {
+			t.Errorf("items[0] value = %q, want %q", got, "first")
 		}
 	})
 }
@@ -116,26 +126,26 @@ func TestCollectStream(t *testing.T) {
 func TestGrpcStream(t *testing.T) {
 	t.Run("sends chunk wire proto", func(t *testing.T) {
 		fake := &fakeServerStream{}
-		stream := &grpcStream[catena.ParamInfo]{ss: fake}
+		stream := &grpcStream[stubMessage]{ss: fake}
 
-		if err := stream.Send(testParamInfo("a")); err != nil {
+		if err := stream.Send(stubMessage{value: "a"}); err != nil {
 			t.Fatalf("Send returned error: %v", err)
 		}
 
 		if len(fake.msgs) != 1 {
 			t.Fatalf("stream received %d messages, want 1", len(fake.msgs))
 		}
-		if _, ok := fake.msgs[0].(*protos.ParamInfoResponse); !ok {
-			t.Errorf("sent message type = %T, want *protos.ParamInfoResponse", fake.msgs[0])
+		if _, ok := fake.msgs[0].(*wrapperspb.StringValue); !ok {
+			t.Errorf("sent message type = %T, want *wrapperspb.StringValue", fake.msgs[0])
 		}
 	})
 
 	t.Run("propagates SendMsg error", func(t *testing.T) {
 		wantErr := errors.New("send failed")
 		fake := &fakeServerStream{sendErr: wantErr}
-		stream := &grpcStream[catena.ParamInfo]{ss: fake}
+		stream := &grpcStream[stubMessage]{ss: fake}
 
-		if err := stream.Send(testParamInfo("a")); !errors.Is(err, wantErr) {
+		if err := stream.Send(stubMessage{value: "a"}); !errors.Is(err, wantErr) {
 			t.Fatalf("Send error = %v, want %v", err, wantErr)
 		}
 	})
@@ -144,17 +154,17 @@ func TestGrpcStream(t *testing.T) {
 func TestRestStream(t *testing.T) {
 	t.Run("writes SSE frame and lazy headers", func(t *testing.T) {
 		rec := httptest.NewRecorder()
-		stream := &restStream[catena.ParamInfo]{
+		stream := &restStream[stubMessage]{
 			w:       rec,
 			flusher: rec,
 			marshal: MarshalProtoJSON,
 			ctx:     context.Background(),
 		}
 
-		if err := stream.Send(testParamInfo("a")); err != nil {
+		if err := stream.Send(stubMessage{value: "a"}); err != nil {
 			t.Fatalf("Send returned error: %v", err)
 		}
-		if err := stream.Send(testParamInfo("b")); err != nil {
+		if err := stream.Send(stubMessage{value: "b"}); err != nil {
 			t.Fatalf("second Send returned error: %v", err)
 		}
 
@@ -177,14 +187,14 @@ func TestRestStream(t *testing.T) {
 		cancel()
 
 		rec := httptest.NewRecorder()
-		stream := &restStream[catena.ParamInfo]{
+		stream := &restStream[stubMessage]{
 			w:       rec,
 			flusher: rec,
 			marshal: MarshalProtoJSON,
 			ctx:     ctx,
 		}
 
-		if err := stream.Send(testParamInfo("a")); !errors.Is(err, context.Canceled) {
+		if err := stream.Send(stubMessage{value: "a"}); !errors.Is(err, context.Canceled) {
 			t.Fatalf("Send error = %v, want context.Canceled", err)
 		}
 		if stream.sent != 0 {
@@ -201,14 +211,14 @@ func TestRestStream(t *testing.T) {
 	t.Run("propagates marshal error before writing headers", func(t *testing.T) {
 		wantErr := errors.New("marshal failed")
 		rec := httptest.NewRecorder()
-		stream := &restStream[catena.ParamInfo]{
+		stream := &restStream[stubMessage]{
 			w:       rec,
 			flusher: rec,
 			marshal: func(proto.Message) ([]byte, error) { return nil, wantErr },
 			ctx:     context.Background(),
 		}
 
-		if err := stream.Send(testParamInfo("a")); !errors.Is(err, wantErr) {
+		if err := stream.Send(stubMessage{value: "a"}); !errors.Is(err, wantErr) {
 			t.Fatalf("Send error = %v, want %v", err, wantErr)
 		}
 		if stream.sent != 0 {
@@ -221,14 +231,14 @@ func TestRestStream(t *testing.T) {
 
 	t.Run("propagates write error", func(t *testing.T) {
 		w := &failingResponseWriter{}
-		stream := &restStream[catena.ParamInfo]{
+		stream := &restStream[stubMessage]{
 			w:       w,
 			flusher: w,
 			marshal: MarshalProtoJSON,
 			ctx:     context.Background(),
 		}
 
-		if err := stream.Send(testParamInfo("a")); err == nil {
+		if err := stream.Send(stubMessage{value: "a"}); err == nil {
 			t.Fatal("Send returned nil, want a write error")
 		}
 		if stream.sent != 0 {
@@ -238,7 +248,7 @@ func TestRestStream(t *testing.T) {
 
 	t.Run("sendError exposes the detailed message in dev mode", func(t *testing.T) {
 		rec := httptest.NewRecorder()
-		stream := &restStream[catena.ParamInfo]{
+		stream := &restStream[stubMessage]{
 			w:       rec,
 			flusher: rec,
 			marshal: MarshalProtoJSON,
@@ -264,7 +274,7 @@ func TestRestStream(t *testing.T) {
 
 	t.Run("sendError generalizes the message outside dev mode", func(t *testing.T) {
 		rec := httptest.NewRecorder()
-		stream := &restStream[catena.ParamInfo]{
+		stream := &restStream[stubMessage]{
 			w:       rec,
 			flusher: rec,
 			marshal: MarshalProtoJSON,
@@ -290,7 +300,7 @@ func TestRestStream(t *testing.T) {
 
 	t.Run("sendError propagates a write error", func(t *testing.T) {
 		w := &failingResponseWriter{}
-		stream := &restStream[catena.ParamInfo]{
+		stream := &restStream[stubMessage]{
 			w:       w,
 			flusher: w,
 			marshal: MarshalProtoJSON,

@@ -251,7 +251,7 @@ func (t *RestTransport) writeHTTPStatusResult(w http.ResponseWriter, result cate
 
 // writeValueResult writes a Value as JSON
 func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int) {
-	protoValue := value.Value
+	protoValue := value.Proto
 	if protoValue == nil {
 		w.WriteHeader(httpStatus)
 		return
@@ -265,12 +265,12 @@ func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int)
 
 // writeDeviceResult writes a Device as JSON
 func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus int) {
-	if device.GetProtoDevice() == nil {
+	if device.Proto == nil {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	b, err := MarshalDeviceJSON(device.GetProtoDevice())
+	b, err := MarshalDeviceJSON(device.Proto)
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
 		w.Header().Set("Content-Type", "application/json")
@@ -288,7 +288,7 @@ func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus i
 
 // writeAssetResult writes an Asset as JSON-encoded ExternalObjectPayload
 func writeAssetResult(w http.ResponseWriter, asset catena.Asset, httpStatus int) {
-	protoAsset := asset.GetProtoAsset()
+	protoAsset := asset.Proto
 	if protoAsset == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -441,6 +441,8 @@ func (t *RestTransport) registerRoutes() {
 				t.handleParamEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
+			case "languages":
+				t.handleLanguagesEndpoint(w, r, slot)
 			default:
 				val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "unknown endpoint")
 				t.writeHTTPResult(w, res, val)
@@ -512,6 +514,33 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		logger.Error("failed to write slots response", "error", err)
+	}
+}
+
+// handleLanguagesEndpoint handles GET /st2138-api/v1/{slot}/languages (Languages).
+// Per the OpenAPI contract (GET /{slot}/languages), the body is a bare JSON array
+// of language codes, e.g. ["en","fr","es","de"]. An empty result serializes as [].
+func (t *RestTransport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
+	if r.Method != http.MethodGet {
+		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	languages, result := t.runtime.InvokeListLanguagesHandler(slot, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+
+	if languages == nil {
+		languages = []string{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(languages); err != nil {
+		logger.Error("failed to write languages response", "error", err)
 	}
 }
 
@@ -799,7 +828,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		cmdResult, _ = catena.CommandNoResponse()
 	}
 
-	_ = WriteProtoJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
+	_ = WriteProtoJSON(w, cmdResult.Proto, http.StatusOK)
 }
 
 // ToHTTPStatus converts a transport-neutral StatusCode to an HTTP status code.

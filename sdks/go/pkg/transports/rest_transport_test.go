@@ -133,7 +133,7 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 					assertContext(t, ctx)
-					device, _ := catena.ToDevice(map[string]any{"slot": uint32(slot)})
+					device := *catena.NewDevice(slot)
 					return catena.Reply(device)
 				}
 			},
@@ -239,6 +239,19 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			},
 		},
 		{
+			name: "languages",
+			setup: func(t *testing.T, runtime *stubServerRuntime) {
+				runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+					assertContext(t, ctx)
+					return []string{"en", "fr"}, catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+			},
+			run: func(t *testing.T, transport *RestTransport) {
+				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "", headers)
+				assertStatus(t, rec, http.StatusOK)
+			},
+		},
+		{
 			name: "connect",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				connection := makeTestConnection(1)
@@ -278,11 +291,8 @@ func TestRestTransport_GetDevice_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	deviceMap := map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-	}
-	device, _ := catena.ToDevice(deviceMap)
+	device := *catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull)
 
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
@@ -1109,7 +1119,7 @@ func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
-	device, _ := catena.ToDevice(map[string]any{"slot": int32(0)})
+	device := *catena.NewDevice(0)
 	rec := httptest.NewRecorder()
 	writeDeviceResult(rec, device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
@@ -1627,7 +1637,7 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 }
 
 func TestWriteDeviceResult_WriteError(t *testing.T) {
-	device, _ := catena.ToDevice(map[string]any{"slot": int32(0)})
+	device := *catena.NewDevice(0)
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
@@ -2155,4 +2165,82 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 			t.Errorf("expected the dev-mode error message in the error event, got body:\n%s", body)
 		}
 	})
+}
+
+// =============================================================================
+// Test: Languages endpoint
+// =============================================================================
+
+func TestRestTransport_Languages_Route(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	handlerCalled := false
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		handlerCalled = true
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
+		}
+		return []string{"en", "fr", "es", "de"}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+
+	var response []string
+	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
+	}
+	expected := []string{"en", "fr", "es", "de"}
+	if len(response) != len(expected) {
+		t.Fatalf("expected %d languages, got %d", len(expected), len(response))
+	}
+	for i, lang := range expected {
+		if response[i] != lang {
+			t.Errorf("language[%d]: expected %q, got %q", i, lang, response[i])
+		}
+	}
+}
+
+func TestRestTransport_Languages_EmptyList(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+
+	var response []string
+	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
+	}
+	if len(response) != 0 {
+		t.Errorf("expected empty languages list, got %v", response)
+	}
+	if !strings.HasPrefix(strings.TrimSpace(rec.Body.String()), "[") {
+		t.Errorf("expected bare JSON array, got %q", rec.Body.String())
+	}
+}
+
+func TestRestTransport_Languages_HandlerError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "no languages handler registered")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}
+
+func TestRestTransport_Languages_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/languages", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }

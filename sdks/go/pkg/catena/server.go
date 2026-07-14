@@ -67,6 +67,7 @@ const (
 	EndpointExecuteCommand
 	EndpointParamInfo
 	EndpointConnect
+	EndpointListLanguages
 
 	// endpointTypeMax is a sentinel that must always be last. Add new endpoint
 	// types above it. It is not a real endpoint; it bounds the enumeration so
@@ -97,6 +98,8 @@ func (e EndpointType) String() string {
 		return "ParamInfo"
 	case EndpointConnect:
 		return "Connect"
+	case EndpointListLanguages:
+		return "ListLanguages"
 	default:
 		return "Unknown"
 	}
@@ -128,6 +131,10 @@ type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, c
 // disconnected, or the transport hit an encoding or write failure - so the
 // handler should stop and return.
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult
+
+// ListLanguagesHandler returns the language codes supported by the device model
+// at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
+type ListLanguagesHandler func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
@@ -184,8 +191,17 @@ type Server interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
+	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
+
+	// RegisterProductStruct hands the mandatory product struct for a slot to the
+	// SDK. Once registered, the SDK injects the product param into the device on
+	// GetDevice, answers GetValue and ParamInfo for product/*, and rejects
+	// SetValue writes to product/* with StatusCodePermissionDenied — business
+	// logic no longer needs to handle the product struct.
+	// Note: If you do not register a product struct for a slot, requests for product/* values or info will fail with StatusCodeNotFound.
+	RegisterProductStruct(slot uint16, product ProductStruct)
 
 	SetMaxConnections(max int)
 	ConnectionCount() int
@@ -206,6 +222,7 @@ type ServerRuntime interface {
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
+	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -232,8 +249,10 @@ type server struct {
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
+	listLanguagesHandlers  map[uint16]ListLanguagesHandler
 	heartbeatHandlers      map[uint16]HeartbeatHandler
-	accessHandler          AccessHandler // optional fallback for slots without specific handlers
+	productStructs         map[uint16]ProductStruct // SDK-managed product per slot
+	accessHandler          AccessHandler            // optional fallback for slots without specific handlers
 	connectionQueue        connectionQueueInterface
 	heartbeat              *Heartbeat
 	transports             []Transport
@@ -276,7 +295,9 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
+		listLanguagesHandlers:  make(map[uint16]ListLanguagesHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
+		productStructs:         make(map[uint16]ProductStruct),
 		accessHandler:          allowAllAccessHandler,
 		connectionQueue:        newConnectionQueue(opts.MaxConnections),
 		transports:             []Transport{},
@@ -643,6 +664,10 @@ func (s *server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
 	s.registerHandlerFn(slot, func() { s.getAssetHandlers[slot] = handler })
 }
 
+func (s *server) RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler) {
+	s.registerHandlerFn(slot, func() { s.listLanguagesHandlers[slot] = handler })
+}
+
 func (s *server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
 	s.registerHandlerFn(slot, func() { s.executeCommandHandlers[slot] = handler })
 }
@@ -664,11 +689,32 @@ func (s *server) RegisterAccessHandler(handler AccessHandler) {
 	s.mu.Unlock()
 }
 
+func (s *server) RegisterProductStruct(slot uint16, product ProductStruct) {
+	s.registerHandlerFn(slot, func() { s.productStructs[slot] = product })
+}
+
+// productForSlot returns the SDK-managed product struct registered for a slot,
+// if any.
+func (s *server) productForSlot(slot uint16) (ProductStruct, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	product, ok := s.productStructs[slot]
+	return product, ok
+}
+
 func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult) {
 	return invokeHandler(s, transportContext, EndpointGetDevice, false, s.getDeviceHandlers, slot,
 		"No device defined at slot",
 		func(handler DeviceHandler, ctx HandlerContext) (Device, StatusResult) {
-			return handler(slot, ctx)
+			device, res := handler(slot, ctx)
+			// Overwrite the product/* fields in whatever the business logic returned
+			// with the SDK-managed product struct, if one is registered for the slot.
+			if res.IsOk() {
+				if product, has := s.productForSlot(slot); has && device.Proto != nil {
+					device.WithParam(ProductOid, ProductParam(product))
+				}
+			}
+			return device, res
 		})
 }
 
@@ -676,6 +722,14 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 	return invokeHandler(s, transportContext, EndpointGetValue, false, s.getValueHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler GetValueHandler, ctx HandlerContext) (Value, StatusResult) {
+			// The SDK owns product/* when a product struct is registered for the slot;
+			// answer it directly instead of passing to business logic.
+			if isProductOid(fqoid) {
+				if product, has := s.productForSlot(slot); has {
+					return productValueForOid(product, fqoid)
+				}
+			}
+			// handle as normal
 			return handler(slot, fqoid, ctx)
 		})
 }
@@ -684,6 +738,14 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 	return invokeHandler(s, transportContext, EndpointGetParam, false, s.getParamHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler GetParamHandler, ctx HandlerContext) (Param, StatusResult) {
+			// The SDK owns product/* when a product struct is registered for the slot;
+			// answer it directly instead of passing to business logic.
+			if isProductOid(fqoid) {
+				if product, has := s.productForSlot(slot); has {
+					return productParamForOid(product, fqoid)
+				}
+			}
+			// handle as normal
 			return handler(slot, fqoid, ctx)
 		})
 }
@@ -696,6 +758,13 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 	_, res := invokeHandler(s, transportContext, EndpointSetValue, true, s.setValueHandlers, slot,
 		"no SetValue handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler SetValueHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			// The product struct is always read-only; reject any write targeting
+			// product/* regardless of whether the SDK or business logic manages it.
+			for _, entry := range entries {
+				if isProductOid(entry.Fqoid) {
+					return struct{}{}, StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
+				}
+			}
 			return struct{}{}, handler(slot, entries, ctx)
 		})
 	return res
@@ -718,12 +787,35 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 }
 
 func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult {
+	// Wrap the transport's stream so Send also fails on server shutdown, not just
+	// client disconnect. Cancellation is then transparent to the handler: it just
+	// gets an error from the next Send once the server is shutting down.
+	stream = shutdownStream[ParamInfo]{inner: stream, shutdown: s.ctx}
 	_, res := invokeHandler(s, transportContext, EndpointParamInfo, false, s.paramInfoHandlers, slot,
 		"ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ParamInfoHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			return struct{}{}, handler(slot, oidPrefix, recursive, ctx, stream)
+			// wrap the incoming stream with a shutdown-aware stream so the handler sees a Send error if the server is shutting down
+			sStream := shutdownStream[ParamInfo]{inner: stream, shutdown: s.ctx}
+
+			// The SDK owns product/* ParamInfo when a product struct is registered for
+			// the slot; answer it directly instead of passing to business logic.
+			if isProductOid(oidPrefix) {
+				if product, has := s.productForSlot(slot); has {
+					return struct{}{}, productParamInfosForOid(product, oidPrefix, recursive, sStream)
+				}
+			}
+			// normal processing for non-product/* ParamInfo
+			return struct{}{}, handler(slot, oidPrefix, recursive, ctx, sStream)
 		})
 	return res
+}
+
+func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult) {
+	return invokeHandler(s, transportContext, EndpointListLanguages, false, s.listLanguagesHandlers, slot,
+		"no ListLanguages handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler ListLanguagesHandler, ctx HandlerContext) ([]string, StatusResult) {
+			return handler(slot, ctx)
+		})
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {

@@ -50,43 +50,6 @@ type Param struct {
 	Proto *protos.Param
 }
 
-// ToMap converts a Param into the map shape accepted by ToDevice. This is
-// useful when constructing a device definition map with the SDK's Param builders.
-func (cp *Param) ToMap() map[string]any {
-	if cp == nil || cp.Proto == nil {
-		logger.Error("Param.ToMap: nil Param")
-		return map[string]any{}
-	}
-
-	definition, err := protoMessageToMap("Param.ToMap", cp.Proto)
-	if err != nil {
-		logger.Error("Param.ToMap: failed to convert param", "error", err)
-		return map[string]any{}
-	}
-	normalizeParamMap(definition, cp.Proto)
-	return definition
-}
-
-func normalizeParamMap(definition map[string]any, param *protos.Param) {
-	definition["type"] = param.GetType()
-
-	if constraintDefinition, ok := definition["constraint"].(map[string]any); ok && param.GetConstraint() != nil {
-		normalizeConstraintMap(constraintDefinition, param.GetConstraint())
-	}
-
-	childDefinitions, ok := definition["params"].(map[string]any)
-	if !ok {
-		return
-	}
-	for oid, childParam := range param.GetParams() {
-		childDefinition, ok := childDefinitions[oid].(map[string]any)
-		if !ok {
-			continue
-		}
-		normalizeParamMap(childDefinition, childParam)
-	}
-}
-
 // --- Factory functions (one per ParamType) ---
 
 func NewParamInt32(value int32) *Param {
@@ -248,14 +211,14 @@ func NewParamData(payload DataPayload) *Param {
 // DataPayload values are mapped to ParamType_DATA since the two
 // cannot be distinguished from the value alone.
 func NewParamFromValue(v Value) *Param {
-	pt := paramTypeFromValueKind(v.Value)
+	pt := paramTypeFromValueKind(v.Proto)
 	if pt == protos.ParamType_UNDEFINED {
 		logger.Warning("NewParamFromValue: could not infer param type from value; using UNDEFINED")
 	}
 	return &Param{
 		Proto: &protos.Param{
 			Type:  pt,
-			Value: v.Value,
+			Value: v.Proto,
 		},
 	}
 }
@@ -268,12 +231,12 @@ func (cp *Param) WithName(name PolyglotText) *Param {
 }
 
 func (cp *Param) WithValue(v Value) *Param {
-	if !isValueValidForParamType(v.Value, cp.Proto.Type) {
+	if !isValueValidForParamType(v.Proto, cp.Proto.Type) {
 		logger.Warning("WithValue: value kind incompatible with param type; ignoring",
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
-	cp.Proto.Value = v.Value
+	cp.Proto.Value = v.Proto
 	return cp
 }
 

@@ -2,7 +2,9 @@ name: "03 CodeQL Analysis"
 
 "on":
   push:
-    branches: ["develop"]
+    branches: ["develop", "main"]
+  pull_request:
+    branches: ["develop", "main"]
   workflow_call:
     inputs:
       cpp_image:
@@ -13,6 +15,10 @@ name: "03 CodeQL Analysis"
         required: false
         type: string
         default: ghcr.io/rossvideo/catena-go-toolchain:develop
+
+concurrency:
+  group: codeql-${{ github.event_name }}-${{ github.ref }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   detect_changes:
@@ -103,6 +109,7 @@ jobs:
         with:
           languages: c-cpp
           build-mode: manual
+          cache-dir: ${{ github.workspace }}/codeql-cache-cpp
 
       - name: Build C++
         shell: bash
@@ -164,6 +171,7 @@ jobs:
         with:
           languages: go
           build-mode: manual
+          cache-dir: ${{ github.workspace }}/codeql-cache-go
 
       - name: Build Go
         shell: bash

@@ -37,6 +37,7 @@
 package catena
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -46,6 +47,8 @@ import (
 type stubMessage struct {
 	id int
 }
+
+var _ Message = stubMessage{}
 
 func (stubMessage) Wire() proto.Message {
 	return nil
@@ -99,6 +102,44 @@ func TestSliceStream(t *testing.T) {
 }
 
 var _ Stream[stubMessage] = &sliceStream[stubMessage]{}
+
+func TestShutdownStream(t *testing.T) {
+	t.Run("delegates to inner while shutdown context is live", func(t *testing.T) {
+		inner := &sliceStream[stubMessage]{}
+		stream := shutdownStream[stubMessage]{inner: inner, shutdown: context.Background()}
+
+		if err := stream.Send(stubMessage{id: 1}); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+		if len(inner.Items) != 1 || inner.Items[0].id != 1 {
+			t.Fatalf("inner did not receive the chunk: %+v", inner.Items)
+		}
+	})
+
+	t.Run("fails and sends nothing once shutdown context is done", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		inner := &sliceStream[stubMessage]{}
+		stream := shutdownStream[stubMessage]{inner: inner, shutdown: ctx}
+
+		if err := stream.Send(stubMessage{id: 1}); !errors.Is(err, context.Canceled) {
+			t.Fatalf("Send error = %v, want context.Canceled", err)
+		}
+		if len(inner.Items) != 0 {
+			t.Fatalf("inner received %d chunks after shutdown, want 0", len(inner.Items))
+		}
+	})
+
+	t.Run("propagates inner Send error while shutdown context is live", func(t *testing.T) {
+		wantErr := errors.New("inner failed")
+		inner := &sliceStream[stubMessage]{Err: wantErr, FailAfter: 0}
+		stream := shutdownStream[stubMessage]{inner: inner, shutdown: context.Background()}
+
+		if err := stream.Send(stubMessage{id: 1}); !errors.Is(err, wantErr) {
+			t.Fatalf("Send error = %v, want %v", err, wantErr)
+		}
+	})
+}
 
 // SliceStream is an in-memory Stream that collects every chunk it receives.
 // It is intended for tests, where a handler can be driven against a real Stream

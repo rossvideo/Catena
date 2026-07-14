@@ -46,8 +46,10 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
+// Value wraps protos.Value for use in handler return types.
+// Proto is the underlying proto message; it may be read or replaced directly.
 type Value struct {
-	Value *protos.Value
+	Proto *protos.Value
 }
 
 type StructVariantValue struct {
@@ -109,7 +111,7 @@ func ToValue(v any) (Value, StatusResult) {
 	if res.Code != StatusCodeOk {
 		return Value{}, StatusResult{Code: res.Code, Error: "ToValue: " + res.Error}
 	}
-	return Value{Value: val}, StatusResult{Code: StatusCodeOk}
+	return Value{Proto: val}, StatusResult{Code: StatusCodeOk}
 }
 
 // ToProto converts native Go types to protos.Value

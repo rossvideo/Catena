@@ -777,6 +777,15 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.paramInfoHandlers[slot] != nil },
 		},
 		{
+			endpoint: EndpointListLanguages,
+			register: func(srv *server, slot uint16) {
+				srv.RegisterListLanguagesHandler(slot, func(uint16, HandlerContext) ([]string, StatusResult) {
+					return []string{}, StatusWithCode(StatusCodeOk, "")
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.listLanguagesHandlers[slot] != nil },
+		},
+		{
 			name:          "HeartbeatHandler",
 			notAnEndpoint: true, // heartbeat is a server-driven timer, not an EndpointType
 			register: func(srv *server, slot uint16) {
@@ -1157,7 +1166,7 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointGetDevice, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		expected := Device{device: &protos.Device{}}
+		expected := Device{Proto: &protos.Device{}}
 		handlerCalled := 0
 		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext) (Device, StatusResult) {
 			handlerCalled++
@@ -1178,7 +1187,7 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if actual.device != expected.device {
+		if actual.Proto != expected.Proto {
 			t.Errorf("expected device %v, got %v", expected, actual)
 		}
 	})
@@ -1214,7 +1223,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if !proto.Equal(actual.Value, expected.Value) {
+		if !proto.Equal(actual.Proto, expected.Proto) {
 			t.Errorf("expected value %v, got %v", expected, actual)
 		}
 	})
@@ -1368,7 +1377,7 @@ func TestServer_InvokeGetAssetHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if !proto.Equal(actual.GetProtoAsset(), expected.GetProtoAsset()) {
+		if !proto.Equal(actual.Proto, expected.Proto) {
 			t.Errorf("expected asset %v, got %v", expected, actual)
 		}
 	})
@@ -1452,7 +1461,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		if len(stream.Items) != 1 {
 			t.Fatalf("expected 1 streamed param info entry, got %d", len(stream.Items))
 		}
-		if got := stream.Items[0].GetProtoInfo().GetOid(); got != "test/param" {
+		if got := stream.Items[0].Proto.GetInfo().GetOid(); got != "test/param" {
 			t.Errorf("streamed param info oid = %q, want %q", got, "test/param")
 		}
 	})
@@ -1553,6 +1562,17 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, invalidContext)
+			},
+		},
+		{
+			endpoint: EndpointListLanguages,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterListLanguagesHandler(0, func(uint16, HandlerContext) ([]string, StatusResult) {
+					*handlerCalled = true
+					return []string{}, StatusWithCode(StatusCodeOk, "")
+				})
+				_, status := srv.InvokeListLanguagesHandler(0, invalidContext)
+				return status
 			},
 		},
 		{
@@ -1819,6 +1839,18 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, TransportContext{})
+			},
+		},
+		{
+			endpoint:          EndpointListLanguages,
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterListLanguagesHandler(0, func(slot uint16, ctx HandlerContext) ([]string, StatusResult) {
+					*handlerCalled = true
+					return []string{}, StatusWithCode(StatusCodeOk, "")
+				})
+				_, status := srv.InvokeListLanguagesHandler(0, TransportContext{})
+				return status
 			},
 		},
 		{
