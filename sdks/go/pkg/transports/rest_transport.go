@@ -440,6 +440,8 @@ func (t *RestTransport) registerRoutes() {
 				t.handleParamEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
+			case "languages":
+				t.handleLanguagesEndpoint(w, r, slot)
 			default:
 				val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "unknown endpoint")
 				t.writeHTTPResult(w, res, val)
@@ -511,6 +513,33 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		logger.Error("failed to write slots response", "error", err)
+	}
+}
+
+// handleLanguagesEndpoint handles GET /st2138-api/v1/{slot}/languages (Languages).
+// Per the OpenAPI contract (GET /{slot}/languages), the body is a bare JSON array
+// of language codes, e.g. ["en","fr","es","de"]. An empty result serializes as [].
+func (t *RestTransport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
+	if r.Method != http.MethodGet {
+		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	languages, result := t.runtime.InvokeListLanguagesHandler(slot, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+
+	if languages == nil {
+		languages = []string{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(languages); err != nil {
+		logger.Error("failed to write languages response", "error", err)
 	}
 }
 

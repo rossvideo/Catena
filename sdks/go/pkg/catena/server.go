@@ -68,6 +68,7 @@ const (
 	EndpointExecuteCommand
 	EndpointParamInfo
 	EndpointConnect
+	EndpointListLanguages
 )
 
 type TransportContext struct {
@@ -139,6 +140,10 @@ type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerConte
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
+
+// ListLanguagesHandler returns the language codes supported by the device model
+// at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
+type ListLanguagesHandler func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
@@ -195,6 +200,7 @@ type Server interface {
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
+	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
 
@@ -217,6 +223,7 @@ type ServerRuntime interface {
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
+	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -243,6 +250,7 @@ type server struct {
 	getAssetHandlers       map[uint16]GetAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
+	listLanguagesHandlers  map[uint16]ListLanguagesHandler
 	heartbeatHandlers      map[uint16]HeartbeatHandler
 	accessHandler          AccessHandler // optional fallback for slots without specific handlers
 	connectionQueue        connectionQueueInterface
@@ -280,6 +288,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
+		listLanguagesHandlers:  make(map[uint16]ListLanguagesHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
 		accessHandler:          allowAllAccessHandler,
 		connectionQueue:        newConnectionQueue(opts.MaxConnections),
@@ -594,6 +603,17 @@ func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	}
 }
 
+func (s *server) RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler) {
+	s.mu.Lock()
+	s.listLanguagesHandlers[slot] = handler
+	newSlot := s.registerSlotLocked(slot)
+	s.mu.Unlock()
+
+	if newSlot {
+		s.notifySlotsAdded(slot)
+	}
+}
+
 func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
 	s.mu.Lock()
 	s.heartbeatHandlers[slot] = handler
@@ -791,6 +811,31 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	// TODO: lookup default handler for slot
 	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
 	return nil, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
+}
+
+func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.Code != StatusCodeOk {
+		return nil, res
+	}
+
+	if !s.hasReadAccess(handlerContext) {
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+	if !s.isAccessAllowed(EndpointListLanguages, handlerContext) {
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	s.mu.Lock()
+	handler, ok := s.listLanguagesHandlers[slot]
+	s.mu.Unlock()
+
+	if ok {
+		return handler(slot, handlerContext)
+	}
+	// TODO: lookup default handler for slot
+	logger.Warning("ListLanguagesHandler called - no handler registered for this slot", "slot", slot)
+	return nil, StatusWithCode(StatusCodeNotFound, "no ListLanguages handler registered for slot "+strconv.Itoa(int(slot)))
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {

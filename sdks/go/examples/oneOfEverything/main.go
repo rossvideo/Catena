@@ -391,6 +391,7 @@ func main() {
 	registerCommandHandler(srv, counter, broadcastRunning, counterScope) // ExecuteCommand
 	registerAssetHandlers(srv, assets)                                   // ExternalObjectRequest
 	registerParamInfoHandlers(srv, counter, state)                       // ParamInfoRequest
+	registerLanguagesHandlers(srv)                                       // ListLanguages
 	registerHeartbeatHandlers(srv, state)                                // periodic BroadcastUpdate
 
 	srv.StartHeartbeat(5 * time.Second)

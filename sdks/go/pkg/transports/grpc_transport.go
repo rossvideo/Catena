@@ -593,9 +593,23 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	return nil, status.Error(codes.Unimplemented, "LanguagePackRequest not implemented")
 }
 
-// ListLanguages returns the list of available languages
+// ListLanguages returns the language codes supported by the device model at a slot.
 func (s *catenaService) ListLanguages(ctx context.Context, req *protos.Slot) (*protos.LanguageList, error) {
-	return nil, status.Error(codes.Unimplemented, "ListLanguages not implemented")
+	slot, err := catena.ValidateSlot(req.GetSlot())
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	logger.Info("ListLanguages", "slot", slot)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	languages, result := s.transport.runtime.InvokeListLanguagesHandler(slot, transportContext)
+	if result.IsError() {
+		logger.Error("ListLanguages handler error", "slot", slot, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+
+	return &protos.LanguageList{Languages: languages}, nil
 }
 
 // RefreshToken refreshes an authentication token

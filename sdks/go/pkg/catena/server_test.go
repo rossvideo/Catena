@@ -1508,6 +1508,51 @@ func TestServer_RegisterParamInfoHandler(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterListLanguagesHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	handlerCalled := false
+	srv.RegisterListLanguagesHandler(0, func(slot uint16, ctx HandlerContext) ([]string, StatusResult) {
+		handlerCalled = true
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
+		}
+		return []string{"en", "fr"}, StatusResult{Code: StatusCodeOk}
+	})
+
+	languages, status := srv.InvokeListLanguagesHandler(0, validTestTransportContext(nil))
+
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status, got %v", status.Code)
+	}
+	if len(languages) != 2 || languages[0] != "en" || languages[1] != "fr" {
+		t.Errorf("expected [en fr], got %v", languages)
+	}
+
+	// check that the slot is registered
+	slots, status := srv.GetSlots(validTestTransportContext(nil))
+	if status.Code != StatusCodeOk {
+		t.Errorf("expected OK status from GetSlots, got %v", status.Code)
+	}
+	if !slices.Contains(slots, uint16(0)) {
+		t.Error("slot 0 should be registered in server slots")
+	}
+}
+
+func TestServer_InvokeListLanguagesHandler_NoHandler(t *testing.T) {
+	srv := newTestServer(t, true)
+
+	_, status := srv.InvokeListLanguagesHandler(0, validTestTransportContext(nil))
+
+	// no handler should return StatusCodeNotFound status
+	if status.Code != StatusCodeNotFound {
+		t.Errorf("expected StatusCodeNotFound status, got %v", status.Code)
+	}
+}
+
 func TestServer_RegisterHeartbeatHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
