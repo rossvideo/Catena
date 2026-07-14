@@ -1618,6 +1618,72 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 	}
 }
 
+// TestServer_StreamingEndpointsUseShutdownStream proves that every streaming
+// endpoint hands its handler a shutdown-aware stream: once the server context is
+// cancelled, the next Send fails with context.Canceled even though the inner
+// transport stream would happily accept the chunk. This guards against an Invoke
+// method forgetting to wrap the stream in shutdownStream.
+//
+// The table lists every EndpointType so assertAllEndpointsCovered forces a new
+// endpoint to be consciously classified: give it a verifyShutdown func if it
+// streams chunks to the client, or leave the func nil to declare it
+// non-streaming. This keeps the check complete without a hand-maintained
+// exclusion list.
+func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
+	tests := []struct {
+		endpoint EndpointType
+		// verifyShutdown registers a handler that Sends on the stream it is given
+		// and returns the resulting error. It is invoked after the server context
+		// has been cancelled. nil marks a non-streaming endpoint.
+		verifyShutdown func(t *testing.T, srv *server) error
+	}{
+		{endpoint: EndpointGetSlots},
+		{endpoint: EndpointGetDevice},
+		{endpoint: EndpointGetValue},
+		{endpoint: EndpointGetParam},
+		{endpoint: EndpointSetValue},
+		{endpoint: EndpointGetAsset},
+		{endpoint: EndpointExecuteCommand},
+		{
+			endpoint: EndpointParamInfo,
+			verifyShutdown: func(t *testing.T, srv *server) error {
+				var sendErr error
+				srv.RegisterParamInfoHandler(0, func(_ uint16, _ string, _ bool, _ HandlerContext, stream Stream[ParamInfo]) StatusResult {
+					sendErr = stream.Send(NewParamInfo("test/param", nil, ParamTypeString, "", 0))
+					return StatusWithCode(StatusCodeOk, "")
+				})
+				srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, TransportContext{})
+				return sendErr
+			},
+		},
+		{endpoint: EndpointConnect},
+		{endpoint: EndpointListLanguages},
+	}
+
+	covered := make([]EndpointType, 0, len(tests))
+	for _, tt := range tests {
+		covered = append(covered, tt.endpoint)
+	}
+	assertAllEndpointsCovered(t, covered)
+
+	for _, tt := range tests {
+		if tt.verifyShutdown == nil {
+			continue
+		}
+		t.Run(tt.endpoint.String(), func(t *testing.T) {
+			// authz disabled so the handler runs without a token; cancel the server
+			// context up front to simulate a shutdown in progress before the Send.
+			srv := newTestServer(t, false)
+			srv.ctxCancel()
+
+			err := tt.verifyShutdown(t, srv)
+			if !errors.Is(err, context.Canceled) {
+				t.Fatalf("expected Send to fail with context.Canceled after shutdown, got %v", err)
+			}
+		})
+	}
+}
+
 func TestServer_RegisterHeartbeatHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 

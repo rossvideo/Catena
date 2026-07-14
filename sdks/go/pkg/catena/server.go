@@ -794,18 +794,15 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	_, res := invokeHandler(s, transportContext, EndpointParamInfo, false, s.paramInfoHandlers, slot,
 		"ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ParamInfoHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			// wrap the incoming stream with a shutdown-aware stream so the handler sees a Send error if the server is shutting down
-			sStream := shutdownStream[ParamInfo]{inner: stream, shutdown: s.ctx}
-
 			// The SDK owns product/* ParamInfo when a product struct is registered for
 			// the slot; answer it directly instead of passing to business logic.
 			if isProductOid(oidPrefix) {
 				if product, has := s.productForSlot(slot); has {
-					return struct{}{}, productParamInfosForOid(product, oidPrefix, recursive, sStream)
+					return struct{}{}, productParamInfosForOid(product, oidPrefix, recursive, stream)
 				}
 			}
 			// normal processing for non-product/* ParamInfo
-			return struct{}{}, handler(slot, oidPrefix, recursive, ctx, sStream)
+			return struct{}{}, handler(slot, oidPrefix, recursive, ctx, stream)
 		})
 	return res
 }
