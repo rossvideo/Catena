@@ -939,12 +939,21 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/run/stream", "")
 		assertStatus(t, rec, http.StatusOK)
 		assertContentType(t, rec, "text/event-stream")
-		if dataCount := strings.Count(rec.Body.String(), "data:"); dataCount != 2 {
-			t.Errorf("expected 2 SSE data events, got %d\nbody:\n%s", dataCount, rec.Body.String())
+		body := rec.Body.String()
+		if dataCount := strings.Count(body, "data:"); dataCount != 3 {
+			t.Errorf("expected 3 SSE data events, got %d\nbody:\n%s", dataCount, body)
 		}
-		// best we can do without capturing logs the server can't send the error
-		if strings.Contains(rec.Body.String(), "internal error") {
-			t.Error("expected the stream to not include an error event, since the handler returned an error after sending some data")
+		if !strings.Contains(body, `"int32_value":1`) || !strings.Contains(body, `"int32_value":2`) {
+			t.Errorf("expected SSE data events with int32 values, got %s", body)
+		}
+		if !strings.Contains(body, "event: error\n") {
+			t.Errorf("expected an SSE error event, got body:\n%s", body)
+		}
+		if !strings.Contains(body, `"code":500`) {
+			t.Errorf("expected the error event to carry status code 500, got body:\n%s", body)
+		}
+		if !strings.Contains(body, "internal error") {
+			t.Errorf("expected the dev-mode error message in the error event, got body:\n%s", body)
 		}
 	})
 

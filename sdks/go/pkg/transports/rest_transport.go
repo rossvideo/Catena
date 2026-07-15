@@ -869,6 +869,7 @@ func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Requ
 		flusher: flusher,
 		marshal: MarshalProtoJSON,
 		ctx:     r.Context(),
+		devMode: t.isDevMode(),
 	}
 	result := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, respond, stream, transportContext)
 
@@ -878,8 +879,8 @@ func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Requ
 		// the error status.
 		if stream.sent == 0 {
 			t.writeHTTPStatusResult(w, result)
-		} else {
-			logger.Error("command stream handler error after partial send", "slot", slot, "command", commandFqoid, "error", result.Error)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send command SSE error event", "slot", slot, "command", commandFqoid, "error", err)
 		}
 		return
 	}
