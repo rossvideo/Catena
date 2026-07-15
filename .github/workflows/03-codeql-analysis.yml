@@ -16,10 +16,6 @@ name: "03 CodeQL Analysis"
         type: string
         default: ghcr.io/rossvideo/catena-go-toolchain:develop
 
-concurrency:
-  group: codeql-${{ github.event_name }}-${{ github.ref }}-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: true
-
 jobs:
   detect_changes:
     name: Detect language changes
@@ -109,7 +105,8 @@ jobs:
         with:
           languages: c-cpp
           build-mode: manual
-          cache-dir: ${{ github.workspace }}/codeql-cache-cpp
+          trap-caching: true
+          dependency-caching: true
 
       - name: Build C++
         shell: bash
@@ -171,7 +168,8 @@ jobs:
         with:
           languages: go
           build-mode: manual
-          cache-dir: ${{ github.workspace }}/codeql-cache-go
+          trap-caching: true
+          dependency-caching: true
 
       - name: Build Go
         shell: bash
@@ -214,6 +212,8 @@ jobs:
         with:
           languages: javascript
           build-mode: none
+          trap-caching: true
+          dependency-caching: true
 
       - name: Analyze JavaScript
         uses: github/codeql-action/analyze@v4

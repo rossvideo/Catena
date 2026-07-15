@@ -194,9 +194,9 @@ func productParamForOid(p ProductStruct, fqoid string) (Param, StatusResult) {
 
 // productParamInfosForOid builds ParamInfo responses for a product FQOID by
 // reusing the standard params-subtree walker over the SDK-built product param.
-func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool) ([]ParamInfo, StatusResult) {
+func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool, stream Stream[ParamInfo]) StatusResult {
 	device := &Device{Proto: &protos.Device{
 		Params: map[string]*protos.Param{ProductOid: ProductParam(p).Proto},
 	}}
-	return ParamInfosForRequest(oidPrefix, device, recursive)
+	return ParamInfosForRequest(oidPrefix, device, recursive, stream)
 }

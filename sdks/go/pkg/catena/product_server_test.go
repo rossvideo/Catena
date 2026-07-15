@@ -320,23 +320,24 @@ func TestServer_SetValue_NonProductAllowed(t *testing.T) {
 func TestServer_ParamInfo_Product(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult) {
+	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult {
 		t.Errorf("business-logic ParamInfo should not be called for %q", oidPrefix)
-		return nil, StatusWithCode(StatusCodeInternal, "should not happen")
+		return StatusWithCode(StatusCodeInternal, "should not happen")
 	})
 
-	infos, res := srv.InvokeParamInfoHandler(0, "product", true, TransportContext{})
+	stream := &sliceStream[ParamInfo]{}
+	res := srv.InvokeParamInfoHandler(0, "product", true, stream, TransportContext{})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 	// product + its 6 sub-params.
-	if len(infos) != 7 {
-		t.Fatalf("expected 7 param infos, got %d", len(infos))
+	if len(stream.Items) != 7 {
+		t.Fatalf("expected 7 param infos, got %d", len(stream.Items))
 	}
-	if infos[0].GetOid() != "product" {
-		t.Errorf("expected first oid 'product', got %q", infos[0].GetOid())
+	if stream.Items[0].GetOid() != "product" {
+		t.Errorf("expected first oid 'product', got %q", stream.Items[0].GetOid())
 	}
-	if infos[0].GetParamType() != ParamTypeStruct {
-		t.Errorf("expected product STRUCT, got %v", infos[0].GetParamType())
+	if stream.Items[0].GetParamType() != ParamTypeStruct {
+		t.Errorf("expected product STRUCT, got %v", stream.Items[0].GetParamType())
 	}
 }

@@ -39,7 +39,10 @@
 package catena
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestNewParamInfo_Basic(t *testing.T) {
@@ -99,54 +102,151 @@ func TestParamInfo_ZeroValue(t *testing.T) {
 	}
 }
 
-func TestParamInfosForRequest_RootNonRecursive(t *testing.T) {
-	infos, res := ParamInfosForRequest("", testDeviceDefinition(), false)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
-	}
+func TestParamInfosForRequest(t *testing.T) {
+	t.Run("RootNonRecursive", func(t *testing.T) {
+		stream := &sliceStream[ParamInfo]{}
+		res := ParamInfosForRequest("", testDeviceDefinition(), false, stream)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+		}
 
-	assertParamInfoOids(t, infos, []string{"alpha", "numbers", "parent"})
+		assertParamInfoOids(t, stream.Items, []string{"alpha", "floats", "numbers", "parent", "strings", "structs", "variants"})
+	})
+
+	t.Run("RootRecursive", func(t *testing.T) {
+		stream := &sliceStream[ParamInfo]{}
+		res := ParamInfosForRequest("", testDeviceDefinition(), true, stream)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+		}
+
+		// each node is emitted immediately followed by its subtree, so parent/child
+		// appears right after parent, before the alphabetically-later siblings.
+		assertParamInfoOids(t, stream.Items, []string{"alpha", "floats", "numbers", "parent", "parent/child", "strings", "structs", "variants"})
+	})
+
+	t.Run("NestedRecursive", func(t *testing.T) {
+		stream := &sliceStream[ParamInfo]{}
+		res := ParamInfosForRequest("parent", testDeviceDefinition(), true, stream)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+		}
+
+		assertParamInfoOids(t, stream.Items, []string{"parent", "parent/child"})
+		if stream.Items[0].GetParamType() != ParamTypeStruct {
+			t.Errorf("expected parent type STRUCT, got %v", stream.Items[0].GetParamType())
+		}
+		if stream.Items[0].GetArrayLength() != 0 {
+			t.Errorf("expected non-array parent array_length 0, got %d", stream.Items[0].GetArrayLength())
+		}
+	})
+
+	t.Run("ArrayLengthFromValue", func(t *testing.T) {
+		// One case per array ParamType so paramArrayLength's whole switch is walked;
+		// each length is derived from the value the shared device carries.
+		cases := []struct {
+			oid  string
+			want uint32
+		}{
+			{"numbers", 3},
+			{"floats", 2},
+			{"strings", 4},
+			{"structs", 2},
+			{"variants", 1},
+		}
+		for _, c := range cases {
+			stream := &sliceStream[ParamInfo]{}
+			res := ParamInfosForRequest(c.oid, testDeviceDefinition(), false, stream)
+			if res.Code != StatusCodeOk {
+				t.Fatalf("%s: expected OK, got %v: %s", c.oid, res.Code, res.Error)
+			}
+			if got := stream.Items[0].GetArrayLength(); got != c.want {
+				t.Errorf("%s: expected array_length %d from value length, got %d", c.oid, c.want, got)
+			}
+		}
+	})
+
+	t.Run("MissingParam", func(t *testing.T) {
+		stream := &sliceStream[ParamInfo]{}
+		res := ParamInfosForRequest("missing", testDeviceDefinition(), false, stream)
+		if res.Code != StatusCodeNotFound {
+			t.Fatalf("expected NOT_FOUND, got %v: %s", res.Code, res.Error)
+		}
+		if len(stream.Items) != 0 {
+			t.Fatalf("expected no infos, got %d", len(stream.Items))
+		}
+	})
+
+	t.Run("NilDevice", func(t *testing.T) {
+		stream := &sliceStream[ParamInfo]{}
+		res := ParamInfosForRequest("", nil, false, stream)
+		if res.Code != StatusCodeInternal {
+			t.Fatalf("expected INTERNAL, got %v: %s", res.Code, res.Error)
+		}
+		if len(stream.Items) != 0 {
+			t.Fatalf("expected no infos, got %d", len(stream.Items))
+		}
+	})
+
+	t.Run("RootSendError", func(t *testing.T) {
+		// FailAfter 0 fails the very first Send while walking the whole tree.
+		stream := &sliceStream[ParamInfo]{Err: errors.New("boom"), FailAfter: 0}
+		res := ParamInfosForRequest("", testDeviceDefinition(), false, stream)
+		if res.Code != StatusCodeInternal {
+			t.Fatalf("expected INTERNAL from a failed Send, got %v: %s", res.Code, res.Error)
+		}
+	})
+
+	t.Run("SpecificSendError", func(t *testing.T) {
+		// FailAfter 0 fails the single descriptor Send on the specific-oid path.
+		stream := &sliceStream[ParamInfo]{Err: errors.New("boom"), FailAfter: 0}
+		res := ParamInfosForRequest("alpha", testDeviceDefinition(), false, stream)
+		if res.Code != StatusCodeInternal {
+			t.Fatalf("expected INTERNAL from a failed Send, got %v: %s", res.Code, res.Error)
+		}
+	})
+
+	t.Run("RecursiveChildSendError", func(t *testing.T) {
+		// The parent descriptor is accepted (FailAfter 1); the Send while recursing
+		// into its children then fails.
+		stream := &sliceStream[ParamInfo]{Err: errors.New("boom"), FailAfter: 1}
+		res := ParamInfosForRequest("parent", testDeviceDefinition(), true, stream)
+		if res.Code != StatusCodeInternal {
+			t.Fatalf("expected INTERNAL from a failed child Send, got %v: %s", res.Code, res.Error)
+		}
+		if len(stream.Items) != 1 {
+			t.Fatalf("expected only the parent to be recorded before the failure, got %d", len(stream.Items))
+		}
+	})
+
+	t.Run("RootRecursiveNestedSendError", func(t *testing.T) {
+		// Root-recursive walk: alpha, floats, numbers, parent are accepted
+		// (FailAfter 4), then the nested recursion into parent's child fails,
+		// exercising the error return inside the recursive sendParamInfos call.
+		stream := &sliceStream[ParamInfo]{Err: errors.New("boom"), FailAfter: 4}
+		res := ParamInfosForRequest("", testDeviceDefinition(), true, stream)
+		if res.Code != StatusCodeInternal {
+			t.Fatalf("expected INTERNAL from a failed nested Send, got %v: %s", res.Code, res.Error)
+		}
+	})
 }
 
-func TestParamInfosForRequest_NestedRecursive(t *testing.T) {
-	infos, res := ParamInfosForRequest("parent", testDeviceDefinition(), true)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+func TestSendParamInfos_SkipsNilParam(t *testing.T) {
+	// A nil param descriptor in the map must be skipped, not sent or dereferenced.
+	stream := &sliceStream[ParamInfo]{}
+	if err := sendParamInfos(map[string]*protos.Param{"ghost": nil}, "", true, stream); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-
-	assertParamInfoOids(t, infos, []string{"parent", "parent/child"})
-	if infos[0].GetParamType() != ParamTypeStruct {
-		t.Errorf("expected parent type STRUCT, got %v", infos[0].GetParamType())
-	}
-	if infos[0].GetArrayLength() != 0 {
-		t.Errorf("expected non-array parent array_length 0, got %d", infos[0].GetArrayLength())
+	if len(stream.Items) != 0 {
+		t.Errorf("expected nil param to be skipped, got %d infos", len(stream.Items))
 	}
 }
 
-func TestParamInfosForRequest_ArrayLengthFromValue(t *testing.T) {
-	infos, res := ParamInfosForRequest("numbers", testDeviceDefinition(), false)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
-	}
-	if infos[0].GetArrayLength() != 3 {
-		t.Errorf("expected array_length 3 from value length, got %d", infos[0].GetArrayLength())
-	}
-}
-
-func TestParamInfosForRequest_MissingParam(t *testing.T) {
-	infos, res := ParamInfosForRequest("missing", testDeviceDefinition(), false)
-	if res.Code != StatusCodeNotFound {
-		t.Fatalf("expected NOT_FOUND, got %v: %s", res.Code, res.Error)
-	}
-	if len(infos) != 0 {
-		t.Fatalf("expected no infos, got %d", len(infos))
-	}
-}
-
-func TestParamInfosForRequest_NilDevice(t *testing.T) {
-	_, res := ParamInfosForRequest("", nil, false)
-	if res.Code != StatusCodeInternal {
-		t.Fatalf("expected INTERNAL, got %v: %s", res.Code, res.Error)
+func TestFindParamDescriptor_EmptyOid(t *testing.T) {
+	// An empty oid has no descriptor to resolve; the guard returns (nil, false).
+	params := testDeviceDefinition().Proto.GetParams()
+	if _, ok := findParamDescriptor(params, ""); ok {
+		t.Error("expected findParamDescriptor to report not-found for an empty oid")
 	}
 }
 
@@ -157,7 +257,11 @@ func testDeviceDefinition() *Device {
 			WithParam("child", NewParamString(""))).
 		WithParam("alpha", NewParamInt32(0).
 			WithName(NewPolyglotText("en", "Alpha"))).
-		WithParam("numbers", NewParamInt32Array([]int32{1, 2, 3}))
+		WithParam("numbers", NewParamInt32Array([]int32{1, 2, 3})).
+		WithParam("floats", NewParamFloat32Array([]float32{1.5, 2.5})).
+		WithParam("strings", NewParamStringArray([]string{"a", "b", "c", "d"})).
+		WithParam("structs", NewParamStructArray([]map[string]any{{"x": int32(1)}, {"x": int32(2)}})).
+		WithParam("variants", NewParamStructVariantArray([]StructVariantValue{{StructVariantType: "type_a", Value: int32(9)}}))
 }
 
 func assertParamInfoOids(t *testing.T, infos []ParamInfo, expected []string) {
@@ -170,5 +274,17 @@ func assertParamInfoOids(t *testing.T, infos []ParamInfo, expected []string) {
 		if infos[i].GetOid() != oid {
 			t.Errorf("expected oid[%d] %q, got %q", i, oid, infos[i].GetOid())
 		}
+	}
+}
+
+func TestParamInfo_Wire(t *testing.T) {
+	info := NewParamInfo("gain", nil, ParamTypeInt32, "", 3)
+
+	wire := info.Wire()
+	if wire == nil {
+		t.Fatal("Wire() returned nil")
+	}
+	if wire != info.Proto {
+		t.Error("Wire() should return the same ParamInfoResponse as GetProtoResponse()")
 	}
 }
