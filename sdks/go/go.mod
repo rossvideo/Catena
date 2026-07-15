@@ -1,8 +1,6 @@
 module github.com/rossvideo/catena/sdks/go
 
-go 1.25.0
-
-toolchain go1.25.10
+go 1.26.0
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.8.0
@@ -14,9 +12,9 @@ require (
 
 require (
 	github.com/MicahParks/jwkset v0.11.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
 )
