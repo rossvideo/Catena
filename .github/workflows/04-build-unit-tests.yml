@@ -244,7 +244,7 @@ jobs:
           submodules: recursive
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "24.17.0"
           cache: "npm"
