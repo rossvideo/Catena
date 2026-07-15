@@ -257,6 +257,27 @@ func TestWithReadOnly_WritableParentDoesNotClearChild(t *testing.T) {
 	}
 }
 
+// A nil entry in the sub-param map must be skipped by read-only propagation
+// without panicking, while non-nil siblings are still marked read-only.
+func TestWithReadOnly_SkipsNilSubParam(t *testing.T) {
+	cp := &Param{Proto: &protos.Param{
+		Type: protos.ParamType_STRUCT,
+		Params: map[string]*protos.Param{
+			"nilChild": nil,
+			"realChild": {Type: protos.ParamType_INT32},
+		},
+	}}
+
+	p := cp.WithReadOnly(true).Proto
+
+	if p.GetParams()["nilChild"] != nil {
+		t.Error("expected nil sub-param to remain nil")
+	}
+	if !p.GetParams()["realChild"].GetReadOnly() {
+		t.Error("expected non-nil sibling to be marked read_only")
+	}
+}
+
 func TestWithWidget(t *testing.T) {
 	p := NewParamInt32(0).WithWidget("slider").Proto
 	if p.GetWidget() != "slider" {
