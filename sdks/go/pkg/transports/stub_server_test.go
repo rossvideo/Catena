@@ -144,12 +144,18 @@ func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoi
 	return catena.CommandResult{}, catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
-func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream catena.Stream[catena.ParamInfo], ctx catena.TransportContext) catena.StatusResult {
 	if s.paramInfoFn != nil {
-		return s.paramInfoFn(slot, oidPrefix, recursive, ctx)
+		infos, res := s.paramInfoFn(slot, oidPrefix, recursive, ctx)
+		for _, info := range infos {
+			if err := stream.Send(info); err != nil {
+				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+			}
+		}
+		return res
 	}
 	s.panicf("ParamInfo handler not implemented in stubServerRuntime for slot %d, oidPrefix %s", slot, oidPrefix)
-	return nil, catena.StatusResult{Code: catena.StatusCodeInternal}
+	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
 func (s *stubServerRuntime) InvokeListLanguagesHandler(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {

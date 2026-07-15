@@ -165,6 +165,7 @@ func (t *RestTransport) retrieveMetadataFromRequest(r *http.Request) catena.Tran
 	transportContext := catena.TransportContext{
 		AccessToken: r.Header.Get("Authorization"),
 		Metadata:    maps.Clone(r.Header), // include all headers as metadata for now; could be filtered in the future if needed
+		Ctx:         r.Context(),
 	}
 	return transportContext
 }
@@ -710,33 +711,42 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	infos, result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
+
+	if streaming {
+		t.streamParamInfo(w, r, slot, oidPrefix, recursive, transportContext)
+		return
+	}
+
+	// Unary: the handler still streams, so collect its chunks and reply with the
+	// first as a single JSON response. Only the first chunk is needed, so cap the
+	// collector at one and let it discard the rest.
+	stream := &collectStream[catena.ParamInfo]{max: 1}
+	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
-	if len(infos) == 0 {
-		msg := "Parameter not found: " + oidPrefix
-		if oidPrefix == "" {
-			msg = "No top-level parameters found"
-		}
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, msg))
+	if len(stream.items) == 0 {
+		// A unary request must resolve to exactly one parameter. A handler that
+		// reports success yet emits nothing has violated that contract; surface
+		// it as an internal error rather than inventing a NotFound over what may
+		// be a genuine handler bug. Handlers own NotFound for missing oids.
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "param info handler reported success but produced no result"))
 		return
 	}
 
-	if streaming {
-		t.writeParamInfoStream(w, r, infos)
-		return
-	}
-
-	if err := WriteProtoJSON(w, infos[0].Proto, http.StatusOK); err != nil {
+	if err := WriteProtoJSON(w, stream.items[0].Wire(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
 	}
 }
 
-// writeParamInfoStream streams the param info entries to the client as Server-Sent Events.
-func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Request, infos []catena.ParamInfo) {
+// streamParamInfo streams param info entries to the client as Server-Sent
+// Events. The restStream writes SSE headers lazily on the first chunk, so if the
+// handler emits nothing before erroring this method can still report a status;
+// once chunks have been sent, a later error is reported in-band as an SSE
+// "error" event carrying the HTTP status code.
+func (t *RestTransport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInternal, "streaming not supported")
@@ -744,34 +754,33 @@ func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.WriteHeader(http.StatusOK)
-	flusher.Flush()
+	stream := &restStream[catena.ParamInfo]{
+		w:       w,
+		flusher: flusher,
+		marshal: MarshalProtoJSON,
+		ctx:     r.Context(),
+		devMode: t.isDevMode(),
+	}
+	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
 
-	ctx := r.Context()
-	for _, info := range infos {
-		select {
-		case <-ctx.Done():
-			logger.Info("param-info stream client disconnected")
-			return
-		default:
+	if result.IsError() {
+		// With nothing sent yet the HTTP status is still uncommitted, so we can
+		// set a normal error status. Once any chunk has been streamed the 200 is
+		// already on the wire, so the error is reported in-band as an SSE "error"
+		// event carrying the status code that would have been returned.
+		if stream.sent == 0 {
+			t.writeHTTPStatusResult(w, result)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send param-info SSE error event", "slot", slot, "oid_prefix", oidPrefix, "error", err)
 		}
-		protoResp := info.Proto
-		if protoResp == nil {
-			continue
-		}
-		data, err := MarshalProtoJSON(protoResp)
-		if err != nil {
-			logger.Error("failed to marshal param info entry", "error", err)
-			return
-		}
-		if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
-			logger.Error("failed to write param info SSE event", "error", err)
-			return
-		}
-		flusher.Flush()
+		return
+	}
+
+	// A successful handler that produced no chunks is a legitimate empty result
+	// (e.g. a device with no top-level params), not a NotFound. Commit the SSE
+	// headers so the client still receives a well-formed empty event stream.
+	if stream.sent == 0 {
+		stream.writeHeaders()
 	}
 }
 

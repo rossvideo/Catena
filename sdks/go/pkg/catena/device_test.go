@@ -378,4 +378,3 @@ func TestDevice_WithSharedConstraint(t *testing.T) {
 		t.Fatalf("expected 3 choices, got %d", got)
 	}
 }
-

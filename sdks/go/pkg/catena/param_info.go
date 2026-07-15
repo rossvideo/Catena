@@ -43,6 +43,7 @@ import (
 	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"google.golang.org/protobuf/proto"
 )
 
 // ParamInfo wraps protos.ParamInfoResponse for parameter info handling.
@@ -73,14 +74,41 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 	}
 }
 
-// ParamInfosForRequest builds ParamInfo responses for the requested FQOID from
-// a Device's params subtree.
-func ParamInfosForRequest(fqoid string, device *Device, recursive bool) ([]ParamInfo, StatusResult) {
+// ParamInfosForRequest streams ParamInfo responses for the requested FQOID from
+// a Device's params subtree, emitting each descriptor into stream as the tree
+// is walked. The returned StatusResult is the terminal status: Ok once every
+// descriptor has been sent, NotFound for an unknown oid, or Internal if a Send
+// fails (a failed Send stops the walk immediately).
+func ParamInfosForRequest(fqoid string, device *Device, recursive bool, stream Stream[ParamInfo]) StatusResult {
 	if device == nil || device.Proto == nil {
-		return []ParamInfo{}, StatusWithCode(StatusCodeInternal, "invalid device")
+		return StatusWithCode(StatusCodeInternal, "invalid device")
+	}
+	params := device.Proto.GetParams()
+
+	if fqoid == "" {
+		if err := sendParamInfos(params, "", recursive, stream); err != nil {
+			return StatusWithCode(StatusCodeInternal, err.Error())
+		}
+		return StatusWithCode(StatusCodeOk, "")
 	}
 
-	return paramInfosForRequest(device.Proto.GetParams(), fqoid, recursive)
+	param, ok := findParamDescriptor(params, fqoid)
+	if !ok {
+		return StatusWithCode(StatusCodeNotFound, "param not found: "+fqoid)
+	}
+
+	if err := stream.Send(newParamInfoFromDescriptor(fqoid, param)); err != nil {
+		return StatusWithCode(StatusCodeInternal, err.Error())
+	}
+	if recursive {
+		if children := param.GetParams(); len(children) > 0 {
+			if err := sendParamInfos(children, fqoid, true, stream); err != nil {
+				return StatusWithCode(StatusCodeInternal, err.Error())
+			}
+		}
+	}
+
+	return StatusWithCode(StatusCodeOk, "")
 }
 
 func paramDisplayName(param *protos.Param) PolyglotText {
@@ -113,14 +141,16 @@ func newParamInfoFromDescriptor(oid string, param *protos.Param) ParamInfo {
 	return NewParamInfo(oid, paramDisplayName(param), param.GetType(), param.GetTemplateOid(), paramArrayLength(param))
 }
 
-func flattenParamInfos(params map[string]*protos.Param, prefix string, recursive bool) []ParamInfo {
+// sendParamInfos walks params in sorted-key order, sending a descriptor for each
+// (and, when recursive, its subtree) into stream. It stops and returns the first
+// Send error encountered.
+func sendParamInfos(params map[string]*protos.Param, prefix string, recursive bool, stream Stream[ParamInfo]) error {
 	keys := make([]string, 0, len(params))
 	for key := range params {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 
-	infos := make([]ParamInfo, 0, len(keys))
 	for _, key := range keys {
 		param := params[key]
 		if param == nil {
@@ -131,15 +161,19 @@ func flattenParamInfos(params map[string]*protos.Param, prefix string, recursive
 		if prefix != "" {
 			oid = prefix + "/" + key
 		}
-		infos = append(infos, newParamInfoFromDescriptor(oid, param))
+		if err := stream.Send(newParamInfoFromDescriptor(oid, param)); err != nil {
+			return err
+		}
 
 		if recursive {
 			if children := param.GetParams(); len(children) > 0 {
-				infos = append(infos, flattenParamInfos(children, oid, true)...)
+				if err := sendParamInfos(children, oid, true, stream); err != nil {
+					return err
+				}
 			}
 		}
 	}
-	return infos
+	return nil
 }
 
 func findParamDescriptor(params map[string]*protos.Param, oid string) (*protos.Param, bool) {
@@ -161,24 +195,14 @@ func findParamDescriptor(params map[string]*protos.Param, oid string) (*protos.P
 	return param, true
 }
 
-func paramInfosForRequest(params map[string]*protos.Param, oid string, recursive bool) ([]ParamInfo, StatusResult) {
-	if oid == "" {
-		return flattenParamInfos(params, "", recursive), StatusWithCode(StatusCodeOk, "")
-	}
+// Ensure ParamInfo can be streamed as a Message.
+var _ Message = ParamInfo{}
 
-	param, ok := findParamDescriptor(params, oid)
-	if !ok {
-		return []ParamInfo{}, StatusWithCode(StatusCodeNotFound, "param not found: "+oid)
-	}
-
-	result := []ParamInfo{newParamInfoFromDescriptor(oid, param)}
-	if recursive {
-		if children := param.GetParams(); len(children) > 0 {
-			result = append(result, flattenParamInfos(children, oid, true)...)
-		}
-	}
-
-	return result, StatusWithCode(StatusCodeOk, "")
+// Wire returns the underlying protos.ParamInfoResponse as the streamed chunk's
+// wire representation. ParamInfo absorbs the ParamInfoResponse layer, so the
+// response is already the complete, self-contained message for one chunk.
+func (p ParamInfo) Wire() proto.Message {
+	return p.Proto
 }
 
 // GetOid returns the parameter's OID, or "" if unset.

@@ -422,11 +422,8 @@ func TestExtractTokenScopes_NonMapClaims(t *testing.T) {
 		},
 	}
 
-	readScopes, writeScopes, status := extractTokenScopes(token)
+	readScopes, writeScopes := extractTokenScopes(token)
 
-	if status.Code != StatusCodeOk {
-		t.Fatalf("expected OK status, got %v", status)
-	}
 	if len(readScopes) != 0 {
 		t.Errorf("expected no read scopes for non-map claims, got %v", readScopes)
 	}
@@ -442,11 +439,8 @@ func TestExtractTokenScopes_MissingScopeClaim(t *testing.T) {
 		},
 	}
 
-	readScopes, writeScopes, status := extractTokenScopes(token)
+	readScopes, writeScopes := extractTokenScopes(token)
 
-	if status.Code != StatusCodeOk {
-		t.Fatalf("expected OK status, got %v", status)
-	}
 	if len(readScopes) != 0 {
 		t.Errorf("expected no read scopes when scope claim is absent, got %v", readScopes)
 	}
@@ -462,11 +456,8 @@ func TestExtractTokenScopes_NonStringScopeClaim(t *testing.T) {
 		},
 	}
 
-	readScopes, writeScopes, status := extractTokenScopes(token)
+	readScopes, writeScopes := extractTokenScopes(token)
 
-	if status.Code != StatusCodeOk {
-		t.Fatalf("expected OK status, got %v", status)
-	}
 	if len(readScopes) != 0 {
 		t.Errorf("expected no read scopes for non-string scope claim, got %v", readScopes)
 	}
@@ -482,11 +473,8 @@ func TestExtractTokenScopes_SplitsReadAndWriteScopes(t *testing.T) {
 		},
 	}
 
-	readScopes, writeScopes, status := extractTokenScopes(token)
+	readScopes, writeScopes := extractTokenScopes(token)
 
-	if status.Code != StatusCodeOk {
-		t.Fatalf("expected OK status, got %v", status)
-	}
 	for _, scopeName := range []string{"st2138:mon", "st2138:cfg", "custom"} {
 		if _, ok := readScopes[scopeName]; !ok {
 			t.Errorf("expected read scopes to include %s, got %v", scopeName, readScopes)

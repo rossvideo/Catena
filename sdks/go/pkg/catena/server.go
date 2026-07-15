@@ -50,7 +50,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -69,55 +68,41 @@ const (
 	EndpointParamInfo
 	EndpointConnect
 	EndpointListLanguages
+
+	// endpointTypeMax is a sentinel that must always be last. Add new endpoint
+	// types above it. It is not a real endpoint; it bounds the enumeration so
+	// tests can range over every EndpointType without a hand-maintained list.
+	endpointTypeMax
 )
 
-type TransportContext struct {
-	AccessToken string
-	Metadata    map[string][]string
-}
-
-// HandlerContext is the context for a handler function.
-// It contains the token, read and write scopes, and metadata.
-type HandlerContext struct {
-	Token        *jwt.Token
-	readScopes   map[string]struct{}
-	writeScopes  map[string]struct{}
-	Metadata     map[string][]string
-	authzEnabled bool
-}
-
-func (ctx HandlerContext) HasReadScope(scopeName string) bool {
-	if !ctx.authzEnabled {
-		return true
+// String returns the human-readable name of the endpoint type. The switch must
+// stay exhaustive: adding a new EndpointType without a case here returns
+// "Unknown", which the enumeration test flags.
+func (e EndpointType) String() string {
+	switch e {
+	case EndpointGetSlots:
+		return "GetSlots"
+	case EndpointGetDevice:
+		return "GetDevice"
+	case EndpointGetValue:
+		return "GetValue"
+	case EndpointSetValue:
+		return "SetValue"
+	case EndpointGetParam:
+		return "GetParam"
+	case EndpointGetAsset:
+		return "GetAsset"
+	case EndpointExecuteCommand:
+		return "ExecuteCommand"
+	case EndpointParamInfo:
+		return "ParamInfo"
+	case EndpointConnect:
+		return "Connect"
+	case EndpointListLanguages:
+		return "ListLanguages"
+	default:
+		return "Unknown"
 	}
-	_, ok := ctx.readScopes[scopeName]
-	return ok
-}
-
-func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
-	if !ctx.authzEnabled {
-		return true
-	}
-	_, ok := ctx.writeScopes[scopeName]
-	return ok
-}
-
-func (ctx HandlerContext) HasAnyWriteScope() bool {
-	for _, scopeName := range catenaScopes {
-		if ctx.HasWriteScope(scopeName) {
-			return true
-		}
-	}
-	return false
-}
-
-func (ctx HandlerContext) HasAnyReadScope() bool {
-	for _, scopeName := range catenaScopes {
-		if ctx.HasReadScope(scopeName) {
-			return true
-		}
-	}
-	return false
 }
 
 // Handler function types used by both REST and gRPC servers.
@@ -139,7 +124,13 @@ type SetValueEntry struct {
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, ctx HandlerContext) (CommandResult, StatusResult)
-type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext) ([]ParamInfo, StatusResult)
+
+// ParamInfoHandler streams parameter information for a slot. The handler emits
+// each ParamInfo chunk through stream.Send and returns a terminal StatusResult.
+// A Send error means the chunk could not be delivered - the client may have
+// disconnected, or the transport hit an encoding or write failure - so the
+// handler should stop and return.
+type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult
 
 // ListLanguagesHandler returns the language codes supported by the device model
 // at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
@@ -230,7 +221,7 @@ type ServerRuntime interface {
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult)
-	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult)
+	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
@@ -265,6 +256,13 @@ type server struct {
 	connectionQueue        connectionQueueInterface
 	heartbeat              *Heartbeat
 	transports             []Transport
+
+	// Redirection seams for the generic registerHandler/invokeHandler helpers.
+	// Generic functions cannot be stored in fields, so the helpers stay generic
+	// but route their non-generic work through these fields, which unit tests may
+	// overwrite to mock registration bookkeeping or the authorization gate.
+	registerHandlerFn func(slot uint16, store func())
+	invokeGateFn      func(transportContext TransportContext, endpoint EndpointType, writeAccess bool) (HandlerContext, StatusResult)
 }
 
 func NewServer(opts config.ServerOptions) (Server, error) {
@@ -280,7 +278,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		}
 	}
 
-	return &server{
+	s := &server{
 		options:                opts,
 		ctx:                    ctx,
 		ctxCancel:              cancel,
@@ -303,7 +301,14 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		accessHandler:          allowAllAccessHandler,
 		connectionQueue:        newConnectionQueue(opts.MaxConnections),
 		transports:             []Transport{},
-	}, nil
+	}
+
+	// Default the redirection seams to the real implementations. Tests may
+	// overwrite these fields to mock registration or the authorization gate.
+	s.registerHandlerFn = s.realRegisterHandler
+	s.invokeGateFn = s.realInvokeGate
+
+	return s, nil
 }
 
 func (s *server) boundedShutdownContext(parent context.Context) (context.Context, context.CancelFunc) {
@@ -441,10 +446,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
 	}
 
-	readScopes, writeScopes, res := extractTokenScopes(token)
-	if res.Code != StatusCodeOk {
-		return HandlerContext{}, res
-	}
+	readScopes, writeScopes := extractTokenScopes(token)
 
 	handlerContext := HandlerContext{
 		Token:        token,
@@ -490,17 +492,12 @@ func (s *server) hasWriteAccess(handlerContext HandlerContext) bool {
 }
 
 func (s *server) GetSlots(transportContext TransportContext) ([]uint16, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
+	// enforce access checks
+	handlerContext, res := s.invokeGateFn(transportContext, EndpointGetSlots, false)
+	if res.IsError() {
 		return nil, res
 	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointGetSlots, handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
+	defer handlerContext.release()
 
 	s.mu.Lock()
 	slots := s.getSlotsLocked()
@@ -535,104 +532,152 @@ func (s *server) notifySlotsAdded(slot uint16) {
 	}, "")
 }
 
-// Handler registration methods
-func (s *server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
+// realRegisterHandler is the default implementation behind s.registerHandlerFn.
+// store performs the typed map write; it is invoked under the server lock so the
+// write, slot registration, and new-slot detection are atomic.
+// By using a store func, we can avoid generics which is better for testing
+// because generics cannot be stored in fields so can't be mocked.
+func (s *server) realRegisterHandler(slot uint16, store func()) {
 	s.mu.Lock()
-	s.getDeviceHandlers[slot] = handler
+	store()
 	newSlot := s.registerSlotLocked(slot)
 	s.mu.Unlock()
 
 	if newSlot {
 		s.notifySlotsAdded(slot)
 	}
+}
+
+// requestContext derives the context handed to a handler for a single unary
+// request. It is canceled when EITHER the server starts shutting down (s.ctx)
+// or the transport's per-request context (reqCtx) is canceled or times out.
+// reqCtx is the value/deadline parent so request-scoped values and deadlines
+// reach the handler; server shutdown contributes cancellation only.
+//
+// The caller MUST call the returned stop func once the handler returns.
+// Otherwise the AfterFunc registration lingers on s.ctx until server shutdown,
+// leaking one registration per request.
+func (s *server) requestContext(reqCtx context.Context) (context.Context, context.CancelFunc) {
+	if reqCtx == nil {
+		reqCtx = context.Background()
+	}
+	ctx, cancel := context.WithCancel(reqCtx)
+	// When the server context is done, cancel this request context too. stop
+	// unregisters the callback when the request finishes first (the common case).
+	stop := context.AfterFunc(s.ctx, cancel)
+	return ctx, func() {
+		stop()
+		cancel()
+	}
+}
+
+// invokeHandler runs the shared gate-keeping for an endpoint (context
+// resolution, scope + endpoint access checks and handler lookup) and then
+// defers to call for the endpoint-specific handler invocation. The
+// authorization gate is delegated to s.invokeGateFn so tests can redirect it;
+// notFound is returned with StatusCodeNotFound when no handler is registered for
+// slot.
+func invokeHandler[H, T any](
+	s *server,
+	transportContext TransportContext,
+	endpoint EndpointType,
+	writeAccess bool,
+	handlers map[uint16]H,
+	slot uint16,
+	notFound string,
+	call func(handler H, ctx HandlerContext) (T, StatusResult),
+) (T, StatusResult) {
+	var zero T
+
+	handlerContext, res := s.invokeGateFn(transportContext, endpoint, writeAccess)
+	if res.IsError() {
+		return zero, res
+	}
+	// The gate built the request context (so the access handler could observe it);
+	// this unary request ends when call returns, so release it here.
+	defer handlerContext.release()
+
+	s.mu.Lock()
+	handler, ok := handlers[slot]
+	s.mu.Unlock()
+
+	//TODO: add default handler lookup when custom default handlers are supported
+	if !ok {
+		logger.Warning("no handler registered for slot", "endpoint", endpoint, "slot", slot)
+		return zero, StatusWithCode(StatusCodeNotFound, notFound)
+	}
+
+	return call(handler, handlerContext)
+}
+
+// realInvokeGate is the default implementation behind s.invokeGateFn. It
+// resolves the caller context and enforces scope + endpoint access. The
+// StatusResult reports any error, the HandlerContext only contains valid
+// data when the StatusResult is OK. invokeHandler should only proceed
+// to call the endpoint handler when the StatusResult is OK.
+func (s *server) realInvokeGate(transportContext TransportContext, endpoint EndpointType, writeAccess bool) (HandlerContext, StatusResult) {
+	handlerContext, res := s.resolveHandlerContext(transportContext)
+	if res.IsError() {
+		return HandlerContext{}, res
+	}
+
+	// Build the request context up front so the access handler (which runs below)
+	// can observe cancellation/deadline via ctx.Context(). Ownership of the cancel
+	// passes to the caller through handlerContext.release(); on the rejection path
+	// below no caller sees it, so we release here.
+	ctx, cancel := s.requestContext(transportContext.Ctx)
+	handlerContext.ctx = ctx
+	handlerContext.ctxCancel = cancel
+
+	granted := false
+	if writeAccess {
+		granted = s.hasWriteAccess(handlerContext)
+	} else {
+		granted = s.hasReadAccess(handlerContext)
+	}
+	if !granted || !s.isAccessAllowed(endpoint, handlerContext) {
+		handlerContext.release()
+		return HandlerContext{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
+	}
+
+	return handlerContext, StatusWithCode(StatusCodeOk, "")
+}
+
+// Handler registration methods
+func (s *server) RegisterGetDeviceHandler(slot uint16, handler DeviceHandler) {
+	s.registerHandlerFn(slot, func() { s.getDeviceHandlers[slot] = handler })
 }
 
 func (s *server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
-	s.mu.Lock()
-	s.getValueHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
+	s.registerHandlerFn(slot, func() { s.getValueHandlers[slot] = handler })
 }
 
 func (s *server) RegisterGetParamHandler(slot uint16, handler GetParamHandler) {
-	s.mu.Lock()
-	s.getParamHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
+	s.registerHandlerFn(slot, func() { s.getParamHandlers[slot] = handler })
 }
 
 func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
-	s.mu.Lock()
-	s.setValueHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
+	s.registerHandlerFn(slot, func() { s.setValueHandlers[slot] = handler })
 }
 
 func (s *server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
-	s.mu.Lock()
-	s.getAssetHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
-}
-
-func (s *server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
-	s.mu.Lock()
-	s.executeCommandHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
-}
-
-func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler) {
-	s.mu.Lock()
-	s.paramInfoHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
+	s.registerHandlerFn(slot, func() { s.getAssetHandlers[slot] = handler })
 }
 
 func (s *server) RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler) {
-	s.mu.Lock()
-	s.listLanguagesHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
+	s.registerHandlerFn(slot, func() { s.listLanguagesHandlers[slot] = handler })
+}
 
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
+func (s *server) RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler) {
+	s.registerHandlerFn(slot, func() { s.executeCommandHandlers[slot] = handler })
+}
+
+func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler) {
+	s.registerHandlerFn(slot, func() { s.paramInfoHandlers[slot] = handler })
 }
 
 func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
-	s.mu.Lock()
-	s.heartbeatHandlers[slot] = handler
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
+	s.registerHandlerFn(slot, func() { s.heartbeatHandlers[slot] = handler })
 }
 
 func (s *server) RegisterAccessHandler(handler AccessHandler) {
@@ -645,14 +690,7 @@ func (s *server) RegisterAccessHandler(handler AccessHandler) {
 }
 
 func (s *server) RegisterProductStruct(slot uint16, product ProductStruct) {
-	s.mu.Lock()
-	s.productStructs[slot] = product
-	newSlot := s.registerSlotLocked(slot)
-	s.mu.Unlock()
-
-	if newSlot {
-		s.notifySlotsAdded(slot)
-	}
+	s.registerHandlerFn(slot, func() { s.productStructs[slot] = product })
 }
 
 // productForSlot returns the SDK-managed product struct registered for a slot,
@@ -665,102 +703,51 @@ func (s *server) productForSlot(slot uint16) (ProductStruct, bool) {
 }
 
 func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return ReplyError[Device](res.Code, res.Error)
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return ReplyError[Device](StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointGetDevice, handlerContext) {
-		return ReplyError[Device](StatusCodePermissionDenied, "Permission denied")
-	}
-
-	s.mu.Lock()
-	handler, ok := s.getDeviceHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		device, res := handler(slot, handlerContext)
-		// Overwrite the product/* fields in whatever the business logic returned
-		// with the SDK-managed product struct, if one is registered for the slot.
-		if res.IsOk() {
-			if product, has := s.productForSlot(slot); has && device.Proto != nil {
-				device.WithParam(ProductOid, ProductParam(product))
+	return invokeHandler(s, transportContext, EndpointGetDevice, false, s.getDeviceHandlers, slot,
+		"No device defined at slot",
+		func(handler DeviceHandler, ctx HandlerContext) (Device, StatusResult) {
+			device, res := handler(slot, ctx)
+			// Overwrite the product/* fields in whatever the business logic returned
+			// with the SDK-managed product struct, if one is registered for the slot.
+			if res.IsOk() {
+				if product, has := s.productForSlot(slot); has && device.Proto != nil {
+					device.WithParam(ProductOid, ProductParam(product))
+				}
 			}
-		}
-		return device, res
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("GetDeviceHandler called - no handler registered for this slot")
-	return ReplyError[Device](StatusCodeNotFound, "No device defined at slot")
+			return device, res
+		})
 }
 
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return ReplyError[Value](res.Code, res.Error)
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return ReplyError[Value](StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointGetValue, handlerContext) {
-		return ReplyError[Value](StatusCodePermissionDenied, "Permission denied")
-	}
-
-	// The SDK owns product/* when a product struct is registered for the slot;
-	// answer it directly instead of passing to business logic.
-	if isProductOid(fqoid) {
-		if product, has := s.productForSlot(slot); has {
-			return productValueForOid(product, fqoid)
-		}
-	}
-
-	s.mu.Lock()
-	handler, ok := s.getValueHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		return handler(slot, fqoid, handlerContext)
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("GetValueHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[Value](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return invokeHandler(s, transportContext, EndpointGetValue, false, s.getValueHandlers, slot,
+		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler GetValueHandler, ctx HandlerContext) (Value, StatusResult) {
+			// The SDK owns product/* when a product struct is registered for the slot;
+			// answer it directly instead of passing to business logic.
+			if isProductOid(fqoid) {
+				if product, has := s.productForSlot(slot); has {
+					return productValueForOid(product, fqoid)
+				}
+			}
+			// handle as normal
+			return handler(slot, fqoid, ctx)
+		})
 }
 
 func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return Param{}, res
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return Param{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointGetParam, handlerContext) {
-		return Param{}, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-
-	// The SDK owns product/* when a product struct is registered for the slot;
-	// answer it directly instead of passing to business logic.
-	if isProductOid(fqoid) {
-		if product, has := s.productForSlot(slot); has {
-			return productParamForOid(product, fqoid)
-		}
-	}
-
-	s.mu.Lock()
-	handler, ok := s.getParamHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		return handler(slot, fqoid, handlerContext)
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("GetParamHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return Param{}, StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return invokeHandler(s, transportContext, EndpointGetParam, false, s.getParamHandlers, slot,
+		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler GetParamHandler, ctx HandlerContext) (Param, StatusResult) {
+			// The SDK owns product/* when a product struct is registered for the slot;
+			// answer it directly instead of passing to business logic.
+			if isProductOid(fqoid) {
+				if product, has := s.productForSlot(slot); has {
+					return productParamForOid(product, fqoid)
+				}
+			}
+			// handle as normal
+			return handler(slot, fqoid, ctx)
+		})
 }
 
 // InvokeSetValueHandler applies one or more parameter values for a slot. The
@@ -768,157 +755,71 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 // them atomically; single-value endpoints pass a one-element slice. Access
 // checks run once for the whole batch.
 func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return res
-	}
-
-	if !s.hasWriteAccess(handlerContext) {
-		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointSetValue, handlerContext) {
-		return StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-
-	// The product struct is always read-only; reject any write targeting
-	// product/* regardless of whether the SDK or business logic manages it.
-	for _, entry := range entries {
-		if isProductOid(entry.Fqoid) {
-			return StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
-		}
-	}
-
-	s.mu.Lock()
-	handler, ok := s.setValueHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		return handler(slot, entries, handlerContext)
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("SetValueHandler called - no handler registered for this slot", "slot", slot, "count", len(entries))
-	return StatusWithCode(StatusCodeNotFound, "no SetValue handler registered for slot "+strconv.Itoa(int(slot)))
+	_, res := invokeHandler(s, transportContext, EndpointSetValue, true, s.setValueHandlers, slot,
+		"no SetValue handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler SetValueHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			// The product struct is always read-only; reject any write targeting
+			// product/* regardless of whether the SDK or business logic manages it.
+			for _, entry := range entries {
+				if isProductOid(entry.Fqoid) {
+					return struct{}{}, StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
+				}
+			}
+			return struct{}{}, handler(slot, entries, ctx)
+		})
+	return res
 }
 
 func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return ReplyError[Asset](res.Code, res.Error)
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return ReplyError[Asset](StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointGetAsset, handlerContext) {
-		return ReplyError[Asset](StatusCodePermissionDenied, "Permission denied")
-	}
-
-	s.mu.Lock()
-	handler, ok := s.getAssetHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		return handler(slot, fqoid, handlerContext)
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("GetAssetHandler called - no handler registered for this slot", "slot", slot, "fqoid", fqoid)
-	return ReplyError[Asset](StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return invokeHandler(s, transportContext, EndpointGetAsset, false, s.getAssetHandlers, slot,
+		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler GetAssetHandler, ctx HandlerContext) (Asset, StatusResult) {
+			return handler(slot, fqoid, ctx)
+		})
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, transportContext TransportContext) (CommandResult, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return CommandError(res.Code, res.Error)
-	}
-
-	if !s.hasWriteAccess(handlerContext) {
-		return CommandError(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointExecuteCommand, handlerContext) {
-		return CommandError(StatusCodePermissionDenied, "Permission denied")
-	}
-
-	s.mu.Lock()
-	handler, ok := s.executeCommandHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		return handler(slot, commandFqoid, payload, handlerContext)
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("ExecuteCommandHandler called - no handler registered for this slot", "slot", slot, "commandFqoid", commandFqoid)
-	return CommandError(StatusCodeNotFound, "ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)))
+	return invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, slot,
+		"ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler ExecuteCommandHandler, ctx HandlerContext) (CommandResult, StatusResult) {
+			return handler(slot, commandFqoid, payload, ctx)
+		})
 }
 
-func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, transportContext TransportContext) ([]ParamInfo, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return nil, res
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointParamInfo, handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-
-	// The SDK owns product/* ParamInfo when a product struct is registered for
-	// the slot; answer it directly instead of passing to business logic.
-	if isProductOid(oidPrefix) {
-		if product, has := s.productForSlot(slot); has {
-			return productParamInfosForOid(product, oidPrefix, recursive)
-		}
-	}
-
-	s.mu.Lock()
-	handler, ok := s.paramInfoHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		return handler(slot, oidPrefix, recursive, handlerContext)
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("ParamInfoHandler called - no handler registered for this slot", "slot", slot, "oidPrefix", oidPrefix)
-	return nil, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
+func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult {
+	// Wrap the transport's stream so Send also fails on server shutdown, not just
+	// client disconnect. Cancellation is then transparent to the handler: it just
+	// gets an error from the next Send once the server is shutting down.
+	stream = shutdownStream[ParamInfo]{inner: stream, shutdown: s.ctx}
+	_, res := invokeHandler(s, transportContext, EndpointParamInfo, false, s.paramInfoHandlers, slot,
+		"ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler ParamInfoHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			// The SDK owns product/* ParamInfo when a product struct is registered for
+			// the slot; answer it directly instead of passing to business logic.
+			if isProductOid(oidPrefix) {
+				if product, has := s.productForSlot(slot); has {
+					return struct{}{}, productParamInfosForOid(product, oidPrefix, recursive, stream)
+				}
+			}
+			// normal processing for non-product/* ParamInfo
+			return struct{}{}, handler(slot, oidPrefix, recursive, ctx, stream)
+		})
+	return res
 }
 
 func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
-		return nil, res
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointListLanguages, handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-
-	s.mu.Lock()
-	handler, ok := s.listLanguagesHandlers[slot]
-	s.mu.Unlock()
-
-	if ok {
-		return handler(slot, handlerContext)
-	}
-	// TODO: lookup default handler for slot
-	logger.Warning("ListLanguagesHandler called - no handler registered for this slot", "slot", slot)
-	return nil, StatusWithCode(StatusCodeNotFound, "no ListLanguages handler registered for slot "+strconv.Itoa(int(slot)))
+	return invokeHandler(s, transportContext, EndpointListLanguages, false, s.listLanguagesHandlers, slot,
+		"no ListLanguages handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler ListLanguagesHandler, ctx HandlerContext) ([]string, StatusResult) {
+			return handler(slot, ctx)
+		})
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
-	handlerContext, res := s.resolveHandlerContext(transportContext)
-	if res.Code != StatusCodeOk {
+	// enforce access checks
+	handlerContext, res := s.invokeGateFn(transportContext, EndpointConnect, false)
+	if res.IsError() {
 		return nil, res
-	}
-
-	if !s.hasReadAccess(handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
-	}
-	if !s.isAccessAllowed(EndpointConnect, handlerContext) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Permission denied")
 	}
 
 	s.mu.Lock()
@@ -940,7 +841,13 @@ func (s *server) RegisterTransportConnection(transport Transport, transportConte
 
 	// register and it will send the initial update to the new connection before returning it
 	// this ensures the transport receives the initial update before it starts processing the connection
-	return s.connectionQueue.registerOwnedConnection(transport, handlerContext, initialUpdate)
+	conn, res := s.connectionQueue.registerOwnedConnection(transport, handlerContext, initialUpdate)
+	if res.IsError() {
+		// the connection was not stored, so no teardown will release it
+		handlerContext.release()
+		return nil, res
+	}
+	return conn, res
 }
 
 // ShutdownTransportConnections allows transports to signal
