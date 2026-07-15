@@ -787,14 +787,24 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Check for a "stream" suffix to enable SSE, mirroring param-info.
+	// process the path to determine if this is a streaming command or a unary command.
+	// A trailing "stream" segment selects streaming; what remains is the command oid.
 	streaming := false
-	fqoidParts := pathParts
-	if len(fqoidParts) > 0 && fqoidParts[len(fqoidParts)-1] == "stream" {
+	if len(pathParts) > 0 && pathParts[len(pathParts)-1] == "stream" {
 		streaming = true
-		fqoidParts = fqoidParts[:len(fqoidParts)-1]
+		pathParts = pathParts[:len(pathParts)-1]
 	}
-	commandFqoid := strings.Join(fqoidParts, "/")
+
+	if len(pathParts) == 0 {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "command FQOID is required"))
+		return
+	}
+	if len(pathParts) > 1 {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, "unknown command endpoint"))
+		return
+	}
+
+	commandOid := pathParts[0]
 
 	// respond defaults to false to match protobuf; only respond=true opts in.
 	respond := false
@@ -825,7 +835,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	transportContext := t.retrieveMetadataFromRequest(r)
 
 	if streaming {
-		t.streamExecuteCommand(w, r, slot, commandFqoid, payload, respond, transportContext)
+		t.streamExecuteCommand(w, r, slot, commandOid, payload, respond, transportContext)
 		return
 	}
 
@@ -834,7 +844,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	// handler can skip emitting responses; the server also swaps in a nullStream
 	// when respond=false, so nothing reaches this stream in that case.
 	stream := &lastStream[catena.CommandResult]{}
-	result := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, respond, stream, transportContext)
+	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
@@ -857,7 +867,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 // Events. The restStream writes SSE headers lazily on the first chunk, so if the
 // handler emits nothing before erroring this method can still report a status.
 // respond is passed through so a smart handler can skip emitting responses.
-func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandFqoid string, payload any, respond bool, transportContext catena.TransportContext) {
+func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandOid string, payload any, respond bool, transportContext catena.TransportContext) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
@@ -871,7 +881,7 @@ func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Requ
 		ctx:     r.Context(),
 		devMode: t.isDevMode(),
 	}
-	result := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, respond, stream, transportContext)
+	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
 
 	if result.IsError() {
 		// Once any chunk has been streamed the HTTP status is committed, so a
@@ -880,7 +890,7 @@ func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Requ
 		if stream.sent == 0 {
 			t.writeHTTPStatusResult(w, result)
 		} else if err := stream.sendError(result); err != nil {
-			logger.Error("failed to send command SSE error event", "slot", slot, "command", commandFqoid, "error", err)
+			logger.Error("failed to send command SSE error event", "slot", slot, "command", commandOid, "error", err)
 		}
 		return
 	}

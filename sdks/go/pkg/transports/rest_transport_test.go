@@ -718,6 +718,29 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 		}
 	})
 
+	t.Run("NoCommand", func(t *testing.T) {
+		transport, _ := makeTestRestTransport(t)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/", "")
+		assertStatus(t, rec, http.StatusBadRequest)
+		assertBodyContains(t, rec, "command FQOID is required")
+	})
+
+	// commands can't be nested in any way
+	t.Run("NestedCommand", func(t *testing.T) {
+		transport, _ := makeTestRestTransport(t)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/invalid/nested/command", "")
+		assertStatus(t, rec, http.StatusNotFound)
+		assertBodyContains(t, rec, "unknown command endpoint")
+	})
+
+	// the only valid string after /command/oid/ is 'stream'
+	t.Run("NotStream", func(t *testing.T) {
+		transport, _ := makeTestRestTransport(t)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/oid/not-stream", "")
+		assertStatus(t, rec, http.StatusNotFound)
+		assertBodyContains(t, rec, "unknown command endpoint")
+	})
+
 	t.Run("PayloadHandling", func(t *testing.T) {
 		tests := []struct {
 			name      string
