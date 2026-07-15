@@ -1,8 +1,6 @@
 module github.com/rossvideo/catena/sdks/go
 
-go 1.25.0
-
-toolchain go1.25.10
+go 1.26.0
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.8.0
