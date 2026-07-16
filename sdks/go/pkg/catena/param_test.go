@@ -185,6 +185,99 @@ func TestWithReadOnly(t *testing.T) {
 	}
 }
 
+// A read-only parent propagates read_only to sub-params added afterward,
+// including nested descendants.
+func TestWithReadOnly_PropagatesToChildrenAddedAfter(t *testing.T) {
+	grandchild := NewParamString("deep")
+	child := NewParamStruct(nil).WithParam("grandchild", grandchild)
+	p := NewParamStruct(nil).
+		WithReadOnly(true).
+		WithParam("child", child).
+		Proto
+
+	sub := p.GetParams()["child"]
+	if sub == nil {
+		t.Fatal("expected sub-param 'child'")
+	}
+	if !sub.GetReadOnly() {
+		t.Error("expected child of read-only parent to be read_only")
+	}
+	if !sub.GetParams()["grandchild"].GetReadOnly() {
+		t.Error("expected grandchild of read-only parent to be read_only")
+	}
+}
+
+// Marking a parent read-only after its children were added propagates
+// read_only down to the existing children recursively.
+func TestWithReadOnly_PropagatesToExistingChildren(t *testing.T) {
+	grandchild := NewParamString("deep")
+	child := NewParamStruct(nil).WithParam("grandchild", grandchild)
+	p := NewParamStruct(nil).
+		WithParam("child", child).
+		WithReadOnly(true).
+		Proto
+
+	sub := p.GetParams()["child"]
+	if !sub.GetReadOnly() {
+		t.Error("expected existing child to become read_only when parent set read-only")
+	}
+	if !sub.GetParams()["grandchild"].GetReadOnly() {
+		t.Error("expected existing grandchild to become read_only when parent set read-only")
+	}
+}
+
+// A writable parent leaves children untouched, so a child may still be
+// independently marked read-only.
+func TestWithReadOnly_WritableParentKeepsChildReadOnly(t *testing.T) {
+	child := NewParamInt32(0).WithReadOnly(true)
+	p := NewParamStruct(nil).
+		WithReadOnly(false).
+		WithParam("child", child).
+		Proto
+
+	if p.GetReadOnly() {
+		t.Error("expected parent to remain writable")
+	}
+	if !p.GetParams()["child"].GetReadOnly() {
+		t.Error("expected child under writable parent to keep its own read_only=true")
+	}
+}
+
+// A writable parent must not force its children to writable: a read-only child
+// added before the parent is marked writable stays read-only.
+func TestWithReadOnly_WritableParentDoesNotClearChild(t *testing.T) {
+	child := NewParamInt32(0).WithReadOnly(true)
+	p := NewParamStruct(nil).
+		WithParam("child", child).
+		WithReadOnly(false).
+		Proto
+
+	if !p.GetParams()["child"].GetReadOnly() {
+		t.Error("expected read-only child to stay read_only under writable parent")
+	}
+}
+
+// A nil entry in the sub-param map must be skipped by read-only propagation
+// without panicking, while non-nil siblings are still marked read-only.
+func TestWithReadOnly_SkipsNilSubParam(t *testing.T) {
+	cp := &Param{Proto: &protos.Param{
+		Type: protos.ParamType_STRUCT,
+		Params: map[string]*protos.Param{
+			"nilChild": nil,
+			"realChild": {Type: protos.ParamType_INT32},
+		},
+	}}
+
+	p := cp.WithReadOnly(true).Proto
+
+	if p.GetParams()["nilChild"] != nil {
+		t.Error("expected nil sub-param to remain nil")
+	}
+	if !p.GetParams()["realChild"].GetReadOnly() {
+		t.Error("expected non-nil sibling to be marked read_only")
+	}
+}
+
 func TestWithWidget(t *testing.T) {
 	p := NewParamInt32(0).WithWidget("slider").Proto
 	if p.GetWidget() != "slider" {
@@ -1037,5 +1130,26 @@ func TestSetValue_InvalidThenValid(t *testing.T) {
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 20 {
 		t.Errorf("expected 20, got %d", cp.Proto.GetValue().GetInt32Value())
+	}
+}
+
+func TestWithParam_StructValuesFromSubParams(t *testing.T) {
+	param := NewParamStruct(nil).
+		WithName(NewPolyglotText("en", "Struct Example")).
+		WithParam("number", NewParamInt32(7).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
+		WithParam("text", NewParamString("hello"))
+
+	if param.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Fatalf("expected STRUCT, got %v", param.Proto.GetType())
+	}
+	number := param.Proto.GetParams()["number"]
+	if number.GetValue().GetInt32Value() != 7 {
+		t.Errorf("expected number sub-param value 7, got %d", number.GetValue().GetInt32Value())
+	}
+	if number.GetConstraint().GetInt32Range().GetMaxValue() != 10 {
+		t.Fatal("expected nested int32 range constraint max 10")
+	}
+	if param.Proto.GetParams()["text"].GetValue().GetStringValue() != "hello" {
+		t.Errorf("expected text sub-param value 'hello', got %q", param.Proto.GetParams()["text"].GetValue().GetStringValue())
 	}
 }

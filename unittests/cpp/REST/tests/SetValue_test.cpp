@@ -76,8 +76,7 @@ class RESTSetValueTests : public RESTEndpointTest {
         slot_ = slot;
         fqoid_ = oid;
         inVal_.set_string_value(value);
-        auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
-        ASSERT_TRUE(status.ok()) << "Failed to convert input value to JSON";
+        protoToJsonString(inVal_, jsonBody_);
     }
 
     /*

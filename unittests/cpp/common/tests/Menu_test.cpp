@@ -72,7 +72,7 @@ protected:
         Menu({names_[0],       names_[1]}, hidden_, disabled_,
              {paramOids_[0],   paramOids_[1]},
              {commandOids_[0], commandOids_[1]},
-             {clientHints_[0], clientHints_[1]}, oid_, menuGroup_);
+             {clientHints_[0], clientHints_[1]}, oid_, order_, menuGroup_);
     }
 
     std::unique_ptr<IMenu> menu_;
@@ -95,6 +95,7 @@ protected:
         {"hint2", "This is another hint"}
     };
     std::string oid_ = "test_menu";
+    int32_t order_ = 1;
     MockMenuGroup menuGroup_;
 };
 
@@ -112,7 +113,7 @@ TEST_F(MenuTest, Menu_ErrCreate) {
     MockMenuGroup errMenuGroup;
     EXPECT_CALL(errMenuGroup, addMenu(oid_, testing::_)).Times(1)
         .WillOnce(testing::Throw(std::runtime_error("MenuGroup error")));
-    EXPECT_THROW(Menu({}, hidden_, disabled_, {}, {}, {}, oid_, errMenuGroup), std::runtime_error);
+    EXPECT_THROW(Menu({}, hidden_, disabled_, {}, {}, {}, oid_, order_, errMenuGroup), std::runtime_error);
 }
 
 /*
@@ -137,4 +138,5 @@ TEST_F(MenuTest, Menu_ToProto) {
     for (auto& [key, value] : clientHints_) {
         EXPECT_EQ(protoMenu.client_hints().at(key), value);
     }
+    EXPECT_EQ(protoMenu.order(), order_) << "Menu order should be serialized";
 }

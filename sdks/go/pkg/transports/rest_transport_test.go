@@ -105,6 +105,9 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		if got := ctx.Metadata["Authorization"]; len(got) != 1 || got[0] != headers["Authorization"] {
 			t.Errorf("expected Authorization metadata %q, got %v", headers["Authorization"], got)
 		}
+		if ctx.Ctx == nil {
+			t.Error("expected the request context to be propagated, got nil")
+		}
 	}
 
 	tests := []struct {
@@ -130,7 +133,7 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 					assertContext(t, ctx)
-					device, _ := catena.ToDevice(map[string]any{"slot": uint32(slot)})
+					device := *catena.NewDevice(slot)
 					return catena.Reply(device)
 				}
 			},
@@ -150,6 +153,19 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			},
 			run: func(t *testing.T, transport *RestTransport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/value/brightness", "", headers)
+				assertStatus(t, rec, http.StatusOK)
+			},
+		},
+		{
+			name: "get param",
+			setup: func(t *testing.T, runtime *stubServerRuntime) {
+				runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+					assertContext(t, ctx)
+					return *catena.NewParamInt32(42), catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+			},
+			run: func(t *testing.T, transport *RestTransport) {
+				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/param/brightness", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
@@ -223,6 +239,19 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 			},
 		},
 		{
+			name: "languages",
+			setup: func(t *testing.T, runtime *stubServerRuntime) {
+				runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+					assertContext(t, ctx)
+					return []string{"en", "fr"}, catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+			},
+			run: func(t *testing.T, transport *RestTransport) {
+				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "", headers)
+				assertStatus(t, rec, http.StatusOK)
+			},
+		},
+		{
 			name: "connect",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				connection := makeTestConnection(1)
@@ -262,11 +291,8 @@ func TestRestTransport_GetDevice_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	deviceMap := map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-	}
-	device, _ := catena.ToDevice(deviceMap)
+	device := *catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull)
 
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
@@ -339,6 +365,106 @@ func TestRestTransport_GetValue_Route(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/value/brightness", "")
 	assertStatus(t, rec, http.StatusOK)
+}
+
+func TestRestTransport_GetParam_Route(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	handlerCalled := false
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		handlerCalled = true
+		if fqoid != "text_box" {
+			t.Errorf("expected fqoid 'text_box', got %s", fqoid)
+		}
+		param := catena.NewParamString("Hello, World!").
+			WithName(catena.NewPolyglotText("en", "Text Box").With("es", "Caja de Texto"))
+		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/text_box", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+	assertBodyContains(t, rec, `"oid":"text_box"`)
+	assertBodyContains(t, rec, `"string_value":"Hello, World!"`)
+	assertBodyContains(t, rec, `"type":"STRING"`)
+}
+
+func TestRestTransport_GetParam_NestedFqoid(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		if fqoid != "parent/child" {
+			t.Errorf("expected fqoid 'parent/child', got %s", fqoid)
+		}
+		return *catena.NewParamInt32(7), catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/parent/child", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertBodyContains(t, rec, `"oid":"parent/child"`)
+}
+
+func TestRestTransport_GetParam_MissingFqoid(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param", "")
+	assertStatus(t, rec, http.StatusBadRequest)
+}
+
+func TestRestTransport_GetParam_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/param/text_box", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+}
+
+func TestRestTransport_GetParam_HandlerError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/missing", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}
+
+// TestRestTransport_GetParam_EmitsZeroValues verifies the param response keeps
+// meaningful proto3 zero values that the default (omit-empty) marshaller drops:
+// a constraint's min_value:0 and a current value of 0.
+func TestRestTransport_GetParam_EmitsZeroValues(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		param := catena.NewParamInt32(0).
+			WithName(catena.NewPolyglotText("en", "Zero")).
+			WithConstraint(catena.NewConstraintInt32Range(0, 100, 1))
+		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/zero", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+	assertBodyContains(t, rec, `"oid":"zero"`)
+	assertBodyContains(t, rec, `"min_value":0`)
+	assertBodyContains(t, rec, `"int32_value":0`)
+}
+
+// TestRestTransport_GetParam_EmitsEmptyStringValue verifies that a current
+// value of "" survives the empty-strip pass (it is detached and reattached).
+func TestRestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		param := catena.NewParamString("").
+			WithName(catena.NewPolyglotText("en", "Empty"))
+		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/empty", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertBodyContains(t, rec, `"string_value":""`)
 }
 
 func TestRestTransport_SetValue_Route(t *testing.T) {
@@ -993,7 +1119,7 @@ func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
-	device, _ := catena.ToDevice(map[string]any{"slot": int32(0)})
+	device := *catena.NewDevice(0)
 	rec := httptest.NewRecorder()
 	writeDeviceResult(rec, device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
@@ -1246,6 +1372,28 @@ func TestRestTransport_Start(t *testing.T) {
 	transport.Shutdown(ctx)
 }
 
+func TestRestTransport_Start_BindError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	// Occupy a port so the transport's synchronous bind fails with
+	// "address already in use".
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
+	}
+	defer listener.Close()
+	port := listener.Addr().(*net.TCPAddr).Port
+
+	transport.port = port
+	err = transport.Start(context.Background(), runtime)
+	if err == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		transport.Shutdown(ctx)
+		t.Fatal("expected Start to return a bind error, got nil")
+	}
+}
+
 func TestRestTransport_Shutdown_NotStarted(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	runtime.shutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
@@ -1489,7 +1637,7 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 }
 
 func TestWriteDeviceResult_WriteError(t *testing.T) {
-	device, _ := catena.ToDevice(map[string]any{"slot": int32(0)})
+	device := *catena.NewDevice(0)
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
@@ -1710,245 +1858,392 @@ func TestRestTransport_GetAsset_CompressionWithError(t *testing.T) {
 // =============================================================================
 // Test: ParamInfo endpoint
 // =============================================================================
+func TestRestTransport_ParamInfo(t *testing.T) {
+	t.Run("unary route", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
 
-func TestRestTransport_ParamInfo_UnaryRoute(t *testing.T) {
+		handlerCalled := false
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			handlerCalled = true
+			// Mirroring the C++ controller, REST builds the fqoid by prepending "/"
+			// to each path segment after the endpoint.
+			if oidPrefix != "text_box" {
+				t.Errorf("expected oidPrefix 'text_box', got %s", oidPrefix)
+			}
+			if recursive {
+				t.Error("expected recursive=false for unary call")
+			}
+			return []catena.ParamInfo{
+				catena.NewParamInfo("text_box", catena.NewPolyglotText("en", "Text Box"), catena.ParamTypeString, "", 0),
+			}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "")
+
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "application/json")
+		if !handlerCalled {
+			t.Error("registered handler was not called")
+		}
+
+		response := parseJSONBody(t, rec)
+		info, ok := response["info"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected 'info' object in response, got %v", response)
+		}
+		if info["oid"] != "text_box" {
+			t.Errorf("expected info.oid='text_box', got %v", info["oid"])
+		}
+		if info["type"] != "STRING" {
+			t.Errorf("expected info.type='STRING', got %v", info["type"])
+		}
+	})
+
+	t.Run("Nested fqoid", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		receivedOidPrefix := ""
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			receivedOidPrefix = oidPrefix
+			return []catena.ParamInfo{
+				catena.NewParamInfo(oidPrefix, nil, catena.ParamTypeInt32, "", 0),
+			}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/parent/child", "")
+		assertStatus(t, rec, http.StatusOK)
+		if receivedOidPrefix != "parent/child" {
+			t.Errorf("expected oidPrefix 'parent/child', got %s", receivedOidPrefix)
+		}
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "Parameter not found: missing")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/missing", "")
+		assertStatus(t, rec, http.StatusNotFound)
+		if err := assertHasError(t, rec); !strings.Contains(err, "Parameter not found") {
+			t.Errorf("expected 'Parameter not found' message, got %q", err)
+		}
+	})
+
+	// TestRestTransport_ParamInfo_UnaryEmptyOk verifies that a unary handler which
+	// reports success but produces no parameter is treated as an internal contract
+	// violation, not a fabricated NotFound.
+	t.Run("UnaryEmptyOk", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/missing", "")
+		assertStatus(t, rec, http.StatusInternalServerError)
+	})
+
+	t.Run("HandlerError", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "")
+		assertStatus(t, rec, http.StatusNotFound)
+	})
+
+	t.Run("MethodNotAllowed", func(t *testing.T) {
+		transport, _ := makeTestRestTransport(t)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/param-info/text_box", "")
+		assertStatus(t, rec, http.StatusMethodNotAllowed)
+	})
+
+	// TestRestTransport_ParamInfo_UnaryRecursiveRejected verifies the C++ rule that
+	// recursive cannot be combined with a unary response.
+	t.Run("UnaryRecursiveRejected", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		handlerCalled := false
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			handlerCalled = true
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/text_box?recursive=true", "")
+		assertStatus(t, rec, http.StatusBadRequest)
+		if err := assertHasError(t, rec); !strings.Contains(err, "Recursive") {
+			t.Errorf("expected 'Recursive ...' error message, got %q", err)
+		}
+		if handlerCalled {
+			t.Error("handler should not be called when validation fails")
+		}
+	})
+
+	// TestRestTransport_ParamInfo_UnaryMissingFqoidRejected verifies the C++ rule that
+	// a unary request must include an fqoid.
+	t.Run("UnaryMissingFqoidRejected", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+		handlerCalled := false
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			handlerCalled = true
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info", "")
+		assertStatus(t, rec, http.StatusBadRequest)
+		if err := assertHasError(t, rec); !strings.Contains(err, "Unary request must include fqoid") {
+			t.Errorf("expected 'Unary request must include fqoid' error, got %q", err)
+		}
+		if handlerCalled {
+			t.Error("handler should not be called when validation fails")
+		}
+	})
+
+	// TestRestTransport_ParamInfo_RecursivePresenceOnly verifies the C++ semantics where
+	// the presence of the `recursive` query parameter enables recursion regardless
+	// of its value (so ?recursive=false STILL enables recursion).
+	t.Run("RecursivePresenceOnly", func(t *testing.T) {
+		cases := []struct {
+			name  string
+			query string
+			want  bool
+		}{
+			{name: "no flag", query: "", want: false},
+			{name: "recursive=true", query: "?recursive=true", want: true},
+			{name: "recursive=false still enables", query: "?recursive=false", want: true},
+			{name: "recursive with no value", query: "?recursive", want: true},
+		}
+
+		for _, tc := range cases {
+			tc := tc
+			t.Run(tc.name, func(t *testing.T) {
+				transport, runtime := makeTestRestTransport(t)
+				var gotRecursive bool
+				runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+					gotRecursive = recursive
+					return []catena.ParamInfo{
+						catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
+					}, catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+
+				rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/stream"+tc.query, "")
+				assertStatus(t, rec, http.StatusOK)
+				if gotRecursive != tc.want {
+					t.Errorf("recursive: got %v, want %v", gotRecursive, tc.want)
+				}
+			})
+		}
+	})
+	t.Run("StreamRoute", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			if oidPrefix != "parent" {
+				t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
+			}
+			if !recursive {
+				t.Error("expected recursive=true")
+			}
+			return []catena.ParamInfo{
+				catena.NewParamInfo("parent", nil, catena.ParamTypeStruct, "", 0),
+				catena.NewParamInfo("parent/child1", nil, catena.ParamTypeInt32, "", 0),
+				catena.NewParamInfo("parent/child2", nil, catena.ParamTypeStringArray, "", 3),
+			}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/parent/stream?recursive=true", "")
+
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+
+		body := rec.Body.String()
+		dataCount := strings.Count(body, "data:")
+		if dataCount != 3 {
+			t.Errorf("expected 3 SSE data events, got %d\nbody:\n%s", dataCount, body)
+		}
+		if !strings.Contains(body, `"oid":"parent/child2"`) {
+			t.Errorf("expected child2 entry in stream, got body:\n%s", body)
+		}
+	})
+
+	t.Run("TopLevelStreamRoute", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			if oidPrefix != "" {
+				t.Errorf("expected empty oidPrefix for top-level stream, got %q", oidPrefix)
+			}
+			return []catena.ParamInfo{
+				catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
+				catena.NewParamInfo("b", nil, catena.ParamTypeFloat32, "", 0),
+			}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+
+		body := rec.Body.String()
+		if strings.Count(body, "data:") != 2 {
+			t.Errorf("expected 2 SSE data events for top-level stream, got body:\n%s", body)
+		}
+	})
+
+	// TestRestTransport_ParamInfo_TopLevelStream_EmptyOk verifies that an empty
+	// top-level result is a well-formed empty event stream (200), not a fabricated
+	// NotFound. Handlers own NotFound for genuinely missing oids.
+	t.Run("TopLevelStream_EmptyOk", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		if ct := rec.Header().Get("Content-Type"); ct != "text/event-stream" {
+			t.Errorf("expected Content-Type 'text/event-stream', got %q", ct)
+		}
+		if body := rec.Body.String(); strings.Contains(body, "data:") {
+			t.Errorf("expected no data events, got %q", body)
+		}
+	})
+
+	// If BL just returns an error right away that can be returned as a http code
+	t.Run("StreamErrorNoneSent", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/missing/stream", "")
+		assertStatus(t, rec, http.StatusNotFound)
+		if err := assertHasError(t, rec); !strings.Contains(err, "param not found") {
+			t.Errorf("expected 'param not found' message, got %q", err)
+		}
+	})
+
+	// hit the branch where BL streams some params, locking in the 200, then the handler returns an error.
+	// The transport can no longer change the HTTP status, so it reports the failure in-band as an SSE
+	// "error" event carrying the status code (and, in dev mode, the detailed message).
+	t.Run("StreamErrorAfterSomeSent", func(t *testing.T) {
+		transport, runtime := makeTestRestTransport(t)
+
+		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			return []catena.ParamInfo{
+				catena.NewParamInfo("parent/child1", nil, catena.ParamTypeInt32, "", 0),
+			}, catena.StatusWithCode(catena.StatusCodeInternal, "boom")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/parent/stream?recursive=true", "")
+
+		// The first chunk committed the SSE 200, so the late error is reported as
+		// an SSE "error" event rather than by rewriting the HTTP status.
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+
+		body := rec.Body.String()
+		if dataCount := strings.Count(body, "data:"); dataCount != 2 {
+			t.Errorf("expected the sent chunk plus the error event, got %d data events\nbody:\n%s", dataCount, body)
+		}
+		if !strings.Contains(body, `"oid":"parent/child1"`) {
+			t.Errorf("expected the sent chunk in the stream, got body:\n%s", body)
+		}
+		if !strings.Contains(body, "event: error\n") {
+			t.Errorf("expected an SSE error event, got body:\n%s", body)
+		}
+		if !strings.Contains(body, `"code":500`) {
+			t.Errorf("expected the error event to carry status code 500, got body:\n%s", body)
+		}
+		if !strings.Contains(body, "boom") {
+			t.Errorf("expected the dev-mode error message in the error event, got body:\n%s", body)
+		}
+	})
+}
+
+// =============================================================================
+// Test: Languages endpoint
+// =============================================================================
+
+func TestRestTransport_Languages_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
 		handlerCalled = true
-		// Mirroring the C++ controller, REST builds the fqoid by prepending "/"
-		// to each path segment after the endpoint.
-		if oidPrefix != "text_box" {
-			t.Errorf("expected oidPrefix 'text_box', got %s", oidPrefix)
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
 		}
-		if recursive {
-			t.Error("expected recursive=false for unary call")
-		}
-		return []catena.ParamInfo{
-			catena.NewParamInfo("text_box", catena.NewPolyglotText("en", "Text Box"), catena.ParamTypeString, "", 0),
-		}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []string{"en", "fr", "es", "de"}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "")
-
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "")
 	assertStatus(t, rec, http.StatusOK)
 	assertContentType(t, rec, "application/json")
 	if !handlerCalled {
 		t.Error("registered handler was not called")
 	}
 
-	response := parseJSONBody(t, rec)
-	info, ok := response["info"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected 'info' object in response, got %v", response)
+	var response []string
+	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
 	}
-	if info["oid"] != "text_box" {
-		t.Errorf("expected info.oid='text_box', got %v", info["oid"])
+	expected := []string{"en", "fr", "es", "de"}
+	if len(response) != len(expected) {
+		t.Fatalf("expected %d languages, got %d", len(expected), len(response))
 	}
-	if info["type"] != "STRING" {
-		t.Errorf("expected info.type='STRING', got %v", info["type"])
-	}
-}
-
-func TestRestTransport_ParamInfo_NestedFqoid(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-
-	receivedOidPrefix := ""
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		receivedOidPrefix = oidPrefix
-		return []catena.ParamInfo{
-			catena.NewParamInfo(oidPrefix, nil, catena.ParamTypeInt32, "", 0),
-		}, catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/parent/child", "")
-	assertStatus(t, rec, http.StatusOK)
-	if receivedOidPrefix != "parent/child" {
-		t.Errorf("expected oidPrefix 'parent/child', got %s", receivedOidPrefix)
+	for i, lang := range expected {
+		if response[i] != lang {
+			t.Errorf("language[%d]: expected %q, got %q", i, lang, response[i])
+		}
 	}
 }
 
-func TestRestTransport_ParamInfo_NotFound(t *testing.T) {
+func TestRestTransport_Languages_EmptyList(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/missing", "")
-	assertStatus(t, rec, http.StatusNotFound)
-	if err := assertHasError(t, rec); !strings.Contains(err, "Parameter not found") {
-		t.Errorf("expected 'Parameter not found' message, got %q", err)
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "")
+	assertStatus(t, rec, http.StatusOK)
+	assertContentType(t, rec, "application/json")
+
+	var response []string
+	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
+	}
+	if len(response) != 0 {
+		t.Errorf("expected empty languages list, got %v", response)
+	}
+	if !strings.HasPrefix(strings.TrimSpace(rec.Body.String()), "[") {
+		t.Errorf("expected bare JSON array, got %q", rec.Body.String())
 	}
 }
 
-func TestRestTransport_ParamInfo_HandlerError(t *testing.T) {
+func TestRestTransport_Languages_HandlerError(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "no languages handler registered")
 	}
 
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "")
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_ParamInfo_MethodNotAllowed(t *testing.T) {
+func TestRestTransport_Languages_MethodNotAllowed(t *testing.T) {
 	transport, _ := makeTestRestTransport(t)
-
-	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/param-info/text_box", "")
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/languages", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
-
-// TestRestTransport_ParamInfo_UnaryRecursiveRejected verifies the C++ rule that
-// recursive cannot be combined with a unary response.
-func TestRestTransport_ParamInfo_UnaryRecursiveRejected(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-
-	handlerCalled := false
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		handlerCalled = true
-		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/text_box?recursive=true", "")
-	assertStatus(t, rec, http.StatusBadRequest)
-	if err := assertHasError(t, rec); !strings.Contains(err, "Recursive") {
-		t.Errorf("expected 'Recursive ...' error message, got %q", err)
-	}
-	if handlerCalled {
-		t.Error("handler should not be called when validation fails")
-	}
-}
-
-// TestRestTransport_ParamInfo_UnaryMissingFqoidRejected verifies the C++ rule that
-// a unary request must include an fqoid.
-func TestRestTransport_ParamInfo_UnaryMissingFqoidRejected(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	handlerCalled := false
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		handlerCalled = true
-		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info", "")
-	assertStatus(t, rec, http.StatusBadRequest)
-	if err := assertHasError(t, rec); !strings.Contains(err, "Unary request must include fqoid") {
-		t.Errorf("expected 'Unary request must include fqoid' error, got %q", err)
-	}
-	if handlerCalled {
-		t.Error("handler should not be called when validation fails")
-	}
-}
-
-// TestRestTransport_ParamInfo_RecursivePresenceOnly verifies the C++ semantics where
-// the presence of the `recursive` query parameter enables recursion regardless
-// of its value (so ?recursive=false STILL enables recursion).
-func TestRestTransport_ParamInfo_RecursivePresenceOnly(t *testing.T) {
-	cases := []struct {
-		name  string
-		query string
-		want  bool
-	}{
-		{name: "no flag", query: "", want: false},
-		{name: "recursive=true", query: "?recursive=true", want: true},
-		{name: "recursive=false still enables", query: "?recursive=false", want: true},
-		{name: "recursive with no value", query: "?recursive", want: true},
-	}
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			transport, runtime := makeTestRestTransport(t)
-			var gotRecursive bool
-			runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-				gotRecursive = recursive
-				return []catena.ParamInfo{
-					catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
-				}, catena.StatusWithCode(catena.StatusCodeOk, "")
-			}
-
-			rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/stream"+tc.query, "")
-			assertStatus(t, rec, http.StatusOK)
-			if gotRecursive != tc.want {
-				t.Errorf("recursive: got %v, want %v", gotRecursive, tc.want)
-			}
-		})
-	}
-}
-
-func TestRestTransport_ParamInfo_StreamRoute(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		if oidPrefix != "parent" {
-			t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
-		}
-		if !recursive {
-			t.Error("expected recursive=true")
-		}
-		return []catena.ParamInfo{
-			catena.NewParamInfo("parent", nil, catena.ParamTypeStruct, "", 0),
-			catena.NewParamInfo("parent/child1", nil, catena.ParamTypeInt32, "", 0),
-			catena.NewParamInfo("parent/child2", nil, catena.ParamTypeStringArray, "", 3),
-		}, catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/parent/stream?recursive=true", "")
-
-	assertStatus(t, rec, http.StatusOK)
-	assertContentType(t, rec, "text/event-stream")
-
-	body := rec.Body.String()
-	dataCount := strings.Count(body, "data:")
-	if dataCount != 3 {
-		t.Errorf("expected 3 SSE data events, got %d\nbody:\n%s", dataCount, body)
-	}
-	if !strings.Contains(body, `"oid":"parent/child2"`) {
-		t.Errorf("expected child2 entry in stream, got body:\n%s", body)
-	}
-}
-
-func TestRestTransport_ParamInfo_TopLevelStreamRoute(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		if oidPrefix != "" {
-			t.Errorf("expected empty oidPrefix for top-level stream, got %q", oidPrefix)
-		}
-		return []catena.ParamInfo{
-			catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
-			catena.NewParamInfo("b", nil, catena.ParamTypeFloat32, "", 0),
-		}, catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/stream", "")
-	assertStatus(t, rec, http.StatusOK)
-	assertContentType(t, rec, "text/event-stream")
-
-	body := rec.Body.String()
-	if strings.Count(body, "data:") != 2 {
-		t.Errorf("expected 2 SSE data events for top-level stream, got body:\n%s", body)
-	}
-}
-
-// TestRestTransport_ParamInfo_TopLevelStream_Empty verifies that an empty top-level
-// result becomes NOT_FOUND, matching the C++ controller.
-func TestRestTransport_ParamInfo_TopLevelStream_Empty(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-
-	runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
-		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
-	}
-
-	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/stream", "")
-	assertStatus(t, rec, http.StatusNotFound)
-	if err := assertHasError(t, rec); !strings.Contains(err, "No top-level parameters found") {
-		t.Errorf("expected 'No top-level parameters found' error, got %q", err)
-	}
-}
-
 func TestRestTransportLanguagePackGetSuccess(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {

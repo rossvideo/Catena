@@ -40,11 +40,9 @@
 package catena
 
 import (
-	"encoding/json"
-	"fmt"
+	"google.golang.org/protobuf/proto"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -62,39 +60,127 @@ const (
 	DetailLevelUnset         DetailLevel = protos.Device_UNSET
 )
 
-// Device wraps protos.Device for device model handling
+// Device wraps protos.Device and exposes a fluent builder API.
+// Proto is the underlying proto message; it may be read or replaced directly.
 type Device struct {
-	device *protos.Device
+	Proto *protos.Device
 }
 
-// ToDevice converts a Go map/struct to Device
-// This allows developers to work with native Go types and convert to the protobuf format
-func ToDevice(m map[string]any) (Device, error) {
-	device, err := toProtoDevice(m)
-	if err != nil {
-		return Device{}, fmt.Errorf("ToDevice: %w", err)
-	}
-	return Device{device: device}, nil
+// NewDevice creates an empty Device for the given slot. Params, commands,
+// constraints, and menus are attached with the chainable With* methods.
+//
+// The mandatory "product" struct is managed by the SDK: register it once with
+// Server.RegisterProductStruct and the SDK injects it into the device on
+// GetDevice and serves it on GetValue / ParamInfo. NewDevice does not deal with
+// the product struct.
+func NewDevice(slot uint16) *Device {
+	return &Device{Proto: &protos.Device{Slot: uint32(slot)}}
 }
 
-// toProtoDevice converts native Go types to protos.Device
-// For complex nested types (params, constraints, etc.), uses JSON marshaling
-// to leverage protojson's automatic conversion and validation
-func toProtoDevice(m map[string]any) (*protos.Device, error) {
-	jsonData, err := json.Marshal(m)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal map to JSON: %w", err)
+// WithParam inserts param into the device's params map, keyed by oid. The
+// param's proto is deep-copied so later builder mutations on the caller's Param
+// do not affect entries already added. A nil param is ignored.
+func (cd *Device) WithParam(oid string, param *Param) *Device {
+	if param == nil || param.Proto == nil {
+		logger.Warning("Device.WithParam called with nil param; ignoring", "oid", oid)
+		return cd
 	}
-
-	device := &protos.Device{}
-	if err := protojson.Unmarshal(jsonData, device); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON to Device proto: %w", err)
+	if cd.Proto.Params == nil {
+		cd.Proto.Params = map[string]*protos.Param{}
 	}
-
-	return device, nil
+	cd.Proto.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
+	return cd
 }
 
-// GetProtoDevice returns the underlying protos.Device
-func (cd Device) GetProtoDevice() *protos.Device {
-	return cd.device
+// WithCommand inserts command into the device's commands map, keyed by oid. The
+// command's proto is deep-copied. A nil command is ignored.
+func (cd *Device) WithCommand(oid string, command *Param) *Device {
+	if command == nil || command.Proto == nil {
+		logger.Warning("Device.WithCommand called with nil command; ignoring", "oid", oid)
+		return cd
+	}
+	if cd.Proto.Commands == nil {
+		cd.Proto.Commands = map[string]*protos.Param{}
+	}
+	cd.Proto.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
+	return cd
+}
+
+// WithConstraint inserts a shared constraint into the device's constraints map,
+// keyed by oid. The constraint's proto is deep-copied. A nil constraint is
+// ignored. Params can reference shared constraints via NewConstraintRefOid.
+func (cd *Device) WithConstraint(oid string, constraint *Constraint) *Device {
+	if constraint == nil || constraint.Proto == nil {
+		logger.Warning("Device.WithConstraint called with nil constraint; ignoring", "oid", oid)
+		return cd
+	}
+	if cd.Proto.Constraints == nil {
+		cd.Proto.Constraints = map[string]*protos.Constraint{}
+	}
+	cd.Proto.Constraints[oid] = proto.Clone(constraint.Proto).(*protos.Constraint)
+	return cd
+}
+
+// WithMenuGroup inserts a menu group into the device's menu_groups map, keyed
+// by oid. The group's proto is deep-copied. A nil group is ignored.
+func (cd *Device) WithMenuGroup(oid string, group *MenuGroup) *Device {
+	if group == nil || group.Proto == nil {
+		logger.Warning("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
+		return cd
+	}
+	if cd.Proto.MenuGroups == nil {
+		cd.Proto.MenuGroups = map[string]*protos.MenuGroup{}
+	}
+	cd.Proto.MenuGroups[oid] = proto.Clone(group.Proto).(*protos.MenuGroup)
+	return cd
+}
+
+// WithLanguagePack inserts a language pack into the device's language_packs map,
+// keyed by language code (e.g. "en"). Replaces any existing pack at that code.
+func (cd *Device) WithLanguagePack(code, name string, words map[string]string) *Device {
+	if cd.Proto.LanguagePacks == nil {
+		cd.Proto.LanguagePacks = &protos.LanguagePacks{}
+	}
+	if cd.Proto.LanguagePacks.Packs == nil {
+		cd.Proto.LanguagePacks.Packs = map[string]*protos.LanguagePack{}
+	}
+	copied := make(map[string]string, len(words))
+	for k, v := range words {
+		copied[k] = v
+	}
+	cd.Proto.LanguagePacks.Packs[code] = &protos.LanguagePack{
+		Name:  name,
+		Words: copied,
+	}
+	return cd
+}
+
+// WithDetailLevel sets how much of the device model to deliver.
+func (cd *Device) WithDetailLevel(level DetailLevel) *Device {
+	cd.Proto.DetailLevel = level
+	return cd
+}
+
+// WithMultiSetEnabled sets whether the device supports multi-set requests.
+func (cd *Device) WithMultiSetEnabled(enabled bool) *Device {
+	cd.Proto.MultiSetEnabled = enabled
+	return cd
+}
+
+// WithSubscriptions sets whether the device supports subscriptions.
+func (cd *Device) WithSubscriptions(subscriptions bool) *Device {
+	cd.Proto.Subscriptions = subscriptions
+	return cd
+}
+
+// WithAccessScopes sets the device's access scopes, replacing any existing ones.
+func (cd *Device) WithAccessScopes(scopes ...string) *Device {
+	cd.Proto.AccessScopes = scopes
+	return cd
+}
+
+// WithDefaultScope sets the device's default access scope.
+func (cd *Device) WithDefaultScope(scope string) *Device {
+	cd.Proto.DefaultScope = scope
+	return cd
 }

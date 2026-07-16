@@ -53,6 +53,7 @@ const (
 )
 
 var (
+	DefaultRuntimeOptions       = config.DefaultRuntimeOptions
 	DefaultServerOptions        = config.DefaultServerOptions
 	DefaultJwtValidationOptions = config.DefaultJwtValidationOptions
 	DefaultDashboardOptions     = config.DefaultDashboardOptions

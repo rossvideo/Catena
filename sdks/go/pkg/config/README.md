@@ -25,10 +25,15 @@ Precedence is:
 
 ## Entry Points
 
-- `InitOptions(appName, args)`
-- `InitOptionsPrefix(appName, prefix, args)`
+- `InitOptions(appName, args, initOpts...)`
 
-Use `InitOptions` for standard `CATENA_*` variables. Use `InitOptionsPrefix` when you need a custom env prefix.
+By default, `InitOptions` uses the `CATENA_*` environment variable prefix.
+
+Optional `InitOption` values let callers customize behavior:
+
+- `WithPrefix("MYAPP")` to use `MYAPP_*` env variables.
+- `WithDefaults(customDefaults)` to replace the baseline defaults before env/CLI overrides.
+- `WithSuppressedInputs("flag-name", ...)` to suppress both env and CLI for selected inputs.
 
 ## Basic Usage
 
@@ -55,6 +60,55 @@ func main() {
 	_ = opts
 }
 ```
+
+## Functional Options
+
+### Custom Env Prefix
+
+```go
+opts, err := config.InitOptions(
+	"my-app",
+	os.Args[1:],
+	config.WithPrefix("MYAPP"),
+)
+```
+
+This reads values from env vars like `MYAPP_LOG_LEVEL`, `MYAPP_USE_GRPC`, etc.
+
+### Custom Defaults
+
+```go
+customDefaults := catena.DefaultRuntimeOptions()
+customDefaults.Server.MaxConnections = 250
+customDefaults.Logger.Level = slog.LevelDebug
+
+opts, err := config.InitOptions(
+	"my-app",
+	os.Args[1:],
+	config.WithDefaults(customDefaults),
+)
+```
+
+Use this when your app wants different baseline behavior while still keeping the same env/CLI override model.
+
+### Suppressed Inputs
+
+```go
+opts, err := config.InitOptions(
+	"my-app",
+	os.Args[1:],
+	config.WithSuppressedInputs(
+		"max-connections",
+		"log-level",
+	),
+)
+```
+
+Suppressed inputs are matched by CLI flag name.
+
+- The suppressed flags are not registered in `--help` output.
+- Their corresponding environment variables are ignored.
+- If a user still passes a suppressed CLI flag explicitly, it is treated as an unknown flag by Go's `flag` parser.
 
 ## Example Scenarios
 
@@ -84,6 +138,41 @@ CATENA_MAX_CONNECTIONS=100 ./my-app \
 
 In this case, `--max-connections=20` overrides `CATENA_MAX_CONNECTIONS=100`.
 
+### App-specific defaults with standard override behavior
+
+```go
+customDefaults := catena.DefaultRuntimeOptions()
+customDefaults.Server.MaxConnections = 250
+
+opts, err := config.InitOptions(
+	"my-app",
+	os.Args[1:],
+	config.WithDefaults(customDefaults),
+)
+```
+
+If you then set `CATENA_MAX_CONNECTIONS=500`, env overrides `250`.
+If you also pass `--max-connections=20`, CLI overrides env.
+
+### Hardcoded app values without misleading config surface
+
+If your application always computes or hardcodes certain values at runtime,
+you can suppress those inputs so they do not appear configurable.
+
+```go
+opts, err := config.InitOptions(
+	"my-app",
+	os.Args[1:],
+	config.WithSuppressedInputs("max-connections", "log-level"),
+)
+
+// Application decides these values directly.
+opts.Server.MaxConnections = deriveConnectionLimit()
+opts.Logger.Level = slog.LevelInfo
+```
+
+This keeps runtime behavior and help output aligned with what the app actually accepts.
+
 ## RuntimeOptions Shape
 
 `RuntimeOptions` includes:
@@ -94,10 +183,11 @@ In this case, `--max-connections=20` overrides `CATENA_MAX_CONNECTIONS=100`.
 
 Defaults are defined in:
 
-- `defaultRuntimeOptions`
+- `DefaultRuntimeOptions`
 - `DefaultServerOptions`
 - `DefaultJwtValidationOptions`
 - `DefaultLoggerOptions`
+- `DefaultDashboardOptions`
 
 ## Structured Logging
 
@@ -134,6 +224,18 @@ All options can be configured via env and CLI.
 - `PREFIX_JWT_AUDIENCE` <-> `--jwt-audience`
 - `PREFIX_JWT_VALIDATE_SIGNATURE` <-> `--jwt-validate-signature`
 
+### DashBoard Connection Props
+
+- `PREFIX_DASHBOARD_SERVICE_HOSTNAME` <-> `--dashboard-service-hostname`
+- `PREFIX_DASHBOARD_PORT` <-> `--dashboard-port`
+- `PREFIX_DASHBOARD_SERVICE_PORT` <-> `--dashboard-service-port`
+- `PREFIX_DASHBOARD_SERVICE_TLS_ENABLED` <-> `--dashboard-service-tls-enabled`
+- `PREFIX_DASHBOARD_PROTOCOL` <-> `--dashboard-protocol`
+- `PREFIX_DASHBOARD_SERVICE_NAME` <-> `--dashboard-service-name`
+- `PREFIX_DASHBOARD_NODE_NAME` <-> `--dashboard-node-name`
+- `PREFIX_DASHBOARD_NODE_ID` <-> `--dashboard-node-id`
+- `PREFIX_DASHBOARD_ENDPOINT` <-> `--dashboard-endpoint`
+
 ### Logger
 
 - `PREFIX_SILENT` <-> `--silent`
@@ -160,6 +262,7 @@ If `--log-level` is explicitly set, it takes priority over these shortcuts.
 - the loader always registers flags first so help output is complete
 - environment parse failures are surfaced as errors
 - help requests return `ErrHelp`
+- suppressed inputs are intentionally excluded from both env and CLI handling
 
 ## Testing
 

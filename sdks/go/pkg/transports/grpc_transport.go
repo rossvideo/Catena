@@ -228,6 +228,7 @@ func (t *GrpcTransport) retrieveMetadataFromContext(ctx context.Context) catena.
 	transportContext := catena.TransportContext{
 		AccessToken: accessToken,
 		Metadata:    metadataMap,
+		Ctx:         ctx,
 	}
 
 	return transportContext
@@ -271,7 +272,7 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 		return status.Error(ToGRPCCode(res.Code), res.Error)
 	}
 
-	protoDevice := device.GetProtoDevice()
+	protoDevice := device.Proto
 	if protoDevice == nil {
 		logger.Error("DeviceRequest device returned nil", "slot", slot)
 		return status.Error(codes.Internal, "device returned nil")
@@ -304,7 +305,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	return value.Value, nil
+	return value.Proto, nil
 }
 
 // SetValue sets the value of a parameter
@@ -390,7 +391,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	protoAsset := asset.GetProtoAsset()
+	protoAsset := asset.Proto
 	if protoAsset == nil {
 		logger.Error("ExternalObjectRequest asset returned nil", "slot", slot, "fqoid", fqoid)
 		return status.Error(codes.Internal, "asset returned nil")
@@ -427,13 +428,34 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	return stream.Send(cmdResult.GetProtoResponse())
+	return stream.Send(cmdResult.Proto)
 }
 
-// GetParam returns a single parameter's metadata
+// GetParam returns a single parameter (metadata + value)
 func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error) {
-	// This would need additional handler support in BaseServer for param metadata
-	return nil, status.Error(codes.Unimplemented, "GetParam not implemented")
+	slot, err := catena.ValidateSlot(req.Slot)
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	fqoid := req.Oid
+	logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	param, result := s.transport.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
+	if result.IsError() {
+		logger.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+	if param.Proto == nil {
+		logger.Error("GetParam returned nil param", "slot", slot, "fqoid", fqoid)
+		return nil, status.Error(codes.Internal, "param returned nil")
+	}
+
+	return &protos.DeviceComponent_ComponentParam{
+		Oid:   fqoid,
+		Param: param.Proto,
+	}, nil
 }
 
 // ParamInfoRequest streams parameter information for the given slot and OID prefix.
@@ -449,32 +471,12 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	infos, result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
+	adapter := &grpcStream[catena.ParamInfo]{ss: stream}
+	result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
-
-	if len(infos) == 0 {
-		msg := "Parameter not found: " + oidPrefix
-		if oidPrefix == "" {
-			msg = "No top-level parameters found"
-		}
-		return status.Error(codes.NotFound, msg)
-	}
-
-	for _, info := range infos {
-		protoResp := info.GetProtoResponse()
-		if protoResp == nil {
-			logger.Error("ParamInfoRequest handler returned nil response entry", "slot", slot, "oid_prefix", oidPrefix)
-			return status.Error(codes.Internal, "param info entry is nil")
-		}
-		if err := stream.Send(protoResp); err != nil {
-			logger.Error("ParamInfoRequest send error", "slot", slot, "oid_prefix", oidPrefix, "error", err)
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -625,9 +627,23 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	}, nil
 }
 
-// ListLanguages returns the list of available languages
+// ListLanguages returns the language codes supported by the device model at a slot.
 func (s *catenaService) ListLanguages(ctx context.Context, req *protos.Slot) (*protos.LanguageList, error) {
-	return nil, status.Error(codes.Unimplemented, "ListLanguages not implemented")
+	slot, err := catena.ValidateSlot(req.GetSlot())
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	logger.Info("ListLanguages", "slot", slot)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	languages, result := s.transport.runtime.InvokeListLanguagesHandler(slot, transportContext)
+	if result.IsError() {
+		logger.Error("ListLanguages handler error", "slot", slot, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+
+	return &protos.LanguageList{Languages: languages}, nil
 }
 
 // RefreshToken refreshes an authentication token

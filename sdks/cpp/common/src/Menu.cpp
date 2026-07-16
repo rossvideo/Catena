@@ -41,9 +41,9 @@
 using namespace catena::common;
 
 Menu::Menu(const catena::common::PolyglotText::ListInitializer name, bool hidden, bool disabled, const OidInitializer param_oids,
-           const OidInitializer command_oids, const PairInitializer& client_hints, std::string oid,
+           const OidInitializer command_oids, const PairInitializer& client_hints, std::string oid, int32_t order,
            IMenuGroup& menuGroup)
-    : name_{name}, hidden_{hidden}, disabled_{disabled}, param_oids_{param_oids}, command_oids_{command_oids},
+    : name_{name}, hidden_{hidden}, disabled_{disabled}, order_{order}, param_oids_{param_oids}, command_oids_{command_oids},
       client_hints_{client_hints.begin(), client_hints.end()} {
     menuGroup.addMenu(oid, std::make_unique<Menu>(std::move(*this)));
 }
@@ -52,6 +52,7 @@ void Menu::toProto(::st2138::Menu& menu) const {
     name_.toProto(*menu.mutable_name());
     menu.set_hidden(hidden_);
     menu.set_disabled(disabled_);
+    menu.set_order(order_);
     menu.clear_param_oids();
     menu.clear_command_oids();
     menu.clear_client_hints();

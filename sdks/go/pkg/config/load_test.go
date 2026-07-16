@@ -48,21 +48,22 @@ import (
 )
 
 func TestInitOptions(t *testing.T) {
+	// just test that it doesn't error and sets the options, the actual parsing is tested in loadParser
 	t.Run("success", func(t *testing.T) {
-		// just test that it doesn't error and sets the options, the actual parsing is tested in loadParser
 		opts, err := InitOptions("test_app", []string{})
 
 		if err != nil {
 			t.Errorf("Expected no error got: %v", err)
 		}
 		// should return default options with the app name set
-		defaultOpts := defaultRuntimeOptions()
+		defaultOpts := DefaultRuntimeOptions()
 		defaultOpts.Logger.AppName = "test_app"
 		if !reflect.DeepEqual(opts, defaultOpts) {
 			t.Errorf("Expected options to be %v got: %v", defaultOpts, opts)
 		}
 	})
 
+	// check if help flag causes ErrHelp to be returned
 	t.Run("help", func(t *testing.T) {
 		opts, err := InitOptions("test_app", []string{"-h"})
 
@@ -74,6 +75,7 @@ func TestInitOptions(t *testing.T) {
 		}
 	})
 
+	// check if invalid flag causes an error and doesn't set options
 	t.Run("invalid flag", func(t *testing.T) {
 		opts, err := InitOptions("test_app", []string{"-invalid"})
 
@@ -85,6 +87,7 @@ func TestInitOptions(t *testing.T) {
 		}
 	})
 
+	// check if invalid env var causes an error and doesn't set options
 	t.Run("invalid env var", func(t *testing.T) {
 		t.Setenv("CATENA_DEV_MODE", "notabool")
 		opts, err := InitOptions("test_app", []string{})
@@ -97,6 +100,7 @@ func TestInitOptions(t *testing.T) {
 		}
 	})
 
+	// check if CLI overrides env var
 	t.Run("cli overrides env var", func(t *testing.T) {
 		t.Setenv("CATENA_MAX_CONNECTIONS", "10")
 		opts, err := InitOptions("test_app", []string{"--max-connections=20"})
@@ -109,6 +113,7 @@ func TestInitOptions(t *testing.T) {
 		}
 	})
 
+	// check the -v -vv -vvv flags set the log level
 	t.Run("verbosity flags set log level", func(t *testing.T) {
 		tests := []struct {
 			name     string
@@ -133,6 +138,7 @@ func TestInitOptions(t *testing.T) {
 		}
 	})
 
+	// make sure --log-level overrides -v flags
 	t.Run("log level priority over verbosity flags", func(t *testing.T) {
 		opts, err := InitOptions("test_app", []string{"-vvv", "--log-level=error"})
 		if err != nil {
@@ -143,6 +149,7 @@ func TestInitOptions(t *testing.T) {
 		}
 	})
 
+	// check that default true flags can still be set to false with --flag=false
 	t.Run("authz can be disabled with explicit false", func(t *testing.T) {
 		opts, err := InitOptions("test_app", []string{"--authz=false"})
 		if err != nil {
@@ -150,6 +157,92 @@ func TestInitOptions(t *testing.T) {
 		}
 		if opts.Server.AuthzEnabled {
 			t.Errorf("Expected AuthzEnabled to be false")
+		}
+	})
+
+	// give the env var a different prefix
+	t.Run("WithPrefix", func(t *testing.T) {
+		t.Setenv("MYAPP_MAX_CONNECTIONS", "321")
+		opts, err := InitOptions("test_app", []string{}, WithPrefix("MYAPP"))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 321 {
+			t.Errorf("Expected MaxConnections to be 321 got: %v", opts.Server.MaxConnections)
+		}
+	})
+
+	// object passed to WithDefaults is used as the options base
+	t.Run("WithDefaults", func(t *testing.T) {
+		customDefaults := DefaultRuntimeOptions()
+		customDefaults.Server.MaxConnections = 222
+		customDefaults.Logger.Level = slog.LevelDebug
+
+		opts, err := InitOptions("test_app", []string{}, WithDefaults(customDefaults))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 222 {
+			t.Errorf("Expected MaxConnections to be 222 got: %v", opts.Server.MaxConnections)
+		}
+		if opts.Logger.Level != slog.LevelDebug {
+			t.Errorf("Expected Logger.Level to be debug got: %v", opts.Logger.Level)
+		}
+	})
+
+	// custom defaults can be overridden by env and CLI
+	t.Run("WithDefaults still respects env and cli precedence", func(t *testing.T) {
+		customDefaults := DefaultRuntimeOptions()
+		customDefaults.Server.MaxConnections = 111
+
+		t.Setenv("CATENA_MAX_CONNECTIONS", "222")
+		opts, err := InitOptions("test_app", []string{"--max-connections=333"}, WithDefaults(customDefaults))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 333 {
+			t.Errorf("Expected MaxConnections to be 333 got: %v", opts.Server.MaxConnections)
+		}
+	})
+
+	// check if suppressed inputs ignore CLI for suppressed field
+	t.Run("WithSuppressedInputs ignores CLI for suppressed field", func(t *testing.T) {
+		_, err := InitOptions("test_app", []string{"--max-connections=333"}, WithSuppressedInputs("max-connections"))
+		// if the flag wasn't regsistered due to suppression, flags will err with invalid flag
+		if err == nil {
+			t.Errorf("Expected error for the invalid flag got nil")
+		}
+	})
+
+	// check if suppressed inputs ignore env for suppressed field
+	t.Run("WithSuppressedInputs ignores env for suppressed field", func(t *testing.T) {
+		customDefaults := DefaultRuntimeOptions()
+		customDefaults.Server.MaxConnections = 111
+
+		t.Setenv("CATENA_MAX_CONNECTIONS", "222")
+		opts, err := InitOptions(
+			"test_app",
+			[]string{},
+			WithDefaults(customDefaults),
+			WithSuppressedInputs("max-connections"),
+		)
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 111 {
+			t.Errorf("Expected MaxConnections to stay at default 111 got: %v", opts.Server.MaxConnections)
+		}
+	})
+
+	// suppressing an unknown input does nothing
+	t.Run("WithSuppressedInputs unknown name is no-op", func(t *testing.T) {
+		t.Setenv("CATENA_MAX_CONNECTIONS", "222")
+		opts, err := InitOptions("test_app", []string{}, WithSuppressedInputs("does-not-exist"))
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.MaxConnections != 222 {
+			t.Errorf("Expected MaxConnections to be 222 got: %v", opts.Server.MaxConnections)
 		}
 	})
 }
@@ -163,9 +256,9 @@ func TestInitOptions_Transport(t *testing.T) {
 	// test if loading errors.
 	init := func(t *testing.T, args ...string) RuntimeOptions {
 		t.Helper()
-		opts, err := InitOptionsPrefix("test_app", "TESTCFG", args)
+		opts, err := InitOptions("test_app", args, WithPrefix("TESTCFG"))
 		if err != nil {
-			t.Fatalf("InitOptionsPrefix() failed: %v", err)
+			t.Fatalf("InitOptions() failed: %v", err)
 		}
 		return opts
 	}
@@ -311,6 +404,7 @@ func makeTestLoader(t *testing.T) *configLoader {
 }
 
 func TestLoader_Bool(t *testing.T) {
+	// test basic bool load
 	t.Run("success", func(t *testing.T) {
 		loader := makeTestLoader(t)
 		val := true
@@ -326,6 +420,7 @@ func TestLoader_Bool(t *testing.T) {
 		}
 	})
 
+	// all the different valid env vars
 	t.Run("env var parsing", func(t *testing.T) {
 		tests := []struct {
 			input    string
@@ -360,6 +455,7 @@ func TestLoader_Bool(t *testing.T) {
 		}
 	})
 
+	// invalid env var should return an error
 	t.Run("env var parsing error", func(t *testing.T) {
 		loader := makeTestLoader(t)
 		val := true
@@ -373,6 +469,7 @@ func TestLoader_Bool(t *testing.T) {
 		}
 	})
 
+	// make sure the cascade works, if there's already an error, should only register the flag
 	t.Run("skips parsing on existing error", func(t *testing.T) {
 		loader := makeTestLoader(t)
 		loader.err = strconv.ErrSyntax
@@ -386,8 +483,30 @@ func TestLoader_Bool(t *testing.T) {
 			t.Errorf("Expected val to be unchanged at true got: %v", val)
 		}
 	})
+
+	// check if suppressed inputs ignore env for suppressed field
+	t.Run("WithSuppressedInputs ignores env for suppressed field", func(t *testing.T) {
+		loader := &configLoader{
+			flags:            flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix:        "",
+			suppressedInputs: []string{"test-bool"},
+		}
+		val := true
+		t.Setenv("TEST_BOOL", "false")
+		loader.extractBool("TEST_BOOL", "test-bool", "Test boolean flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if loader.flags.Lookup("test-bool") != nil {
+			t.Errorf("Expected suppressed flag 'test-bool' to not be registered")
+		}
+		if !val {
+			t.Errorf("Expected val to be unchanged at true for suppressed input got: %v", val)
+		}
+	})
 }
 
+// load an int, error cases are covered in the loadParser tests
 func TestLoader_Int(t *testing.T) {
 	loader := makeTestLoader(t)
 	val := 12
@@ -404,6 +523,7 @@ func TestLoader_Int(t *testing.T) {
 	}
 }
 
+// load a string, error cases are covered in the loadParser tests
 func TestLoader_String(t *testing.T) {
 	loader := makeTestLoader(t)
 	val := "default"
@@ -421,6 +541,7 @@ func TestLoader_String(t *testing.T) {
 }
 
 func TestLoader_LogLevel(t *testing.T) {
+	// valid log levels should be parsed correctly
 	tests := []struct {
 		input    string
 		expected slog.Level
@@ -445,6 +566,7 @@ func TestLoader_LogLevel(t *testing.T) {
 		})
 	}
 
+	// test an invalid log level
 	t.Run("invalid log level", func(t *testing.T) {
 		loader := makeTestLoader(t)
 		val := slog.LevelInfo
@@ -460,6 +582,7 @@ func TestLoader_LogLevel(t *testing.T) {
 }
 
 func TestLoader_ConnectionProtocol(t *testing.T) {
+	// valid protocols should be parsed correctly
 	tests := []struct {
 		input    string
 		expected ConnectionProtocol
@@ -483,6 +606,7 @@ func TestLoader_ConnectionProtocol(t *testing.T) {
 		})
 	}
 
+	// test an invalid protocol
 	t.Run("invalid protocol", func(t *testing.T) {
 		loader := makeTestLoader(t)
 		val := ProtocolST2138Rest
@@ -498,62 +622,106 @@ func TestLoader_ConnectionProtocol(t *testing.T) {
 }
 
 func TestLoadParser(t *testing.T) {
+	// basic success case, should register the flag and set the value to the default
 	t.Run("success", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
 		val := 12
-		err := loadParser(nil, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
 
-		if err != nil {
-			t.Errorf("Expected no err got: %v", err)
+		if loader.err != nil {
+			t.Errorf("Expected no err got: %v", loader.err)
 		}
 		if val != 12 {
 			t.Errorf("Expected val to be 12 got: %d", val)
 		}
-		if flags.Lookup("test") == nil {
+		if loader.flags.Lookup("test") == nil {
 			t.Errorf("Expected flag 'test' to be registered")
 		}
 	})
 
+	// loads the env var
 	t.Run("env var parsing", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
 		val := 12
 		t.Setenv("TEST_ENV", "34")
-		err := loadParser(nil, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
 
-		if err != nil {
-			t.Errorf("Expected no err got: %v", err)
+		if loader.err != nil {
+			t.Errorf("Expected no err got: %v", loader.err)
 		}
 		if val != 34 {
 			t.Errorf("Expected val to be 34 got: %d", val)
 		}
 	})
 
+	// there was an error parsing the env var
+	// should set loader.err and not change the value
 	t.Run("env var parsing error", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
 		val := 12
 		t.Setenv("TEST_ENV", "notanint")
-		err := loadParser(nil, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
 
-		if err == nil {
+		if loader.err == nil {
 			t.Errorf("Expected error got nil")
-		}
-	})
-
-	t.Run("skips parsing on existing error", func(t *testing.T) {
-		flags := flag.NewFlagSet("TEST", flag.ContinueOnError)
-		val := 12
-		testErr := errors.New("test error")
-		err := loadParser(testErr, flags, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
-
-		if err != testErr {
-			t.Errorf("Expected error to be %v got: %v", testErr, err)
 		}
 		if val != 12 {
 			t.Errorf("Expected val to be unchanged at 12 got: %d", val)
 		}
 	})
+
+	// skips over env parsing if there's already an error
+	t.Run("skips parsing on existing error", func(t *testing.T) {
+		loader := &configLoader{
+			flags:     flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix: "",
+		}
+		val := 12
+		testErr := errors.New("test error")
+		loader.err = testErr
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+
+		if loader.err != testErr {
+			t.Errorf("Expected error to be %v got: %v", testErr, loader.err)
+		}
+		if val != 12 {
+			t.Errorf("Expected val to be unchanged at 12 got: %d", val)
+		}
+	})
+
+	// check that suppressed inputs ignore env for suppressed field
+	t.Run("suppressed input", func(t *testing.T) {
+		loader := &configLoader{
+			flags:            flag.NewFlagSet("TEST", flag.ContinueOnError),
+			envPrefix:        "",
+			suppressedInputs: []string{"test"},
+		}
+		val := 12
+		t.Setenv("TEST_ENV", "34")
+		loadParser(loader, "TEST_ENV", "test", "Test flag", &val, strconv.Atoi)
+
+		if loader.err != nil {
+			t.Errorf("Expected no err got: %v", loader.err)
+		}
+		if val != 12 {
+			t.Errorf("Expected val to stay 12 for suppressed input got: %d", val)
+		}
+		if loader.flags.Lookup("test") != nil {
+			t.Errorf("Expected suppressed flag 'test' to not be registered")
+		}
+	})
 }
 
+// quick coverage tests for the flag.Value interface implementation for parserValue
 func TestParserValue(t *testing.T) {
 	t.Run("new", func(t *testing.T) {
 		val := 12

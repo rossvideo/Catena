@@ -70,13 +70,8 @@ COPY .devcontainer/go/go.mod .devcontainer/go/go.sum ./
 
 RUN go mod download
 
-RUN go install \
-    github.com/go-delve/delve/cmd/dlv \
-    google.golang.org/protobuf/cmd/protoc-gen-go \
-    google.golang.org/grpc/cmd/protoc-gen-go-grpc \
-    github.com/axw/gocov/gocov \
-    github.com/matm/gocov-html/cmd/gocov-html \
-    github.com/jandelgado/gcov2lcov
+# will install all the tools from the toolchain's go.mod
+RUN go install tool
 
 ENV GOBIN=
 

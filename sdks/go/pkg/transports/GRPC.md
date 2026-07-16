@@ -26,6 +26,7 @@ Implemented against shared runtime handlers:
 - `GetPopulatedSlots`
 - `DeviceRequest`
 - `GetValue`
+- `GetParam`
 - `SetValue`
 - `MultiSetValue`
 - `ExternalObjectRequest`
@@ -35,7 +36,6 @@ Implemented against shared runtime handlers:
 
 Currently unimplemented (returns `Unimplemented`):
 
-- `GetParam`
 - `UpdateSubscriptions`
 - `AddLanguage`
 - `LanguagePackRequest`
@@ -49,6 +49,7 @@ RPC methods invoke the same handlers registered on `catena.Server`:
 
 - `DeviceRequest` -> `RegisterGetDeviceHandler`
 - `GetValue` -> `RegisterGetValueHandler`
+- `GetParam` -> `RegisterGetParamHandler`
 - `SetValue` / `MultiSetValue` -> `RegisterSetValueHandler` (the handler receives `[]SetValueEntry`; `SetValue` delivers a one-element slice, `MultiSetValue` delivers the full slice for atomic application)
 - `ExternalObjectRequest` -> `RegisterGetAssetHandler`
 - `ExecuteCommand` -> `RegisterExecuteCommandHandler`

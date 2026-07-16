@@ -46,9 +46,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-// std
-#include <atomic>
-
 // mock classes
 #include "MockDevice.h"
 #include "MockConnect.h"
@@ -75,15 +72,14 @@ class RESTServiceImplTests : public testing::Test {
     void SetUp() override {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
-        // Assign a unique port per test instance
-        port_ = s_next_port.fetch_add(1);
         ServiceConfig config = ServiceConfig()
             .add_dm(&dm_)
             .set_EOPath(EOPath_)
             .set_authz(authzEnabled_)
             .set_maxConnections(1)
-            .set_port(port_);
+            .set_port(0);
         service_.reset(new ServiceImpl(config));
+        port_ = service_->listeningPort();
     }
 
     /*
@@ -126,11 +122,7 @@ class RESTServiceImplTests : public testing::Test {
 
     // We really don't care about uninteresting function errors here.
     testing::NiceMock<MockDevice> dm_;
-
-    static std::atomic<uint16_t> s_next_port;
 };
-
-std::atomic<uint16_t> RESTServiceImplTests::s_next_port{50050};
 
 /*
  * TEST 1 - Test ServiceConfig set_dms() and add_dm()
@@ -167,7 +159,7 @@ TEST_F(RESTServiceImplTests, ServiceImpl_CreateDuplicateSlot) {
     config.dms.push_back(&dm1);
     EXPECT_CALL(dm2, slot()).WillRepeatedly(testing::Return(0));
     config.dms.push_back(&dm2);
-    config.port = port_ + 2;
+    config.port = 0;
     // Creating a service with a duplicate slot.
     EXPECT_THROW(ServiceImpl newService{config}, std::runtime_error) << "Creating a service with two devices sharing a slot should throw an error.";
 }

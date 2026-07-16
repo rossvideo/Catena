@@ -1,4 +1,4 @@
-CMDS := oneOfEverything
+CMDS := oneOfEverything hello_world
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
@@ -54,7 +54,7 @@ clean-protos:
 	rm -rf "$(GENERATED_DIR)"
 
 # Test targets
-.PHONY: test race coverage coverage-html coverage-lcov clean-coverage
+.PHONY: test race coverage coverage-html coverage-lcov coverage-cobertura clean-coverage
 
 # Exclude generated protos from tests + coverage accounting
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
@@ -73,15 +73,19 @@ test:
 RACE_PACKAGES ?= $(TEST_PACKAGES)
 RACE_COUNT ?= 10
 
+GOTESTSUM = gotestsum \
+	--format $(if $(filter 1,$(VERBOSE)),standard-verbose,pkgname) \
+	$(GOTESTSUM_OPTS) --
+
 race: protos-all
-	go test \
+	$(GOTESTSUM) \
 		-race \
 		-count=$(RACE_COUNT) \
 		$(if $(filter 1,$(VERBOSE)),-v) \
 		$(RACE_PACKAGES)
 
 coverage: | $(COVERAGE_DIR) protos-all
-	go test \
+	$(GOTESTSUM) \
 		-coverprofile=$(COVERAGE_OUT) \
 		-covermode=count \
 		$(if $(filter 1,$(VERBOSE)),-v) \
@@ -102,10 +106,18 @@ coverage-lcov: coverage
 	@echo "LCOV coverage report generated: $(COVERAGE_DIR)/go_coverage.lcov"
 	@echo "You can now enable Coverage Gutters in VS Code to see coverage highlights"
 
+coverage-cobertura: coverage
+	@echo "Generating Cobertura coverage file for CI/CD pipelines..."
+	gocover-cobertura < $(COVERAGE_OUT) > $(COVERAGE_DIR)/go_coverage.xml
+	@echo "Cobertura coverage report generated: $(COVERAGE_DIR)/go_coverage.xml"
+
 clean-coverage:
 	@echo "Cleaning Go build cache and coverage files..."
 	go clean -testcache
 	rm -f $(COVERAGE_OUT)
+	rm -f $(COVERAGE_DIR)/go_coverage.html
+	rm -f $(COVERAGE_DIR)/go_coverage.lcov
+	rm -f $(COVERAGE_DIR)/go_coverage.xml
 	@echo "Go build cache cleaned."
 
 $(COVERAGE_DIR):

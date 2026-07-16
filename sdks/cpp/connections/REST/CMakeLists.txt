@@ -42,6 +42,8 @@ set(sources
     "src/ServiceImpl.cpp"
     "src/SocketReader.cpp"
     "src/SocketWriter.cpp"
+    "src/RestJsonFormatter.cpp"
+    "src/JsonFixers.cpp"
     "src/controllers/Connect.cpp"
     "src/controllers/DeviceRequest.cpp"
     "src/controllers/ExecuteCommand.cpp"

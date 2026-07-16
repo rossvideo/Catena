@@ -53,23 +53,20 @@ func TestReply_Value(t *testing.T) {
 	if status.Error != "" {
 		t.Errorf("Reply status error = %q, want empty", status.Error)
 	}
-	if result.Value == nil {
+	if result.Proto == nil {
 		t.Error("Reply result value should not be nil")
 	}
 }
 
 func TestReply_Device(t *testing.T) {
-	deviceMap := map[string]any{
-		"slot":         uint32(0),
-		"detail_level": DetailLevelFull,
-	}
-	device, _ := ToDevice(deviceMap)
+	device := *NewDevice(0).
+		WithDetailLevel(DetailLevelFull)
 	result, status := Reply(device)
 
 	if status.Code != StatusCodeOk {
 		t.Errorf("Reply status code = %d, want %d", status.Code, StatusCodeOk)
 	}
-	if result.GetProtoDevice() == nil {
+	if result.Proto == nil {
 		t.Error("Reply result device should not be nil")
 	}
 }
@@ -84,7 +81,7 @@ func TestReply_Asset(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Errorf("Reply status code = %d, want %d", status.Code, StatusCodeOk)
 	}
-	if result.GetProtoAsset() == nil {
+	if result.Proto == nil {
 		t.Error("Reply result asset should not be nil")
 	}
 }
@@ -99,7 +96,7 @@ func TestReplyWithCode(t *testing.T) {
 	if status.Error != "" {
 		t.Errorf("ReplyWithCode status error = %q, want empty", status.Error)
 	}
-	if result.Value == nil {
+	if result.Proto == nil {
 		t.Error("ReplyWithCode result value should not be nil")
 	}
 }
@@ -113,7 +110,7 @@ func TestReplyError_Value(t *testing.T) {
 	if status.Error != "resource not found" {
 		t.Errorf("ReplyError status error = %q, want 'resource not found'", status.Error)
 	}
-	if result.Value != nil {
+	if result.Proto != nil {
 		t.Error("ReplyError result value should be nil (zero value)")
 	}
 }
@@ -127,7 +124,7 @@ func TestReplyError_Device(t *testing.T) {
 	if status.Error != "internal error" {
 		t.Errorf("ReplyError status error = %q, want 'internal error'", status.Error)
 	}
-	if result.GetProtoDevice() != nil {
+	if result.Proto != nil {
 		t.Error("ReplyError result device should be nil (zero value)")
 	}
 }
@@ -141,7 +138,7 @@ func TestReplyError_Asset(t *testing.T) {
 	if status.Error != "service unavailable" {
 		t.Errorf("ReplyError status error = %q, want 'service unavailable'", status.Error)
 	}
-	if result.GetProtoAsset() != nil {
+	if result.Proto != nil {
 		t.Error("ReplyError result asset should be nil (zero value)")
 	}
 }
@@ -223,7 +220,7 @@ func TestReplyError_AllStatusCodes(t *testing.T) {
 			if status.Code != code {
 				t.Errorf("test %d: ReplyError code = %d, want %d", i, status.Code, code)
 			}
-			if result.Value != nil {
+			if result.Proto != nil {
 				t.Error("ReplyError should return zero value")
 			}
 		})

@@ -43,38 +43,84 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
 
 var ErrHelp = flag.ErrHelp
 
-// InitOptions uses "CATENA" as the default prefix for environment variables.
-// See InitOptionsPrefix for more details.
-func InitOptions(appName string, args []string) (RuntimeOptions, error) {
-	return InitOptionsPrefix(appName, "CATENA", args)
+type InitOption func(opts *initOptions)
+
+type initOptions struct {
+	prefix           string
+	defaults         RuntimeOptions
+	suppressedInputs []string
 }
 
-// InitOptionsPrefix builds RuntimeOptions from defaults, environment variables,
+func WithPrefix(prefix string) InitOption {
+	return func(opts *initOptions) {
+		opts.prefix = prefix
+	}
+}
+
+func WithDefaults(defaults RuntimeOptions) InitOption {
+	return func(opts *initOptions) {
+		opts.defaults = defaults
+	}
+}
+
+func WithSuppressedInputs(inputs ...string) InitOption {
+	return func(opts *initOptions) {
+		opts.suppressedInputs = inputs
+	}
+}
+
+// InitOptions builds RuntimeOptions from defaults, environment variables,
 // and command-line flags.
 //
-// Environment variables are read using prefix to form option names, such as
-// prefix+"_LOG_LEVEL". Command-line flags override environment values, and
-// environment values override defaults.
+// Value precedence is:
+// 1. defaults (DefaultRuntimeOptions, or WithDefaults if provided)
+// 2. environment variables
+// 3. command-line flags
+//
+// By default, environment variable names use the CATENA prefix, such as
+// CATENA_LOG_LEVEL. WithPrefix changes this prefix.
 //
 // appName is used as the flag set name, appears in help output, is assigned to
 // Logger.AppName, and may be used for log file naming. args should contain the
 // command-line arguments to parse, excluding argv[0].
 //
-// If the help flag is provided, InitOptionsPrefix prints usage and returns
-// ErrHelp. If an environment variable or command-line flag cannot be parsed,
-// it prints the error, prints usage, and returns the parse error. Callers
-// should generally handle any non-nil error by choosing an exit code rather
-// than printing the error again.
-func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, error) {
+// Optional InitOption values customize loading behavior:
+//   - WithPrefix("MYAPP") uses MYAPP_* environment variable names.
+//   - WithDefaults(opts) replaces the default base RuntimeOptions before env/flag overrides.
+//   - WithSuppressedInputs(names...) suppresses both env and CLI loading for the
+//     provided option names (matched by CLI flag name, e.g. "dashboard-node-id").
+//     Suppressed options are not registered in flag help output and their env vars
+//     are ignored.
+//
+// If the help flag is provided, InitOptions prints usage and returns ErrHelp.
+// If an environment variable or command-line flag cannot be parsed, it prints
+// the error, prints usage, and returns the parse error. Callers should generally
+// handle any non-nil error by choosing an exit code rather than printing the
+// error again.
+func InitOptions(appName string, args []string, initOpts ...InitOption) (RuntimeOptions, error) {
+	// default init options before applying any custom options
+	resolvedInitOpts := &initOptions{
+		// default prefix is CATENA but can be overridden by init options
+		prefix: "CATENA",
+		// start off with the default runtime options, users may inject custom defaults via init options which will override these
+		defaults: DefaultRuntimeOptions(),
+	}
+
+	// apply any custom init options to override defaults like the env var prefix or default option values
+	for _, opt := range initOpts {
+		opt(resolvedInitOpts)
+	}
+
 	// start with defaults and then override them with env vars and cli flags
 	// cli flags take precedence over env vars
-	opts := defaultRuntimeOptions()
+	opts := resolvedInitOpts.defaults
 	// manually inject the app name into the Logger options
 	opts.Logger.AppName = appName
 
@@ -82,8 +128,9 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 	// handle exiting if they want to
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
 	loader := &configLoader{
-		flags:     flags,
-		envPrefix: prefix + "_",
+		flags:            flags,
+		envPrefix:        resolvedInitOpts.prefix + "_",
+		suppressedInputs: resolvedInitOpts.suppressedInputs,
 	}
 	// chain building all the options up
 	loader.
@@ -164,16 +211,25 @@ func InitOptionsPrefix(appName, prefix string, args []string) (RuntimeOptions, e
 }
 
 type configLoader struct {
-	err       error
-	flags     *flag.FlagSet
-	envPrefix string
+	err              error
+	flags            *flag.FlagSet
+	envPrefix        string
+	suppressedInputs []string
 }
 
 func (l *configLoader) prefixEnv(name string) string {
 	return l.envPrefix + name
 }
 
+func (l *configLoader) shouldSuppressInput(cliName string) bool {
+	return slices.Contains(l.suppressedInputs, cliName)
+}
+
 func (l *configLoader) extractBool(envName, cliName, usage string, val *bool) *configLoader {
+	// skip if suppressed, this allows user code to customize which options are exposed via cli and env.
+	if l.shouldSuppressInput(cliName) {
+		return l
+	}
 	envName = l.prefixEnv(envName)
 	// we have to do custom parsing for bools since strconv.ParseBool is very strict and
 	// doesn't handle common env var values like "1" or "yes" also the flag package's
@@ -198,13 +254,13 @@ func (l *configLoader) extractBool(envName, cliName, usage string, val *bool) *c
 
 func (l *configLoader) extractInt(envName, cliName, usage string, val *int) *configLoader {
 	// just wrap strconv.Atoi, works cause the signature is the same
-	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, strconv.Atoi)
+	loadParser(l, envName, cliName, usage, val, strconv.Atoi)
 	return l
 }
 
 func (l *configLoader) extractString(envName, cliName, usage string, val *string) *configLoader {
 	// dummy passthrough parser func
-	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, func(s string) (string, error) {
+	loadParser(l, envName, cliName, usage, val, func(s string) (string, error) {
 		return s, nil
 	})
 	return l
@@ -212,7 +268,7 @@ func (l *configLoader) extractString(envName, cliName, usage string, val *string
 
 func (l *configLoader) extractConnectionProtocol(envName, cliName, usage string, val *ConnectionProtocol) *configLoader {
 	// custom parser that validates the protocol against the known values
-	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, func(s string) (ConnectionProtocol, error) {
+	loadParser(l, envName, cliName, usage, val, func(s string) (ConnectionProtocol, error) {
 		switch ConnectionProtocol(s) {
 		case ProtocolST2138Rest, ProtocolST2138Grpc, ProtocolST2138Catena:
 			return ConnectionProtocol(s), nil
@@ -226,7 +282,7 @@ func (l *configLoader) extractConnectionProtocol(envName, cliName, usage string,
 
 func (l *configLoader) extractLogLevel(envName, cliName, usage string, val *slog.Level) *configLoader {
 	// custom parser to convert from string to slog.Level
-	l.err = loadParser(l.err, l.flags, l.prefixEnv(envName), cliName, usage, val, func(s string) (slog.Level, error) {
+	loadParser(l, envName, cliName, usage, val, func(s string) (slog.Level, error) {
 		var level slog.Level
 		err := level.UnmarshalText([]byte(s))
 		return level, err
@@ -235,25 +291,32 @@ func (l *configLoader) extractLogLevel(envName, cliName, usage string, val *slog
 }
 
 // loadParser is a helper that abstracts the common pattern of loading a config value from
-// env and cli with error handling. Is not a method on loader since in go, methods can't be
-// generic but we want to use it for different types.
-func loadParser[T any](err error, flags *flag.FlagSet, envName, cliName, usage string, val *T, parser func(string) (T, error)) error {
+// env and cli with error handling. It takes configLoader as a parameter instead of
+// being a method because generic methods on non-generic types are not supported in Go.
+func loadParser[T any](l *configLoader, envName, cliName, usage string, val *T, parser func(string) (T, error)) {
+	// skip if suppressed, this allows user code to customize which options are exposed via cli and env.
+	if l.shouldSuppressInput(cliName) {
+		return
+	}
+
+	envName = l.prefixEnv(envName)
+
 	// always register the flag so it appears in help
-	flags.Var(newParserValue(val, parser), cliName, usage+" (env: "+envName+")")
-	// if there's an error skip parsing just pass over this so it
-	// cascades down to the end of the options parsing
-	if err != nil {
-		return err
+	l.flags.Var(newParserValue(val, parser), cliName, usage+" (env: "+envName+")")
+	// if there's an error skip env parsing. just pass over this so it
+	// cascades down to the end of the options parsing and the usage will show everything
+	if l.err != nil {
+		return
 	}
 	// parse the env var now, cli will overwrite during flags.Parse if set
 	if v := os.Getenv(envName); v != "" {
 		parsed, err := parser(v)
 		if err != nil {
-			return err
+			l.err = err
+			return
 		}
 		*val = parsed
 	}
-	return nil
 }
 
 // compile-time check that parserValue implements flag.Value

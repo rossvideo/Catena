@@ -14,6 +14,7 @@ include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
 set(REST_TEST_FILES
     SocketReader_test.cpp
     SocketWriter_test.cpp
+    RestJsonFormatter_test.cpp
     GetValue_test.cpp
     LanguagePack_test.cpp
     Languages_test.cpp

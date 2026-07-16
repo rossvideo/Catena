@@ -47,9 +47,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"mime"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -80,9 +82,10 @@ func (e Encoding) String() string {
 	}
 }
 
-// Asset wraps protos.ExternalObjectPayload for asset handling
+// Asset wraps protos.ExternalObjectPayload for asset handling.
+// Proto is the underlying proto message; it may be read or replaced directly.
 type Asset struct {
-	asset *protos.ExternalObjectPayload
+	Proto *protos.ExternalObjectPayload
 }
 
 // DataPayload is a helper type for business logic to create assets
@@ -181,15 +184,15 @@ func ToPayloadFromURL(url string) DataPayload {
 // dataPayloadToProto converts a DataPayload to its proto representation.
 func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 	pdp := &protos.DataPayload{
-		Metadata:        dp.Metadata,
-		Digest:          dp.Digest,
+		Metadata:        maps.Clone(dp.Metadata),
+		Digest:          slices.Clone(dp.Digest),
 		PayloadEncoding: protos.DataPayload_PayloadEncoding(dp.PayloadEncoding),
 	}
 
 	if dp.Url != "" && len(dp.Payload) == 0 {
 		pdp.Kind = &protos.DataPayload_Url{Url: dp.Url}
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
-		pdp.Kind = &protos.DataPayload_Payload{Payload: dp.Payload}
+		pdp.Kind = &protos.DataPayload_Payload{Payload: slices.Clone(dp.Payload)}
 	} else {
 		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload, but not both"}
 	}
@@ -197,24 +200,35 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 	return pdp, StatusResult{Code: StatusCodeOk}
 }
 
+func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
+	if pdp == nil {
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil DataPayload"}
+	}
+	dp := DataPayload{
+		Metadata:        maps.Clone(pdp.GetMetadata()),
+		Digest:          slices.Clone(pdp.GetDigest()),
+		PayloadEncoding: Encoding(pdp.GetPayloadEncoding()),
+	}
+	switch k := pdp.GetKind().(type) {
+	case *protos.DataPayload_Url:
+		dp.Url = k.Url
+	case *protos.DataPayload_Payload:
+		dp.Payload = slices.Clone(k.Payload)
+	}
+	return dp, StatusResult{Code: StatusCodeOk}
+}
+
 // ToAsset converts DataPayload to Asset by building the proto directly
 func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 	protoPayload, res := dataPayloadToProto(dp)
 	if res.Code != StatusCodeOk {
-		return Asset{asset: nil}, res
+		return Asset{}, res
 	}
 
-	asset := &protos.ExternalObjectPayload{
+	return Asset{Proto: &protos.ExternalObjectPayload{
 		Cachable: cachable,
 		Payload:  protoPayload,
-	}
-
-	return Asset{asset: asset}, StatusResult{Code: StatusCodeOk}
-}
-
-// GetProtoAsset returns the underlying protos.ExternalObjectPayload
-func (ca Asset) GetProtoAsset() *protos.ExternalObjectPayload {
-	return ca.asset
+	}}, StatusResult{Code: StatusCodeOk}
 }
 
 func compressGzipTo(w io.Writer, data []byte) error {
@@ -337,12 +351,11 @@ func PayloadEncodingFromExt(filename string) Encoding {
 // re-encodes it to targetEncoding, modifying the asset in place.
 // If the asset is already in the target encoding, this is a no-op.
 func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
-	original := asset.GetProtoAsset()
-	if original == nil || original.GetPayload() == nil {
+	if asset.Proto == nil || asset.Proto.GetPayload() == nil {
 		return StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no payload"}
 	}
 
-	dp := original.GetPayload()
+	dp := asset.Proto.GetPayload()
 	currentEncoding := Encoding(dp.GetPayloadEncoding())
 
 	if currentEncoding == targetEncoding {
@@ -359,12 +372,12 @@ func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
 		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("encode: %v", err)}
 	}
 
-	cloned := proto.Clone(original).(*protos.ExternalObjectPayload)
+	cloned := proto.Clone(asset.Proto).(*protos.ExternalObjectPayload)
 	cloned.Payload.Kind = &protos.DataPayload_Payload{Payload: encodedData}
 	cloned.Payload.PayloadEncoding = protos.DataPayload_PayloadEncoding(targetEncoding)
 	newDigest := sha256.Sum256(encodedData)
 	cloned.Payload.Digest = newDigest[:]
-	asset.asset = cloned
+	asset.Proto = cloned
 
 	return StatusResult{Code: StatusCodeOk}
 }
