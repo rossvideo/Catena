@@ -64,6 +64,9 @@ const (
 	EndpointGetParam
 	EndpointSetValue
 	EndpointGetAsset
+	EndpointLoadAsset
+	EndpointOverwriteAsset
+	EndpointDeleteAsset
 	EndpointExecuteCommand
 	EndpointParamInfo
 	EndpointConnect
@@ -92,6 +95,12 @@ func (e EndpointType) String() string {
 		return "GetParam"
 	case EndpointGetAsset:
 		return "GetAsset"
+	case EndpointLoadAsset:
+		return "LoadAsset"
+	case EndpointOverwriteAsset:
+		return "OverwriteAsset"
+	case EndpointDeleteAsset:
+		return "DeleteAsset"
 	case EndpointExecuteCommand:
 		return "ExecuteCommand"
 	case EndpointParamInfo:
@@ -123,6 +132,17 @@ type SetValueEntry struct {
 // full slice so the handler can apply them atomically (all-or-nothing).
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
+
+// LoadAssetHandler stores a new asset at fqoid (HTTP POST / LoadAsset). Business
+// logic decides create-vs-conflict semantics.
+type LoadAssetHandler func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult
+
+// OverwriteAssetHandler replaces an existing asset at fqoid (HTTP PUT /
+// OverwriteAsset). Business logic decides overwrite-vs-not-found semantics.
+type OverwriteAssetHandler func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult
+
+// DeleteAssetHandler removes the asset at fqoid (HTTP DELETE / DeleteAsset).
+type DeleteAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult
 
 // ParamInfoHandler streams parameter information for a slot. The handler emits
@@ -189,6 +209,9 @@ type Server interface {
 	RegisterGetParamHandler(slot uint16, handler GetParamHandler)
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
+	RegisterLoadAssetHandler(slot uint16, handler LoadAssetHandler)
+	RegisterOverwriteAssetHandler(slot uint16, handler OverwriteAssetHandler)
+	RegisterDeleteAssetHandler(slot uint16, handler DeleteAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
@@ -220,6 +243,9 @@ type ServerRuntime interface {
 	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult)
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
 	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
+	InvokeLoadAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult
+	InvokeOverwriteAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult
+	InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
@@ -247,6 +273,9 @@ type server struct {
 	getParamHandlers       map[uint16]GetParamHandler
 	setValueHandlers       map[uint16]SetValueHandler
 	getAssetHandlers       map[uint16]GetAssetHandler
+	loadAssetHandlers      map[uint16]LoadAssetHandler
+	overwriteAssetHandlers map[uint16]OverwriteAssetHandler
+	deleteAssetHandlers    map[uint16]DeleteAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
 	listLanguagesHandlers  map[uint16]ListLanguagesHandler
@@ -293,6 +322,9 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		getParamHandlers:       make(map[uint16]GetParamHandler),
 		setValueHandlers:       make(map[uint16]SetValueHandler),
 		getAssetHandlers:       make(map[uint16]GetAssetHandler),
+		loadAssetHandlers:      make(map[uint16]LoadAssetHandler),
+		overwriteAssetHandlers: make(map[uint16]OverwriteAssetHandler),
+		deleteAssetHandlers:    make(map[uint16]DeleteAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		listLanguagesHandlers:  make(map[uint16]ListLanguagesHandler),
@@ -664,6 +696,18 @@ func (s *server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
 	s.registerHandlerFn(slot, func() { s.getAssetHandlers[slot] = handler })
 }
 
+func (s *server) RegisterLoadAssetHandler(slot uint16, handler LoadAssetHandler) {
+	s.registerHandlerFn(slot, func() { s.loadAssetHandlers[slot] = handler })
+}
+
+func (s *server) RegisterOverwriteAssetHandler(slot uint16, handler OverwriteAssetHandler) {
+	s.registerHandlerFn(slot, func() { s.overwriteAssetHandlers[slot] = handler })
+}
+
+func (s *server) RegisterDeleteAssetHandler(slot uint16, handler DeleteAssetHandler) {
+	s.registerHandlerFn(slot, func() { s.deleteAssetHandlers[slot] = handler })
+}
+
 func (s *server) RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler) {
 	s.registerHandlerFn(slot, func() { s.listLanguagesHandlers[slot] = handler })
 }
@@ -776,6 +820,33 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportConte
 		func(handler GetAssetHandler, ctx HandlerContext) (Asset, StatusResult) {
 			return handler(slot, fqoid, ctx)
 		})
+}
+
+func (s *server) InvokeLoadAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointLoadAsset, true, s.loadAssetHandlers, slot,
+		"no LoadAsset handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler LoadAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, fqoid, asset, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeOverwriteAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointOverwriteAsset, true, s.overwriteAssetHandlers, slot,
+		"no OverwriteAsset handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler OverwriteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, fqoid, asset, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointDeleteAsset, true, s.deleteAssetHandlers, slot,
+		"no DeleteAsset handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, fqoid, ctx)
+		})
+	return res
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult {

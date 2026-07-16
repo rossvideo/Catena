@@ -58,6 +58,9 @@ type stubServerRuntime struct {
 	getParamFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult)
 	setValueFn               func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult
 	getAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
+	loadAssetFn              func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult
+	overwriteAssetFn         func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult
+	deleteAssetFn            func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
 	commandFn                func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
 	listLanguagesFn          func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult)
@@ -134,6 +137,30 @@ func (s *stubServerRuntime) InvokeGetAssetHandler(slot uint16, fqoid string, ctx
 	}
 	s.panicf("GetAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
 	return catena.ReplyError[catena.Asset](catena.StatusCodeInternal, "GetAsset handler not implemented")
+}
+
+func (s *stubServerRuntime) InvokeLoadAssetHandler(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	if s.loadAssetFn != nil {
+		return s.loadAssetFn(slot, fqoid, asset, ctx)
+	}
+	s.panicf("LoadAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "LoadAsset handler not implemented"}
+}
+
+func (s *stubServerRuntime) InvokeOverwriteAssetHandler(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	if s.overwriteAssetFn != nil {
+		return s.overwriteAssetFn(slot, fqoid, asset, ctx)
+	}
+	s.panicf("OverwriteAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "OverwriteAsset handler not implemented"}
+}
+
+func (s *stubServerRuntime) InvokeDeleteAssetHandler(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	if s.deleteAssetFn != nil {
+		return s.deleteAssetFn(slot, fqoid, ctx)
+	}
+	s.panicf("DeleteAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "DeleteAsset handler not implemented"}
 }
 
 func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream catena.Stream[catena.CommandResult], ctx catena.TransportContext) catena.StatusResult {

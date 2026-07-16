@@ -638,18 +638,123 @@ func TestRestTransport_GetAsset_Route(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestRestTransport_GetAsset_MethodNotAllowed(t *testing.T) {
+func TestRestTransport_Asset_MethodNotAllowed(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	handlerCalled := false
+	getCalled := false
 	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
-		handlerCalled = true
+		getCalled = true
 		return catena.Reply(catena.Asset{})
 	}
 
-	makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", "")
+	// PATCH is not a supported asset method.
+	rec := makeRequest(t, transport, http.MethodPatch, "/st2138-api/v1/0/asset/logo", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+	if getCalled {
+		t.Error("registered GET handler should not have been called for PATCH")
+	}
+}
+
+const assetRequestBody = `{"cachable":true,"payload":{"payload_encoding":"UNCOMPRESSED","payload":"ZmFrZSBpbWFnZQ=="}}`
+
+func TestRestTransport_LoadAsset_Route(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	var gotFqoid string
+	var gotPayload []byte
+	runtime.loadAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+		gotFqoid = fqoid
+		dp, res := catena.FromAsset(asset)
+		if res.Code != catena.StatusCodeOk {
+			t.Errorf("FromAsset error: %v", res.Error)
+		}
+		gotPayload = dp.Payload
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+	assertStatus(t, rec, http.StatusNoContent)
+	if gotFqoid != "logo" {
+		t.Errorf("expected fqoid 'logo', got %s", gotFqoid)
+	}
+	if string(gotPayload) != "fake image" {
+		t.Errorf("expected payload 'fake image', got %q", string(gotPayload))
+	}
+}
+
+func TestRestTransport_OverwriteAsset_Route(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	var gotFqoid string
+	runtime.overwriteAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+		gotFqoid = fqoid
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+	assertStatus(t, rec, http.StatusNoContent)
+	if gotFqoid != "logo" {
+		t.Errorf("expected fqoid 'logo', got %s", gotFqoid)
+	}
+}
+
+func TestRestTransport_DeleteAsset_Route(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	var gotFqoid string
+	runtime.deleteAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+		gotFqoid = fqoid
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodDelete, "/st2138-api/v1/0/asset/logo", "")
+	assertStatus(t, rec, http.StatusNoContent)
+	if gotFqoid != "logo" {
+		t.Errorf("expected fqoid 'logo', got %s", gotFqoid)
+	}
+}
+
+func TestRestTransport_DeleteAsset_NotFound(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	runtime.deleteAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
+	}
+
+	rec := makeRequest(t, transport, http.MethodDelete, "/st2138-api/v1/0/asset/missing", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}
+
+func TestRestTransport_LoadAsset_InvalidBody(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	handlerCalled := false
+	runtime.loadAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+		handlerCalled = true
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", "{ not valid json")
+	assertStatus(t, rec, http.StatusBadRequest)
 	if handlerCalled {
-		t.Error("registered handler should not have been called")
+		t.Error("handler should not be called with invalid body")
+	}
+}
+
+func TestRestTransport_OverwriteAsset_MissingContentType(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+
+	handlerCalled := false
+	runtime.overwriteAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+		handlerCalled = true
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	// No Content-Type header set.
+	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/asset/logo", assetRequestBody, nil)
+	assertStatus(t, rec, http.StatusBadRequest)
+	if handlerCalled {
+		t.Error("handler should not be called without Content-Type")
 	}
 }
 

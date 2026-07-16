@@ -231,6 +231,15 @@ func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 	}}, StatusResult{Code: StatusCodeOk}
 }
 
+// FromAsset converts an Asset back into a DataPayload for business logic to
+// store or inspect. It is the inverse of ToAsset.
+func FromAsset(asset Asset) (DataPayload, StatusResult) {
+	if asset.Proto == nil {
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no proto"}
+	}
+	return dataPayloadFromProto(asset.Proto.GetPayload())
+}
+
 func compressGzipTo(w io.Writer, data []byte) error {
 	gw := gzip.NewWriter(w)
 	if _, err := gw.Write(data); err != nil {
