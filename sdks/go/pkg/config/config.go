@@ -209,7 +209,7 @@ func DefaultServerOptions() ServerOptions {
 	return ServerOptions{
 		IsDev:          false,
 		MaxConnections: 100,
-		AuthzEnabled:   false,
+		AuthzEnabled:   true,
 		JwtOptions:     DefaultJwtValidationOptions(),
 	}
 }
