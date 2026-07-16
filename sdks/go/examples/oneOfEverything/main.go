@@ -338,7 +338,7 @@ func main() {
 		os.Exit(1)
 	}
 	for id, payload := range payloads {
-		assets.Store(id, payload)
+		assets.Store(id, storedAsset{payload: payload, cachable: true})
 	}
 	assetIDs := sortedAssetIDs(assets)
 
@@ -416,7 +416,7 @@ func main() {
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {
-					payload := value.(catena.DataPayload)
+					payload := value.(storedAsset).payload
 					assetList = append(assetList, map[string]any{
 						"id":           key.(string),
 						"content_type": payload.Metadata["content-type"],

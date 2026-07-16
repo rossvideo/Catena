@@ -211,9 +211,17 @@ func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
 	}
 	switch k := pdp.GetKind().(type) {
 	case *protos.DataPayload_Url:
+		if k.Url == "" {
+			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+		}
 		dp.Url = k.Url
 	case *protos.DataPayload_Payload:
+		if len(k.Payload) == 0 {
+			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+		}
 		dp.Payload = slices.Clone(k.Payload)
+	default:
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
 	}
 	return dp, StatusResult{Code: StatusCodeOk}
 }
