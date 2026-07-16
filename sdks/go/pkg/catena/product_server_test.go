@@ -55,19 +55,20 @@ func testProduct() ProductStruct {
 
 // expectedProductParam is the golden proto for the SDK-managed product param
 // built from testProduct(): a read-only STRUCT with STRING field descriptors and
-// the field values carried in the struct's Value.
+// the field values carried in the struct's Value. Because the struct itself is
+// read-only, its field descriptors inherit read_only too.
 func expectedProductParam() *protos.Param {
 	return &protos.Param{
 		Type:        protos.ParamType_STRUCT,
 		ReadOnly:    true,
 		AccessScope: ScopeMon,
 		Params: map[string]*protos.Param{
-			ProductOidName:             {Type: protos.ParamType_STRING},
-			ProductOidVendor:           {Type: protos.ParamType_STRING},
-			ProductOidVersion:          {Type: protos.ParamType_STRING},
-			ProductOidSerialNumber:     {Type: protos.ParamType_STRING},
-			ProductOidCatenaSDKVersion: {Type: protos.ParamType_STRING},
-			ProductOidCatenaSDK:        {Type: protos.ParamType_STRING},
+			ProductOidName:             {Type: protos.ParamType_STRING, ReadOnly: true},
+			ProductOidVendor:           {Type: protos.ParamType_STRING, ReadOnly: true},
+			ProductOidVersion:          {Type: protos.ParamType_STRING, ReadOnly: true},
+			ProductOidSerialNumber:     {Type: protos.ParamType_STRING, ReadOnly: true},
+			ProductOidCatenaSDKVersion: {Type: protos.ParamType_STRING, ReadOnly: true},
+			ProductOidCatenaSDK:        {Type: protos.ParamType_STRING, ReadOnly: true},
 		},
 		Value: &protos.Value{
 			Kind: &protos.Value_StructValue{

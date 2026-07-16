@@ -254,9 +254,29 @@ func (cp *Param) WithConstraint(c *Constraint) *Param {
 	return cp
 }
 
+// WithReadOnly sets the param's read_only flag. Read-only is inherited
+// downward: when set to true, every existing sub-param (recursively) is also
+// marked read-only, since a child of a read-only parent cannot be writable.
+// Setting it to false leaves sub-params untouched, so a child may still be
+// independently marked read-only under a writable parent.
 func (cp *Param) WithReadOnly(readOnly bool) *Param {
 	cp.Proto.ReadOnly = readOnly
+	if readOnly {
+		propagateReadOnly(cp.Proto.Params)
+	}
 	return cp
+}
+
+// propagateReadOnly recursively marks every param in the map (and their
+// sub-params) as read-only.
+func propagateReadOnly(params map[string]*protos.Param) {
+	for _, p := range params {
+		if p == nil {
+			continue
+		}
+		p.ReadOnly = true
+		propagateReadOnly(p.Params)
+	}
 }
 
 func (cp *Param) WithWidget(widget string) *Param {
@@ -320,6 +340,13 @@ func (cp *Param) WithParam(oid string, param *Param) *Param {
 	}
 	if cp.Proto.Params == nil {
 		cp.Proto.Params = map[string]*protos.Param{}
+	}
+	// A read-only parent forces its children read-only. When the parent is
+	// writable the child keeps its own read_only flag, so a child can still be
+	// independently marked read-only.
+	if cp.Proto.ReadOnly {
+		cloned.ReadOnly = true
+		propagateReadOnly(cloned.Params)
 	}
 	cp.Proto.Params[oid] = cloned
 	return cp
