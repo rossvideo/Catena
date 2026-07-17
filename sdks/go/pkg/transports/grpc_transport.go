@@ -620,6 +620,14 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
+	// A nil proto on an OK result is an internal contract violation by the
+	// handler, not success; surface it as an internal error rather than
+	// returning an empty pack (mirrors REST GET and GetParam).
+	if pack.Proto == nil {
+		logger.Error("language pack handler returned OK with nil proto", "slot", slot, "language", language)
+		return nil, status.Error(codes.Internal, "language pack response was empty")
+	}
+
 	// The handler wraps the inner pack (name + words); the gRPC response is the
 	// outer component that also carries the language tag.
 	return &protos.DeviceComponent_ComponentLanguagePack{

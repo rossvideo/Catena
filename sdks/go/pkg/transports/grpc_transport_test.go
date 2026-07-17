@@ -2017,6 +2017,25 @@ func TestGrpcTransport_LanguagePackRequest_NotFound(t *testing.T) {
 	assertGRPCCode(t, err, codes.NotFound, "LanguagePackRequest not found")
 }
 
+// A handler that reports OK but leaves the wrapped Proto nil has violated its
+// contract; the transport must surface Internal rather than return an empty
+// pack (mirrors REST GET and GetParam).
+func TestGrpcTransport_LanguagePackRequest_NilProtoOnOk(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
+	assertGRPCCode(t, err, codes.Internal, "LanguagePackRequest nil proto on OK")
+}
+
 // =============================================================================
 // Test: gRPC Reflection
 // =============================================================================
