@@ -50,6 +50,7 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 // --- Client setup helpers ---
@@ -94,7 +95,7 @@ func makeGetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx co
 func makeSetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, value any) (*protos.Empty, error) {
 	t.Helper()
 
-	protoValue, err := catena.ToProto(value)
+	protoValue, err := st2138.ToProto(value)
 	if err.Code != catena.StatusCodeOk {
 		t.Fatalf("failed to convert value to proto: %v", err.Error)
 	}
@@ -114,7 +115,7 @@ func makeMultiSetValueRequest(t *testing.T, client protos.CatenaServiceClient, c
 
 	setValues := make([]*protos.SetValuePayload, 0, len(values))
 	for oid, value := range values {
-		protoValue, err := catena.ToProto(value)
+		protoValue, err := st2138.ToProto(value)
 		if err.Code != catena.StatusCodeOk {
 			t.Fatalf("failed to convert value for %s to proto: %v", oid, err.Error)
 		}
@@ -158,7 +159,7 @@ func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, 
 	}
 
 	if payload != nil {
-		protoValue, err := catena.ToProto(payload)
+		protoValue, err := st2138.ToProto(payload)
 		if err.Code != catena.StatusCodeOk {
 			t.Fatalf("failed to convert command payload to proto: %v", err.Error)
 		}

@@ -39,28 +39,18 @@ package catena
 import (
 	"context"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
-// Message is implemented by the wrapper types that can be sent as a single
-// chunk of a streamed response. Wire returns the fully-formed protobuf message
-// for that chunk - the transport-neutral wire representation.
-//
-// A Message is self-contained: it carries everything the transport needs to
-// emit one chunk. Transports never reach past Wire to inspect wrapper internals
-// - the gRPC path sends the returned proto directly, and the REST path applies
-// its own JSON marshalling rules to it.
-type Message interface {
-	Wire() proto.Message
-}
+// Message is the wrapper interface for a single chunk of a streamed response.
+// It is defined in the st2138 package; this alias keeps the catena.Message
+// spelling for handler signatures.
+type Message = st2138.Message
 
-// Stream is the handler-facing sink for a streamed response. Each endpoint's
-// stream is parameterized by its own chunk type, so a handler can only send the
-// chunk type that endpoint expects. Send delivers one chunk to the client and
-// returns an error if the chunk could not be sent.
-type Stream[T Message] interface {
-	Send(chunk T) error
-}
+// Stream is the handler-facing sink for a streamed response. It is defined in
+// the st2138 package; this alias keeps the catena.Stream spelling for handler
+// signatures (e.g. catena.Stream[st2138.ParamInfo]).
+type Stream[T Message] = st2138.Stream[T]
 
 // shutdownStream wraps a handler-facing Stream so Send fails once the server's
 // shutdown context is done, without the handler having to check for

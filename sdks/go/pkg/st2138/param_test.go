@@ -36,7 +36,7 @@
  * @date 2026-05-11
  */
 
-package catena
+package st2138
 
 import (
 	"testing"
@@ -263,7 +263,7 @@ func TestWithReadOnly_SkipsNilSubParam(t *testing.T) {
 	cp := &Param{Proto: &protos.Param{
 		Type: protos.ParamType_STRUCT,
 		Params: map[string]*protos.Param{
-			"nilChild": nil,
+			"nilChild":  nil,
 			"realChild": {Type: protos.ParamType_INT32},
 		},
 	}}

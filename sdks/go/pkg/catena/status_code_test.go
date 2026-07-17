@@ -41,10 +41,12 @@ package catena
 import (
 	"fmt"
 	"testing"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func TestReply_Value(t *testing.T) {
-	value, _ := ToValue(int32(42))
+	value, _ := st2138.ToValue(int32(42))
 	result, status := Reply(value)
 
 	if status.Code != StatusCodeOk {
@@ -59,8 +61,8 @@ func TestReply_Value(t *testing.T) {
 }
 
 func TestReply_Device(t *testing.T) {
-	device := *NewDevice(0).
-		WithDetailLevel(DetailLevelFull)
+	device := *st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull)
 	result, status := Reply(device)
 
 	if status.Code != StatusCodeOk {
@@ -72,10 +74,10 @@ func TestReply_Device(t *testing.T) {
 }
 
 func TestReply_Asset(t *testing.T) {
-	dp := DataPayload{
+	dp := st2138.DataPayload{
 		Payload: []byte("test"),
 	}
-	asset, _ := ToAsset(dp, true)
+	asset, _ := st2138.ToAsset(dp, true)
 	result, status := Reply(asset)
 
 	if status.Code != StatusCodeOk {
@@ -87,7 +89,7 @@ func TestReply_Asset(t *testing.T) {
 }
 
 func TestReplyWithCode(t *testing.T) {
-	value, _ := ToValue(int32(42))
+	value, _ := st2138.ToValue(int32(42))
 	result, status := ReplyWithCode(value, StatusCodeNotFound)
 
 	if status.Code != StatusCodeNotFound {
@@ -102,7 +104,7 @@ func TestReplyWithCode(t *testing.T) {
 }
 
 func TestReplyError_Value(t *testing.T) {
-	result, status := ReplyError[Value](StatusCodeNotFound, "resource not found")
+	result, status := ReplyError[st2138.Value](StatusCodeNotFound, "resource not found")
 
 	if status.Code != StatusCodeNotFound {
 		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeNotFound)
@@ -116,7 +118,7 @@ func TestReplyError_Value(t *testing.T) {
 }
 
 func TestReplyError_Device(t *testing.T) {
-	result, status := ReplyError[Device](StatusCodeInternal, "internal error")
+	result, status := ReplyError[st2138.Device](StatusCodeInternal, "internal error")
 
 	if status.Code != StatusCodeInternal {
 		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeInternal)
@@ -130,7 +132,7 @@ func TestReplyError_Device(t *testing.T) {
 }
 
 func TestReplyError_Asset(t *testing.T) {
-	result, status := ReplyError[Asset](StatusCodeUnavailable, "service unavailable")
+	result, status := ReplyError[st2138.Asset](StatusCodeUnavailable, "service unavailable")
 
 	if status.Code != StatusCodeUnavailable {
 		t.Errorf("ReplyError status code = %d, want %d", status.Code, StatusCodeUnavailable)
@@ -201,9 +203,9 @@ func TestStatusCode_Values(t *testing.T) {
 // TestResponseType_Constraint verifies the generic constraint works
 func TestResponseType_Constraint(t *testing.T) {
 	// These should all compile and work
-	var _ func(Value) (Value, StatusResult) = Reply[Value]
-	var _ func(Device) (Device, StatusResult) = Reply[Device]
-	var _ func(Asset) (Asset, StatusResult) = Reply[Asset]
+	var _ func(st2138.Value) (st2138.Value, StatusResult) = Reply[st2138.Value]
+	var _ func(st2138.Device) (st2138.Device, StatusResult) = Reply[st2138.Device]
+	var _ func(st2138.Asset) (st2138.Asset, StatusResult) = Reply[st2138.Asset]
 }
 
 func TestReplyError_AllStatusCodes(t *testing.T) {
@@ -216,7 +218,7 @@ func TestReplyError_AllStatusCodes(t *testing.T) {
 
 	for i, code := range codes {
 		t.Run(fmt.Sprintf("StatusCode_%d", code), func(t *testing.T) {
-			result, status := ReplyError[Value](code, "test error")
+			result, status := ReplyError[st2138.Value](code, "test error")
 			if status.Code != code {
 				t.Errorf("test %d: ReplyError code = %d, want %d", i, status.Code, code)
 			}

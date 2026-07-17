@@ -42,10 +42,11 @@ import (
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func TestCommandReply(t *testing.T) {
-	val, _ := ToValue(int32(42))
+	val, _ := st2138.ToValue(int32(42))
 	result := CommandValue(val)
 
 	if result.IsEmpty() {
@@ -88,7 +89,7 @@ func TestCommandNoResponse(t *testing.T) {
 }
 
 func TestCommandExceptionResult(t *testing.T) {
-	errorMsg := NewPolyglotText("en", "Something failed")
+	errorMsg := st2138.NewPolyglotText("en", "Something failed")
 	result := CommandException("TestError", "detailed info", errorMsg)
 
 	if result.IsEmpty() {
@@ -128,7 +129,7 @@ func TestCommandExceptionResult(t *testing.T) {
 }
 
 func TestCommandExceptionResult_MultipleLanguages(t *testing.T) {
-	errorMsg := NewPolyglotText("en", "Command not found").With("fr", "Commande introuvable")
+	errorMsg := st2138.NewPolyglotText("en", "Command not found").With("fr", "Commande introuvable")
 	result := CommandException("NotFound", "missing", errorMsg)
 
 	exc := result.GetException()
@@ -155,7 +156,7 @@ func TestCommandExceptionResult_NilErrorMessage(t *testing.T) {
 }
 
 func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
-	val, _ := ToValue("hello")
+	val, _ := st2138.ToValue("hello")
 	result := CommandValue(val)
 	proto := result.Proto
 
@@ -177,7 +178,7 @@ func TestCommandResult_GetProtoResponse_NoResponse(t *testing.T) {
 }
 
 func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
-	result := CommandException("E", "d", NewPolyglotText("fr", "erreur"))
+	result := CommandException("E", "d", st2138.NewPolyglotText("fr", "erreur"))
 	proto := result.Proto
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_Exception); !ok {
@@ -193,7 +194,7 @@ func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
 }
 
 func TestCommandResult_Wire(t *testing.T) {
-	val, _ := ToValue(123)
+	val, _ := st2138.ToValue(123)
 	result := CommandValue(val)
 
 	wire := result.Wire()

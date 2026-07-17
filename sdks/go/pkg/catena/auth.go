@@ -47,20 +47,15 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
-)
 
-const (
-	ScopeOp  = "st2138:op"
-	ScopeCfg = "st2138:cfg"
-	ScopeAdm = "st2138:adm"
-	ScopeMon = "st2138:mon"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 var catenaScopes = []string{
-	ScopeOp,
-	ScopeCfg,
-	ScopeAdm,
-	ScopeMon,
+	st2138.ScopeOp,
+	st2138.ScopeCfg,
+	st2138.ScopeAdm,
+	st2138.ScopeMon,
 }
 
 type jwtValidator struct {

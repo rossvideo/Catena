@@ -53,6 +53,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -144,7 +145,7 @@ func validTestTransportContext(metadata map[string][]string) TransportContext {
 // admTestTransportContext returns a context whose token carries the adm write
 // scope, required by the language-pack create/update/delete operations.
 func admTestTransportContext(t *testing.T) TransportContext {
-	return TransportContext{AccessToken: makeTestJwtToken(t, []string{ScopeAdm + ":w"})}
+	return TransportContext{AccessToken: makeTestJwtToken(t, []string{st2138.ScopeAdm + ":w"})}
 }
 
 func TestServer_IsDev(t *testing.T) {
@@ -186,11 +187,11 @@ func TestServer_ParseTransportContext(t *testing.T) {
 		if !ctx.HasReadScope("read") || !ctx.HasReadScope("write") {
 			t.Errorf("expected parsed token read scopes to include read and write, got %v", ctx.readScopes)
 		}
-		if !ctx.HasReadScope(ScopeOp) {
-			t.Errorf("expected parsed token read scopes to include %s, got %v", ScopeOp, ctx.readScopes)
+		if !ctx.HasReadScope(st2138.ScopeOp) {
+			t.Errorf("expected parsed token read scopes to include %s, got %v", st2138.ScopeOp, ctx.readScopes)
 		}
-		if !ctx.HasWriteScope(ScopeOp) {
-			t.Errorf("expected parsed token write scopes to include %s, got %v", ScopeOp, ctx.writeScopes)
+		if !ctx.HasWriteScope(st2138.ScopeOp) {
+			t.Errorf("expected parsed token write scopes to include %s, got %v", st2138.ScopeOp, ctx.writeScopes)
 		}
 		if ctx.HasWriteScope("write") {
 			t.Errorf("expected non-:w scope to be read-only, got %v", ctx.writeScopes)
@@ -722,8 +723,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetDevice,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetDeviceHandler(slot, func(uint16, HandlerContext) (Device, StatusResult) {
-					return Reply(Device{})
+				srv.RegisterGetDeviceHandler(slot, func(uint16, HandlerContext) (st2138.Device, StatusResult) {
+					return Reply(st2138.Device{})
 				})
 			},
 			has: func(srv *server, slot uint16) bool { return srv.getDeviceHandlers[slot] != nil },
@@ -731,8 +732,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetValue,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetValueHandler(slot, func(uint16, string, HandlerContext) (Value, StatusResult) {
-					return Reply(Value{})
+				srv.RegisterGetValueHandler(slot, func(uint16, string, HandlerContext) (st2138.Value, StatusResult) {
+					return Reply(st2138.Value{})
 				})
 			},
 			has: func(srv *server, slot uint16) bool { return srv.getValueHandlers[slot] != nil },
@@ -749,8 +750,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetParam,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetParamHandler(slot, func(uint16, string, HandlerContext) (Param, StatusResult) {
-					return Reply(Param{})
+				srv.RegisterGetParamHandler(slot, func(uint16, string, HandlerContext) (st2138.Param, StatusResult) {
+					return Reply(st2138.Param{})
 				})
 			},
 			has: func(srv *server, slot uint16) bool { return srv.getParamHandlers[slot] != nil },
@@ -758,8 +759,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointReadAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterReadAssetHandler(slot, func(uint16, string, HandlerContext) (Asset, StatusResult) {
-					return Reply(Asset{})
+				srv.RegisterReadAssetHandler(slot, func(uint16, string, HandlerContext) (st2138.Asset, StatusResult) {
+					return Reply(st2138.Asset{})
 				})
 			},
 			has: func(srv *server, slot uint16) bool { return srv.readAssetHandlers[slot] != nil },
@@ -767,7 +768,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointCreateAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterCreateAssetHandler(slot, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(slot, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -776,7 +777,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointUpdateAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterUpdateAssetHandler(slot, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(slot, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -803,7 +804,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointParamInfo,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterParamInfoHandler(slot, func(uint16, string, bool, HandlerContext, Stream[ParamInfo]) StatusResult {
+				srv.RegisterParamInfoHandler(slot, func(uint16, string, bool, HandlerContext, Stream[st2138.ParamInfo]) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -1044,7 +1045,7 @@ func TestServer_RealInvokeGate(t *testing.T) {
 		transportContext := validTestTransportContext(nil)
 
 		// read scope only (st2138:op without :w), so write access must be denied
-		transportContext.AccessToken = makeTestJwtToken(t, []string{ScopeOp})
+		transportContext.AccessToken = makeTestJwtToken(t, []string{st2138.ScopeOp})
 
 		_, res := srv.realInvokeGate(transportContext, EndpointSetValue, true)
 		if res.IsOk() {
@@ -1235,9 +1236,9 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointGetDevice, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		expected := Device{Proto: &protos.Device{}}
+		expected := st2138.Device{Proto: &protos.Device{}}
 		handlerCalled := 0
-		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext) (Device, StatusResult) {
+		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult) {
 			handlerCalled++
 			if slot != 11 {
 				t.Errorf("expected slot 11, got %d", slot)
@@ -1268,9 +1269,9 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		expected := Value{}
+		expected := st2138.Value{}
 		handlerCalled := 0
-		srv.getValueHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+		srv.getValueHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
 			handlerCalled++
 			if slot != 7 {
 				t.Errorf("expected slot 7, got %d", slot)
@@ -1381,9 +1382,9 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointGetParam, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		expected := Param{}
+		expected := st2138.Param{}
 		handlerCalled := 0
-		srv.getParamHandlers[22] = func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+		srv.getParamHandlers[22] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
 			handlerCalled++
 			if slot != 22 {
 				t.Errorf("expected slot 22, got %d", slot)
@@ -1417,14 +1418,14 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointReadAsset, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		dp := DataPayload{
+		dp := st2138.DataPayload{
 			Metadata: map[string]string{"content-type": "image/png"},
 			Payload:  []byte("fake image"),
 		}
-		expected, _ := ToAsset(dp, false)
+		expected, _ := st2138.ToAsset(dp, false)
 
 		handlerCalled := 0
-		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
+		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult) {
 			handlerCalled++
 			if slot != 5 {
 				t.Errorf("expected slot 5, got %d", slot)
@@ -1458,11 +1459,11 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointCreateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		dp := DataPayload{Payload: []byte("fake image")}
-		asset, _ := ToAsset(dp, true)
+		dp := st2138.DataPayload{Payload: []byte("fake image")}
+		asset, _ := st2138.ToAsset(dp, true)
 
 		handlerCalled := 0
-		srv.createAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset Asset, ctx HandlerContext) StatusResult {
+		srv.createAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset st2138.Asset, ctx HandlerContext) StatusResult {
 			handlerCalled++
 			if slot != 5 {
 				t.Errorf("expected slot 5, got %d", slot)
@@ -1493,7 +1494,7 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointCreateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		status := srv.InvokeCreateAssetHandler(7, "missing", Asset{}, validTestTransportContext(nil))
+		status := srv.InvokeCreateAssetHandler(7, "missing", st2138.Asset{}, validTestTransportContext(nil))
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound when no handler registered, got %v", status)
 		}
@@ -1506,11 +1507,11 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointUpdateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		dp := DataPayload{Payload: []byte("fake image")}
-		asset, _ := ToAsset(dp, true)
+		dp := st2138.DataPayload{Payload: []byte("fake image")}
+		asset, _ := st2138.ToAsset(dp, true)
 
 		handlerCalled := 0
-		srv.updateAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset Asset, ctx HandlerContext) StatusResult {
+		srv.updateAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset st2138.Asset, ctx HandlerContext) StatusResult {
 			handlerCalled++
 			if slot != 5 {
 				t.Errorf("expected slot 5, got %d", slot)
@@ -1541,7 +1542,7 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointUpdateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		status := srv.InvokeUpdateAssetHandler(7, "missing", Asset{}, validTestTransportContext(nil))
+		status := srv.InvokeUpdateAssetHandler(7, "missing", st2138.Asset{}, validTestTransportContext(nil))
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound when no handler registered, got %v", status)
 		}
@@ -1595,7 +1596,7 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 // caller holding only the monitor write scope is rejected with PermissionDenied
 // and the business handler never runs.
 func TestServer_AssetWriteRequiresNonMonitorScope(t *testing.T) {
-	sampleAsset, _ := ToAsset(DataPayload{Payload: []byte("data")}, true)
+	sampleAsset, _ := st2138.ToAsset(st2138.DataPayload{Payload: []byte("data")}, true)
 
 	endpoints := []struct {
 		name     string
@@ -1607,7 +1608,7 @@ func TestServer_AssetWriteRequiresNonMonitorScope(t *testing.T) {
 			name:     "CreateAsset",
 			endpoint: EndpointCreateAsset,
 			register: func(srv *server, called *bool) {
-				srv.createAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.createAssetHandlers[0] = func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
 					*called = true
 					return StatusWithCode(StatusCodeOk, "")
 				}
@@ -1620,7 +1621,7 @@ func TestServer_AssetWriteRequiresNonMonitorScope(t *testing.T) {
 			name:     "UpdateAsset",
 			endpoint: EndpointUpdateAsset,
 			register: func(srv *server, called *bool) {
-				srv.updateAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.updateAssetHandlers[0] = func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
 					*called = true
 					return StatusWithCode(StatusCodeOk, "")
 				}
@@ -1649,11 +1650,11 @@ func TestServer_AssetWriteRequiresNonMonitorScope(t *testing.T) {
 		ctx    HandlerContext
 		wantOK bool
 	}{
-		{"MonitorRejected", HandlerContext{writeScopes: map[string]struct{}{ScopeMon: {}}, authzEnabled: true}, false},
+		{"MonitorRejected", HandlerContext{writeScopes: map[string]struct{}{st2138.ScopeMon: {}}, authzEnabled: true}, false},
 		{"NoWriteScopeRejected", HandlerContext{writeScopes: map[string]struct{}{}, authzEnabled: true}, false},
-		{"OpAccepted", HandlerContext{writeScopes: map[string]struct{}{ScopeOp: {}}, authzEnabled: true}, true},
-		{"CfgAccepted", HandlerContext{writeScopes: map[string]struct{}{ScopeCfg: {}}, authzEnabled: true}, true},
-		{"AdmAccepted", HandlerContext{writeScopes: map[string]struct{}{ScopeAdm: {}}, authzEnabled: true}, true},
+		{"OpAccepted", HandlerContext{writeScopes: map[string]struct{}{st2138.ScopeOp: {}}, authzEnabled: true}, true},
+		{"CfgAccepted", HandlerContext{writeScopes: map[string]struct{}{st2138.ScopeCfg: {}}, authzEnabled: true}, true},
+		{"AdmAccepted", HandlerContext{writeScopes: map[string]struct{}{st2138.ScopeAdm: {}}, authzEnabled: true}, true},
 	}
 
 	for _, ep := range endpoints {
@@ -1753,7 +1754,7 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 			if err := stream.Send(CommandNoResponse()); err != nil {
 				t.Errorf("unexpected error from gobbling stream Send: %v", err)
 			}
-			value, _ := ToValue(int32(42))
+			value, _ := st2138.ToValue(int32(42))
 			if err := stream.Send(CommandValue(value)); err != nil {
 				t.Errorf("unexpected error from gobbling stream Send: %v", err)
 			}
@@ -1784,7 +1785,7 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointExecuteCommand, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		value, _ := ToValue(int32(42))
+		value, _ := st2138.ToValue(int32(42))
 		first := CommandNoResponse()
 		second := CommandValue(value)
 		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult {
@@ -1822,7 +1823,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		handlerCalled := 0
-		srv.paramInfoHandlers[4] = func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult {
+		srv.paramInfoHandlers[4] = func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
 			handlerCalled++
 			if slot != 4 {
 				t.Errorf("expected slot 4, got %d", slot)
@@ -1836,13 +1837,13 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
 			}
-			if err := stream.Send(NewParamInfo("test/param", nil, ParamTypeString, "", 0)); err != nil {
+			if err := stream.Send(st2138.NewParamInfo("test/param", nil, st2138.ParamTypeString, "", 0)); err != nil {
 				t.Errorf("unexpected Send error: %v", err)
 			}
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		stream := &sliceStream[ParamInfo]{}
+		stream := &sliceStream[st2138.ParamInfo]{}
 		status := srv.InvokeParamInfoHandler(4, "test/param", true, stream, validTestTransportContext(nil))
 
 		if handlerCalled != 1 {
@@ -1885,9 +1886,9 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointGetDevice,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetDeviceHandler(0, func(uint16, HandlerContext) (Device, StatusResult) {
+				srv.RegisterGetDeviceHandler(0, func(uint16, HandlerContext) (st2138.Device, StatusResult) {
 					*handlerCalled = true
-					return Reply(Device{})
+					return Reply(st2138.Device{})
 				})
 				_, status := srv.InvokeGetDeviceHandler(0, invalidContext)
 				return status
@@ -1896,9 +1897,9 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointGetValue,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetValueHandler(0, func(uint16, string, HandlerContext) (Value, StatusResult) {
+				srv.RegisterGetValueHandler(0, func(uint16, string, HandlerContext) (st2138.Value, StatusResult) {
 					*handlerCalled = true
-					return Reply(Value{})
+					return Reply(st2138.Value{})
 				})
 				_, status := srv.InvokeGetValueHandler(0, "test/param", invalidContext)
 				return status
@@ -1917,9 +1918,9 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointGetParam,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(uint16, string, HandlerContext) (Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(uint16, string, HandlerContext) (st2138.Param, StatusResult) {
 					*handlerCalled = true
-					return Reply(Param{})
+					return Reply(st2138.Param{})
 				})
 				_, status := srv.InvokeGetParamHandler(0, "test/param", invalidContext)
 				return status
@@ -1928,9 +1929,9 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointReadAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadAssetHandler(0, func(uint16, string, HandlerContext) (Asset, StatusResult) {
+				srv.RegisterReadAssetHandler(0, func(uint16, string, HandlerContext) (st2138.Asset, StatusResult) {
 					*handlerCalled = true
-					return Reply(Asset{})
+					return Reply(st2138.Asset{})
 				})
 				_, status := srv.InvokeReadAssetHandler(0, "test/asset", invalidContext)
 				return status
@@ -1939,21 +1940,21 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointCreateAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterCreateAssetHandler(0, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(0, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeCreateAssetHandler(0, "test/asset", Asset{}, invalidContext)
+				return srv.InvokeCreateAssetHandler(0, "test/asset", st2138.Asset{}, invalidContext)
 			},
 		},
 		{
 			endpoint: EndpointUpdateAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateAssetHandler(0, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(0, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateAssetHandler(0, "test/asset", Asset{}, invalidContext)
+				return srv.InvokeUpdateAssetHandler(0, "test/asset", st2138.Asset{}, invalidContext)
 			},
 		},
 		{
@@ -1979,11 +1980,11 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointParamInfo,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterParamInfoHandler(0, func(uint16, string, bool, HandlerContext, Stream[ParamInfo]) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(uint16, string, bool, HandlerContext, Stream[st2138.ParamInfo]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, invalidContext)
+				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[st2138.ParamInfo]{}, invalidContext)
 			},
 		},
 		{
@@ -2125,11 +2126,11 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 			endpoint: EndpointParamInfo,
 			verifyShutdown: func(t *testing.T, srv *server) error {
 				var sendErr error
-				srv.RegisterParamInfoHandler(0, func(_ uint16, _ string, _ bool, _ HandlerContext, stream Stream[ParamInfo]) StatusResult {
-					sendErr = stream.Send(NewParamInfo("test/param", nil, ParamTypeString, "", 0))
+				srv.RegisterParamInfoHandler(0, func(_ uint16, _ string, _ bool, _ HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
+					sendErr = stream.Send(st2138.NewParamInfo("test/param", nil, st2138.ParamTypeString, "", 0))
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, TransportContext{})
+				srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[st2138.ParamInfo]{}, TransportContext{})
 				return sendErr
 			},
 		},
@@ -2238,12 +2239,12 @@ func TestServer_AuthzDisabledSkipsAccessHandlerAndAllowsScopedHandlerChecks(t *t
 		accessCalled = true
 		return false
 	})
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
 		handlerCalled = true
-		if !ctx.HasReadScope(ScopeCfg) {
-			return ReplyError[Value](StatusCodePermissionDenied, "configuration scope required")
+		if !ctx.HasReadScope(st2138.ScopeCfg) {
+			return ReplyError[st2138.Value](StatusCodePermissionDenied, "configuration scope required")
 		}
-		return Reply(Value{})
+		return Reply(st2138.Value{})
 	})
 
 	_, status := srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
@@ -2266,21 +2267,21 @@ func TestServer_AuthzDisabledHandlerContextGrantsAllScopes(t *testing.T) {
 	if status.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v", status)
 	}
-	if !ctx.HasReadScope(ScopeCfg) {
+	if !ctx.HasReadScope(st2138.ScopeCfg) {
 		t.Fatal("expected HasReadScope to succeed when authz is disabled")
 	}
-	if !ctx.HasWriteScope(ScopeCfg) {
+	if !ctx.HasWriteScope(st2138.ScopeCfg) {
 		t.Fatal("expected HasWriteScope to succeed when authz is disabled")
 	}
 	if !ctx.HasAnyReadScope() || !ctx.HasAnyWriteScope() {
 		t.Fatal("expected HasAnyReadScope and HasAnyWriteScope to succeed when authz is disabled")
 	}
 
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
-		if !ctx.HasReadScope(ScopeCfg) {
-			return ReplyError[Value](StatusCodePermissionDenied, "configuration scope required")
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+		if !ctx.HasReadScope(st2138.ScopeCfg) {
+			return ReplyError[st2138.Value](StatusCodePermissionDenied, "configuration scope required")
 		}
-		return Reply(Value{})
+		return Reply(st2138.Value{})
 	})
 
 	_, status = srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
@@ -2310,9 +2311,9 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointGetDevice,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (Device, StatusResult) {
+				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult) {
 					*handlerCalled = true
-					return Reply(Device{})
+					return Reply(st2138.Device{})
 				})
 				_, status := srv.InvokeGetDeviceHandler(0, TransportContext{})
 				return status
@@ -2322,9 +2323,9 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointGetValue,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult) {
+				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
 					*handlerCalled = true
-					return Reply(Value{})
+					return Reply(st2138.Value{})
 				})
 				_, status := srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
 				return status
@@ -2345,9 +2346,9 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointGetParam,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
 					*handlerCalled = true
-					return Reply(Param{})
+					return Reply(st2138.Param{})
 				})
 				_, status := srv.InvokeGetParamHandler(0, "test/param", TransportContext{})
 				return status
@@ -2357,9 +2358,9 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointReadAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
+				srv.RegisterReadAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult) {
 					*handlerCalled = true
-					return Reply(Asset{})
+					return Reply(st2138.Asset{})
 				})
 				_, status := srv.InvokeReadAssetHandler(0, "test/asset", TransportContext{})
 				return status
@@ -2369,22 +2370,22 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointCreateAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterCreateAssetHandler(0, func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(0, func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeCreateAssetHandler(0, "test/asset", Asset{}, TransportContext{})
+				return srv.InvokeCreateAssetHandler(0, "test/asset", st2138.Asset{}, TransportContext{})
 			},
 		},
 		{
 			endpoint:          EndpointUpdateAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateAssetHandler(0, func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(0, func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateAssetHandler(0, "test/asset", Asset{}, TransportContext{})
+				return srv.InvokeUpdateAssetHandler(0, "test/asset", st2138.Asset{}, TransportContext{})
 			},
 		},
 		{
@@ -2413,11 +2414,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointParamInfo,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[ParamInfo]{}, TransportContext{})
+				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[st2138.ParamInfo]{}, TransportContext{})
 			},
 		},
 		{
@@ -2642,7 +2643,7 @@ func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 			if gotTransport != transport {
 				t.Error("expected transport owner to be passed through")
 			}
-			if !handlerContext.HasWriteScope(ScopeOp) {
+			if !handlerContext.HasWriteScope(st2138.ScopeOp) {
 				t.Errorf("expected handler context to be passed through, got %v", handlerContext.writeScopes)
 			}
 			if initialUpdate == nil {
@@ -2775,7 +2776,7 @@ func TestServer_BroadcastUpdate_Normal(t *testing.T) {
 	}
 
 	// Broadcast an update
-	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOp)
+	srv.BroadcastUpdate(0, "test/param", int32(42), st2138.ScopeOp)
 
 	// Verify the update was received
 	select {
@@ -2823,7 +2824,7 @@ func TestServer_BroadcastUpdate_FiltersConnectionsByScope(t *testing.T) {
 		}
 	}
 
-	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOp)
+	srv.BroadcastUpdate(0, "test/param", int32(42), st2138.ScopeOp)
 
 	select {
 	case <-matchingConn.Updates:
@@ -2863,7 +2864,7 @@ func TestServer_BroadcastUpdate_AuthzDisabledBypassesScopeFilter(t *testing.T) {
 		}
 	}
 
-	srv.BroadcastUpdate(0, "test/param", int32(42), ScopeOp)
+	srv.BroadcastUpdate(0, "test/param", int32(42), st2138.ScopeOp)
 
 	for _, conn := range []*Connection{matchingConn, noScopeConn} {
 		select {
@@ -2891,7 +2892,7 @@ func TestServer_BroadcastUpdate_InvalidValue(t *testing.T) {
 	}
 
 	// Try to broadcast an invalid value (bool is not supported by ToProto)
-	srv.BroadcastUpdate(0, "test/param", true, ScopeOp)
+	srv.BroadcastUpdate(0, "test/param", true, st2138.ScopeOp)
 
 	// Should not receive update (logged error instead)
 	select {

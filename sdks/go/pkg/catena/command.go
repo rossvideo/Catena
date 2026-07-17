@@ -40,6 +40,7 @@ package catena
 
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -74,7 +75,7 @@ func (r CommandResult) GetException() *protos.Exception {
 }
 
 // CommandValue returns a successful command response wrapping a value.
-func CommandValue(value Value) CommandResult {
+func CommandValue(value st2138.Value) CommandResult {
 	return CommandResult{
 		Proto: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Response{Response: value.Proto},
@@ -94,7 +95,7 @@ func CommandNoResponse() CommandResult {
 // CommandException returns a command exception response.
 // exType is the exception type, details provides additional context,
 // and errorMessage is a PolyglotText map of language code to display string (may be nil).
-func CommandException(exType, details string, errorMessage PolyglotText) CommandResult {
+func CommandException(exType, details string, errorMessage st2138.PolyglotText) CommandResult {
 	exc := &protos.Exception{
 		Type:    exType,
 		Details: details,

@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package catena
+package st2138
 
 import (
 	"testing"

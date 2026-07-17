@@ -52,6 +52,7 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -285,7 +286,7 @@ func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, cat
 
 	entries := make([]catena.SetValueEntry, 0, len(payload.GetValues()))
 	for i, sv := range payload.GetValues() {
-		nativeValue, convErr := catena.FromProto(sv.GetValue())
+		nativeValue, convErr := st2138.FromProto(sv.GetValue())
 		if convErr.Code != catena.StatusCodeOk {
 			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid value at index %d: %v", i, convErr.Error)}
 		}

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastRunning func(), counterScope string) {
@@ -22,7 +23,7 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 		// the transport would discard it anyway, so a smart handler saves the work.
 		sendCounter := func() catena.StatusResult {
 			if respond {
-				val, _ := catena.ToValue(counter.GetValue())
+				val, _ := st2138.ToValue(counter.GetValue())
 				if err := stream.Send(catena.CommandValue(val)); err != nil {
 					return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
 				}

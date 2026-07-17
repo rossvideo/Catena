@@ -36,7 +36,7 @@
  * @date 2026-05-29
  */
 
-package catena
+package st2138
 
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
