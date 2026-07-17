@@ -29,9 +29,10 @@ Core routes:
 - `PUT /st2138-api/v1/{slot}/values` - SetValues (MultiSetValue)
 - `GET /st2138-api/v1/{slot}/param/{oid...}` - GetParam (full param: metadata + value)
 - `GET /st2138-api/v1/{slot}/asset/{oid}` - ExternalObjectRequest equivalent
-- `POST /st2138-api/v1/{slot}/command/{oid}` - ExecuteCommand
+- `POST /st2138-api/v1/{slot}/command/{oid}` - ExecuteCommand (unary; add `?respond=true` to receive a response)
+- `POST /st2138-api/v1/{slot}/command/{oid}/stream` - SSE ExecuteCommand response stream
 - `GET /st2138-api/v1/{slot}/param-info/{oid...}` - unary param info
-- `GET /st2138-api/v1/{slot}/param-info/{oid...}/stream` - SSE param info stream
+- `GET /st2138-api/v1/{slot}/param-info/{oid...}/stream` - SSE param info stream (add `?recursive` to walk the subtree)
 - `GET /st2138-api/v1/connect` - SSE push updates
 - `GET /st2138-api/v1/devices` - populated slots
 - `GET /st2138-api/v1/health` - health check
@@ -50,8 +51,48 @@ REST routes invoke handlers registered on `catena.Server`:
 - Param route -> `RegisterGetParamHandler`
 - Values route -> `RegisterSetValueHandler` (delivers the full `[]SetValueEntry` for atomic application)
 - Asset route -> `RegisterGetAssetHandler`
-- Command route -> `RegisterExecuteCommandHandler`
-- Param-info routes -> `RegisterParamInfoHandler`
+- Command routes -> `RegisterExecuteCommandHandler` (both the unary and `/stream` routes invoke the same streaming handler)
+- Param-info routes -> `RegisterParamInfoHandler` (both the unary and `/stream` routes invoke the same streaming handler)
+
+## Streaming Responses (SSE)
+
+Param-info and command each expose a unary route and a `/stream` route. The
+transport adapts the underlying response stream to the requested shape: the
+unary route collapses the stream to a single JSON body, while the `/stream`
+route emits Server-Sent Events.
+
+SSE framing:
+
+- Each chunk is written as one `data: <json>\n\n` frame and flushed immediately.
+- Response headers (`Content-Type: text/event-stream`) and the `200` status are
+  written lazily on the first chunk, so an error raised before the first chunk
+  can still return a normal HTTP error status.
+- A stream that produces no chunks yields a well-formed empty SSE `200` response
+  (no `data:` frames).
+
+Mid-stream errors (`SseError`):
+
+- Once a chunk has been sent the `200` is committed and the HTTP status can no
+  longer change, so a later error is reported in-band as an SSE `event: error`
+  frame whose data is `{"code": <http-status>, "message": <text>}`.
+- The detailed message is only exposed in dev mode; otherwise it is generalized
+  to the standard HTTP status text (and omitted when blank).
+
+Param-info routes:
+
+- The unary route requires an fqoid, is never recursive, and returns a single
+  JSON param-info object.
+- The `/stream` route accepts `?recursive` to walk the subtree.
+
+Command routes:
+
+- The request body is the command payload (a JSON value); omit the body for
+  commands that take no argument.
+- `respond` defaults to `false`; only `?respond=true` opts into receiving
+  responses, and `respond` is passed through to the handler.
+- The unary route replies with the final `CommandResult` from the stream, or an
+  explicit `no_response` when `respond=false` or nothing was produced.
+- The `/stream` route forwards every `CommandResult`.
 
 ## SSE Push Updates
 

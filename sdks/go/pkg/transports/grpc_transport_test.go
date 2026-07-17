@@ -1218,7 +1218,7 @@ func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "device.reboot" {
 			t.Errorf("expected fqoid 'device.reboot', got %s", fqoid)
@@ -1227,13 +1227,13 @@ func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
 			t.Error("expected non-nil payload")
 		}
 		value, _ := catena.ToValue(string("Command executed"))
-		return catena.CommandReply(value)
+		return []catena.CommandResult{catena.CommandValue(value)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5))
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5), true)
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
@@ -1253,14 +1253,14 @@ func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
-		return catena.CommandNoResponse()
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
@@ -1273,20 +1273,20 @@ func TestGrpcTransport_ExecuteCommand_NilPayload(t *testing.T) {
 	defer cleanup()
 
 	receivedPayload := "not nil"
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 		if payload != nil {
 			receivedPayload = "not nil"
 		} else {
 			receivedPayload = "nil"
 		}
 		value, _ := catena.ToValue(string("OK"))
-		return catena.CommandReply(value)
+		return []catena.CommandResult{catena.CommandValue(value)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	assertNoError(t, err)
 
 	_ = receiveCommandResponse(t, stream)
@@ -1304,7 +1304,7 @@ func TestGrpcTransport_ExecuteCommand_InvalidSlot(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil, true)
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
@@ -1319,14 +1319,14 @@ func TestGrpcTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
-		return catena.CommandError(catena.StatusCodeNotFound, "command not supported")
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "command not supported")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "handler error at stream creation")
 		return
@@ -1689,8 +1689,8 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "command not supported",
 			grpcCode:   codes.Unimplemented,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
-					return catena.CommandError(catena.StatusCodeUnimplemented, "command not supported")
+				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+					return nil, catena.StatusWithCode(catena.StatusCodeUnimplemented, "command not supported")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {

@@ -92,3 +92,16 @@ func (s shutdownStream[T]) Send(chunk T) error {
 	}
 	return s.inner.Send(chunk)
 }
+
+// nullStream is a Stream that discards every chunk. The server substitutes it
+// for the transport's stream when a caller opts out of responses (respond=false)
+// so the gobbling is enforced in one place for all transports: the handler still
+// runs to completion, but nothing it sends reaches the client. Send always
+// returns nil so a handler that ignores respond behaves identically to one that
+// honors it.
+type nullStream[T Message] struct{}
+
+var _ Stream[Message] = (*nullStream[Message])(nil)
+
+// Send discards the chunk and always returns nil.
+func (nullStream[T]) Send(chunk T) error { return nil }

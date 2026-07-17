@@ -422,13 +422,14 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	cmdResult, result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
+	adapter := &grpcStream[catena.CommandResult]{ss: stream}
+	result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, req.Respond, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	return stream.Send(cmdResult.Proto)
+	return nil
 }
 
 // GetParam returns a single parameter (metadata + value)

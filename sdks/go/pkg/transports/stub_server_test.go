@@ -58,7 +58,7 @@ type stubServerRuntime struct {
 	getParamFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult)
 	setValueFn               func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult
 	getAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
-	commandFn                func(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult)
+	commandFn                func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
 	listLanguagesFn          func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult)
 	registerTransportConnFn  func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult)
@@ -136,12 +136,18 @@ func (s *stubServerRuntime) InvokeGetAssetHandler(slot uint16, fqoid string, ctx
 	return catena.ReplyError[catena.Asset](catena.StatusCodeInternal, "GetAsset handler not implemented")
 }
 
-func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream catena.Stream[catena.CommandResult], ctx catena.TransportContext) catena.StatusResult {
 	if s.commandFn != nil {
-		return s.commandFn(slot, commandFqoid, payload, ctx)
+		results, status := s.commandFn(slot, commandFqoid, payload, respond, ctx)
+		for _, result := range results {
+			if err := stream.Send(result); err != nil {
+				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+			}
+		}
+		return status
 	}
 	s.panicf("ExecuteCommand handler not implemented in stubServerRuntime for slot %d, commandFqoid %s", slot, commandFqoid)
-	return catena.CommandResult{}, catena.StatusResult{Code: catena.StatusCodeInternal}
+	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
 func (s *stubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream catena.Stream[catena.ParamInfo], ctx catena.TransportContext) catena.StatusResult {

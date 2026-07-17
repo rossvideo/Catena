@@ -717,17 +717,15 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Unary: the handler still streams, so collect its chunks and reply with the
-	// first as a single JSON response. Only the first chunk is needed, so cap the
-	// collector at one and let it discard the rest.
-	stream := &collectStream[catena.ParamInfo]{max: 1}
+	// Unary: the handler still streams, so collect its first message and discard the rest.
+	stream := &firstStream[catena.ParamInfo]{}
 	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
-	if len(stream.items) == 0 {
+	if !stream.has {
 		// A unary request must resolve to exactly one parameter. A handler that
 		// reports success yet emits nothing has violated that contract; surface
 		// it as an internal error rather than inventing a NotFound over what may
@@ -736,7 +734,7 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := WriteProtoJSON(w, stream.items[0].Wire(), http.StatusOK); err != nil {
+	if err := WriteProtoJSON(w, stream.item.Wire(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
 	}
 }
@@ -749,8 +747,7 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 func (t *RestTransport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInternal, "streaming not supported")
-		t.writeHTTPResult(w, res, val)
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
 		return
 	}
 
@@ -790,11 +787,29 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	commandFqoid := strings.Join(pathParts, "/")
+	// process the path to determine if this is a streaming command or a unary command.
+	// A trailing "stream" segment selects streaming; what remains is the command oid.
+	streaming := false
+	if len(pathParts) > 0 && pathParts[len(pathParts)-1] == "stream" {
+		streaming = true
+		pathParts = pathParts[:len(pathParts)-1]
+	}
 
-	respond := true
-	if r.URL.Query().Get("respond") == "false" {
-		respond = false
+	if len(pathParts) == 0 {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "command FQOID is required"))
+		return
+	}
+	if len(pathParts) > 1 {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, "unknown command endpoint"))
+		return
+	}
+
+	commandOid := pathParts[0]
+
+	// respond defaults to false to match protobuf; only respond=true opts in.
+	respond := false
+	if r.URL.Query().Get("respond") == "true" {
+		respond = true
 	}
 
 	// Read command payload
@@ -818,17 +833,73 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	cmdResult, status := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
-	if status.IsError() {
-		t.writeHTTPResult(w, status, catena.Value{})
+
+	if streaming {
+		t.streamExecuteCommand(w, r, slot, commandOid, payload, respond, transportContext)
 		return
 	}
 
-	if !respond {
-		cmdResult, _ = catena.CommandNoResponse()
+	// Unary: the handler streams CommandResults but the HTTP reply is a single
+	// response, so keep only the last Send. respond is passed through so a smart
+	// handler can skip emitting responses; the server also swaps in a nullStream
+	// when respond=false, so nothing reaches this stream in that case.
+	stream := &lastStream[catena.CommandResult]{}
+	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
 	}
 
-	_ = WriteProtoJSON(w, cmdResult.Proto, http.StatusOK)
+	// Reply with the final CommandResult the handler sent. When the caller opted
+	// out (respond=false) the server gobbled every chunk, so nothing was retained
+	// and we reply with an explicit no_response.
+	cmdResult := catena.CommandNoResponse()
+	if stream.has {
+		cmdResult = stream.item
+	}
+
+	if err := WriteProtoJSON(w, cmdResult.Proto, http.StatusOK); err != nil {
+		logger.Error("failed to write command response", "error", err)
+	}
+}
+
+// streamExecuteCommand streams command responses to the client as Server-Sent
+// Events. The restStream writes SSE headers lazily on the first chunk, so if the
+// handler emits nothing before erroring this method can still report a status.
+// respond is passed through so a smart handler can skip emitting responses.
+func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandOid string, payload any, respond bool, transportContext catena.TransportContext) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
+		return
+	}
+
+	stream := &restStream[catena.CommandResult]{
+		w:       w,
+		flusher: flusher,
+		marshal: MarshalProtoJSON,
+		ctx:     r.Context(),
+		devMode: t.isDevMode(),
+	}
+	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
+
+	if result.IsError() {
+		// Once any chunk has been streamed the HTTP status is committed, so a
+		// late error can only be logged. With nothing sent yet we can still set
+		// the error status.
+		if stream.sent == 0 {
+			t.writeHTTPStatusResult(w, result)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send command SSE error event", "slot", slot, "command", commandOid, "error", err)
+		}
+		return
+	}
+
+	// A successful handler that produced no chunks still gets a well-formed empty
+	// event stream so the client receives a valid 200 response.
+	if stream.sent == 0 {
+		stream.writeHeaders()
+	}
 }
 
 // ToHTTPStatus converts a transport-neutral StatusCode to an HTTP status code.

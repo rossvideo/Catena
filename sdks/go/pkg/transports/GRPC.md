@@ -30,8 +30,8 @@ Implemented against shared runtime handlers:
 - `SetValue`
 - `MultiSetValue`
 - `ExternalObjectRequest`
-- `ExecuteCommand`
-- `ParamInfoRequest`
+- `ExecuteCommand` (server-streaming response)
+- `ParamInfoRequest` (server-streaming response)
 - `Connect`
 
 Currently unimplemented (returns `Unimplemented`):
@@ -54,6 +54,20 @@ RPC methods invoke the same handlers registered on `catena.Server`:
 - `ExternalObjectRequest` -> `RegisterGetAssetHandler`
 - `ExecuteCommand` -> `RegisterExecuteCommandHandler`
 - `ParamInfoRequest` -> `RegisterParamInfoHandler`
+
+## Streaming Responses (`ParamInfoRequest`, `ExecuteCommand`)
+
+`ParamInfoRequest` and `ExecuteCommand` are server-streaming RPCs. Each response
+chunk is sent over the gRPC stream as its wire proto (`ParamInfoResponse` /
+`CommandResponse`).
+
+- A stream that produces no chunks completes as an empty successful stream
+  (EOF), not an error.
+- A terminal error is returned as the RPC status via `ToGRPCCode`; any chunks
+  already sent remain on the stream.
+- `ExecuteCommand` reads `req.Respond` (a proto bool, defaulting to `false`) to
+  gate responses. When `Respond` is `false` the stream completes with no
+  `CommandResponse` messages; a client must set `Respond=true` to receive them.
 
 ## Streaming Updates (`Connect`)
 

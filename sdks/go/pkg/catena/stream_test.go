@@ -92,6 +92,16 @@ func TestShutdownStream(t *testing.T) {
 	})
 }
 
+func TestNullStream(t *testing.T) {
+	t.Run("Nothing", func(t *testing.T) {
+		stream := &nullStream[stubMessage]{}
+
+		if err := stream.Send(stubMessage{id: 1}); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+	})
+}
+
 // This is just testing the test infrastructure
 func TestSliceStream(t *testing.T) {
 	t.Run("collects chunks in order", func(t *testing.T) {
