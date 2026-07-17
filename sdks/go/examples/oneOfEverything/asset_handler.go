@@ -18,7 +18,7 @@ type storedAsset struct {
 func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 	// Slot 0-2: direct map-backed lookup, matching the sync.Map data-model example.
 	for _, slot := range slotList {
-		srv.RegisterGetAssetHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Asset, catena.StatusResult) {
+		srv.RegisterReadAssetHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Asset, catena.StatusResult) {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 			val, ok := assets.Load(fqoid)
 			if !ok {
@@ -37,8 +37,8 @@ func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 			return catena.Reply(catenaAsset)
 		})
 
-		// POST / LoadAsset: create a new asset, conflict if one already exists.
-		srv.RegisterLoadAssetHandler(slot, func(slot uint16, fqoid string, asset catena.Asset, ctx catena.HandlerContext) catena.StatusResult {
+		// POST / CreateAsset: create a new asset, conflict if one already exists.
+		srv.RegisterCreateAssetHandler(slot, func(slot uint16, fqoid string, asset catena.Asset, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("Asset load request", "slot", slot, "fqoid", fqoid)
 			payload, res := catena.FromAsset(asset)
 			if res.Code != catena.StatusCodeOk {
@@ -54,8 +54,8 @@ func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 
-		// PUT / OverwriteAsset: replace an existing asset, not found if missing.
-		srv.RegisterOverwriteAssetHandler(slot, func(slot uint16, fqoid string, asset catena.Asset, ctx catena.HandlerContext) catena.StatusResult {
+		// PUT / UpdateAsset: replace an existing asset, not found if missing.
+		srv.RegisterUpdateAssetHandler(slot, func(slot uint16, fqoid string, asset catena.Asset, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("Asset overwrite request", "slot", slot, "fqoid", fqoid)
 			payload, res := catena.FromAsset(asset)
 			if res.Code != catena.StatusCodeOk {

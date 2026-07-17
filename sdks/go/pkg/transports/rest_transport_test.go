@@ -199,7 +199,7 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "get asset",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+				runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 					assertContext(t, ctx)
 					asset, _ := catena.ToAsset(catena.DataPayload{Payload: []byte("asset")}, false)
 					return catena.Reply(asset)
@@ -618,7 +618,7 @@ func TestRestTransport_SetValues_HandlerError(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_GetAsset_Route(t *testing.T) {
+func TestRestTransport_ReadAsset_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -627,7 +627,7 @@ func TestRestTransport_GetAsset_Route(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "logo" {
 			t.Errorf("expected fqoid 'logo', got %s", fqoid)
 		}
@@ -642,7 +642,7 @@ func TestRestTransport_Asset_MethodNotAllowed(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	getCalled := false
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		getCalled = true
 		return catena.Reply(catena.Asset{})
 	}
@@ -657,12 +657,12 @@ func TestRestTransport_Asset_MethodNotAllowed(t *testing.T) {
 
 const assetRequestBody = `{"cachable":true,"payload":{"payload_encoding":"UNCOMPRESSED","payload":"ZmFrZSBpbWFnZQ=="}}`
 
-func TestRestTransport_LoadAsset_Route(t *testing.T) {
+func TestRestTransport_CreateAsset_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	var gotFqoid string
 	var gotPayload []byte
-	runtime.loadAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.createAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		gotFqoid = fqoid
 		dp, res := catena.FromAsset(asset)
 		if res.Code != catena.StatusCodeOk {
@@ -682,11 +682,11 @@ func TestRestTransport_LoadAsset_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_OverwriteAsset_Route(t *testing.T) {
+func TestRestTransport_UpdateAsset_Route(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	var gotFqoid string
-	runtime.overwriteAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.updateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		gotFqoid = fqoid
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -725,11 +725,11 @@ func TestRestTransport_DeleteAsset_NotFound(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_LoadAsset_InvalidBody(t *testing.T) {
+func TestRestTransport_CreateAsset_InvalidBody(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.loadAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.createAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -741,11 +741,11 @@ func TestRestTransport_LoadAsset_InvalidBody(t *testing.T) {
 	}
 }
 
-func TestRestTransport_OverwriteAsset_MissingContentType(t *testing.T) {
+func TestRestTransport_UpdateAsset_MissingContentType(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	handlerCalled := false
-	runtime.overwriteAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.updateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -1691,7 +1691,7 @@ func TestWriteHTTPResult_DefaultType(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestRestTransport_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
+func TestRestTransport_ReadAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -1700,7 +1700,7 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
@@ -1725,7 +1725,7 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
+func TestRestTransport_ReadAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -1734,7 +1734,7 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
@@ -1759,7 +1759,7 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
+func TestRestTransport_ReadAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	original := []byte("test asset data")
@@ -1771,7 +1771,7 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Uncompressed(t *testing.T)
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
@@ -2000,7 +2000,7 @@ func TestRouting_BasePathOnly(t *testing.T) {
 	assertHasError(t, rec)
 }
 
-func TestRestTransport_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
+func TestRestTransport_ReadAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -2009,7 +2009,7 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -2022,7 +2022,7 @@ func TestRestTransport_GetAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetAsset_NoCompressionParam(t *testing.T) {
+func TestRestTransport_ReadAsset_NoCompressionParam(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
 	dp := catena.DataPayload{
@@ -2031,7 +2031,7 @@ func TestRestTransport_GetAsset_NoCompressionParam(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -2044,10 +2044,10 @@ func TestRestTransport_GetAsset_NoCompressionParam(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetAsset_CompressionWithError(t *testing.T) {
+func TestRestTransport_ReadAsset_CompressionWithError(t *testing.T) {
 	transport, runtime := makeTestRestTransport(t)
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		return catena.ReplyError[catena.Asset](catena.StatusCodeNotFound, "asset not found")
 	}
 

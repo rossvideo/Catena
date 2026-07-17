@@ -603,19 +603,19 @@ func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Requ
 }
 
 // handleAssetEndpoint dispatches /st2138-api/v1/{slot}/asset/{fqoid} across
-// the four asset operations: GET (GetAsset), POST (LoadAsset), PUT
-// (OverwriteAsset) and DELETE (DeleteAsset). The three write operations return
+// the four asset operations: GET (ReadAsset), POST (CreateAsset), PUT
+// (UpdateAsset) and DELETE (DeleteAsset). The three write operations return
 // 204 No Content on success per the OpenAPI spec.
 func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	fqoid := strings.Join(pathParts, "/")
 
 	switch r.Method {
 	case http.MethodGet:
-		t.handleGetAsset(w, r, slot, fqoid)
+		t.handleReadAsset(w, r, slot, fqoid)
 	case http.MethodPost:
-		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeLoadAssetHandler)
+		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeCreateAssetHandler)
 	case http.MethodPut:
-		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeOverwriteAssetHandler)
+		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeUpdateAssetHandler)
 	case http.MethodDelete:
 		transportContext := t.retrieveMetadataFromRequest(r)
 		res := t.runtime.InvokeDeleteAssetHandler(slot, fqoid, transportContext)
@@ -625,11 +625,11 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// handleGetAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid}, with optional
+// handleReadAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid}, with optional
 // payload transcoding via the ?compression= query parameter.
-func (t *RestTransport) handleGetAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
+func (t *RestTransport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
 	transportContext := t.retrieveMetadataFromRequest(r)
-	asset, result := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
+	asset, result := t.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
 
 	if result.IsOk() {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
@@ -651,7 +651,7 @@ func (t *RestTransport) handleGetAsset(w http.ResponseWriter, r *http.Request, s
 	t.writeHTTPResult(w, result, asset)
 }
 
-// handleWriteAsset handles POST (LoadAsset) and PUT (OverwriteAsset). Both read
+// handleWriteAsset handles POST (CreateAsset) and PUT (UpdateAsset). Both read
 // an external_object_payload body, hand it to the given invoke function, and
 // return 204 No Content on success.
 func (t *RestTransport) handleWriteAsset(

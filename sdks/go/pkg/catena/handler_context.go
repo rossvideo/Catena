@@ -117,7 +117,7 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 
 // HasAnyWriteScopeExceptMonitor reports whether the caller holds a write scope
 // other than the monitor scope - that is, op, cfg, or adm write. Per ST 2138
-// the asset mutations (LoadAsset/OverwriteAsset/DeleteAsset) accept adm:w,
+// the asset mutations (CreateAsset/UpdateAsset/DeleteAsset) accept adm:w,
 // op:w, or cfg:w but never mon:w, so HasAnyWriteScope is too permissive for
 // them. It returns true for every scope when authorization is disabled.
 func (ctx HandlerContext) HasAnyWriteScopeExceptMonitor() bool {

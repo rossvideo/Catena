@@ -74,7 +74,7 @@ import (
 )
 
 //go:embed static/*
-var StaticFS embed.FS // binary assets served via GetAssetHandler (ExternalObjectRequest)
+var StaticFS embed.FS // binary assets served via ReadAssetHandler (ExternalObjectRequest)
 
 //go:embed webui/*
 var webFS embed.FS // demo dashboard; served by REST fallback handler, not Catena API

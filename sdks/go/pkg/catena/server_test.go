@@ -750,31 +750,31 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.getParamHandlers[slot] != nil },
 		},
 		{
-			endpoint: EndpointGetAsset,
+			endpoint: EndpointReadAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetAssetHandler(slot, func(uint16, string, HandlerContext) (Asset, StatusResult) {
+				srv.RegisterReadAssetHandler(slot, func(uint16, string, HandlerContext) (Asset, StatusResult) {
 					return Reply(Asset{})
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.getAssetHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.readAssetHandlers[slot] != nil },
 		},
 		{
-			endpoint: EndpointLoadAsset,
+			endpoint: EndpointCreateAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterLoadAssetHandler(slot, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(slot, func(uint16, string, Asset, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.loadAssetHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.createAssetHandlers[slot] != nil },
 		},
 		{
-			endpoint: EndpointOverwriteAsset,
+			endpoint: EndpointUpdateAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterOverwriteAssetHandler(slot, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(slot, func(uint16, string, Asset, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.overwriteAssetHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.updateAssetHandlers[slot] != nil },
 		},
 		{
 			endpoint: EndpointDeleteAsset,
@@ -1369,11 +1369,11 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 	})
 }
 
-func TestServer_InvokeGetAssetHandler(t *testing.T) {
+func TestServer_InvokeReadAssetHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
-		mockInvokeGateFn(t, srv, EndpointGetAsset, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+		mockInvokeGateFn(t, srv, EndpointReadAsset, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		dp := DataPayload{
 			Metadata: map[string]string{"content-type": "image/png"},
@@ -1382,7 +1382,7 @@ func TestServer_InvokeGetAssetHandler(t *testing.T) {
 		expected, _ := ToAsset(dp, false)
 
 		handlerCalled := 0
-		srv.getAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
+		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
 			handlerCalled++
 			if slot != 5 {
 				t.Errorf("expected slot 5, got %d", slot)
@@ -1396,7 +1396,7 @@ func TestServer_InvokeGetAssetHandler(t *testing.T) {
 			return Reply(expected)
 		}
 
-		actual, status := srv.InvokeGetAssetHandler(5, "test/asset", validTestTransportContext(nil))
+		actual, status := srv.InvokeReadAssetHandler(5, "test/asset", validTestTransportContext(nil))
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1410,17 +1410,17 @@ func TestServer_InvokeGetAssetHandler(t *testing.T) {
 	})
 }
 
-func TestServer_InvokeLoadAssetHandler(t *testing.T) {
+func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
-		mockInvokeGateFn(t, srv, EndpointLoadAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
+		mockInvokeGateFn(t, srv, EndpointCreateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		dp := DataPayload{Payload: []byte("fake image")}
 		asset, _ := ToAsset(dp, true)
 
 		handlerCalled := 0
-		srv.loadAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset Asset, ctx HandlerContext) StatusResult {
+		srv.createAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset Asset, ctx HandlerContext) StatusResult {
 			handlerCalled++
 			if slot != 5 {
 				t.Errorf("expected slot 5, got %d", slot)
@@ -1437,7 +1437,7 @@ func TestServer_InvokeLoadAssetHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		status := srv.InvokeLoadAssetHandler(5, "test/asset", asset, validTestTransportContext(nil))
+		status := srv.InvokeCreateAssetHandler(5, "test/asset", asset, validTestTransportContext(nil))
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
 		}
@@ -1449,26 +1449,26 @@ func TestServer_InvokeLoadAssetHandler(t *testing.T) {
 	t.Run("NoHandler", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
-		mockInvokeGateFn(t, srv, EndpointLoadAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
+		mockInvokeGateFn(t, srv, EndpointCreateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		status := srv.InvokeLoadAssetHandler(7, "missing", Asset{}, validTestTransportContext(nil))
+		status := srv.InvokeCreateAssetHandler(7, "missing", Asset{}, validTestTransportContext(nil))
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound when no handler registered, got %v", status)
 		}
 	})
 }
 
-func TestServer_InvokeOverwriteAssetHandler(t *testing.T) {
+func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
-		mockInvokeGateFn(t, srv, EndpointOverwriteAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
+		mockInvokeGateFn(t, srv, EndpointUpdateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		dp := DataPayload{Payload: []byte("fake image")}
 		asset, _ := ToAsset(dp, true)
 
 		handlerCalled := 0
-		srv.overwriteAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset Asset, ctx HandlerContext) StatusResult {
+		srv.updateAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset Asset, ctx HandlerContext) StatusResult {
 			handlerCalled++
 			if slot != 5 {
 				t.Errorf("expected slot 5, got %d", slot)
@@ -1485,7 +1485,7 @@ func TestServer_InvokeOverwriteAssetHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		status := srv.InvokeOverwriteAssetHandler(5, "test/asset", asset, validTestTransportContext(nil))
+		status := srv.InvokeUpdateAssetHandler(5, "test/asset", asset, validTestTransportContext(nil))
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
 		}
@@ -1497,9 +1497,9 @@ func TestServer_InvokeOverwriteAssetHandler(t *testing.T) {
 	t.Run("NoHandler", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
-		mockInvokeGateFn(t, srv, EndpointOverwriteAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
+		mockInvokeGateFn(t, srv, EndpointUpdateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		status := srv.InvokeOverwriteAssetHandler(7, "missing", Asset{}, validTestTransportContext(nil))
+		status := srv.InvokeUpdateAssetHandler(7, "missing", Asset{}, validTestTransportContext(nil))
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound when no handler registered, got %v", status)
 		}
@@ -1562,29 +1562,29 @@ func TestServer_AssetWriteRequiresNonMonitorScope(t *testing.T) {
 		invoke   func(srv *server, tc TransportContext) StatusResult
 	}{
 		{
-			name:     "LoadAsset",
-			endpoint: EndpointLoadAsset,
+			name:     "CreateAsset",
+			endpoint: EndpointCreateAsset,
 			register: func(srv *server, called *bool) {
-				srv.loadAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.createAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
 					*called = true
 					return StatusWithCode(StatusCodeOk, "")
 				}
 			},
 			invoke: func(srv *server, tc TransportContext) StatusResult {
-				return srv.InvokeLoadAssetHandler(0, "asset", sampleAsset, tc)
+				return srv.InvokeCreateAssetHandler(0, "asset", sampleAsset, tc)
 			},
 		},
 		{
-			name:     "OverwriteAsset",
-			endpoint: EndpointOverwriteAsset,
+			name:     "UpdateAsset",
+			endpoint: EndpointUpdateAsset,
 			register: func(srv *server, called *bool) {
-				srv.overwriteAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.updateAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
 					*called = true
 					return StatusWithCode(StatusCodeOk, "")
 				}
 			},
 			invoke: func(srv *server, tc TransportContext) StatusResult {
-				return srv.InvokeOverwriteAssetHandler(0, "asset", sampleAsset, tc)
+				return srv.InvokeUpdateAssetHandler(0, "asset", sampleAsset, tc)
 			},
 		},
 		{
@@ -1884,34 +1884,34 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 			},
 		},
 		{
-			endpoint: EndpointGetAsset,
+			endpoint: EndpointReadAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetAssetHandler(0, func(uint16, string, HandlerContext) (Asset, StatusResult) {
+				srv.RegisterReadAssetHandler(0, func(uint16, string, HandlerContext) (Asset, StatusResult) {
 					*handlerCalled = true
 					return Reply(Asset{})
 				})
-				_, status := srv.InvokeGetAssetHandler(0, "test/asset", invalidContext)
+				_, status := srv.InvokeReadAssetHandler(0, "test/asset", invalidContext)
 				return status
 			},
 		},
 		{
-			endpoint: EndpointLoadAsset,
+			endpoint: EndpointCreateAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterLoadAssetHandler(0, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(0, func(uint16, string, Asset, HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeLoadAssetHandler(0, "test/asset", Asset{}, invalidContext)
+				return srv.InvokeCreateAssetHandler(0, "test/asset", Asset{}, invalidContext)
 			},
 		},
 		{
-			endpoint: EndpointOverwriteAsset,
+			endpoint: EndpointUpdateAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterOverwriteAssetHandler(0, func(uint16, string, Asset, HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(0, func(uint16, string, Asset, HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeOverwriteAssetHandler(0, "test/asset", Asset{}, invalidContext)
+				return srv.InvokeUpdateAssetHandler(0, "test/asset", Asset{}, invalidContext)
 			},
 		},
 		{
@@ -2022,9 +2022,9 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 		{endpoint: EndpointGetValue},
 		{endpoint: EndpointGetParam},
 		{endpoint: EndpointSetValue},
-		{endpoint: EndpointGetAsset},
-		{endpoint: EndpointLoadAsset},
-		{endpoint: EndpointOverwriteAsset},
+		{endpoint: EndpointReadAsset},
+		{endpoint: EndpointCreateAsset},
+		{endpoint: EndpointUpdateAsset},
 		{endpoint: EndpointDeleteAsset},
 		{
 			endpoint: EndpointExecuteCommand,
@@ -2267,37 +2267,37 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			},
 		},
 		{
-			endpoint:          EndpointGetAsset,
+			endpoint:          EndpointReadAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
+				srv.RegisterReadAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult) {
 					*handlerCalled = true
 					return Reply(Asset{})
 				})
-				_, status := srv.InvokeGetAssetHandler(0, "test/asset", TransportContext{})
+				_, status := srv.InvokeReadAssetHandler(0, "test/asset", TransportContext{})
 				return status
 			},
 		},
 		{
-			endpoint:          EndpointLoadAsset,
+			endpoint:          EndpointCreateAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterLoadAssetHandler(0, func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(0, func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeLoadAssetHandler(0, "test/asset", Asset{}, TransportContext{})
+				return srv.InvokeCreateAssetHandler(0, "test/asset", Asset{}, TransportContext{})
 			},
 		},
 		{
-			endpoint:          EndpointOverwriteAsset,
+			endpoint:          EndpointUpdateAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterOverwriteAssetHandler(0, func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(0, func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeOverwriteAssetHandler(0, "test/asset", Asset{}, TransportContext{})
+				return srv.InvokeUpdateAssetHandler(0, "test/asset", Asset{}, TransportContext{})
 			},
 		},
 		{

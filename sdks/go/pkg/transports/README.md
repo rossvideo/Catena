@@ -87,9 +87,9 @@ Both transports invoke the same registered handlers from `catena.ServerRuntime`:
 - `RegisterGetDeviceHandler`
 - `RegisterGetValueHandler`
 - `RegisterSetValueHandler` (handles both single and multi set requests; single endpoints deliver a one-element `[]SetValueEntry`, multi endpoints deliver the full slice)
-- `RegisterGetAssetHandler` (REST GET, gRPC ExternalObjectRequest)
-- `RegisterLoadAssetHandler` (REST POST / LoadAsset)
-- `RegisterOverwriteAssetHandler` (REST PUT / OverwriteAsset)
+- `RegisterReadAssetHandler` (REST GET, gRPC ExternalObjectRequest)
+- `RegisterCreateAssetHandler` (REST POST / CreateAsset)
+- `RegisterUpdateAssetHandler` (REST PUT / UpdateAsset)
 - `RegisterDeleteAssetHandler` (REST DELETE / DeleteAsset)
 - `RegisterExecuteCommandHandler`
 - `RegisterParamInfoHandler`
