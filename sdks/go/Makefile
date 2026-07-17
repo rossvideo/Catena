@@ -60,9 +60,6 @@ clean-protos:
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
 TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^$(PROTO_PKG)($$|/)')
 
-# coverpkg takes a comma-separated list
-COVER_PACKAGES := $(shell go list ./pkg/... | grep -vE '^$(PROTO_PKG)($$|/)' | paste -sd, -)
-
 COVERAGE_DIR ?= $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
 VERBOSE ?= 0
@@ -89,7 +86,6 @@ coverage: | $(COVERAGE_DIR) protos-all
 		-coverprofile=$(COVERAGE_OUT) \
 		-covermode=count \
 		$(if $(filter 1,$(VERBOSE)),-v) \
-		-coverpkg=$(COVER_PACKAGES) \
 		$(TEST_PACKAGES)
 	@echo ""
 	@echo "Coverage Summary:"
