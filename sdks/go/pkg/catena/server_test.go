@@ -1548,6 +1548,104 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 	})
 }
 
+// TestServer_AssetWriteRequiresNonMonitorScope proves the asset write endpoints
+// enforce the ST 2138 scope rule: adm, op, or cfg write is accepted, but a
+// caller holding only the monitor write scope is rejected with PermissionDenied
+// and the business handler never runs.
+func TestServer_AssetWriteRequiresNonMonitorScope(t *testing.T) {
+	sampleAsset, _ := ToAsset(DataPayload{Payload: []byte("data")}, true)
+
+	endpoints := []struct {
+		name     string
+		endpoint EndpointType
+		register func(srv *server, called *bool)
+		invoke   func(srv *server, tc TransportContext) StatusResult
+	}{
+		{
+			name:     "LoadAsset",
+			endpoint: EndpointLoadAsset,
+			register: func(srv *server, called *bool) {
+				srv.loadAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
+					*called = true
+					return StatusWithCode(StatusCodeOk, "")
+				}
+			},
+			invoke: func(srv *server, tc TransportContext) StatusResult {
+				return srv.InvokeLoadAssetHandler(0, "asset", sampleAsset, tc)
+			},
+		},
+		{
+			name:     "OverwriteAsset",
+			endpoint: EndpointOverwriteAsset,
+			register: func(srv *server, called *bool) {
+				srv.overwriteAssetHandlers[0] = func(uint16, string, Asset, HandlerContext) StatusResult {
+					*called = true
+					return StatusWithCode(StatusCodeOk, "")
+				}
+			},
+			invoke: func(srv *server, tc TransportContext) StatusResult {
+				return srv.InvokeOverwriteAssetHandler(0, "asset", sampleAsset, tc)
+			},
+		},
+		{
+			name:     "DeleteAsset",
+			endpoint: EndpointDeleteAsset,
+			register: func(srv *server, called *bool) {
+				srv.deleteAssetHandlers[0] = func(uint16, string, HandlerContext) StatusResult {
+					*called = true
+					return StatusWithCode(StatusCodeOk, "")
+				}
+			},
+			invoke: func(srv *server, tc TransportContext) StatusResult {
+				return srv.InvokeDeleteAssetHandler(0, "asset", tc)
+			},
+		},
+	}
+
+	scopes := []struct {
+		name   string
+		ctx    HandlerContext
+		wantOK bool
+	}{
+		{"MonitorRejected", HandlerContext{writeScopes: map[string]struct{}{ScopeMon: {}}, authzEnabled: true}, false},
+		{"NoWriteScopeRejected", HandlerContext{writeScopes: map[string]struct{}{}, authzEnabled: true}, false},
+		{"OpAccepted", HandlerContext{writeScopes: map[string]struct{}{ScopeOp: {}}, authzEnabled: true}, true},
+		{"CfgAccepted", HandlerContext{writeScopes: map[string]struct{}{ScopeCfg: {}}, authzEnabled: true}, true},
+		{"AdmAccepted", HandlerContext{writeScopes: map[string]struct{}{ScopeAdm: {}}, authzEnabled: true}, true},
+	}
+
+	for _, ep := range endpoints {
+		for _, sc := range scopes {
+			t.Run(ep.name+"/"+sc.name, func(t *testing.T) {
+				srv := newTestServer(t, true)
+				called := false
+				ep.register(srv, &called)
+				// The gate is mocked to admit the request with the given ctx so the
+				// endpoint-specific scope check is what is under test here.
+				mockInvokeGateFn(t, srv, ep.endpoint, true, sc.ctx, StatusWithCode(StatusCodeOk, ""))
+
+				status := ep.invoke(srv, validTestTransportContext(nil))
+
+				if sc.wantOK {
+					if status.IsError() {
+						t.Errorf("expected OK, got %v", status)
+					}
+					if !called {
+						t.Error("expected handler to be called for accepted scope")
+					}
+				} else {
+					if status.Code != StatusCodePermissionDenied {
+						t.Errorf("expected PermissionDenied, got %v", status)
+					}
+					if called {
+						t.Error("handler must not run when the scope is rejected")
+					}
+				}
+			})
+		}
+	}
+}
+
 func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		srv := newTestServer(t, true)

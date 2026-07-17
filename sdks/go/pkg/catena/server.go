@@ -822,10 +822,25 @@ func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportConte
 		})
 }
 
+// enforceAssetWriteScope authorizes an asset mutation. Per ST 2138 the asset
+// write endpoints (LoadAsset/OverwriteAsset/DeleteAsset) require adm, op, or cfg
+// write scope; a caller holding only the monitor scope is rejected even though
+// it technically carries a write scope. The generic gate's coarse write check
+// (HasAnyWriteScope) admits mon:w, so this narrower check runs per endpoint.
+func enforceAssetWriteScope(ctx HandlerContext) StatusResult {
+	if ctx.HasAnyWriteScopeExceptMonitor() {
+		return StatusWithCode(StatusCodeOk, "")
+	}
+	return StatusWithCode(StatusCodePermissionDenied, "asset writes require adm, op, or cfg write scope")
+}
+
 func (s *server) InvokeLoadAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult {
 	_, res := invokeHandler(s, transportContext, EndpointLoadAsset, true, s.loadAssetHandlers, slot,
 		"no LoadAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler LoadAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
+				return struct{}{}, scopeRes
+			}
 			return struct{}{}, handler(slot, fqoid, asset, ctx)
 		})
 	return res
@@ -835,6 +850,9 @@ func (s *server) InvokeOverwriteAssetHandler(slot uint16, fqoid string, asset As
 	_, res := invokeHandler(s, transportContext, EndpointOverwriteAsset, true, s.overwriteAssetHandlers, slot,
 		"no OverwriteAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler OverwriteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
+				return struct{}{}, scopeRes
+			}
 			return struct{}{}, handler(slot, fqoid, asset, ctx)
 		})
 	return res
@@ -844,6 +862,9 @@ func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportCo
 	_, res := invokeHandler(s, transportContext, EndpointDeleteAsset, true, s.deleteAssetHandlers, slot,
 		"no DeleteAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
+				return struct{}{}, scopeRes
+			}
 			return struct{}{}, handler(slot, fqoid, ctx)
 		})
 	return res
