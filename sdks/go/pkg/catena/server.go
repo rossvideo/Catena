@@ -66,6 +66,7 @@ const (
 	EndpointGetAsset
 	EndpointExecuteCommand
 	EndpointParamInfo
+	EndpointLanguagePack
 	EndpointConnect
 	EndpointListLanguages
 
@@ -96,6 +97,8 @@ func (e EndpointType) String() string {
 		return "ExecuteCommand"
 	case EndpointParamInfo:
 		return "ParamInfo"
+	case EndpointLanguagePack:
+		return "LanguagePack"
 	case EndpointConnect:
 		return "Connect"
 	case EndpointListLanguages:
@@ -135,6 +138,11 @@ type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx Ha
 // ListLanguagesHandler returns the language codes supported by the device model
 // at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
 type ListLanguagesHandler func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
+
+type LanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
+type AddLanguageHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type UpdateLanguageHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type DeleteLanguageHandler func(slot uint16, language string, ctx HandlerContext) StatusResult
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
@@ -192,6 +200,10 @@ type Server interface {
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
+	RegisterLanguagePackHandler(slot uint16, handler LanguagePackHandler)
+	RegisterAddLanguageHandler(slot uint16, handler AddLanguageHandler)
+	RegisterUpdateLanguageHandler(slot uint16, handler UpdateLanguageHandler)
+	RegisterDeleteLanguageHandler(slot uint16, handler DeleteLanguageHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
 
@@ -223,6 +235,10 @@ type ServerRuntime interface {
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
+	InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult)
+	InvokeAddLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeUpdateLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeDeleteLanguageHandler(slot uint16, language string, transportContext TransportContext) StatusResult
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -250,6 +266,10 @@ type server struct {
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
 	listLanguagesHandlers  map[uint16]ListLanguagesHandler
+	languagePackHandlers   map[uint16]LanguagePackHandler
+	addLanguageHandlers    map[uint16]AddLanguageHandler
+	updateLanguageHandlers map[uint16]UpdateLanguageHandler
+	deleteLanguageHandlers map[uint16]DeleteLanguageHandler
 	heartbeatHandlers      map[uint16]HeartbeatHandler
 	productStructs         map[uint16]ProductStruct // SDK-managed product per slot
 	accessHandler          AccessHandler            // optional fallback for slots without specific handlers
@@ -296,6 +316,10 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		listLanguagesHandlers:  make(map[uint16]ListLanguagesHandler),
+		languagePackHandlers:   make(map[uint16]LanguagePackHandler),
+		addLanguageHandlers:    make(map[uint16]AddLanguageHandler),
+		updateLanguageHandlers: make(map[uint16]UpdateLanguageHandler),
+		deleteLanguageHandlers: make(map[uint16]DeleteLanguageHandler),
 		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
 		productStructs:         make(map[uint16]ProductStruct),
 		accessHandler:          allowAllAccessHandler,
@@ -676,6 +700,22 @@ func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	s.registerHandlerFn(slot, func() { s.paramInfoHandlers[slot] = handler })
 }
 
+func (s *server) RegisterLanguagePackHandler(slot uint16, handler LanguagePackHandler) {
+	s.registerHandlerFn(slot, func() { s.languagePackHandlers[slot] = handler })
+}
+
+func (s *server) RegisterAddLanguageHandler(slot uint16, handler AddLanguageHandler) {
+	s.registerHandlerFn(slot, func() { s.addLanguageHandlers[slot] = handler })
+}
+
+func (s *server) RegisterUpdateLanguageHandler(slot uint16, handler UpdateLanguageHandler) {
+	s.registerHandlerFn(slot, func() { s.updateLanguageHandlers[slot] = handler })
+}
+
+func (s *server) RegisterDeleteLanguageHandler(slot uint16, handler DeleteLanguageHandler) {
+	s.registerHandlerFn(slot, func() { s.deleteLanguageHandlers[slot] = handler })
+}
+
 func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
 	s.registerHandlerFn(slot, func() { s.heartbeatHandlers[slot] = handler })
 }
@@ -824,6 +864,41 @@ func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext Transp
 		func(handler ListLanguagesHandler, ctx HandlerContext) ([]string, StatusResult) {
 			return handler(slot, ctx)
 		})
+}
+
+func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
+	return invokeHandler(s, transportContext, EndpointLanguagePack, false, s.languagePackHandlers, slot,
+		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler LanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
+			return handler(slot, language, ctx)
+		})
+}
+
+func (s *server) InvokeAddLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointLanguagePack, true, s.addLanguageHandlers, slot,
+		"AddLanguage handler not found at slot "+strconv.Itoa(int(slot)),
+		func(handler AddLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, language, languagePack, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeUpdateLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointLanguagePack, true, s.updateLanguageHandlers, slot,
+		"UpdateLanguage handler not found at slot "+strconv.Itoa(int(slot)),
+		func(handler UpdateLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, language, languagePack, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeDeleteLanguageHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointLanguagePack, true, s.deleteLanguageHandlers, slot,
+		"DeleteLanguage handler not found at slot "+strconv.Itoa(int(slot)),
+		func(handler DeleteLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, language, ctx)
+		})
+	return res
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {

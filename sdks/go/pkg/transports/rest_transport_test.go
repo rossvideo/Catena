@@ -2344,3 +2344,180 @@ func TestRestTransport_Languages_MethodNotAllowed(t *testing.T) {
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/languages", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
+func TestRestTransportLanguagePackGetSuccess(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		if slot != 0 {
+			t.Fatalf("expected slot 0, got %d", slot)
+		}
+		if language != "es" {
+			t.Fatalf("expected language es, got %s", language)
+		}
+
+		return catena.NewLanguagePack().
+			WithName("Spanish").
+			WithWords(map[string]string{
+				"greeting": "Hola",
+				"parting":  "Adiós",
+			}), catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/language-pack/es", "")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "Spanish") {
+		t.Fatalf("expected response body to contain Spanish, got %s", rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackGetError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language pack not found")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/language-pack/de", "")
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackGetNilProto(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	// Handler reports success but returns an empty (nil-proto) pack. This is a
+	// handler contract violation and must surface as 500, not overwrite the OK
+	// result with a 404.
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/language-pack/es", "")
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackPostSuccess(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.addLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		if slot != 0 {
+			t.Fatalf("expected slot 0, got %d", slot)
+		}
+		if language != "fr" {
+			t.Fatalf("expected language fr, got %s", language)
+		}
+
+		if languagePack.Proto == nil || languagePack.GetName() != "French" {
+			t.Fatalf("expected French language pack, got %#v", languagePack.Proto)
+		}
+
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	body := `{"name":"French","words":{"greeting":"Bonjour","parting":"Au revoir"}}`
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", body)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected status 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackPostError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.addLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodePermissionDenied, "not allowed")
+	}
+
+	body := `{"name":"French"}`
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", body)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected status 403, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackPutSuccess(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.updateLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		if language != "fr" {
+			t.Fatalf("expected language fr, got %s", language)
+		}
+
+		if languagePack.Proto == nil || languagePack.GetName() != "French Updated" {
+			t.Fatalf("expected updated French language pack, got %#v", languagePack.Proto)
+		}
+
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	body := `{"name":"French Updated","words":{"greeting":"Salut"}}`
+	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/language-pack/fr", body)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected status 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackDeleteSuccess(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.deleteLanguageFn = func(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult {
+		if language != "fr" {
+			t.Fatalf("expected language fr, got %s", language)
+		}
+
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodDelete, "/st2138-api/v1/0/language-pack/fr", "")
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected status 204, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackDeleteError(t *testing.T) {
+	transport, runtime := makeTestRestTransport(t)
+	runtime.deleteLanguageFn = func(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodeNotFound, "language pack not found")
+	}
+
+	rec := makeRequest(t, transport, http.MethodDelete, "/st2138-api/v1/0/language-pack/fr", "")
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackInvalidJSON(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", `{invalid json}`)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackMissingLanguage(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/language-pack", "")
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRestTransportLanguagePackUnsupportedMethod(t *testing.T) {
+	transport, _ := makeTestRestTransport(t)
+
+	rec := makeRequest(t, transport, http.MethodPatch, "/st2138-api/v1/0/language-pack/fr", "")
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected status 405, got %d: %s", rec.Code, rec.Body.String())
+	}
+}

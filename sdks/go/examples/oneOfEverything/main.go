@@ -354,6 +354,7 @@ func main() {
 	registerAssetHandlers(srv, assets)                                   // ExternalObjectRequest
 	registerParamInfoHandlers(srv, counter, state)                       // ParamInfoRequest
 	registerLanguagesHandlers(srv)                                       // ListLanguages
+	registerLanguagePackHandlers(srv)                                    // LanguagePackRequest / AddLanguage / Update / Delete
 	registerHeartbeatHandlers(srv, state)                                // periodic BroadcastUpdate
 
 	srv.StartHeartbeat(5 * time.Second)

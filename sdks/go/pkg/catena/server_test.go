@@ -786,6 +786,15 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.listLanguagesHandlers[slot] != nil },
 		},
 		{
+			endpoint: EndpointLanguagePack,
+			register: func(srv *server, slot uint16) {
+				srv.RegisterLanguagePackHandler(slot, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
+				})
+			},
+			has: func(srv *server, slot uint16) bool { return srv.languagePackHandlers[slot] != nil },
+		},
+		{
 			name:          "HeartbeatHandler",
 			notAnEndpoint: true, // heartbeat is a server-driven timer, not an EndpointType
 			register: func(srv *server, slot uint16) {
@@ -1663,6 +1672,17 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 			},
 		},
 		{
+			endpoint: EndpointLanguagePack,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+					*handlerCalled = true
+					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
+				})
+				_, status := srv.InvokeLanguagePackHandler(0, "es", invalidContext)
+				return status
+			},
+		},
+		{
 			endpoint: EndpointConnect,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
 				conn, status := srv.RegisterTransportConnection(nil, invalidContext)
@@ -1756,6 +1776,7 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 		},
 		{endpoint: EndpointConnect},
 		{endpoint: EndpointListLanguages},
+		{endpoint: EndpointLanguagePack},
 	}
 
 	covered := make([]EndpointType, 0, len(tests))
@@ -2013,6 +2034,18 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 					return []string{}, StatusWithCode(StatusCodeOk, "")
 				})
 				_, status := srv.InvokeListLanguagesHandler(0, TransportContext{})
+				return status
+			},
+		},
+		{
+			endpoint:          EndpointLanguagePack,
+			expectHandlerCall: true,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				srv.RegisterLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+					*handlerCalled = true
+					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
+				})
+				_, status := srv.InvokeLanguagePackHandler(0, "es", TransportContext{})
 				return status
 			},
 		},

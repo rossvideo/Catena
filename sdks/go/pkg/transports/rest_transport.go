@@ -44,6 +44,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
 	"net"
 	"net/http"
@@ -54,6 +55,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult)
@@ -441,6 +443,8 @@ func (t *RestTransport) registerRoutes() {
 				t.handleParamEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
+			case "language-pack":
+				t.handleLanguagePackEndpoint(w, r, slot, parts[4:])
 			case "languages":
 				t.handleLanguagesEndpoint(w, r, slot)
 			default:
@@ -736,6 +740,86 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 
 	if err := WriteProtoJSON(w, stream.item.Wire(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
+	}
+}
+
+func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if len(pathParts) == 0 || strings.Join(pathParts, "/") == "" {
+		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "language is required")
+		t.writeHTTPResult(w, res, val)
+		return
+	}
+
+	language := strings.Join(pathParts, "/")
+	transportContext := t.retrieveMetadataFromRequest(r)
+
+	switch r.Method {
+	case http.MethodGet:
+		languagePack, res := t.runtime.InvokeLanguagePackHandler(slot, language, transportContext)
+		if res.Code != catena.StatusCodeOk {
+			t.writeHTTPStatusResult(w, res)
+			return
+		}
+
+		// A nil proto on an OK result is an internal contract violation by the
+		// handler, not a not-found; surface it as an internal error rather than
+		// overwriting the successful outcome with a 404.
+		if languagePack.Proto == nil {
+			logger.Error("language pack handler returned OK with nil proto", "slot", slot, "language", language)
+			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "language pack response was empty"))
+			return
+		}
+
+		// The handler wraps the inner pack (name + words); the REST response is
+		// the outer component that also carries the language tag.
+		component := &protos.DeviceComponent_ComponentLanguagePack{
+			Language:     language,
+			LanguagePack: languagePack.Proto,
+		}
+		if err := WriteProtoJSON(w, component, http.StatusOK); err != nil {
+			logger.Error("failed to write language pack response", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+	case http.MethodPost, http.MethodPut:
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "failed to read request body"))
+			return
+		}
+
+		pack := &protos.LanguagePack{}
+		if err := protojson.Unmarshal(body, pack); err != nil {
+			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid language pack request body"))
+			return
+		}
+
+		languagePack := catena.NewLanguagePack().
+			WithName(pack.GetName()).
+			WithWords(pack.GetWords())
+
+		var res catena.StatusResult
+		if r.Method == http.MethodPut {
+			res = t.runtime.InvokeUpdateLanguageHandler(slot, language, languagePack, transportContext)
+		} else {
+			res = t.runtime.InvokeAddLanguageHandler(slot, language, languagePack, transportContext)
+		}
+		if res.Code != catena.StatusCodeOk {
+			t.writeHTTPStatusResult(w, res)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	case http.MethodDelete:
+		res := t.runtime.InvokeDeleteLanguageHandler(slot, language, transportContext)
+		if res.Code != catena.StatusCodeOk {
+			t.writeHTTPStatusResult(w, res)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		t.writeHTTPMethodNotAllowed(w, "only GET, POST, PUT and DELETE allowed")
 	}
 }
 
