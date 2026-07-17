@@ -48,6 +48,21 @@ type Constraint struct {
 	Proto *protos.Constraint
 }
 
+// ConstraintType represents the type of a constraint
+// Mirrors protos.Constraint_ConstraintType for convenience
+type ConstraintType = protos.Constraint_ConstraintType
+
+// ConstraintType constants matching the proto enum
+const (
+	ConstraintTypeUndefined          ConstraintType = protos.Constraint_UNDEFINED
+	ConstraintTypeIntRange           ConstraintType = protos.Constraint_INT_RANGE
+	ConstraintTypeFloatRange         ConstraintType = protos.Constraint_FLOAT_RANGE
+	ConstraintTypeIntChoice          ConstraintType = protos.Constraint_INT_CHOICE
+	ConstraintTypeStringChoice       ConstraintType = protos.Constraint_STRING_CHOICE
+	ConstraintTypeStringStringChoice ConstraintType = protos.Constraint_STRING_STRING_CHOICE
+	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
+)
+
 // --- Input types for constraint builders ---
 
 // Int32Choice pairs an int32 value with a human-readable display name.
