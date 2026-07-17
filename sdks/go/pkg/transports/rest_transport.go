@@ -662,9 +662,9 @@ func (t *RestTransport) handleWriteAsset(
 	invoke func(slot uint16, fqoid string, asset catena.Asset, transportContext catena.TransportContext) catena.StatusResult,
 ) {
 	payload, err := ReadAssetRequestJSON(r)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		logger.Error("failed to read asset request", "error", err)
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, err.Error()))
 		return
 	}
 

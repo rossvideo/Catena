@@ -1126,7 +1126,7 @@ func TestReadAssetRequestJSON_Valid(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	payload, err := ReadAssetRequestJSON(req)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !payload.GetCachable() {
@@ -1142,8 +1142,8 @@ func TestReadAssetRequestJSON_MissingContentType(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
 
 	_, err := ReadAssetRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for missing Content-Type")
+	if err == nil {
+		t.Fatal("expected error for missing Content-Type")
 	}
 }
 
@@ -1153,8 +1153,8 @@ func TestReadAssetRequestJSON_InvalidContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "text/plain")
 
 	_, err := ReadAssetRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for invalid Content-Type")
+	if err == nil {
+		t.Fatal("expected error for invalid Content-Type")
 	}
 }
 
@@ -1164,8 +1164,8 @@ func TestReadAssetRequestJSON_MalformedContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "invalid;;;type")
 
 	_, err := ReadAssetRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for malformed Content-Type")
+	if err == nil {
+		t.Fatal("expected error for malformed Content-Type")
 	}
 }
 
@@ -1175,11 +1175,11 @@ func TestReadAssetRequestJSON_InvalidJSON(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadAssetRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for invalid JSON")
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
 	}
-	if !strings.Contains(err.Error, "failed to unmarshal request body") {
-		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err.Error)
+	if !strings.Contains(err.Error(), "failed to unmarshal request body") {
+		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err)
 	}
 }
 
@@ -1188,11 +1188,11 @@ func TestReadAssetRequestJSON_BodyReadError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadAssetRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error when reading the body fails")
+	if err == nil {
+		t.Fatal("expected error when reading the body fails")
 	}
-	if !strings.Contains(err.Error, "failed to read request body") {
-		t.Errorf("expected error to contain 'failed to read request body', got: %v", err.Error)
+	if !strings.Contains(err.Error(), "failed to read request body") {
+		t.Errorf("expected error to contain 'failed to read request body', got: %v", err)
 	}
 }
 
