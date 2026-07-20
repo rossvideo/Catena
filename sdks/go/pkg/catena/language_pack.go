@@ -36,7 +36,11 @@
 
 package catena
 
-import "github.com/rossvideo/catena/sdks/go/pkg/protos"
+import (
+	"maps"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+)
 
 // LanguagePack wraps a protos.LanguagePack and exposes a fluent builder API so
 // SDK users don't have to touch protos directly. A language pack is a display
@@ -76,9 +80,7 @@ func (lp LanguagePack) WithWords(words map[string]string) LanguagePack {
 	if lp.Proto.Words == nil {
 		lp.Proto.Words = map[string]string{}
 	}
-	for key, value := range words {
-		lp.Proto.Words[key] = value
-	}
+	maps.Copy(lp.Proto.Words, words)
 	return lp
 }
 
