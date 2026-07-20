@@ -66,7 +66,10 @@ const (
 	EndpointGetAsset
 	EndpointExecuteCommand
 	EndpointParamInfo
-	EndpointLanguagePack
+	EndpointGetLanguagePack
+	EndpointCreateLanguagePack
+	EndpointUpdateLanguagePack
+	EndpointDeleteLanguagePack
 	EndpointConnect
 	EndpointListLanguages
 
@@ -97,8 +100,14 @@ func (e EndpointType) String() string {
 		return "ExecuteCommand"
 	case EndpointParamInfo:
 		return "ParamInfo"
-	case EndpointLanguagePack:
-		return "LanguagePack"
+	case EndpointGetLanguagePack:
+		return "GetLanguagePack"
+	case EndpointCreateLanguagePack:
+		return "CreateLanguagePack"
+	case EndpointUpdateLanguagePack:
+		return "UpdateLanguagePack"
+	case EndpointDeleteLanguagePack:
+		return "DeleteLanguagePack"
 	case EndpointConnect:
 		return "Connect"
 	case EndpointListLanguages:
@@ -867,7 +876,7 @@ func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext Transp
 }
 
 func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
-	return invokeHandler(s, transportContext, EndpointLanguagePack, false, s.languagePackHandlers, slot,
+	return invokeHandler(s, transportContext, EndpointGetLanguagePack, false, s.languagePackHandlers, slot,
 		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler LanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
 			return handler(slot, language, ctx)
@@ -875,7 +884,7 @@ func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transpo
 }
 
 func (s *server) InvokeAddLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
-	_, res := invokeHandler(s, transportContext, EndpointLanguagePack, true, s.addLanguageHandlers, slot,
+	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.addLanguageHandlers, slot,
 		"AddLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler AddLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			return struct{}{}, handler(slot, language, languagePack, ctx)
@@ -884,7 +893,7 @@ func (s *server) InvokeAddLanguageHandler(slot uint16, language string, language
 }
 
 func (s *server) InvokeUpdateLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
-	_, res := invokeHandler(s, transportContext, EndpointLanguagePack, true, s.updateLanguageHandlers, slot,
+	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguageHandlers, slot,
 		"UpdateLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			return struct{}{}, handler(slot, language, languagePack, ctx)
@@ -893,7 +902,7 @@ func (s *server) InvokeUpdateLanguageHandler(slot uint16, language string, langu
 }
 
 func (s *server) InvokeDeleteLanguageHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
-	_, res := invokeHandler(s, transportContext, EndpointLanguagePack, true, s.deleteLanguageHandlers, slot,
+	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguageHandlers, slot,
 		"DeleteLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			return struct{}{}, handler(slot, language, ctx)
