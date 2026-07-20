@@ -744,13 +744,15 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 }
 
 func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
-	if len(pathParts) == 0 || strings.Join(pathParts, "/") == "" {
+	// The language code is a single path segment; an empty code (if any) is
+	// left for the server layer to validate.
+	if len(pathParts) != 1 {
 		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "language is required")
 		t.writeHTTPResult(w, res, val)
 		return
 	}
 
-	language := strings.Join(pathParts, "/")
+	language := pathParts[0]
 	transportContext := t.retrieveMetadataFromRequest(r)
 
 	switch r.Method {
