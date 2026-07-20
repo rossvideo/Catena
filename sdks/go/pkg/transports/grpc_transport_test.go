@@ -2015,6 +2015,38 @@ func TestGrpcTransport_LanguagePackRequest_NilProtoOnOk(t *testing.T) {
 	assertGRPCCode(t, err, codes.Internal, "LanguagePackRequest nil proto on OK")
 }
 
+func TestGrpcTransport_LanguagePackRequest_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: uint32(1) << 20, Language: "nl"})
+	assertGRPCCode(t, err, codes.InvalidArgument, "LanguagePackRequest invalid slot")
+}
+
+func TestGrpcTransport_AddLanguage_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.addLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodeInternal, "boom")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
+		Slot:         0,
+		Language:     "nl",
+		LanguagePack: &protos.LanguagePack{Name: "Global Dutch"},
+	})
+	assertGRPCCode(t, err, codes.Internal, "AddLanguage handler error")
+}
+
 // =============================================================================
 // Test: gRPC Reflection
 // =============================================================================
