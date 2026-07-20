@@ -796,9 +796,7 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 			return
 		}
 
-		languagePack := catena.NewLanguagePack().
-			WithName(pack.GetName()).
-			WithWords(pack.GetWords())
+		languagePack := catena.LanguagePack{Proto: pack}
 
 		var res catena.StatusResult
 		if r.Method == http.MethodPut {
