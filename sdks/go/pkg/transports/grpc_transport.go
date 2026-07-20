@@ -573,20 +573,11 @@ func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguage
 	}
 
 	language := req.Language
-	if language == "" {
-		logger.Error("AddLanguage missing language", "slot", slot)
-		return nil, status.Error(codes.InvalidArgument, "language is required")
-	}
-	if req.LanguagePack == nil {
-		logger.Error("AddLanguage missing language pack", "slot", slot, "language", language)
-		return nil, status.Error(codes.InvalidArgument, "language_pack is required")
-	}
-
 	logger.Info("AddLanguage", "slot", slot, "language", language)
 
-	pack := catena.NewLanguagePack().
-		WithName(req.LanguagePack.GetName()).
-		WithWords(req.LanguagePack.GetWords())
+	// Language and pack presence are validated by the server layer so the rule
+	// lives in one place; pass the proto straight through.
+	pack := catena.LanguagePack{Proto: req.LanguagePack}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	result := s.transport.runtime.InvokeAddLanguageHandler(slot, language, pack, transportContext)
@@ -606,11 +597,6 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	}
 
 	language := req.Language
-	if language == "" {
-		logger.Error("LanguagePackRequest missing language", "slot", slot)
-		return nil, status.Error(codes.InvalidArgument, "language is required")
-	}
-
 	logger.Info("LanguagePackRequest", "slot", slot, "language", language)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)

@@ -1722,7 +1722,7 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeAddLanguageHandler(0, "es", LanguagePack{}, invalidContext)
+				return srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), invalidContext)
 			},
 		},
 		{
@@ -1732,7 +1732,7 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateLanguageHandler(0, "es", LanguagePack{}, invalidContext)
+				return srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), invalidContext)
 			},
 		},
 		{
@@ -2123,7 +2123,7 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeAddLanguageHandler(0, "es", LanguagePack{}, TransportContext{})
+				return srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), TransportContext{})
 			},
 		},
 		{
@@ -2134,7 +2134,7 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateLanguageHandler(0, "es", LanguagePack{}, TransportContext{})
+				return srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), TransportContext{})
 			},
 		},
 		{

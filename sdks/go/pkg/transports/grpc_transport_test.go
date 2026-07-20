@@ -1910,22 +1910,13 @@ func TestGrpcTransport_AddLanguage_Success(t *testing.T) {
 	}
 }
 
+// Language and pack presence are validated by the server layer, not the
+// transport, so only transport-owned validation (slot range) is asserted here.
 func TestGrpcTransport_AddLanguage_InvalidArgument(t *testing.T) {
 	tests := []struct {
 		name string
 		req  *protos.AddLanguagePayload
 	}{
-		{
-			name: "missing language",
-			req: &protos.AddLanguagePayload{
-				Slot:         0,
-				LanguagePack: &protos.LanguagePack{Name: "Global Dutch"},
-			},
-		},
-		{
-			name: "missing language pack",
-			req:  &protos.AddLanguagePayload{Slot: 0, Language: "nl"},
-		},
 		{
 			name: "slot out of range",
 			req: &protos.AddLanguagePayload{
@@ -1987,18 +1978,6 @@ func TestGrpcTransport_LanguagePackRequest_Success(t *testing.T) {
 	if pack.GetWords()["parting"] != "Tot ziens" {
 		t.Errorf("expected parting %q, got %q", "Tot ziens", pack.GetWords()["parting"])
 	}
-}
-
-func TestGrpcTransport_LanguagePackRequest_MissingLanguage(t *testing.T) {
-	ctx := context.Background()
-	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
-	defer cleanup()
-
-	client, clientCleanup := setupGRPCClient(t, ctx, lis)
-	defer clientCleanup()
-
-	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0})
-	assertGRPCCode(t, err, codes.InvalidArgument, "LanguagePackRequest missing language")
 }
 
 func TestGrpcTransport_LanguagePackRequest_NotFound(t *testing.T) {

@@ -876,6 +876,9 @@ func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext Transp
 }
 
 func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
+	if language == "" {
+		return LanguagePack{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+	}
 	return invokeHandler(s, transportContext, EndpointGetLanguagePack, false, s.languagePackHandlers, slot,
 		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler LanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
@@ -895,6 +898,12 @@ func requireAdminScope(ctx HandlerContext) StatusResult {
 }
 
 func (s *server) InvokeAddLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	if language == "" {
+		return StatusWithCode(StatusCodeInvalidArgument, "language is required")
+	}
+	if languagePack.Proto == nil {
+		return StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
+	}
 	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.addLanguageHandlers, slot,
 		"AddLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler AddLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -907,6 +916,12 @@ func (s *server) InvokeAddLanguageHandler(slot uint16, language string, language
 }
 
 func (s *server) InvokeUpdateLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	if language == "" {
+		return StatusWithCode(StatusCodeInvalidArgument, "language is required")
+	}
+	if languagePack.Proto == nil {
+		return StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
+	}
 	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguageHandlers, slot,
 		"UpdateLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -919,6 +934,9 @@ func (s *server) InvokeUpdateLanguageHandler(slot uint16, language string, langu
 }
 
 func (s *server) InvokeDeleteLanguageHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
+	if language == "" {
+		return StatusWithCode(StatusCodeInvalidArgument, "language is required")
+	}
 	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguageHandlers, slot,
 		"DeleteLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {

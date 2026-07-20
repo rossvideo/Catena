@@ -278,3 +278,47 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 		}
 	})
 }
+
+// TestServer_LanguageHandlersValidation covers the request validation that the
+// server owns so transports don't each repeat it: a language is always
+// required, and create/update also require a non-nil pack.
+func TestServer_LanguageHandlersValidation(t *testing.T) {
+	srv := newTestServer(t, true)
+	ctx := admTestTransportContext(t)
+
+	t.Run("get requires language", func(t *testing.T) {
+		if _, status := srv.InvokeLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("add requires language", func(t *testing.T) {
+		if status := srv.InvokeAddLanguageHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("add requires pack", func(t *testing.T) {
+		if status := srv.InvokeAddLanguageHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("update requires language", func(t *testing.T) {
+		if status := srv.InvokeUpdateLanguageHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("update requires pack", func(t *testing.T) {
+		if status := srv.InvokeUpdateLanguageHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("delete requires language", func(t *testing.T) {
+		if status := srv.InvokeDeleteLanguageHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+}
