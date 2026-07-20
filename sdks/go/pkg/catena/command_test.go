@@ -191,3 +191,16 @@ func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
 		t.Errorf("expected fr='erreur', got %s", exc.GetErrorMessage().GetDisplayStrings()["fr"])
 	}
 }
+
+func TestCommandResult_Wire(t *testing.T) {
+	val, _ := ToValue(123)
+	result := CommandValue(val)
+
+	wire := result.Wire()
+	if wire == nil {
+		t.Fatal("Wire() returned nil")
+	}
+	if wire != result.Proto {
+		t.Errorf("expected Wire() to return the underlying proto, got %v", wire)
+	}
+}
