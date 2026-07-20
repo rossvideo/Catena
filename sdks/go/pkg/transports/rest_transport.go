@@ -602,15 +602,34 @@ func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Requ
 	t.writeHTTPStatusResultNoBody(w, res)
 }
 
+// handleAssetEndpoint dispatches /st2138-api/v1/{slot}/asset/{fqoid} across
+// the four asset operations: GET (ReadAsset), POST (CreateAsset), PUT
+// (UpdateAsset) and DELETE (DeleteAsset). The three write operations return
+// 204 No Content on success per the OpenAPI spec.
 func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
-	if r.Method != http.MethodGet {
-		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
-		return
-	}
-
 	fqoid := strings.Join(pathParts, "/")
+
+	switch r.Method {
+	case http.MethodGet:
+		t.handleReadAsset(w, r, slot, fqoid)
+	case http.MethodPost:
+		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeCreateAssetHandler)
+	case http.MethodPut:
+		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeUpdateAssetHandler)
+	case http.MethodDelete:
+		transportContext := t.retrieveMetadataFromRequest(r)
+		res := t.runtime.InvokeDeleteAssetHandler(slot, fqoid, transportContext)
+		t.writeHTTPStatusResultNoBody(w, res)
+	default:
+		t.writeHTTPMethodNotAllowed(w, "only GET, POST, PUT, DELETE allowed")
+	}
+}
+
+// handleReadAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid}, with optional
+// payload transcoding via the ?compression= query parameter.
+func (t *RestTransport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
 	transportContext := t.retrieveMetadataFromRequest(r)
-	asset, result := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
+	asset, result := t.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
 
 	if result.IsOk() {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
@@ -630,6 +649,28 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	t.writeHTTPResult(w, result, asset)
+}
+
+// handleWriteAsset handles POST (CreateAsset) and PUT (UpdateAsset). Both read
+// an external_object_payload body, hand it to the given invoke function, and
+// return 204 No Content on success.
+func (t *RestTransport) handleWriteAsset(
+	w http.ResponseWriter,
+	r *http.Request,
+	slot uint16,
+	fqoid string,
+	invoke func(slot uint16, fqoid string, asset catena.Asset, transportContext catena.TransportContext) catena.StatusResult,
+) {
+	payload, err := ReadAssetRequestJSON(r)
+	if err != nil {
+		logger.Error("failed to read asset request", "error", err)
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, err.Error()))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	res := invoke(slot, fqoid, catena.Asset{Proto: payload}, transportContext)
+	t.writeHTTPStatusResultNoBody(w, res)
 }
 
 // handleParamEndpoint handles GET /st2138-api/v1/{slot}/param/{fqoid} (GetParam).

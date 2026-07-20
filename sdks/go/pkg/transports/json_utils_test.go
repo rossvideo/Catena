@@ -1120,6 +1120,82 @@ func TestMarshalAssetJSON_Nil(t *testing.T) {
 	}
 }
 
+func TestReadAssetRequestJSON_Valid(t *testing.T) {
+	body := `{"cachable":true,"payload":{"payload_encoding":"UNCOMPRESSED","payload":"ZmFrZSBpbWFnZQ=="}}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	payload, err := ReadAssetRequestJSON(req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !payload.GetCachable() {
+		t.Error("expected cachable true")
+	}
+	if string(payload.GetPayload().GetPayload()) != "fake image" {
+		t.Errorf("expected payload 'fake image', got %q", string(payload.GetPayload().GetPayload()))
+	}
+}
+
+func TestReadAssetRequestJSON_MissingContentType(t *testing.T) {
+	body := `{"cachable":true}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for missing Content-Type")
+	}
+}
+
+func TestReadAssetRequestJSON_InvalidContentType(t *testing.T) {
+	body := `{"cachable":true}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "text/plain")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for invalid Content-Type")
+	}
+}
+
+func TestReadAssetRequestJSON_MalformedContentType(t *testing.T) {
+	body := `{"cachable":true}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "invalid;;;type")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for malformed Content-Type")
+	}
+}
+
+func TestReadAssetRequestJSON_InvalidJSON(t *testing.T) {
+	body := `{not valid json}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
+	}
+	if !strings.Contains(err.Error(), "failed to unmarshal request body") {
+		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err)
+	}
+}
+
+func TestReadAssetRequestJSON_BodyReadError(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/", errReader{})
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error when reading the body fails")
+	}
+	if !strings.Contains(err.Error(), "failed to read request body") {
+		t.Errorf("expected error to contain 'failed to read request body', got: %v", err)
+	}
+}
+
 func TestInjectJSONField_Float32(t *testing.T) {
 	input := []byte(`{"type":"FLOAT32"}`)
 	got := injectJSONField(input, "value", float32(1.5))
