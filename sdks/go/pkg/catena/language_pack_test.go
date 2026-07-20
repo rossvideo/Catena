@@ -125,7 +125,7 @@ func TestServer_RegisterAddLanguageHandler(t *testing.T) {
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeAddLanguageHandler(0, "fr", NewLanguagePack(), validTestTransportContext(nil))
+	status := srv.InvokeAddLanguageHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -144,7 +144,7 @@ func TestServer_RegisterUpdateLanguageHandler(t *testing.T) {
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeUpdateLanguageHandler(0, "fr", NewLanguagePack(), validTestTransportContext(nil))
+	status := srv.InvokeUpdateLanguageHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -163,7 +163,7 @@ func TestServer_RegisterDeleteLanguageHandler(t *testing.T) {
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeDeleteLanguageHandler(0, "fr", validTestTransportContext(nil))
+	status := srv.InvokeDeleteLanguageHandler(0, "fr", admTestTransportContext(t))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -237,6 +237,43 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 			return StatusResult{Code: StatusCodeOk}
 		})
 		if status := srv.InvokeDeleteLanguageHandler(0, "es", noWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	// validTestTransportContext carries the op write scope: enough to pass the
+	// coarse write gate, but the spec requires adm specifically for mutations.
+	opWriteContext := validTestTransportContext(nil)
+
+	t.Run("add requires adm scope, not just write", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterAddLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without adm scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	t.Run("update requires adm scope, not just write", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterUpdateLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without adm scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	t.Run("delete requires adm scope, not just write", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterDeleteLanguageHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without adm scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeDeleteLanguageHandler(0, "es", opWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})

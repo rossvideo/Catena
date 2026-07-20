@@ -141,6 +141,12 @@ func validTestTransportContext(metadata map[string][]string) TransportContext {
 	}
 }
 
+// admTestTransportContext returns a context whose token carries the adm write
+// scope, required by the language-pack create/update/delete operations.
+func admTestTransportContext(t *testing.T) TransportContext {
+	return TransportContext{AccessToken: makeTestJwtToken(t, []string{ScopeAdm + ":w"})}
+}
+
 func TestServer_IsDev(t *testing.T) {
 	for _, isDev := range []bool{true, false} {
 		t.Run(fmt.Sprintf("IsDev=%v", isDev), func(t *testing.T) {

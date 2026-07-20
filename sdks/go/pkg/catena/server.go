@@ -883,10 +883,24 @@ func (s *server) InvokeLanguagePackHandler(slot uint16, language string, transpo
 		})
 }
 
+// requireAdminScope enforces the spec rule that every language-pack operation
+// other than read (create/update/delete) needs the admin scope specifically,
+// not merely any write scope. The coarse write gate in realInvokeGate has
+// already run; this narrows it to adm once the HandlerContext is available.
+func requireAdminScope(ctx HandlerContext) StatusResult {
+	if !ctx.HasWriteScope(ScopeAdm) {
+		return StatusWithCode(StatusCodePermissionDenied, "admin scope required")
+	}
+	return StatusWithCode(StatusCodeOk, "")
+}
+
 func (s *server) InvokeAddLanguageHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
 	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.addLanguageHandlers, slot,
 		"AddLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler AddLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if res := requireAdminScope(ctx); res.IsError() {
+				return struct{}{}, res
+			}
 			return struct{}{}, handler(slot, language, languagePack, ctx)
 		})
 	return res
@@ -896,6 +910,9 @@ func (s *server) InvokeUpdateLanguageHandler(slot uint16, language string, langu
 	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguageHandlers, slot,
 		"UpdateLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if res := requireAdminScope(ctx); res.IsError() {
+				return struct{}{}, res
+			}
 			return struct{}{}, handler(slot, language, languagePack, ctx)
 		})
 	return res
@@ -905,6 +922,9 @@ func (s *server) InvokeDeleteLanguageHandler(slot uint16, language string, trans
 	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguageHandlers, slot,
 		"DeleteLanguage handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguageHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if res := requireAdminScope(ctx); res.IsError() {
+				return struct{}{}, res
+			}
 			return struct{}{}, handler(slot, language, ctx)
 		})
 	return res
