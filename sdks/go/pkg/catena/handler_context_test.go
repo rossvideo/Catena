@@ -94,40 +94,4 @@ func TestHandlerContext(t *testing.T) {
 			t.Fatal("parsed write scope should satisfy write access")
 		}
 	})
-
-	t.Run("HasAnyWriteScopeExceptMonitor", func(t *testing.T) {
-		monOnly := HandlerContext{
-			writeScopes:  map[string]struct{}{ScopeMon: {}},
-			authzEnabled: true,
-		}
-		if !monOnly.HasAnyWriteScope() {
-			t.Fatal("mon:w should satisfy the coarse write check")
-		}
-		if monOnly.HasAnyWriteScopeExceptMonitor() {
-			t.Fatal("mon:w alone must not satisfy the non-monitor write check")
-		}
-
-		for _, scope := range []string{ScopeOp, ScopeCfg, ScopeAdm} {
-			ctx := HandlerContext{
-				writeScopes:  map[string]struct{}{scope: {}},
-				authzEnabled: true,
-			}
-			if !ctx.HasAnyWriteScopeExceptMonitor() {
-				t.Errorf("%s:w should satisfy the non-monitor write check", scope)
-			}
-		}
-
-		none := HandlerContext{
-			writeScopes:  map[string]struct{}{},
-			authzEnabled: true,
-		}
-		if none.HasAnyWriteScopeExceptMonitor() {
-			t.Fatal("no write scope must not satisfy the non-monitor write check")
-		}
-
-		authzDisabled := HandlerContext{authzEnabled: false}
-		if !authzDisabled.HasAnyWriteScopeExceptMonitor() {
-			t.Fatal("authz disabled should satisfy the non-monitor write check")
-		}
-	})
 }

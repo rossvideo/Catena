@@ -827,8 +827,10 @@ func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, transportCont
 // write scope; a caller holding only the monitor scope is rejected even though
 // it technically carries a write scope. The generic gate's coarse write check
 // (HasAnyWriteScope) admits mon:w, so this narrower check runs per endpoint.
+// HasWriteScope returns true for every scope when authorization is disabled, so
+// this passes in that mode.
 func enforceAssetWriteScope(ctx HandlerContext) StatusResult {
-	if ctx.HasAnyWriteScopeExceptMonitor() {
+	if ctx.HasWriteScope(ScopeOp) || ctx.HasWriteScope(ScopeCfg) || ctx.HasWriteScope(ScopeAdm) {
 		return StatusWithCode(StatusCodeOk, "")
 	}
 	return StatusWithCode(StatusCodePermissionDenied, "asset writes require adm, op, or cfg write scope")

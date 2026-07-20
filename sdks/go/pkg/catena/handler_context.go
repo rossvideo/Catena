@@ -115,18 +115,6 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 	return slices.ContainsFunc(catenaScopes, ctx.HasReadScope)
 }
 
-// HasAnyWriteScopeExceptMonitor reports whether the caller holds a write scope
-// other than the monitor scope - that is, op, cfg, or adm write. Per ST 2138
-// the asset mutations (CreateAsset/UpdateAsset/DeleteAsset) accept adm:w,
-// op:w, or cfg:w but never mon:w, so HasAnyWriteScope is too permissive for
-// them. It returns true for every scope when authorization is disabled.
-func (ctx HandlerContext) HasAnyWriteScopeExceptMonitor() bool {
-	if !ctx.authzEnabled {
-		return true
-	}
-	return ctx.HasWriteScope(ScopeOp) || ctx.HasWriteScope(ScopeCfg) || ctx.HasWriteScope(ScopeAdm)
-}
-
 // Context returns the context.Context for this request. It is Done when either
 // the request (or stream) ends or the server begins shutting down, whichever
 // happens first, and it carries any deadline and values from the request.
