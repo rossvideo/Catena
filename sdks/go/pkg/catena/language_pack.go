@@ -86,11 +86,13 @@ func (lp LanguagePack) WithWords(words map[string]string) LanguagePack {
 
 // GetName returns the language pack's display name, or "" if unset.
 func (lp LanguagePack) GetName() string {
+	lp.ensurePack()
 	return lp.Proto.GetName()
 }
 
 // GetWords returns the language pack's word dictionary, or nil if unset.
 func (lp LanguagePack) GetWords() map[string]string {
+	lp.ensurePack()
 	return lp.Proto.GetWords()
 }
 
