@@ -272,9 +272,9 @@ type server struct {
 	getValueHandlers       map[uint16]GetValueHandler
 	getParamHandlers       map[uint16]GetParamHandler
 	setValueHandlers       map[uint16]SetValueHandler
-	readAssetHandlers       map[uint16]ReadAssetHandler
-	createAssetHandlers      map[uint16]CreateAssetHandler
-	updateAssetHandlers map[uint16]UpdateAssetHandler
+	readAssetHandlers      map[uint16]ReadAssetHandler
+	createAssetHandlers    map[uint16]CreateAssetHandler
+	updateAssetHandlers    map[uint16]UpdateAssetHandler
 	deleteAssetHandlers    map[uint16]DeleteAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
@@ -321,9 +321,9 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		getValueHandlers:       make(map[uint16]GetValueHandler),
 		getParamHandlers:       make(map[uint16]GetParamHandler),
 		setValueHandlers:       make(map[uint16]SetValueHandler),
-		readAssetHandlers:       make(map[uint16]ReadAssetHandler),
-		createAssetHandlers:      make(map[uint16]CreateAssetHandler),
-		updateAssetHandlers: make(map[uint16]UpdateAssetHandler),
+		readAssetHandlers:      make(map[uint16]ReadAssetHandler),
+		createAssetHandlers:    make(map[uint16]CreateAssetHandler),
+		updateAssetHandlers:    make(map[uint16]UpdateAssetHandler),
 		deleteAssetHandlers:    make(map[uint16]DeleteAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
