@@ -88,11 +88,11 @@ func TestLanguagePackBuilderZeroValue(t *testing.T) {
 	}
 }
 
-func TestServer_RegisterLanguagePackHandler(t *testing.T) {
+func TestServer_RegisterGetLanguagePackHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	handlerCalled := false
-	srv.RegisterLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+	srv.RegisterGetLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
 		handlerCalled = true
 		if language != "es" {
 			t.Errorf("expected language 'es', got %s", language)
@@ -100,7 +100,7 @@ func TestServer_RegisterLanguagePackHandler(t *testing.T) {
 		return NewLanguagePack().WithName("Spanish"), StatusResult{Code: StatusCodeOk}
 	})
 
-	lp, status := srv.InvokeLanguagePackHandler(0, "es", validTestTransportContext(nil))
+	lp, status := srv.InvokeGetLanguagePackHandler(0, "es", validTestTransportContext(nil))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -113,11 +113,11 @@ func TestServer_RegisterLanguagePackHandler(t *testing.T) {
 	}
 }
 
-func TestServer_RegisterAddLanguageHandler(t *testing.T) {
+func TestServer_RegisterCreateLanguagePackHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	handlerCalled := false
-	srv.RegisterAddLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+	srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
 		handlerCalled = true
 		if language != "fr" {
 			t.Errorf("expected language 'fr', got %s", language)
@@ -125,7 +125,7 @@ func TestServer_RegisterAddLanguageHandler(t *testing.T) {
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeAddLanguageHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
+	status := srv.InvokeCreateLanguagePackHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -135,16 +135,16 @@ func TestServer_RegisterAddLanguageHandler(t *testing.T) {
 	}
 }
 
-func TestServer_RegisterUpdateLanguageHandler(t *testing.T) {
+func TestServer_RegisterUpdateLanguagePackHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	handlerCalled := false
-	srv.RegisterUpdateLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+	srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
 		handlerCalled = true
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeUpdateLanguageHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
+	status := srv.InvokeUpdateLanguagePackHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -154,16 +154,16 @@ func TestServer_RegisterUpdateLanguageHandler(t *testing.T) {
 	}
 }
 
-func TestServer_RegisterDeleteLanguageHandler(t *testing.T) {
+func TestServer_RegisterDeleteLanguagePackHandler(t *testing.T) {
 	srv := newTestServer(t, true)
 
 	handlerCalled := false
-	srv.RegisterDeleteLanguageHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+	srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
 		handlerCalled = true
 		return StatusResult{Code: StatusCodeOk}
 	})
 
-	status := srv.InvokeDeleteLanguageHandler(0, "fr", admTestTransportContext(t))
+	status := srv.InvokeDeleteLanguagePackHandler(0, "fr", admTestTransportContext(t))
 
 	if !handlerCalled {
 		t.Error("registered handler was not called")
@@ -177,16 +177,16 @@ func TestServer_LanguageHandlersNotRegistered(t *testing.T) {
 	srv := newTestServer(t, true)
 	ctx := validTestTransportContext(nil)
 
-	if _, status := srv.InvokeLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
+	if _, status := srv.InvokeGetLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
 		t.Errorf("get: expected NotFound, got %v", status.Code)
 	}
-	if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
+	if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
 		t.Errorf("add: expected NotFound, got %v", status.Code)
 	}
-	if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
+	if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
 		t.Errorf("update: expected NotFound, got %v", status.Code)
 	}
-	if status := srv.InvokeDeleteLanguageHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
+	if status := srv.InvokeDeleteLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
 		t.Errorf("delete: expected NotFound, got %v", status.Code)
 	}
 }
@@ -199,44 +199,44 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 
 	t.Run("get requires read scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+		srv.RegisterGetLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
 			t.Fatal("handler should not run without read scope")
 			return LanguagePack{}, StatusResult{Code: StatusCodeOk}
 		})
-		if _, status := srv.InvokeLanguagePackHandler(0, "es", noReadContext); status.Code != StatusCodePermissionDenied {
+		if _, status := srv.InvokeGetLanguagePackHandler(0, "es", noReadContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("add requires write scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterAddLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires write scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterUpdateLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("delete requires write scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterDeleteLanguageHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeDeleteLanguageHandler(0, "es", noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", noWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
@@ -247,33 +247,33 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 
 	t.Run("add requires adm scope, not just write", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterAddLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
 			t.Fatal("handler should not run without adm scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires adm scope, not just write", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterUpdateLanguageHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
 			t.Fatal("handler should not run without adm scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("delete requires adm scope, not just write", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterDeleteLanguageHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
 			t.Fatal("handler should not run without adm scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeDeleteLanguageHandler(0, "es", opWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", opWriteContext); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
@@ -287,37 +287,37 @@ func TestServer_LanguageHandlersValidation(t *testing.T) {
 	ctx := admTestTransportContext(t)
 
 	t.Run("get requires language", func(t *testing.T) {
-		if _, status := srv.InvokeLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+		if _, status := srv.InvokeGetLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("add requires language", func(t *testing.T) {
-		if status := srv.InvokeAddLanguageHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeCreateLanguagePackHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("add requires pack", func(t *testing.T) {
-		if status := srv.InvokeAddLanguageHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeCreateLanguagePackHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires language", func(t *testing.T) {
-		if status := srv.InvokeUpdateLanguageHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires pack", func(t *testing.T) {
-		if status := srv.InvokeUpdateLanguageHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("delete requires language", func(t *testing.T) {
-		if status := srv.InvokeDeleteLanguageHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeDeleteLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})

@@ -82,7 +82,7 @@ func (s *LanguageStore) Delete(slot uint16, language string) bool {
 func registerLanguagePackHandlers(srv catena.Server) {
 	languages := NewLanguageStore(slotList)
 	for _, slot := range slotList {
-		srv.RegisterLanguagePackHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) (catena.LanguagePack, catena.StatusResult) {
+		srv.RegisterGetLanguagePackHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) (catena.LanguagePack, catena.StatusResult) {
 			logger.Info("LanguagePackRequest", "slot", slot, "language", language)
 			pack, ok := languages.Get(slot, language)
 			if !ok {
@@ -91,13 +91,13 @@ func registerLanguagePackHandlers(srv catena.Server) {
 			return pack, catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 
-		srv.RegisterAddLanguageHandler(slot, func(slot uint16, language string, pack catena.LanguagePack, ctx catena.HandlerContext) catena.StatusResult {
+		srv.RegisterCreateLanguagePackHandler(slot, func(slot uint16, language string, pack catena.LanguagePack, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("AddLanguage", "slot", slot, "language", language, "name", pack.GetName())
 			languages.Set(slot, language, pack)
 			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 
-		srv.RegisterUpdateLanguageHandler(slot, func(slot uint16, language string, pack catena.LanguagePack, ctx catena.HandlerContext) catena.StatusResult {
+		srv.RegisterUpdateLanguagePackHandler(slot, func(slot uint16, language string, pack catena.LanguagePack, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("UpdateLanguage", "slot", slot, "language", language, "name", pack.GetName())
 			if !languages.Has(slot, language) {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "language not found: "+language)
@@ -106,7 +106,7 @@ func registerLanguagePackHandlers(srv catena.Server) {
 			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 
-		srv.RegisterDeleteLanguageHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) catena.StatusResult {
+		srv.RegisterDeleteLanguagePackHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("DeleteLanguage", "slot", slot, "language", language)
 			if !languages.Delete(slot, language) {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "language not found: "+language)

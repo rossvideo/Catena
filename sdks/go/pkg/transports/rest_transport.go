@@ -798,7 +798,7 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 
 	switch r.Method {
 	case http.MethodGet:
-		languagePack, res := t.runtime.InvokeLanguagePackHandler(slot, language, transportContext)
+		languagePack, res := t.runtime.InvokeGetLanguagePackHandler(slot, language, transportContext)
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
 			return
@@ -841,9 +841,9 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 
 		var res catena.StatusResult
 		if r.Method == http.MethodPut {
-			res = t.runtime.InvokeUpdateLanguageHandler(slot, language, languagePack, transportContext)
+			res = t.runtime.InvokeUpdateLanguagePackHandler(slot, language, languagePack, transportContext)
 		} else {
-			res = t.runtime.InvokeAddLanguageHandler(slot, language, languagePack, transportContext)
+			res = t.runtime.InvokeCreateLanguagePackHandler(slot, language, languagePack, transportContext)
 		}
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
@@ -852,7 +852,7 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 		w.WriteHeader(http.StatusNoContent)
 
 	case http.MethodDelete:
-		res := t.runtime.InvokeDeleteLanguageHandler(slot, language, transportContext)
+		res := t.runtime.InvokeDeleteLanguagePackHandler(slot, language, transportContext)
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
 			return

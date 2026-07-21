@@ -580,7 +580,7 @@ func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguage
 	pack := catena.LanguagePack{Proto: req.LanguagePack}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	result := s.transport.runtime.InvokeAddLanguageHandler(slot, language, pack, transportContext)
+	result := s.transport.runtime.InvokeCreateLanguagePackHandler(slot, language, pack, transportContext)
 	if result.IsError() {
 		logger.Error("AddLanguage handler error", "slot", slot, "language", language, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -600,7 +600,7 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	logger.Info("LanguagePackRequest", "slot", slot, "language", language)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	pack, result := s.transport.runtime.InvokeLanguagePackHandler(slot, language, transportContext)
+	pack, result := s.transport.runtime.InvokeGetLanguagePackHandler(slot, language, transportContext)
 	if result.IsError() {
 		logger.Error("LanguagePackRequest handler error", "slot", slot, "language", language, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)

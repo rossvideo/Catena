@@ -821,38 +821,38 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterLanguagePackHandler(slot, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterGetLanguagePackHandler(slot, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.languagePackHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.getLanguagePackHandlers[slot] != nil },
 		},
 		{
 			endpoint: EndpointCreateLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterAddLanguageHandler(slot, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterCreateLanguagePackHandler(slot, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.addLanguageHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.createLanguagePackHandlers[slot] != nil },
 		},
 		{
 			endpoint: EndpointUpdateLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterUpdateLanguageHandler(slot, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterUpdateLanguagePackHandler(slot, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.updateLanguageHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.updateLanguagePackHandlers[slot] != nil },
 		},
 		{
 			endpoint: EndpointDeleteLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterDeleteLanguageHandler(slot, func(uint16, string, HandlerContext) StatusResult {
+				srv.RegisterDeleteLanguagePackHandler(slot, func(uint16, string, HandlerContext) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.deleteLanguageHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.deleteLanguagePackHandlers[slot] != nil },
 		},
 		{
 			name:          "HeartbeatHandler",
@@ -2000,42 +2000,42 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointGetLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterGetLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
 					*handlerCalled = true
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeLanguagePackHandler(0, "es", invalidContext)
+				_, status := srv.InvokeGetLanguagePackHandler(0, "es", invalidContext)
 				return status
 			},
 		},
 		{
 			endpoint: EndpointCreateLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterAddLanguageHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterCreateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), invalidContext)
+				return srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), invalidContext)
 			},
 		},
 		{
 			endpoint: EndpointUpdateLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateLanguageHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterUpdateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), invalidContext)
+				return srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), invalidContext)
 			},
 		},
 		{
 			endpoint: EndpointDeleteLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterDeleteLanguageHandler(0, func(uint16, string, HandlerContext) StatusResult {
+				srv.RegisterDeleteLanguagePackHandler(0, func(uint16, string, HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeDeleteLanguageHandler(0, "es", invalidContext)
+				return srv.InvokeDeleteLanguagePackHandler(0, "es", invalidContext)
 			},
 		},
 		{
@@ -2436,11 +2436,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointGetLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterGetLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
 					*handlerCalled = true
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeLanguagePackHandler(0, "es", TransportContext{})
+				_, status := srv.InvokeGetLanguagePackHandler(0, "es", TransportContext{})
 				return status
 			},
 		},
@@ -2448,33 +2448,33 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointCreateLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterAddLanguageHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
+				srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeAddLanguageHandler(0, "es", NewLanguagePack(), TransportContext{})
+				return srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), TransportContext{})
 			},
 		},
 		{
 			endpoint:          EndpointUpdateLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateLanguageHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
+				srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateLanguageHandler(0, "es", NewLanguagePack(), TransportContext{})
+				return srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), TransportContext{})
 			},
 		},
 		{
 			endpoint:          EndpointDeleteLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterDeleteLanguageHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+				srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeDeleteLanguageHandler(0, "es", TransportContext{})
+				return srv.InvokeDeleteLanguagePackHandler(0, "es", TransportContext{})
 			},
 		},
 		{
