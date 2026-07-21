@@ -94,4 +94,35 @@ func TestHandlerContext(t *testing.T) {
 			t.Fatal("parsed write scope should satisfy write access")
 		}
 	})
+
+	t.Run("RequireScopeGeneratesStatusBoilerplate", func(t *testing.T) {
+		authorized := HandlerContext{
+			readScopes:   map[string]struct{}{ScopeAdm: {}},
+			writeScopes:  map[string]struct{}{ScopeAdm: {}},
+			authzEnabled: true,
+		}
+		if res := authorized.RequireReadScope(ScopeAdm); res.IsError() {
+			t.Fatalf("expected OK when read scope is held, got %v", res)
+		}
+		if res := authorized.RequireWriteScope(ScopeAdm); res.IsError() {
+			t.Fatalf("expected OK when write scope is held, got %v", res)
+		}
+
+		denied := HandlerContext{authzEnabled: true}
+		if res := denied.RequireReadScope(ScopeAdm); res.Code != StatusCodePermissionDenied {
+			t.Fatalf("expected PermissionDenied without read scope, got %v", res.Code)
+		}
+		if res := denied.RequireWriteScope(ScopeAdm); res.Code != StatusCodePermissionDenied {
+			t.Fatalf("expected PermissionDenied without write scope, got %v", res.Code)
+		}
+
+		// With authorization disabled the scope checks pass for any scope.
+		disabled := HandlerContext{}
+		if res := disabled.RequireReadScope(ScopeAdm); res.IsError() {
+			t.Fatalf("expected OK when authz disabled, got %v", res)
+		}
+		if res := disabled.RequireWriteScope(ScopeAdm); res.IsError() {
+			t.Fatalf("expected OK when authz disabled, got %v", res)
+		}
+	})
 }

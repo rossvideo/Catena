@@ -969,40 +969,43 @@ func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext Transp
 		})
 }
 
+// requireLanguagePackWriteScope enforces the spec rule that every language-pack
+// operation other than read (create/update/delete) needs the adm scope
+// specifically, not merely any write scope. The coarse write gate in
+// realInvokeGate has already run; this narrows it to adm once the
+// HandlerContext is available, reusing the portable RequireWriteScope helper for
+// the status/message boilerplate.
+func requireLanguagePackWriteScope(ctx HandlerContext) StatusResult {
+	return ctx.RequireWriteScope(ScopeAdm)
+}
+
 func (s *server) InvokeGetLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
-	if language == "" {
-		return LanguagePack{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
-	}
 	return invokeHandler(s, transportContext, EndpointGetLanguagePack, false, s.getLanguagePackHandlers, slot,
 		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler GetLanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
+			// Argument validation runs after the auth gate so an unauthorized
+			// caller only ever sees a security error, never a validation hint.
+			if language == "" {
+				return LanguagePack{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			}
 			return handler(slot, language, ctx)
 		})
 }
 
-// requireAdminScope enforces the spec rule that every language-pack operation
-// other than read (create/update/delete) needs the admin scope specifically,
-// not merely any write scope. The coarse write gate in realInvokeGate has
-// already run; this narrows it to adm once the HandlerContext is available.
-func requireAdminScope(ctx HandlerContext) StatusResult {
-	if !ctx.HasWriteScope(ScopeAdm) {
-		return StatusWithCode(StatusCodePermissionDenied, "admin scope required")
-	}
-	return StatusWithCode(StatusCodeOk, "")
-}
-
 func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
-	if language == "" {
-		return StatusWithCode(StatusCodeInvalidArgument, "language is required")
-	}
-	if languagePack.Proto == nil {
-		return StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
-	}
 	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.createLanguagePackHandlers, slot,
 		"CreateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler CreateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if res := requireAdminScope(ctx); res.IsError() {
+			if res := requireLanguagePackWriteScope(ctx); res.IsError() {
 				return struct{}{}, res
+			}
+			// Argument validation runs after the scope check so an unauthorized
+			// caller only ever sees a security error, never a validation hint.
+			if language == "" {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			}
+			if languagePack.Proto == nil {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
 			}
 			return struct{}{}, handler(slot, language, languagePack, ctx)
 		})
@@ -1010,17 +1013,17 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 }
 
 func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
-	if language == "" {
-		return StatusWithCode(StatusCodeInvalidArgument, "language is required")
-	}
-	if languagePack.Proto == nil {
-		return StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
-	}
 	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguagePackHandlers, slot,
 		"UpdateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if res := requireAdminScope(ctx); res.IsError() {
+			if res := requireLanguagePackWriteScope(ctx); res.IsError() {
 				return struct{}{}, res
+			}
+			if language == "" {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			}
+			if languagePack.Proto == nil {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
 			}
 			return struct{}{}, handler(slot, language, languagePack, ctx)
 		})
@@ -1028,14 +1031,14 @@ func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, l
 }
 
 func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
-	if language == "" {
-		return StatusWithCode(StatusCodeInvalidArgument, "language is required")
-	}
 	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguagePackHandlers, slot,
 		"DeleteLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if res := requireAdminScope(ctx); res.IsError() {
+			if res := requireLanguagePackWriteScope(ctx); res.IsError() {
 				return struct{}{}, res
+			}
+			if language == "" {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
 			}
 			return struct{}{}, handler(slot, language, ctx)
 		})

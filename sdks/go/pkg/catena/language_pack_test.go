@@ -286,6 +286,26 @@ func TestServer_LanguageHandlersValidation(t *testing.T) {
 	srv := newTestServer(t, true)
 	ctx := admTestTransportContext(t)
 
+	// Register handlers so the invoke callback - where argument validation now
+	// lives, after the auth/scope gate - is actually reached. The handlers must
+	// never run, since every case below fails validation first.
+	srv.RegisterGetLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+		t.Fatal("handler should not run when validation fails")
+		return LanguagePack{}, StatusResult{Code: StatusCodeOk}
+	})
+	srv.RegisterCreateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+		t.Fatal("handler should not run when validation fails")
+		return StatusResult{Code: StatusCodeOk}
+	})
+	srv.RegisterUpdateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+		t.Fatal("handler should not run when validation fails")
+		return StatusResult{Code: StatusCodeOk}
+	})
+	srv.RegisterDeleteLanguagePackHandler(0, func(uint16, string, HandlerContext) StatusResult {
+		t.Fatal("handler should not run when validation fails")
+		return StatusResult{Code: StatusCodeOk}
+	})
+
 	t.Run("get requires language", func(t *testing.T) {
 		if _, status := srv.InvokeGetLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
