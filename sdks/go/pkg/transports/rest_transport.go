@@ -965,21 +965,21 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Unary: the handler streams CommandResults but the HTTP reply is a single
+	// Unary: the handler streams CommandResponses but the HTTP reply is a single
 	// response, so keep only the last Send. respond is passed through so a smart
 	// handler can skip emitting responses; the server also swaps in a nullStream
 	// when respond=false, so nothing reaches this stream in that case.
-	stream := &lastStream[catena.CommandResult]{}
+	stream := &lastStream[st2138.CommandResponse]{}
 	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
-	// Reply with the final CommandResult the handler sent. When the caller opted
+	// Reply with the final CommandResponse the handler sent. When the caller opted
 	// out (respond=false) the server gobbled every chunk, so nothing was retained
 	// and we reply with an explicit no_response.
-	cmdResult := catena.CommandNoResponse()
+	cmdResult := st2138.CommandNoResponse()
 	if stream.has {
 		cmdResult = stream.item
 	}
@@ -1000,7 +1000,7 @@ func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	stream := &restStream[catena.CommandResult]{
+	stream := &restStream[st2138.CommandResponse]{
 		w:       w,
 		flusher: flusher,
 		marshal: MarshalProtoJSON,

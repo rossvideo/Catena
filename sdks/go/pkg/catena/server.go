@@ -156,7 +156,7 @@ type UpdateAssetHandler func(slot uint16, fqoid string, asset st2138.Asset, ctx 
 
 // DeleteAssetHandler removes the asset at fqoid (HTTP DELETE / DeleteAsset).
 type DeleteAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult
+type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult
 
 // ParamInfoHandler streams parameter information for a slot. The handler emits
 // each ParamInfo chunk through stream.Send and returns a terminal StatusResult.
@@ -274,7 +274,7 @@ type ServerRuntime interface {
 	InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult
 	InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult
 	InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult
-	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult
+	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[st2138.CommandResponse], transportContext TransportContext) StatusResult
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
 	InvokeReadLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult)
@@ -950,17 +950,17 @@ func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportCo
 	return res
 }
 
-func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult {
+func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[st2138.CommandResponse], transportContext TransportContext) StatusResult {
 	// When the caller opts out of responses, swap in a nullStream so any chunks
 	// the handler sends are discarded here rather than each transport having to
 	// gobble them itself. The handler still receives respond and may skip sending.
 	if !respond {
-		stream = nullStream[CommandResult]{}
+		stream = nullStream[st2138.CommandResponse]{}
 	}
 	// wrap the transport's stream so Send also fails on server shutdown, not just
 	// client disconnect. Cancellation is then transparent to the handler: it just
 	// gets an error from the next Send once the server is shutting down.
-	stream = shutdownStream[CommandResult]{inner: stream, shutdown: s.ctx}
+	stream = shutdownStream[st2138.CommandResponse]{inner: stream, shutdown: s.ctx}
 	_, res := invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, slot,
 		"ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ExecuteCommandHandler, ctx HandlerContext) (struct{}, StatusResult) {

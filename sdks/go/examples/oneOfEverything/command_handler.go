@@ -11,7 +11,7 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 	// This handler does not reduce allowed scopes beyond the base level of
 	// any command scope (mon, op, conf, or adm), however it broadcasts updates
 	// to the counter value only to specified counterScope.
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.HandlerContext, stream catena.Stream[catena.CommandResult]) catena.StatusResult {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.HandlerContext, stream catena.Stream[st2138.CommandResponse]) catena.StatusResult {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 		if !ctx.HasWriteScope(counterScope) {
 			logger.Warning("Unauthorized command execution attempt", "slot", slot, "command", commandFqoid)
@@ -24,7 +24,7 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 		sendCounter := func() catena.StatusResult {
 			if respond {
 				val, _ := st2138.ToValue(counter.GetValue())
-				if err := stream.Send(catena.CommandValue(val)); err != nil {
+				if err := stream.Send(st2138.CommandValue(val)); err != nil {
 					return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
 				}
 			}

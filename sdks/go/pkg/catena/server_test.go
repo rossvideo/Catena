@@ -795,7 +795,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointExecuteCommand,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterExecuteCommandHandler(slot, func(uint16, string, any, bool, HandlerContext, Stream[CommandResult]) StatusResult {
+				srv.RegisterExecuteCommandHandler(slot, func(uint16, string, any, bool, HandlerContext, Stream[st2138.CommandResponse]) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -1696,9 +1696,9 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointExecuteCommand, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		payload := "test-payload"
-		commandResult := CommandNoResponse()
+		commandResult := st2138.CommandNoResponse()
 		handlerCalled := 0
-		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, gotRespond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult {
+		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, gotRespond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
 			handlerCalled++
 			if slot != 9 {
 				t.Errorf("expected slot 9, got %d", slot)
@@ -1719,7 +1719,7 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		stream := &sliceStream[CommandResult]{}
+		stream := &sliceStream[st2138.CommandResponse]{}
 		status := srv.InvokeExecuteCommandHandler(9, "test/command", payload, true, stream, validTestTransportContext(nil))
 
 		if handlerCalled != 1 {
@@ -1746,22 +1746,22 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 
 		handlerCalled := 0
 		var gotRespond bool
-		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult {
+		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
 			handlerCalled++
 			gotRespond = respond
 			// A naive handler that ignores respond and sends anyway: these must be
 			// gobbled by the server, not delivered to the caller's stream.
-			if err := stream.Send(CommandNoResponse()); err != nil {
+			if err := stream.Send(st2138.CommandNoResponse()); err != nil {
 				t.Errorf("unexpected error from gobbling stream Send: %v", err)
 			}
 			value, _ := st2138.ToValue(int32(42))
-			if err := stream.Send(CommandValue(value)); err != nil {
+			if err := stream.Send(st2138.CommandValue(value)); err != nil {
 				t.Errorf("unexpected error from gobbling stream Send: %v", err)
 			}
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		stream := &sliceStream[CommandResult]{}
+		stream := &sliceStream[st2138.CommandResponse]{}
 		status := srv.InvokeExecuteCommandHandler(9, "test/command", "payload", false, stream, validTestTransportContext(nil))
 
 		if handlerCalled != 1 {
@@ -1786,9 +1786,9 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointExecuteCommand, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		value, _ := st2138.ToValue(int32(42))
-		first := CommandNoResponse()
-		second := CommandValue(value)
-		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult {
+		first := st2138.CommandNoResponse()
+		second := st2138.CommandValue(value)
+		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
 			if respond != true {
 				t.Errorf("expected handler to observe respond=true, got %v", respond)
 			}
@@ -1801,7 +1801,7 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		stream := &sliceStream[CommandResult]{}
+		stream := &sliceStream[st2138.CommandResponse]{}
 		status := srv.InvokeExecuteCommandHandler(9, "test/command", "payload", true, stream, validTestTransportContext(nil))
 
 		if status.IsError() {
@@ -1970,11 +1970,11 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointExecuteCommand,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterExecuteCommandHandler(0, func(uint16, string, any, bool, HandlerContext, Stream[CommandResult]) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(uint16, string, any, bool, HandlerContext, Stream[st2138.CommandResponse]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[CommandResult]{}, invalidContext)
+				return srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[st2138.CommandResponse]{}, invalidContext)
 			},
 		},
 		{
@@ -2114,11 +2114,11 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 			endpoint: EndpointExecuteCommand,
 			verifyShutdown: func(t *testing.T, srv *server) error {
 				var sendErr error
-				srv.RegisterExecuteCommandHandler(0, func(_ uint16, _ string, _ any, _ bool, _ HandlerContext, stream Stream[CommandResult]) StatusResult {
-					sendErr = stream.Send(CommandNoResponse())
+				srv.RegisterExecuteCommandHandler(0, func(_ uint16, _ string, _ any, _ bool, _ HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
+					sendErr = stream.Send(st2138.CommandNoResponse())
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[CommandResult]{}, TransportContext{})
+				srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[st2138.CommandResponse]{}, TransportContext{})
 				return sendErr
 			},
 		},
@@ -2403,11 +2403,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointExecuteCommand,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterExecuteCommandHandler(0, func(uint16, string, any, bool, HandlerContext, Stream[CommandResult]) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(uint16, string, any, bool, HandlerContext, Stream[st2138.CommandResponse]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[CommandResult]{}, TransportContext{})
+				return srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[st2138.CommandResponse]{}, TransportContext{})
 			},
 		},
 		{

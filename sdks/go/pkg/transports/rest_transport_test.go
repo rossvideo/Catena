@@ -214,9 +214,9 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "execute command",
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+				runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 					assertContext(t, ctx)
-					return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *RestTransport) {
@@ -764,12 +764,12 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
 		handlerCalled := false
-		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			handlerCalled = true
 			if commandFqoid != "reboot" {
 				t.Errorf("expected commandFqoid 'reboot', got %s", commandFqoid)
 			}
-			return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/reboot", "")
@@ -788,13 +788,13 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
 		handlerCalled := false
-		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			handlerCalled = true
 			if payload == nil {
 				t.Error("expected payload to be non-nil")
 			}
 			val, _ := st2138.ToValue(payload)
-			return []catena.CommandResult{catena.CommandValue(val)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.CommandResponse{st2138.CommandValue(val)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value": "test"}`)
@@ -812,9 +812,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
 		handlerCalled := false
-		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			handlerCalled = true
-			return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/command/reboot", "")
@@ -861,9 +861,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				transport, runtime := makeTestRestTransport(t)
 				var receivedPayload any
-				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 					receivedPayload = payload
-					return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 
 				makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/test", tt.body)
@@ -892,9 +892,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 	t.Run("ResponseValue", func(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			val, _ := st2138.ToValue("command executed")
-			return []catena.CommandResult{catena.CommandValue(val)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.CommandResponse{st2138.CommandValue(val)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/run", "")
@@ -917,8 +917,8 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 	t.Run("ExceptionResponse", func(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
-			return []catena.CommandResult{catena.CommandException(
+		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+			return []st2138.CommandResponse{st2138.CommandException(
 				"InvalidCommand",
 				"Command not found: "+fqoid,
 				st2138.NewPolyglotText("en", "Command not found"),
@@ -959,7 +959,7 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 	t.Run("HandlerError", func(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "command not found")
 		}
 
@@ -990,7 +990,7 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				transport, runtime := makeTestRestTransport(t)
 				handlerCalled := false
-				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 					handlerCalled = true
 					if respond != tc.want {
 						t.Errorf("handler received respond=%v, want %v", respond, tc.want)
@@ -1011,16 +1011,16 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
 		gotRespond := false
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			gotRespond = respond
 			if fqoid != "run" {
 				t.Errorf("expected commandFqoid 'run', got %s", fqoid)
 			}
 			v1, _ := st2138.ToValue(int32(1))
 			v2, _ := st2138.ToValue(int32(2))
-			return []catena.CommandResult{
-				catena.CommandValue(v1),
-				catena.CommandValue(v2),
+			return []st2138.CommandResponse{
+				st2138.CommandValue(v1),
+				st2138.CommandValue(v2),
 			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -1041,7 +1041,7 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	t.Run("StreamErrorNoneSent", func(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "command not found")
 		}
 
@@ -1056,12 +1056,12 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	t.Run("StreamErrorAfterSomeSent", func(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			v1, _ := st2138.ToValue(int32(1))
 			v2, _ := st2138.ToValue(int32(2))
-			return []catena.CommandResult{
-				catena.CommandValue(v1),
-				catena.CommandValue(v2),
+			return []st2138.CommandResponse{
+				st2138.CommandValue(v1),
+				st2138.CommandValue(v2),
 			}, catena.StatusWithCode(catena.StatusCodeInternal, "internal error")
 		}
 
@@ -1091,7 +1091,7 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	t.Run("StreamEmptyOk", func(t *testing.T) {
 		transport, runtime := makeTestRestTransport(t)
 
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 

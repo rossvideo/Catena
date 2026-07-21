@@ -62,7 +62,7 @@ type stubServerRuntime struct {
 	createAssetFn            func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult
 	updateAssetFn            func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult
 	deleteAssetFn            func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
-	commandFn                func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult)
+	commandFn                func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult)
 	listLanguagesFn          func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult)
 	languagePackFn           func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult)
@@ -168,7 +168,7 @@ func (s *stubServerRuntime) InvokeDeleteAssetHandler(slot uint16, fqoid string, 
 	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "DeleteAsset handler not implemented"}
 }
 
-func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream catena.Stream[catena.CommandResult], ctx catena.TransportContext) catena.StatusResult {
+func (s *stubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream catena.Stream[st2138.CommandResponse], ctx catena.TransportContext) catena.StatusResult {
 	if s.commandFn != nil {
 		results, status := s.commandFn(slot, commandFqoid, payload, respond, ctx)
 		for _, result := range results {

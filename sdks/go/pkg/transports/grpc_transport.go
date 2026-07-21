@@ -423,7 +423,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	adapter := &grpcStream[catena.CommandResult]{ss: stream}
+	adapter := &grpcStream[st2138.CommandResponse]{ss: stream}
 	result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, req.Respond, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
