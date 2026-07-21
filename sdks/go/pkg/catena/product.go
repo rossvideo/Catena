@@ -147,6 +147,18 @@ func isProductOid(fqoid string) bool {
 	return fqoid == ProductOid || strings.HasPrefix(fqoid, ProductOid+"/")
 }
 
+// enforceProductReadScope authorizes a read of the product param. The product
+// struct declares the st2138:mon access scope (see ProductParam), so any read
+// touching product/* requires the monitor read scope. A write grant implies
+// read, and HasReadScope returns true for every scope when authorization is
+// disabled, so this passes in that mode. Mirrors enforceAssetWriteScope.
+func enforceProductReadScope(ctx HandlerContext) StatusResult {
+	if ctx.HasReadScope(ScopeMon) {
+		return StatusWithCode(StatusCodeOk, "")
+	}
+	return StatusWithCode(StatusCodePermissionDenied, "product params require monitor scope")
+}
+
 // productValueForOid resolves a product FQOID (the whole struct for "product",
 // or a single field for "product/<field>") to a Value from p.
 func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {

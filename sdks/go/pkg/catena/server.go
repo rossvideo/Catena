@@ -244,6 +244,10 @@ type Server interface {
 	// GetDevice, answers GetValue and ParamInfo for product/*, and rejects
 	// SetValue writes to product/* with StatusCodePermissionDenied — business
 	// logic no longer needs to handle the product struct.
+	// The product param carries the st2138:mon access scope: when authorization
+	// is enabled, GetDevice omits the product param for callers without the
+	// monitor read scope, and GetValue/GetParam/ParamInfo reject product/*
+	// requests from such callers with StatusCodePermissionDenied.
 	// Note: If you do not register a product struct for a slot, requests for product/* values or info will fail with StatusCodeNotFound.
 	RegisterProductStruct(slot uint16, product ProductStruct)
 
@@ -800,11 +804,18 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 		"No device defined at slot",
 		func(handler DeviceHandler, ctx HandlerContext) (Device, StatusResult) {
 			device, res := handler(slot, ctx)
-			// Overwrite the product/* fields in whatever the business logic returned
-			// with the SDK-managed product struct, if one is registered for the slot.
-			if res.IsOk() {
-				if product, has := s.productForSlot(slot); has && device.Proto != nil {
-					device.WithParam(ProductOid, ProductParam(product))
+			if res.IsOk() && device.Proto != nil {
+				// The product param requires the st2138:mon read scope. Callers with
+				// mon get the SDK-managed product injected (overwriting whatever the
+				// business logic returned); callers without mon get no product param
+				// at all, even one the business logic added, since the product struct
+				// is read-only and mon-scoped regardless of who manages it.
+				if enforceProductReadScope(ctx).IsOk() {
+					if product, has := s.productForSlot(slot); has {
+						device.WithParam(ProductOid, ProductParam(product))
+					}
+				} else {
+					delete(device.Proto.Params, ProductOid)
 				}
 			}
 			return device, res
@@ -816,8 +827,12 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler GetValueHandler, ctx HandlerContext) (Value, StatusResult) {
 			// The SDK owns product/* when a product struct is registered for the slot;
-			// answer it directly instead of passing to business logic.
+			// answer it directly instead of passing to business logic. The product
+			// param is mon-scoped, so gate any product/* read before touching it.
 			if isProductOid(fqoid) {
+				if scopeRes := enforceProductReadScope(ctx); scopeRes.IsError() {
+					return ReplyError[Value](scopeRes.Code, scopeRes.Error)
+				}
 				if product, has := s.productForSlot(slot); has {
 					return productValueForOid(product, fqoid)
 				}
@@ -832,8 +847,12 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler GetParamHandler, ctx HandlerContext) (Param, StatusResult) {
 			// The SDK owns product/* when a product struct is registered for the slot;
-			// answer it directly instead of passing to business logic.
+			// answer it directly instead of passing to business logic. The product
+			// param is mon-scoped, so gate any product/* read before touching it.
 			if isProductOid(fqoid) {
+				if scopeRes := enforceProductReadScope(ctx); scopeRes.IsError() {
+					return Param{}, scopeRes
+				}
 				if product, has := s.productForSlot(slot); has {
 					return productParamForOid(product, fqoid)
 				}
@@ -949,8 +968,13 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 		"ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ParamInfoHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			// The SDK owns product/* ParamInfo when a product struct is registered for
-			// the slot; answer it directly instead of passing to business logic.
+			// the slot; answer it directly instead of passing to business logic. The
+			// product param is mon-scoped, so gate any product/* request before
+			// touching it.
 			if isProductOid(oidPrefix) {
+				if scopeRes := enforceProductReadScope(ctx); scopeRes.IsError() {
+					return struct{}{}, scopeRes
+				}
 				if product, has := s.productForSlot(slot); has {
 					return struct{}{}, productParamInfosForOid(product, oidPrefix, recursive, stream)
 				}
