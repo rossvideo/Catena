@@ -47,10 +47,13 @@ import (
 // spelling for handler signatures.
 type Message = st2138.Message
 
-// Stream is the handler-facing sink for a streamed response. It is defined in
-// the st2138 package; this alias keeps the catena.Stream spelling for handler
-// signatures (e.g. catena.Stream[st2138.ParamInfo]).
-type Stream[T Message] = st2138.Stream[T]
+// Stream is the handler-facing sink for a streamed response. Each endpoint's
+// stream is parameterized by its own chunk type, so a handler can only send the
+// chunk type that endpoint expects. Send delivers one chunk to the client and
+// returns an error if the chunk could not be sent.
+type Stream[T Message] interface {
+	Send(chunk T) error
+}
 
 // shutdownStream wraps a handler-facing Stream so Send fails once the server's
 // shutdown context is done, without the handler having to check for

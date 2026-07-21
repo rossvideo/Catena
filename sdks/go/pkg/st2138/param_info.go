@@ -74,12 +74,21 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 	}
 }
 
+// paramInfoSink is the minimal chunk sink ParamInfosForRequest needs: somewhere
+// to Send each ParamInfo descriptor. The handler-facing Stream type lives in the
+// catena package (which would create an import cycle if referenced here), so we
+// accept the narrow interface instead - any catena.Stream[ParamInfo] satisfies
+// it structurally.
+type paramInfoSink interface {
+	Send(chunk ParamInfo) error
+}
+
 // ParamInfosForRequest streams ParamInfo responses for the requested FQOID from
 // a Device's params subtree, emitting each descriptor into stream as the tree
 // is walked. The returned StatusResult is the terminal status: Ok once every
 // descriptor has been sent, NotFound for an unknown oid, or Internal if a Send
 // fails (a failed Send stops the walk immediately).
-func ParamInfosForRequest(fqoid string, device *Device, recursive bool, stream Stream[ParamInfo]) StatusResult {
+func ParamInfosForRequest(fqoid string, device *Device, recursive bool, stream paramInfoSink) StatusResult {
 	if device == nil || device.Proto == nil {
 		return StatusWithCode(StatusCodeInternal, "invalid device")
 	}
@@ -144,7 +153,7 @@ func newParamInfoFromDescriptor(oid string, param *protos.Param) ParamInfo {
 // sendParamInfos walks params in sorted-key order, sending a descriptor for each
 // (and, when recursive, its subtree) into stream. It stops and returns the first
 // Send error encountered.
-func sendParamInfos(params map[string]*protos.Param, prefix string, recursive bool, stream Stream[ParamInfo]) error {
+func sendParamInfos(params map[string]*protos.Param, prefix string, recursive bool, stream paramInfoSink) error {
 	keys := make([]string, 0, len(params))
 	for key := range params {
 		keys = append(keys, key)

@@ -29,35 +29,28 @@
  */
 
 /**
- * @brief Test helpers for the st2138 streaming primitives.
- * @file stream_test.go
+ * @brief Streamable message primitive for the Catena SDK.
+ * @file message.go
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 package st2138
 
-var _ Stream[ParamInfo] = &sliceStream[ParamInfo]{}
+import (
+	"google.golang.org/protobuf/proto"
+)
 
-// sliceStream is an in-memory Stream that collects every chunk it receives.
-// It is intended for tests, where a handler can be driven against a real Stream
-// and the accumulated chunks inspected afterwards.
-type sliceStream[T Message] struct {
-	Items []T
-	// Err, when non-nil, is returned by Send once FailAfter chunks have been
-	// accepted, letting tests exercise a handler's error path mid-stream.
-	Err error
-	// FailAfter is the number of chunks Send accepts before returning Err.
-	// It has no effect while Err is nil. Zero fails on the first Send.
-	FailAfter int
-}
-
-// Send appends chunk to Items and returns nil, unless Err is set and FailAfter
-// chunks have already been accepted, in which case it returns Err without
-// recording the chunk.
-func (s *sliceStream[T]) Send(chunk T) error {
-	if s.Err != nil && len(s.Items) >= s.FailAfter {
-		return s.Err
-	}
-	s.Items = append(s.Items, chunk)
-	return nil
+// Message is implemented by the wrapper types that can be sent as a single
+// chunk of a streamed response. Wire returns the fully-formed protobuf message
+// for that chunk - the transport-neutral wire representation.
+//
+// A Message is self-contained: it carries everything the transport needs to
+// emit one chunk. Transports never reach past Wire to inspect wrapper internals
+// - the gRPC path sends the returned proto directly, and the REST path applies
+// its own JSON marshalling rules to it.
+//
+// The handler-facing Stream sink that carries these chunks lives in the catena
+// package; st2138 only defines the chunk (Message) contract itself.
+type Message interface {
+	Wire() proto.Message
 }

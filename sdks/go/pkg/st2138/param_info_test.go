@@ -45,6 +45,32 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
+var _ paramInfoSink = &sliceStream[ParamInfo]{}
+
+// sliceStream is an in-memory chunk sink that collects every chunk it receives.
+// It is intended for tests, where a handler can be driven against a real sink
+// and the accumulated chunks inspected afterwards.
+type sliceStream[T Message] struct {
+	Items []T
+	// Err, when non-nil, is returned by Send once FailAfter chunks have been
+	// accepted, letting tests exercise a handler's error path mid-stream.
+	Err error
+	// FailAfter is the number of chunks Send accepts before returning Err.
+	// It has no effect while Err is nil. Zero fails on the first Send.
+	FailAfter int
+}
+
+// Send appends chunk to Items and returns nil, unless Err is set and FailAfter
+// chunks have already been accepted, in which case it returns Err without
+// recording the chunk.
+func (s *sliceStream[T]) Send(chunk T) error {
+	if s.Err != nil && len(s.Items) >= s.FailAfter {
+		return s.Err
+	}
+	s.Items = append(s.Items, chunk)
+	return nil
+}
+
 func TestNewParamInfo_Basic(t *testing.T) {
 	pi := NewParamInfo("text_box", NewPolyglotText("en", "Text Box"), ParamTypeString, "tpl-1", 0)
 
