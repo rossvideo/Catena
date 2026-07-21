@@ -63,7 +63,10 @@ const (
 	EndpointGetValue
 	EndpointGetParam
 	EndpointSetValue
-	EndpointGetAsset
+	EndpointReadAsset
+	EndpointCreateAsset
+	EndpointUpdateAsset
+	EndpointDeleteAsset
 	EndpointExecuteCommand
 	EndpointParamInfo
 	EndpointGetLanguagePack
@@ -94,8 +97,14 @@ func (e EndpointType) String() string {
 		return "SetValue"
 	case EndpointGetParam:
 		return "GetParam"
-	case EndpointGetAsset:
-		return "GetAsset"
+	case EndpointReadAsset:
+		return "ReadAsset"
+	case EndpointCreateAsset:
+		return "CreateAsset"
+	case EndpointUpdateAsset:
+		return "UpdateAsset"
+	case EndpointDeleteAsset:
+		return "DeleteAsset"
 	case EndpointExecuteCommand:
 		return "ExecuteCommand"
 	case EndpointParamInfo:
@@ -134,7 +143,18 @@ type SetValueEntry struct {
 // endpoints invoke it with a one-element slice; multi-value endpoints pass the
 // full slice so the handler can apply them atomically (all-or-nothing).
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
-type GetAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
+type ReadAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
+
+// CreateAssetHandler stores a new asset at fqoid (HTTP POST / CreateAsset). Business
+// logic decides create-vs-conflict semantics.
+type CreateAssetHandler func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult
+
+// UpdateAssetHandler replaces an existing asset at fqoid (HTTP PUT /
+// UpdateAsset). Business logic decides overwrite-vs-not-found semantics.
+type UpdateAssetHandler func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult
+
+// DeleteAssetHandler removes the asset at fqoid (HTTP DELETE / DeleteAsset).
+type DeleteAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult
 
 // ParamInfoHandler streams parameter information for a slot. The handler emits
@@ -205,7 +225,10 @@ type Server interface {
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
 	RegisterGetParamHandler(slot uint16, handler GetParamHandler)
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
-	RegisterGetAssetHandler(slot uint16, handler GetAssetHandler)
+	RegisterReadAssetHandler(slot uint16, handler ReadAssetHandler)
+	RegisterCreateAssetHandler(slot uint16, handler CreateAssetHandler)
+	RegisterUpdateAssetHandler(slot uint16, handler UpdateAssetHandler)
+	RegisterDeleteAssetHandler(slot uint16, handler DeleteAssetHandler)
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
@@ -240,7 +263,10 @@ type ServerRuntime interface {
 	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
 	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult)
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
-	InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
+	InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
+	InvokeCreateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult
+	InvokeUpdateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult
+	InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
@@ -271,7 +297,10 @@ type server struct {
 	getValueHandlers       map[uint16]GetValueHandler
 	getParamHandlers       map[uint16]GetParamHandler
 	setValueHandlers       map[uint16]SetValueHandler
-	getAssetHandlers       map[uint16]GetAssetHandler
+	readAssetHandlers      map[uint16]ReadAssetHandler
+	createAssetHandlers    map[uint16]CreateAssetHandler
+	updateAssetHandlers    map[uint16]UpdateAssetHandler
+	deleteAssetHandlers    map[uint16]DeleteAssetHandler
 	executeCommandHandlers map[uint16]ExecuteCommandHandler
 	paramInfoHandlers      map[uint16]ParamInfoHandler
 	listLanguagesHandlers  map[uint16]ListLanguagesHandler
@@ -321,7 +350,10 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		getValueHandlers:       make(map[uint16]GetValueHandler),
 		getParamHandlers:       make(map[uint16]GetParamHandler),
 		setValueHandlers:       make(map[uint16]SetValueHandler),
-		getAssetHandlers:       make(map[uint16]GetAssetHandler),
+		readAssetHandlers:      make(map[uint16]ReadAssetHandler),
+		createAssetHandlers:    make(map[uint16]CreateAssetHandler),
+		updateAssetHandlers:    make(map[uint16]UpdateAssetHandler),
+		deleteAssetHandlers:    make(map[uint16]DeleteAssetHandler),
 		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
 		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
 		listLanguagesHandlers:  make(map[uint16]ListLanguagesHandler),
@@ -693,8 +725,20 @@ func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
 	s.registerHandlerFn(slot, func() { s.setValueHandlers[slot] = handler })
 }
 
-func (s *server) RegisterGetAssetHandler(slot uint16, handler GetAssetHandler) {
-	s.registerHandlerFn(slot, func() { s.getAssetHandlers[slot] = handler })
+func (s *server) RegisterReadAssetHandler(slot uint16, handler ReadAssetHandler) {
+	s.registerHandlerFn(slot, func() { s.readAssetHandlers[slot] = handler })
+}
+
+func (s *server) RegisterCreateAssetHandler(slot uint16, handler CreateAssetHandler) {
+	s.registerHandlerFn(slot, func() { s.createAssetHandlers[slot] = handler })
+}
+
+func (s *server) RegisterUpdateAssetHandler(slot uint16, handler UpdateAssetHandler) {
+	s.registerHandlerFn(slot, func() { s.updateAssetHandlers[slot] = handler })
+}
+
+func (s *server) RegisterDeleteAssetHandler(slot uint16, handler DeleteAssetHandler) {
+	s.registerHandlerFn(slot, func() { s.deleteAssetHandlers[slot] = handler })
 }
 
 func (s *server) RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler) {
@@ -819,12 +863,62 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 	return res
 }
 
-func (s *server) InvokeGetAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {
-	return invokeHandler(s, transportContext, EndpointGetAsset, false, s.getAssetHandlers, slot,
+func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {
+	return invokeHandler(s, transportContext, EndpointReadAsset, false, s.readAssetHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
-		func(handler GetAssetHandler, ctx HandlerContext) (Asset, StatusResult) {
+		func(handler ReadAssetHandler, ctx HandlerContext) (Asset, StatusResult) {
 			return handler(slot, fqoid, ctx)
 		})
+}
+
+// enforceAssetWriteScope authorizes an asset mutation. Per ST 2138 the asset
+// write endpoints (CreateAsset/UpdateAsset/DeleteAsset) require adm, op, or cfg
+// write scope; a caller holding only the monitor scope is rejected even though
+// it technically carries a write scope. The generic gate's coarse write check
+// (HasAnyWriteScope) admits mon:w, so this narrower check runs per endpoint.
+// HasWriteScope returns true for every scope when authorization is disabled, so
+// this passes in that mode.
+func enforceAssetWriteScope(ctx HandlerContext) StatusResult {
+	if ctx.HasWriteScope(ScopeOp) || ctx.HasWriteScope(ScopeCfg) || ctx.HasWriteScope(ScopeAdm) {
+		return StatusWithCode(StatusCodeOk, "")
+	}
+	return StatusWithCode(StatusCodePermissionDenied, "asset writes require adm, op, or cfg write scope")
+}
+
+func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointCreateAsset, true, s.createAssetHandlers, slot,
+		"no CreateAsset handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler CreateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
+				return struct{}{}, scopeRes
+			}
+			return struct{}{}, handler(slot, fqoid, asset, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointUpdateAsset, true, s.updateAssetHandlers, slot,
+		"no UpdateAsset handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler UpdateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
+				return struct{}{}, scopeRes
+			}
+			return struct{}{}, handler(slot, fqoid, asset, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointDeleteAsset, true, s.deleteAssetHandlers, slot,
+		"no DeleteAsset handler registered for slot "+strconv.Itoa(int(slot)),
+		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
+				return struct{}{}, scopeRes
+			}
+			return struct{}{}, handler(slot, fqoid, ctx)
+		})
+	return res
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult {

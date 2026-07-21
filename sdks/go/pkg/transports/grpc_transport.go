@@ -385,7 +385,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	asset, result := s.transport.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
+	asset, result := s.transport.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
 	if result.IsError() {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)

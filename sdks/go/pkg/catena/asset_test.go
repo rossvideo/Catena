@@ -243,6 +243,106 @@ func TestToAsset_EmptyPayload_WithUrl(t *testing.T) {
 	}
 }
 
+func TestFromAsset_Payload_Roundtrip(t *testing.T) {
+	dp := DataPayload{
+		Metadata:        map[string]string{"content-type": "image/png"},
+		Digest:          []byte{0x01, 0x02, 0x03},
+		PayloadEncoding: EncodingGzip,
+		Payload:         []byte("fake image data"),
+	}
+
+	asset, res := ToAsset(dp, true)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("ToAsset error: %v", res.Error)
+	}
+
+	got, res := FromAsset(asset)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("FromAsset error: %v", res.Error)
+	}
+	if string(got.Payload) != "fake image data" {
+		t.Errorf("expected payload 'fake image data', got %q", string(got.Payload))
+	}
+	if got.Metadata["content-type"] != "image/png" {
+		t.Errorf("expected content-type 'image/png', got %v", got.Metadata["content-type"])
+	}
+	if got.PayloadEncoding != EncodingGzip {
+		t.Errorf("expected GZIP encoding, got %v", got.PayloadEncoding)
+	}
+	if !bytes.Equal(got.Digest, []byte{0x01, 0x02, 0x03}) {
+		t.Errorf("expected digest [1 2 3], got %v", got.Digest)
+	}
+}
+
+func TestFromAsset_Url_Roundtrip(t *testing.T) {
+	dp := DataPayload{Url: "https://example.com/resource.json"}
+
+	asset, res := ToAsset(dp, false)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("ToAsset error: %v", res.Error)
+	}
+
+	got, res := FromAsset(asset)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("FromAsset error: %v", res.Error)
+	}
+	if got.Url != "https://example.com/resource.json" {
+		t.Errorf("expected URL, got %q", got.Url)
+	}
+}
+
+func TestFromAsset_NilProto(t *testing.T) {
+	_, res := FromAsset(Asset{})
+	if res.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected InvalidArgument for nil proto, got %v", res.Code)
+	}
+}
+
+func TestFromAsset_NilPayload(t *testing.T) {
+	asset := Asset{Proto: &protos.ExternalObjectPayload{}}
+	_, res := FromAsset(asset)
+	if res.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected InvalidArgument for nil payload, got %v", res.Code)
+	}
+}
+
+func TestFromAsset_EmptyUrl(t *testing.T) {
+	// A URL oneof set to the empty string carries no data and must be rejected.
+	asset := Asset{Proto: &protos.ExternalObjectPayload{
+		Payload: &protos.DataPayload{
+			Kind: &protos.DataPayload_Url{Url: ""},
+		},
+	}}
+	_, res := FromAsset(asset)
+	if res.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected InvalidArgument for empty URL, got %v", res.Code)
+	}
+}
+
+func TestFromAsset_EmptyPayload(t *testing.T) {
+	// A payload oneof set to an empty byte slice carries no data and must be rejected.
+	asset := Asset{Proto: &protos.ExternalObjectPayload{
+		Payload: &protos.DataPayload{
+			Kind: &protos.DataPayload_Payload{Payload: []byte{}},
+		},
+	}}
+	_, res := FromAsset(asset)
+	if res.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected InvalidArgument for empty payload, got %v", res.Code)
+	}
+}
+
+func TestFromAsset_NoKind(t *testing.T) {
+	// A DataPayload with neither payload nor url set must be rejected.
+	asset := Asset{Proto: &protos.ExternalObjectPayload{
+		Payload: &protos.DataPayload{},
+	}}
+	_, res := FromAsset(asset)
+	if res.Code != StatusCodeInvalidArgument {
+		t.Errorf("expected InvalidArgument for missing kind, got %v", res.Code)
+	}
+}
+
 func TestDataPayload_Fields(t *testing.T) {
 	dp := DataPayload{
 		Metadata: map[string]string{

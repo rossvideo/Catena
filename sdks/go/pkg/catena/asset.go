@@ -211,9 +211,17 @@ func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
 	}
 	switch k := pdp.GetKind().(type) {
 	case *protos.DataPayload_Url:
+		if k.Url == "" {
+			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+		}
 		dp.Url = k.Url
 	case *protos.DataPayload_Payload:
+		if len(k.Payload) == 0 {
+			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+		}
 		dp.Payload = slices.Clone(k.Payload)
+	default:
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
 	}
 	return dp, StatusResult{Code: StatusCodeOk}
 }
@@ -229,6 +237,15 @@ func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 		Cachable: cachable,
 		Payload:  protoPayload,
 	}}, StatusResult{Code: StatusCodeOk}
+}
+
+// FromAsset converts an Asset back into a DataPayload for business logic to
+// store or inspect. It is the inverse of ToAsset.
+func FromAsset(asset Asset) (DataPayload, StatusResult) {
+	if asset.Proto == nil {
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no proto"}
+	}
+	return dataPayloadFromProto(asset.Proto.GetPayload())
 }
 
 func compressGzipTo(w io.Writer, data []byte) error {

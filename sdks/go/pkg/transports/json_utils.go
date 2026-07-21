@@ -187,6 +187,38 @@ func WriteProtoJSON(w http.ResponseWriter, msg proto.Message, statusCode int) er
 	return writeErr
 }
 
+// ReadAssetRequestJSON reads and unmarshals a JSON request body into a
+// protos.ExternalObjectPayload (the inverse of MarshalAssetJSON). It validates
+// the Content-Type header and returns an error if it's not application/json.
+func ReadAssetRequestJSON(r *http.Request) (*protos.ExternalObjectPayload, error) {
+	defer r.Body.Close()
+
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "" {
+		return nil, fmt.Errorf("missing Content-Type header")
+	}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return nil, fmt.Errorf("invalid content type: %s", contentType)
+	}
+	if mediaType != "application/json" {
+		return nil, fmt.Errorf("unsupported content type: %s, expected application/json", mediaType)
+	}
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read request body: %w", err)
+	}
+
+	payload := &protos.ExternalObjectPayload{}
+	if err := (protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}).Unmarshal(data, payload); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal request body: %w", err)
+	}
+	return payload, nil
+}
+
 // ReadRequestJSON reads and unmarshals a JSON request body into a protos.Value.
 // It validates the Content-Type header and returns an error if it's not application/json.
 func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
