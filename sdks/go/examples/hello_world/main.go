@@ -115,9 +115,9 @@ func main() {
 			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 		}
 
-		value, res := st2138.ToValue(helloWorld.Get())
-		if res.Code != catena.StatusCodeOk {
-			logger.Error("Failed to convert hello_world value", "error", res.Error)
+		value, err := st2138.ToValue(helloWorld.Get())
+		if err != nil {
+			logger.Error("Failed to convert hello_world value", "error", err)
 			return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to convert value")
 		}
 		return catena.Reply(value)

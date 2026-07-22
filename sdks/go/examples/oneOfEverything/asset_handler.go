@@ -28,10 +28,10 @@ func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 			}
 
 			stored := val.(storedAsset)
-			catenaAsset, res := st2138.ToAsset(stored.payload, stored.cachable)
-			if res.Code != catena.StatusCodeOk {
-				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", res.Error)
-				return catena.ReplyError[st2138.Asset](catena.StatusCodeInternal, "failed to convert asset: "+res.Error)
+			catenaAsset, err := st2138.ToAsset(stored.payload, stored.cachable)
+			if err != nil {
+				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+				return catena.ReplyError[st2138.Asset](catena.StatusCodeInternal, "failed to convert asset: "+err.Error())
 			}
 
 			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(stored.payload.Payload))
@@ -41,10 +41,10 @@ func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 		// POST / CreateAsset: create a new asset, conflict if one already exists.
 		srv.RegisterCreateAssetHandler(slot, func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("Asset load request", "slot", slot, "fqoid", fqoid)
-			payload, res := st2138.FromAsset(asset)
-			if res.Code != catena.StatusCodeOk {
-				logger.Error("Failed to convert asset to payload", "slot", slot, "fqoid", fqoid, "error", res.Error)
-				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid asset payload: "+res.Error)
+			payload, err := st2138.FromAsset(asset)
+			if err != nil {
+				logger.Error("Failed to convert asset to payload", "slot", slot, "fqoid", fqoid, "error", err)
+				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid asset payload: "+err.Error())
 			}
 			entry := storedAsset{payload: payload, cachable: asset.Proto.GetCachable()}
 			if _, loaded := assets.LoadOrStore(fqoid, entry); loaded {
@@ -58,10 +58,10 @@ func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 		// PUT / UpdateAsset: replace an existing asset, not found if missing.
 		srv.RegisterUpdateAssetHandler(slot, func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.HandlerContext) catena.StatusResult {
 			logger.Info("Asset overwrite request", "slot", slot, "fqoid", fqoid)
-			payload, res := st2138.FromAsset(asset)
-			if res.Code != catena.StatusCodeOk {
-				logger.Error("Failed to convert asset to payload", "slot", slot, "fqoid", fqoid, "error", res.Error)
-				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid asset payload: "+res.Error)
+			payload, err := st2138.FromAsset(asset)
+			if err != nil {
+				logger.Error("Failed to convert asset to payload", "slot", slot, "fqoid", fqoid, "error", err)
+				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid asset payload: "+err.Error())
 			}
 			if _, ok := assets.Load(fqoid); !ok {
 				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)

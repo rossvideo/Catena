@@ -39,37 +39,127 @@
 package catena
 
 import (
+	"errors"
+
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
-// StatusCode is a transport-neutral outcome for handlers. It is defined in the
-// st2138 package (see st2138/StatusCode.md for per-code semantics); this alias
-// keeps the catena.StatusCode spelling for the server and response contract.
-type StatusCode = st2138.StatusCode
+// StatusCode is a transport-neutral outcome for handlers. Values 0-16 match
+// gRPC's canonical code space (ST 2138-11 §6.2 Table 2) and map 1:1 in the
+// gRPC transport. See StatusCode.md for per-code semantics and how the REST
+// transport chooses 200 vs 204 per ST 2138-12.
+//
+// Based on Google's gRPC project (Apache 2.0 license):
+// https://github.com/grpc/grpc
+// http://www.apache.org/licenses/LICENSE-2.0
+type StatusCode int
 
-// StatusResult pairs a StatusCode with an optional error message. It is defined
-// in the st2138 package; this alias keeps the catena.StatusResult spelling.
-type StatusResult = st2138.StatusResult
+// StatusResult pairs a StatusCode with an optional error message. It is the
+// SDK-level response contract handlers return; the lower-level st2138 package
+// reports failures with idiomatic errors (see st2138's sentinel errors), which
+// the server maps into a StatusResult via statusFromError.
+type StatusResult struct {
+	Code  StatusCode
+	Error string
+}
+
+func (s StatusResult) IsOk() bool {
+	return s.Code == StatusCodeOk
+}
+
+func (s StatusResult) IsError() bool {
+	return s.Code != StatusCodeOk
+}
 
 const (
-	StatusCodeOk                 = st2138.StatusCodeOk
-	StatusCodeCancelled          = st2138.StatusCodeCancelled
-	StatusCodeUnknown            = st2138.StatusCodeUnknown
-	StatusCodeInvalidArgument    = st2138.StatusCodeInvalidArgument
-	StatusCodeDeadlineExceeded   = st2138.StatusCodeDeadlineExceeded
-	StatusCodeNotFound           = st2138.StatusCodeNotFound
-	StatusCodeAlreadyExists      = st2138.StatusCodeAlreadyExists
-	StatusCodePermissionDenied   = st2138.StatusCodePermissionDenied
-	StatusCodeResourceExhausted  = st2138.StatusCodeResourceExhausted
-	StatusCodeFailedPrecondition = st2138.StatusCodeFailedPrecondition
-	StatusCodeAborted            = st2138.StatusCodeAborted
-	StatusCodeOutOfRange         = st2138.StatusCodeOutOfRange
-	StatusCodeUnimplemented      = st2138.StatusCodeUnimplemented
-	StatusCodeInternal           = st2138.StatusCodeInternal
-	StatusCodeUnavailable        = st2138.StatusCodeUnavailable
-	StatusCodeDataLoss           = st2138.StatusCodeDataLoss
-	StatusCodeUnauthenticated    = st2138.StatusCodeUnauthenticated
+	// StatusCodeOk indicates the operation completed successfully.
+	StatusCodeOk StatusCode = 0
+
+	// StatusCodeCancelled indicates the operation was cancelled, typically by
+	// the caller (closed stream, cancelled context).
+	StatusCodeCancelled StatusCode = 1
+
+	// StatusCodeUnknown indicates a failure that cannot be classified more
+	// specifically.
+	StatusCodeUnknown StatusCode = 2
+
+	// StatusCodeInvalidArgument indicates the client supplied a request that
+	// cannot succeed as-is (bad JSON, wrong type, malformed fqoid, missing
+	// required field).
+	StatusCodeInvalidArgument StatusCode = 3
+
+	// StatusCodeDeadlineExceeded indicates the deadline expired before the
+	// operation could complete.
+	StatusCodeDeadlineExceeded StatusCode = 4
+
+	// StatusCodeNotFound indicates a referenced entity does not exist
+	// (unknown slot, missing param, unknown route).
+	StatusCodeNotFound StatusCode = 5
+
+	// StatusCodeAlreadyExists indicates a create would duplicate a unique
+	// resource.
+	StatusCodeAlreadyExists StatusCode = 6
+
+	// StatusCodePermissionDenied indicates the caller is authenticated but
+	// not authorized (token scope insufficient for the command/param).
+	StatusCodePermissionDenied StatusCode = 7
+
+	// StatusCodeResourceExhausted indicates a quota or rate limit was hit,
+	// or another resource has been exhausted.
+	StatusCodeResourceExhausted StatusCode = 8
+
+	// StatusCodeFailedPrecondition indicates the system is in the wrong
+	// state for the requested operation. (Distinct from HTTP 412 Precondition
+	// Failed; see StatusCode.md.)
+	StatusCodeFailedPrecondition StatusCode = 9
+
+	// StatusCodeAborted indicates a concurrency or transaction conflict;
+	// the client may retry at a higher level.
+	StatusCodeAborted StatusCode = 10
+
+	// StatusCodeOutOfRange indicates a value is past the end of a valid
+	// range (e.g. accessing band 5 of a 4-band eq).
+	StatusCodeOutOfRange StatusCode = 11
+
+	// StatusCodeUnimplemented indicates the operation or capability is not
+	// implemented or not enabled.
+	StatusCodeUnimplemented StatusCode = 12
+
+	// StatusCodeInternal indicates an unexpected server failure or broken
+	// invariant.
+	StatusCodeInternal StatusCode = 13
+
+	// StatusCodeUnavailable indicates a transient outage; the client may
+	// retry with backoff.
+	StatusCodeUnavailable StatusCode = 14
+
+	// StatusCodeDataLoss indicates unrecoverable data loss or corruption.
+	StatusCodeDataLoss StatusCode = 15
+
+	// StatusCodeUnauthenticated indicates missing or invalid credentials.
+	StatusCodeUnauthenticated StatusCode = 16
 )
+
+// StatusFromError maps an error returned by the st2138 package into a
+// StatusResult. It recognizes st2138's exported sentinel errors and translates
+// each to the matching StatusCode; a nil error is Ok and any unrecognized error
+// falls back to StatusCodeUnknown. Business logic that calls st2138 conversion
+// helpers (e.g. st2138.ToValue, st2138.FromProto) directly can use this to
+// convert their error return into the StatusResult a handler must return.
+func StatusFromError(err error) StatusResult {
+	switch {
+	case err == nil:
+		return StatusResult{Code: StatusCodeOk}
+	case errors.Is(err, st2138.ErrNotFound):
+		return StatusResult{Code: StatusCodeNotFound, Error: err.Error()}
+	case errors.Is(err, st2138.ErrInternal):
+		return StatusResult{Code: StatusCodeInternal, Error: err.Error()}
+	case errors.Is(err, st2138.ErrInvalidArgument):
+		return StatusResult{Code: StatusCodeInvalidArgument, Error: err.Error()}
+	default:
+		return StatusResult{Code: StatusCodeUnknown, Error: err.Error()}
+	}
+}
 
 // ResponseType is a constraint for types that can be returned from handlers
 type ResponseType interface {
@@ -98,5 +188,5 @@ func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 
 // StatusWithCode returns a StatusResult with the given StatusCode and optional message.
 func StatusWithCode(code StatusCode, msg string) StatusResult {
-	return st2138.StatusWithCode(code, msg)
+	return StatusResult{Code: code, Error: msg}
 }

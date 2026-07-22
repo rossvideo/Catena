@@ -287,8 +287,8 @@ func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, cat
 	entries := make([]catena.SetValueEntry, 0, len(payload.GetValues()))
 	for i, sv := range payload.GetValues() {
 		nativeValue, convErr := st2138.FromProto(sv.GetValue())
-		if convErr.Code != catena.StatusCodeOk {
-			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid value at index %d: %v", i, convErr.Error)}
+		if convErr != nil {
+			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid value at index %d: %v", i, convErr)}
 		}
 
 		entries = append(entries, catena.SetValueEntry{Fqoid: sv.GetOid(), Value: nativeValue})

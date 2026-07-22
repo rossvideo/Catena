@@ -29,7 +29,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 			return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 		}
 
-		return st2138.ParamInfosForRequest(fqoid, deviceInfo, recursive, stream)
+		return catena.ParamInfosForRequest(fqoid, deviceInfo, recursive, stream)
 	})
 
 	// Slot 2: prefix-based if statements with manual responses. This is useful

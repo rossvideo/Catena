@@ -212,8 +212,8 @@ func replyValue(fqoid string, v any, ok bool) (st2138.Value, catena.StatusResult
 	if !ok {
 		return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 	}
-	catenaVal, res := st2138.ToValue(v)
-	if res.Code != catena.StatusCodeOk {
+	catenaVal, err := st2138.ToValue(v)
+	if err != nil {
 		return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to convert value")
 	}
 	return catena.Reply(catenaVal)

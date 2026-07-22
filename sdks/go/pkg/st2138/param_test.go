@@ -39,6 +39,7 @@
 package st2138
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -669,8 +670,8 @@ func TestFullChaining(t *testing.T) {
 
 func TestWithValue_MatchingType(t *testing.T) {
 	v, res := ToValue(int32(42))
-	if res.Code != StatusCodeOk {
-		t.Fatal(res.Error)
+	if res != nil {
+		t.Fatal(res)
 	}
 	p := NewParamInt32(0).WithValue(v).Proto
 	if p.GetValue().GetInt32Value() != 42 {
@@ -680,8 +681,8 @@ func TestWithValue_MatchingType(t *testing.T) {
 
 func TestWithValue_Struct(t *testing.T) {
 	v, res := ToValue(map[string]any{"name": "test"})
-	if res.Code != StatusCodeOk {
-		t.Fatal(res.Error)
+	if res != nil {
+		t.Fatal(res)
 	}
 	p := NewParamStruct(nil).WithValue(v).Proto
 	fields := p.GetValue().GetStructValue().GetFields()
@@ -693,8 +694,8 @@ func TestWithValue_Struct(t *testing.T) {
 func TestWithValue_StructVariant(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "type_a", Value: int32(10)}
 	v, res := ToValue(sv)
-	if res.Code != StatusCodeOk {
-		t.Fatal(res.Error)
+	if res != nil {
+		t.Fatal(res)
 	}
 	p := NewParamStructVariant(nil).WithValue(v).Proto
 	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "type_a" {
@@ -705,8 +706,8 @@ func TestWithValue_StructVariant(t *testing.T) {
 
 func TestWithValue_MismatchedType(t *testing.T) {
 	v, res := ToValue("hello")
-	if res.Code != StatusCodeOk {
-		t.Fatal(res.Error)
+	if res != nil {
+		t.Fatal(res)
 	}
 	p := NewParamInt32(0).WithValue(v).Proto
 	if p.GetValue().GetInt32Value() != 0 {
@@ -719,8 +720,8 @@ func TestWithValue_MismatchedType(t *testing.T) {
 func TestSetValue_OK(t *testing.T) {
 	cp := NewParamInt32(0)
 	res := cp.SetValue(int32(99))
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	if res != nil {
+		t.Fatalf("expected OK, got %v", res)
 	}
 	p := cp.Proto
 	if p.GetValue().GetInt32Value() != 99 {
@@ -731,8 +732,8 @@ func TestSetValue_OK(t *testing.T) {
 func TestSetValue_TypeMismatch(t *testing.T) {
 	cp := NewParamInt32(0)
 	res := cp.SetValue("not an int")
-	if res.Code != StatusCodeInvalidArgument {
-		t.Errorf("expected StatusCodeInvalidArgument, got %v", res.Code)
+	if !errors.Is(res, ErrInvalidArgument) {
+		t.Errorf("expected ErrInvalidArgument, got %v", res)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 0 {
 		t.Error("expected value to remain unchanged after type mismatch")
@@ -742,7 +743,7 @@ func TestSetValue_TypeMismatch(t *testing.T) {
 func TestSetValue_ConversionError(t *testing.T) {
 	cp := NewParamInt32(0)
 	res := cp.SetValue(struct{}{})
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("expected conversion error for unsupported type")
 	}
 }
@@ -750,8 +751,8 @@ func TestSetValue_ConversionError(t *testing.T) {
 func TestGetValue_OK(t *testing.T) {
 	cp := NewParamString("hello")
 	v, res := cp.GetValue()
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	if res != nil {
+		t.Fatalf("expected OK, got %v", res)
 	}
 	s, ok := v.(string)
 	if !ok || s != "hello" {
@@ -762,8 +763,8 @@ func TestGetValue_OK(t *testing.T) {
 func TestGetValue_Nil(t *testing.T) {
 	cp := NewParamStruct(nil)
 	v, res := cp.GetValue()
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK for nil value, got %v: %s", res.Code, res.Error)
+	if res != nil {
+		t.Fatalf("expected OK for nil value, got %v", res)
 	}
 	if v != nil {
 		t.Errorf("expected nil value, got %v", v)
@@ -774,12 +775,12 @@ func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
 	cp := NewParamStruct(nil)
 	input := map[string]any{"x": int32(1), "y": int32(2)}
 	res := cp.SetValue(input)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("SetValue failed: %s", res.Error)
+	if res != nil {
+		t.Fatalf("SetValue failed: %s", res)
 	}
 	out, res := cp.GetValue()
-	if res.Code != StatusCodeOk {
-		t.Fatalf("GetValue failed: %s", res.Error)
+	if res != nil {
+		t.Fatalf("GetValue failed: %s", res)
 	}
 	m, ok := out.(map[string]any)
 	if !ok {
@@ -918,8 +919,8 @@ func TestNewParamFromValue_AllScalarTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v, res := ToValue(tt.input)
-			if res.Code != StatusCodeOk {
-				t.Fatalf("ToValue failed: %s", res.Error)
+			if res != nil {
+				t.Fatalf("ToValue failed: %s", res)
 			}
 			cp := NewParamFromValue(v)
 			if cp.Proto.GetType() != tt.wantType {
@@ -1118,15 +1119,15 @@ func TestIsConstraintValidForParam_NilKind(t *testing.T) {
 func TestSetValue_InvalidThenValid(t *testing.T) {
 	cp := NewParamInt32(10)
 	res := cp.SetValue("wrong type")
-	if res.Code != StatusCodeInvalidArgument {
-		t.Errorf("expected StatusCodeInvalidArgument, got %v", res.Code)
+	if !errors.Is(res, ErrInvalidArgument) {
+		t.Errorf("expected ErrInvalidArgument, got %v", res)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 10 {
 		t.Error("expected original value to be preserved after failed SetValue")
 	}
 	res = cp.SetValue(int32(20))
-	if res.Code != StatusCodeOk {
-		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	if res != nil {
+		t.Fatalf("expected OK, got %v", res)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 20 {
 		t.Errorf("expected 20, got %d", cp.Proto.GetValue().GetInt32Value())

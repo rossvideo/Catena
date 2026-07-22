@@ -1140,9 +1140,9 @@ func (s *server) ConnectionCount() int {
 // mutate or discard the original input after BroadcastUpdate returns.
 // Callers must still prevent concurrent mutation of value while this function is running.
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
-	protoValue, res := st2138.ToProto(value)
-	if res.Code != StatusCodeOk {
-		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
+	protoValue, err := st2138.ToProto(value)
+	if err != nil {
+		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
 		return
 	}
 	update := &protos.PushUpdates{

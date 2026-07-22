@@ -666,8 +666,8 @@ func TestRestTransport_CreateAsset_Route(t *testing.T) {
 	runtime.createAssetFn = func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult {
 		gotFqoid = fqoid
 		dp, res := st2138.FromAsset(asset)
-		if res.Code != catena.StatusCodeOk {
-			t.Errorf("FromAsset error: %v", res.Error)
+		if res != nil {
+			t.Errorf("FromAsset error: %v", res)
 		}
 		gotPayload = dp.Payload
 		return catena.StatusWithCode(catena.StatusCodeOk, "")

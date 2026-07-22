@@ -165,8 +165,8 @@ func productValueForOid(p ProductStruct, fqoid string) (st2138.Value, StatusResu
 		native = value
 	}
 
-	value, res := st2138.ToValue(native)
-	if res.Code != StatusCodeOk {
+	value, err := st2138.ToValue(native)
+	if err != nil {
 		return ReplyError[st2138.Value](StatusCodeInternal, "failed to convert product value")
 	}
 	return Reply(value)
@@ -186,8 +186,8 @@ func productParamForOid(p ProductStruct, fqoid string) (st2138.Param, StatusResu
 		return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+fqoid)
 	}
 
-	pv, res := st2138.ToProto(value)
-	if res.Code != StatusCodeOk {
+	pv, err := st2138.ToProto(value)
+	if err != nil {
 		return st2138.Param{}, StatusWithCode(StatusCodeInternal, "failed to convert product value")
 	}
 	return st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}, StatusWithCode(StatusCodeOk, "")
@@ -199,5 +199,5 @@ func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool, 
 	device := &st2138.Device{Proto: &protos.Device{
 		Params: map[string]*protos.Param{ProductOid: ProductParam(p).Proto},
 	}}
-	return st2138.ParamInfosForRequest(oidPrefix, device, recursive, stream)
+	return ParamInfosForRequest(oidPrefix, device, recursive, stream)
 }

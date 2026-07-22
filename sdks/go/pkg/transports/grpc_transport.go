@@ -326,9 +326,9 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 
 	// Convert proto value to native Go type
 	nativeValue, errProto := st2138.FromProto(req.Value.Value)
-	if errProto.Code != catena.StatusCodeOk {
-		logger.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto.Error))
+	if errProto != nil {
+		logger.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto))
 	}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
@@ -357,9 +357,9 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 		fqoid := setValue.Oid
 
 		nativeValue, errProto := st2138.FromProto(setValue.Value)
-		if errProto.Code != catena.StatusCodeOk {
-			logger.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
+		if errProto != nil {
+			logger.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto))
 		}
 
 		entries = append(entries, catena.SetValueEntry{Fqoid: fqoid, Value: nativeValue})
@@ -413,11 +413,11 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 
 	var payload any
 	if req.Value != nil {
-		var errProto catena.StatusResult
+		var errProto error
 		payload, errProto = st2138.FromProto(req.Value)
-		if errProto.Code != catena.StatusCodeOk {
-			logger.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto.Error)
-			return status.Error(codes.InvalidArgument, fmt.Sprintf("invalid command payload: %v", errProto.Error))
+		if errProto != nil {
+			logger.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto)
+			return status.Error(codes.InvalidArgument, fmt.Sprintf("invalid command payload: %v", errProto))
 		}
 	}
 

@@ -70,13 +70,13 @@ func TestToValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cv, err := ToValue(tt.input)
 			if tt.wantErr {
-				if err.Code == StatusCodeOk {
+				if err == nil {
 					t.Errorf("ToValue(%v) expected error, got nil", tt.input)
 				}
 				return
 			}
-			if err.Code != StatusCodeOk {
-				t.Errorf("ToValue(%v) unexpected error: %v", tt.input, err.Error)
+			if err != nil {
+				t.Errorf("ToValue(%v) unexpected error: %v", tt.input, err)
 				return
 			}
 			if cv.Proto == nil {
@@ -89,8 +89,8 @@ func TestToValue(t *testing.T) {
 func TestToProto_Int32(t *testing.T) {
 	input := int32(42)
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	if pv.GetInt32Value() != 42 {
 		t.Errorf("ToProto(%v) = %v, want 42", input, pv.GetInt32Value())
@@ -100,8 +100,8 @@ func TestToProto_Int32(t *testing.T) {
 func TestToProto_Float32(t *testing.T) {
 	input := float32(3.14)
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	if pv.GetFloat32Value() != input {
 		t.Errorf("ToProto(%v) = %v, want %v", input, pv.GetFloat32Value(), input)
@@ -111,8 +111,8 @@ func TestToProto_Float32(t *testing.T) {
 func TestToProto_String(t *testing.T) {
 	input := "hello world"
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	if pv.GetStringValue() != input {
 		t.Errorf("ToProto(%v) = %v, want %v", input, pv.GetStringValue(), input)
@@ -122,8 +122,8 @@ func TestToProto_String(t *testing.T) {
 func TestToProto_Int32Array(t *testing.T) {
 	input := []int32{1, 2, 3, 4, 5}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	result := pv.GetInt32ArrayValues().GetInts()
 	if !reflect.DeepEqual(result, input) {
@@ -134,8 +134,8 @@ func TestToProto_Int32Array(t *testing.T) {
 func TestToProto_Float32Array(t *testing.T) {
 	input := []float32{1.1, 2.2, 3.3}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	result := pv.GetFloat32ArrayValues().GetFloats()
 	if !reflect.DeepEqual(result, input) {
@@ -146,8 +146,8 @@ func TestToProto_Float32Array(t *testing.T) {
 func TestToProto_StringArray(t *testing.T) {
 	input := []string{"one", "two", "three"}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	result := pv.GetStringArrayValues().GetStrings()
 	if !reflect.DeepEqual(result, input) {
@@ -158,8 +158,8 @@ func TestToProto_StringArray(t *testing.T) {
 func TestToProto_EmptyValue(t *testing.T) {
 	input := EmptyValue{}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(EmptyValue{}) error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(EmptyValue{}) error: %v", err)
 	}
 	if pv.GetEmptyValue() == nil {
 		t.Error("ToProto(EmptyValue{}) expected EmptyValue kind")
@@ -169,8 +169,8 @@ func TestToProto_EmptyValue(t *testing.T) {
 func TestToProto_UndefinedValue(t *testing.T) {
 	input := UndefinedValue(0)
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(UndefinedValue) error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(UndefinedValue) error: %v", err)
 	}
 	// Check that it has the UndefinedValue kind
 	if pv.GetUndefinedValue() == 0 {
@@ -184,8 +184,8 @@ func TestToProto_StructValue(t *testing.T) {
 		"count": int32(42),
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	sv := pv.GetStructValue()
 	if sv == nil {
@@ -206,8 +206,8 @@ func TestToProto_StructArray(t *testing.T) {
 		{"id": int32(2), "label": "second"},
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(%v) error: %v", input, err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(%v) error: %v", input, err)
 	}
 	sa := pv.GetStructArrayValues()
 	if sa == nil {
@@ -233,8 +233,8 @@ func TestToProto_StructVariantValue(t *testing.T) {
 		},
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(StructVariantValue) error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(StructVariantValue) error: %v", err)
 	}
 	sv := pv.GetStructVariantValue()
 	if sv == nil {
@@ -251,8 +251,8 @@ func TestToProto_StructVariantArray(t *testing.T) {
 		{StructVariantType: "TypeB", Value: "hello"},
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto([]StructVariantValue) error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto([]StructVariantValue) error: %v", err)
 	}
 	sva := pv.GetStructVariantArrayValues()
 	if sva == nil {
@@ -275,8 +275,8 @@ func TestToProto_DataPayload_WithPayload(t *testing.T) {
 		Payload:         []byte("binary data"),
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(DataPayload) error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(DataPayload) error: %v", err)
 	}
 	dp := pv.GetDataPayload()
 	if dp == nil {
@@ -299,8 +299,8 @@ func TestToProto_DataPayload_WithUrl(t *testing.T) {
 		Url:      "https://example.com/data.json",
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(DataPayload) error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(DataPayload) error: %v", err)
 	}
 	dp := pv.GetDataPayload()
 	if dp == nil {
@@ -317,7 +317,7 @@ func TestToProto_DataPayload_BothPayloadAndUrl_Error(t *testing.T) {
 		Url:     "https://example.com",
 	}
 	_, err := ToProto(input)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected error when both payload and url are provided")
 	}
 }
@@ -327,7 +327,7 @@ func TestToProto_DataPayload_NeitherPayloadNorUrl_Error(t *testing.T) {
 		Metadata: map[string]string{"content-type": "text/plain"},
 	}
 	_, err := ToProto(input)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected error when neither payload nor url are provided")
 	}
 }
@@ -340,12 +340,12 @@ func TestFromProto_DataPayload_WithPayload(t *testing.T) {
 		Payload:         []byte("binary data"),
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto error: %v", err)
 	}
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	dp, ok := result.(DataPayload)
 	if !ok {
@@ -370,12 +370,12 @@ func TestFromProto_DataPayload_WithUrl(t *testing.T) {
 		Url: "https://example.com/resource",
 	}
 	pv, err := ToProto(input)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto error: %v", err)
 	}
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	dp, ok := result.(DataPayload)
 	if !ok {
@@ -419,12 +419,12 @@ func TestRoundTrip_DataPayload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			pv, err := ToProto(tt.input)
-			if err.Code != StatusCodeOk {
-				t.Fatalf("ToProto error: %v", err.Error)
+			if err != nil {
+				t.Fatalf("ToProto error: %v", err)
 			}
 			result, err := FromProto(pv)
-			if err.Code != StatusCodeOk {
-				t.Fatalf("FromProto error: %v", err.Error)
+			if err != nil {
+				t.Fatalf("FromProto error: %v", err)
 			}
 			dp, ok := result.(DataPayload)
 			if !ok {
@@ -451,28 +451,28 @@ func TestRoundTrip_DataPayload(t *testing.T) {
 
 func TestToProto_Nil(t *testing.T) {
 	_, res := ToProto(nil)
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("ToProto(nil) expected error")
 	}
 }
 
 func TestToProto_TypedNil_Map(t *testing.T) {
 	_, res := ToProto((map[string]any)(nil))
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("ToProto(nil map[string]any) expected error")
 	}
 }
 
 func TestToProto_TypedNil_StructArray(t *testing.T) {
 	_, res := ToProto(([]map[string]any)(nil))
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("ToProto(nil []map[string]any) expected error")
 	}
 }
 
 func TestToProto_TypedNil_StructVariantArray(t *testing.T) {
 	_, res := ToProto(([]StructVariantValue)(nil))
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("ToProto(nil []StructVariantValue) expected error")
 	}
 }
@@ -480,15 +480,15 @@ func TestToProto_TypedNil_StructVariantArray(t *testing.T) {
 func TestToProto_TypedNil_StructVariant(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "t", Value: nil}
 	_, res := ToProto(sv)
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("ToProto(StructVariantValue with nil Value) expected error")
 	}
 }
 
 func TestToProto_EmptyStructArray(t *testing.T) {
 	pv, res := ToProto([]map[string]any{})
-	if res.Code != StatusCodeOk {
-		t.Fatalf("ToProto(empty []map[string]any) expected OK, got %v: %s", res.Code, res.Error)
+	if res != nil {
+		t.Fatalf("ToProto(empty []map[string]any) expected OK, got %v", res)
 	}
 	sa := pv.GetStructArrayValues()
 	if sa == nil {
@@ -501,8 +501,8 @@ func TestToProto_EmptyStructArray(t *testing.T) {
 
 func TestToProto_EmptyStructVariantArray(t *testing.T) {
 	pv, res := ToProto([]StructVariantValue{})
-	if res.Code != StatusCodeOk {
-		t.Fatalf("ToProto(empty []StructVariantValue) expected OK, got %v: %s", res.Code, res.Error)
+	if res != nil {
+		t.Fatalf("ToProto(empty []StructVariantValue) expected OK, got %v", res)
 	}
 	sva := pv.GetStructVariantArrayValues()
 	if sva == nil {
@@ -515,14 +515,14 @@ func TestToProto_EmptyStructVariantArray(t *testing.T) {
 
 func TestToProto_EmptyMap(t *testing.T) {
 	_, res := ToProto(map[string]any{})
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("ToProto(empty map[string]any) expected error")
 	}
 }
 
 func TestToProto_EmptyStructVariant(t *testing.T) {
 	_, res := ToProto(StructVariantValue{})
-	if res.Code == StatusCodeOk {
+	if res == nil {
 		t.Error("ToProto(empty StructVariantValue) expected error")
 	}
 }
@@ -541,7 +541,7 @@ func TestToProto_UnsupportedType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := ToProto(tt.input)
-			if err.Code == StatusCodeOk {
+			if err == nil {
 				t.Errorf("ToProto(%T) expected error for unsupported type", tt.input)
 			}
 		})
@@ -550,7 +550,7 @@ func TestToProto_UnsupportedType(t *testing.T) {
 
 func TestFromProto_Nil(t *testing.T) {
 	_, err := FromProto(nil)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("FromProto(nil) expected error")
 	}
 }
@@ -558,8 +558,8 @@ func TestFromProto_Nil(t *testing.T) {
 func TestFromProto_Int32(t *testing.T) {
 	pv, _ := ToProto(int32(42))
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	if v, ok := result.(int32); !ok || v != 42 {
 		t.Errorf("FromProto expected int32(42), got %T(%v)", result, result)
@@ -569,8 +569,8 @@ func TestFromProto_Int32(t *testing.T) {
 func TestFromProto_Float32(t *testing.T) {
 	pv, _ := ToProto(float32(3.14))
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	if v, ok := result.(float32); !ok || v != 3.14 {
 		t.Errorf("FromProto expected float32(3.14), got %T(%v)", result, result)
@@ -580,8 +580,8 @@ func TestFromProto_Float32(t *testing.T) {
 func TestFromProto_String(t *testing.T) {
 	pv, _ := ToProto("hello")
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	if v, ok := result.(string); !ok || v != "hello" {
 		t.Errorf("FromProto expected string(hello), got %T(%v)", result, result)
@@ -592,8 +592,8 @@ func TestFromProto_Int32Array(t *testing.T) {
 	input := []int32{1, 2, 3}
 	pv, _ := ToProto(input)
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	if !reflect.DeepEqual(result, input) {
 		t.Errorf("FromProto expected %v, got %v", input, result)
@@ -604,8 +604,8 @@ func TestFromProto_Float32Array(t *testing.T) {
 	input := []float32{1.1, 2.2}
 	pv, _ := ToProto(input)
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	if !reflect.DeepEqual(result, input) {
 		t.Errorf("FromProto expected %v, got %v", input, result)
@@ -616,8 +616,8 @@ func TestFromProto_StringArray(t *testing.T) {
 	input := []string{"a", "b", "c"}
 	pv, _ := ToProto(input)
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	if !reflect.DeepEqual(result, input) {
 		t.Errorf("FromProto expected %v, got %v", input, result)
@@ -627,8 +627,8 @@ func TestFromProto_StringArray(t *testing.T) {
 func TestFromProto_EmptyValue(t *testing.T) {
 	pv, _ := ToProto(EmptyValue{})
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	if _, ok := result.(EmptyValue); !ok {
 		t.Errorf("FromProto expected EmptyValue, got %T", result)
@@ -642,8 +642,8 @@ func TestFromProto_StructValue(t *testing.T) {
 	}
 	pv, _ := ToProto(input)
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	m, ok := result.(map[string]any)
 	if !ok {
@@ -664,8 +664,8 @@ func TestFromProto_StructArray(t *testing.T) {
 	}
 	pv, _ := ToProto(input)
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	arr, ok := result.([]map[string]any)
 	if !ok {
@@ -683,8 +683,8 @@ func TestFromProto_StructVariantValue(t *testing.T) {
 	}
 	pv, _ := ToProto(input)
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	sv, ok := result.(StructVariantValue)
 	if !ok {
@@ -702,8 +702,8 @@ func TestFromProto_StructVariantArray(t *testing.T) {
 	}
 	pv, _ := ToProto(input)
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	arr, ok := result.([]StructVariantValue)
 	if !ok {
@@ -737,12 +737,12 @@ func TestRoundTrip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			pv, err := ToProto(tt.input)
-			if err.Code != StatusCodeOk {
-				t.Fatalf("ToProto error: %v", err.Error)
+			if err != nil {
+				t.Fatalf("ToProto error: %v", err)
 			}
 			result, err := FromProto(pv)
-			if err.Code != StatusCodeOk {
-				t.Fatalf("FromProto error: %v", err.Error)
+			if err != nil {
+				t.Fatalf("FromProto error: %v", err)
 			}
 			if !reflect.DeepEqual(result, tt.input) {
 				t.Errorf("round trip failed: input=%v, result=%v", tt.input, result)
@@ -753,12 +753,12 @@ func TestRoundTrip(t *testing.T) {
 
 func TestFromProto_UndefinedValue(t *testing.T) {
 	pv, err := ToProto(UndefinedValue(42))
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToProto(UndefinedValue) error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToProto(UndefinedValue) error: %v", err)
 	}
 	result, err := FromProto(pv)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("FromProto error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("FromProto error: %v", err)
 	}
 	uv, ok := result.(UndefinedValue)
 	if !ok {
@@ -772,7 +772,7 @@ func TestFromProto_UndefinedValue(t *testing.T) {
 func TestFromProto_NilDataPayload(t *testing.T) {
 	pv := &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: nil}}
 	_, err := FromProto(pv)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("FromProto with nil DataPayload expected error")
 	}
 }
@@ -780,7 +780,7 @@ func TestFromProto_NilDataPayload(t *testing.T) {
 func TestFromProto_UnsupportedKind(t *testing.T) {
 	pv := &protos.Value{}
 	_, err := FromProto(pv)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("FromProto with nil Kind expected error")
 	}
 }
@@ -792,7 +792,7 @@ func TestFromProto_StructFieldError(t *testing.T) {
 		},
 	}}}
 	_, err := FromProto(pv)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("FromProto with nil struct field value expected error")
 	}
 }
@@ -804,7 +804,7 @@ func TestFromProto_StructArrayFieldError(t *testing.T) {
 		},
 	}}}
 	_, err := FromProto(pv)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("FromProto with nil struct array field value expected error")
 	}
 }
@@ -815,7 +815,7 @@ func TestFromProto_StructVariantValueError(t *testing.T) {
 		Value:             nil,
 	}}}
 	_, err := FromProto(pv)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("FromProto with nil struct variant value expected error")
 	}
 }
@@ -827,7 +827,7 @@ func TestFromProto_StructVariantArrayError(t *testing.T) {
 		},
 	}}}
 	_, err := FromProto(pv)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("FromProto with nil struct variant array value expected error")
 	}
 }
@@ -837,7 +837,7 @@ func TestToProto_StructFieldError(t *testing.T) {
 		"bad": int64(1),
 	}
 	_, err := ToProto(input)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("ToProto with unsupported struct field type expected error")
 	}
 }
@@ -847,7 +847,7 @@ func TestToProto_StructArrayFieldError(t *testing.T) {
 		{"bad": int64(1)},
 	}
 	_, err := ToProto(input)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("ToProto with unsupported struct array field type expected error")
 	}
 }
@@ -858,7 +858,7 @@ func TestToProto_StructVariantValueError(t *testing.T) {
 		Value:             int64(1),
 	}
 	_, err := ToProto(input)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("ToProto with unsupported struct variant value type expected error")
 	}
 }
@@ -868,7 +868,7 @@ func TestToProto_StructVariantArrayError(t *testing.T) {
 		{StructVariantType: "bad", Value: int64(1)},
 	}
 	_, err := ToProto(input)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("ToProto with unsupported struct variant array value type expected error")
 	}
 }
@@ -885,8 +885,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 			assert: func(t *testing.T) {
 				var input int32 = 42
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input = 99
 				if pv.GetInt32Value() != 42 {
@@ -899,8 +899,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 			assert: func(t *testing.T) {
 				var input float32 = 3.14
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input = 9.99
 				if pv.GetFloat32Value() != 3.14 {
@@ -913,8 +913,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 			assert: func(t *testing.T) {
 				input := "hello"
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input = "mutated"
 				if pv.GetStringValue() != "hello" {
@@ -927,8 +927,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 			assert: func(t *testing.T) {
 				slice := []int32{1, 2, 3}
 				pv, res := ToProto(slice)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				slice[0] = 99
 				if pv.GetInt32ArrayValues().GetInts()[0] != 1 {
@@ -941,8 +941,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 			assert: func(t *testing.T) {
 				slice := []float32{1.1, 2.2}
 				pv, res := ToProto(slice)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				slice[0] = 9.9
 				if pv.GetFloat32ArrayValues().GetFloats()[0] != 1.1 {
@@ -955,8 +955,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 			assert: func(t *testing.T) {
 				slice := []string{"a", "b"}
 				pv, res := ToProto(slice)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				slice[0] = "mutated"
 				if pv.GetStringArrayValues().GetStrings()[0] != "a" {
@@ -972,8 +972,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 					"y": "alpha",
 				}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input["x"] = int32(2)
 				input["z"] = int32(3)
@@ -992,8 +992,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 				nested := []int32{1, 2}
 				input := map[string]any{"arr": nested}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				nested[0] = 99
 				got := pv.GetStructValue().GetFields()["arr"].GetInt32ArrayValues().GetInts()[0]
@@ -1009,8 +1009,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 					{"id": int32(1)},
 				}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input[0]["id"] = int32(99)
 				input = append(input, map[string]any{"id": int32(2)})
@@ -1029,8 +1029,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 				nested := []int32{1, 2}
 				input := []map[string]any{{"arr": nested}}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				nested[0] = 99
 				got := pv.GetStructArrayValues().GetStructValues()[0].
@@ -1048,8 +1048,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 					Value:             int32(7),
 				}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input.StructVariantType = "mutated"
 				input.Value = int32(99)
@@ -1071,8 +1071,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 					Value:             nested,
 				}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				nested[0] = "mutated"
 				got := pv.GetStructVariantValue().GetValue().
@@ -1089,8 +1089,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 					{StructVariantType: "A", Value: int32(1)},
 				}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input[0].StructVariantType = "mutated"
 				input[0].Value = int32(99)
@@ -1113,8 +1113,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 				payload := []byte("hello")
 				input := DataPayload{Payload: payload}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				payload[0] = 'X'
 				if pv.GetDataPayload().GetPayload()[0] != 'h' {
@@ -1128,8 +1128,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 				digest := []byte{0x01, 0x02}
 				input := DataPayload{Payload: []byte("data"), Digest: digest}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				digest[0] = 0xff
 				if pv.GetDataPayload().GetDigest()[0] != 0x01 {
@@ -1143,8 +1143,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 				metadata := map[string]string{"content-type": "text/plain"}
 				input := DataPayload{Payload: []byte("data"), Metadata: metadata}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				metadata["content-type"] = "application/json"
 				if pv.GetDataPayload().GetMetadata()["content-type"] != "text/plain" {
@@ -1157,8 +1157,8 @@ func TestToProto_CopiesInputData(t *testing.T) {
 			assert: func(t *testing.T) {
 				input := DataPayload{Url: "https://example.com"}
 				pv, res := ToProto(input)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("ToProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("ToProto error: %s", res)
 				}
 				input.Url = "https://mutated.example.com"
 				if pv.GetDataPayload().GetUrl() != "https://example.com" {
@@ -1188,8 +1188,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					Int32ArrayValues: &protos.Int32List{Ints: ints},
 				}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				ints[0] = 99
 				got := result.([]int32)
@@ -1206,8 +1206,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					Float32ArrayValues: &protos.Float32List{Floats: floats},
 				}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				floats[0] = 9.9
 				got := result.([]float32)
@@ -1224,8 +1224,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					StringArrayValues: &protos.StringList{Strings: strings},
 				}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				strings[0] = "mutated"
 				got := result.([]string)
@@ -1246,8 +1246,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					},
 				}}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				nested[0] = 99
 				got := result.(map[string]any)["arr"].([]int32)
@@ -1270,8 +1270,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					}},
 				}}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				nested[0] = 99
 				got := result.([]map[string]any)[0]["arr"].([]int32)
@@ -1291,8 +1291,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					}},
 				}}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				nested[0] = "mutated"
 				got := result.(StructVariantValue).Value.([]string)
@@ -1311,8 +1311,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					}},
 				}}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				pv.GetStructVariantArrayValues().StructVariants[0].StructVariantType = "mutated"
 				pv.GetStructVariantArrayValues().StructVariants[0].Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 99}}
@@ -1330,8 +1330,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					Kind: &protos.DataPayload_Payload{Payload: payload},
 				}}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				payload[0] = 'X'
 				got := result.(DataPayload).Payload
@@ -1350,8 +1350,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					Kind:   &protos.DataPayload_Payload{Payload: payload},
 				}}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				digest[0] = 0xff
 				got := result.(DataPayload).Digest
@@ -1370,8 +1370,8 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 					Kind:     &protos.DataPayload_Payload{Payload: payload},
 				}}}
 				result, res := FromProto(pv)
-				if res.Code != StatusCodeOk {
-					t.Fatalf("FromProto error: %s", res.Error)
+				if res != nil {
+					t.Fatalf("FromProto error: %s", res)
 				}
 				metadata["content-type"] = "application/json"
 				got := result.(DataPayload).Metadata

@@ -1090,8 +1090,8 @@ func TestMarshalAssetJSON(t *testing.T) {
 	}
 
 	asset, res := st2138.ToAsset(dp, true)
-	if res.Code != catena.StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", res.Error)
+	if res != nil {
+		t.Fatalf("ToAsset error: %v", res)
 	}
 
 	jsonData, err := MarshalAssetJSON(asset.Proto)

@@ -39,6 +39,8 @@
 package st2138
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -85,10 +87,10 @@ func NewParamStruct(value map[string]any) *Param {
 			Type: protos.ParamType_STRUCT,
 		},
 	}
-	pv, res := ToProto(value)
-	if res.Code != StatusCodeOk {
+	pv, err := ToProto(value)
+	if err != nil {
 		logger.Warning("NewParamStruct: failed to convert value; value left nil",
-			"error", res.Error)
+			"error", err)
 		return cp
 	}
 	cp.Proto.Value = pv
@@ -102,10 +104,10 @@ func NewParamStructVariant(value *StructVariantValue) *Param {
 		},
 	}
 	if value != nil {
-		pv, res := ToProto(*value)
-		if res.Code != StatusCodeOk {
+		pv, err := ToProto(*value)
+		if err != nil {
 			logger.Warning("NewParamStructVariant: failed to convert value; value left nil",
-				"error", res.Error)
+				"error", err)
 			return cp
 		}
 		cp.Proto.Value = pv
@@ -155,10 +157,10 @@ func NewParamStructArray(value []map[string]any) *Param {
 			Type: protos.ParamType_STRUCT_ARRAY,
 		},
 	}
-	pv, res := ToProto(value)
-	if res.Code != StatusCodeOk {
+	pv, err := ToProto(value)
+	if err != nil {
 		logger.Warning("NewParamStructArray: failed to convert value; value left nil",
-			"error", res.Error)
+			"error", err)
 		return cp
 	}
 	cp.Proto.Value = pv
@@ -171,10 +173,10 @@ func NewParamStructVariantArray(value []StructVariantValue) *Param {
 			Type: protos.ParamType_STRUCT_VARIANT_ARRAY,
 		},
 	}
-	pv, res := ToProto(value)
-	if res.Code != StatusCodeOk {
+	pv, err := ToProto(value)
+	if err != nil {
 		logger.Warning("NewParamStructVariantArray: failed to convert value; value left nil",
-			"error", res.Error)
+			"error", err)
 		return cp
 	}
 	cp.Proto.Value = pv
@@ -196,10 +198,10 @@ func NewParamData(payload DataPayload) *Param {
 			Type: protos.ParamType_DATA,
 		},
 	}
-	pdp, res := dataPayloadToProto(payload)
-	if res.Code != StatusCodeOk {
+	pdp, err := dataPayloadToProto(payload)
+	if err != nil {
 		logger.Warning("NewParamData: failed to convert DataPayload; value left nil",
-			"error", res.Error)
+			"error", err)
 		return cp
 	}
 	cp.Proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
@@ -392,23 +394,23 @@ func (cp *Param) WithTemplateOid(oid string) *Param {
 
 // SetValue converts v to a proto value via ToProto, validates it against the
 // param type, and sets it.
-func (cp *Param) SetValue(v any) StatusResult {
-	pv, res := ToProto(v)
-	if res.Code != StatusCodeOk {
-		return res
+func (cp *Param) SetValue(v any) error {
+	pv, err := ToProto(v)
+	if err != nil {
+		return err
 	}
 	if !isValueValidForParamType(pv, cp.Proto.Type) {
-		return StatusResult{Code: StatusCodeInvalidArgument, Error: "value kind incompatible with param type " + cp.Proto.Type.String()}
+		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.Proto.Type.String(), ErrInvalidArgument)
 	}
 	cp.Proto.Value = pv
-	return StatusResult{Code: StatusCodeOk}
+	return nil
 }
 
 // GetValue reads the current value and converts it to a native Go type via
-// FromProto. Returns (nil, StatusCodeOk) if no value is set.
-func (cp *Param) GetValue() (any, StatusResult) {
+// FromProto. Returns (nil, nil) if no value is set.
+func (cp *Param) GetValue() (any, error) {
 	if cp.Proto.Value == nil {
-		return nil, StatusResult{Code: StatusCodeOk}
+		return nil, nil
 	}
 	return FromProto(cp.Proto.Value)
 }
