@@ -32,10 +32,6 @@
     "smpte-validator": "file:../../smpte/tools",
     "yaml": "^2.9.0"
   },
-  "overrides": {
-    "fast-uri": "3.1.4",
-    "js-yaml": "4.2.0"
-  },
   "devDependencies": {
     "jest": "^30.4.2",
     "jest-junit": "^17.0.0"
