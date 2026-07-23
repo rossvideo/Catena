@@ -804,18 +804,20 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 		"No device defined at slot",
 		func(handler DeviceHandler, ctx HandlerContext) (Device, StatusResult) {
 			device, res := handler(slot, ctx)
+			// Only touch the device return when the SDK manages the product for this
+			// slot; otherwise leave whatever the business logic produced untouched.
 			if res.IsOk() && device.Proto != nil {
-				// The product param requires the st2138:mon read scope. Callers with
-				// mon get the SDK-managed product injected (overwriting whatever the
-				// business logic returned); callers without mon get no product param
-				// at all, even one the business logic added, since the product struct
-				// is read-only and mon-scoped regardless of who manages it.
-				if enforceProductReadScope(ctx).IsOk() {
-					if product, has := s.productForSlot(slot); has {
+				if product, has := s.productForSlot(slot); has {
+					// The product param requires the st2138:mon read scope. Callers with
+					// mon get the SDK-managed product injected (overwriting whatever the
+					// business logic returned); callers without mon get no product param
+					// at all, even one the business logic added, since the product struct
+					// is read-only and mon-scoped regardless of who manages it.
+					if enforceProductReadScope(ctx).IsOk() {
 						device.WithParam(ProductOid, ProductParam(product))
+					} else {
+						delete(device.Proto.Params, ProductOid)
 					}
-				} else {
-					delete(device.Proto.Params, ProductOid)
 				}
 			}
 			return device, res
