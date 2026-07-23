@@ -403,6 +403,7 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v7
+        id: checkout_repo
         with:
           ref: main
           fetch-depth: 0
@@ -482,7 +483,9 @@ jobs:
               --base develop \
               --head "$RELEASE_BRANCH" \
               --title "chore(release): sync $NEW_VERSION into develop" \
-              --body "Automated sync PR for release $NEW_VERSION.\n\nThis PR reuses the existing release branch and merges it into develop with a merge commit (not squashed) to preserve shared history with main.")
+              --body "Automated sync PR for release $NEW_VERSION.
+
+          This PR reuses the existing release branch and merges it into develop with a merge commit (not squashed) to preserve shared history with main.")
             echo "✅ Opened develop-sync PR: $PR_URL"
           fi
 
@@ -505,7 +508,7 @@ jobs:
       # If direct push is not allowed, consider creating a revert PR instead.
       # ─────────────────────────────────────────────────────────────────────────
       - name: "[ROLLBACK] Revert main merge on develop-merge failure"
-        if: failure()
+        if: failure() && needs.checkout_repo.result == 'success'
         env:
           GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
           PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
