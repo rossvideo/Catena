@@ -1547,19 +1547,36 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 		},
 		{
 			name:       "AddLanguage",
-			devMessage: "AddLanguage not implemented",
-			grpcCode:   codes.Unimplemented,
+			devMessage: "language not writable",
+			grpcCode:   codes.PermissionDenied,
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.addLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+					return catena.StatusWithCode(catena.StatusCodePermissionDenied, "language not writable")
+				}
+			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{Slot: 0})
+				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
+					Slot:     0,
+					Language: "nl",
+					LanguagePack: &protos.LanguagePack{
+						Name:  "Global Dutch",
+						Words: map[string]string{"greeting": "Hallo"},
+					},
+				})
 				return err
 			},
 		},
 		{
 			name:       "LanguagePackRequest",
-			devMessage: "LanguagePackRequest not implemented",
-			grpcCode:   codes.Unimplemented,
+			devMessage: "language not found",
+			grpcCode:   codes.NotFound,
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+					return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
+				}
+			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0})
+				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
 				return err
 			},
 		},
@@ -1813,24 +1830,6 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name: "AddLanguage",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
-					Slot: 0,
-				})
-				return err
-			},
-		},
-		{
-			name: "LanguagePackRequest",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{
-					Slot: 0,
-				})
-				return err
-			},
-		},
-		{
 			name: "RefreshToken",
 			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RefreshToken(ctx, &protos.RefreshTokenPayload{
@@ -1863,6 +1862,189 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 			assertGRPCCode(t, err, codes.Unimplemented, "unimplemented endpoint")
 		})
 	}
+}
+
+// =============================================================================
+// Test: AddLanguage / LanguagePackRequest
+// =============================================================================
+
+func TestGrpcTransport_AddLanguage_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	var gotSlot uint16
+	var gotLanguage string
+	var gotPack catena.LanguagePack
+	runtime.addLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		gotSlot = slot
+		gotLanguage = language
+		gotPack = pack
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
+		Slot:     0,
+		Language: "nl",
+		LanguagePack: &protos.LanguagePack{
+			Name:  "Global Dutch",
+			Words: map[string]string{"greeting": "Hallo", "parting": "Tot ziens"},
+		},
+	})
+	assertNoError(t, err)
+
+	if gotSlot != 0 {
+		t.Errorf("expected slot 0, got %d", gotSlot)
+	}
+	if gotLanguage != "nl" {
+		t.Errorf("expected language %q, got %q", "nl", gotLanguage)
+	}
+	if gotPack.GetName() != "Global Dutch" {
+		t.Errorf("expected pack name %q, got %q", "Global Dutch", gotPack.GetName())
+	}
+	if gotPack.GetWords()["greeting"] != "Hallo" {
+		t.Errorf("expected greeting %q, got %q", "Hallo", gotPack.GetWords()["greeting"])
+	}
+}
+
+// Language and pack presence are validated by the server layer, not the
+// transport, so only transport-owned validation (slot range) is asserted here.
+func TestGrpcTransport_AddLanguage_InvalidArgument(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *protos.AddLanguagePayload
+	}{
+		{
+			name: "slot out of range",
+			req: &protos.AddLanguagePayload{
+				Slot:         uint32(1) << 20,
+				Language:     "nl",
+				LanguagePack: &protos.LanguagePack{Name: "Global Dutch"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+			defer cleanup()
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			_, err := client.AddLanguage(ctx, tt.req)
+			assertGRPCCode(t, err, codes.InvalidArgument, "AddLanguage invalid argument")
+		})
+	}
+}
+
+func TestGrpcTransport_LanguagePackRequest_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		if language != "nl" {
+			return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
+		}
+		return catena.NewLanguagePack().
+			WithName("Global Dutch").
+			WithWords(map[string]string{
+				"greeting": "Hallo",
+				"parting":  "Tot ziens",
+			}), catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	resp, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
+	assertNoError(t, err)
+
+	if resp.GetLanguage() != "nl" {
+		t.Errorf("expected language %q, got %q", "nl", resp.GetLanguage())
+	}
+	pack := resp.GetLanguagePack()
+	if pack == nil {
+		t.Fatal("expected language pack, got nil")
+	}
+	if pack.GetName() != "Global Dutch" {
+		t.Errorf("expected pack name %q, got %q", "Global Dutch", pack.GetName())
+	}
+	if pack.GetWords()["parting"] != "Tot ziens" {
+		t.Errorf("expected parting %q, got %q", "Tot ziens", pack.GetWords()["parting"])
+	}
+}
+
+func TestGrpcTransport_LanguagePackRequest_NotFound(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "zz"})
+	assertGRPCCode(t, err, codes.NotFound, "LanguagePackRequest not found")
+}
+
+// A handler that reports OK but leaves the wrapped Proto nil has violated its
+// contract; the transport must surface Internal rather than return an empty
+// pack (mirrors REST GET and GetParam).
+func TestGrpcTransport_LanguagePackRequest_NilProtoOnOk(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
+	assertGRPCCode(t, err, codes.Internal, "LanguagePackRequest nil proto on OK")
+}
+
+func TestGrpcTransport_LanguagePackRequest_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: uint32(1) << 20, Language: "nl"})
+	assertGRPCCode(t, err, codes.InvalidArgument, "LanguagePackRequest invalid slot")
+}
+
+func TestGrpcTransport_AddLanguage_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.addLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodeInternal, "boom")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
+		Slot:         0,
+		Language:     "nl",
+		LanguagePack: &protos.LanguagePack{Name: "Global Dutch"},
+	})
+	assertGRPCCode(t, err, codes.Internal, "AddLanguage handler error")
 }
 
 // =============================================================================

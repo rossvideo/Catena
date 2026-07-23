@@ -567,12 +567,59 @@ func ToGRPCCode(s catena.StatusCode) codes.Code {
 
 // AddLanguage adds a language pack (optional capability)
 func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguagePayload) (*protos.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "AddLanguage not implemented")
+	slot, err := catena.ValidateSlot(req.Slot)
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	language := req.Language
+	logger.Info("AddLanguage", "slot", slot, "language", language)
+
+	// Language and pack presence are validated by the server layer so the rule
+	// lives in one place; pass the proto straight through.
+	pack := catena.LanguagePack{Proto: req.LanguagePack}
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	result := s.transport.runtime.InvokeCreateLanguagePackHandler(slot, language, pack, transportContext)
+	if result.IsError() {
+		logger.Error("AddLanguage handler error", "slot", slot, "language", language, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+
+	return &protos.Empty{}, nil
 }
 
 // LanguagePackRequest returns a language pack
 func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.LanguagePackRequestPayload) (*protos.DeviceComponent_ComponentLanguagePack, error) {
-	return nil, status.Error(codes.Unimplemented, "LanguagePackRequest not implemented")
+	slot, err := catena.ValidateSlot(req.Slot)
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	language := req.Language
+	logger.Info("LanguagePackRequest", "slot", slot, "language", language)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	pack, result := s.transport.runtime.InvokeReadLanguagePackHandler(slot, language, transportContext)
+	if result.IsError() {
+		logger.Error("LanguagePackRequest handler error", "slot", slot, "language", language, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+
+	// A nil proto on an OK result is an internal contract violation by the
+	// handler, not success; surface it as an internal error rather than
+	// returning an empty pack (mirrors REST GET and GetParam).
+	if pack.Proto == nil {
+		logger.Error("language pack handler returned OK with nil proto", "slot", slot, "language", language)
+		return nil, status.Error(codes.Internal, "language pack response was empty")
+	}
+
+	// The handler wraps the inner pack (name + words); the gRPC response is the
+	// outer component that also carries the language tag.
+	return &protos.DeviceComponent_ComponentLanguagePack{
+		Language:     language,
+		LanguagePack: pack.Proto,
+	}, nil
 }
 
 // ListLanguages returns the language codes supported by the device model at a slot.
