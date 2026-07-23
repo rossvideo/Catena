@@ -10,8 +10,10 @@ think in `StatusCode`, not in HTTP numbers or gRPC codes directly.
 - `StatusCode` — see `status_code.go`.
 - `StatusResult` — a `StatusCode` plus an optional error message.
 - `Reply` / `ReplyError` / `ReplyWithCode` / `StatusWithCode` helpers.
-- `StatusFromError` — maps an `st2138` sentinel error (`ErrInvalidArgument`,
-  `ErrNotFound`, `ErrInternal`) to a `StatusResult`.
+- `StatusFromError` — maps any error to a `StatusResult`: `nil` becomes
+  `StatusCodeOk`, the `st2138` sentinel errors (`ErrInvalidArgument`,
+  `ErrNotFound`, `ErrInternal`) become their matching codes, and any other
+  error falls back to `StatusCodeUnknown`.
 
 ## Normative references
 
