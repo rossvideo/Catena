@@ -42,6 +42,15 @@ on:
 env:
   GH_REPO: ${{ github.repository }}
 
+# Serialize the entire release process across all of its triggers
+# (workflow_dispatch → review approval → PR-closed). It's started manually and
+# resumed by approving the main PR, so concurrent runs are unlikely; if one is
+# already in flight, queue at most one more and NEVER cancel a release that is
+# mid-merge (cancel-in-progress: false).
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 # ══════════════════════════════════════════════════════════════════════════════
 # PHASE 1 JOBS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -244,7 +253,7 @@ jobs:
           3. A GitHub release tagged \`$NEW_VERSION\` will be created on \`main\`.
           4. Toolchain containers will be retagged \`develop → latest\`.
 
-          > ⚠️ **Closing this PR without approveal will cancel the release.**")
+          > ⚠️ **Closing this PR without approval will cancel the release.**")
 
           echo "✅ Release PR opened: $PR_URL"
 
@@ -463,7 +472,7 @@ jobs:
             --base develop \
             --state open \
             --json url \
-            --jq '.[0].url')
+            --jq '.[0].url // empty')
 
           if [[ -n "${EXISTING_PR_URL:-}" ]]; then
             PR_URL="$EXISTING_PR_URL"
@@ -553,7 +562,9 @@ jobs:
 
           if [[ -z "${GH_TOKEN:-}" ]]; then
             echo "⚠️  REPO_ADMIN_TOKEN missing during cleanup; cannot restore setting"
-            exit 1
+            # We don't fail the job because we don't want to fail the whole process after
+            # a potentially successful release.  The admin should manually restore the setting.
+            exit 0
           fi
 
           # If the enable step never ran (e.g. earlier failure), skip silently.
