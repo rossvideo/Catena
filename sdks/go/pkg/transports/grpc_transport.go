@@ -600,7 +600,7 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	logger.Info("LanguagePackRequest", "slot", slot, "language", language)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	pack, result := s.transport.runtime.InvokeGetLanguagePackHandler(slot, language, transportContext)
+	pack, result := s.transport.runtime.InvokeReadLanguagePackHandler(slot, language, transportContext)
 	if result.IsError() {
 		logger.Error("LanguagePackRequest handler error", "slot", slot, "language", language, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)

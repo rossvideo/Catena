@@ -798,7 +798,7 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 
 	switch r.Method {
 	case http.MethodGet:
-		languagePack, res := t.runtime.InvokeGetLanguagePackHandler(slot, language, transportContext)
+		languagePack, res := t.runtime.InvokeReadLanguagePackHandler(slot, language, transportContext)
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
 			return

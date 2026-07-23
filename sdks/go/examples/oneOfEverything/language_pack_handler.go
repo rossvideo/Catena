@@ -82,7 +82,7 @@ func (s *LanguageStore) Delete(slot uint16, language string) bool {
 func registerLanguagePackHandlers(srv catena.Server) {
 	languages := NewLanguageStore(slotList)
 	for _, slot := range slotList {
-		srv.RegisterGetLanguagePackHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) (catena.LanguagePack, catena.StatusResult) {
+		srv.RegisterReadLanguagePackHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) (catena.LanguagePack, catena.StatusResult) {
 			logger.Info("LanguagePackRequest", "slot", slot, "language", language)
 			pack, ok := languages.Get(slot, language)
 			if !ok {

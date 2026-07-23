@@ -819,13 +819,13 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.listLanguagesHandlers[slot] != nil },
 		},
 		{
-			endpoint: EndpointGetLanguagePack,
+			endpoint: EndpointReadLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetLanguagePackHandler(slot, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterReadLanguagePackHandler(slot, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.getLanguagePackHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.readLanguagePackHandlers[slot] != nil },
 		},
 		{
 			endpoint: EndpointCreateLanguagePack,
@@ -1998,13 +1998,13 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 			},
 		},
 		{
-			endpoint: EndpointGetLanguagePack,
+			endpoint: EndpointReadLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterReadLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
 					*handlerCalled = true
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeGetLanguagePackHandler(0, "es", invalidContext)
+				_, status := srv.InvokeReadLanguagePackHandler(0, "es", invalidContext)
 				return status
 			},
 		},
@@ -2135,7 +2135,7 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 		},
 		{endpoint: EndpointConnect},
 		{endpoint: EndpointListLanguages},
-		{endpoint: EndpointGetLanguagePack},
+		{endpoint: EndpointReadLanguagePack},
 		{endpoint: EndpointCreateLanguagePack},
 		{endpoint: EndpointUpdateLanguagePack},
 		{endpoint: EndpointDeleteLanguagePack},
@@ -2433,14 +2433,14 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			},
 		},
 		{
-			endpoint:          EndpointGetLanguagePack,
+			endpoint:          EndpointReadLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterReadLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
 					*handlerCalled = true
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeGetLanguagePackHandler(0, "es", TransportContext{})
+				_, status := srv.InvokeReadLanguagePackHandler(0, "es", TransportContext{})
 				return status
 			},
 		},
@@ -3126,4 +3126,277 @@ func TestServer_StartHeartbeat_RestartAfterStop(t *testing.T) {
 	if tickCount.Load() < 2 {
 		t.Errorf("expected ticks after restart, got %d", tickCount.Load())
 	}
+}
+
+func TestServer_RegisterLanguagePackHandlers(t *testing.T) {
+	t.Run("get", func(t *testing.T) {
+		srv := newTestServer(t, true)
+
+		handlerCalled := false
+		srv.RegisterReadLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+			handlerCalled = true
+			if language != "es" {
+				t.Errorf("expected language 'es', got %s", language)
+			}
+			return NewLanguagePack().WithName("Spanish"), StatusResult{Code: StatusCodeOk}
+		})
+
+		lp, status := srv.InvokeReadLanguagePackHandler(0, "es", validTestTransportContext(nil))
+
+		if !handlerCalled {
+			t.Error("registered handler was not called")
+		}
+		if status.Code != StatusCodeOk {
+			t.Errorf("expected OK status, got %v", status.Code)
+		}
+		if lp.GetName() != "Spanish" {
+			t.Errorf("expected Spanish, got %q", lp.GetName())
+		}
+	})
+
+	t.Run("create", func(t *testing.T) {
+		srv := newTestServer(t, true)
+
+		handlerCalled := false
+		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			handlerCalled = true
+			if language != "fr" {
+				t.Errorf("expected language 'fr', got %s", language)
+			}
+			return StatusResult{Code: StatusCodeOk}
+		})
+
+		status := srv.InvokeCreateLanguagePackHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
+
+		if !handlerCalled {
+			t.Error("registered handler was not called")
+		}
+		if status.Code != StatusCodeOk {
+			t.Errorf("expected OK status, got %v", status.Code)
+		}
+	})
+
+	t.Run("update", func(t *testing.T) {
+		srv := newTestServer(t, true)
+
+		handlerCalled := false
+		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			handlerCalled = true
+			return StatusResult{Code: StatusCodeOk}
+		})
+
+		status := srv.InvokeUpdateLanguagePackHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
+
+		if !handlerCalled {
+			t.Error("registered handler was not called")
+		}
+		if status.Code != StatusCodeOk {
+			t.Errorf("expected OK status, got %v", status.Code)
+		}
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		srv := newTestServer(t, true)
+
+		handlerCalled := false
+		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+			handlerCalled = true
+			return StatusResult{Code: StatusCodeOk}
+		})
+
+		status := srv.InvokeDeleteLanguagePackHandler(0, "fr", admTestTransportContext(t))
+
+		if !handlerCalled {
+			t.Error("registered handler was not called")
+		}
+		if status.Code != StatusCodeOk {
+			t.Errorf("expected OK status, got %v", status.Code)
+		}
+	})
+}
+
+func TestServer_LanguageHandlersNotRegistered(t *testing.T) {
+	// validTestTransportContext carries the op write scope, enough to pass the
+	// coarse read/write gate so each invoke reaches the missing-handler lookup.
+	ctx := validTestTransportContext(nil)
+
+	t.Run("get", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		if _, status := srv.InvokeReadLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound, got %v", status.Code)
+		}
+	})
+
+	t.Run("create", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound, got %v", status.Code)
+		}
+	})
+
+	t.Run("update", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound, got %v", status.Code)
+		}
+	})
+
+	t.Run("delete", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound, got %v", status.Code)
+		}
+	})
+}
+
+func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
+	// "read write all" contains no recognized catena scopes, so it grants
+	// neither read nor write. "st2138:cfg" grants read but not write.
+	noReadContext := TransportContext{AccessToken: validTestJWTWithoutExecuteCommandScope}
+	noWriteContext := TransportContext{AccessToken: validTestJWTWithCfgScope}
+
+	t.Run("get requires read scope", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterReadLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+			t.Fatal("handler should not run without read scope")
+			return LanguagePack{}, StatusResult{Code: StatusCodeOk}
+		})
+		if _, status := srv.InvokeReadLanguagePackHandler(0, "es", noReadContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	t.Run("add requires write scope", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without write scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	t.Run("update requires write scope", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without write scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	t.Run("delete requires write scope", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without write scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", noWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	// validTestTransportContext carries the op write scope: enough to pass the
+	// coarse write gate, but the spec requires adm specifically for mutations.
+	opWriteContext := validTestTransportContext(nil)
+
+	t.Run("add requires adm scope, not just write", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without adm scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	t.Run("update requires adm scope, not just write", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without adm scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+
+	t.Run("delete requires adm scope, not just write", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+			t.Fatal("handler should not run without adm scope")
+			return StatusResult{Code: StatusCodeOk}
+		})
+		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", opWriteContext); status.Code != StatusCodePermissionDenied {
+			t.Errorf("expected PermissionDenied, got %v", status.Code)
+		}
+	})
+}
+
+// TestServer_LanguageHandlersValidation covers the request validation that the
+// server owns so transports don't each repeat it: a language is always
+// required, and create/update also require a non-nil pack.
+func TestServer_LanguageHandlersValidation(t *testing.T) {
+	srv := newTestServer(t, true)
+	ctx := admTestTransportContext(t)
+
+	// Register handlers so the invoke callback - where argument validation now
+	// lives, after the auth/scope gate - is actually reached. The handlers must
+	// never run, since every case below fails validation first.
+	srv.RegisterReadLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+		t.Fatal("handler should not run when validation fails")
+		return LanguagePack{}, StatusResult{Code: StatusCodeOk}
+	})
+	srv.RegisterCreateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+		t.Fatal("handler should not run when validation fails")
+		return StatusResult{Code: StatusCodeOk}
+	})
+	srv.RegisterUpdateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+		t.Fatal("handler should not run when validation fails")
+		return StatusResult{Code: StatusCodeOk}
+	})
+	srv.RegisterDeleteLanguagePackHandler(0, func(uint16, string, HandlerContext) StatusResult {
+		t.Fatal("handler should not run when validation fails")
+		return StatusResult{Code: StatusCodeOk}
+	})
+
+	t.Run("get requires language", func(t *testing.T) {
+		if _, status := srv.InvokeReadLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("add requires language", func(t *testing.T) {
+		if status := srv.InvokeCreateLanguagePackHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("add requires pack", func(t *testing.T) {
+		if status := srv.InvokeCreateLanguagePackHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("update requires language", func(t *testing.T) {
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("update requires pack", func(t *testing.T) {
+		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
+
+	t.Run("delete requires language", func(t *testing.T) {
+		if status := srv.InvokeDeleteLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", status.Code)
+		}
+	})
 }

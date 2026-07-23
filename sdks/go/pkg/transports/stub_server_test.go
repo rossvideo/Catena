@@ -57,9 +57,9 @@ type stubServerRuntime struct {
 	getValueFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult)
 	getParamFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult)
 	setValueFn               func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult
-	readAssetFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
-	createAssetFn              func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult
-	updateAssetFn         func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult
+	readAssetFn              func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult)
+	createAssetFn            func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult
+	updateAssetFn            func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult
 	deleteAssetFn            func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
 	commandFn                func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult)
 	paramInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult)
@@ -203,7 +203,7 @@ func (s *stubServerRuntime) InvokeListLanguagesHandler(slot uint16, ctx catena.T
 	return nil, catena.StatusResult{Code: catena.StatusCodeInternal, Error: "ListLanguages handler not implemented"}
 }
 
-func (s *stubServerRuntime) InvokeGetLanguagePackHandler(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+func (s *stubServerRuntime) InvokeReadLanguagePackHandler(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
 	if s.languagePackFn != nil {
 		return s.languagePackFn(slot, language, ctx)
 	}
