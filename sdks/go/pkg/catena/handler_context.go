@@ -101,6 +101,30 @@ func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
 	return ok
 }
 
+// RequireReadScope is the enforcing counterpart to HasReadScope: it returns an
+// OK StatusResult when the caller holds the named read scope and a
+// PermissionDenied result with a standard message otherwise. Prefer it over
+// HasReadScope at authorization gates so call sites don't re-derive the status
+// code and message boilerplate.
+func (ctx HandlerContext) RequireReadScope(scopeName string) StatusResult {
+	if ctx.HasReadScope(scopeName) {
+		return StatusWithCode(StatusCodeOk, "")
+	}
+	return StatusWithCode(StatusCodePermissionDenied, "read scope "+scopeName+" required")
+}
+
+// RequireWriteScope is the enforcing counterpart to HasWriteScope: it returns an
+// OK StatusResult when the caller holds the named write scope and a
+// PermissionDenied result with a standard message otherwise. Prefer it over
+// HasWriteScope at authorization gates so call sites don't re-derive the status
+// code and message boilerplate.
+func (ctx HandlerContext) RequireWriteScope(scopeName string) StatusResult {
+	if ctx.HasWriteScope(scopeName) {
+		return StatusWithCode(StatusCodeOk, "")
+	}
+	return StatusWithCode(StatusCodePermissionDenied, "write scope "+scopeName+" required")
+}
+
 // HasAnyWriteScope reports whether the caller holds at least one write scope,
 // i.e. whether they are allowed to make any change at all. Use it as a coarse
 // gate before the more specific HasWriteScope check.

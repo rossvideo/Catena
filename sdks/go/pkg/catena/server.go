@@ -69,6 +69,10 @@ const (
 	EndpointDeleteAsset
 	EndpointExecuteCommand
 	EndpointParamInfo
+	EndpointReadLanguagePack
+	EndpointCreateLanguagePack
+	EndpointUpdateLanguagePack
+	EndpointDeleteLanguagePack
 	EndpointConnect
 	EndpointListLanguages
 
@@ -105,6 +109,14 @@ func (e EndpointType) String() string {
 		return "ExecuteCommand"
 	case EndpointParamInfo:
 		return "ParamInfo"
+	case EndpointReadLanguagePack:
+		return "ReadLanguagePack"
+	case EndpointCreateLanguagePack:
+		return "CreateLanguagePack"
+	case EndpointUpdateLanguagePack:
+		return "UpdateLanguagePack"
+	case EndpointDeleteLanguagePack:
+		return "DeleteLanguagePack"
 	case EndpointConnect:
 		return "Connect"
 	case EndpointListLanguages:
@@ -155,6 +167,11 @@ type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx Ha
 // ListLanguagesHandler returns the language codes supported by the device model
 // at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
 type ListLanguagesHandler func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
+
+type ReadLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
+type CreateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type UpdateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type DeleteLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) StatusResult
 type HeartbeatHandler func(slot uint16)
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
@@ -215,6 +232,10 @@ type Server interface {
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
+	RegisterReadLanguagePackHandler(slot uint16, handler ReadLanguagePackHandler)
+	RegisterCreateLanguagePackHandler(slot uint16, handler CreateLanguagePackHandler)
+	RegisterUpdateLanguagePackHandler(slot uint16, handler UpdateLanguagePackHandler)
+	RegisterDeleteLanguagePackHandler(slot uint16, handler DeleteLanguagePackHandler)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
 	RegisterAccessHandler(handler AccessHandler)
 
@@ -249,6 +270,10 @@ type ServerRuntime interface {
 	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult
 	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
+	InvokeReadLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult)
+	InvokeCreateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeUpdateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult
+	InvokeDeleteLanguagePackHandler(slot uint16, language string, transportContext TransportContext) StatusResult
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
@@ -258,33 +283,37 @@ var _ Server = (*server)(nil)
 var _ ServerRuntime = (*server)(nil)
 
 type server struct {
-	options                ServerOptions
-	mu                     sync.Mutex
-	ctx                    context.Context
-	ctxCancel              context.CancelFunc
-	authzEnabled           bool
-	jwtValidator           jwtValidatorInterface
-	maxShutdownWait        time.Duration
-	shutdown               bool
-	stopped                chan struct{}
-	slots                  map[uint16]struct{}
-	getDeviceHandlers      map[uint16]DeviceHandler
-	getValueHandlers       map[uint16]GetValueHandler
-	getParamHandlers       map[uint16]GetParamHandler
-	setValueHandlers       map[uint16]SetValueHandler
-	readAssetHandlers      map[uint16]ReadAssetHandler
-	createAssetHandlers    map[uint16]CreateAssetHandler
-	updateAssetHandlers    map[uint16]UpdateAssetHandler
-	deleteAssetHandlers    map[uint16]DeleteAssetHandler
-	executeCommandHandlers map[uint16]ExecuteCommandHandler
-	paramInfoHandlers      map[uint16]ParamInfoHandler
-	listLanguagesHandlers  map[uint16]ListLanguagesHandler
-	heartbeatHandlers      map[uint16]HeartbeatHandler
-	productStructs         map[uint16]ProductStruct // SDK-managed product per slot
-	accessHandler          AccessHandler            // optional fallback for slots without specific handlers
-	connectionQueue        connectionQueueInterface
-	heartbeat              *Heartbeat
-	transports             []Transport
+	options                    ServerOptions
+	mu                         sync.Mutex
+	ctx                        context.Context
+	ctxCancel                  context.CancelFunc
+	authzEnabled               bool
+	jwtValidator               jwtValidatorInterface
+	maxShutdownWait            time.Duration
+	shutdown                   bool
+	stopped                    chan struct{}
+	slots                      map[uint16]struct{}
+	getDeviceHandlers          map[uint16]DeviceHandler
+	getValueHandlers           map[uint16]GetValueHandler
+	getParamHandlers           map[uint16]GetParamHandler
+	setValueHandlers           map[uint16]SetValueHandler
+	readAssetHandlers          map[uint16]ReadAssetHandler
+	createAssetHandlers        map[uint16]CreateAssetHandler
+	updateAssetHandlers        map[uint16]UpdateAssetHandler
+	deleteAssetHandlers        map[uint16]DeleteAssetHandler
+	executeCommandHandlers     map[uint16]ExecuteCommandHandler
+	paramInfoHandlers          map[uint16]ParamInfoHandler
+	listLanguagesHandlers      map[uint16]ListLanguagesHandler
+	readLanguagePackHandlers   map[uint16]ReadLanguagePackHandler
+	createLanguagePackHandlers map[uint16]CreateLanguagePackHandler
+	updateLanguagePackHandlers map[uint16]UpdateLanguagePackHandler
+	deleteLanguagePackHandlers map[uint16]DeleteLanguagePackHandler
+	heartbeatHandlers          map[uint16]HeartbeatHandler
+	productStructs             map[uint16]ProductStruct // SDK-managed product per slot
+	accessHandler              AccessHandler            // optional fallback for slots without specific handlers
+	connectionQueue            connectionQueueInterface
+	heartbeat                  *Heartbeat
+	transports                 []Transport
 
 	// Redirection seams for the generic registerHandler/invokeHandler helpers.
 	// Generic functions cannot be stored in fields, so the helpers stay generic
@@ -308,31 +337,35 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 	}
 
 	s := &server{
-		options:                opts,
-		ctx:                    ctx,
-		ctxCancel:              cancel,
-		authzEnabled:           opts.AuthzEnabled,
-		jwtValidator:           validator,
-		maxShutdownWait:        defaultServerMaxShutdownWait, // override in unittests if needed
-		shutdown:               false,
-		stopped:                make(chan struct{}),
-		slots:                  make(map[uint16]struct{}),
-		getDeviceHandlers:      make(map[uint16]DeviceHandler),
-		getValueHandlers:       make(map[uint16]GetValueHandler),
-		getParamHandlers:       make(map[uint16]GetParamHandler),
-		setValueHandlers:       make(map[uint16]SetValueHandler),
-		readAssetHandlers:      make(map[uint16]ReadAssetHandler),
-		createAssetHandlers:    make(map[uint16]CreateAssetHandler),
-		updateAssetHandlers:    make(map[uint16]UpdateAssetHandler),
-		deleteAssetHandlers:    make(map[uint16]DeleteAssetHandler),
-		executeCommandHandlers: make(map[uint16]ExecuteCommandHandler),
-		paramInfoHandlers:      make(map[uint16]ParamInfoHandler),
-		listLanguagesHandlers:  make(map[uint16]ListLanguagesHandler),
-		heartbeatHandlers:      make(map[uint16]HeartbeatHandler),
-		productStructs:         make(map[uint16]ProductStruct),
-		accessHandler:          allowAllAccessHandler,
-		connectionQueue:        newConnectionQueue(opts.MaxConnections),
-		transports:             []Transport{},
+		options:                    opts,
+		ctx:                        ctx,
+		ctxCancel:                  cancel,
+		authzEnabled:               opts.AuthzEnabled,
+		jwtValidator:               validator,
+		maxShutdownWait:            defaultServerMaxShutdownWait, // override in unittests if needed
+		shutdown:                   false,
+		stopped:                    make(chan struct{}),
+		slots:                      make(map[uint16]struct{}),
+		getDeviceHandlers:          make(map[uint16]DeviceHandler),
+		getValueHandlers:           make(map[uint16]GetValueHandler),
+		getParamHandlers:           make(map[uint16]GetParamHandler),
+		setValueHandlers:           make(map[uint16]SetValueHandler),
+		readAssetHandlers:          make(map[uint16]ReadAssetHandler),
+		createAssetHandlers:        make(map[uint16]CreateAssetHandler),
+		updateAssetHandlers:        make(map[uint16]UpdateAssetHandler),
+		deleteAssetHandlers:        make(map[uint16]DeleteAssetHandler),
+		executeCommandHandlers:     make(map[uint16]ExecuteCommandHandler),
+		paramInfoHandlers:          make(map[uint16]ParamInfoHandler),
+		listLanguagesHandlers:      make(map[uint16]ListLanguagesHandler),
+		readLanguagePackHandlers:   make(map[uint16]ReadLanguagePackHandler),
+		createLanguagePackHandlers: make(map[uint16]CreateLanguagePackHandler),
+		updateLanguagePackHandlers: make(map[uint16]UpdateLanguagePackHandler),
+		deleteLanguagePackHandlers: make(map[uint16]DeleteLanguagePackHandler),
+		heartbeatHandlers:          make(map[uint16]HeartbeatHandler),
+		productStructs:             make(map[uint16]ProductStruct),
+		accessHandler:              allowAllAccessHandler,
+		connectionQueue:            newConnectionQueue(opts.MaxConnections),
+		transports:                 []Transport{},
 	}
 
 	// Default the redirection seams to the real implementations. Tests may
@@ -720,6 +753,22 @@ func (s *server) RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
 	s.registerHandlerFn(slot, func() { s.paramInfoHandlers[slot] = handler })
 }
 
+func (s *server) RegisterReadLanguagePackHandler(slot uint16, handler ReadLanguagePackHandler) {
+	s.registerHandlerFn(slot, func() { s.readLanguagePackHandlers[slot] = handler })
+}
+
+func (s *server) RegisterCreateLanguagePackHandler(slot uint16, handler CreateLanguagePackHandler) {
+	s.registerHandlerFn(slot, func() { s.createLanguagePackHandlers[slot] = handler })
+}
+
+func (s *server) RegisterUpdateLanguagePackHandler(slot uint16, handler UpdateLanguagePackHandler) {
+	s.registerHandlerFn(slot, func() { s.updateLanguagePackHandlers[slot] = handler })
+}
+
+func (s *server) RegisterDeleteLanguagePackHandler(slot uint16, handler DeleteLanguagePackHandler) {
+	s.registerHandlerFn(slot, func() { s.deleteLanguagePackHandlers[slot] = handler })
+}
+
 func (s *server) RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler) {
 	s.registerHandlerFn(slot, func() { s.heartbeatHandlers[slot] = handler })
 }
@@ -918,6 +967,76 @@ func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext Transp
 		func(handler ListLanguagesHandler, ctx HandlerContext) ([]string, StatusResult) {
 			return handler(slot, ctx)
 		})
+}
+
+func (s *server) InvokeReadLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
+	return invokeHandler(s, transportContext, EndpointReadLanguagePack, false, s.readLanguagePackHandlers, slot,
+		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
+		func(handler ReadLanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
+			// Argument validation runs after the auth gate so an unauthorized
+			// caller only ever sees a security error, never a validation hint.
+			if language == "" {
+				return LanguagePack{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			}
+			return handler(slot, language, ctx)
+		})
+}
+
+func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.createLanguagePackHandlers, slot,
+		"CreateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
+		func(handler CreateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			// Mutations require the adm scope specifically, not merely any write
+			// scope, so narrow the coarse write gate now that we have the context.
+			if res := ctx.RequireWriteScope(ScopeAdm); res.IsError() {
+				return struct{}{}, res
+			}
+			// Argument validation runs after the scope check so an unauthorized
+			// caller only ever sees a security error, never a validation hint.
+			if language == "" {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			}
+			if languagePack.Proto == nil {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
+			}
+			return struct{}{}, handler(slot, language, languagePack, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguagePackHandlers, slot,
+		"UpdateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
+		func(handler UpdateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			// Mutations require the adm scope specifically, not merely any write scope.
+			if res := ctx.RequireWriteScope(ScopeAdm); res.IsError() {
+				return struct{}{}, res
+			}
+			if language == "" {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			}
+			if languagePack.Proto == nil {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
+			}
+			return struct{}{}, handler(slot, language, languagePack, ctx)
+		})
+	return res
+}
+
+func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
+	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguagePackHandlers, slot,
+		"DeleteLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
+		func(handler DeleteLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			// Mutations require the adm scope specifically, not merely any write scope.
+			if res := ctx.RequireWriteScope(ScopeAdm); res.IsError() {
+				return struct{}{}, res
+			}
+			if language == "" {
+				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			}
+			return struct{}{}, handler(slot, language, ctx)
+		})
+	return res
 }
 
 func (s *server) RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult) {
