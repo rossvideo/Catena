@@ -407,7 +407,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.REPO_ADMIN_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # ── Temporarily enable merge commits so we can true-merge into develop ────
       #
