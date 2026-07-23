@@ -813,7 +813,7 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 					// business logic returned); callers without mon get no product param
 					// at all, even one the business logic added, since the product struct
 					// is read-only and mon-scoped regardless of who manages it.
-					if enforceProductReadScope(ctx).IsOk() {
+					if ctx.RequireReadScope(ScopeMon).IsOk() {
 						device.WithParam(ProductOid, ProductParam(product))
 					} else {
 						delete(device.Proto.Params, ProductOid)
@@ -832,7 +832,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 			// answer it directly instead of passing to business logic. The product
 			// param is mon-scoped, so gate any product/* read before touching it.
 			if isProductOid(fqoid) {
-				if scopeRes := enforceProductReadScope(ctx); scopeRes.IsError() {
+				if scopeRes := ctx.RequireReadScope(ScopeMon); scopeRes.IsError() {
 					return ReplyError[Value](scopeRes.Code, scopeRes.Error)
 				}
 				if product, has := s.productForSlot(slot); has {
@@ -852,7 +852,7 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 			// answer it directly instead of passing to business logic. The product
 			// param is mon-scoped, so gate any product/* read before touching it.
 			if isProductOid(fqoid) {
-				if scopeRes := enforceProductReadScope(ctx); scopeRes.IsError() {
+				if scopeRes := ctx.RequireReadScope(ScopeMon); scopeRes.IsError() {
 					return Param{}, scopeRes
 				}
 				if product, has := s.productForSlot(slot); has {
@@ -974,7 +974,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 			// product param is mon-scoped, so gate any product/* request before
 			// touching it.
 			if isProductOid(oidPrefix) {
-				if scopeRes := enforceProductReadScope(ctx); scopeRes.IsError() {
+				if scopeRes := ctx.RequireReadScope(ScopeMon); scopeRes.IsError() {
 					return struct{}{}, scopeRes
 				}
 				if product, has := s.productForSlot(slot); has {
