@@ -505,7 +505,7 @@ jobs:
       # If direct push is not allowed, consider creating a revert PR instead.
       # ─────────────────────────────────────────────────────────────────────────
       - name: "[ROLLBACK] Revert main merge on develop-merge failure"
-        if: failure() && steps.merge_develop.outcome == 'failure'
+        if: failure()
         env:
           GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
           PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
