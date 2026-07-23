@@ -395,20 +395,6 @@ jobs:
       PR_MERGE_SHA:   ${{ github.event.pull_request.merge_commit_sha }}
 
     steps:
-      # ── Checkout the repo ─────────────────────────────────────────────────────
-      #
-      # Required for the rollback step, which uses local git (fetch/checkout/
-      # revert/push) to undo the main merge if the develop merge fails.
-      # fetch-depth: 0 gives the full history needed for `git revert`.
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        id: checkout_repo
-        with:
-          ref: main
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       # ── Temporarily enable merge commits so we can true-merge into develop ────
       #
       # The repository default is squash-only.  A release branch must be merged
@@ -440,6 +426,20 @@ jobs:
           else
             echo "ℹ️  allow_merge_commit already enabled"
           fi
+
+      # ── Checkout the repo ─────────────────────────────────────────────────────
+      #
+      # Required for the rollback step, which uses local git (fetch/checkout/
+      # revert/push) to undo the main merge if the develop merge fails.
+      # fetch-depth: 0 gives the full history needed for `git revert`.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        id: checkout_repo
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.REPO_ADMIN_TOKEN }}  # needed for rollback push to main
 
       # ── Merge existing release branch into develop via PR ─────────────────────
       #
@@ -564,7 +564,8 @@ jobs:
           set -euo pipefail
 
           if [[ -z "${GH_TOKEN:-}" ]]; then
-            echo "⚠️  REPO_ADMIN_TOKEN missing during cleanup; cannot restore setting"
+            echo "::warning title=Merge setting not restored::REPO_ADMIN_TOKEN missing during cleanup; restore allow_merge_commit manually."
+            echo "⚠️  Merge setting not restored — REPO_ADMIN_TOKEN missing during cleanup." >> "$GITHUB_STEP_SUMMARY"
             # We don't fail the job because we don't want to fail the whole process after
             # a potentially successful release.  The admin should manually restore the setting.
             exit 0
@@ -576,10 +577,17 @@ jobs:
             exit 0
           fi
 
-          gh api -X PATCH "repos/${{ github.repository }}" \
-            -f allow_merge_commit="$ORIG_ALLOW_MERGE" >/dev/null
-
-          echo "✅ Restored allow_merge_commit=$ORIG_ALLOW_MERGE"
+          # Best-effort restore: a transient PATCH failure must not fail the job
+          # (the develop merge may already have succeeded).  Emit a workflow
+          # annotation (visible even on a green run) so an admin can restore
+          # manually, then exit 0 so downstream release jobs are not blocked.
+          if gh api -X PATCH "repos/${{ github.repository }}" \
+            -f allow_merge_commit="$ORIG_ALLOW_MERGE" >/dev/null; then
+            echo "✅ Restored allow_merge_commit=$ORIG_ALLOW_MERGE"
+          else
+            echo "::warning title=Merge setting not restored::Failed to restore allow_merge_commit=$ORIG_ALLOW_MERGE; restore it manually in the repository settings."
+            echo "⚠️  Failed to restore allow_merge_commit=$ORIG_ALLOW_MERGE — restore it manually in the repository settings." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   # ────────────────────────────────────────────────────────────────────────────
   # Job 4: Build release notes and create the GitHub release on main.
