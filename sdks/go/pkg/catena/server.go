@@ -814,7 +814,7 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportC
 				// product injected (overwriting whatever the business logic returned);
 				// callers without mon get no product param at all, even one the business
 				// logic added, since the SDK-managed product struct is read-only and
-				// mon-scoped regardless of who manages it.
+				// mon-scoped regardless of who created it.
 				if product, has := s.productForSlot(slot); has {
 					if ctx.RequireReadScope(ScopeMon).IsOk() {
 						device.WithParam(ProductOid, ProductParam(product))
