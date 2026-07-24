@@ -521,19 +521,25 @@ func TestServer_ParamInfo_ProductScope(t *testing.T) {
 	})
 }
 
-// TestServer_GetValue_ProductScopeUnregistered verifies product/* reads are
-// denied without the monitor scope even when no product struct is registered,
-// so the request never leaks to business logic.
+// TestServer_GetValue_ProductScopeUnregistered verifies that when no product
+// struct is registered for a slot, a product/* read is not gated by the SDK's
+// mon scope check and instead falls through to the business-logic handler,
+// which does its own scoping.
 func TestServer_GetValue_ProductScopeUnregistered(t *testing.T) {
 	srv := newTestServer(t, true)
+	handlerCalled := false
 	srv.RegisterGetValueHandler(0, func(slot uint16, oid string, ctx HandlerContext) (Value, StatusResult) {
-		t.Errorf("business-logic GetValue should not be called for %q", oid)
-		return ReplyError[Value](StatusCodeInternal, "should not happen")
+		handlerCalled = true
+		value, _ := ToValue("from business logic")
+		return Reply(value)
 	})
 	mockInvokeGateFn(t, srv, EndpointGetValue, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
 
 	_, res := srv.InvokeGetValueHandler(0, "product/name", TransportContext{})
-	if res.Code != StatusCodePermissionDenied {
-		t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK from handler fallback, got %v: %s", res.Code, res.Error)
+	}
+	if !handlerCalled {
+		t.Error("expected business-logic GetValue handler to be called when no product struct is registered")
 	}
 }
