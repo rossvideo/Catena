@@ -15,6 +15,7 @@ name: Release
 #          so main and develop share the version-bump commit as a common ancestor.
 #          └─ If the develop merge fails, automatically revert the main merge.
 #       5a. Create a GitHub release (tagged on main) with grouped release notes.
+#           Also push a Go module tag (sdks/go/vX.Y.Z) so `go get` resolves it.
 #       5b. Retag toolchain containers develop → latest  (parallel with 5a).
 #     If closed without merging:
 #       → Release is cancelled; nothing further happens.
@@ -680,7 +681,40 @@ jobs:
           echo "── Release notes preview ──"
           cat /tmp/release_notes.md
 
+      # ── Create annotated release tags ─────────────────────────────────────────
+      #
+      # Create BOTH tags as annotated (carrying tagger, date and message — the
+      # conventional choice for releases) so they're consistent:
+      #   • vX.Y.Z          — the main release tag.  Creating it here (rather than
+      #                        letting `gh release create` mint a lightweight one)
+      #                        means the release reuses this annotated tag.
+      #   • sdks/go/vX.Y.Z  — required by Go module versioning to resolve the SDK
+      #                        that lives in the sdks/go subdirectory.
+      # Both point at the same commit on main (HEAD).
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Create annotated release tags
+        run: |
+          set -euo pipefail
+
+          # Annotated tags need a committer identity.
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+
+          for TAG in "$NEW_VERSION" "sdks/go/$NEW_VERSION"; do
+            if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+              echo "ℹ️  Tag '$TAG' already exists — skipping."
+            else
+              git tag -a "$TAG" -m "Release $NEW_VERSION"
+              git push origin "$TAG"
+              echo "✅ Pushed annotated tag '$TAG'"
+            fi
+          done
+
       # ── Create the GitHub release ─────────────────────────────────────────────
+      #
+      # The vX.Y.Z tag was already created (annotated) above, so `gh release
+      # create` reuses it instead of minting its own lightweight tag.
+      # ─────────────────────────────────────────────────────────────────────────
       - name: Create GitHub release
         run: |
           set -euo pipefail
@@ -689,7 +723,6 @@ jobs:
           RELEASE_TITLE="Catena version $NEW_VERSION made on $RELEASE_DATE"
 
           gh release create "$NEW_VERSION" \
-            --target main \
             --title "$RELEASE_TITLE" \
             --notes-file /tmp/release_notes.md
 
