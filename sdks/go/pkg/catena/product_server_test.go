@@ -342,3 +342,204 @@ func TestServer_ParamInfo_Product(t *testing.T) {
 		t.Errorf("expected product STRUCT, got %v", stream.Items[0].GetParamType())
 	}
 }
+
+// monScopeContext is an authz-enabled HandlerContext carrying only the monitor
+// read scope, which is what the product param requires.
+func monScopeContext() HandlerContext {
+	return HandlerContext{readScopes: map[string]struct{}{ScopeMon: {}}, authzEnabled: true}
+}
+
+// nonMonScopeContext is an authz-enabled HandlerContext holding a read scope
+// other than monitor, so product reads must be denied.
+func nonMonScopeContext() HandlerContext {
+	return HandlerContext{readScopes: map[string]struct{}{ScopeOp: {}}, authzEnabled: true}
+}
+
+// TestServer_GetDevice_ProductScope verifies GetDevice injects the product param
+// only for callers holding the monitor scope, and strips any product param for
+// callers without it, while preserving the rest of the device.
+func TestServer_GetDevice_ProductScope(t *testing.T) {
+	newDeviceServer := func(t *testing.T, ctx HandlerContext) (*server, *bool) {
+		t.Helper()
+		srv := newTestServer(t, true)
+		srv.RegisterProductStruct(0, testProduct())
+		called := false
+		srv.RegisterGetDeviceHandler(0, func(slot uint16, hctx HandlerContext) (Device, StatusResult) {
+			called = true
+			return Reply(*NewDevice(0).
+				WithParam("product", NewParamString("wrong")).
+				WithParam("brightness", NewParamInt32(50)))
+		})
+		mockInvokeGateFn(t, srv, EndpointGetDevice, false, ctx, StatusWithCode(StatusCodeOk, ""))
+		return srv, &called
+	}
+
+	t.Run("MonInjectsProduct", func(t *testing.T) {
+		srv, called := newDeviceServer(t, monScopeContext())
+		device, res := srv.InvokeGetDeviceHandler(0, TransportContext{})
+		if res.Code != StatusCodeOk {
+			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+		}
+		if !*called {
+			t.Error("expected business-logic GetDevice to be called")
+		}
+		params := device.Proto.GetParams()
+		if _, ok := params["brightness"]; !ok {
+			t.Error("expected business-logic 'brightness' param to be preserved")
+		}
+		product, ok := params["product"]
+		if !ok {
+			t.Fatal("expected SDK-injected 'product' param for mon caller")
+		}
+		if !proto.Equal(product, expectedProductParam()) {
+			t.Errorf("SDK-injected product param does not match expected, got %v", product)
+		}
+	})
+
+	t.Run("NonMonStripsProduct", func(t *testing.T) {
+		srv, called := newDeviceServer(t, nonMonScopeContext())
+		device, res := srv.InvokeGetDeviceHandler(0, TransportContext{})
+		if res.Code != StatusCodeOk {
+			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+		}
+		if !*called {
+			t.Error("expected business-logic GetDevice to be called")
+		}
+		params := device.Proto.GetParams()
+		if _, ok := params["brightness"]; !ok {
+			t.Error("expected business-logic 'brightness' param to be preserved")
+		}
+		if _, ok := params["product"]; ok {
+			t.Error("did not expect a product param for non-mon caller")
+		}
+	})
+}
+
+// TestServer_GetValue_ProductScope verifies product/* reads succeed with the
+// monitor scope and are denied without it, without invoking business logic on
+// the denied path.
+func TestServer_GetValue_ProductScope(t *testing.T) {
+	for _, fqoid := range []string{"product", "product/name"} {
+		t.Run("Mon/"+fqoid, func(t *testing.T) {
+			srv := newTestServer(t, true)
+			srv.RegisterProductStruct(0, testProduct())
+			srv.RegisterGetValueHandler(0, func(slot uint16, oid string, ctx HandlerContext) (Value, StatusResult) {
+				t.Errorf("business-logic GetValue should not be called for %q", oid)
+				return ReplyError[Value](StatusCodeInternal, "should not happen")
+			})
+			mockInvokeGateFn(t, srv, EndpointGetValue, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
+			_, res := srv.InvokeGetValueHandler(0, fqoid, TransportContext{})
+			if res.Code != StatusCodeOk {
+				t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+			}
+		})
+
+		t.Run("NonMon/"+fqoid, func(t *testing.T) {
+			srv := newTestServer(t, true)
+			srv.RegisterProductStruct(0, testProduct())
+			srv.RegisterGetValueHandler(0, func(slot uint16, oid string, ctx HandlerContext) (Value, StatusResult) {
+				t.Errorf("business-logic GetValue should not be called for %q", oid)
+				return ReplyError[Value](StatusCodeInternal, "should not happen")
+			})
+			mockInvokeGateFn(t, srv, EndpointGetValue, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
+			_, res := srv.InvokeGetValueHandler(0, fqoid, TransportContext{})
+			if res.Code != StatusCodePermissionDenied {
+				t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
+			}
+		})
+	}
+}
+
+// TestServer_GetParam_ProductScope verifies product/* GetParam requests succeed
+// with the monitor scope and are denied without it.
+func TestServer_GetParam_ProductScope(t *testing.T) {
+	for _, fqoid := range []string{"product", "product/name"} {
+		t.Run("Mon/"+fqoid, func(t *testing.T) {
+			srv := newTestServer(t, true)
+			srv.RegisterProductStruct(0, testProduct())
+			srv.RegisterGetParamHandler(0, func(slot uint16, oid string, ctx HandlerContext) (Param, StatusResult) {
+				t.Errorf("business-logic GetParam should not be called for %q", oid)
+				return Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+			})
+			mockInvokeGateFn(t, srv, EndpointGetParam, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
+			_, res := srv.InvokeGetParamHandler(0, fqoid, TransportContext{})
+			if res.Code != StatusCodeOk {
+				t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+			}
+		})
+
+		t.Run("NonMon/"+fqoid, func(t *testing.T) {
+			srv := newTestServer(t, true)
+			srv.RegisterProductStruct(0, testProduct())
+			srv.RegisterGetParamHandler(0, func(slot uint16, oid string, ctx HandlerContext) (Param, StatusResult) {
+				t.Errorf("business-logic GetParam should not be called for %q", oid)
+				return Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+			})
+			mockInvokeGateFn(t, srv, EndpointGetParam, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
+			_, res := srv.InvokeGetParamHandler(0, fqoid, TransportContext{})
+			if res.Code != StatusCodePermissionDenied {
+				t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
+			}
+		})
+	}
+}
+
+// TestServer_ParamInfo_ProductScope verifies product/* ParamInfo succeeds with
+// the monitor scope and is denied without it.
+func TestServer_ParamInfo_ProductScope(t *testing.T) {
+	t.Run("Mon", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterProductStruct(0, testProduct())
+		srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult {
+			t.Errorf("business-logic ParamInfo should not be called for %q", oidPrefix)
+			return StatusWithCode(StatusCodeInternal, "should not happen")
+		})
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
+		stream := &sliceStream[ParamInfo]{}
+		res := srv.InvokeParamInfoHandler(0, "product", true, stream, TransportContext{})
+		if res.Code != StatusCodeOk {
+			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+		}
+		if len(stream.Items) != 7 {
+			t.Fatalf("expected 7 param infos, got %d", len(stream.Items))
+		}
+	})
+
+	t.Run("NonMon", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		srv.RegisterProductStruct(0, testProduct())
+		srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult {
+			t.Errorf("business-logic ParamInfo should not be called for %q", oidPrefix)
+			return StatusWithCode(StatusCodeInternal, "should not happen")
+		})
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
+		stream := &sliceStream[ParamInfo]{}
+		res := srv.InvokeParamInfoHandler(0, "product", true, stream, TransportContext{})
+		if res.Code != StatusCodePermissionDenied {
+			t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
+		}
+	})
+}
+
+// TestServer_GetValue_ProductScopeUnregistered verifies that when no product
+// struct is registered for a slot, a product/* read is not gated by the SDK's
+// mon scope check and instead falls through to the business-logic handler,
+// which does its own scoping.
+func TestServer_GetValue_ProductScopeUnregistered(t *testing.T) {
+	srv := newTestServer(t, true)
+	handlerCalled := false
+	srv.RegisterGetValueHandler(0, func(slot uint16, oid string, ctx HandlerContext) (Value, StatusResult) {
+		handlerCalled = true
+		value, _ := ToValue("from business logic")
+		return Reply(value)
+	})
+	mockInvokeGateFn(t, srv, EndpointGetValue, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
+
+	_, res := srv.InvokeGetValueHandler(0, "product/name", TransportContext{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK from handler fallback, got %v: %s", res.Code, res.Error)
+	}
+	if !handlerCalled {
+		t.Error("expected business-logic GetValue handler to be called when no product struct is registered")
+	}
+}
