@@ -39,8 +39,6 @@
 package catena
 
 import (
-	"errors"
-
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -56,8 +54,11 @@ type StatusCode int
 
 // StatusResult pairs a StatusCode with an optional error message. It is the
 // SDK-level response contract handlers return; the lower-level st2138 package
-// reports failures with idiomatic errors (see st2138's sentinel errors), which
-// the server maps into a StatusResult via statusFromError.
+// reports failures with idiomatic errors (see st2138's sentinel errors).
+// Callers translate those errors into a StatusResult at the call site,
+// choosing the code based on who supplied the bad input: a value that came
+// from the client warrants StatusCodeInvalidArgument, while a value the
+// server itself constructed warrants StatusCodeInternal.
 type StatusResult struct {
 	Code  StatusCode
 	Error string
@@ -139,27 +140,6 @@ const (
 	// StatusCodeUnauthenticated indicates missing or invalid credentials.
 	StatusCodeUnauthenticated StatusCode = 16
 )
-
-// StatusFromError maps an error returned by the st2138 package into a
-// StatusResult. It recognizes st2138's exported sentinel errors and translates
-// each to the matching StatusCode; a nil error is Ok and any unrecognized error
-// falls back to StatusCodeUnknown. Business logic that calls st2138 conversion
-// helpers (e.g. st2138.ToValue, st2138.FromProto) directly can use this to
-// convert their error return into the StatusResult a handler must return.
-func StatusFromError(err error) StatusResult {
-	switch {
-	case err == nil:
-		return StatusResult{Code: StatusCodeOk}
-	case errors.Is(err, st2138.ErrNotFound):
-		return StatusResult{Code: StatusCodeNotFound, Error: err.Error()}
-	case errors.Is(err, st2138.ErrInternal):
-		return StatusResult{Code: StatusCodeInternal, Error: err.Error()}
-	case errors.Is(err, st2138.ErrInvalidArgument):
-		return StatusResult{Code: StatusCodeInvalidArgument, Error: err.Error()}
-	default:
-		return StatusResult{Code: StatusCodeUnknown, Error: err.Error()}
-	}
-}
 
 // ResponseType is a constraint for types that can be returned from handlers
 type ResponseType interface {

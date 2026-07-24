@@ -400,7 +400,7 @@ func (cp *Param) SetValue(v any) error {
 		return err
 	}
 	if !isValueValidForParamType(pv, cp.Proto.Type) {
-		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.Proto.Type.String(), ErrInvalidArgument)
+		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.Proto.Type.String(), ErrInvalid)
 	}
 	cp.Proto.Value = pv
 	return nil

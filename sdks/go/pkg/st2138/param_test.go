@@ -732,8 +732,8 @@ func TestSetValue_OK(t *testing.T) {
 func TestSetValue_TypeMismatch(t *testing.T) {
 	cp := NewParamInt32(0)
 	res := cp.SetValue("not an int")
-	if !errors.Is(res, ErrInvalidArgument) {
-		t.Errorf("expected ErrInvalidArgument, got %v", res)
+	if !errors.Is(res, ErrInvalid) {
+		t.Errorf("expected ErrInvalid, got %v", res)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 0 {
 		t.Error("expected value to remain unchanged after type mismatch")
@@ -1119,8 +1119,8 @@ func TestIsConstraintValidForParam_NilKind(t *testing.T) {
 func TestSetValue_InvalidThenValid(t *testing.T) {
 	cp := NewParamInt32(10)
 	res := cp.SetValue("wrong type")
-	if !errors.Is(res, ErrInvalidArgument) {
-		t.Errorf("expected ErrInvalidArgument, got %v", res)
+	if !errors.Is(res, ErrInvalid) {
+		t.Errorf("expected ErrInvalid, got %v", res)
 	}
 	if cp.Proto.GetValue().GetInt32Value() != 10 {
 		t.Error("expected original value to be preserved after failed SetValue")

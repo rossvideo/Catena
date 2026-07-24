@@ -194,7 +194,7 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, error) {
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
 		pdp.Kind = &protos.DataPayload_Payload{Payload: slices.Clone(dp.Payload)}
 	} else {
-		return nil, fmt.Errorf("either payload or url must be provided in DataPayload, but not both: %w", ErrInvalidArgument)
+		return nil, fmt.Errorf("either payload or url must be provided in DataPayload, but not both: %w", ErrInvalid)
 	}
 
 	return pdp, nil
@@ -202,7 +202,7 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, error) {
 
 func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, error) {
 	if pdp == nil {
-		return DataPayload{}, fmt.Errorf("nil DataPayload: %w", ErrInvalidArgument)
+		return DataPayload{}, fmt.Errorf("nil DataPayload: %w", ErrInvalid)
 	}
 	dp := DataPayload{
 		Metadata:        maps.Clone(pdp.GetMetadata()),
@@ -212,16 +212,16 @@ func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, error) {
 	switch k := pdp.GetKind().(type) {
 	case *protos.DataPayload_Url:
 		if k.Url == "" {
-			return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalidArgument)
+			return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)
 		}
 		dp.Url = k.Url
 	case *protos.DataPayload_Payload:
 		if len(k.Payload) == 0 {
-			return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalidArgument)
+			return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)
 		}
 		dp.Payload = slices.Clone(k.Payload)
 	default:
-		return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalidArgument)
+		return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)
 	}
 	return dp, nil
 }
@@ -243,7 +243,7 @@ func ToAsset(dp DataPayload, cachable bool) (Asset, error) {
 // store or inspect. It is the inverse of ToAsset.
 func FromAsset(asset Asset) (DataPayload, error) {
 	if asset.Proto == nil {
-		return DataPayload{}, fmt.Errorf("asset has no proto: %w", ErrInvalidArgument)
+		return DataPayload{}, fmt.Errorf("asset has no proto: %w", ErrInvalid)
 	}
 	return dataPayloadFromProto(asset.Proto.GetPayload())
 }
@@ -347,7 +347,7 @@ func ParsePayloadEncoding(s string) (Encoding, error) {
 	case "DEFLATE":
 		return EncodingDeflate, nil
 	default:
-		return EncodingUncompressed, fmt.Errorf("invalid payload encoding: %s: %w", s, ErrInvalidArgument)
+		return EncodingUncompressed, fmt.Errorf("invalid payload encoding: %s: %w", s, ErrInvalid)
 	}
 }
 
@@ -369,7 +369,7 @@ func PayloadEncodingFromExt(filename string) Encoding {
 // If the asset is already in the target encoding, this is a no-op.
 func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) error {
 	if asset.Proto == nil || asset.Proto.GetPayload() == nil {
-		return fmt.Errorf("asset has no payload: %w", ErrInvalidArgument)
+		return fmt.Errorf("asset has no payload: %w", ErrInvalid)
 	}
 
 	dp := asset.Proto.GetPayload()
@@ -381,12 +381,12 @@ func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) error {
 
 	rawData, err := DecodePayload(dp.GetPayload(), currentEncoding)
 	if err != nil {
-		return fmt.Errorf("decode: %v: %w", err, ErrInternal)
+		return fmt.Errorf("decode payload: %w", err)
 	}
 
 	encodedData, err := EncodePayload(rawData, targetEncoding)
 	if err != nil {
-		return fmt.Errorf("encode: %v: %w", err, ErrInternal)
+		return fmt.Errorf("encode payload: %w", err)
 	}
 
 	cloned := proto.Clone(asset.Proto).(*protos.ExternalObjectPayload)

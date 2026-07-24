@@ -102,7 +102,7 @@ func ToValue(v any) (Value, error) {
 // ToProto converts native Go types to protos.Value
 func ToProto(v any) (*protos.Value, error) {
 	if v == nil {
-		return nil, fmt.Errorf("nil value: %w", ErrInvalidArgument)
+		return nil, fmt.Errorf("nil value: %w", ErrInvalid)
 	}
 	switch val := v.(type) {
 	case DataPayload:
@@ -129,7 +129,7 @@ func ToProto(v any) (*protos.Value, error) {
 		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: slices.Clone(val)}}}, nil
 	case map[string]any:
 		if len(val) == 0 {
-			return nil, fmt.Errorf("nil or empty map[string]any: %w", ErrInvalidArgument)
+			return nil, fmt.Errorf("nil or empty map[string]any: %w", ErrInvalid)
 		}
 		fields := make(map[string]*protos.Value)
 		for k, v := range val {
@@ -142,7 +142,7 @@ func ToProto(v any) (*protos.Value, error) {
 		return &protos.Value{Kind: &protos.Value_StructValue{StructValue: &protos.StructValue{Fields: fields}}}, nil
 	case []map[string]any:
 		if val == nil {
-			return nil, fmt.Errorf("nil []map[string]any: %w", ErrInvalidArgument)
+			return nil, fmt.Errorf("nil []map[string]any: %w", ErrInvalid)
 		}
 		structArr := make([]*protos.StructValue, len(val))
 		for i, m := range val {
@@ -159,7 +159,7 @@ func ToProto(v any) (*protos.Value, error) {
 		return &protos.Value{Kind: &protos.Value_StructArrayValues{StructArrayValues: &protos.StructList{StructValues: structArr}}}, nil
 	case StructVariantValue:
 		if val.Value == nil {
-			return nil, fmt.Errorf("nil StructVariantValue.Value: %w", ErrInvalidArgument)
+			return nil, fmt.Errorf("nil StructVariantValue.Value: %w", ErrInvalid)
 		}
 		protoVal, err := ToProto(val.Value)
 		if err != nil {
@@ -171,7 +171,7 @@ func ToProto(v any) (*protos.Value, error) {
 		}}}, nil
 	case []StructVariantValue:
 		if val == nil {
-			return nil, fmt.Errorf("nil []StructVariantValue: %w", ErrInvalidArgument)
+			return nil, fmt.Errorf("nil []StructVariantValue: %w", ErrInvalid)
 		}
 		var structVariants []*protos.StructVariantValue
 		for _, sv := range val {
@@ -188,7 +188,7 @@ func ToProto(v any) (*protos.Value, error) {
 			StructVariants: structVariants,
 		}}}, nil
 	default:
-		return nil, fmt.Errorf("unsupported type: %T: %w", v, ErrInvalidArgument)
+		return nil, fmt.Errorf("unsupported type: %T: %w", v, ErrInvalid)
 	}
 }
 
@@ -199,7 +199,7 @@ func ToProto(v any) (*protos.Value, error) {
 // state and freely reuse or discard the source proto after FromProto returns.
 func FromProto(pv *protos.Value) (any, error) {
 	if pv == nil {
-		return nil, fmt.Errorf("nil Value: %w", ErrInvalidArgument)
+		return nil, fmt.Errorf("nil Value: %w", ErrInvalid)
 	}
 	switch pv.GetKind().(type) {
 	case *protos.Value_DataPayload:
@@ -272,6 +272,6 @@ func FromProto(pv *protos.Value) (any, error) {
 		}
 		return arr, nil
 	default:
-		return nil, fmt.Errorf("unsupported Value type: %T: %w", pv.GetKind(), ErrInvalidArgument)
+		return nil, fmt.Errorf("unsupported Value type: %T: %w", pv.GetKind(), ErrInvalid)
 	}
 }

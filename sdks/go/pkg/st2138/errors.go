@@ -39,28 +39,22 @@ package st2138
 import "errors"
 
 // Sentinel errors returned (wrapped) by the st2138 conversion and model
-// helpers. The st2138 package is transport- and SDK-neutral, so it does not
-// know about the SDK's StatusResult/StatusCode contract. Callers that need a
-// StatusCode (for example the catena server) match these sentinels with
-// errors.Is and translate them to the matching code:
-//
-//	ErrInvalidArgument -> StatusCodeInvalidArgument
-//	ErrNotFound        -> StatusCodeNotFound
-//	ErrInternal        -> StatusCodeInternal
+// helpers, named after the stdlib io/fs idiom. The st2138 package is transport-
+// and SDK-neutral, so it does not know about the SDK's StatusResult/StatusCode
+// contract, and it deliberately does not mirror those code names. Callers match
+// these sentinels with errors.Is and pick a StatusCode themselves based on
+// context: the same ErrInvalid means StatusCodeInvalidArgument when the bad
+// value came from the client, but StatusCodeInternal when the server itself
+// constructed the value it passed in.
 //
 // Helpers wrap a sentinel with context using fmt.Errorf("...: %w", ErrX) so the
 // returned error carries a descriptive message while remaining matchable.
 var (
-	// ErrInvalidArgument indicates the caller supplied an input that cannot be
-	// converted or is otherwise invalid (nil value, unsupported type, malformed
-	// payload).
-	ErrInvalidArgument = errors.New("invalid argument")
+	// ErrInvalid indicates an input that cannot be converted or is otherwise
+	// invalid (nil value, unsupported type, malformed payload).
+	ErrInvalid = errors.New("invalid argument")
 
-	// ErrNotFound indicates a referenced entity does not exist (e.g. an unknown
+	// ErrNotExist indicates a referenced entity does not exist (e.g. an unknown
 	// param OID while walking a device subtree).
-	ErrNotFound = errors.New("not found")
-
-	// ErrInternal indicates an unexpected failure or broken invariant while
-	// processing (e.g. a compression/decompression failure or a failed send).
-	ErrInternal = errors.New("internal error")
+	ErrNotExist = errors.New("does not exist")
 )

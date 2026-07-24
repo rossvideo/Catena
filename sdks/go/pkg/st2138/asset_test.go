@@ -293,7 +293,7 @@ func TestFromAsset_Url_Roundtrip(t *testing.T) {
 
 func TestFromAsset_NilProto(t *testing.T) {
 	_, res := FromAsset(Asset{})
-	if !errors.Is(res, ErrInvalidArgument) {
+	if !errors.Is(res, ErrInvalid) {
 		t.Errorf("expected InvalidArgument for nil proto, got %v", res)
 	}
 }
@@ -301,7 +301,7 @@ func TestFromAsset_NilProto(t *testing.T) {
 func TestFromAsset_NilPayload(t *testing.T) {
 	asset := Asset{Proto: &protos.ExternalObjectPayload{}}
 	_, res := FromAsset(asset)
-	if !errors.Is(res, ErrInvalidArgument) {
+	if !errors.Is(res, ErrInvalid) {
 		t.Errorf("expected InvalidArgument for nil payload, got %v", res)
 	}
 }
@@ -314,7 +314,7 @@ func TestFromAsset_EmptyUrl(t *testing.T) {
 		},
 	}}
 	_, res := FromAsset(asset)
-	if !errors.Is(res, ErrInvalidArgument) {
+	if !errors.Is(res, ErrInvalid) {
 		t.Errorf("expected InvalidArgument for empty URL, got %v", res)
 	}
 }
@@ -327,7 +327,7 @@ func TestFromAsset_EmptyPayload(t *testing.T) {
 		},
 	}}
 	_, res := FromAsset(asset)
-	if !errors.Is(res, ErrInvalidArgument) {
+	if !errors.Is(res, ErrInvalid) {
 		t.Errorf("expected InvalidArgument for empty payload, got %v", res)
 	}
 }
@@ -338,7 +338,7 @@ func TestFromAsset_NoKind(t *testing.T) {
 		Payload: &protos.DataPayload{},
 	}}
 	_, res := FromAsset(asset)
-	if !errors.Is(res, ErrInvalidArgument) {
+	if !errors.Is(res, ErrInvalid) {
 		t.Errorf("expected InvalidArgument for missing kind, got %v", res)
 	}
 }

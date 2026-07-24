@@ -10,10 +10,6 @@ think in `StatusCode`, not in HTTP numbers or gRPC codes directly.
 - `StatusCode` — see `status_code.go`.
 - `StatusResult` — a `StatusCode` plus an optional error message.
 - `Reply` / `ReplyError` / `ReplyWithCode` / `StatusWithCode` helpers.
-- `StatusFromError` — maps any error to a `StatusResult`: `nil` becomes
-  `StatusCodeOk`, the `st2138` sentinel errors (`ErrInvalidArgument`,
-  `ErrNotFound`, `ErrInternal`) become their matching codes, and any other
-  error falls back to `StatusCodeUnknown`.
 
 ## Normative references
 
@@ -45,6 +41,12 @@ to add `400` to §7.3 Table 1 is tracked in
   `Created`, `Accepted`) are not part of `StatusCode`. Method enforcement
   and proxy/gateway conditions are transport concerns and are handled by
   the REST router directly, bypassing `StatusCode`.
+- Errors from `st2138` helpers (`ErrInvalid`, `ErrNotExist`) are not
+  status codes; classify them yourself based on where the bad input came
+  from. An `ErrInvalid` from a value the client supplied is
+  `StatusCodeInvalidArgument`, but the same error from a value your handler
+  constructed is `StatusCodeInternal` — do not blindly forward it as a
+  client error.
 
 ## Cheat sheet
 
