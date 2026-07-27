@@ -42,6 +42,8 @@ import (
 	"errors"
 	"testing"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -78,14 +80,14 @@ func TestNewParamString(t *testing.T) {
 }
 
 func TestNewParamStruct(t *testing.T) {
-	p := NewParamStruct(nil).Proto
+	p := NewParamStruct().Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
 }
 
 func TestNewParamStructVariant(t *testing.T) {
-	p := NewParamStructVariant(nil).Proto
+	p := NewParamStructVariant().Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
 		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
 	}
@@ -136,14 +138,14 @@ func TestNewParamBinary(t *testing.T) {
 }
 
 func TestNewParamStructArray(t *testing.T) {
-	p := NewParamStructArray(nil).Proto
+	p := NewParamStructArray().Proto
 	if p.GetType() != protos.ParamType_STRUCT_ARRAY {
 		t.Errorf("expected STRUCT_ARRAY, got %v", p.GetType())
 	}
 }
 
 func TestNewParamStructVariantArray(t *testing.T) {
-	p := NewParamStructVariantArray(nil).Proto
+	p := NewParamStructVariantArray().Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
 		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", p.GetType())
 	}
@@ -190,8 +192,8 @@ func TestWithReadOnly(t *testing.T) {
 // including nested descendants.
 func TestWithReadOnly_PropagatesToChildrenAddedAfter(t *testing.T) {
 	grandchild := NewParamString("deep")
-	child := NewParamStruct(nil).WithParam("grandchild", grandchild)
-	p := NewParamStruct(nil).
+	child := NewParamStruct().WithParam("grandchild", grandchild)
+	p := NewParamStruct().
 		WithReadOnly(true).
 		WithParam("child", child).
 		Proto
@@ -212,8 +214,8 @@ func TestWithReadOnly_PropagatesToChildrenAddedAfter(t *testing.T) {
 // read_only down to the existing children recursively.
 func TestWithReadOnly_PropagatesToExistingChildren(t *testing.T) {
 	grandchild := NewParamString("deep")
-	child := NewParamStruct(nil).WithParam("grandchild", grandchild)
-	p := NewParamStruct(nil).
+	child := NewParamStruct().WithParam("grandchild", grandchild)
+	p := NewParamStruct().
 		WithParam("child", child).
 		WithReadOnly(true).
 		Proto
@@ -231,7 +233,7 @@ func TestWithReadOnly_PropagatesToExistingChildren(t *testing.T) {
 // independently marked read-only.
 func TestWithReadOnly_WritableParentKeepsChildReadOnly(t *testing.T) {
 	child := NewParamInt32(0).WithReadOnly(true)
-	p := NewParamStruct(nil).
+	p := NewParamStruct().
 		WithReadOnly(false).
 		WithParam("child", child).
 		Proto
@@ -248,7 +250,7 @@ func TestWithReadOnly_WritableParentKeepsChildReadOnly(t *testing.T) {
 // added before the parent is marked writable stays read-only.
 func TestWithReadOnly_WritableParentDoesNotClearChild(t *testing.T) {
 	child := NewParamInt32(0).WithReadOnly(true)
-	p := NewParamStruct(nil).
+	p := NewParamStruct().
 		WithParam("child", child).
 		WithReadOnly(false).
 		Proto
@@ -356,24 +358,33 @@ func TestWithClientHint(t *testing.T) {
 
 func TestWithParam_Struct(t *testing.T) {
 	child := NewParamInt32(10).WithName(NewPolyglotText("en", "child"))
-	p := NewParamStruct(nil).WithParam("brightness", child).Proto
+	p := NewParamStruct().WithParam("brightness", child).Proto
 
 	sub := p.GetParams()["brightness"]
 	if sub == nil {
 		t.Fatal("expected sub-param 'brightness'")
 	}
-	if sub.GetValue().GetInt32Value() != 10 {
-		t.Errorf("expected sub-param value 10, got %d", sub.GetValue().GetInt32Value())
+	if sub.GetName().GetDisplayStrings()["en"] != "child" {
+		t.Errorf("expected sub-param name 'child', got %q", sub.GetName().GetDisplayStrings()["en"])
+	}
+	// The child's value is moved into the parent struct's Value; the stored
+	// descriptor stays valueless.
+	if sub.GetValue() != nil {
+		t.Error("expected stored sub-param descriptor to be valueless")
+	}
+	if p.GetValue().GetStructValue().GetFields()["brightness"].GetInt32Value() != 10 {
+		t.Errorf("expected parent struct value field 'brightness'=10, got %d",
+			p.GetValue().GetStructValue().GetFields()["brightness"].GetInt32Value())
 	}
 }
 
 func TestWithParam_DeepClone(t *testing.T) {
 	child := NewParamInt32(1)
-	parent := NewParamStruct(nil).WithParam("x", child).Proto
+	parent := NewParamStruct().WithParam("x", child).Proto
 
 	child.SetValue(int32(999))
-	if parent.GetParams()["x"].GetValue().GetInt32Value() != 1 {
-		t.Error("expected sub-param to be a deep clone, not affected by later mutation")
+	if parent.GetValue().GetStructValue().GetFields()["x"].GetInt32Value() != 1 {
+		t.Error("expected sub-param value to be a deep clone, not affected by later mutation")
 	}
 }
 
@@ -389,7 +400,7 @@ func TestWithParam_Nil(t *testing.T) {
 	// Passing a nil sub-param must not panic and must not add an entry,
 	// preserving the contract that method chaining is never interrupted
 	// by error handling.
-	cp := NewParamStruct(nil).WithParam("x", nil)
+	cp := NewParamStruct().WithParam("x", nil)
 	p := cp.Proto
 	if len(p.GetParams()) != 0 {
 		t.Error("expected nil sub-param to be a no-op")
@@ -397,8 +408,11 @@ func TestWithParam_Nil(t *testing.T) {
 	// Chaining must continue to work after the no-op.
 	child := NewParamInt32(7)
 	p = cp.WithParam("y", child).Proto
-	if p.GetParams()["y"].GetValue().GetInt32Value() != 7 {
-		t.Error("expected chaining to continue working after nil sub-param")
+	if p.GetParams()["y"] == nil {
+		t.Fatal("expected chaining to continue working after nil sub-param")
+	}
+	if p.GetValue().GetStructValue().GetFields()["y"].GetInt32Value() != 7 {
+		t.Error("expected sub-param value to land in parent struct value after nil no-op")
 	}
 }
 
@@ -510,7 +524,7 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 		func() *Param { return NewParamInt32(0) },
 		func() *Param { return NewParamFloat32(0) },
 		func() *Param { return NewParamString("") },
-		func() *Param { return NewParamStruct(nil) },
+		func() *Param { return NewParamStruct() },
 	} {
 		p := factory().WithConstraint(c).Proto
 		if p.GetConstraint() == nil {
@@ -684,7 +698,7 @@ func TestWithValue_Struct(t *testing.T) {
 	if res != nil {
 		t.Fatal(res)
 	}
-	p := NewParamStruct(nil).WithValue(v).Proto
+	p := NewParamStruct().WithValue(v).Proto
 	fields := p.GetValue().GetStructValue().GetFields()
 	if fields["name"].GetStringValue() != "test" {
 		t.Errorf("expected struct field 'name'='test', got %q", fields["name"].GetStringValue())
@@ -697,7 +711,7 @@ func TestWithValue_StructVariant(t *testing.T) {
 	if res != nil {
 		t.Fatal(res)
 	}
-	p := NewParamStructVariant(nil).WithValue(v).Proto
+	p := NewParamStructVariant().WithValue(v).Proto
 	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "type_a" {
 		t.Errorf("expected struct_variant_type 'type_a', got %q",
 			p.GetValue().GetStructVariantValue().GetStructVariantType())
@@ -761,7 +775,7 @@ func TestGetValue_OK(t *testing.T) {
 }
 
 func TestGetValue_Nil(t *testing.T) {
-	cp := NewParamStruct(nil)
+	cp := NewParamStruct()
 	v, res := cp.GetValue()
 	if res != nil {
 		t.Fatalf("expected OK for nil value, got %v", res)
@@ -772,7 +786,7 @@ func TestGetValue_Nil(t *testing.T) {
 }
 
 func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
-	cp := NewParamStruct(nil)
+	cp := NewParamStruct()
 	input := map[string]any{"x": int32(1), "y": int32(2)}
 	res := cp.SetValue(input)
 	if res != nil {
@@ -802,7 +816,7 @@ func TestNewParamStruct_WithValue(t *testing.T) {
 }
 
 func TestNewParamStruct_NoValue(t *testing.T) {
-	p := NewParamStruct(nil).Proto
+	p := NewParamStruct().Proto
 	if p.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", p.GetType())
 	}
@@ -813,7 +827,7 @@ func TestNewParamStruct_NoValue(t *testing.T) {
 
 func TestNewParamStructVariant_WithValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "kind_a", Value: int32(5)}
-	p := NewParamStructVariant(&sv).Proto
+	p := NewParamStructVariant(sv).Proto
 	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "kind_a" {
 		t.Errorf("expected struct_variant_type 'kind_a', got %q",
 			p.GetValue().GetStructVariantValue().GetStructVariantType())
@@ -967,7 +981,7 @@ func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
 }
 
 func TestWithParam_SelfReference(t *testing.T) {
-	cp := NewParamStruct(nil)
+	cp := NewParamStruct()
 	cp.WithParam("self", cp)
 	sub := cp.Proto.GetParams()["self"]
 	if sub == nil {
@@ -989,7 +1003,7 @@ func TestNewParamStruct_InvalidValue(t *testing.T) {
 
 func TestNewParamStructVariant_InvalidValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "t", Value: struct{}{}}
-	p := NewParamStructVariant(&sv).Proto
+	p := NewParamStructVariant(sv).Proto
 	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
 		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
 	}
@@ -1044,7 +1058,7 @@ func TestNewParamData_BothPayloadAndUrl(t *testing.T) {
 
 func TestWithParam_StructVariant(t *testing.T) {
 	child := NewParamInt32(5)
-	p := NewParamStructVariant(nil).WithParam("field", child).Proto
+	p := NewParamStructVariant().WithParam("field", child).Proto
 	sub := p.GetParams()["field"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_VARIANT")
@@ -1056,7 +1070,7 @@ func TestWithParam_StructVariant(t *testing.T) {
 
 func TestWithParam_StructArray(t *testing.T) {
 	child := NewParamString("val")
-	p := NewParamStructArray(nil).WithParam("item", child).Proto
+	p := NewParamStructArray().WithParam("item", child).Proto
 	sub := p.GetParams()["item"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_ARRAY")
@@ -1068,7 +1082,7 @@ func TestWithParam_StructArray(t *testing.T) {
 
 func TestWithParam_StructVariantArray(t *testing.T) {
 	child := NewParamFloat32(1.5)
-	p := NewParamStructVariantArray(nil).WithParam("entry", child).Proto
+	p := NewParamStructVariantArray().WithParam("entry", child).Proto
 	sub := p.GetParams()["entry"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_VARIANT_ARRAY")
@@ -1135,7 +1149,7 @@ func TestSetValue_InvalidThenValid(t *testing.T) {
 }
 
 func TestWithParam_StructValuesFromSubParams(t *testing.T) {
-	param := NewParamStruct(nil).
+	param := NewParamStruct().
 		WithName(NewPolyglotText("en", "Struct Example")).
 		WithParam("number", NewParamInt32(7).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
 		WithParam("text", NewParamString("hello"))
@@ -1143,14 +1157,209 @@ func TestWithParam_StructValuesFromSubParams(t *testing.T) {
 	if param.Proto.GetType() != protos.ParamType_STRUCT {
 		t.Fatalf("expected STRUCT, got %v", param.Proto.GetType())
 	}
+	fields := param.Proto.GetValue().GetStructValue().GetFields()
+	if fields["number"].GetInt32Value() != 7 {
+		t.Errorf("expected struct value field 'number'=7, got %d", fields["number"].GetInt32Value())
+	}
+	if fields["text"].GetStringValue() != "hello" {
+		t.Errorf("expected struct value field 'text'='hello', got %q", fields["text"].GetStringValue())
+	}
 	number := param.Proto.GetParams()["number"]
-	if number.GetValue().GetInt32Value() != 7 {
-		t.Errorf("expected number sub-param value 7, got %d", number.GetValue().GetInt32Value())
+	if number.GetValue() != nil {
+		t.Error("expected number descriptor to be valueless")
 	}
 	if number.GetConstraint().GetInt32Range().GetMaxValue() != 10 {
 		t.Fatal("expected nested int32 range constraint max 10")
 	}
-	if param.Proto.GetParams()["text"].GetValue().GetStringValue() != "hello" {
-		t.Errorf("expected text sub-param value 'hello', got %q", param.Proto.GetParams()["text"].GetValue().GetStringValue())
+	if param.Proto.GetParams()["text"].GetValue() != nil {
+		t.Error("expected text descriptor to be valueless")
+	}
+}
+
+// --- Variadic factory / hasValue tests ---
+
+func TestNewParamX_NoValue(t *testing.T) {
+	tests := []struct {
+		name     string
+		param    *Param
+		wantType protos.ParamType
+	}{
+		{"int32", NewParamInt32(), protos.ParamType_INT32},
+		{"float32", NewParamFloat32(), protos.ParamType_FLOAT32},
+		{"string", NewParamString(), protos.ParamType_STRING},
+		{"struct", NewParamStruct(), protos.ParamType_STRUCT},
+		{"struct_variant", NewParamStructVariant(), protos.ParamType_STRUCT_VARIANT},
+		{"int32_array", NewParamInt32Array(), protos.ParamType_INT32_ARRAY},
+		{"float32_array", NewParamFloat32Array(), protos.ParamType_FLOAT32_ARRAY},
+		{"string_array", NewParamStringArray(), protos.ParamType_STRING_ARRAY},
+		{"binary", NewParamBinary(), protos.ParamType_BINARY},
+		{"struct_array", NewParamStructArray(), protos.ParamType_STRUCT_ARRAY},
+		{"struct_variant_array", NewParamStructVariantArray(), protos.ParamType_STRUCT_VARIANT_ARRAY},
+		{"data", NewParamData(), protos.ParamType_DATA},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.param.Proto.GetType() != tt.wantType {
+				t.Errorf("expected %v, got %v", tt.wantType, tt.param.Proto.GetType())
+			}
+			if tt.param.Proto.GetValue() != nil {
+				t.Error("expected nil value when no value given")
+			}
+			if tt.param.HasValue() {
+				t.Error("expected HasValue()=false when no value given")
+			}
+		})
+	}
+}
+
+func TestNewParamX_HasValue(t *testing.T) {
+	if !NewParamInt32(0).HasValue() {
+		t.Error("expected HasValue()=true for intentionally default value")
+	}
+	if !NewParamString("").HasValue() {
+		t.Error("expected HasValue()=true for intentionally empty string")
+	}
+	if !NewParamEmpty().HasValue() {
+		t.Error("expected HasValue()=true for EMPTY param")
+	}
+}
+
+func TestNewParamX_ExtraValuesIgnored(t *testing.T) {
+	p := NewParamInt32(1, 2, 3)
+	if p.Proto.GetValue().GetInt32Value() != 1 {
+		t.Errorf("expected first value 1 to win, got %d", p.Proto.GetValue().GetInt32Value())
+	}
+	if !p.HasValue() {
+		t.Error("expected HasValue()=true when values were given")
+	}
+}
+
+func TestWithValue_SetsHasValue(t *testing.T) {
+	v, _ := ToValue(int32(42))
+	cp := NewParamInt32().WithValue(v)
+	if !cp.HasValue() {
+		t.Error("expected HasValue()=true after WithValue")
+	}
+}
+
+func TestSetValue_SetsHasValue(t *testing.T) {
+	cp := NewParamInt32()
+	if err := cp.SetValue(int32(5)); err != nil {
+		t.Fatalf("SetValue failed: %v", err)
+	}
+	if !cp.HasValue() {
+		t.Error("expected HasValue()=true after SetValue")
+	}
+}
+
+func TestSetValue_FailureDoesNotSetHasValue(t *testing.T) {
+	cp := NewParamInt32()
+	if err := cp.SetValue("wrong type"); err == nil {
+		t.Fatal("expected SetValue to fail")
+	}
+	if cp.HasValue() {
+		t.Error("expected HasValue()=false after failed SetValue")
+	}
+}
+
+func TestNewParamStruct_AutoDescriptors(t *testing.T) {
+	p := NewParamStruct(map[string]any{
+		"number": int32(42),
+		"text":   "hi",
+		"ratio":  float32(0.5),
+		"nested": map[string]any{"inner": int32(1)},
+	}).Proto
+
+	params := p.GetParams()
+	if len(params) != 4 {
+		t.Fatalf("expected 4 auto-created descriptors, got %d", len(params))
+	}
+	wantTypes := map[string]protos.ParamType{
+		"number": protos.ParamType_INT32,
+		"text":   protos.ParamType_STRING,
+		"ratio":  protos.ParamType_FLOAT32,
+		"nested": protos.ParamType_STRUCT,
+	}
+	for oid, wantType := range wantTypes {
+		sub := params[oid]
+		if sub == nil {
+			t.Fatalf("expected auto-created descriptor for %q", oid)
+		}
+		if sub.GetType() != wantType {
+			t.Errorf("expected %q descriptor type %v, got %v", oid, wantType, sub.GetType())
+		}
+		if sub.GetValue() != nil {
+			t.Errorf("expected %q descriptor to be valueless", oid)
+		}
+	}
+	inner := params["nested"].GetParams()["inner"]
+	if inner == nil {
+		t.Fatal("expected recursive descriptor for nested field 'inner'")
+	}
+	if inner.GetType() != protos.ParamType_INT32 {
+		t.Errorf("expected nested 'inner' descriptor type INT32, got %v", inner.GetType())
+	}
+}
+
+// A valueless sub-param can refine an auto-created descriptor (name,
+// constraint, ...) without overriding the value that came from the map.
+func TestWithParam_ValuelessDoesNotOverrideMapValue(t *testing.T) {
+	p := NewParamStruct(map[string]any{"field2": int32(42)}).
+		WithParam("field2", NewParamInt32().WithName(NewPolyglotText("en", "Field 2"))).
+		Proto
+
+	if p.GetValue().GetStructValue().GetFields()["field2"].GetInt32Value() != 42 {
+		t.Errorf("expected map-provided value 42 to be kept, got %d",
+			p.GetValue().GetStructValue().GetFields()["field2"].GetInt32Value())
+	}
+	sub := p.GetParams()["field2"]
+	if sub.GetName().GetDisplayStrings()["en"] != "Field 2" {
+		t.Errorf("expected replaced descriptor to carry name 'Field 2', got %q",
+			sub.GetName().GetDisplayStrings()["en"])
+	}
+	if sub.GetValue() != nil {
+		t.Error("expected descriptor to remain valueless")
+	}
+}
+
+// A valued sub-param overrides the value that came from the map.
+func TestWithParam_ValueOverridesMapValue(t *testing.T) {
+	p := NewParamStruct(map[string]any{"field3": float32(0.0)}).
+		WithParam("field3", NewParamFloat32(1.2)).
+		Proto
+
+	if p.GetValue().GetStructValue().GetFields()["field3"].GetFloat32Value() != 1.2 {
+		t.Errorf("expected overridden value 1.2, got %f",
+			p.GetValue().GetStructValue().GetFields()["field3"].GetFloat32Value())
+	}
+}
+
+// The clean builder style produces the same struct value as passing the full
+// map up front, and a struct populated via WithParam propagates its value
+// when nested into another struct.
+func TestWithParam_CleanBuilderEquivalence(t *testing.T) {
+	clean := NewParamStruct().
+		WithParam("field1", NewParamString("value1")).
+		WithParam("field2", NewParamInt32(42))
+	upfront := NewParamStruct(map[string]any{
+		"field1": "value1",
+		"field2": int32(42),
+	})
+
+	if !proto.Equal(clean.Proto, upfront.Proto) {
+		t.Errorf("expected clean builder proto to equal up-front map proto:\nclean:   %v\nupfront: %v",
+			clean.Proto, upfront.Proto)
+	}
+	if !clean.HasValue() {
+		t.Error("expected struct built via valued WithParam calls to report HasValue()=true")
+	}
+
+	outer := NewParamStruct().WithParam("inner", clean)
+	innerValue := outer.Proto.GetValue().GetStructValue().GetFields()["inner"]
+	if innerValue.GetStructValue().GetFields()["field1"].GetStringValue() != "value1" {
+		t.Error("expected nested struct value to propagate into outer struct value")
+	}
+	if outer.Proto.GetParams()["inner"].GetValue() != nil {
+		t.Error("expected nested struct descriptor to be valueless")
 	}
 }
