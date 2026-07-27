@@ -5,16 +5,16 @@
 ## Constructor
 
 ```go
-rest := rest.NewTransport(rest.Options{Port: 9080})
+restTransport := rest.NewTransport(rest.Options{Port: 9080})
 // or with defaults
-rest := rest.NewTransport(rest.DefaultOptions())
+restTransport := rest.NewTransport(rest.DefaultOptions())
 ```
 
 Register it on the shared server:
 
 ```go
 srv := catena.NewServer(100)
-if err := srv.RegisterTransport(rest); err != nil {
+if err := srv.RegisterTransport(restTransport); err != nil {
     panic(err)
 }
 ```
