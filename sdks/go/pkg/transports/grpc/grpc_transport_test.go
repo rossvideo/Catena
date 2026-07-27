@@ -59,6 +59,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos/rpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest"
 )
 
@@ -227,7 +228,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 	tests := []struct {
 		name  string
 		setup func(t *testing.T, runtime *transporttest.StubServerRuntime)
-		run   func(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc)
+		run   func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc)
 	}{
 		{
 			name: "get populated slots",
@@ -237,7 +238,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 					return []uint16{0}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
+			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
 				resp, err := makeGetPopulatedSlotsRequest(t, client, ctx)
 				assertNoError(t, err)
 				assertSlotList(t, resp, []uint32{0})
@@ -252,7 +253,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 					return catena.Reply(value)
 				}
 			},
-			run: func(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
+			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
 				_, err := makeGetValueRequest(t, client, ctx, 0, "device.param1")
 				assertNoError(t, err)
 			},
@@ -265,7 +266,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
+			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
 				_, err := makeMultiSetValueRequest(t, client, ctx, 0, map[string]any{
 					"param1": int32(1),
 					"param2": "two",
@@ -282,7 +283,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 					return catena.Reply(device)
 				}
 			},
-			run: func(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
+			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
 				stream, err := makeDeviceRequest(t, client, ctx, 0)
 				assertNoError(t, err)
 				_ = receiveDeviceComponent(t, stream)
@@ -298,7 +299,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 				}
 				runtime.DeregisterConnFn = func(connID int) {}
 			},
-			run: func(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
+			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
 				stream, err := makeConnectRequest(t, client, ctx)
 				assertNoError(t, err)
 				cancel()
@@ -1487,7 +1488,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 		devMessage    string
 		grpcCode      codes.Code
 		setupHandlers func(*transporttest.StubServerRuntime)
-		callEndpoint  func(protos.CatenaServiceClient, context.Context) error
+		callEndpoint  func(rpc.CatenaServiceClient, context.Context) error
 	}
 
 	endpoints := []endpoint{
@@ -1500,7 +1501,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 					return catena.ReplyError[catena.Value](catena.StatusCodeUnimplemented, "param not supported")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.GetValue(ctx, &protos.GetValuePayload{Slot: 0, Oid: "device.param1"})
 				return err
 			},
@@ -1514,7 +1515,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				protoValue, _ := catena.ToProto(int32(100))
 				_, err := client.SetValue(ctx, &protos.SingleSetValuePayload{
 					Slot: 0,
@@ -1535,7 +1536,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 					return catena.StatusWithCode(catena.StatusCodeFailedPrecondition, "multi set failed")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				protoValue, _ := catena.ToProto(int32(1))
 				_, err := client.MultiSetValue(ctx, &protos.MultiSetValuePayload{
 					Slot: 0,
@@ -1555,7 +1556,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 					return catena.StatusWithCode(catena.StatusCodePermissionDenied, "language not writable")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
 					Slot:     0,
 					Language: "nl",
@@ -1576,7 +1577,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 					return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
 				return err
 			},
@@ -1585,7 +1586,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			name:       "RefreshToken",
 			devMessage: "RefreshToken not implemented",
 			grpcCode:   codes.Unimplemented,
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RefreshToken(ctx, &protos.RefreshTokenPayload{Reason: "test"})
 				return err
 			},
@@ -1594,7 +1595,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			name:       "RevokeAccess",
 			devMessage: "RevokeAccess not implemented",
 			grpcCode:   codes.Unimplemented,
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RevokeAccess(ctx, &protos.RevokeAccessPayload{Subject: "test-subject"})
 				return err
 			},
@@ -1662,7 +1663,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 		devMessage    string
 		grpcCode      codes.Code
 		setupHandlers func(*transporttest.StubServerRuntime)
-		callEndpoint  func(protos.CatenaServiceClient, context.Context) error
+		callEndpoint  func(rpc.CatenaServiceClient, context.Context) error
 	}
 
 	endpoints := []endpoint{
@@ -1675,7 +1676,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 					return catena.ReplyError[catena.Device](catena.StatusCodeNotFound, "device not found")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.DeviceRequest(ctx, &protos.DeviceRequestPayload{Slot: 0})
 				if err != nil {
 					return err
@@ -1693,7 +1694,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 					return catena.ReplyError[catena.Asset](catena.StatusCodeNotFound, "asset not found")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.ExternalObjectRequest(ctx, &protos.ExternalObjectRequestPayload{Slot: 0, Oid: "device.image1"})
 				if err != nil {
 					return err
@@ -1711,7 +1712,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 					return nil, catena.StatusWithCode(catena.StatusCodeUnimplemented, "command not supported")
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.ExecuteCommand(ctx, &protos.ExecuteCommandPayload{Slot: 0, Oid: "device.command"})
 				if err != nil {
 					return err
@@ -1729,7 +1730,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 					return nil, catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "param not found"}
 				}
 			},
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{Slot: 0, OidPrefix: "device"})
 				if err != nil {
 					return err
@@ -1742,7 +1743,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			name:       "UpdateSubscriptions",
 			devMessage: "UpdateSubscriptions not implemented",
 			grpcCode:   codes.Unimplemented,
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.UpdateSubscriptions(ctx, &protos.UpdateSubscriptionsPayload{Slot: 0})
 				if err != nil {
 					return err
@@ -1815,11 +1816,11 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 func TestTransport_UnimplementedEndpoints(t *testing.T) {
 	tests := []struct {
 		name     string
-		callFunc func(protos.CatenaServiceClient, context.Context) error
+		callFunc func(rpc.CatenaServiceClient, context.Context) error
 	}{
 		{
 			name: "UpdateSubscriptions",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callFunc: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.UpdateSubscriptions(ctx, &protos.UpdateSubscriptionsPayload{
 					Slot: 0,
 				})
@@ -1832,7 +1833,7 @@ func TestTransport_UnimplementedEndpoints(t *testing.T) {
 		},
 		{
 			name: "RefreshToken",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callFunc: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RefreshToken(ctx, &protos.RefreshTokenPayload{
 					Reason: "test",
 				})
@@ -1841,7 +1842,7 @@ func TestTransport_UnimplementedEndpoints(t *testing.T) {
 		},
 		{
 			name: "RevokeAccess",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
+			callFunc: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RevokeAccess(ctx, &protos.RevokeAccessPayload{
 					Subject: "test-subject",
 				})
@@ -2264,7 +2265,7 @@ func TestTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := protos.NewCatenaServiceClient(conn)
+	client := rpc.NewCatenaServiceClient(conn)
 
 	// Test 1: GetPopulatedSlots
 	t.Run("GetPopulatedSlots", func(t *testing.T) {
@@ -2340,7 +2341,7 @@ func TestTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := protos.NewCatenaServiceClient(conn)
+	client := rpc.NewCatenaServiceClient(conn)
 
 	// Establish Connect stream (long-lived connection)
 	stream, err := client.Connect(ctx, &protos.ConnectPayload{})
@@ -2399,7 +2400,7 @@ func TestTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 	}
 	defer conn.Close()
 
-	client := protos.NewCatenaServiceClient(conn)
+	client := rpc.NewCatenaServiceClient(conn)
 	stream, err := client.Connect(context.Background(), &protos.ConnectPayload{})
 	if err != nil {
 		transport.Shutdown(context.Background())
@@ -2526,7 +2527,7 @@ func TestTransport_MultipleClients_RealNetwork(t *testing.T) {
 			}
 			defer conn.Close()
 
-			client := protos.NewCatenaServiceClient(conn)
+			client := rpc.NewCatenaServiceClient(conn)
 			resp, err := client.GetValue(ctx, &protos.GetValuePayload{
 				Slot: 0,
 				Oid:  "test.param",

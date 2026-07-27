@@ -50,6 +50,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos/rpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -82,7 +83,7 @@ func NewTransport(cfg Options) *Transport {
 		grpc.StreamInterceptor(transport.streamInterceptor),
 	)
 
-	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
+	rpc.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
 
 	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
@@ -236,7 +237,7 @@ func (t *Transport) retrieveMetadataFromContext(ctx context.Context) catena.Tran
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
 type catenaService struct {
 	transport *Transport
-	protos.UnimplementedCatenaServiceServer
+	rpc.UnimplementedCatenaServiceServer
 }
 
 func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
