@@ -27,8 +27,8 @@ import (
     "syscall"
 
     "github.com/rossvideo/catena/sdks/go/pkg/catena"
-    "github.com/rossvideo/catena/sdks/go/pkg/config"
-    "github.com/rossvideo/catena/sdks/go/pkg/transports"
+    "github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
+    "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 )
 
 func main() {

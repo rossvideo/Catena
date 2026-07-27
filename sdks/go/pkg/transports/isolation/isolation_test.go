@@ -59,7 +59,13 @@ const (
 // deps returns the transitive dependency import paths of pkg via `go list`.
 func deps(t *testing.T, pkg string) []string {
 	t.Helper()
-	out, err := exec.Command("go", "list", "-deps", pkg).CombinedOutput()
+
+	goPath, err := exec.LookPath("go")
+	if err != nil {
+		t.Fatalf("cannot find 'go' in PATH: %v", err)
+	}
+
+	out, err := exec.Command(goPath, "list", "-deps", pkg).CombinedOutput()
 	if err != nil {
 		t.Fatalf("go list -deps %s failed: %v\n%s", pkg, err, out)
 	}
