@@ -38,7 +38,7 @@
  * @date 2026-05-14
  */
 
-package transports
+package rest
 
 import (
 	"context"
@@ -55,40 +55,41 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest"
 	"google.golang.org/protobuf/proto"
 )
 
-func makeTestRestTransport(tb testing.TB) (*RestTransport, *stubServerRuntime) {
-	transport := NewRestTransport(config.RestOptions{Port: 8080})
-	stubRuntime := makeStubServerRuntime(tb)
-	stubRuntime.isDev = true
+func makeTestTransport(tb testing.TB) (*Transport, *transporttest.StubServerRuntime) {
+	transport := NewTransport(config.RestOptions{Port: 8080})
+	stubRuntime := transporttest.MakeStubServerRuntime(tb)
+	stubRuntime.Dev = true
 	transport.runtime = stubRuntime
 	return transport, stubRuntime
 }
 
-func TestRestTransport_NewRestTransport(t *testing.T) {
+func TestTransport_New(t *testing.T) {
 	expected := 1234
-	transport := NewRestTransport(config.RestOptions{Port: expected})
+	transport := NewTransport(config.RestOptions{Port: expected})
 	if transport == nil {
-		t.Fatal("NewRestTransport returned nil")
+		t.Fatal("NewTransport returned nil")
 	}
 	if transport.port != expected {
 		t.Errorf("expected port %d, got %d", expected, transport.port)
 	}
 }
 
-func TestRestTransport_DefaultRestOptions(t *testing.T) {
+func TestTransport_DefaultOptions(t *testing.T) {
 	cfg := config.DefaultRestOptions()
-	transport := NewRestTransport(cfg)
+	transport := NewTransport(cfg)
 	if transport == nil {
-		t.Fatal("NewRestTransport returned nil")
+		t.Fatal("NewTransport returned nil")
 	}
 	if transport.port != 9080 {
 		t.Errorf("expected default port 9080, got %d", transport.port)
 	}
 }
 
-func TestRestTransport_PropagatesTransportContext(t *testing.T) {
+func TestTransport_PropagatesTransportContext(t *testing.T) {
 	headers := map[string]string{
 		"Authorization": "Bearer rest-token",
 		"X-Test-Tenant": "tenant-a",
@@ -112,85 +113,85 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		run   func(t *testing.T, transport *RestTransport)
-		setup func(t *testing.T, runtime *stubServerRuntime)
+		run   func(t *testing.T, transport *Transport)
+		setup func(t *testing.T, runtime *transporttest.StubServerRuntime)
 	}{
 		{
 			name: "get populated slots",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.getSlotsFn = func(ctx catena.TransportContext) ([]uint16, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.GetSlotsFn = func(ctx catena.TransportContext) ([]uint16, catena.StatusResult) {
 					assertContext(t, ctx)
 					return []uint16{0}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/devices", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "get device",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 					assertContext(t, ctx)
 					device := *catena.NewDevice(slot)
 					return catena.Reply(device)
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "get value",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.getValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult) {
 					assertContext(t, ctx)
 					value, _ := catena.ToValue(int32(42))
 					return catena.Reply(value)
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/value/brightness", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "get param",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
 					assertContext(t, ctx)
 					return *catena.NewParamInt32(42), catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/param/brightness", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "set value",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness", `{"int32_value": 42}`, headers)
 				assertStatus(t, rec, http.StatusNoContent)
 			},
 		},
 		{
 			name: "set values",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
 					`{"values":[{"oid":"a","value":{"int32_value":1}}]}`, headers)
 				assertStatus(t, rec, http.StatusNoContent)
@@ -198,70 +199,70 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 		},
 		{
 			name: "get asset",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 					assertContext(t, ctx)
 					asset, _ := catena.ToAsset(catena.DataPayload{Payload: []byte("asset")}, false)
 					return catena.Reply(asset)
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/logo", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "execute command",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.CommandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 					assertContext(t, ctx)
 					return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodPost, "/st2138-api/v1/0/command/reboot", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "param info",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 					assertContext(t, ctx)
 					return []catena.ParamInfo{
 						catena.NewParamInfo("text_box", nil, catena.ParamTypeString, "", 0),
 					}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/param-info/text_box", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "languages",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				runtime.ListLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
 					assertContext(t, ctx)
 					return []string{"en", "fr"}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				rec := makeRequestWithHeaders(t, transport, http.MethodGet, "/st2138-api/v1/0/languages", "", headers)
 				assertStatus(t, rec, http.StatusOK)
 			},
 		},
 		{
 			name: "connect",
-			setup: func(t *testing.T, runtime *stubServerRuntime) {
-				connection := makeTestConnection(1)
-				runtime.registerTransportConnFn = func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
+			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
+				connection := transporttest.MakeTestConnection(1)
+				runtime.RegisterTransportConnFn = func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
 					assertContext(t, ctx)
 					return connection, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
-				runtime.deregisterConnFn = func(connID int) {}
+				runtime.DeregisterConnFn = func(connID int) {}
 			},
-			run: func(t *testing.T, transport *RestTransport) {
+			run: func(t *testing.T, transport *Transport) {
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
 				req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
@@ -280,21 +281,21 @@ func TestRestTransport_PropagatesTransportContext(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			transport, runtime := makeTestRestTransport(t)
+			transport, runtime := makeTestTransport(t)
 			tt.setup(t, runtime)
 			tt.run(t, transport)
 		})
 	}
 }
 
-func TestRestTransport_GetDevice_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetDevice_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
 	device := *catena.NewDevice(0).
 		WithDetailLevel(catena.DetailLevelFull)
 
-	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -310,11 +311,11 @@ func TestRestTransport_GetDevice_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetDevice_NotFound(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetDevice_NotFound(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 99 {
 			t.Errorf("expected slot 99, got %d", slot)
@@ -331,11 +332,11 @@ func TestRestTransport_GetDevice_NotFound(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetDevice_InvalidSlot(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetDevice_InvalidSlot(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -352,11 +353,11 @@ func TestRestTransport_GetDevice_InvalidSlot(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetValue_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetValue_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	value, _ := catena.ToValue(int32(42))
-	runtime.getValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult) {
+	runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult) {
 		if fqoid != "brightness" {
 			t.Errorf("expected fqoid 'brightness', got %s", fqoid)
 		}
@@ -367,11 +368,11 @@ func TestRestTransport_GetValue_Route(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestRestTransport_GetParam_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetParam_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "text_box" {
 			t.Errorf("expected fqoid 'text_box', got %s", fqoid)
@@ -392,10 +393,10 @@ func TestRestTransport_GetParam_Route(t *testing.T) {
 	assertBodyContains(t, rec, `"type":"STRING"`)
 }
 
-func TestRestTransport_GetParam_NestedFqoid(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetParam_NestedFqoid(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
 		if fqoid != "parent/child" {
 			t.Errorf("expected fqoid 'parent/child', got %s", fqoid)
 		}
@@ -407,22 +408,22 @@ func TestRestTransport_GetParam_NestedFqoid(t *testing.T) {
 	assertBodyContains(t, rec, `"oid":"parent/child"`)
 }
 
-func TestRestTransport_GetParam_MissingFqoid(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_GetParam_MissingFqoid(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param", "")
 	assertStatus(t, rec, http.StatusBadRequest)
 }
 
-func TestRestTransport_GetParam_MethodNotAllowed(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_GetParam_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/param/text_box", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
-func TestRestTransport_GetParam_HandlerError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetParam_HandlerError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
 		return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
@@ -430,13 +431,13 @@ func TestRestTransport_GetParam_HandlerError(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-// TestRestTransport_GetParam_EmitsZeroValues verifies the param response keeps
+// TestTransport_GetParam_EmitsZeroValues verifies the param response keeps
 // meaningful proto3 zero values that the default (omit-empty) marshaller drops:
 // a constraint's min_value:0 and a current value of 0.
-func TestRestTransport_GetParam_EmitsZeroValues(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
 		param := catena.NewParamInt32(0).
 			WithName(catena.NewPolyglotText("en", "Zero")).
 			WithConstraint(catena.NewConstraintInt32Range(0, 100, 1))
@@ -451,12 +452,12 @@ func TestRestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 	assertBodyContains(t, rec, `"int32_value":0`)
 }
 
-// TestRestTransport_GetParam_EmitsEmptyStringValue verifies that a current
+// TestTransport_GetParam_EmitsEmptyStringValue verifies that a current
 // value of "" survives the empty-strip pass (it is detached and reattached).
-func TestRestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
 		param := catena.NewParamString("").
 			WithName(catena.NewPolyglotText("en", "Empty"))
 		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -467,11 +468,11 @@ func TestRestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
 	assertBodyContains(t, rec, `"string_value":""`)
 }
 
-func TestRestTransport_SetValue_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_SetValue_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		if len(entries) != 1 {
 			t.Fatalf("expected 1 entry, got %d", len(entries))
@@ -492,11 +493,11 @@ func TestRestTransport_SetValue_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_SetValue_InvalidContentType(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_SetValue_InvalidContentType(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
@@ -513,11 +514,11 @@ func TestRestTransport_SetValue_InvalidContentType(t *testing.T) {
 	}
 }
 
-func TestRestTransport_SetValues_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_SetValues_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	var got []catena.SetValueEntry
-	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		got = values
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -546,12 +547,12 @@ func TestRestTransport_SetValues_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_SetValues_DeliversAllEntries(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_SetValues_DeliversAllEntries(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	callCount := 0
 	var got []catena.SetValueEntry
-	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		callCount++
 		got = values
 		return catena.StatusResult{Code: catena.StatusCodeOk}
@@ -568,11 +569,11 @@ func TestRestTransport_SetValues_DeliversAllEntries(t *testing.T) {
 	}
 }
 
-func TestRestTransport_SetValues_InvalidContentType(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_SetValues_InvalidContentType(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
@@ -588,28 +589,28 @@ func TestRestTransport_SetValues_InvalidContentType(t *testing.T) {
 	}
 }
 
-func TestRestTransport_SetValues_MalformedBody(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_SetValues_MalformedBody(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", `{"values": not-json}`)
 	assertStatus(t, rec, http.StatusBadRequest)
 }
 
-func TestRestTransport_SetValues_FromProtoError(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_SetValues_FromProtoError(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	body := `{"values":[{"oid":"param","value":{"struct_variant_value":{"variant_name":"test"}}}]}`
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
 	assertStatus(t, rec, http.StatusBadRequest)
 }
 
-func TestRestTransport_SetValues_MethodNotAllowed(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_SetValues_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/values", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
-func TestRestTransport_SetValues_HandlerError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.setValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+func TestTransport_SetValues_HandlerError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "not found")
 	}
 
@@ -618,8 +619,8 @@ func TestRestTransport_SetValues_HandlerError(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_ReadAsset_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_ReadAsset_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "image/png"},
@@ -627,7 +628,7 @@ func TestRestTransport_ReadAsset_Route(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "logo" {
 			t.Errorf("expected fqoid 'logo', got %s", fqoid)
 		}
@@ -638,11 +639,11 @@ func TestRestTransport_ReadAsset_Route(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestRestTransport_Asset_MethodNotAllowed(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Asset_MethodNotAllowed(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	getCalled := false
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		getCalled = true
 		return catena.Reply(catena.Asset{})
 	}
@@ -657,12 +658,12 @@ func TestRestTransport_Asset_MethodNotAllowed(t *testing.T) {
 
 const assetRequestBody = `{"cachable":true,"payload":{"payload_encoding":"UNCOMPRESSED","payload":"ZmFrZSBpbWFnZQ=="}}`
 
-func TestRestTransport_CreateAsset_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_CreateAsset_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	var gotFqoid string
 	var gotPayload []byte
-	runtime.createAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.CreateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		gotFqoid = fqoid
 		dp, res := catena.FromAsset(asset)
 		if res.Code != catena.StatusCodeOk {
@@ -682,11 +683,11 @@ func TestRestTransport_CreateAsset_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_UpdateAsset_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_UpdateAsset_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	var gotFqoid string
-	runtime.updateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.UpdateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		gotFqoid = fqoid
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -698,11 +699,11 @@ func TestRestTransport_UpdateAsset_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_DeleteAsset_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_DeleteAsset_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	var gotFqoid string
-	runtime.deleteAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.DeleteAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
 		gotFqoid = fqoid
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -714,10 +715,10 @@ func TestRestTransport_DeleteAsset_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_DeleteAsset_NotFound(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_DeleteAsset_NotFound(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.deleteAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+	runtime.DeleteAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
 	}
 
@@ -725,11 +726,11 @@ func TestRestTransport_DeleteAsset_NotFound(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_CreateAsset_InvalidBody(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_CreateAsset_InvalidBody(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.createAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.CreateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -741,11 +742,11 @@ func TestRestTransport_CreateAsset_InvalidBody(t *testing.T) {
 	}
 }
 
-func TestRestTransport_UpdateAsset_MissingContentType(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_UpdateAsset_MissingContentType(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.updateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
+	runtime.UpdateAssetFn = func(slot uint16, fqoid string, asset catena.Asset, ctx catena.TransportContext) catena.StatusResult {
 		handlerCalled = true
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -758,12 +759,12 @@ func TestRestTransport_UpdateAsset_MissingContentType(t *testing.T) {
 	}
 }
 
-func TestRestTransport_ExecuteCommand(t *testing.T) {
+func TestTransport_ExecuteCommand(t *testing.T) {
 	t.Run("Route", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
 		handlerCalled := false
-		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.CommandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			handlerCalled = true
 			if commandFqoid != "reboot" {
 				t.Errorf("expected commandFqoid 'reboot', got %s", commandFqoid)
@@ -784,10 +785,10 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 
 	t.Run("WithPayload", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
 		handlerCalled := false
-		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.CommandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			handlerCalled = true
 			if payload == nil {
 				t.Error("expected payload to be non-nil")
@@ -808,10 +809,10 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 
 	t.Run("MethodNotAllowed", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
 		handlerCalled := false
-		runtime.commandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.CommandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			handlerCalled = true
 			return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
@@ -824,7 +825,7 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 
 	t.Run("NoCommand", func(t *testing.T) {
-		transport, _ := makeTestRestTransport(t)
+		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/", "")
 		assertStatus(t, rec, http.StatusBadRequest)
 		assertBodyContains(t, rec, "command FQOID is required")
@@ -832,7 +833,7 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 	// commands can't be nested in any way
 	t.Run("NestedCommand", func(t *testing.T) {
-		transport, _ := makeTestRestTransport(t)
+		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/invalid/nested/command", "")
 		assertStatus(t, rec, http.StatusNotFound)
 		assertBodyContains(t, rec, "unknown command endpoint")
@@ -840,7 +841,7 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 	// the only valid string after /command/oid/ is 'stream'
 	t.Run("NotStream", func(t *testing.T) {
-		transport, _ := makeTestRestTransport(t)
+		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/oid/not-stream", "")
 		assertStatus(t, rec, http.StatusNotFound)
 		assertBodyContains(t, rec, "unknown command endpoint")
@@ -858,9 +859,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				transport, runtime := makeTestRestTransport(t)
+				transport, runtime := makeTestTransport(t)
 				var receivedPayload any
-				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+				runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 					receivedPayload = payload
 					return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
@@ -877,21 +878,21 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
-		transport, _ := makeTestRestTransport(t)
+		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/test", `{invalid json}`)
 		assertStatus(t, rec, http.StatusBadRequest)
 	})
 
 	t.Run("FromProtoError", func(t *testing.T) {
-		transport, _ := makeTestRestTransport(t)
+		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/exec",
 			`{"struct_variant_value": {"variant_name": "test"}}`)
 		assertStatus(t, rec, http.StatusBadRequest)
 	})
 
 	t.Run("ResponseValue", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		transport, runtime := makeTestTransport(t)
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			val, _ := catena.ToValue("command executed")
 			return []catena.CommandResult{catena.CommandValue(val)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
@@ -915,8 +916,8 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 
 	t.Run("ExceptionResponse", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		transport, runtime := makeTestTransport(t)
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			return []catena.CommandResult{catena.CommandException(
 				"InvalidCommand",
 				"Command not found: "+fqoid,
@@ -957,8 +958,8 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 
 	t.Run("HandlerError", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		transport, runtime := makeTestTransport(t)
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "command not found")
 		}
 
@@ -987,9 +988,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 		for _, tc := range cases {
 			t.Run(tc.name, func(t *testing.T) {
-				transport, runtime := makeTestRestTransport(t)
+				transport, runtime := makeTestTransport(t)
 				handlerCalled := false
-				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+				runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 					handlerCalled = true
 					if respond != tc.want {
 						t.Errorf("handler received respond=%v, want %v", respond, tc.want)
@@ -1007,10 +1008,10 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 
 	t.Run("StreamRoute", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
 		gotRespond := false
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			gotRespond = respond
 			if fqoid != "run" {
 				t.Errorf("expected commandFqoid 'run', got %s", fqoid)
@@ -1038,9 +1039,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	// If the handler errors before sending anything, the stream has not committed
 	// a status yet, so the transport can still report the error as an HTTP status.
 	t.Run("StreamErrorNoneSent", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "command not found")
 		}
 
@@ -1053,9 +1054,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 
 	// Exercise the case where the handler sends results but then returns error
 	t.Run("StreamErrorAfterSomeSent", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			v1, _ := catena.ToValue(int32(1))
 			v2, _ := catena.ToValue(int32(2))
 			return []catena.CommandResult{
@@ -1088,9 +1089,9 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	// A successful handler that streams nothing yields a well-formed empty event
 	// stream (200), not an error.
 	t.Run("StreamEmptyOk", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -1105,8 +1106,8 @@ func TestRestTransport_ExecuteCommand(t *testing.T) {
 	})
 }
 
-func TestRestTransport_Health_Route(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_Health_Route(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/health", "")
 	assertStatus(t, rec, http.StatusOK)
@@ -1117,16 +1118,16 @@ func TestRestTransport_Health_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Health_MethodNotAllowed(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_Health_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/health", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
-func TestRestTransport_Connect_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Connect_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	connection := makeTestConnection(1)
+	connection := transporttest.MakeTestConnection(1)
 	runtime.WithConnection(connection)
 
 	// push an update to the connection
@@ -1177,8 +1178,8 @@ func TestRestTransport_Connect_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Connect_MethodNotAllowed(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_Connect_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/connect", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
@@ -1188,10 +1189,10 @@ func TestRestTransport_Connect_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetPopulatedSlots_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_GetPopulatedSlots_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.slots = []uint16{0, 1, 5}
+	runtime.Slots = []uint16{0, 1, 5}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/devices", "")
 	assertStatus(t, rec, http.StatusOK)
@@ -1221,8 +1222,8 @@ func TestRestTransport_GetPopulatedSlots_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetPopulatedSlots_MethodNotAllowed(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_GetPopulatedSlots_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/devices", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
@@ -1232,8 +1233,8 @@ func TestRestTransport_GetPopulatedSlots_MethodNotAllowed(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetPopulatedSlots_EmptySlots(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_GetPopulatedSlots_EmptySlots(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/devices", "")
 	assertStatus(t, rec, http.StatusOK)
@@ -1250,9 +1251,9 @@ func TestRestTransport_GetPopulatedSlots_EmptySlots(t *testing.T) {
 	}
 }
 
-func TestRestTransport_GetPopulatedSlots_RuntimeError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.getSlotsFn = func(ctx catena.TransportContext) ([]uint16, catena.StatusResult) {
+func TestTransport_GetPopulatedSlots_RuntimeError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.GetSlotsFn = func(ctx catena.TransportContext) ([]uint16, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodePermissionDenied, "no slot access")
 	}
 
@@ -1265,8 +1266,8 @@ func TestRestTransport_GetPopulatedSlots_RuntimeError(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Fallback_Route(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_Fallback_Route(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	handlerCalled := false
 	transport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
@@ -1281,10 +1282,10 @@ func TestRestTransport_Fallback_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_NestedValuePath(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_NestedValuePath(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.getValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult) {
+	runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Value, catena.StatusResult) {
 		if fqoid != "nested/path/to/param" {
 			t.Errorf("expected fqoid 'nested/path/to/param', got %s", fqoid)
 		}
@@ -1296,26 +1297,26 @@ func TestRestTransport_NestedValuePath(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestRestTransport_UnknownEndpoint(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_UnknownEndpoint(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/unknown", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_InvalidPath(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_InvalidPath(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/kjhgjnghf", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_InvalidPathNoSlash(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_InvalidPathNoSlash(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1", "")
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_NegativeSlot(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_NegativeSlot(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/-1", "")
 	assertStatus(t, rec, http.StatusBadRequest)
 }
@@ -1326,7 +1327,7 @@ func TestWriteHTTPResult_Error(t *testing.T) {
 		Code:  catena.StatusCodeNotFound,
 		Error: "test error message",
 	}
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	transport.writeHTTPResult(rec, result, catena.Value{})
 
 	errMsg := assertHasError(t, rec)
@@ -1338,14 +1339,14 @@ func TestWriteHTTPResult_Error(t *testing.T) {
 func TestWriteHTTPStatusResult(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeOk}
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	transport.writeHTTPStatusResult(rec, result)
 	assertStatus(t, rec, http.StatusOK)
 }
 
 func TestWriteHTTPStatusResultNoBody_SuccessIs204(t *testing.T) {
 	rec := httptest.NewRecorder()
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	transport.writeHTTPStatusResultNoBody(rec, catena.StatusResult{Code: catena.StatusCodeOk})
 	assertStatus(t, rec, http.StatusNoContent)
 	if rec.Body.Len() != 0 {
@@ -1355,7 +1356,7 @@ func TestWriteHTTPStatusResultNoBody_SuccessIs204(t *testing.T) {
 
 func TestWriteHTTPStatusResultNoBody_ErrorPreservesMapping(t *testing.T) {
 	rec := httptest.NewRecorder()
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	transport.writeHTTPStatusResultNoBody(rec, catena.StatusResult{
 		Code:  catena.StatusCodeNotFound,
 		Error: "missing",
@@ -1363,7 +1364,7 @@ func TestWriteHTTPStatusResultNoBody_ErrorPreservesMapping(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_ErrorMessages_DevVsProd(t *testing.T) {
+func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 	tests := []struct {
 		name     string
 		isDev    bool
@@ -1375,8 +1376,8 @@ func TestRestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			transport, runtime := makeTestRestTransport(t)
-			runtime.isDev = tt.isDev
+			transport, runtime := makeTestTransport(t)
+			runtime.Dev = tt.isDev
 
 			rec := httptest.NewRecorder()
 			result := catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "detailed error"}
@@ -1408,7 +1409,7 @@ func TestWriteFunctions_NilValues(t *testing.T) {
 }
 
 func TestSetValue_FromProtoError(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/value/param",
 		`{"struct_variant_value": {"variant_name": "test"}}`)
 	if rec.Code == 0 {
@@ -1417,7 +1418,7 @@ func TestSetValue_FromProtoError(t *testing.T) {
 }
 
 func TestRouting_EdgeCases(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 
 	tests := []struct {
 		name string
@@ -1437,8 +1438,8 @@ func TestRouting_EdgeCases(t *testing.T) {
 }
 
 func TestValueEndpoint_Methods(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.setValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	transport, runtime := makeTestTransport(t)
+	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusResult{Code: catena.StatusCodeOk}
 	}
 
@@ -1458,9 +1459,9 @@ func TestValueEndpoint_Methods(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Connect_TooManyConnections(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.registerTransportConnFn = func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
+func TestTransport_Connect_TooManyConnections(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.RegisterTransportConnFn = func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult) {
 		return nil, catena.StatusResult{Code: catena.StatusCodeResourceExhausted, Error: "connection rejected"}
 	}
 
@@ -1490,7 +1491,7 @@ func TestWriteResults_ValidData(t *testing.T) {
 }
 
 func TestDeviceEndpoint_WrongMethod(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0", "")
 	assertHasError(t, rec)
 }
@@ -1498,13 +1499,13 @@ func TestDeviceEndpoint_WrongMethod(t *testing.T) {
 func TestWriteHTTPStatusResult_WithError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeInternal, Error: "error"}
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	transport.writeHTTPStatusResult(rec, result)
 	assertBodyContains(t, rec, "error")
 }
 
-func TestRestTransport_sendSSEEvent(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_sendSSEEvent(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := httptest.NewRecorder()
 	var w http.ResponseWriter = rec
 	flusher := w.(http.Flusher)
@@ -1542,9 +1543,9 @@ func TestRestTransport_sendSSEEvent(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Start(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.shutdownTransportConnsFn = func(ctx context.Context, transport catena.Transport) {
+func TestTransport_Start(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, transport catena.Transport) {
 		if transport != transport {
 			t.Errorf("expected transport %v, got %v", transport, transport)
 		}
@@ -1577,8 +1578,8 @@ func TestRestTransport_Start(t *testing.T) {
 	transport.Shutdown(ctx)
 }
 
-func TestRestTransport_Start_BindError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Start_BindError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	// Occupy a port so the transport's synchronous bind fails with
 	// "address already in use".
@@ -1599,9 +1600,9 @@ func TestRestTransport_Start_BindError(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Shutdown_NotStarted(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.shutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+func TestTransport_Shutdown_NotStarted(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
 		if gotTransport != transport {
 			t.Errorf("expected transport %v, got %v", transport, gotTransport)
 		}
@@ -1614,9 +1615,9 @@ func TestRestTransport_Shutdown_NotStarted(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Shutdown_Deadline(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.shutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+func TestTransport_Shutdown_Deadline(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
 		if gotTransport != transport {
 			t.Errorf("expected transport %v, got %v", transport, gotTransport)
 		}
@@ -1686,13 +1687,13 @@ func TestRestTransport_Shutdown_Deadline(t *testing.T) {
 func TestWriteHTTPResult_DefaultType(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeOk}
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	transport.writeHTTPResult(rec, result, nil)
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestRestTransport_ReadAsset_CompressionQueryParam_Gzip(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_ReadAsset_CompressionQueryParam_Gzip(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -1700,7 +1701,7 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
@@ -1725,8 +1726,8 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	}
 }
 
-func TestRestTransport_ReadAsset_CompressionQueryParam_Deflate(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_ReadAsset_CompressionQueryParam_Deflate(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -1734,7 +1735,7 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
@@ -1759,8 +1760,8 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	}
 }
 
-func TestRestTransport_ReadAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_ReadAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	original := []byte("test asset data")
 	gzData, _ := catena.CompressGzip(original)
@@ -1771,7 +1772,7 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Uncompressed(t *testing.T
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
@@ -1784,8 +1785,8 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Uncompressed(t *testing.T
 	assertStatus(t, rec, http.StatusOK)
 }
 
-func TestRestTransport_Connect_StreamingNotSupported(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_Connect_StreamingNotSupported(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
 	rec := httptest.NewRecorder()
 	w := &noFlusher{ResponseWriter: rec}
@@ -1802,20 +1803,20 @@ func TestRestTransport_Connect_StreamingNotSupported(t *testing.T) {
 func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "detailed internal error"}
-	transport, runtime := makeTestRestTransport(t)
-	runtime.isDev = false
+	transport, runtime := makeTestTransport(t)
+	runtime.Dev = false
 	transport.writeHTTPStatusResult(rec, result)
 
 	assertBodyContains(t, rec, "Not Found")
 	assertBodyNotContains(t, rec, "detailed internal error")
 }
 
-func TestRestTransport_Connect_WithOrigin(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Connect_WithOrigin(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	runtime.WithConnection(makeTestConnection(1))
+	runtime.WithConnection(transporttest.MakeTestConnection(1))
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
 	req.Header.Set("Origin", "https://example.com")
@@ -1864,8 +1865,8 @@ func TestWriteAssetResult_WriteError(t *testing.T) {
 func TestWriteHTTPResult_WithError_NonDev(t *testing.T) {
 	rec := httptest.NewRecorder()
 	result := catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "internal detail"}
-	transport, runtime := makeTestRestTransport(t)
-	runtime.isDev = false
+	transport, runtime := makeTestTransport(t)
+	runtime.Dev = false
 	transport.writeHTTPResult(rec, result, catena.Value{})
 
 	assertBodyNotContains(t, rec, "internal detail")
@@ -1878,7 +1879,7 @@ func TestSendSSEEvent_MarshalError(t *testing.T) {
 		return nil, fmt.Errorf("marshal failed")
 	}
 
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	rec := httptest.NewRecorder()
 	var w http.ResponseWriter = rec
 	flusher := w.(http.Flusher)
@@ -1891,7 +1892,7 @@ func TestSendSSEEvent_MarshalError(t *testing.T) {
 }
 
 func TestSendSSEEvent_WriteFailure(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	rec := httptest.NewRecorder()
 	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 0}
 	update := &protos.PushUpdates{
@@ -1910,10 +1911,10 @@ func TestSendSSEEvent_WriteFailure(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Connect_PushUpdates(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Connect_PushUpdates(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	connection := makeTestConnection(1)
+	connection := transporttest.MakeTestConnection(1)
 	runtime.WithConnection(connection)
 
 	rec, cancel := setupSSEConnection(t, transport)
@@ -1937,10 +1938,10 @@ func TestRestTransport_Connect_PushUpdates(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Connect_ServerShutdown(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Connect_ServerShutdown(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	connection := makeTestConnection(1)
+	connection := transporttest.MakeTestConnection(1)
 	runtime.WithConnection(connection)
 
 	_, cancel := setupSSEConnection(t, transport)
@@ -1948,18 +1949,18 @@ func TestRestTransport_Connect_ServerShutdown(t *testing.T) {
 	connection.Done <- struct{}{}
 	cancel()
 
-	if runtime.registerCalls != runtime.deregisterCalls {
-		t.Errorf("expected deregister calls to match register calls after server shutdown, got %d deregister calls and %d register calls", runtime.deregisterCalls, runtime.registerCalls)
+	if runtime.RegisterCalls != runtime.DeregisterCalls {
+		t.Errorf("expected deregister calls to match register calls after server shutdown, got %d deregister calls and %d register calls", runtime.DeregisterCalls, runtime.RegisterCalls)
 	}
 }
 
 func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+	transport, runtime := makeTestTransport(t)
 	rec := httptest.NewRecorder()
 	w := &failFlusherWriter{ResponseRecorder: rec, failAfterN: 1}
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
 
-	connection := makeTestConnection(1)
+	connection := transporttest.MakeTestConnection(1)
 	runtime.WithConnection(connection)
 
 	done := make(chan struct{})
@@ -1988,20 +1989,20 @@ func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
 		t.Fatal("handler did not exit after update write failure")
 	}
 
-	if runtime.registerCalls != runtime.deregisterCalls {
-		t.Errorf("expected deregister calls to match register calls after update event failure, got %d deregister calls and %d register calls", runtime.deregisterCalls, runtime.registerCalls)
+	if runtime.RegisterCalls != runtime.DeregisterCalls {
+		t.Errorf("expected deregister calls to match register calls after update event failure, got %d deregister calls and %d register calls", runtime.DeregisterCalls, runtime.RegisterCalls)
 	}
 }
 
 func TestRouting_BasePathOnly(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/", "")
 	assertStatus(t, rec, http.StatusBadRequest)
 	assertHasError(t, rec)
 }
 
-func TestRestTransport_ReadAsset_CompressionQueryParam_Invalid(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_ReadAsset_CompressionQueryParam_Invalid(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -2009,7 +2010,7 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -2022,8 +2023,8 @@ func TestRestTransport_ReadAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	}
 }
 
-func TestRestTransport_ReadAsset_NoCompressionParam(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_ReadAsset_NoCompressionParam(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	dp := catena.DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
@@ -2031,7 +2032,7 @@ func TestRestTransport_ReadAsset_NoCompressionParam(t *testing.T) {
 	}
 	asset, _ := catena.ToAsset(dp, true)
 
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		return catena.Reply(asset)
 	}
 
@@ -2044,10 +2045,10 @@ func TestRestTransport_ReadAsset_NoCompressionParam(t *testing.T) {
 	}
 }
 
-func TestRestTransport_ReadAsset_CompressionWithError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_ReadAsset_CompressionWithError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		return catena.ReplyError[catena.Asset](catena.StatusCodeNotFound, "asset not found")
 	}
 
@@ -2063,12 +2064,12 @@ func TestRestTransport_ReadAsset_CompressionWithError(t *testing.T) {
 // =============================================================================
 // Test: ParamInfo endpoint
 // =============================================================================
-func TestRestTransport_ParamInfo(t *testing.T) {
+func TestTransport_ParamInfo(t *testing.T) {
 	t.Run("unary route", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
 		handlerCalled := false
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			handlerCalled = true
 			// Mirroring the C++ controller, REST builds the fqoid by prepending "/"
 			// to each path segment after the endpoint.
@@ -2105,10 +2106,10 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 	})
 
 	t.Run("Nested fqoid", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
 		receivedOidPrefix := ""
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			receivedOidPrefix = oidPrefix
 			return []catena.ParamInfo{
 				catena.NewParamInfo(oidPrefix, nil, catena.ParamTypeInt32, "", 0),
@@ -2123,9 +2124,9 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "Parameter not found: missing")
 		}
 
@@ -2136,13 +2137,13 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 		}
 	})
 
-	// TestRestTransport_ParamInfo_UnaryEmptyOk verifies that a unary handler which
+	// TestTransport_ParamInfo_UnaryEmptyOk verifies that a unary handler which
 	// reports success but produces no parameter is treated as an internal contract
 	// violation, not a fabricated NotFound.
 	t.Run("UnaryEmptyOk", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -2151,9 +2152,9 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 	})
 
 	t.Run("HandlerError", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 		}
 
@@ -2162,19 +2163,19 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 	})
 
 	t.Run("MethodNotAllowed", func(t *testing.T) {
-		transport, _ := makeTestRestTransport(t)
+		transport, _ := makeTestTransport(t)
 
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/param-info/text_box", "")
 		assertStatus(t, rec, http.StatusMethodNotAllowed)
 	})
 
-	// TestRestTransport_ParamInfo_UnaryRecursiveRejected verifies the C++ rule that
+	// TestTransport_ParamInfo_UnaryRecursiveRejected verifies the C++ rule that
 	// recursive cannot be combined with a unary response.
 	t.Run("UnaryRecursiveRejected", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
 		handlerCalled := false
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			handlerCalled = true
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
@@ -2189,12 +2190,12 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 		}
 	})
 
-	// TestRestTransport_ParamInfo_UnaryMissingFqoidRejected verifies the C++ rule that
+	// TestTransport_ParamInfo_UnaryMissingFqoidRejected verifies the C++ rule that
 	// a unary request must include an fqoid.
 	t.Run("UnaryMissingFqoidRejected", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 		handlerCalled := false
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			handlerCalled = true
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
@@ -2209,7 +2210,7 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 		}
 	})
 
-	// TestRestTransport_ParamInfo_RecursivePresenceOnly verifies the C++ semantics where
+	// TestTransport_ParamInfo_RecursivePresenceOnly verifies the C++ semantics where
 	// the presence of the `recursive` query parameter enables recursion regardless
 	// of its value (so ?recursive=false STILL enables recursion).
 	t.Run("RecursivePresenceOnly", func(t *testing.T) {
@@ -2227,9 +2228,9 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 		for _, tc := range cases {
 			tc := tc
 			t.Run(tc.name, func(t *testing.T) {
-				transport, runtime := makeTestRestTransport(t)
+				transport, runtime := makeTestTransport(t)
 				var gotRecursive bool
-				runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+				runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 					gotRecursive = recursive
 					return []catena.ParamInfo{
 						catena.NewParamInfo("a", nil, catena.ParamTypeInt32, "", 0),
@@ -2245,9 +2246,9 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 		}
 	})
 	t.Run("StreamRoute", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			if oidPrefix != "parent" {
 				t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
 			}
@@ -2277,9 +2278,9 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 	})
 
 	t.Run("TopLevelStreamRoute", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			if oidPrefix != "" {
 				t.Errorf("expected empty oidPrefix for top-level stream, got %q", oidPrefix)
 			}
@@ -2299,13 +2300,13 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 		}
 	})
 
-	// TestRestTransport_ParamInfo_TopLevelStream_EmptyOk verifies that an empty
+	// TestTransport_ParamInfo_TopLevelStream_EmptyOk verifies that an empty
 	// top-level result is a well-formed empty event stream (200), not a fabricated
 	// NotFound. Handlers own NotFound for genuinely missing oids.
 	t.Run("TopLevelStream_EmptyOk", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -2321,9 +2322,9 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 
 	// If BL just returns an error right away that can be returned as a http code
 	t.Run("StreamErrorNoneSent", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 		}
 
@@ -2338,9 +2339,9 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 	// The transport can no longer change the HTTP status, so it reports the failure in-band as an SSE
 	// "error" event carrying the status code (and, in dev mode, the detailed message).
 	t.Run("StreamErrorAfterSomeSent", func(t *testing.T) {
-		transport, runtime := makeTestRestTransport(t)
+		transport, runtime := makeTestTransport(t)
 
-		runtime.paramInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]catena.ParamInfo, catena.StatusResult) {
 			return []catena.ParamInfo{
 				catena.NewParamInfo("parent/child1", nil, catena.ParamTypeInt32, "", 0),
 			}, catena.StatusWithCode(catena.StatusCodeInternal, "boom")
@@ -2376,11 +2377,11 @@ func TestRestTransport_ParamInfo(t *testing.T) {
 // Test: Languages endpoint
 // =============================================================================
 
-func TestRestTransport_Languages_Route(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Languages_Route(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+	runtime.ListLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
@@ -2410,10 +2411,10 @@ func TestRestTransport_Languages_Route(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Languages_EmptyList(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Languages_EmptyList(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+	runtime.ListLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -2433,10 +2434,10 @@ func TestRestTransport_Languages_EmptyList(t *testing.T) {
 	}
 }
 
-func TestRestTransport_Languages_HandlerError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_Languages_HandlerError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 
-	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+	runtime.ListLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "no languages handler registered")
 	}
 
@@ -2444,14 +2445,14 @@ func TestRestTransport_Languages_HandlerError(t *testing.T) {
 	assertStatus(t, rec, http.StatusNotFound)
 }
 
-func TestRestTransport_Languages_MethodNotAllowed(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_Languages_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/languages", "")
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
-func TestRestTransportLanguagePackGetSuccess(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+func TestTransport_LanguagePackGetSuccess(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.LanguagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
 		if slot != 0 {
 			t.Fatalf("expected slot 0, got %d", slot)
 		}
@@ -2477,9 +2478,9 @@ func TestRestTransportLanguagePackGetSuccess(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackGetError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+func TestTransport_LanguagePackGetError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.LanguagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
 		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language pack not found")
 	}
 
@@ -2490,12 +2491,12 @@ func TestRestTransportLanguagePackGetError(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackGetNilProto(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
+func TestTransport_LanguagePackGetNilProto(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
 	// Handler reports success but returns an empty (nil-proto) pack. This is a
 	// handler contract violation and must surface as 500, not overwrite the OK
 	// result with a 404.
-	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+	runtime.LanguagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
 		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -2506,9 +2507,9 @@ func TestRestTransportLanguagePackGetNilProto(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackPostSuccess(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.addLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+func TestTransport_LanguagePackPostSuccess(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.AddLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
 		if slot != 0 {
 			t.Fatalf("expected slot 0, got %d", slot)
 		}
@@ -2531,9 +2532,9 @@ func TestRestTransportLanguagePackPostSuccess(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackPostError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.addLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+func TestTransport_LanguagePackPostError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.AddLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodePermissionDenied, "not allowed")
 	}
 
@@ -2545,9 +2546,9 @@ func TestRestTransportLanguagePackPostError(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackPutSuccess(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.updateLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+func TestTransport_LanguagePackPutSuccess(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.UpdateLanguageFn = func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
 		if language != "fr" {
 			t.Fatalf("expected language fr, got %s", language)
 		}
@@ -2567,9 +2568,9 @@ func TestRestTransportLanguagePackPutSuccess(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackDeleteSuccess(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.deleteLanguageFn = func(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult {
+func TestTransport_LanguagePackDeleteSuccess(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.DeleteLanguageFn = func(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult {
 		if language != "fr" {
 			t.Fatalf("expected language fr, got %s", language)
 		}
@@ -2584,9 +2585,9 @@ func TestRestTransportLanguagePackDeleteSuccess(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackDeleteError(t *testing.T) {
-	transport, runtime := makeTestRestTransport(t)
-	runtime.deleteLanguageFn = func(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult {
+func TestTransport_LanguagePackDeleteError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.DeleteLanguageFn = func(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "language pack not found")
 	}
 
@@ -2597,8 +2598,8 @@ func TestRestTransportLanguagePackDeleteError(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackInvalidJSON(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_LanguagePackInvalidJSON(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", `{invalid json}`)
 
@@ -2607,8 +2608,8 @@ func TestRestTransportLanguagePackInvalidJSON(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackMissingLanguage(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_LanguagePackMissingLanguage(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/language-pack", "")
 
@@ -2617,8 +2618,8 @@ func TestRestTransportLanguagePackMissingLanguage(t *testing.T) {
 	}
 }
 
-func TestRestTransportLanguagePackUnsupportedMethod(t *testing.T) {
-	transport, _ := makeTestRestTransport(t)
+func TestTransport_LanguagePackUnsupportedMethod(t *testing.T) {
+	transport, _ := makeTestTransport(t)
 
 	rec := makeRequest(t, transport, http.MethodPatch, "/st2138-api/v1/0/language-pack/fr", "")
 

@@ -37,7 +37,7 @@
  * @date 2026-02-04
  */
 
-package transports
+package rest
 
 import (
 	"bytes"

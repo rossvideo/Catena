@@ -37,14 +37,12 @@
  * @date 2026-06-19
  */
 
-package transports
+package grpc
 
 import "github.com/rossvideo/catena/sdks/go/pkg/config"
 
-type GrpcOptions = config.GrpcOptions
-type RestOptions = config.RestOptions
+type Options = config.GrpcOptions
 
 var (
-	DefaultGrpcOptions = config.DefaultGrpcOptions
-	DefaultRestOptions = config.DefaultRestOptions
+	DefaultOptions = config.DefaultGrpcOptions
 )

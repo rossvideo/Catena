@@ -30,13 +30,13 @@
 
 /**
  * @brief Test helpers for gRPC server tests.
- * @file test_helpers_test.go
+ * @file helpers_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2026-03-15
  */
 
-package transports
+package grpc
 
 import (
 	"context"

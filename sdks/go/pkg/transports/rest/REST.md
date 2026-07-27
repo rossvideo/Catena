@@ -1,13 +1,13 @@
 # REST Transport
 
-`RestTransport` exposes Catena handlers over HTTP and Server-Sent Events (SSE).
+`rest.Transport` exposes Catena handlers over HTTP and Server-Sent Events (SSE).
 
 ## Constructor
 
 ```go
-rest := transports.NewRestTransport(config.RestOptions{Port: 9080})
+rest := rest.NewTransport(rest.Options{Port: 9080})
 // or with defaults
-rest := transports.NewRestTransport(config.DefaultRestOptions())
+rest := rest.NewTransport(rest.DefaultOptions())
 ```
 
 Register it on the shared server:

@@ -58,7 +58,8 @@ clean-protos:
 
 # Exclude generated protos from tests + coverage accounting
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
-TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^$(PROTO_PKG)($$|/)')
+TRANSPORTTEST_PKG := github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest
+TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG))($$|/)')
 
 COVERAGE_DIR ?= $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out

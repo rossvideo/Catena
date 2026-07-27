@@ -34,7 +34,7 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
-package transports
+package rest
 
 import (
 	"context"
@@ -44,33 +44,11 @@ import (
 	"strings"
 	"testing"
 
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
-
-// fakeServerStream is a minimal grpc.ServerStream that records the messages
-// passed to SendMsg, or fails every SendMsg when sendErr is set.
-type fakeServerStream struct {
-	msgs    []any
-	sendErr error
-}
-
-func (f *fakeServerStream) SetHeader(metadata.MD) error  { return nil }
-func (f *fakeServerStream) SendHeader(metadata.MD) error { return nil }
-func (f *fakeServerStream) SetTrailer(metadata.MD)       {}
-func (f *fakeServerStream) Context() context.Context     { return context.Background() }
-func (f *fakeServerStream) RecvMsg(any) error            { return nil }
-
-func (f *fakeServerStream) SendMsg(m any) error {
-	if f.sendErr != nil {
-		return f.sendErr
-	}
-	f.msgs = append(f.msgs, m)
-	return nil
-}
 
 // failingResponseWriter is an http.ResponseWriter+http.Flusher whose Write
 // always fails, used to exercise the SSE write-error branch.
@@ -145,35 +123,7 @@ func TestLastStream(t *testing.T) {
 	})
 }
 
-func TestGrpcStream(t *testing.T) {
-	t.Run("sends chunk wire proto", func(t *testing.T) {
-		fake := &fakeServerStream{}
-		stream := &grpcStream[stubMessage]{ss: fake}
-
-		if err := stream.Send(stubMessage{value: "a"}); err != nil {
-			t.Fatalf("Send returned error: %v", err)
-		}
-
-		if len(fake.msgs) != 1 {
-			t.Fatalf("stream received %d messages, want 1", len(fake.msgs))
-		}
-		if _, ok := fake.msgs[0].(*wrapperspb.StringValue); !ok {
-			t.Errorf("sent message type = %T, want *wrapperspb.StringValue", fake.msgs[0])
-		}
-	})
-
-	t.Run("propagates SendMsg error", func(t *testing.T) {
-		wantErr := errors.New("send failed")
-		fake := &fakeServerStream{sendErr: wantErr}
-		stream := &grpcStream[stubMessage]{ss: fake}
-
-		if err := stream.Send(stubMessage{value: "a"}); !errors.Is(err, wantErr) {
-			t.Fatalf("Send error = %v, want %v", err, wantErr)
-		}
-	})
-}
-
-func TestRestStream(t *testing.T) {
+func TestStream(t *testing.T) {
 	t.Run("writes SSE frame and lazy headers", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 		stream := &restStream[stubMessage]{

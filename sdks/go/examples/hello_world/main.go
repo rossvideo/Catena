@@ -44,9 +44,9 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 )
 
 const (
@@ -145,11 +145,11 @@ func main() {
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
-	if err := srv.RegisterTransport(transports.NewRestTransport(config.DefaultRestOptions())); err != nil {
+	if err := srv.RegisterTransport(rest.NewTransport(rest.DefaultOptions())); err != nil {
 		logger.Error("Failed to register REST transport", "error", err)
 		os.Exit(1)
 	}
-	if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcOptions())); err != nil {
+	if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {
 		logger.Error("Failed to register gRPC transport", "error", err)
 		os.Exit(1)
 	}

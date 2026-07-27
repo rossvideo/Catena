@@ -1,13 +1,13 @@
 # gRPC Transport
 
-`GrpcTransport` exposes Catena handlers through the generated `CatenaService` gRPC API.
+`grpc.Transport` exposes Catena handlers through the generated `CatenaService` gRPC API.
 
 ## Constructor
 
 ```go
-grpcTransport := transports.NewGrpcTransport(config.GrpcOptions{Port: 6254, Reflection: false})
+grpcTransport := grpc.NewTransport(grpc.Options{Port: 6254, Reflection: false})
 // or with defaults
-grpcTransport := transports.NewGrpcTransport(config.DefaultGrpcOptions())
+grpcTransport := grpc.NewTransport(grpc.DefaultOptions())
 ```
 
 Register it on the shared server:
@@ -33,13 +33,13 @@ Implemented against shared runtime handlers:
 - `ExecuteCommand` (server-streaming response)
 - `ParamInfoRequest` (server-streaming response)
 - `Connect`
+- `AddLanguage`
+- `LanguagePackRequest`
+- `ListLanguages`
 
 Currently unimplemented (returns `Unimplemented`):
 
 - `UpdateSubscriptions`
-- `AddLanguage`
-- `LanguagePackRequest`
-- `ListLanguages`
 - `RefreshToken`
 - `RevokeAccess`
 
@@ -111,14 +111,14 @@ In production mode, detailed error text is sanitized to status code names.
 Reflection can be enabled at construction time:
 
 ```go
-grpcTransport := transports.NewGrpcTransport(config.GrpcOptions{Port: 6254, Reflection: true})
+grpcTransport := grpc.NewTransport(grpc.Options{Port: 6254, Reflection: true})
 ```
 
 When enabled, tools such as `grpcurl` can discover services and methods dynamically.
 
 ## Graceful Shutdown
 
-`GrpcTransport.Shutdown(ctx)` performs graceful stop first, then forces stop if context expires.
+`grpc.Transport.Shutdown(ctx)` performs graceful stop first, then forces stop if context expires.
 
 Because `grpc.Server.GracefulStop()` waits for active streams to finish, gRPC shutdown should also request owner-scoped runtime stream signaling:
 
