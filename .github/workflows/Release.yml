@@ -647,7 +647,7 @@ jobs:
           echo "PR numbers found: $(echo "$PR_NUMBERS" | tr '\n' ' ')"
 
           # Fetch PR titles and bucket them by [TAG]
-          declare -A PR_GROUPS
+          declare -A GROUPS
           while IFS= read -r PR_NUM; do
             [[ -z "$PR_NUM" ]] && continue
 
@@ -657,7 +657,7 @@ jobs:
             # Only include titles that start with "[" — extract the group tag
             if [[ "$TITLE" =~ ^\[([^]]+)\] ]]; then
               GROUP_KEY="${BASH_REMATCH[1]}"
-              PR_GROUPS["$GROUP_KEY"]+="- $TITLE"$'\n'
+              GROUPS["$GROUP_KEY"]+="- $TITLE"$'\n'
               echo "  ✅ [$GROUP_KEY] $TITLE"
             else
               echo "  ⏭  Skipped (no [tag]): $TITLE"
@@ -668,12 +668,12 @@ jobs:
           {
             echo "## What's Changed in $NEW_VERSION"
             echo ""
-            if [[ ${#PR_GROUPS[@]} -eq 0 ]]; then
+            if [[ ${#GROUPS[@]} -eq 0 ]]; then
               echo "_No tagged PR titles found since the last release._"
             else
-              for KEY in $(echo "${!PR_GROUPS[@]}" | tr ' ' '\n' | sort); do
+              for KEY in $(echo "${!GROUPS[@]}" | tr ' ' '\n' | sort); do
                 echo "### [$KEY]"
-                echo "${PR_GROUPS[$KEY]}"
+                echo "${GROUPS[$KEY]}"
               done
             fi
           } > /tmp/release_notes.md
