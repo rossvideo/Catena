@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 // Shared param makers are the single source of truth for slot 0's params. The
@@ -11,9 +11,9 @@ import (
 // makers, a param can never drift between GetDevice and GetParam.
 
 // makeCounterParam builds the slot 0 "counter" param (INT32, current value).
-func makeCounterParam(counter *CounterState) *catena.Param {
-	return catena.NewParamInt32(counter.GetValue()).
-		WithName(catena.NewPolyglotText("en", "Counter").
+func makeCounterParam(counter *CounterState) *st2138.Param {
+	return st2138.NewParamInt32(counter.GetValue()).
+		WithName(st2138.NewPolyglotText("en", "Counter").
 			With("es", "Contador").
 			With("fr", "Compteur").
 			With("ja", "カウンター")).
@@ -22,13 +22,13 @@ func makeCounterParam(counter *CounterState) *catena.Param {
 
 // makeRunningParam builds the slot 0 "running" param (INT32, read-only,
 // INT32_CHOICE constraint describing the counting state).
-func makeRunningParam(counter *CounterState) *catena.Param {
-	return catena.NewParamInt32(counter.RunningInt32()).
-		WithName(catena.NewPolyglotText("en", "Counter Running Status")).
+func makeRunningParam(counter *CounterState) *st2138.Param {
+	return st2138.NewParamInt32(counter.RunningInt32()).
+		WithName(st2138.NewPolyglotText("en", "Counter Running Status")).
 		WithReadOnly(true).
-		WithConstraint(catena.NewConstraintInt32Choice([]catena.Int32Choice{
-			{Value: 0, Name: catena.NewPolyglotText("en", "Not Counting")},
-			{Value: 1, Name: catena.NewPolyglotText("en", "Counting")},
+		WithConstraint(st2138.NewConstraintInt32Choice([]st2138.Int32Choice{
+			{Value: 0, Name: st2138.NewPolyglotText("en", "Not Counting")},
+			{Value: 1, Name: st2138.NewPolyglotText("en", "Counting")},
 		})).
 		WithMinimalSet(true)
 }

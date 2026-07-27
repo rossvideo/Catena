@@ -15,7 +15,7 @@ func registerAccessHandler(srv catena.Server) {
 
 		// Shows how to restrict getPopulatedSlots to only op and adm read scopes.
 		//if endpointType == catena.EndpointGetSlots {
-		//	return ctx.HasReadScope(catena.ScopeOp) || ctx.HasReadScope(catena.ScopeAdm)
+		//	return ctx.HasReadScope(st2138.ScopeOp) || ctx.HasReadScope(st2138.ScopeAdm)
 		//}
 		return true
 	})

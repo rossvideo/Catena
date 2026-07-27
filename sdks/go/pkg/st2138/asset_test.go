@@ -37,7 +37,7 @@
  * @date 2026-02-04
  */
 
-package catena
+package st2138
 
 import (
 	"bytes"
@@ -67,8 +67,8 @@ func TestToAsset_WithPayload(t *testing.T) {
 	}
 
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
 	}
 
 	proto := asset.Proto
@@ -100,8 +100,8 @@ func TestToAsset_WithUrl(t *testing.T) {
 	}
 
 	asset, err := ToAsset(dp, false)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
 	}
 
 	proto := asset.Proto
@@ -128,7 +128,7 @@ func TestToAsset_BothPayloadAndUrl_Error(t *testing.T) {
 	}
 
 	_, err := ToAsset(dp, true)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected error when both payload and url are provided")
 	}
 }
@@ -141,7 +141,7 @@ func TestToAsset_NeitherPayloadNorUrl_Error(t *testing.T) {
 	}
 
 	_, err := ToAsset(dp, true)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected error when neither payload nor url are provided")
 	}
 }
@@ -153,8 +153,8 @@ func TestToAsset_WithGzipEncoding(t *testing.T) {
 	}
 
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
 	}
 
 	proto := asset.Proto
@@ -178,8 +178,8 @@ func TestToAsset_WithDeflateEncoding(t *testing.T) {
 	}
 
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
 	}
 
 	proto := asset.Proto
@@ -204,8 +204,8 @@ func TestToAsset_WithDigest(t *testing.T) {
 	}
 
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
 	}
 
 	proto := asset.Proto
@@ -232,8 +232,8 @@ func TestToAsset_EmptyPayload_WithUrl(t *testing.T) {
 	}
 
 	asset, err := ToAsset(dp, false)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
 	}
 
 	proto := asset.Proto
@@ -252,13 +252,13 @@ func TestFromAsset_Payload_Roundtrip(t *testing.T) {
 	}
 
 	asset, res := ToAsset(dp, true)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", res.Error)
+	if res != nil {
+		t.Fatalf("ToAsset error: %v", res)
 	}
 
 	got, res := FromAsset(asset)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("FromAsset error: %v", res.Error)
+	if res != nil {
+		t.Fatalf("FromAsset error: %v", res)
 	}
 	if string(got.Payload) != "fake image data" {
 		t.Errorf("expected payload 'fake image data', got %q", string(got.Payload))
@@ -278,13 +278,13 @@ func TestFromAsset_Url_Roundtrip(t *testing.T) {
 	dp := DataPayload{Url: "https://example.com/resource.json"}
 
 	asset, res := ToAsset(dp, false)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", res.Error)
+	if res != nil {
+		t.Fatalf("ToAsset error: %v", res)
 	}
 
 	got, res := FromAsset(asset)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("FromAsset error: %v", res.Error)
+	if res != nil {
+		t.Fatalf("FromAsset error: %v", res)
 	}
 	if got.Url != "https://example.com/resource.json" {
 		t.Errorf("expected URL, got %q", got.Url)
@@ -293,16 +293,16 @@ func TestFromAsset_Url_Roundtrip(t *testing.T) {
 
 func TestFromAsset_NilProto(t *testing.T) {
 	_, res := FromAsset(Asset{})
-	if res.Code != StatusCodeInvalidArgument {
-		t.Errorf("expected InvalidArgument for nil proto, got %v", res.Code)
+	if !errors.Is(res, ErrInvalid) {
+		t.Errorf("expected InvalidArgument for nil proto, got %v", res)
 	}
 }
 
 func TestFromAsset_NilPayload(t *testing.T) {
 	asset := Asset{Proto: &protos.ExternalObjectPayload{}}
 	_, res := FromAsset(asset)
-	if res.Code != StatusCodeInvalidArgument {
-		t.Errorf("expected InvalidArgument for nil payload, got %v", res.Code)
+	if !errors.Is(res, ErrInvalid) {
+		t.Errorf("expected InvalidArgument for nil payload, got %v", res)
 	}
 }
 
@@ -314,8 +314,8 @@ func TestFromAsset_EmptyUrl(t *testing.T) {
 		},
 	}}
 	_, res := FromAsset(asset)
-	if res.Code != StatusCodeInvalidArgument {
-		t.Errorf("expected InvalidArgument for empty URL, got %v", res.Code)
+	if !errors.Is(res, ErrInvalid) {
+		t.Errorf("expected InvalidArgument for empty URL, got %v", res)
 	}
 }
 
@@ -327,8 +327,8 @@ func TestFromAsset_EmptyPayload(t *testing.T) {
 		},
 	}}
 	_, res := FromAsset(asset)
-	if res.Code != StatusCodeInvalidArgument {
-		t.Errorf("expected InvalidArgument for empty payload, got %v", res.Code)
+	if !errors.Is(res, ErrInvalid) {
+		t.Errorf("expected InvalidArgument for empty payload, got %v", res)
 	}
 }
 
@@ -338,8 +338,8 @@ func TestFromAsset_NoKind(t *testing.T) {
 		Payload: &protos.DataPayload{},
 	}}
 	_, res := FromAsset(asset)
-	if res.Code != StatusCodeInvalidArgument {
-		t.Errorf("expected InvalidArgument for missing kind, got %v", res.Code)
+	if !errors.Is(res, ErrInvalid) {
+		t.Errorf("expected InvalidArgument for missing kind, got %v", res)
 	}
 }
 
@@ -696,8 +696,8 @@ func TestParsePayloadEncoding(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
 			got, err := ParsePayloadEncoding(tt.input)
-			if (err.Code != StatusCodeOk) != tt.wantErr {
-				t.Fatalf("ParsePayloadEncoding(%q) error = %v, wantErr %v", tt.input, err.Error, tt.wantErr)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ParsePayloadEncoding(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 			}
 			if got != tt.want {
 				t.Errorf("ParsePayloadEncoding(%q) = %d, want %d", tt.input, got, tt.want)
@@ -737,13 +737,13 @@ func TestTranscodeAssetPayload(t *testing.T) {
 		Payload:  original,
 	}
 	asset, res := ToAsset(dp, true)
-	if res.Code != StatusCodeOk {
-		t.Fatalf("ToAsset: %v", res.Error)
+	if res != nil {
+		t.Fatalf("ToAsset: %v", res)
 	}
 
 	// Transcode to GZIP
-	if res := TranscodeAssetPayload(&asset, EncodingGzip); res.Code != StatusCodeOk {
-		t.Fatalf("TranscodeAssetPayload to GZIP: %v", res.Error)
+	if res := TranscodeAssetPayload(&asset, EncodingGzip); res != nil {
+		t.Fatalf("TranscodeAssetPayload to GZIP: %v", res)
 	}
 	proto := asset.Proto.GetPayload()
 	if Encoding(proto.GetPayloadEncoding()) != EncodingGzip {
@@ -760,8 +760,8 @@ func TestTranscodeAssetPayload(t *testing.T) {
 	}
 
 	// Transcode from GZIP to DEFLATE
-	if res := TranscodeAssetPayload(&asset, EncodingDeflate); res.Code != StatusCodeOk {
-		t.Fatalf("TranscodeAssetPayload GZIP→DEFLATE: %v", res.Error)
+	if res := TranscodeAssetPayload(&asset, EncodingDeflate); res != nil {
+		t.Fatalf("TranscodeAssetPayload GZIP→DEFLATE: %v", res)
 	}
 	proto = asset.Proto.GetPayload()
 	if Encoding(proto.GetPayloadEncoding()) != EncodingDeflate {
@@ -776,8 +776,8 @@ func TestTranscodeAssetPayload(t *testing.T) {
 	}
 
 	// Transcode from DEFLATE to UNCOMPRESSED
-	if res := TranscodeAssetPayload(&asset, EncodingUncompressed); res.Code != StatusCodeOk {
-		t.Fatalf("TranscodeAssetPayload DEFLATE→UNCOMPRESSED: %v", res.Error)
+	if res := TranscodeAssetPayload(&asset, EncodingUncompressed); res != nil {
+		t.Fatalf("TranscodeAssetPayload DEFLATE→UNCOMPRESSED: %v", res)
 	}
 	proto = asset.Proto.GetPayload()
 	if Encoding(proto.GetPayloadEncoding()) != EncodingUncompressed {
@@ -793,8 +793,8 @@ func TestTranscodeAssetPayload_RecomputesDigest(t *testing.T) {
 	dp := ToPayload(original, "text/plain", "test.txt")
 
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset: %v", err)
 	}
 
 	originalDigest := make([]byte, len(asset.Proto.GetPayload().GetDigest()))
@@ -809,8 +809,8 @@ func TestTranscodeAssetPayload_RecomputesDigest(t *testing.T) {
 		}
 	}
 
-	if res := TranscodeAssetPayload(&asset, EncodingGzip); res.Code != StatusCodeOk {
-		t.Fatalf("TranscodeAssetPayload to GZIP: %v", res.Error)
+	if res := TranscodeAssetPayload(&asset, EncodingGzip); res != nil {
+		t.Fatalf("TranscodeAssetPayload to GZIP: %v", res)
 	}
 
 	newPayloadBytes := asset.Proto.GetPayload().GetPayload()
@@ -841,8 +841,8 @@ func TestTranscodeAssetPayload_SameEncoding_Noop(t *testing.T) {
 	asset, _ := ToAsset(dp, true)
 	originalBytes := asset.Proto.GetPayload().GetPayload()
 
-	if res := TranscodeAssetPayload(&asset, EncodingUncompressed); res.Code != StatusCodeOk {
-		t.Fatalf("TranscodeAssetPayload same encoding: %v", res.Error)
+	if res := TranscodeAssetPayload(&asset, EncodingUncompressed); res != nil {
+		t.Fatalf("TranscodeAssetPayload same encoding: %v", res)
 	}
 	if string(asset.Proto.GetPayload().GetPayload()) != string(originalBytes) {
 		t.Error("expected no-op when transcoding to same encoding")
@@ -856,15 +856,15 @@ func TestTranscodeAssetPayload_DoesNotMutateOriginalProto(t *testing.T) {
 		Payload:  original,
 	}
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset: %v", err)
 	}
 
 	originalProto := asset.Proto
 
 	copy := asset // shallow copy — shares the pointer
-	if res := TranscodeAssetPayload(&copy, EncodingGzip); res.Code != StatusCodeOk {
-		t.Fatalf("TranscodeAssetPayload: %v", res.Error)
+	if res := TranscodeAssetPayload(&copy, EncodingGzip); res != nil {
+		t.Fatalf("TranscodeAssetPayload: %v", res)
 	}
 
 	if Encoding(originalProto.GetPayload().GetPayloadEncoding()) != EncodingUncompressed {
@@ -884,7 +884,7 @@ func TestTranscodeAssetPayload_DoesNotMutateOriginalProto(t *testing.T) {
 func TestTranscodeAssetPayload_NilAsset(t *testing.T) {
 	asset := Asset{}
 	err := TranscodeAssetPayload(&asset, EncodingGzip)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected error for nil asset")
 	}
 }
@@ -892,7 +892,7 @@ func TestTranscodeAssetPayload_NilAsset(t *testing.T) {
 func TestTranscodeAssetPayload_NilPayload(t *testing.T) {
 	asset := Asset{Proto: &protos.ExternalObjectPayload{Payload: nil}}
 	err := TranscodeAssetPayload(&asset, EncodingGzip)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected error for nil payload on non-nil asset")
 	}
 }
@@ -903,12 +903,12 @@ func TestTranscodeAssetPayload_DecodeError(t *testing.T) {
 		PayloadEncoding: EncodingGzip,
 	}
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset: %v", err)
 	}
 
 	err = TranscodeAssetPayload(&asset, EncodingUncompressed)
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected decode error for corrupt gzip payload")
 	}
 }
@@ -918,12 +918,12 @@ func TestTranscodeAssetPayload_EncodeError(t *testing.T) {
 		Payload: []byte("valid data"),
 	}
 	asset, err := ToAsset(dp, true)
-	if err.Code != StatusCodeOk {
-		t.Fatalf("ToAsset: %v", err.Error)
+	if err != nil {
+		t.Fatalf("ToAsset: %v", err)
 	}
 
 	err = TranscodeAssetPayload(&asset, Encoding(99))
-	if err.Code == StatusCodeOk {
+	if err == nil {
 		t.Error("expected encode error for unsupported target encoding")
 	}
 }

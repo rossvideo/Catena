@@ -36,6 +36,7 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func TestNewConnectionQueue(t *testing.T) {
@@ -166,7 +167,7 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 
 	owner := &stubTransport{tb: t}
 	handlerContext := HandlerContext{
-		readScopes:   map[string]struct{}{ScopeOp: {}},
+		readScopes:   map[string]struct{}{st2138.ScopeOp: {}},
 		authzEnabled: true,
 	}
 
@@ -182,7 +183,7 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 		},
 	}
 
-	cq.notifyUpdate(update, ScopeOp)
+	cq.notifyUpdate(update, st2138.ScopeOp)
 
 	checkUpdate := func(name string, conn *Connection) {
 		select {
@@ -205,16 +206,16 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 	owner := &stubTransport{tb: t}
 
 	matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes:   map[string]struct{}{ScopeMon: {}},
+		readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
 		authzEnabled: true,
 	}, nil)
 	matchingWriteConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes:   map[string]struct{}{ScopeMon: {}},
-		writeScopes:  map[string]struct{}{ScopeMon: {}},
+		readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
+		writeScopes:  map[string]struct{}{st2138.ScopeMon: {}},
 		authzEnabled: true,
 	}, nil)
 	nonMatchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes:   map[string]struct{}{ScopeCfg: {}},
+		readScopes:   map[string]struct{}{st2138.ScopeCfg: {}},
 		authzEnabled: true,
 	}, nil)
 
@@ -225,7 +226,7 @@ func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
 		},
 	}
 
-	cq.notifyUpdate(update, ScopeMon)
+	cq.notifyUpdate(update, st2138.ScopeMon)
 
 	select {
 	case <-matchingConn.Updates:

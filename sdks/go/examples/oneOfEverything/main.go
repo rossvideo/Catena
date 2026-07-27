@@ -70,6 +70,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
@@ -174,9 +175,9 @@ type ExampleState struct {
 	sampleFloatArray         []float32
 	sampleStringArray        []string
 	sampleBinary             []byte
-	sampleStructVariant      catena.StructVariantValue
+	sampleStructVariant      st2138.StructVariantValue
 	sampleStructArray        []map[string]any
-	sampleStructVariantArray []catena.StructVariantValue
+	sampleStructVariantArray []st2138.StructVariantValue
 }
 
 func NewExampleState() *ExampleState {
@@ -203,9 +204,9 @@ func NewExampleState() *ExampleState {
 		},
 		sampleIntArray: []int32{1, 2, 3, 4},
 		slotOneParams:  &sync.Map{},
-		volume:     75,
-		muted:      0,
-		deviceName: "Demo Device",
+		volume:         75,
+		muted:          0,
+		deviceName:     "Demo Device",
 		structExample: map[string]any{
 			"number": int32(2),
 			"text":   "Slot 2 struct",
@@ -214,7 +215,7 @@ func NewExampleState() *ExampleState {
 		sampleFloatArray:  []float32{1.1, 2.2, 3.3},
 		sampleStringArray: []string{"alpha", "beta", "gamma"},
 		sampleBinary:      []byte{0xCA, 0xFE, 0xBA, 0xBE},
-		sampleStructVariant: catena.StructVariantValue{
+		sampleStructVariant: st2138.StructVariantValue{
 			StructVariantType: "int_kind",
 			Value:             int32(42),
 		},
@@ -222,7 +223,7 @@ func NewExampleState() *ExampleState {
 			{"label": "entry_a", "count": int32(1)},
 			{"label": "entry_b", "count": int32(2)},
 		},
-		sampleStructVariantArray: []catena.StructVariantValue{
+		sampleStructVariantArray: []st2138.StructVariantValue{
 			{StructVariantType: "int_kind", Value: int32(10)},
 			{StructVariantType: "string_kind", Value: "hello"},
 		},
@@ -258,7 +259,7 @@ func (s *ExampleState) sampleStructArrayValue() []map[string]any {
 	return s.sampleStructArray
 }
 
-func (s *ExampleState) sampleStructVariantArrayValue() []catena.StructVariantValue {
+func (s *ExampleState) sampleStructVariantArrayValue() []st2138.StructVariantValue {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.sampleStructVariantArray
@@ -308,7 +309,7 @@ func main() {
 	// Handlers receive these pointers; mutations here are what Get/SetValue expose.
 	counter := &CounterState{}
 	state := NewExampleState()
-	counterScope := catena.ScopeCfg // scope tag on counter BroadcastUpdate ticks
+	counterScope := st2138.ScopeCfg // scope tag on counter BroadcastUpdate ticks
 
 	// Background goroutine: increment counter every second while running and push
 	// updates to SSE/gRPC subscribers. Command handler toggles running via broadcastRunning.
@@ -328,11 +329,11 @@ func main() {
 	// broadcastRunning publishes the current running flag on the "running" param
 	// so subscribers (REST SSE / gRPC stream) see the state change live.
 	broadcastRunning := func() {
-		srv.BroadcastUpdate(0, "running", counter.RunningInt32(), catena.ScopeMon)
+		srv.BroadcastUpdate(0, "running", counter.RunningInt32(), st2138.ScopeMon)
 	}
 
 	assets := &sync.Map{}
-	payloads, err := catena.LoadPayloadsFromEmbed(StaticFS, "static")
+	payloads, err := st2138.LoadPayloadsFromEmbed(StaticFS, "static")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load embedded assets: %v\n", err)
 		os.Exit(1)
@@ -413,7 +414,7 @@ func main() {
 		// the Catena API. SDK endpoints are still handled by the REST transport;
 		// this fallback only serves the demo UI and an asset index convenience
 		// route when no SDK route matched.
-		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
+		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {
@@ -428,7 +429,7 @@ func main() {
 				})
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(assetList)
-				return catena.Reply(catena.Value{})
+				return catena.Reply(st2138.Value{})
 			}
 
 			fileMap := map[string]struct {
@@ -443,13 +444,13 @@ func main() {
 			if file, ok := fileMap[r.URL.Path]; ok {
 				data, err := webFS.ReadFile(file.path)
 				if err != nil {
-					return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "file not found: "+r.URL.Path)
+					return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "file not found: "+r.URL.Path)
 				}
 				w.Header().Set("Content-Type", file.contentType)
 				w.Write(data)
-				return catena.Reply(catena.Value{})
+				return catena.Reply(st2138.Value{})
 			}
-			return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "endpoint not found: "+r.URL.Path)
+			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found: "+r.URL.Path)
 		})
 
 		if err := srv.RegisterTransport(restTransport); err != nil {

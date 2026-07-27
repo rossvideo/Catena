@@ -1,0 +1,112 @@
+/*
+ * Copyright 2026 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @brief Tests for ParamInfo handling.
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
+ * @date 2026-05-12
+ * @file param_info_test.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ */
+
+package st2138
+
+import (
+	"testing"
+)
+
+func TestNewParamInfo_Basic(t *testing.T) {
+	pi := NewParamInfo("text_box", NewPolyglotText("en", "Text Box"), ParamTypeString, "tpl-1", 0)
+
+	if pi.GetOid() != "text_box" {
+		t.Errorf("expected oid 'text_box', got %s", pi.GetOid())
+	}
+	if pi.GetParamType() != ParamTypeString {
+		t.Errorf("expected type STRING, got %v", pi.GetParamType())
+	}
+	if pi.GetTemplateOid() != "tpl-1" {
+		t.Errorf("expected template_oid 'tpl-1', got %s", pi.GetTemplateOid())
+	}
+	if pi.GetArrayLength() != 0 {
+		t.Errorf("expected array_length 0, got %d", pi.GetArrayLength())
+	}
+	if pi.Proto == nil {
+		t.Fatal("expected non-nil proto response")
+	}
+	if pi.Proto.GetInfo() == nil {
+		t.Fatal("expected non-nil proto info")
+	}
+	name := pi.Proto.GetInfo().GetName()
+	if name == nil || name.GetDisplayStrings()["en"] != "Text Box" {
+		t.Errorf("expected display name 'Text Box' for en, got %v", name)
+	}
+}
+
+func TestNewParamInfo_NilName(t *testing.T) {
+	pi := NewParamInfo("foo", nil, ParamTypeInt32, "", 0)
+	if pi.Proto.GetInfo().GetName() != nil {
+		t.Error("expected nil name when none was provided")
+	}
+}
+
+func TestNewParamInfo_ArrayLength(t *testing.T) {
+	pi := NewParamInfo("arr", nil, ParamTypeStringArray, "", 7)
+	if pi.GetArrayLength() != 7 {
+		t.Errorf("expected array_length 7, got %d", pi.GetArrayLength())
+	}
+}
+
+func TestParamInfo_ZeroValue(t *testing.T) {
+	var pi ParamInfo
+	if pi.Proto != nil {
+		t.Error("expected nil proto response for zero value")
+	}
+	if pi.Proto.GetInfo() != nil {
+		t.Error("expected nil proto info for zero value")
+	}
+	if pi.GetOid() != "" {
+		t.Errorf("expected empty oid, got %q", pi.GetOid())
+	}
+	if pi.GetArrayLength() != 0 {
+		t.Errorf("expected array_length 0, got %d", pi.GetArrayLength())
+	}
+}
+
+func TestParamInfo_Wire(t *testing.T) {
+	info := NewParamInfo("gain", nil, ParamTypeInt32, "", 3)
+
+	wire := info.Wire()
+	if wire == nil {
+		t.Fatal("Wire() returned nil")
+	}
+	if wire != info.Proto {
+		t.Error("Wire() should return the same ParamInfoResponse as GetProtoResponse()")
+	}
+}

@@ -37,7 +37,7 @@
  * @date 2026-03-09
  */
 
-package catena
+package st2138
 
 import (
 	"bytes"
@@ -182,7 +182,7 @@ func ToPayloadFromURL(url string) DataPayload {
 }
 
 // dataPayloadToProto converts a DataPayload to its proto representation.
-func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
+func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, error) {
 	pdp := &protos.DataPayload{
 		Metadata:        maps.Clone(dp.Metadata),
 		Digest:          slices.Clone(dp.Digest),
@@ -194,15 +194,15 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, StatusResult) {
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
 		pdp.Kind = &protos.DataPayload_Payload{Payload: slices.Clone(dp.Payload)}
 	} else {
-		return nil, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload, but not both"}
+		return nil, fmt.Errorf("either payload or url must be provided in DataPayload, but not both: %w", ErrInvalid)
 	}
 
-	return pdp, StatusResult{Code: StatusCodeOk}
+	return pdp, nil
 }
 
-func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
+func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, error) {
 	if pdp == nil {
-		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "nil DataPayload"}
+		return DataPayload{}, fmt.Errorf("nil DataPayload: %w", ErrInvalid)
 	}
 	dp := DataPayload{
 		Metadata:        maps.Clone(pdp.GetMetadata()),
@@ -212,38 +212,38 @@ func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
 	switch k := pdp.GetKind().(type) {
 	case *protos.DataPayload_Url:
 		if k.Url == "" {
-			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+			return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)
 		}
 		dp.Url = k.Url
 	case *protos.DataPayload_Payload:
 		if len(k.Payload) == 0 {
-			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+			return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)
 		}
 		dp.Payload = slices.Clone(k.Payload)
 	default:
-		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+		return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)
 	}
-	return dp, StatusResult{Code: StatusCodeOk}
+	return dp, nil
 }
 
 // ToAsset converts DataPayload to Asset by building the proto directly
-func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
-	protoPayload, res := dataPayloadToProto(dp)
-	if res.Code != StatusCodeOk {
-		return Asset{}, res
+func ToAsset(dp DataPayload, cachable bool) (Asset, error) {
+	protoPayload, err := dataPayloadToProto(dp)
+	if err != nil {
+		return Asset{}, err
 	}
 
 	return Asset{Proto: &protos.ExternalObjectPayload{
 		Cachable: cachable,
 		Payload:  protoPayload,
-	}}, StatusResult{Code: StatusCodeOk}
+	}}, nil
 }
 
 // FromAsset converts an Asset back into a DataPayload for business logic to
 // store or inspect. It is the inverse of ToAsset.
-func FromAsset(asset Asset) (DataPayload, StatusResult) {
+func FromAsset(asset Asset) (DataPayload, error) {
 	if asset.Proto == nil {
-		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no proto"}
+		return DataPayload{}, fmt.Errorf("asset has no proto: %w", ErrInvalid)
 	}
 	return dataPayloadFromProto(asset.Proto.GetPayload())
 }
@@ -338,16 +338,16 @@ func EncodePayload(data []byte, encoding Encoding) ([]byte, error) {
 
 // ParsePayloadEncoding converts a string (e.g. "GZIP", "DEFLATE", "UNCOMPRESSED")
 // to the corresponding encoding constant.
-func ParsePayloadEncoding(s string) (Encoding, StatusResult) {
+func ParsePayloadEncoding(s string) (Encoding, error) {
 	switch strings.ToUpper(strings.TrimSpace(s)) {
 	case "UNCOMPRESSED", "":
-		return EncodingUncompressed, StatusResult{Code: StatusCodeOk}
+		return EncodingUncompressed, nil
 	case "GZIP":
-		return EncodingGzip, StatusResult{Code: StatusCodeOk}
+		return EncodingGzip, nil
 	case "DEFLATE":
-		return EncodingDeflate, StatusResult{Code: StatusCodeOk}
+		return EncodingDeflate, nil
 	default:
-		return EncodingUncompressed, StatusResult{Code: StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid payload encoding: %s", s)}
+		return EncodingUncompressed, fmt.Errorf("invalid payload encoding: %s: %w", s, ErrInvalid)
 	}
 }
 
@@ -367,26 +367,26 @@ func PayloadEncodingFromExt(filename string) Encoding {
 // TranscodeAssetPayload decodes the asset's current payload encoding and
 // re-encodes it to targetEncoding, modifying the asset in place.
 // If the asset is already in the target encoding, this is a no-op.
-func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
+func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) error {
 	if asset.Proto == nil || asset.Proto.GetPayload() == nil {
-		return StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no payload"}
+		return fmt.Errorf("asset has no payload: %w", ErrInvalid)
 	}
 
 	dp := asset.Proto.GetPayload()
 	currentEncoding := Encoding(dp.GetPayloadEncoding())
 
 	if currentEncoding == targetEncoding {
-		return StatusResult{Code: StatusCodeOk}
+		return nil
 	}
 
 	rawData, err := DecodePayload(dp.GetPayload(), currentEncoding)
 	if err != nil {
-		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("decode: %v", err)}
+		return fmt.Errorf("decode payload: %w", err)
 	}
 
 	encodedData, err := EncodePayload(rawData, targetEncoding)
 	if err != nil {
-		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("encode: %v", err)}
+		return fmt.Errorf("encode payload: %w", err)
 	}
 
 	cloned := proto.Clone(asset.Proto).(*protos.ExternalObjectPayload)
@@ -396,5 +396,5 @@ func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
 	cloned.Payload.Digest = newDigest[:]
 	asset.Proto = cloned
 
-	return StatusResult{Code: StatusCodeOk}
+	return nil
 }

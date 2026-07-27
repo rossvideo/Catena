@@ -169,7 +169,7 @@ func (s *firstStream[T]) Send(chunk T) error {
 }
 
 // lastStream retains only the most recently sent chunk. The REST ExecuteCommand
-// endpoint is unary: the handler may stream several CommandResults, but the HTTP
+// endpoint is unary: the handler may stream several CommandResponses, but the HTTP
 // reply carries a single response, so only the final Send is kept (earlier ones
 // are overwritten). Send always returns nil so the handler runs to completion.
 type lastStream[T catena.Message] struct {

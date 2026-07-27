@@ -52,6 +52,7 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 // errReader is an io.Reader that always fails, used to exercise body-read
@@ -662,10 +663,10 @@ func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
 // --- MarshalDeviceJSON tests (migrated from catena/device_test.go) ---
 
 func TestMarshalDeviceJSON(t *testing.T) {
-	cd := catena.NewDevice(0).
-		WithDetailLevel(catena.DetailLevelFull).
-		WithParam("brightness", catena.NewParamInt32(0).
-			WithName(catena.NewPolyglotText("en", "Brightness")))
+	cd := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).
+		WithParam("brightness", st2138.NewParamInt32(0).
+			WithName(st2138.NewPolyglotText("en", "Brightness")))
 
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -685,9 +686,9 @@ func TestMarshalDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
-	cd := catena.NewDevice(0).
-		WithDetailLevel(catena.DetailLevelFull).
-		WithParam("volume", catena.NewParamInt32(0))
+	cd := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).
+		WithParam("volume", st2138.NewParamInt32(0))
 
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -707,9 +708,9 @@ func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyStringValuePreserved(t *testing.T) {
-	cd := catena.NewDevice(0).
-		WithDetailLevel(catena.DetailLevelFull).
-		WithParam("label", catena.NewParamString(""))
+	cd := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).
+		WithParam("label", st2138.NewParamString(""))
 
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -733,7 +734,7 @@ func TestMarshalDeviceJSON_Nil(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
-	cd := catena.NewDevice(5)
+	cd := st2138.NewDevice(5)
 	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
@@ -745,8 +746,8 @@ func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
-	cd := catena.NewDevice(0).
-		WithDetailLevel(catena.DetailLevelFull)
+	cd := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull)
 	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
@@ -764,9 +765,9 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
-	cd := catena.NewDevice(0).
-		WithParam("brightness", catena.NewParamInt32(0)).
-		WithCommand("reboot", catena.NewParamEmpty())
+	cd := st2138.NewDevice(0).
+		WithParam("brightness", st2138.NewParamInt32(0)).
+		WithCommand("reboot", st2138.NewParamEmpty())
 	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
@@ -782,13 +783,13 @@ func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMenuMetadataStringsStripped(t *testing.T) {
-	cd := catena.NewDevice(0).
-		WithDetailLevel(catena.DetailLevelFull).
-		WithParam("brightness", catena.NewParamInt32(0)).
-		WithMenuGroup("config", catena.NewMenuGroup().
-			WithName(catena.NewPolyglotText("en", "Config").With("fr", "")).
-			WithMenu("main", catena.NewMenu().
-				WithName(catena.NewPolyglotText("en", "Main")).
+	cd := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).
+		WithParam("brightness", st2138.NewParamInt32(0)).
+		WithMenuGroup("config", st2138.NewMenuGroup().
+			WithName(st2138.NewPolyglotText("en", "Config").With("fr", "")).
+			WithMenu("main", st2138.NewMenu().
+				WithName(st2138.NewPolyglotText("en", "Main")).
 				WithParamOids("/brightness").
 				WithClientHint("ui-url", "")))
 
@@ -926,19 +927,19 @@ func TestCleanDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
-	cd := catena.NewDevice(0).
-		WithDetailLevel(catena.DetailLevelFull).
+	cd := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op").
-		WithParam("brightness", catena.NewParamInt32(0).
-			WithName(catena.NewPolyglotText("en", "Brightness")).
-			WithConstraint(catena.NewConstraintRefOid("brightness_range")).
+		WithParam("brightness", st2138.NewParamInt32(0).
+			WithName(st2138.NewPolyglotText("en", "Brightness")).
+			WithConstraint(st2138.NewConstraintRefOid("brightness_range")).
 			WithWidget("SLIDER")).
-		WithConstraint("brightness_range", catena.NewConstraintInt32Range(0, 100, 1)).
-		WithCommand("reboot", catena.NewParamEmpty().
-			WithName(catena.NewPolyglotText("en", "Reboot Device")))
+		WithConstraint("brightness_range", st2138.NewConstraintInt32Range(0, 100, 1)).
+		WithCommand("reboot", st2138.NewParamEmpty().
+			WithName(st2138.NewPolyglotText("en", "Reboot Device")))
 
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -1081,16 +1082,16 @@ func TestInjectJSONField_DerivedTypes(t *testing.T) {
 }
 
 func TestMarshalAssetJSON(t *testing.T) {
-	dp := catena.DataPayload{
+	dp := st2138.DataPayload{
 		Metadata: map[string]string{
 			"content-type": "application/octet-stream",
 		},
 		Payload: []byte("binary data"),
 	}
 
-	asset, res := catena.ToAsset(dp, true)
-	if res.Code != catena.StatusCodeOk {
-		t.Fatalf("ToAsset error: %v", res.Error)
+	asset, res := st2138.ToAsset(dp, true)
+	if res != nil {
+		t.Fatalf("ToAsset error: %v", res)
 	}
 
 	jsonData, err := MarshalAssetJSON(asset.Proto)

@@ -42,6 +42,7 @@ import (
 	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 // sdkModulePath is the SDK's Go module path, used to locate the SDK's resolved
@@ -110,11 +111,11 @@ const (
 // values live in the struct's Value; the sub-params carry only the field
 // descriptors (their STRING type). The SDK uses this to seed the product param
 // into the device on GetDevice.
-func ProductParam(p ProductStruct) *Param {
+func ProductParam(p ProductStruct) *st2138.Param {
 	values := ProductValues(p)
-	param := NewParamStruct(values).
+	param := st2138.NewParamStruct(values).
 		WithReadOnly(true).
-		WithAccessScope(ScopeMon)
+		WithAccessScope(st2138.ScopeMon)
 	for oid := range values {
 		param.WithParam(oid, productFieldDescriptor())
 	}
@@ -123,8 +124,8 @@ func ProductParam(p ProductStruct) *Param {
 
 // productFieldDescriptor is a valueless STRING sub-param used to describe a
 // product field. The field's value lives in the parent struct's Value.
-func productFieldDescriptor() *Param {
-	return &Param{Proto: &protos.Param{Type: protos.ParamType_STRING}}
+func productFieldDescriptor() *st2138.Param {
+	return &st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING}}
 }
 
 // ProductValues returns the product field values keyed by their sub-OID,
@@ -149,7 +150,7 @@ func isProductOid(fqoid string) bool {
 
 // productValueForOid resolves a product FQOID (the whole struct for "product",
 // or a single field for "product/<field>") to a Value from p.
-func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
+func productValueForOid(p ProductStruct, fqoid string) (st2138.Value, StatusResult) {
 	values := ProductValues(p)
 
 	var native any
@@ -159,14 +160,14 @@ func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
 		field := strings.TrimPrefix(fqoid, ProductOid+"/")
 		value, ok := values[field]
 		if !ok {
-			return ReplyError[Value](StatusCodeNotFound, "parameter not found: "+fqoid)
+			return ReplyError[st2138.Value](StatusCodeNotFound, "parameter not found: "+fqoid)
 		}
 		native = value
 	}
 
-	value, res := ToValue(native)
-	if res.Code != StatusCodeOk {
-		return ReplyError[Value](StatusCodeInternal, "failed to convert product value")
+	value, err := st2138.ToValue(native)
+	if err != nil {
+		return ReplyError[st2138.Value](StatusCodeInternal, "failed to convert product value")
 	}
 	return Reply(value)
 }
@@ -174,7 +175,7 @@ func productValueForOid(p ProductStruct, fqoid string) (Value, StatusResult) {
 // productParamForOid resolves a product FQOID to a Param: the whole struct for
 // "product", or a single STRING field descriptor (with its value) for
 // "product/<field>".
-func productParamForOid(p ProductStruct, fqoid string) (Param, StatusResult) {
+func productParamForOid(p ProductStruct, fqoid string) (st2138.Param, StatusResult) {
 	if fqoid == ProductOid {
 		return *ProductParam(p), StatusWithCode(StatusCodeOk, "")
 	}
@@ -182,20 +183,20 @@ func productParamForOid(p ProductStruct, fqoid string) (Param, StatusResult) {
 	field := strings.TrimPrefix(fqoid, ProductOid+"/")
 	value, ok := ProductValues(p)[field]
 	if !ok {
-		return Param{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+fqoid)
+		return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+fqoid)
 	}
 
-	pv, res := ToProto(value)
-	if res.Code != StatusCodeOk {
-		return Param{}, StatusWithCode(StatusCodeInternal, "failed to convert product value")
+	pv, err := st2138.ToProto(value)
+	if err != nil {
+		return st2138.Param{}, StatusWithCode(StatusCodeInternal, "failed to convert product value")
 	}
-	return Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}, StatusWithCode(StatusCodeOk, "")
+	return st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}, StatusWithCode(StatusCodeOk, "")
 }
 
 // productParamInfosForOid builds ParamInfo responses for a product FQOID by
 // reusing the standard params-subtree walker over the SDK-built product param.
-func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool, stream Stream[ParamInfo]) StatusResult {
-	device := &Device{Proto: &protos.Device{
+func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo]) StatusResult {
+	device := &st2138.Device{Proto: &protos.Device{
 		Params: map[string]*protos.Param{ProductOid: ProductParam(p).Proto},
 	}}
 	return ParamInfosForRequest(oidPrefix, device, recursive, stream)

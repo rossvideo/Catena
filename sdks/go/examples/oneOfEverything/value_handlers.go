@@ -7,6 +7,7 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func registerValueHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
@@ -14,10 +15,10 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// and works well when a device has a small number of params. This handler
 	// also shows a per-endpoint auth restriction: callers must have read access
 	// to the configuration scope before slot 0 values are returned.
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {
+	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
 		logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
-		if !ctx.HasReadScope(catena.ScopeCfg) {
-			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "configuration scope required")
+		if !ctx.HasReadScope(st2138.ScopeCfg) {
+			return catena.ReplyError[st2138.Value](catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
 		switch fqoid {
@@ -32,10 +33,10 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 
 	// Slot 1: direct sync.Map lookup. This demonstrates map-backed state where
 	// parameter OIDs are the storage keys. Slot 1 uses the monitor scope for access
-	srv.RegisterGetValueHandler(1, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {
+	srv.RegisterGetValueHandler(1, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
 		logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
-		if !ctx.HasReadScope(catena.ScopeMon) {
-			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "monitor scope required")
+		if !ctx.HasReadScope(st2138.ScopeMon) {
+			return catena.ReplyError[st2138.Value](catena.StatusCodePermissionDenied, "monitor scope required")
 		}
 
 		state.mu.RLock()
@@ -47,10 +48,10 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// Slot 2: direct state access. This demonstrates a more traditional
 	// approach where each handler manages its own set of parameters.
 	// This handler requires operation-scope read access.
-	srv.RegisterGetValueHandler(2, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {
+	srv.RegisterGetValueHandler(2, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
 		logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
-		if !ctx.HasReadScope(catena.ScopeOp) {
-			return catena.ReplyError[catena.Value](catena.StatusCodePermissionDenied, "operation scope required")
+		if !ctx.HasReadScope(st2138.ScopeOp) {
+			return catena.ReplyError[st2138.Value](catena.StatusCodePermissionDenied, "operation scope required")
 		}
 
 		state.mu.RLock()
@@ -86,7 +87,7 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		} else if strings.HasPrefix(fqoid, "sample_string_array") {
 			v, ok = slotTwoIndexedArrayValue(fqoid, "sample_string_array", state.sampleStringArray)
 		} else if fqoid == "sample_binary" {
-			v, ok = catena.DataPayload{Payload: state.sampleBinary}, true
+			v, ok = st2138.DataPayload{Payload: state.sampleBinary}, true
 		} else if fqoid == "sample_float" {
 			v, ok = state.sampleFloat, true
 		}
@@ -99,7 +100,7 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// entry before applying any so the batch is all-or-nothing.
 	srv.RegisterSetValueHandler(0, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
 		logger.Info("SetValue", "slot", slot, "count", len(entries))
-		if !ctx.HasWriteScope(catena.ScopeCfg) {
+		if !ctx.HasWriteScope(st2138.ScopeCfg) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
@@ -129,7 +130,7 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 				counter.SetValue(entry.Value.(int32))
 			}
 			logger.Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
-			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeCfg)
+			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, st2138.ScopeCfg)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
@@ -139,7 +140,7 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// that each handler can enforce a different authorization policy.
 	srv.RegisterSetValueHandler(1, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
 		logger.Info("SetValue", "slot", slot, "count", len(entries))
-		if !ctx.HasWriteScope(catena.ScopeMon) {
+		if !ctx.HasWriteScope(st2138.ScopeMon) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "monitor scope required")
 		}
 
@@ -173,7 +174,7 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		for _, entry := range entries {
 			state.slotOneParams.Store(entry.Fqoid, entry.Value)
 			logger.Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
-			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeMon)
+			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, st2138.ScopeMon)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
@@ -183,7 +184,7 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// the same snapshot; validate every entry before applying any (all-or-nothing).
 	srv.RegisterSetValueHandler(2, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
 		logger.Info("SetValue", "slot", slot, "count", len(entries))
-		if !ctx.HasWriteScope(catena.ScopeOp) {
+		if !ctx.HasWriteScope(st2138.ScopeOp) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "operation scope required")
 		}
 
@@ -201,19 +202,19 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		}
 		for _, entry := range entries {
 			logger.Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
-			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, catena.ScopeMon)
+			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, st2138.ScopeMon)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 }
 
-func replyValue(fqoid string, v any, ok bool) (catena.Value, catena.StatusResult) {
+func replyValue(fqoid string, v any, ok bool) (st2138.Value, catena.StatusResult) {
 	if !ok {
-		return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
+		return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 	}
-	catenaVal, res := catena.ToValue(v)
-	if res.Code != catena.StatusCodeOk {
-		return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert value")
+	catenaVal, err := st2138.ToValue(v)
+	if err != nil {
+		return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to convert value")
 	}
 	return catena.Reply(catenaVal)
 }
@@ -308,7 +309,7 @@ func slotTwoValidateSet(fqoid string, value any, state *ExampleState) catena.Sta
 	case strings.HasPrefix(fqoid, "sample_string_array"):
 		return slotTwoValidateIndexedArraySet(fqoid, "sample_string_array", value, state.sampleStringArray)
 	case fqoid == "sample_binary":
-		if _, ok := value.(catena.DataPayload); !ok {
+		if _, ok := value.(st2138.DataPayload); !ok {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
 	case fqoid == "sample_float":
@@ -353,7 +354,7 @@ func slotTwoApplySet(fqoid string, value any, state *ExampleState) catena.Status
 	case strings.HasPrefix(fqoid, "sample_string_array"):
 		return slotTwoApplyIndexedArraySet(fqoid, "sample_string_array", value, &state.sampleStringArray)
 	case fqoid == "sample_binary":
-		state.sampleBinary = value.(catena.DataPayload).Payload
+		state.sampleBinary = value.(st2138.DataPayload).Payload
 	case fqoid == "sample_float":
 		state.sampleFloat = value.(float32)
 	default:
@@ -500,7 +501,7 @@ func slotTwoApplyIndexedArraySet[T any](fqoid, arrayOid string, value any, arr *
 	return catena.StatusWithCode(catena.StatusCodeOk, "")
 }
 
-func slotTwoSampleStructVariantValue(fqoid string, sv catena.StructVariantValue) (any, bool) {
+func slotTwoSampleStructVariantValue(fqoid string, sv st2138.StructVariantValue) (any, bool) {
 	switch fqoid {
 	case "sample_struct_variant":
 		return sv, true
@@ -522,7 +523,7 @@ func slotTwoSampleStructVariantValue(fqoid string, sv catena.StructVariantValue)
 func slotTwoValidateSampleStructVariantSet(fqoid string, value any) catena.StatusResult {
 	switch fqoid {
 	case "sample_struct_variant":
-		if _, ok := value.(catena.StructVariantValue); !ok {
+		if _, ok := value.(st2138.StructVariantValue); !ok {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
 	case "sample_struct_variant/int_kind":
@@ -539,10 +540,10 @@ func slotTwoValidateSampleStructVariantSet(fqoid string, value any) catena.Statu
 	return catena.StatusWithCode(catena.StatusCodeOk, "")
 }
 
-func slotTwoApplySampleStructVariantSet(fqoid string, value any, sv *catena.StructVariantValue) catena.StatusResult {
+func slotTwoApplySampleStructVariantSet(fqoid string, value any, sv *st2138.StructVariantValue) catena.StatusResult {
 	switch fqoid {
 	case "sample_struct_variant":
-		v, ok := value.(catena.StructVariantValue)
+		v, ok := value.(st2138.StructVariantValue)
 		if !ok {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
@@ -553,21 +554,21 @@ func slotTwoApplySampleStructVariantSet(fqoid string, value any, sv *catena.Stru
 		if !ok {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
-		*sv = catena.StructVariantValue{StructVariantType: "int_kind", Value: v}
+		*sv = st2138.StructVariantValue{StructVariantType: "int_kind", Value: v}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "sample_struct_variant/string_kind":
 		v, ok := value.(string)
 		if !ok {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
-		*sv = catena.StructVariantValue{StructVariantType: "string_kind", Value: v}
+		*sv = st2138.StructVariantValue{StructVariantType: "string_kind", Value: v}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	default:
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 	}
 }
 
-func slotTwoSampleStructVariantArrayValue(fqoid string, arr []catena.StructVariantValue) (any, bool) {
+func slotTwoSampleStructVariantArrayValue(fqoid string, arr []st2138.StructVariantValue) (any, bool) {
 	idx, field, wholeArray, ok := parseArrayElementPath(fqoid, "sample_struct_variant_array")
 	if !ok {
 		return nil, false
@@ -596,13 +597,13 @@ func slotTwoSampleStructVariantArrayValue(fqoid string, arr []catena.StructVaria
 	}
 }
 
-func slotTwoValidateSampleStructVariantArraySet(fqoid string, value any, arr []catena.StructVariantValue) catena.StatusResult {
+func slotTwoValidateSampleStructVariantArraySet(fqoid string, value any, arr []st2138.StructVariantValue) catena.StatusResult {
 	idx, field, wholeArray, ok := parseArrayElementPath(fqoid, "sample_struct_variant_array")
 	if !ok {
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 	}
 	if wholeArray {
-		if _, typed := value.([]catena.StructVariantValue); !typed {
+		if _, typed := value.([]st2138.StructVariantValue); !typed {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -612,7 +613,7 @@ func slotTwoValidateSampleStructVariantArraySet(fqoid string, value any, arr []c
 	}
 	switch field {
 	case "":
-		if _, typed := value.(catena.StructVariantValue); !typed {
+		if _, typed := value.(st2138.StructVariantValue); !typed {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
 	case "int_kind":
@@ -629,13 +630,13 @@ func slotTwoValidateSampleStructVariantArraySet(fqoid string, value any, arr []c
 	return catena.StatusWithCode(catena.StatusCodeOk, "")
 }
 
-func slotTwoApplySampleStructVariantArraySet(fqoid string, value any, arr *[]catena.StructVariantValue) catena.StatusResult {
+func slotTwoApplySampleStructVariantArraySet(fqoid string, value any, arr *[]st2138.StructVariantValue) catena.StatusResult {
 	idx, field, wholeArray, ok := parseArrayElementPath(fqoid, "sample_struct_variant_array")
 	if !ok {
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 	}
 	if wholeArray {
-		v, typed := value.([]catena.StructVariantValue)
+		v, typed := value.([]st2138.StructVariantValue)
 		if !typed {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
@@ -647,7 +648,7 @@ func slotTwoApplySampleStructVariantArraySet(fqoid string, value any, arr *[]cat
 	}
 	switch field {
 	case "":
-		v, typed := value.(catena.StructVariantValue)
+		v, typed := value.(st2138.StructVariantValue)
 		if !typed {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
@@ -657,13 +658,13 @@ func slotTwoApplySampleStructVariantArraySet(fqoid string, value any, arr *[]cat
 		if !typed {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
-		(*arr)[idx] = catena.StructVariantValue{StructVariantType: "int_kind", Value: v}
+		(*arr)[idx] = st2138.StructVariantValue{StructVariantType: "int_kind", Value: v}
 	case "string_kind":
 		v, typed := value.(string)
 		if !typed {
 			return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 		}
-		(*arr)[idx] = catena.StructVariantValue{StructVariantType: "string_kind", Value: v}
+		(*arr)[idx] = st2138.StructVariantValue{StructVariantType: "string_kind", Value: v}
 	default:
 		return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 	}

@@ -39,6 +39,8 @@ package catena
 import (
 	"context"
 	"testing"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func TestHandlerContext(t *testing.T) {
@@ -55,21 +57,21 @@ func TestHandlerContext(t *testing.T) {
 
 	t.Run("ScopeChecksUseSeparateReadAndWriteScopes", func(t *testing.T) {
 		readOnly := HandlerContext{
-			readScopes:   map[string]struct{}{ScopeMon: {}},
+			readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
 			authzEnabled: true,
 		}
-		if !readOnly.HasReadScope(ScopeMon) {
+		if !readOnly.HasReadScope(st2138.ScopeMon) {
 			t.Fatal("expected read scope to satisfy read scope check")
 		}
 		if readOnly.HasAnyWriteScope() {
 			t.Fatal("read scope should not satisfy write access")
 		}
-		if readOnly.HasWriteScope(ScopeMon) {
+		if readOnly.HasWriteScope(st2138.ScopeMon) {
 			t.Fatal("read scope should not satisfy write scope check")
 		}
 
 		writeOnly := HandlerContext{
-			writeScopes:  map[string]struct{}{ScopeCfg: {}},
+			writeScopes:  map[string]struct{}{st2138.ScopeCfg: {}},
 			authzEnabled: true,
 		}
 		if writeOnly.HasAnyReadScope() {
@@ -78,13 +80,13 @@ func TestHandlerContext(t *testing.T) {
 		if !writeOnly.HasAnyWriteScope() {
 			t.Fatal("expected write scope to satisfy write access")
 		}
-		if writeOnly.HasReadScope(ScopeCfg) {
+		if writeOnly.HasReadScope(st2138.ScopeCfg) {
 			t.Fatal("write scope should not satisfy read scope check")
 		}
 
 		parsedWrite := HandlerContext{
-			readScopes:   map[string]struct{}{ScopeCfg: {}},
-			writeScopes:  map[string]struct{}{ScopeCfg: {}},
+			readScopes:   map[string]struct{}{st2138.ScopeCfg: {}},
+			writeScopes:  map[string]struct{}{st2138.ScopeCfg: {}},
 			authzEnabled: true,
 		}
 		if !parsedWrite.HasAnyReadScope() {
@@ -97,31 +99,31 @@ func TestHandlerContext(t *testing.T) {
 
 	t.Run("RequireScopeGeneratesStatusBoilerplate", func(t *testing.T) {
 		authorized := HandlerContext{
-			readScopes:   map[string]struct{}{ScopeAdm: {}},
-			writeScopes:  map[string]struct{}{ScopeAdm: {}},
+			readScopes:   map[string]struct{}{st2138.ScopeAdm: {}},
+			writeScopes:  map[string]struct{}{st2138.ScopeAdm: {}},
 			authzEnabled: true,
 		}
-		if res := authorized.RequireReadScope(ScopeAdm); res.IsError() {
+		if res := authorized.RequireReadScope(st2138.ScopeAdm); res.IsError() {
 			t.Fatalf("expected OK when read scope is held, got %v", res)
 		}
-		if res := authorized.RequireWriteScope(ScopeAdm); res.IsError() {
+		if res := authorized.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 			t.Fatalf("expected OK when write scope is held, got %v", res)
 		}
 
 		denied := HandlerContext{authzEnabled: true}
-		if res := denied.RequireReadScope(ScopeAdm); res.Code != StatusCodePermissionDenied {
+		if res := denied.RequireReadScope(st2138.ScopeAdm); res.Code != StatusCodePermissionDenied {
 			t.Fatalf("expected PermissionDenied without read scope, got %v", res.Code)
 		}
-		if res := denied.RequireWriteScope(ScopeAdm); res.Code != StatusCodePermissionDenied {
+		if res := denied.RequireWriteScope(st2138.ScopeAdm); res.Code != StatusCodePermissionDenied {
 			t.Fatalf("expected PermissionDenied without write scope, got %v", res.Code)
 		}
 
 		// With authorization disabled the scope checks pass for any scope.
 		disabled := HandlerContext{}
-		if res := disabled.RequireReadScope(ScopeAdm); res.IsError() {
+		if res := disabled.RequireReadScope(st2138.ScopeAdm); res.IsError() {
 			t.Fatalf("expected OK when authz disabled, got %v", res)
 		}
-		if res := disabled.RequireWriteScope(ScopeAdm); res.IsError() {
+		if res := disabled.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 			t.Fatalf("expected OK when authz disabled, got %v", res)
 		}
 	})
