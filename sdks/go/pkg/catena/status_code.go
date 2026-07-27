@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Status code handling for the Catena SDK.
+ * @brief Response contract for the Catena SDK.
  * @file status_code.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
@@ -38,16 +38,27 @@
 
 package catena
 
-// StatusCode is a transport-neutral outcome for handlers. Values 0–16 match
+import (
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
+)
+
+// StatusCode is a transport-neutral outcome for handlers. Values 0-16 match
 // gRPC's canonical code space (ST 2138-11 §6.2 Table 2) and map 1:1 in the
-// gRPC transport. See StatusCode.md in this directory for per-code semantics
-// and how the REST transport chooses 200 vs 204 per ST 2138-12.
+// gRPC transport. See StatusCode.md for per-code semantics and how the REST
+// transport chooses 200 vs 204 per ST 2138-12.
 //
 // Based on Google's gRPC project (Apache 2.0 license):
 // https://github.com/grpc/grpc
 // http://www.apache.org/licenses/LICENSE-2.0
 type StatusCode int
 
+// StatusResult pairs a StatusCode with an optional error message. It is the
+// SDK-level response contract handlers return; the lower-level st2138 package
+// reports failures with idiomatic errors (see st2138's sentinel errors).
+// Callers translate those errors into a StatusResult at the call site,
+// choosing the code based on who supplied the bad input: a value that came
+// from the client warrants StatusCodeInvalidArgument, while a value the
+// server itself constructed warrants StatusCodeInternal.
 type StatusResult struct {
 	Code  StatusCode
 	Error string
@@ -132,7 +143,7 @@ const (
 
 // ResponseType is a constraint for types that can be returned from handlers
 type ResponseType interface {
-	Value | Asset | Device | Param | LanguagePack
+	st2138.Value | st2138.Asset | st2138.Device | st2138.Param | LanguagePack
 }
 
 // Reply returns a successful response (StatusCodeOk) with the given value.
@@ -149,7 +160,7 @@ func ReplyWithCode[T ResponseType](value T, code StatusCode) (T, StatusResult) {
 
 // ReplyError returns an error response with the given status code and message.
 // The value returned is the zero value of T.
-// Usage: catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "not found")
+// Usage: catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "not found")
 func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 	var zero T
 	return zero, StatusResult{Code: code, Error: msg}

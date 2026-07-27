@@ -36,7 +36,7 @@
  * @date 2026-03-10
  */
 
-package catena
+package st2138
 
 import (
 	"testing"
@@ -154,7 +154,7 @@ func TestCommandExceptionResult_NilErrorMessage(t *testing.T) {
 	}
 }
 
-func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
+func TestCommandResponse_GetProtoResponse_Response(t *testing.T) {
 	val, _ := ToValue("hello")
 	result := CommandValue(val)
 	proto := result.Proto
@@ -167,7 +167,7 @@ func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
 	}
 }
 
-func TestCommandResult_GetProtoResponse_NoResponse(t *testing.T) {
+func TestCommandResponse_GetProtoResponse_NoResponse(t *testing.T) {
 	result := CommandNoResponse()
 	proto := result.Proto
 
@@ -176,7 +176,7 @@ func TestCommandResult_GetProtoResponse_NoResponse(t *testing.T) {
 	}
 }
 
-func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
+func TestCommandResponse_GetProtoResponse_Exception(t *testing.T) {
 	result := CommandException("E", "d", NewPolyglotText("fr", "erreur"))
 	proto := result.Proto
 
@@ -192,7 +192,7 @@ func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
 	}
 }
 
-func TestCommandResult_Wire(t *testing.T) {
+func TestCommandResponse_Wire(t *testing.T) {
 	val, _ := ToValue(123)
 	result := CommandValue(val)
 

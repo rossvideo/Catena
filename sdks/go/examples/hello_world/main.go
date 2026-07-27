@@ -45,6 +45,7 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 )
@@ -73,15 +74,15 @@ func (s *helloWorldState) Set(value string) {
 	s.value = value
 }
 
-func buildDevice() *catena.Device {
-	return catena.NewDevice(slot).
-		WithDetailLevel(catena.DetailLevelFull).
+func buildDevice() *st2138.Device {
+	return st2138.NewDevice(slot).
+		WithDetailLevel(st2138.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op").
-		WithParam(helloWorldOID, catena.NewParamString(helloWorld.Get()).
-			WithName(catena.NewPolyglotText("en", "Hello World")))
+		WithParam(helloWorldOID, st2138.NewParamString(helloWorld.Get()).
+			WithName(st2138.NewPolyglotText("en", "Hello World")))
 }
 
 func main() {
@@ -103,21 +104,21 @@ func main() {
 		SerialNumber: "SN-HELLO-0001",
 	})
 
-	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
+	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (st2138.Device, catena.StatusResult) {
 		logger.Info("GetDevice", "slot", slot)
 		return catena.Reply(*buildDevice())
 	})
 
-	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Value, catena.StatusResult) {
+	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
 		logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 		if fqoid != helloWorldOID {
-			return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
+			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 		}
 
-		value, res := catena.ToValue(helloWorld.Get())
-		if res.Code != catena.StatusCodeOk {
-			logger.Error("Failed to convert hello_world value", "error", res.Error)
-			return catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to convert value")
+		value, err := st2138.ToValue(helloWorld.Get())
+		if err != nil {
+			logger.Error("Failed to convert hello_world value", "error", err)
+			return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to convert value")
 		}
 		return catena.Reply(value)
 	})
@@ -140,7 +141,7 @@ func main() {
 		for _, entry := range entries {
 			stringValue := entry.Value.(string)
 			helloWorld.Set(stringValue)
-			srv.BroadcastUpdate(slot, entry.Fqoid, stringValue, catena.ScopeMon)
+			srv.BroadcastUpdate(slot, entry.Fqoid, stringValue, st2138.ScopeMon)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})

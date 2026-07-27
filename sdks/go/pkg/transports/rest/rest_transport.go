@@ -54,10 +54,11 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult)
+type FallbackHandler func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult)
 
 type Transport struct {
 	mu              sync.Mutex
@@ -194,11 +195,11 @@ func (t *Transport) writeHTTPResult(w http.ResponseWriter, result catena.StatusR
 
 	// Handle different value types (no error case)
 	switch v := value.(type) {
-	case catena.Value:
+	case st2138.Value:
 		writeValueResult(w, v, httpStatus)
-	case catena.Device:
+	case st2138.Device:
 		writeDeviceResult(w, v, httpStatus)
-	case catena.Asset:
+	case st2138.Asset:
 		writeAssetResult(w, v, httpStatus)
 	default:
 		w.WriteHeader(httpStatus)
@@ -251,7 +252,7 @@ func (t *Transport) writeHTTPStatusResult(w http.ResponseWriter, result catena.S
 }
 
 // writeValueResult writes a Value as JSON
-func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int) {
+func writeValueResult(w http.ResponseWriter, value st2138.Value, httpStatus int) {
 	protoValue := value.Proto
 	if protoValue == nil {
 		w.WriteHeader(httpStatus)
@@ -265,7 +266,7 @@ func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int)
 }
 
 // writeDeviceResult writes a Device as JSON
-func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus int) {
+func writeDeviceResult(w http.ResponseWriter, device st2138.Device, httpStatus int) {
 	if device.Proto == nil {
 		w.WriteHeader(httpStatus)
 		return
@@ -288,7 +289,7 @@ func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus i
 }
 
 // writeAssetResult writes an Asset as JSON-encoded ExternalObjectPayload
-func writeAssetResult(w http.ResponseWriter, asset catena.Asset, httpStatus int) {
+func writeAssetResult(w http.ResponseWriter, asset st2138.Asset, httpStatus int) {
 	protoAsset := asset.Proto
 	if protoAsset == nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -340,7 +341,7 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if SSE streaming is supported
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInternal, "streaming not supported")
+		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "streaming not supported")
 		t.writeHTTPResult(w, res, val)
 		return
 	}
@@ -357,7 +358,7 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	conn, res := t.runtime.RegisterTransportConnection(t, transportContext)
 	if res.Code != catena.StatusCodeOk {
-		val, res := catena.ReplyError[catena.Value](res.Code, res.Error)
+		val, res := catena.ReplyError[st2138.Value](res.Code, res.Error)
 		t.writeHTTPResult(w, res, val)
 		return
 	}
@@ -405,7 +406,7 @@ func (t *Transport) registerRoutes() {
 		logger.Info("Device endpoint", "path", r.URL.Path, "method", r.Method)
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) < 3 {
-			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid path format")
+			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid path format")
 			t.writeHTTPResult(w, res, val)
 			return
 		}
@@ -413,7 +414,7 @@ func (t *Transport) registerRoutes() {
 		slotStr := parts[2]
 		slot, err := catena.ValidateSlotString(slotStr)
 		if err.IsError() {
-			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid slot number")
+			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid slot number")
 			t.writeHTTPResult(w, res, val)
 			return
 		}
@@ -447,13 +448,13 @@ func (t *Transport) registerRoutes() {
 			case "languages":
 				t.handleLanguagesEndpoint(w, r, slot)
 			default:
-				val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "unknown endpoint")
+				val, res := catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "unknown endpoint")
 				t.writeHTTPResult(w, res, val)
 			}
 			return
 		}
 
-		val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "endpoint not found")
+		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found")
 		t.writeHTTPResult(w, res, val)
 	})
 
@@ -480,7 +481,7 @@ func (t *Transport) registerRoutes() {
 			t.writeHTTPResult(w, res, val)
 			return
 		}
-		val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "endpoint not found")
+		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found")
 		t.writeHTTPResult(w, res, val)
 	})
 
@@ -566,10 +567,10 @@ func (t *Transport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, 
 		}
 
 		// Convert proto value to native Go type
-		nativeValue, errProto := catena.FromProto(reqValue)
-		if errProto.Code != catena.StatusCodeOk {
-			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
-			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid request body")
+		nativeValue, errProto := st2138.FromProto(reqValue)
+		if errProto != nil {
+			logger.Error("failed to convert proto value to native Go type", "error", errProto)
+			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid request body")
 			t.writeHTTPResult(w, res, val)
 			return
 		}
@@ -636,15 +637,15 @@ func (t *Transport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot
 
 	if result.IsOk() {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
-			targetEncoding, encRes := catena.ParsePayloadEncoding(compressionStr)
-			if encRes.Code != catena.StatusCodeOk {
-				val, errRes := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, encRes.Error)
+			targetEncoding, encErr := st2138.ParsePayloadEncoding(compressionStr)
+			if encErr != nil {
+				val, errRes := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, encErr.Error())
 				t.writeHTTPResult(w, errRes, val)
 				return
 			}
-			if tcRes := catena.TranscodeAssetPayload(&asset, targetEncoding); tcRes.Code != catena.StatusCodeOk {
-				logger.Error("failed to transcode asset payload", "error", tcRes.Error)
-				val, errRes := catena.ReplyError[catena.Value](catena.StatusCodeInternal, "failed to transcode payload: "+tcRes.Error)
+			if tcErr := st2138.TranscodeAssetPayload(&asset, targetEncoding); tcErr != nil {
+				logger.Error("failed to transcode asset payload", "error", tcErr)
+				val, errRes := catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to transcode payload: "+tcErr.Error())
 				t.writeHTTPResult(w, errRes, val)
 				return
 			}
@@ -662,7 +663,7 @@ func (t *Transport) handleWriteAsset(
 	r *http.Request,
 	slot uint16,
 	fqoid string,
-	invoke func(slot uint16, fqoid string, asset catena.Asset, transportContext catena.TransportContext) catena.StatusResult,
+	invoke func(slot uint16, fqoid string, asset st2138.Asset, transportContext catena.TransportContext) catena.StatusResult,
 ) {
 	payload, err := ReadAssetRequestJSON(r)
 	if err != nil {
@@ -672,7 +673,7 @@ func (t *Transport) handleWriteAsset(
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	res := invoke(slot, fqoid, catena.Asset{Proto: payload}, transportContext)
+	res := invoke(slot, fqoid, st2138.Asset{Proto: payload}, transportContext)
 	t.writeHTTPStatusResultNoBody(w, res)
 }
 
@@ -762,7 +763,7 @@ func (t *Transport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Unary: the handler still streams, so collect its first message and discard the rest.
-	stream := &firstStream[catena.ParamInfo]{}
+	stream := &firstStream[st2138.ParamInfo]{}
 	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
@@ -787,7 +788,7 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 	// The language code is a single path segment; an empty code (if any) is
 	// left for the server layer to validate.
 	if len(pathParts) != 1 {
-		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "language is required")
+		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "language is required")
 		t.writeHTTPResult(w, res, val)
 		return
 	}
@@ -875,7 +876,7 @@ func (t *Transport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot
 		return
 	}
 
-	stream := &restStream[catena.ParamInfo]{
+	stream := &restStream[st2138.ParamInfo]{
 		w:       w,
 		flusher: flusher,
 		marshal: MarshalProtoJSON,
@@ -942,15 +943,15 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 		reqValue, err := ReadRequestJSON(r)
 		if err.Code != catena.StatusCodeOk {
 			logger.Error("failed to read command payload", "error", err)
-			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
+			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
 			return
 		}
-		var errProto catena.StatusResult
-		payload, errProto = catena.FromProto(reqValue)
-		if errProto.Code != catena.StatusCodeOk {
-			logger.Error("failed to convert proto value to native Go type", "error", errProto.Error)
-			val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
+		var errProto error
+		payload, errProto = st2138.FromProto(reqValue)
+		if errProto != nil {
+			logger.Error("failed to convert proto value to native Go type", "error", errProto)
+			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
 			return
 		}
@@ -963,21 +964,21 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Unary: the handler streams CommandResults but the HTTP reply is a single
+	// Unary: the handler streams CommandResponses but the HTTP reply is a single
 	// response, so keep only the last Send. respond is passed through so a smart
 	// handler can skip emitting responses; the server also swaps in a nullStream
 	// when respond=false, so nothing reaches this stream in that case.
-	stream := &lastStream[catena.CommandResult]{}
+	stream := &lastStream[st2138.CommandResponse]{}
 	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
-	// Reply with the final CommandResult the handler sent. When the caller opted
+	// Reply with the final CommandResponse the handler sent. When the caller opted
 	// out (respond=false) the server gobbled every chunk, so nothing was retained
 	// and we reply with an explicit no_response.
-	cmdResult := catena.CommandNoResponse()
+	cmdResult := st2138.CommandNoResponse()
 	if stream.has {
 		cmdResult = stream.item
 	}
@@ -998,7 +999,7 @@ func (t *Transport) streamExecuteCommand(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	stream := &restStream[catena.CommandResult]{
+	stream := &restStream[st2138.CommandResponse]{
 		w:       w,
 		flusher: flusher,
 		marshal: MarshalProtoJSON,

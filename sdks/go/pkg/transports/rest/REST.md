@@ -93,9 +93,9 @@ Command routes:
   commands that take no argument.
 - `respond` defaults to `false`; only `?respond=true` opts into receiving
   responses, and `respond` is passed through to the handler.
-- The unary route replies with the final `CommandResult` from the stream, or an
+- The unary route replies with the final `CommandResponse` from the stream, or an
   explicit `no_response` when `respond=false` or nothing was produced.
-- The `/stream` route forwards every `CommandResult`.
+- The `/stream` route forwards every `CommandResponse`.
 
 ## SSE Push Updates
 

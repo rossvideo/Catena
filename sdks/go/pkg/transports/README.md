@@ -27,6 +27,7 @@ import (
     "syscall"
 
     "github.com/rossvideo/catena/sdks/go/pkg/catena"
+    "github.com/rossvideo/catena/sdks/go/pkg/st2138"
     "github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
     "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 )
@@ -43,8 +44,8 @@ func main() {
     })
 
     // Register handlers once. All registered transports share this runtime.
-    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
-        device := catena.NewDevice(slot)
+    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext) (st2138.Device, catena.StatusResult) {
+        device := st2138.NewDevice(slot)
         return catena.Reply(*device)
     })
 
@@ -58,8 +59,8 @@ func main() {
     }
 
     // Optional custom fallback endpoints on REST.
-    restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
-        return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "endpoint not found")
+    restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
+        return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found")
     })
 
     ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

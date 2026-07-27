@@ -49,6 +49,8 @@ import (
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func TestNewJwtValidator(t *testing.T) {
@@ -452,7 +454,7 @@ func TestExtractTokenScopes_MissingScopeClaim(t *testing.T) {
 func TestExtractTokenScopes_NonStringScopeClaim(t *testing.T) {
 	token := &jwt.Token{
 		Claims: jwt.MapClaims{
-			"scope": []string{ScopeOp},
+			"scope": []string{st2138.ScopeOp},
 		},
 	}
 

@@ -51,6 +51,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos/rpc"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -324,10 +325,10 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 	logger.Info("SetValue", "slot", slot, "fqoid", fqoid)
 
 	// Convert proto value to native Go type
-	nativeValue, errProto := catena.FromProto(req.Value.Value)
-	if errProto.Code != catena.StatusCodeOk {
-		logger.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto.Error))
+	nativeValue, errProto := st2138.FromProto(req.Value.Value)
+	if errProto != nil {
+		logger.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto))
 	}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
@@ -355,10 +356,10 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 	for _, setValue := range req.Values {
 		fqoid := setValue.Oid
 
-		nativeValue, errProto := catena.FromProto(setValue.Value)
-		if errProto.Code != catena.StatusCodeOk {
-			logger.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto.Error)
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto.Error))
+		nativeValue, errProto := st2138.FromProto(setValue.Value)
+		if errProto != nil {
+			logger.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto))
 		}
 
 		entries = append(entries, catena.SetValueEntry{Fqoid: fqoid, Value: nativeValue})
@@ -412,17 +413,17 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 
 	var payload any
 	if req.Value != nil {
-		var errProto catena.StatusResult
-		payload, errProto = catena.FromProto(req.Value)
-		if errProto.Code != catena.StatusCodeOk {
-			logger.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto.Error)
-			return status.Error(codes.InvalidArgument, fmt.Sprintf("invalid command payload: %v", errProto.Error))
+		var errProto error
+		payload, errProto = st2138.FromProto(req.Value)
+		if errProto != nil {
+			logger.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto)
+			return status.Error(codes.InvalidArgument, fmt.Sprintf("invalid command payload: %v", errProto))
 		}
 	}
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	adapter := &grpcStream[catena.CommandResult]{ss: stream}
+	adapter := &grpcStream[st2138.CommandResponse]{ss: stream}
 	result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, req.Respond, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
@@ -472,7 +473,7 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	adapter := &grpcStream[catena.ParamInfo]{ss: stream}
+	adapter := &grpcStream[st2138.ParamInfo]{ss: stream}
 	result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
