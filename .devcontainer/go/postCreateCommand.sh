@@ -5,7 +5,7 @@ BUILD_TARGET=$2
 ROOT_DIR=$3
 
 cd ${ROOT_DIR}/sdks/go
-make protos-all
+make protos
 
 cd ${ROOT_DIR}
 # should exist cause of volume mount, but just in case
