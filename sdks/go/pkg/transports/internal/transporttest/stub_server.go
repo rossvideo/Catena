@@ -30,7 +30,7 @@
 
 /**
  * @brief ServerRuntime stub for testing transports without a full Catena server implementation.
- * @file stub_server_test.go
+ * @file stub_server.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Andrew Brown (andrew.brown@rossvideo.com)
  * @date 2026-05-08

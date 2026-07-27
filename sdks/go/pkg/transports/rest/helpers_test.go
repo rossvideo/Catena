@@ -30,7 +30,7 @@
 
 /**
  * @brief Test helpers for the REST server tests.
- * @file test_helpers_test.go
+ * @file helpers_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @date 2026-02-25
