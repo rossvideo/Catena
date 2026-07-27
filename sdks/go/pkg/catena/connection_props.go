@@ -111,8 +111,6 @@ func (c *ConnectionProps) Start() error {
 	// Bind synchronously so that errors (privileged port, address already in
 	// use, etc.) are returned to the caller instead of only being logged
 	// asynchronously after Start has already reported success.
-	// TODO: replicate this synchronous-listener startup routine in RestTransport
-	// (sdks/go/pkg/transports/rest_transport.go) so its errors surface to the caller too.
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		c.mu.Unlock()

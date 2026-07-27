@@ -235,3 +235,29 @@ jobs:
           fi
 
           rerun_open_pr_orchestrators
+
+  stage7_trigger_build_examples:
+    name: "7 - Trigger Build Examples"
+    needs: stage6_finalize_toolchain_tags
+    if: ${{ github.ref == 'refs/heads/develop' && ((github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create JWT
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          repositories: Catena-deployments
+          owner: rossvideo
+        
+      - name: Trigger examples build workflow
+        run: |
+          gh api --method POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/rossvideo/Catena-deployments/dispatches \
+            -f 'event_type=build-examples' \
+            -F 'client_payload[ref]=${{ github.ref }}'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}

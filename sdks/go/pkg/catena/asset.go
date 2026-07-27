@@ -82,9 +82,10 @@ func (e Encoding) String() string {
 	}
 }
 
-// Asset wraps protos.ExternalObjectPayload for asset handling
+// Asset wraps protos.ExternalObjectPayload for asset handling.
+// Proto is the underlying proto message; it may be read or replaced directly.
 type Asset struct {
-	asset *protos.ExternalObjectPayload
+	Proto *protos.ExternalObjectPayload
 }
 
 // DataPayload is a helper type for business logic to create assets
@@ -210,9 +211,17 @@ func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
 	}
 	switch k := pdp.GetKind().(type) {
 	case *protos.DataPayload_Url:
+		if k.Url == "" {
+			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+		}
 		dp.Url = k.Url
 	case *protos.DataPayload_Payload:
+		if len(k.Payload) == 0 {
+			return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
+		}
 		dp.Payload = slices.Clone(k.Payload)
+	default:
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "either payload or url must be provided in DataPayload"}
 	}
 	return dp, StatusResult{Code: StatusCodeOk}
 }
@@ -221,20 +230,22 @@ func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, StatusResult) {
 func ToAsset(dp DataPayload, cachable bool) (Asset, StatusResult) {
 	protoPayload, res := dataPayloadToProto(dp)
 	if res.Code != StatusCodeOk {
-		return Asset{asset: nil}, res
+		return Asset{}, res
 	}
 
-	asset := &protos.ExternalObjectPayload{
+	return Asset{Proto: &protos.ExternalObjectPayload{
 		Cachable: cachable,
 		Payload:  protoPayload,
-	}
-
-	return Asset{asset: asset}, StatusResult{Code: StatusCodeOk}
+	}}, StatusResult{Code: StatusCodeOk}
 }
 
-// GetProtoAsset returns the underlying protos.ExternalObjectPayload
-func (ca Asset) GetProtoAsset() *protos.ExternalObjectPayload {
-	return ca.asset
+// FromAsset converts an Asset back into a DataPayload for business logic to
+// store or inspect. It is the inverse of ToAsset.
+func FromAsset(asset Asset) (DataPayload, StatusResult) {
+	if asset.Proto == nil {
+		return DataPayload{}, StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no proto"}
+	}
+	return dataPayloadFromProto(asset.Proto.GetPayload())
 }
 
 func compressGzipTo(w io.Writer, data []byte) error {
@@ -357,12 +368,11 @@ func PayloadEncodingFromExt(filename string) Encoding {
 // re-encodes it to targetEncoding, modifying the asset in place.
 // If the asset is already in the target encoding, this is a no-op.
 func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
-	original := asset.GetProtoAsset()
-	if original == nil || original.GetPayload() == nil {
+	if asset.Proto == nil || asset.Proto.GetPayload() == nil {
 		return StatusResult{Code: StatusCodeInvalidArgument, Error: "asset has no payload"}
 	}
 
-	dp := original.GetPayload()
+	dp := asset.Proto.GetPayload()
 	currentEncoding := Encoding(dp.GetPayloadEncoding())
 
 	if currentEncoding == targetEncoding {
@@ -379,12 +389,12 @@ func TranscodeAssetPayload(asset *Asset, targetEncoding Encoding) StatusResult {
 		return StatusResult{Code: StatusCodeInternal, Error: fmt.Sprintf("encode: %v", err)}
 	}
 
-	cloned := proto.Clone(original).(*protos.ExternalObjectPayload)
+	cloned := proto.Clone(asset.Proto).(*protos.ExternalObjectPayload)
 	cloned.Payload.Kind = &protos.DataPayload_Payload{Payload: encodedData}
 	cloned.Payload.PayloadEncoding = protos.DataPayload_PayloadEncoding(targetEncoding)
 	newDigest := sha256.Sum256(encodedData)
 	cloned.Payload.Digest = newDigest[:]
-	asset.asset = cloned
+	asset.Proto = cloned
 
 	return StatusResult{Code: StatusCodeOk}
 }

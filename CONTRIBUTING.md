@@ -212,7 +212,7 @@ All checks must pass before a PR can be merged.
 |------|-------------|
 | `smpte/interface/proto/` | Catena protobuf definitions |
 | `smpte/interface/schemata/` | JSON schema for device models |
-| `sdks/` | SDK source (C++, Go, Java) |
+| `sdks/` | SDK source (C++, Go) |
 | `scripts/` | Build, formatting, and CI scripts |
 | `docs/` | Project documentation |
 | `unittests/` | Unit tests |

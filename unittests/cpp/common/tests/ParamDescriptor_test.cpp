@@ -333,6 +333,26 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
     EXPECT_FALSE(param.has_constraint()) << "Param should not have a constraint";
 }
 /*
+ * TEST 8b - Testing ParamDescriptor toProto serializes the inherited readOnly status.
+ * A child param with read_only_ == false under a read-only parent should serialize
+ * read_only == true because toProto uses readOnly() rather than the raw read_only_ member.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProtoInheritsReadOnly) {
+    // pd has readOnly == true. Create a child with read_only_ == false parented to pd.
+    auto child = createRealParamDescriptor("child_oid", "child", false, pd.get());
+    ASSERT_TRUE(child->readOnly()) << "Child should inherit read-only status from parent";
+    // toProto should serialize the inherited (true) readOnly status.
+    st2138::Param param;
+    child->toProto(param, authz_);
+    EXPECT_TRUE(param.read_only()) << "toProto should serialize inherited readOnly status from parent";
+    // Now clear the parent's readOnly status and verify the child serializes read_only == false.
+    pd->readOnly(false);
+    ASSERT_FALSE(child->readOnly()) << "Child should no longer be read-only once parent is not read-only";
+    param.Clear();
+    child->toProto(param, authz_);
+    EXPECT_FALSE(param.read_only()) << "toProto should serialize read_only == false when neither child nor parent is read-only";
+}
+/*
  * TEST 9 - Testing ParamDescriptor ExecuteCommand default command definition.
  */
 TEST_F(ParamDescriptorTest, ParamDescriptor_ExecuteCommand) {

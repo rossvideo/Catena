@@ -124,6 +124,7 @@ inline std::string createParamInfoJson(const ParamInfo& info) {
     setupParamInfo(response, info);
     std::string jsonBody;
     google::protobuf::util::JsonPrintOptions options;
+    options.preserve_proto_field_names = true; // Preserve field names as defined in the proto
     auto status = google::protobuf::util::MessageToJsonString(response, &jsonBody, options);
     return jsonBody;
 }

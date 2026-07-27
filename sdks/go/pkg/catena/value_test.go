@@ -79,7 +79,7 @@ func TestToValue(t *testing.T) {
 				t.Errorf("ToValue(%v) unexpected error: %v", tt.input, err.Error)
 				return
 			}
-			if cv.Value == nil {
+			if cv.Proto == nil {
 				t.Errorf("ToValue(%v) returned nil Value", tt.input)
 			}
 		})

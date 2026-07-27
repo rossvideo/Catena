@@ -66,12 +66,33 @@ using boost::asio::ip::tcp;
 
 // REST
 #include "SocketWriter.h"
+#include "RestJsonFormatter.h"
 #include "interface/ICallData.h"
 
 using namespace catena::common;
 
 namespace catena {
 namespace REST {
+
+/*
+ * RAII guard that disables all RestJsonFormatter rules (options + post passes)
+ * for its lifetime, restoring them on destruction. REST tests build their
+ * expected JSON with sparse protobuf serialization (protoToJsonString), so
+ * bypassing the formatter keeps those expectations valid and confines fixer
+ * coverage to RestJsonFormatter_test.
+ */
+class ScopedFormatterBypass {
+  public:
+    ScopedFormatterBypass() : saved_(RestJsonFormatter::getInstance().snapshot()) {
+        RestJsonFormatter::getInstance().restore({});
+    }
+    ~ScopedFormatterBypass() { RestJsonFormatter::getInstance().restore(std::move(saved_)); }
+    ScopedFormatterBypass(const ScopedFormatterBypass&) = delete;
+    ScopedFormatterBypass& operator=(const ScopedFormatterBypass&) = delete;
+
+  private:
+    RestJsonFormatter::RuleTable saved_;
+};
 
 /*
  * Surface level RESTTest class inherited by test fixtures to provide functions
@@ -297,6 +318,90 @@ class RESTTest {
     }
 
     /*
+     * Reads a complete Server-Sent Events (SSE) response from the readSocket_.
+     *
+     * SSE responses are keep-alive and have no Content-Length, so we can't rely
+     * on readResponse() (which returns as soon as the header terminator is seen)
+     * or readTotalResponse() (which needs a Content-Length). Instead, this reads
+     * the headers and then keeps reading until the expected number of complete
+     * "data: ...\n\n" events have arrived. This is deterministic because the
+     * endpoint's proceed() is synchronous: by the time it returns, every event
+     * for the response has already been written to the socket.
+     *
+     * @param expectedEvents The number of SSE events ("data: ...\n\n") to read.
+     *                       Pass 0 for error/empty responses (headers only).
+     * @param timeout Maximum time to wait for the expected events to arrive.
+     *                If it elapses the function fails the test (via ADD_FAILURE)
+     *                and returns what was received so far instead of hanging.
+     * @returns the full response (headers + all SSE events) as a string.
+     */
+    std::string readSseResponse(std::size_t expectedEvents,
+                                std::chrono::milliseconds timeout = std::chrono::seconds(2)) {
+        boost::asio::streambuf buffer;
+        // 1. Read headers (up to and including the "\r\n\r\n" terminator).
+        boost::asio::read_until(*readSocket_, buffer, "\r\n\r\n");
+        std::istream response_stream(&buffer);
+        std::string response, line;
+        while (std::getline(response_stream, line) && line != "\r") {
+            response += line + "\n";
+        }
+        response += "\r\n";
+
+        // 2. Append any body bytes already pulled in alongside the headers.
+        std::size_t already_read = buffer.size();
+        if (already_read > 0) {
+            std::vector<char> tmp(already_read);
+            buffer.sgetn(tmp.data(), already_read);
+            response.append(tmp.data(), already_read);
+        }
+
+        // 3. Keep reading until we've seen expectedEvents event terminators.
+        //    Each SSE event ends with a blank line ("\n\n"). A deadline guards
+        //    against the endpoint sending fewer events than expected, which
+        //    would otherwise block forever on a synchronous read.
+        auto eventCount = [&response]() {
+            std::size_t count = 0, pos = 0;
+            while ((pos = response.find("\n\n", pos)) != std::string::npos) {
+                ++count;
+                pos += 2;
+            }
+            return count;
+        };
+        while (eventCount() < expectedEvents) {
+            char temp[4096];
+            boost::system::error_code read_ec;
+            std::size_t n = 0;
+            bool done = false;
+            readSocket_->async_read_some(boost::asio::buffer(temp, sizeof(temp)),
+                [&](const boost::system::error_code& ec, std::size_t bytes) {
+                    read_ec = ec;
+                    n = bytes;
+                    done = true;
+                });
+            // Run the io_context until the read completes or the deadline hits.
+            io_context_.restart();
+            io_context_.run_for(timeout);
+            if (!done) {
+                // Timed out: cancel the pending read and let its handler run so
+                // the captured references above don't dangle, then bail out.
+                readSocket_->cancel();
+                io_context_.restart();
+                io_context_.run();
+                ADD_FAILURE() << "readSseResponse timed out: expected " << expectedEvents
+                              << " SSE event(s) but only received " << eventCount();
+                break;
+            }
+            if (read_ec) {
+                // EOF or socket error: stop and return what we have.
+                break;
+            }
+            response.append(temp, n);
+        }
+
+        return response;
+    }
+
+    /*
      * Returns what an expect response from SocketWriter should look like.
      */
     inline std::string expectedResponse(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
@@ -363,12 +468,30 @@ class RESTTest {
                ", open: " + std::to_string(readSocket_->is_open());
     }
 
+    /**
+     * @brief Converts a protobuf message to a JSON string. Uses the imporant
+     * option to preserve proto field names that keeps the names snake_case instead
+     * of converting them to camelCase, which is required by the st2138 spec.
+     * @param msg The protobuf message to convert.
+     * @param jsonStr The output string to hold the JSON representation of the message.
+     * @throws std::runtime_error with an ASSERT_TRUE if the conversion fails.
+     */
+    inline void protoToJsonString(const google::protobuf::Message& msg, std::string& jsonStr) {
+        google::protobuf::util::JsonPrintOptions options{.preserve_proto_field_names = true};
+        auto status = google::protobuf::util::MessageToJsonString(msg, &jsonStr, options);
+        ASSERT_TRUE(status.ok()) << "Failed to convert message to JSON";
+    }
+
     std::string origin_ = "*";
     // Read/write helper variables.
     boost::asio::io_context io_context_;
     tcp::socket clientSocket_{io_context_};
     tcp::socket serverSocket_{io_context_};
     tcp::acceptor acceptor_{io_context_, tcp::endpoint(tcp::v4(), 0)};
+
+    // Disables RestJsonFormatter post-processing for the lifetime of the test
+    // so expectations built with sparse protoToJsonString remain valid.
+    ScopedFormatterBypass formatterBypass_;
 
   private:
     tcp::socket* writeSocket_ = nullptr;

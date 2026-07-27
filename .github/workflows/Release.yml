@@ -11,9 +11,11 @@ name: Release
 #
 #   PHASE 2 — Triggered automatically when the release PR is closed on main
 #     If merged:
-#       4. Squash-merge the release branch into develop.
-#          └─ If the squash merge fails, automatically revert the main merge.
+#       4. Merge the release branch into develop (merge commit, not squashed)
+#          so main and develop share the version-bump commit as a common ancestor.
+#          └─ If the develop merge fails, automatically revert the main merge.
 #       5a. Create a GitHub release (tagged on main) with grouped release notes.
+#           Also push a Go module tag (sdks/go/vX.Y.Z) so `go get` resolves it.
 #       5b. Retag toolchain containers develop → latest  (parallel with 5a).
 #     If closed without merging:
 #       → Release is cancelled; nothing further happens.
@@ -35,6 +37,20 @@ on:
 
   pull_request_review:
     types: [submitted]
+
+# Repo target for all `gh` calls (gh resolves: --repo flag > GH_REPO > git remote).
+# Setting it here means individual steps don't need to pass --repo.
+env:
+  GH_REPO: ${{ github.repository }}
+
+# Serialize the entire release process across all of its triggers
+# (workflow_dispatch → review approval → PR-closed). It's started manually and
+# resumed by approving the main PR, so concurrent runs are unlikely; if one is
+# already in flight, queue at most one more and NEVER cancel a release that is
+# mid-merge (cancel-in-progress: false).
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PHASE 1 JOBS
@@ -90,7 +106,7 @@ jobs:
 
       # ── Step 1b: Check out the develop branch ───────────────────────────────
       - name: Checkout develop
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: develop
           fetch-depth: 0
@@ -234,11 +250,11 @@ jobs:
 
           ### What happens when this PR is approved
           1. The release branch will be merged into \`main\`.
-          2. The release branch will be squash-merged back into \`develop\`.
+          2. The release branch will be merged back into \`develop\` (merge commit, not squashed).
           3. A GitHub release tagged \`$NEW_VERSION\` will be created on \`main\`.
           4. Toolchain containers will be retagged \`develop → latest\`.
 
-          > ⚠️ **Closing this PR without approveal will cancel the release.**")
+          > ⚠️ **Closing this PR without approval will cancel the release.**")
 
           echo "✅ Release PR opened: $PR_URL"
 
@@ -355,14 +371,19 @@ jobs:
           fi
 
   # ────────────────────────────────────────────────────────────────────────────
-  # Job 3: Squash-merge the existing release branch into develop.
+  # Job 3: Merge the existing release branch into develop (merge commit).
+  #
+  # A true merge (NOT squash) is required so that main and develop share the
+  # actual version-bump commit as a common ancestor.  Squashing would create an
+  # orphan copy on develop and cause phantom VERSION.txt conflicts on future
+  # releases/hotfixes.
   #
   # On failure: attempt to revert the main merge commit to keep main/develop
   # in sync.  If the revert itself fails (e.g. protected branch requires a PR),
   # the step exits non-zero so the failure is clearly visible in the run log.
   # ────────────────────────────────────────────────────────────────────────────
-  squash_merge_develop:
-    name: "3 - Squash-Merge Release into Develop"
+  merge_release_develop:
+    name: "3 - Merge Release into Develop"
     needs: detect_release_pr
     if: needs.detect_release_pr.outputs.merged == 'true'
     runs-on: ubuntu-latest
@@ -375,14 +396,61 @@ jobs:
       PR_MERGE_SHA:   ${{ github.event.pull_request.merge_commit_sha }}
 
     steps:
-      # ── Squash-merge existing release branch into develop via PR ──────────────
+      # ── Temporarily enable merge commits so we can true-merge into develop ────
+      #
+      # The repository default is squash-only.  A release branch must be merged
+      # into develop with a real merge commit (not squashed) so that main and
+      # develop share the actual version-bump commit as a common ancestor,
+      # preventing phantom VERSION.txt conflicts on future releases/hotfixes.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Temporarily enable merge commits on repository
+        id: enable_merge_commits
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "❌ Missing required secret: REPO_ADMIN_TOKEN"
+            echo "   Create a repo/org secret with admin rights to update merge settings."
+            exit 1
+          fi
+
+          ORIG_ALLOW_MERGE=$(gh api "repos/${{ github.repository }}" --jq '.allow_merge_commit')
+          echo "orig_allow_merge=$ORIG_ALLOW_MERGE" >> "$GITHUB_OUTPUT"
+          echo "Current allow_merge_commit=$ORIG_ALLOW_MERGE"
+
+          if [[ "$ORIG_ALLOW_MERGE" != "true" ]]; then
+            gh api -X PATCH "repos/${{ github.repository }}" \
+              -f allow_merge_commit=true >/dev/null
+            echo "✅ Temporarily enabled allow_merge_commit=true"
+          else
+            echo "ℹ️  allow_merge_commit already enabled"
+          fi
+
+      # ── Checkout the repo ─────────────────────────────────────────────────────
+      #
+      # Required for the rollback step, which uses local git (fetch/checkout/
+      # revert/push) to undo the main merge if the develop merge fails.
+      # fetch-depth: 0 gives the full history needed for `git revert`.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        id: checkout_repo
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.REPO_ADMIN_TOKEN }}  # needed for rollback push to main
+
+      # ── Merge existing release branch into develop via PR ─────────────────────
       #
       # Reuse the release branch created in phase 1 (release-vX.Y.Z).
       # This avoids creating a second sync branch/commit path.
-      # the branch is squash-merged into develop, and the branch is deleted after merge.
+      # The branch is merged (NOT squashed) into develop so the version-bump
+      # commit is shared with main, then the branch is deleted after merge.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: Squash-merge existing release branch into develop
-        id: squash_merge
+      - name: Merge existing release branch into develop
+        id: merge_develop
         env:
           GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
         run: |
@@ -406,7 +474,7 @@ jobs:
             --base develop \
             --state open \
             --json url \
-            --jq '.[0].url')
+            --jq '.[0].url // empty')
 
           if [[ -n "${EXISTING_PR_URL:-}" ]]; then
             PR_URL="$EXISTING_PR_URL"
@@ -416,27 +484,42 @@ jobs:
               --base develop \
               --head "$RELEASE_BRANCH" \
               --title "chore(release): sync $NEW_VERSION into develop" \
-              --body "Automated sync PR for release $NEW_VERSION.\n\nThis PR reuses the existing release branch and squash-merges it into develop.")
+              --body "Automated sync PR for release $NEW_VERSION.
+
+          This PR reuses the existing release branch and merges it into develop with a merge commit (not squashed) to preserve shared history with main.")
             echo "✅ Opened develop-sync PR: $PR_URL"
           fi
 
-          gh pr merge "$PR_URL" --squash --admin --delete-branch --repo "${{ github.repository }}"
-          echo "✅ Synced release branch into develop via PR (--squash)"
+          # Merge via the API, then delete the remote branch explicitly.
+          # We deliberately do NOT pass --delete-branch: that flag makes `gh`
+          # also prune the *local* branch, but only `main` is checked out here
+          # (for the rollback step), so a local prune is pointless and can emit
+          # spurious git errors. An explicit API delete is deterministic.
+          gh pr merge "$PR_URL" --merge --admin
+          echo "✅ Synced release branch into develop via PR (--merge)"
 
-      # ── Rollback: revert the main merge if the squash into develop failed ────
+          gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/${RELEASE_BRANCH}" >/dev/null \
+            && echo "✅ Deleted remote release branch '$RELEASE_BRANCH'" \
+            || echo "ℹ️  Remote release branch '$RELEASE_BRANCH' already gone"
+
+      # ── Rollback: revert the main merge if the merge into develop failed ─────
       #
       # NOTE: This step requires the workflow token to have push access to main
       # (or the branch protection must allow admin bypass / a PAT must be used).
       # If direct push is not allowed, consider creating a revert PR instead.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: "[ROLLBACK] Revert main merge on squash failure"
-        if: failure() && steps.squash_merge.outcome == 'failure'
+      - name: "[ROLLBACK] Revert main merge on develop-merge failure"
+        if: failure() && steps.checkout_repo.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
           PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
         run: |
           set -euo pipefail
-          echo "⚠️  Squash merge into develop failed — reverting main merge for $NEW_VERSION"
+          echo "⚠️  Merge into develop failed — reverting main merge for $NEW_VERSION"
+
+          # git revert creates a commit, so a committer identity is required.
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
 
           git fetch origin main
           git checkout -B main-revert-work origin/main
@@ -476,16 +559,51 @@ jobs:
           echo "❌ Release $NEW_VERSION was rolled back. Please investigate and retry."
           exit 1  # Fail the job so the run is marked as failed
 
+      # ── Restore the repository merge-commit setting ──────────────────────────
+      - name: Restore merge-commit repository setting
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+          ORIG_ALLOW_MERGE: ${{ steps.enable_merge_commits.outputs.orig_allow_merge }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "::warning title=Merge setting not restored::REPO_ADMIN_TOKEN missing during cleanup; restore allow_merge_commit manually."
+            echo "⚠️  Merge setting not restored — REPO_ADMIN_TOKEN missing during cleanup." >> "$GITHUB_STEP_SUMMARY"
+            # We don't fail the job because we don't want to fail the whole process after
+            # a potentially successful release.  The admin should manually restore the setting.
+            exit 0
+          fi
+
+          # If the enable step never ran (e.g. earlier failure), skip silently.
+          if [[ -z "${ORIG_ALLOW_MERGE:-}" ]]; then
+            echo "ℹ️  No saved allow_merge_commit value; nothing to restore."
+            exit 0
+          fi
+
+          # Best-effort restore: a transient PATCH failure must not fail the job
+          # (the develop merge may already have succeeded).  Emit a workflow
+          # annotation (visible even on a green run) so an admin can restore
+          # manually, then exit 0 so downstream release jobs are not blocked.
+          if gh api -X PATCH "repos/${{ github.repository }}" \
+            -f allow_merge_commit="$ORIG_ALLOW_MERGE" >/dev/null; then
+            echo "✅ Restored allow_merge_commit=$ORIG_ALLOW_MERGE"
+          else
+            echo "::warning title=Merge setting not restored::Failed to restore allow_merge_commit=$ORIG_ALLOW_MERGE; restore it manually in the repository settings."
+            echo "⚠️  Failed to restore allow_merge_commit=$ORIG_ALLOW_MERGE — restore it manually in the repository settings." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   # ────────────────────────────────────────────────────────────────────────────
   # Job 4: Build release notes and create the GitHub release on main.
-  # Runs after squash_merge_develop succeeds.
+  # Runs after merge_release_develop succeeds.
   # ────────────────────────────────────────────────────────────────────────────
   create_github_release:
     name: "4 - Create GitHub Release"
-    needs: [detect_release_pr, squash_merge_develop]
+    needs: [detect_release_pr, merge_release_develop]
     if: >
       needs.detect_release_pr.outputs.merged == 'true' &&
-      needs.squash_merge_develop.result == 'success'
+      needs.merge_release_develop.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write      # create release and upload artifacts
@@ -498,7 +616,7 @@ jobs:
     steps:
 
       - name: Checkout main
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
@@ -563,7 +681,40 @@ jobs:
           echo "── Release notes preview ──"
           cat /tmp/release_notes.md
 
+      # ── Create annotated release tags ─────────────────────────────────────────
+      #
+      # Create BOTH tags as annotated (carrying tagger, date and message — the
+      # conventional choice for releases) so they're consistent:
+      #   • vX.Y.Z          — the main release tag.  Creating it here (rather than
+      #                        letting `gh release create` mint a lightweight one)
+      #                        means the release reuses this annotated tag.
+      #   • sdks/go/vX.Y.Z  — required by Go module versioning to resolve the SDK
+      #                        that lives in the sdks/go subdirectory.
+      # Both point at the same commit on main (HEAD).
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Create annotated release tags
+        run: |
+          set -euo pipefail
+
+          # Annotated tags need a committer identity.
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+
+          for TAG in "$NEW_VERSION" "sdks/go/$NEW_VERSION"; do
+            if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+              echo "ℹ️  Tag '$TAG' already exists — skipping."
+            else
+              git tag -a "$TAG" -m "Release $NEW_VERSION"
+              git push origin "$TAG"
+              echo "✅ Pushed annotated tag '$TAG'"
+            fi
+          done
+
       # ── Create the GitHub release ─────────────────────────────────────────────
+      #
+      # The vX.Y.Z tag was already created (annotated) above, so `gh release
+      # create` reuses it instead of minting its own lightweight tag.
+      # ─────────────────────────────────────────────────────────────────────────
       - name: Create GitHub release
         run: |
           set -euo pipefail
@@ -572,7 +723,6 @@ jobs:
           RELEASE_TITLE="Catena version $NEW_VERSION made on $RELEASE_DATE"
 
           gh release create "$NEW_VERSION" \
-            --target main \
             --title "$RELEASE_TITLE" \
             --notes-file /tmp/release_notes.md
 
@@ -610,10 +760,10 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────────
   retag_toolchain_containers:
     name: "5 - Retag Toolchain Containers (develop → latest)"
-    needs: [detect_release_pr, squash_merge_develop]
+    needs: [detect_release_pr, merge_release_develop]
     if: >
       needs.detect_release_pr.outputs.merged == 'true' &&
-      needs.squash_merge_develop.result == 'success'
+      needs.merge_release_develop.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       packages: write  # push retagged images to GHCR

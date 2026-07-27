@@ -10,11 +10,24 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 	// This handler does not reduce allowed scopes beyond the base level of
 	// any command scope (mon, op, conf, or adm), however it broadcasts updates
 	// to the counter value only to specified counterScope.
-	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, ctx catena.HandlerContext) (catena.CommandResult, catena.StatusResult) {
+	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.HandlerContext, stream catena.Stream[catena.CommandResult]) catena.StatusResult {
 		logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 		if !ctx.HasWriteScope(counterScope) {
 			logger.Warning("Unauthorized command execution attempt", "slot", slot, "command", commandFqoid)
-			return catena.CommandError(catena.StatusCodePermissionDenied, "Caller does not have required scope for this command")
+			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "Caller does not have required scope for this command")
+		}
+
+		// sendCounter emits the current counter value as a command response.
+		// When the caller opted out (respond=false) it skips the Send entirely -
+		// the transport would discard it anyway, so a smart handler saves the work.
+		sendCounter := func() catena.StatusResult {
+			if respond {
+				val, _ := catena.ToValue(counter.GetValue())
+				if err := stream.Send(catena.CommandValue(val)); err != nil {
+					return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+				}
+			}
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		switch commandFqoid {
@@ -27,8 +40,7 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
+			return sendCounter()
 		case "stop":
 			if !counter.IsRunning() {
 				logger.Info("Stop command - already stopped")
@@ -38,23 +50,20 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
+			return sendCounter()
 		case "add10":
 			counter.Add(10)
 			logger.Info("Added 10 to counter", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
+			return sendCounter()
 		case "reset":
 			counter.Reset()
 			logger.Info("Counter reset", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
-			val, _ := catena.ToValue(counter.GetValue())
-			return catena.CommandReply(val)
+			return sendCounter()
 		default:
 			logger.Warning("Command not found", "slot", slot, "command", commandFqoid)
-			return catena.CommandError(catena.StatusCodeNotFound, "Command not found: "+commandFqoid)
+			return catena.StatusWithCode(catena.StatusCodeNotFound, "Command not found: "+commandFqoid)
 		}
 	})
 

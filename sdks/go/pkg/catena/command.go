@@ -40,60 +40,61 @@ package catena
 
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"google.golang.org/protobuf/proto"
 )
 
 // CommandResult wraps protos.CommandResponse, representing the three possible
 // outcomes of ExecuteCommand: no_response, response, or exception.
+// Proto is the underlying proto message; it may be read or replaced directly.
 type CommandResult struct {
-	response *protos.CommandResponse
+	Proto *protos.CommandResponse
+}
+
+// ensure CommandResult implements the Message interface.
+var _ Message = CommandResult{}
+
+func (r CommandResult) Wire() proto.Message {
+	return r.Proto
 }
 
 // IsEmpty returns true if this is a no_response result.
 func (r CommandResult) IsEmpty() bool {
-	return r.response == nil || r.response.GetNoResponse() != nil
+	return r.Proto == nil || r.Proto.GetNoResponse() != nil
 }
 
 // IsException returns true if this is an exception result.
 func (r CommandResult) IsException() bool {
-	return r.response != nil && r.response.GetException() != nil
+	return r.Proto != nil && r.Proto.GetException() != nil
 }
 
 // GetException returns the underlying proto Exception.
 // Only valid when IsException() is true.
 func (r CommandResult) GetException() *protos.Exception {
-	if r.response != nil {
-		return r.response.GetException()
-	}
-	return nil
+	return r.Proto.GetException()
 }
 
-// GetProtoResponse returns the underlying protos.CommandResponse.
-func (r CommandResult) GetProtoResponse() *protos.CommandResponse {
-	return r.response
-}
-
-// CommandReply returns a successful command response wrapping a value.
-func CommandReply(value Value) (CommandResult, StatusResult) {
+// CommandValue returns a successful command response wrapping a value.
+func CommandValue(value Value) CommandResult {
 	return CommandResult{
-		response: &protos.CommandResponse{
-			Kind: &protos.CommandResponse_Response{Response: value.Value},
+		Proto: &protos.CommandResponse{
+			Kind: &protos.CommandResponse_Response{Response: value.Proto},
 		},
-	}, StatusResult{Code: StatusCodeOk}
+	}
 }
 
 // CommandNoResponse returns an empty command response (no_response).
-func CommandNoResponse() (CommandResult, StatusResult) {
+func CommandNoResponse() CommandResult {
 	return CommandResult{
-		response: &protos.CommandResponse{
+		Proto: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_NoResponse{NoResponse: &protos.Empty{}},
 		},
-	}, StatusResult{Code: StatusCodeOk}
+	}
 }
 
-// CommandExceptionResult returns a command exception response.
+// CommandException returns a command exception response.
 // exType is the exception type, details provides additional context,
 // and errorMessage is a PolyglotText map of language code to display string (may be nil).
-func CommandExceptionResult(exType, details string, errorMessage PolyglotText) (CommandResult, StatusResult) {
+func CommandException(exType, details string, errorMessage PolyglotText) CommandResult {
 	exc := &protos.Exception{
 		Type:    exType,
 		Details: details,
@@ -102,14 +103,8 @@ func CommandExceptionResult(exType, details string, errorMessage PolyglotText) (
 		exc.ErrorMessage = &protos.PolyglotText{DisplayStrings: errorMessage}
 	}
 	return CommandResult{
-		response: &protos.CommandResponse{
+		Proto: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Exception{Exception: exc},
 		},
-	}, StatusResult{Code: StatusCodeOk}
-}
-
-// CommandError returns a transport-level error (not a CommandResponse exception).
-// Use this for infrastructure errors like "handler not found" or "unimplemented".
-func CommandError(code StatusCode, msg string) (CommandResult, StatusResult) {
-	return CommandResult{}, StatusResult{Code: code, Error: msg}
+	}
 }

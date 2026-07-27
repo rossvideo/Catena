@@ -1,4 +1,4 @@
-FROM ghcr.io/rossvideo/catena-cpp-toolchain:latest
+FROM ghcr.io/rossvideo/catena-cpp-toolchain:develop
 
 # Declare build arguments
 ARG USER_UID=1000

@@ -44,7 +44,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -53,6 +55,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult)
@@ -82,6 +85,16 @@ func NewRestTransport(cfg config.RestOptions) *RestTransport {
 // Start starts the HTTP server on the specified port using this server's mux
 func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
 	addr := fmt.Sprintf(":%d", t.port)
+	// Bind synchronously so that startup errors (privileged port, address
+	// already in use, invalid address, etc.) are returned to the caller
+	// instead of only being logged asynchronously after Start has already
+	// reported success. This mirrors ConnectionProps.Start.
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		logger.Error("REST Transport failed to listen", "address", addr, "error", err)
+		return fmt.Errorf("REST transport failed to listen on %s: %w", addr, err)
+	}
+
 	t.server = &http.Server{
 		Addr:    addr,
 		Handler: t.mux,
@@ -89,10 +102,10 @@ func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime)
 	t.runtime = runtime
 
 	// http server does not use context
-	// listen and serve blocks so do it in a goroutine
+	// serve blocks so do it in a goroutine
 	go func() {
 		logger.Info("REST Transport listening", "address", addr)
-		err := t.server.ListenAndServe()
+		err := t.server.Serve(listener)
 		if err != nil && err != http.ErrServerClosed {
 			logger.Error("HTTP server error", "error", err)
 		}
@@ -154,6 +167,7 @@ func (t *RestTransport) retrieveMetadataFromRequest(r *http.Request) catena.Tran
 	transportContext := catena.TransportContext{
 		AccessToken: r.Header.Get("Authorization"),
 		Metadata:    maps.Clone(r.Header), // include all headers as metadata for now; could be filtered in the future if needed
+		Ctx:         r.Context(),
 	}
 	return transportContext
 }
@@ -239,7 +253,7 @@ func (t *RestTransport) writeHTTPStatusResult(w http.ResponseWriter, result cate
 
 // writeValueResult writes a Value as JSON
 func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int) {
-	protoValue := value.Value
+	protoValue := value.Proto
 	if protoValue == nil {
 		w.WriteHeader(httpStatus)
 		return
@@ -253,12 +267,12 @@ func writeValueResult(w http.ResponseWriter, value catena.Value, httpStatus int)
 
 // writeDeviceResult writes a Device as JSON
 func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus int) {
-	if device.GetProtoDevice() == nil {
+	if device.Proto == nil {
 		w.WriteHeader(httpStatus)
 		return
 	}
 
-	b, err := MarshalDeviceJSON(device.GetProtoDevice())
+	b, err := MarshalDeviceJSON(device.Proto)
 	if err != nil {
 		logger.Error("failed to marshal device response", "error", err)
 		w.Header().Set("Content-Type", "application/json")
@@ -276,7 +290,7 @@ func writeDeviceResult(w http.ResponseWriter, device catena.Device, httpStatus i
 
 // writeAssetResult writes an Asset as JSON-encoded ExternalObjectPayload
 func writeAssetResult(w http.ResponseWriter, asset catena.Asset, httpStatus int) {
-	protoAsset := asset.GetProtoAsset()
+	protoAsset := asset.Proto
 	if protoAsset == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -425,8 +439,14 @@ func (t *RestTransport) registerRoutes() {
 				t.handleAssetEndpoint(w, r, slot, parts[4:])
 			case "command":
 				t.handleCommandEndpoint(w, r, slot, parts[4:])
+			case "param":
+				t.handleParamEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
+			case "language-pack":
+				t.handleLanguagePackEndpoint(w, r, slot, parts[4:])
+			case "languages":
+				t.handleLanguagesEndpoint(w, r, slot)
 			default:
 				val, res := catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "unknown endpoint")
 				t.writeHTTPResult(w, res, val)
@@ -501,6 +521,33 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 	}
 }
 
+// handleLanguagesEndpoint handles GET /st2138-api/v1/{slot}/languages (Languages).
+// Per the OpenAPI contract (GET /{slot}/languages), the body is a bare JSON array
+// of language codes, e.g. ["en","fr","es","de"]. An empty result serializes as [].
+func (t *RestTransport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
+	if r.Method != http.MethodGet {
+		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	languages, result := t.runtime.InvokeListLanguagesHandler(slot, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+
+	if languages == nil {
+		languages = []string{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(languages); err != nil {
+		logger.Error("failed to write languages response", "error", err)
+	}
+}
+
 func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	fqoid := strings.Join(pathParts, "/")
 
@@ -559,15 +606,34 @@ func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Requ
 	t.writeHTTPStatusResultNoBody(w, res)
 }
 
+// handleAssetEndpoint dispatches /st2138-api/v1/{slot}/asset/{fqoid} across
+// the four asset operations: GET (ReadAsset), POST (CreateAsset), PUT
+// (UpdateAsset) and DELETE (DeleteAsset). The three write operations return
+// 204 No Content on success per the OpenAPI spec.
 func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
-	if r.Method != http.MethodGet {
-		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
-		return
-	}
-
 	fqoid := strings.Join(pathParts, "/")
+
+	switch r.Method {
+	case http.MethodGet:
+		t.handleReadAsset(w, r, slot, fqoid)
+	case http.MethodPost:
+		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeCreateAssetHandler)
+	case http.MethodPut:
+		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeUpdateAssetHandler)
+	case http.MethodDelete:
+		transportContext := t.retrieveMetadataFromRequest(r)
+		res := t.runtime.InvokeDeleteAssetHandler(slot, fqoid, transportContext)
+		t.writeHTTPStatusResultNoBody(w, res)
+	default:
+		t.writeHTTPMethodNotAllowed(w, "only GET, POST, PUT, DELETE allowed")
+	}
+}
+
+// handleReadAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid}, with optional
+// payload transcoding via the ?compression= query parameter.
+func (t *RestTransport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
 	transportContext := t.retrieveMetadataFromRequest(r)
-	asset, result := t.runtime.InvokeGetAssetHandler(slot, fqoid, transportContext)
+	asset, result := t.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
 
 	if result.IsOk() {
 		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
@@ -587,6 +653,74 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	t.writeHTTPResult(w, result, asset)
+}
+
+// handleWriteAsset handles POST (CreateAsset) and PUT (UpdateAsset). Both read
+// an external_object_payload body, hand it to the given invoke function, and
+// return 204 No Content on success.
+func (t *RestTransport) handleWriteAsset(
+	w http.ResponseWriter,
+	r *http.Request,
+	slot uint16,
+	fqoid string,
+	invoke func(slot uint16, fqoid string, asset catena.Asset, transportContext catena.TransportContext) catena.StatusResult,
+) {
+	payload, err := ReadAssetRequestJSON(r)
+	if err != nil {
+		logger.Error("failed to read asset request", "error", err)
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, err.Error()))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	res := invoke(slot, fqoid, catena.Asset{Proto: payload}, transportContext)
+	t.writeHTTPStatusResultNoBody(w, res)
+}
+
+// handleParamEndpoint handles GET /st2138-api/v1/{slot}/param/{fqoid} (GetParam).
+// It returns the full parameter (metadata + value) as a component_param object
+// of the form {"oid": ..., "param": {...}}.
+func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if r.Method != http.MethodGet {
+		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+		return
+	}
+
+	fqoid := strings.Join(pathParts, "/")
+	if fqoid == "" {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include fqoid"))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	param, result := t.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+	if param.Proto == nil {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "param returned nil"))
+		return
+	}
+
+	component := &protos.DeviceComponent_ComponentParam{
+		Oid:   fqoid,
+		Param: param.Proto,
+	}
+	// Use the device-style marshaller so meaningful proto3 zero values survive
+	// (e.g. constraint min_value:0, or a current value of 0/0.0/"").
+	b, err := MarshalComponentParamJSON(component)
+	if err != nil {
+		logger.Error("failed to marshal param response", "error", err)
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "failed to marshal param response"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if _, writeErr := w.Write(b); writeErr != nil {
+		logger.Error("failed to write param response", "error", writeErr)
+	}
 }
 
 // handleParamInfoEndpoint handles param info requests and streaming (SSE).
@@ -622,68 +756,153 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	infos, result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, transportContext)
+
+	if streaming {
+		t.streamParamInfo(w, r, slot, oidPrefix, recursive, transportContext)
+		return
+	}
+
+	// Unary: the handler still streams, so collect its first message and discard the rest.
+	stream := &firstStream[catena.ParamInfo]{}
+	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
-	if len(infos) == 0 {
-		msg := "Parameter not found: " + oidPrefix
-		if oidPrefix == "" {
-			msg = "No top-level parameters found"
-		}
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, msg))
+	if !stream.has {
+		// A unary request must resolve to exactly one parameter. A handler that
+		// reports success yet emits nothing has violated that contract; surface
+		// it as an internal error rather than inventing a NotFound over what may
+		// be a genuine handler bug. Handlers own NotFound for missing oids.
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "param info handler reported success but produced no result"))
 		return
 	}
 
-	if streaming {
-		t.writeParamInfoStream(w, r, infos)
-		return
-	}
-
-	if err := WriteProtoJSON(w, infos[0].GetProtoResponse(), http.StatusOK); err != nil {
+	if err := WriteProtoJSON(w, stream.item.Wire(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
 	}
 }
 
-// writeParamInfoStream streams the param info entries to the client as Server-Sent Events.
-func (t *RestTransport) writeParamInfoStream(w http.ResponseWriter, r *http.Request, infos []catena.ParamInfo) {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInternal, "streaming not supported")
+func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	// The language code is a single path segment; an empty code (if any) is
+	// left for the server layer to validate.
+	if len(pathParts) != 1 {
+		val, res := catena.ReplyError[catena.Value](catena.StatusCodeInvalidArgument, "language is required")
 		t.writeHTTPResult(w, res, val)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.WriteHeader(http.StatusOK)
-	flusher.Flush()
+	language := pathParts[0]
+	transportContext := t.retrieveMetadataFromRequest(r)
 
-	ctx := r.Context()
-	for _, info := range infos {
-		select {
-		case <-ctx.Done():
-			logger.Info("param-info stream client disconnected")
+	switch r.Method {
+	case http.MethodGet:
+		languagePack, res := t.runtime.InvokeReadLanguagePackHandler(slot, language, transportContext)
+		if res.Code != catena.StatusCodeOk {
+			t.writeHTTPStatusResult(w, res)
 			return
-		default:
 		}
-		protoResp := info.GetProtoResponse()
-		if protoResp == nil {
-			continue
+
+		// A nil proto on an OK result is an internal contract violation by the
+		// handler, not a not-found; surface it as an internal error rather than
+		// overwriting the successful outcome with a 404.
+		if languagePack.Proto == nil {
+			logger.Error("language pack handler returned OK with nil proto", "slot", slot, "language", language)
+			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "language pack response was empty"))
+			return
 		}
-		data, err := MarshalProtoJSON(protoResp)
+
+		// The handler wraps the inner pack (name + words); the REST response is
+		// the outer component that also carries the language tag.
+		component := &protos.DeviceComponent_ComponentLanguagePack{
+			Language:     language,
+			LanguagePack: languagePack.Proto,
+		}
+		if err := WriteProtoJSON(w, component, http.StatusOK); err != nil {
+			logger.Error("failed to write language pack response", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+	case http.MethodPost, http.MethodPut:
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			logger.Error("failed to marshal param info entry", "error", err)
+			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "failed to read request body"))
 			return
 		}
-		if _, err := fmt.Fprintf(w, "data: %s\n\n", data); err != nil {
-			logger.Error("failed to write param info SSE event", "error", err)
+
+		pack := &protos.LanguagePack{}
+		if err := protojson.Unmarshal(body, pack); err != nil {
+			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid language pack request body"))
 			return
 		}
-		flusher.Flush()
+
+		languagePack := catena.LanguagePack{Proto: pack}
+
+		var res catena.StatusResult
+		if r.Method == http.MethodPut {
+			res = t.runtime.InvokeUpdateLanguagePackHandler(slot, language, languagePack, transportContext)
+		} else {
+			res = t.runtime.InvokeCreateLanguagePackHandler(slot, language, languagePack, transportContext)
+		}
+		if res.Code != catena.StatusCodeOk {
+			t.writeHTTPStatusResult(w, res)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	case http.MethodDelete:
+		res := t.runtime.InvokeDeleteLanguagePackHandler(slot, language, transportContext)
+		if res.Code != catena.StatusCodeOk {
+			t.writeHTTPStatusResult(w, res)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+
+	default:
+		t.writeHTTPMethodNotAllowed(w, "only GET, POST, PUT and DELETE allowed")
+	}
+}
+
+// streamParamInfo streams param info entries to the client as Server-Sent
+// Events. The restStream writes SSE headers lazily on the first chunk, so if the
+// handler emits nothing before erroring this method can still report a status;
+// once chunks have been sent, a later error is reported in-band as an SSE
+// "error" event carrying the HTTP status code.
+func (t *RestTransport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
+		return
+	}
+
+	stream := &restStream[catena.ParamInfo]{
+		w:       w,
+		flusher: flusher,
+		marshal: MarshalProtoJSON,
+		ctx:     r.Context(),
+		devMode: t.isDevMode(),
+	}
+	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
+
+	if result.IsError() {
+		// With nothing sent yet the HTTP status is still uncommitted, so we can
+		// set a normal error status. Once any chunk has been streamed the 200 is
+		// already on the wire, so the error is reported in-band as an SSE "error"
+		// event carrying the status code that would have been returned.
+		if stream.sent == 0 {
+			t.writeHTTPStatusResult(w, result)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send param-info SSE error event", "slot", slot, "oid_prefix", oidPrefix, "error", err)
+		}
+		return
+	}
+
+	// A successful handler that produced no chunks is a legitimate empty result
+	// (e.g. a device with no top-level params), not a NotFound. Commit the SSE
+	// headers so the client still receives a well-formed empty event stream.
+	if stream.sent == 0 {
+		stream.writeHeaders()
 	}
 }
 
@@ -693,11 +912,29 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	commandFqoid := strings.Join(pathParts, "/")
+	// process the path to determine if this is a streaming command or a unary command.
+	// A trailing "stream" segment selects streaming; what remains is the command oid.
+	streaming := false
+	if len(pathParts) > 0 && pathParts[len(pathParts)-1] == "stream" {
+		streaming = true
+		pathParts = pathParts[:len(pathParts)-1]
+	}
 
-	respond := true
-	if r.URL.Query().Get("respond") == "false" {
-		respond = false
+	if len(pathParts) == 0 {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "command FQOID is required"))
+		return
+	}
+	if len(pathParts) > 1 {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, "unknown command endpoint"))
+		return
+	}
+
+	commandOid := pathParts[0]
+
+	// respond defaults to false to match protobuf; only respond=true opts in.
+	respond := false
+	if r.URL.Query().Get("respond") == "true" {
+		respond = true
 	}
 
 	// Read command payload
@@ -721,17 +958,73 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	cmdResult, status := t.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, transportContext)
-	if status.IsError() {
-		t.writeHTTPResult(w, status, catena.Value{})
+
+	if streaming {
+		t.streamExecuteCommand(w, r, slot, commandOid, payload, respond, transportContext)
 		return
 	}
 
-	if !respond {
-		cmdResult, _ = catena.CommandNoResponse()
+	// Unary: the handler streams CommandResults but the HTTP reply is a single
+	// response, so keep only the last Send. respond is passed through so a smart
+	// handler can skip emitting responses; the server also swaps in a nullStream
+	// when respond=false, so nothing reaches this stream in that case.
+	stream := &lastStream[catena.CommandResult]{}
+	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
 	}
 
-	_ = WriteProtoJSON(w, cmdResult.GetProtoResponse(), http.StatusOK)
+	// Reply with the final CommandResult the handler sent. When the caller opted
+	// out (respond=false) the server gobbled every chunk, so nothing was retained
+	// and we reply with an explicit no_response.
+	cmdResult := catena.CommandNoResponse()
+	if stream.has {
+		cmdResult = stream.item
+	}
+
+	if err := WriteProtoJSON(w, cmdResult.Proto, http.StatusOK); err != nil {
+		logger.Error("failed to write command response", "error", err)
+	}
+}
+
+// streamExecuteCommand streams command responses to the client as Server-Sent
+// Events. The restStream writes SSE headers lazily on the first chunk, so if the
+// handler emits nothing before erroring this method can still report a status.
+// respond is passed through so a smart handler can skip emitting responses.
+func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandOid string, payload any, respond bool, transportContext catena.TransportContext) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
+		return
+	}
+
+	stream := &restStream[catena.CommandResult]{
+		w:       w,
+		flusher: flusher,
+		marshal: MarshalProtoJSON,
+		ctx:     r.Context(),
+		devMode: t.isDevMode(),
+	}
+	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
+
+	if result.IsError() {
+		// Once any chunk has been streamed the HTTP status is committed, so a
+		// late error can only be logged. With nothing sent yet we can still set
+		// the error status.
+		if stream.sent == 0 {
+			t.writeHTTPStatusResult(w, result)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send command SSE error event", "slot", slot, "command", commandOid, "error", err)
+		}
+		return
+	}
+
+	// A successful handler that produced no chunks still gets a well-formed empty
+	// event stream so the client receives a valid 200 response.
+	if stream.sent == 0 {
+		stream.writeHeaders()
+	}
 }
 
 // ToHTTPStatus converts a transport-neutral StatusCode to an HTTP status code.

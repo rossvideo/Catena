@@ -34,9 +34,18 @@ import (
 func main() {
     srv := catena.NewServer(100) // max concurrent push connections
 
+    // The SDK manages the mandatory product struct; register it once per slot.
+    srv.RegisterProductStruct(0, catena.ProductStruct{
+        Name:         "My Device",
+        Vendor:       "Ross Video",
+        Version:      "1.0.0",
+        SerialNumber: "SN-0001",
+    })
+
     // Register handlers once. All registered transports share this runtime.
-    srv.RegisterGetDeviceHandler(0, func() (catena.CatenaDevice, catena.StatusResult) {
-        return catena.ReplyError[catena.CatenaDevice](catena.StatusCodeUnimplemented, "implement me")
+    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext) (catena.Device, catena.StatusResult) {
+        device := catena.NewDevice(slot)
+        return catena.Reply(*device)
     })
 
     if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcOptions())); err != nil {
@@ -49,8 +58,8 @@ func main() {
     }
 
     // Optional custom fallback endpoints on REST.
-    rest.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.CatenaValue, catena.StatusResult) {
-        return catena.ReplyError[catena.CatenaValue](catena.StatusCodeNotFound, "endpoint not found")
+    rest.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (catena.Value, catena.StatusResult) {
+        return catena.ReplyError[catena.Value](catena.StatusCodeNotFound, "endpoint not found")
     })
 
     ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -78,10 +87,15 @@ Both transports invoke the same registered handlers from `catena.ServerRuntime`:
 - `RegisterGetDeviceHandler`
 - `RegisterGetValueHandler`
 - `RegisterSetValueHandler` (handles both single and multi set requests; single endpoints deliver a one-element `[]SetValueEntry`, multi endpoints deliver the full slice)
-- `RegisterGetAssetHandler`
+- `RegisterReadAssetHandler` (REST GET, gRPC ExternalObjectRequest)
+- `RegisterCreateAssetHandler` (REST POST / CreateAsset)
+- `RegisterUpdateAssetHandler` (REST PUT / UpdateAsset)
+- `RegisterDeleteAssetHandler` (REST DELETE / DeleteAsset)
 - `RegisterExecuteCommandHandler`
 - `RegisterParamInfoHandler`
 - `RegisterHeartbeatHandler`
+
+The mandatory product struct is managed by the SDK, not by a handler: call `RegisterProductStruct(slot, catena.ProductStruct{...})` and the SDK will inject it into GetDevice and serve product/* on GetValue and ParamInfo (rejecting writes by default). This means common product handling doesn't need any separate handler fallback. If desired, business logic can still implement its own handler for custom or fallback behavior, but the SDK manages all standard product struct handling and fallback messaging automatically. The product param carries the `st2138:mon` access scope: when authorization is enabled, callers without the monitor read scope do not receive the product param on GetDevice and are denied product/* requests on GetValue, GetParam, and ParamInfo.
 
 Use `BroadcastUpdate(slot, fqoid, value)` to fan out push updates to all active REST and gRPC stream clients.
 

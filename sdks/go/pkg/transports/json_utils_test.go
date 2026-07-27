@@ -662,25 +662,12 @@ func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
 // --- MarshalDeviceJSON tests (migrated from catena/device_test.go) ---
 
 func TestMarshalDeviceJSON(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-		"params": map[string]any{
-			"brightness": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Brightness",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice error: %v", err)
-	}
+	cd := catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull).
+		WithParam("brightness", catena.NewParamInt32(0).
+			WithName(catena.NewPolyglotText("en", "Brightness")))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -698,23 +685,11 @@ func TestMarshalDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-		"params": map[string]any{
-			"volume": map[string]any{
-				"type": catena.ParamTypeInt32,
-				"value": map[string]any{
-					"int32_value": 0,
-				},
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice error: %v", err)
-	}
+	cd := catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull).
+		WithParam("volume", catena.NewParamInt32(0))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -731,6 +706,22 @@ func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
 	}
 }
 
+func TestMarshalDeviceJSON_EmptyStringValuePreserved(t *testing.T) {
+	cd := catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull).
+		WithParam("label", catena.NewParamString(""))
+
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
+	if err2 != nil {
+		t.Fatalf("MarshalDeviceJSON error: %v", err2)
+	}
+
+	body := string(jsonData)
+	if !strings.Contains(body, `"string_value":""`) {
+		t.Errorf("expected empty string_value to be preserved, got %s", body)
+	}
+}
+
 func TestMarshalDeviceJSON_Nil(t *testing.T) {
 	jsonData, err := MarshalDeviceJSON(nil)
 	if err != nil {
@@ -742,13 +733,8 @@ func TestMarshalDeviceJSON_Nil(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot": uint32(5),
-	})
-	if err != nil {
-		t.Fatalf("ToDevice: %v", err)
-	}
-	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	cd := catena.NewDevice(5)
+	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -759,14 +745,9 @@ func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":         uint32(0),
-		"detail_level": catena.DetailLevelFull,
-	})
-	if err != nil {
-		t.Fatalf("ToDevice: %v", err)
-	}
-	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	cd := catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull)
+	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -775,7 +756,7 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 	if !strings.Contains(body, `"slot":0`) {
 		t.Errorf("expected slot:0; got %s", body)
 	}
-	for _, field := range []string{"params", "constraints", "commands", "menu_groups", "language_packs"} {
+	for _, field := range []string{"constraints", "commands", "menu_groups", "language_packs"} {
 		if strings.Contains(body, `"`+field+`":{}`) {
 			t.Errorf("empty %s should be stripped; got %s", field, body)
 		}
@@ -783,23 +764,10 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot": uint32(0),
-		"params": map[string]any{
-			"brightness": map[string]any{
-				"type": catena.ParamTypeInt32,
-			},
-		},
-		"commands": map[string]any{
-			"reboot": map[string]any{
-				"type": catena.ParamTypeEmpty,
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice: %v", err)
-	}
-	b, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	cd := catena.NewDevice(0).
+		WithParam("brightness", catena.NewParamInt32(0)).
+		WithCommand("reboot", catena.NewParamEmpty())
+	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
 	}
@@ -810,6 +778,34 @@ func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
 	}
 	if !strings.Contains(body, `"commands"`) {
 		t.Errorf("expected commands in output; got %s", body)
+	}
+}
+
+func TestMarshalDeviceJSON_EmptyMenuMetadataStringsStripped(t *testing.T) {
+	cd := catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull).
+		WithParam("brightness", catena.NewParamInt32(0)).
+		WithMenuGroup("config", catena.NewMenuGroup().
+			WithName(catena.NewPolyglotText("en", "Config").With("fr", "")).
+			WithMenu("main", catena.NewMenu().
+				WithName(catena.NewPolyglotText("en", "Main")).
+				WithParamOids("/brightness").
+				WithClientHint("ui-url", "")))
+
+	b, err2 := MarshalDeviceJSON(cd.Proto)
+	if err2 != nil {
+		t.Fatalf("MarshalDeviceJSON: %v", err2)
+	}
+	body := string(b)
+
+	if !strings.Contains(body, `"en":"Config"`) {
+		t.Errorf("expected populated display string to be kept; got %s", body)
+	}
+	if strings.Contains(body, `"fr":""`) {
+		t.Errorf("empty display_strings value should be stripped; got %s", body)
+	}
+	if strings.Contains(body, `"ui-url"`) || strings.Contains(body, `"client_hints"`) {
+		t.Errorf("empty client_hints value should be stripped; got %s", body)
 	}
 }
 
@@ -857,9 +853,14 @@ func TestCleanDeviceJSON(t *testing.T) {
 		},
 		{
 			name:     "strip multiple patterns",
-			input:    `{"a":null,"b":{},"c":[],"d":"","e":1}`,
-			contains: []string{`"e":1`},
-			excludes: []string{`"a"`, `"b"`, `"c"`, `"d"`},
+			input:    `{"a":null,"b":{},"c":[],"widget":"","string_value":"","e":1}`,
+			contains: []string{`"e":1`, `"string_value":""`},
+			excludes: []string{`"a"`, `"b"`, `"c"`, `"widget"`},
+		},
+		{
+			name:     "preserve non-targeted empty string",
+			input:    `{"string_value":"","type":"STRING"}`,
+			contains: []string{`"string_value":""`, `"type":"STRING"`},
 		},
 		{
 			name:     "nested null stripped",
@@ -869,15 +870,38 @@ func TestCleanDeviceJSON(t *testing.T) {
 		},
 		{
 			name:     "strip empty fields inside array element objects",
-			input:    `{"menu_groups":{"main":{"items":[{"name":"item1","description":"","metadata":null,"extras":{},"tags":[]}]}}}`,
+			input:    `{"menu_groups":{"main":{"items":[{"name":"item1","widget":"","metadata":null,"extras":{},"tags":[]}]}}}`,
 			contains: []string{`"items"`, `"name":"item1"`},
-			excludes: []string{`"description"`, `"metadata"`, `"extras"`, `"tags"`},
+			excludes: []string{`"widget"`, `"metadata"`, `"extras"`, `"tags"`},
 		},
 		{
 			name:     "strip empty fields in nested array of arrays of objects",
 			input:    `{"matrix":[[{"a":1,"b":null}]]}`,
 			contains: []string{`"matrix"`, `"a":1`},
 			excludes: []string{`"b"`},
+		},
+		{
+			name:     "strip empty display_strings map value in nested menu",
+			input:    `{"menu_groups":{"config":{"name":{"display_strings":{"en":"Config","fr":""}}}}}`,
+			contains: []string{`"display_strings"`, `"en":"Config"`},
+			excludes: []string{`"fr"`},
+		},
+		{
+			name:     "strip empty client_hints map value keeps sibling metadata",
+			input:    `{"menu_groups":{"config":{"menus":{"main":{"order":2,"client_hints":{"ui-url":""}}}}}}`,
+			contains: []string{`"main"`, `"order":2`},
+			excludes: []string{`"client_hints"`, `"ui-url"`},
+		},
+		{
+			name:     "strip arbitrary empty metadata string not in old allow-list",
+			input:    `{"struct_variant_type":"","type":"STRING"}`,
+			contains: []string{`"type":"STRING"`},
+			excludes: []string{`"struct_variant_type"`},
+		},
+		{
+			name:     "preserve empty string inside string array value element",
+			input:    `{"value":{"string_array_values":{"strings":["a","","b"]}}}`,
+			contains: []string{`"strings":["a","","b"]`},
 		},
 	}
 	for _, tt := range tests {
@@ -902,52 +926,21 @@ func TestCleanDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
-	cd, err := catena.ToDevice(map[string]any{
-		"slot":              uint32(0),
-		"detail_level":      catena.DetailLevelFull,
-		"multi_set_enabled": true,
-		"subscriptions":     true,
-		"access_scopes":     []string{"st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"},
-		"default_scope":     "st2138:op",
-		"params": map[string]any{
-			"brightness": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Brightness",
-					},
-				},
-				"type": catena.ParamTypeInt32,
-				"constraint": map[string]any{
-					"ref_oid": "brightness_range",
-				},
-				"read_only": false,
-				"widget":    "SLIDER",
-			},
-		},
-		"constraints": map[string]any{
-			"brightness_range": map[string]any{
-				"int32_range": map[string]any{
-					"min_value": int32(0),
-					"max_value": int32(100),
-				},
-			},
-		},
-		"commands": map[string]any{
-			"reboot": map[string]any{
-				"name": map[string]any{
-					"display_strings": map[string]string{
-						"en": "Reboot Device",
-					},
-				},
-				"type": catena.ParamTypeEmpty,
-			},
-		},
-	})
-	if err != nil {
-		t.Fatalf("ToDevice error: %v", err)
-	}
+	cd := catena.NewDevice(0).
+		WithDetailLevel(catena.DetailLevelFull).
+		WithMultiSetEnabled(true).
+		WithSubscriptions(true).
+		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
+		WithDefaultScope("st2138:op").
+		WithParam("brightness", catena.NewParamInt32(0).
+			WithName(catena.NewPolyglotText("en", "Brightness")).
+			WithConstraint(catena.NewConstraintRefOid("brightness_range")).
+			WithWidget("SLIDER")).
+		WithConstraint("brightness_range", catena.NewConstraintInt32Range(0, 100, 1)).
+		WithCommand("reboot", catena.NewParamEmpty().
+			WithName(catena.NewPolyglotText("en", "Reboot Device")))
 
-	jsonData, err2 := MarshalDeviceJSON(cd.GetProtoDevice())
+	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
 	}
@@ -1100,7 +1093,7 @@ func TestMarshalAssetJSON(t *testing.T) {
 		t.Fatalf("ToAsset error: %v", res.Error)
 	}
 
-	jsonData, err := MarshalAssetJSON(asset.GetProtoAsset())
+	jsonData, err := MarshalAssetJSON(asset.Proto)
 	if err != nil {
 		t.Fatalf("MarshalAssetJSON error: %v", err)
 	}
@@ -1124,6 +1117,82 @@ func TestMarshalAssetJSON_Nil(t *testing.T) {
 	}
 	if jsonData != nil {
 		t.Error("expected nil JSON data for nil asset")
+	}
+}
+
+func TestReadAssetRequestJSON_Valid(t *testing.T) {
+	body := `{"cachable":true,"payload":{"payload_encoding":"UNCOMPRESSED","payload":"ZmFrZSBpbWFnZQ=="}}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	payload, err := ReadAssetRequestJSON(req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !payload.GetCachable() {
+		t.Error("expected cachable true")
+	}
+	if string(payload.GetPayload().GetPayload()) != "fake image" {
+		t.Errorf("expected payload 'fake image', got %q", string(payload.GetPayload().GetPayload()))
+	}
+}
+
+func TestReadAssetRequestJSON_MissingContentType(t *testing.T) {
+	body := `{"cachable":true}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for missing Content-Type")
+	}
+}
+
+func TestReadAssetRequestJSON_InvalidContentType(t *testing.T) {
+	body := `{"cachable":true}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "text/plain")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for invalid Content-Type")
+	}
+}
+
+func TestReadAssetRequestJSON_MalformedContentType(t *testing.T) {
+	body := `{"cachable":true}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "invalid;;;type")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for malformed Content-Type")
+	}
+}
+
+func TestReadAssetRequestJSON_InvalidJSON(t *testing.T) {
+	body := `{not valid json}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
+	}
+	if !strings.Contains(err.Error(), "failed to unmarshal request body") {
+		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err)
+	}
+}
+
+func TestReadAssetRequestJSON_BodyReadError(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/", errReader{})
+	req.Header.Set("Content-Type", "application/json")
+
+	_, err := ReadAssetRequestJSON(req)
+	if err == nil {
+		t.Fatal("expected error when reading the body fails")
+	}
+	if !strings.Contains(err.Error(), "failed to read request body") {
+		t.Errorf("expected error to contain 'failed to read request body', got: %v", err)
 	}
 }
 

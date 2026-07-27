@@ -218,6 +218,9 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 		if got := ctx.Metadata["x-test-tenant"]; len(got) != 1 || got[0] != tenant {
 			t.Errorf("expected tenant metadata %q, got %v", tenant, got)
 		}
+		if ctx.Ctx == nil {
+			t.Error("expected the request context to be propagated, got nil")
+		}
 	}
 
 	tests := []struct {
@@ -274,7 +277,7 @@ func TestGrpcTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *stubServerRuntime) {
 				runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 					assertContext(t, ctx)
-					device, _ := catena.ToDevice(map[string]any{"slot": uint32(slot)})
+					device := *catena.NewDevice(slot)
 					return catena.Reply(device)
 				}
 			},
@@ -402,14 +405,8 @@ func TestGrpcTransport_DeviceRequest_Success(t *testing.T) {
 	handlerCalled := false
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
 		handlerCalled = true
-		deviceMap := map[string]any{
-			"slot":         uint32(slot),
-			"detail_level": catena.DetailLevelFull,
-		}
-		device, err := catena.ToDevice(deviceMap)
-		if err != nil {
-			t.Fatalf("ToDevice failed: %v", err)
-		}
+		device := *catena.NewDevice(slot).
+			WithDetailLevel(catena.DetailLevelFull)
 		return catena.Reply(device)
 	}
 
@@ -593,6 +590,157 @@ func TestGrpcTransport_GetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	_, err := makeGetValueRequest(t, client, ctx, 0, "device.param1")
+	assertGRPCCode(t, err, codes.NotFound, "handler error")
+}
+
+// =============================================================================
+// Test: ListLanguages
+// =============================================================================
+
+func TestGrpcTransport_ListLanguages_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		handlerCalled = true
+		if slot != 0 {
+			t.Errorf("expected slot 0, got %d", slot)
+		}
+		return []string{"en", "fr", "es", "de"}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	resp, err := client.ListLanguages(ctx, &protos.Slot{Slot: 0})
+	assertNoError(t, err)
+	if !handlerCalled {
+		t.Error("registered handler was not called")
+	}
+
+	expected := []string{"en", "fr", "es", "de"}
+	if len(resp.GetLanguages()) != len(expected) {
+		t.Fatalf("expected %d languages, got %d", len(expected), len(resp.GetLanguages()))
+	}
+	for i, lang := range expected {
+		if resp.GetLanguages()[i] != lang {
+			t.Errorf("language[%d]: expected %q, got %q", i, lang, resp.GetLanguages()[i])
+		}
+	}
+}
+
+func TestGrpcTransport_ListLanguages_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "no languages handler registered")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 0})
+	assertGRPCCode(t, err, codes.NotFound, "handler error")
+}
+
+func TestGrpcTransport_ListLanguages_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.listLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+		handlerCalled = true
+		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 999999})
+	assertGRPCCode(t, err, codes.InvalidArgument, "invalid slot number")
+	if handlerCalled {
+		t.Error("handler should not be called when slot validation fails")
+	}
+}
+
+// =============================================================================
+// Test: GetParam
+// =============================================================================
+
+func TestGrpcTransport_GetParam_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	handlerCalled := false
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		handlerCalled = true
+		if fqoid != "counter" {
+			t.Errorf("expected fqoid 'counter', got %s", fqoid)
+		}
+		param := catena.NewParamInt32(21).
+			WithName(catena.NewPolyglotText("en", "Counter")).
+			WithMinimalSet(true)
+		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	resp, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "counter"})
+	assertNoError(t, err)
+
+	if !handlerCalled {
+		t.Error("handler was not called")
+	}
+	if resp.GetOid() != "counter" {
+		t.Errorf("expected response oid 'counter', got %q", resp.GetOid())
+	}
+	param := resp.GetParam()
+	if param == nil {
+		t.Fatal("expected param, got nil")
+	}
+	if param.GetType() != protos.ParamType_INT32 {
+		t.Errorf("expected type INT32, got %v", param.GetType())
+	}
+	if param.GetValue().GetInt32Value() != 21 {
+		t.Errorf("expected value 21, got %d", param.GetValue().GetInt32Value())
+	}
+	if !param.GetMinimalSet() {
+		t.Error("expected minimalSet=true")
+	}
+}
+
+func TestGrpcTransport_GetParam_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 999999, Oid: "/counter"})
+	assertGRPCCode(t, err, codes.InvalidArgument, "slot exceeds uint16 max")
+}
+
+func TestGrpcTransport_GetParam_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.getParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Param, catena.StatusResult) {
+		return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "missing"})
 	assertGRPCCode(t, err, codes.NotFound, "handler error")
 }
 
@@ -797,7 +945,7 @@ func TestGrpcTransport_ExternalObjectRequest_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "device.image1" {
 			t.Errorf("expected fqoid 'device.image1', got %s", fqoid)
@@ -847,7 +995,7 @@ func TestGrpcTransport_ExternalObjectRequest_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+	runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 		return catena.ReplyError[catena.Asset](catena.StatusCodeNotFound, "asset not found")
 	}
 
@@ -980,9 +1128,10 @@ func TestGrpcTransport_ParamInfoRequest_HandlerError(t *testing.T) {
 	assertGRPCCode(t, err, codes.NotFound, "handler error at recv")
 }
 
-// TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound verifies that the gRPC
-// transport promotes an OK + empty result to NOT_FOUND.
-func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
+// TestGrpcTransport_ParamInfoRequest_EmptyResult_OK verifies that the gRPC
+// transport treats an OK + empty result as a well-formed empty stream rather
+// than inventing a NOT_FOUND. Handlers own NOT_FOUND for missing oids.
+func TestGrpcTransport_ParamInfoRequest_EmptyResult_OK(t *testing.T) {
 	t.Run("specific oid empty", func(t *testing.T) {
 		ctx := context.Background()
 		_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
@@ -996,12 +1145,20 @@ func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
 		defer cleanup()
 
 		stream, err := makeParamInfoRequest(t, client, ctx, 0, "missing", false)
-		if err != nil {
-			assertGRPCCode(t, err, codes.NotFound, "empty result at stream creation")
-			return
+		assertNoError(t, err)
+
+		count := 0
+		for {
+			_, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			assertNoError(t, err)
+			count++
 		}
-		_, err = stream.Recv()
-		assertGRPCCode(t, err, codes.NotFound, "empty result at recv")
+		if count != 0 {
+			t.Errorf("expected empty stream, got %d entries", count)
+		}
 	})
 
 	t.Run("top-level empty", func(t *testing.T) {
@@ -1017,12 +1174,20 @@ func TestGrpcTransport_ParamInfoRequest_EmptyResult_NotFound(t *testing.T) {
 		defer cleanup()
 
 		stream, err := makeParamInfoRequest(t, client, ctx, 0, "", false)
-		if err != nil {
-			assertGRPCCode(t, err, codes.NotFound, "empty top-level at stream creation")
-			return
+		assertNoError(t, err)
+
+		count := 0
+		for {
+			_, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			assertNoError(t, err)
+			count++
 		}
-		_, err = stream.Recv()
-		assertGRPCCode(t, err, codes.NotFound, "empty top-level at recv")
+		if count != 0 {
+			t.Errorf("expected empty stream, got %d entries", count)
+		}
 	})
 }
 
@@ -1053,7 +1218,7 @@ func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "device.reboot" {
 			t.Errorf("expected fqoid 'device.reboot', got %s", fqoid)
@@ -1062,13 +1227,13 @@ func TestGrpcTransport_ExecuteCommand_WithResponse(t *testing.T) {
 			t.Error("expected non-nil payload")
 		}
 		value, _ := catena.ToValue(string("Command executed"))
-		return catena.CommandReply(value)
+		return []catena.CommandResult{catena.CommandValue(value)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5))
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.reboot", int32(5), true)
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
@@ -1088,14 +1253,14 @@ func TestGrpcTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
-		return catena.CommandNoResponse()
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		return []catena.CommandResult{catena.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	assertNoError(t, err)
 
 	resp := receiveCommandResponse(t, stream)
@@ -1108,20 +1273,20 @@ func TestGrpcTransport_ExecuteCommand_NilPayload(t *testing.T) {
 	defer cleanup()
 
 	receivedPayload := "not nil"
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
 		if payload != nil {
 			receivedPayload = "not nil"
 		} else {
 			receivedPayload = "nil"
 		}
 		value, _ := catena.ToValue(string("OK"))
-		return catena.CommandReply(value)
+		return []catena.CommandResult{catena.CommandValue(value)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	assertNoError(t, err)
 
 	_ = receiveCommandResponse(t, stream)
@@ -1139,7 +1304,7 @@ func TestGrpcTransport_ExecuteCommand_InvalidSlot(t *testing.T) {
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 999999, "device.command", nil, true)
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "NotFound for invalid slot at stream creation") // Note: server returns NotFound for slots without handlers
 		return
@@ -1154,14 +1319,14 @@ func TestGrpcTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
-		return catena.CommandError(catena.StatusCodeNotFound, "command not supported")
+	runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "command not supported")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil)
+	stream, err := makeExecuteCommandRequest(t, client, ctx, 0, "device.command", nil, true)
 	if err != nil {
 		assertGRPCCode(t, err, codes.NotFound, "handler error at stream creation")
 		return
@@ -1381,38 +1546,37 @@ func TestGrpcTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			},
 		},
 		{
-			name:       "GetParam",
-			devMessage: "GetParam not implemented",
-			grpcCode:   codes.Unimplemented,
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "device.param1"})
-				return err
-			},
-		},
-		{
 			name:       "AddLanguage",
-			devMessage: "AddLanguage not implemented",
-			grpcCode:   codes.Unimplemented,
+			devMessage: "language not writable",
+			grpcCode:   codes.PermissionDenied,
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.addLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+					return catena.StatusWithCode(catena.StatusCodePermissionDenied, "language not writable")
+				}
+			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{Slot: 0})
+				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
+					Slot:     0,
+					Language: "nl",
+					LanguagePack: &protos.LanguagePack{
+						Name:  "Global Dutch",
+						Words: map[string]string{"greeting": "Hallo"},
+					},
+				})
 				return err
 			},
 		},
 		{
 			name:       "LanguagePackRequest",
-			devMessage: "LanguagePackRequest not implemented",
-			grpcCode:   codes.Unimplemented,
-			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0})
-				return err
+			devMessage: "language not found",
+			grpcCode:   codes.NotFound,
+			setupHandlers: func(runtime *stubServerRuntime) {
+				runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+					return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
+				}
 			},
-		},
-		{
-			name:       "ListLanguages",
-			devMessage: "ListLanguages not implemented",
-			grpcCode:   codes.Unimplemented,
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.ListLanguages(ctx, &protos.Slot{Slot: 0})
+				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
 				return err
 			},
 		},
@@ -1524,7 +1688,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "asset not found",
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.getAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
+				runtime.readAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (catena.Asset, catena.StatusResult) {
 					return catena.ReplyError[catena.Asset](catena.StatusCodeNotFound, "asset not found")
 				}
 			},
@@ -1542,8 +1706,8 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "command not supported",
 			grpcCode:   codes.Unimplemented,
 			setupHandlers: func(runtime *stubServerRuntime) {
-				runtime.commandFn = func(slot uint16, fqoid string, payload any, ctx catena.TransportContext) (catena.CommandResult, catena.StatusResult) {
-					return catena.CommandError(catena.StatusCodeUnimplemented, "command not supported")
+				runtime.commandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]catena.CommandResult, catena.StatusResult) {
+					return nil, catena.StatusWithCode(catena.StatusCodeUnimplemented, "command not supported")
 				}
 			},
 			callEndpoint: func(client protos.CatenaServiceClient, ctx context.Context) error {
@@ -1653,16 +1817,6 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 		callFunc func(protos.CatenaServiceClient, context.Context) error
 	}{
 		{
-			name: "GetParam",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.GetParam(ctx, &protos.GetParamPayload{
-					Slot: 0,
-					Oid:  "device.param1",
-				})
-				return err
-			},
-		},
-		{
 			name: "UpdateSubscriptions",
 			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
 				stream, err := client.UpdateSubscriptions(ctx, &protos.UpdateSubscriptionsPayload{
@@ -1672,33 +1826,6 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 					return err
 				}
 				_, err = stream.Recv()
-				return err
-			},
-		},
-		{
-			name: "AddLanguage",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
-					Slot: 0,
-				})
-				return err
-			},
-		},
-		{
-			name: "LanguagePackRequest",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{
-					Slot: 0,
-				})
-				return err
-			},
-		},
-		{
-			name: "ListLanguages",
-			callFunc: func(client protos.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.ListLanguages(ctx, &protos.Slot{
-					Slot: 0,
-				})
 				return err
 			},
 		},
@@ -1735,6 +1862,189 @@ func TestGrpcTransport_UnimplementedEndpoints(t *testing.T) {
 			assertGRPCCode(t, err, codes.Unimplemented, "unimplemented endpoint")
 		})
 	}
+}
+
+// =============================================================================
+// Test: AddLanguage / LanguagePackRequest
+// =============================================================================
+
+func TestGrpcTransport_AddLanguage_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	var gotSlot uint16
+	var gotLanguage string
+	var gotPack catena.LanguagePack
+	runtime.addLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		gotSlot = slot
+		gotLanguage = language
+		gotPack = pack
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
+		Slot:     0,
+		Language: "nl",
+		LanguagePack: &protos.LanguagePack{
+			Name:  "Global Dutch",
+			Words: map[string]string{"greeting": "Hallo", "parting": "Tot ziens"},
+		},
+	})
+	assertNoError(t, err)
+
+	if gotSlot != 0 {
+		t.Errorf("expected slot 0, got %d", gotSlot)
+	}
+	if gotLanguage != "nl" {
+		t.Errorf("expected language %q, got %q", "nl", gotLanguage)
+	}
+	if gotPack.GetName() != "Global Dutch" {
+		t.Errorf("expected pack name %q, got %q", "Global Dutch", gotPack.GetName())
+	}
+	if gotPack.GetWords()["greeting"] != "Hallo" {
+		t.Errorf("expected greeting %q, got %q", "Hallo", gotPack.GetWords()["greeting"])
+	}
+}
+
+// Language and pack presence are validated by the server layer, not the
+// transport, so only transport-owned validation (slot range) is asserted here.
+func TestGrpcTransport_AddLanguage_InvalidArgument(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *protos.AddLanguagePayload
+	}{
+		{
+			name: "slot out of range",
+			req: &protos.AddLanguagePayload{
+				Slot:         uint32(1) << 20,
+				Language:     "nl",
+				LanguagePack: &protos.LanguagePack{Name: "Global Dutch"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+			defer cleanup()
+
+			client, clientCleanup := setupGRPCClient(t, ctx, lis)
+			defer clientCleanup()
+
+			_, err := client.AddLanguage(ctx, tt.req)
+			assertGRPCCode(t, err, codes.InvalidArgument, "AddLanguage invalid argument")
+		})
+	}
+}
+
+func TestGrpcTransport_LanguagePackRequest_Success(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		if language != "nl" {
+			return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
+		}
+		return catena.NewLanguagePack().
+			WithName("Global Dutch").
+			WithWords(map[string]string{
+				"greeting": "Hallo",
+				"parting":  "Tot ziens",
+			}), catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	resp, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
+	assertNoError(t, err)
+
+	if resp.GetLanguage() != "nl" {
+		t.Errorf("expected language %q, got %q", "nl", resp.GetLanguage())
+	}
+	pack := resp.GetLanguagePack()
+	if pack == nil {
+		t.Fatal("expected language pack, got nil")
+	}
+	if pack.GetName() != "Global Dutch" {
+		t.Errorf("expected pack name %q, got %q", "Global Dutch", pack.GetName())
+	}
+	if pack.GetWords()["parting"] != "Tot ziens" {
+		t.Errorf("expected parting %q, got %q", "Tot ziens", pack.GetWords()["parting"])
+	}
+}
+
+func TestGrpcTransport_LanguagePackRequest_NotFound(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "zz"})
+	assertGRPCCode(t, err, codes.NotFound, "LanguagePackRequest not found")
+}
+
+// A handler that reports OK but leaves the wrapped Proto nil has violated its
+// contract; the transport must surface Internal rather than return an empty
+// pack (mirrors REST GET and GetParam).
+func TestGrpcTransport_LanguagePackRequest_NilProtoOnOk(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.languagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: 0, Language: "nl"})
+	assertGRPCCode(t, err, codes.Internal, "LanguagePackRequest nil proto on OK")
+}
+
+func TestGrpcTransport_LanguagePackRequest_InvalidSlot(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.LanguagePackRequest(ctx, &protos.LanguagePackRequestPayload{Slot: uint32(1) << 20, Language: "nl"})
+	assertGRPCCode(t, err, codes.InvalidArgument, "LanguagePackRequest invalid slot")
+}
+
+func TestGrpcTransport_AddLanguage_HandlerError(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestGrpcTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.addLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodeInternal, "boom")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := client.AddLanguage(ctx, &protos.AddLanguagePayload{
+		Slot:         0,
+		Language:     "nl",
+		LanguagePack: &protos.LanguagePack{Name: "Global Dutch"},
+	})
+	assertGRPCCode(t, err, codes.Internal, "AddLanguage handler error")
 }
 
 // =============================================================================
@@ -1930,11 +2240,8 @@ func TestGrpcTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	runtime.getDeviceFn = func(slot uint16, ctx catena.TransportContext) (catena.Device, catena.StatusResult) {
-		deviceMap := map[string]any{
-			"slot":         uint32(slot),
-			"detail_level": catena.DetailLevelFull,
-		}
-		device, _ := catena.ToDevice(deviceMap)
+		device := *catena.NewDevice(slot).
+			WithDetailLevel(catena.DetailLevelFull)
 		return catena.Reply(device)
 	}
 

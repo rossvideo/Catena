@@ -100,10 +100,17 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
                 expVals_.begin()->mutable_language_pack()->set_language("language_test");
             case 2:
                 expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
-                expVals_.begin()->mutable_menu()->set_oid("menu_test");
+                expVals_.begin()->mutable_menu()->set_oid("menu_group/menu_test");
             case 1:
                 expVals_.emplace(expVals_.begin(), st2138::DeviceComponent());
-                expVals_.begin()->mutable_device()->set_slot(slot_);
+                expVals_.begin()->mutable_device()->set_slot(1);
+                if (expNum >= 2) {
+                    // the device component actually has the menu_group defs
+                    st2138::MenuGroup menuGroup{};
+                    menuGroup.set_order(1);
+                    menuGroup.mutable_name()->mutable_display_strings()->insert({"en", "Menu Group Test"});
+                    expVals_[0].mutable_device()->mutable_menu_groups()->insert({"menu_group", menuGroup});
+                }
         }
     }
     /*
@@ -111,16 +118,32 @@ class RESTDeviceRequestTests : public RESTEndpointTest {
      */
     void testCall() {
         endpoint_->proceed();
-        std::vector<std::string> jsonBodies;
-        for (const auto& expVal : expVals_) {
-            jsonBodies.push_back("");
-            auto status = google::protobuf::util::MessageToJsonString(expVal, &jsonBodies.back());
-            ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
-        }
         if (stream_) {
-            EXPECT_EQ(readResponse(), expectedSSEResponse(expRc_, jsonBodies));
+            std::vector<std::string> jsonBodies;
+            for (const auto& expVal : expVals_) {
+                jsonBodies.push_back("");
+                protoToJsonString(expVal, jsonBodies.back());
+            }
+            EXPECT_EQ(readSseResponse(jsonBodies.size()), expectedSSEResponse(expRc_, jsonBodies));
         } else {
-            EXPECT_EQ(readResponse(), expectedResponse(expRc_, jsonBodies));
+            if (!expVals_.empty()) {
+                // the first item in expVals_ is the device
+                st2138::Device device = expVals_.front().device();
+                switch (expVals_.size()) {
+                    case 6:
+                        device.mutable_commands()->insert({expVals_[5].command().oid(), expVals_[5].command().command()});
+                    case 5:
+                        device.mutable_params()->insert({expVals_[4].param().oid(), expVals_[4].param().param()});
+                    case 4:
+                        device.mutable_constraints()->insert({expVals_[3].shared_constraint().oid(), expVals_[3].shared_constraint().constraint()});
+                    case 3:
+                        device.mutable_language_packs()->mutable_packs()->insert({expVals_[2].language_pack().language(), expVals_[2].language_pack().language_pack()});
+                    case 2:
+                        device.mutable_menu_groups()->at("menu_group").mutable_menus()->insert({"menu_test", expVals_[1].menu().menu()});
+                }
+                protoToJsonString(device, jsonBody_);
+            }
+            EXPECT_EQ(readTotalResponse(), expectedResponse(expRc_, jsonBody_));
         }
     }
 
@@ -137,7 +160,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Create) {
 // --- 1. PROCEED TESTS ---
 // Test 1.1: Test proceed unary response with multiple components
 TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
-    initExpVal(3);
+    initExpVal(6);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_))
         .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
@@ -149,11 +172,17 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Normal) {
                 .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(true))
                 .WillOnce(testing::Return(false));
             EXPECT_CALL(*mockSerializer, getNext())
                 .WillOnce(testing::Return(expVals_[0]))
                 .WillOnce(testing::Return(expVals_[1]))
-                .WillOnce(testing::Return(expVals_[2]));
+                .WillOnce(testing::Return(expVals_[2]))
+                .WillOnce(testing::Return(expVals_[3]))
+                .WillOnce(testing::Return(expVals_[4]))
+                .WillOnce(testing::Return(expVals_[5]));
             return mockSerializer;
         }));
     // Calling proceed and testing the output
@@ -192,6 +221,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Stream) {
 // Test 1.3: Test proceed with authz enabled and a valid token.
 TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
     authzEnabled_ = true;
+    initExpVal(1);
     // Set up expectation for getComponentSerializer to return a working serializer
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
         .WillOnce(testing::Invoke([this](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
@@ -199,8 +229,11 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
             EXPECT_EQ(dl, st2138::Device_DetailLevel_FULL);
             EXPECT_TRUE(subscribedOids.empty());
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
-            EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
-            EXPECT_CALL(*mockSerializer, getNext()).Times(0);
+            EXPECT_CALL(*mockSerializer, hasMore())
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(false));
+            EXPECT_CALL(*mockSerializer, getNext())
+                .WillOnce(testing::Return(expVals_[0]));
             return mockSerializer;
         }));
     // Calling proceed and testing the output
@@ -209,6 +242,7 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_AuthzValid) {
 
 // Test 1.4: Test proceed with Subscriptions
 TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
+    initExpVal(1);
     std::set<std::string> expectedSubscribedOids = {"param1", "param2", "param3"};
     MockSubscriptionManager mockSubManager;
     // Set up expectations for subscription mode
@@ -219,12 +253,15 @@ TEST_F(RESTDeviceRequestTests, DeviceRequest_Subscriptions) {
         .WillOnce(testing::Return(expectedSubscribedOids));
     // Set up expectation for getComponentSerializer to verify subscribed OIDs are passed
     EXPECT_CALL(dm0_, getComponentSerializer(testing::_, testing::_, testing::_, testing::_)).Times(1)
-        .WillOnce(testing::Invoke([&expectedSubscribedOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
+        .WillOnce(testing::Invoke([this, &expectedSubscribedOids](const IAuthorizer &authz, const std::set<std::string> &subscribedOids, st2138::Device_DetailLevel dl, bool shallow){
             EXPECT_EQ(subscribedOids, expectedSubscribedOids);
             EXPECT_EQ(dl, st2138::Device_DetailLevel_SUBSCRIPTIONS);
             auto mockSerializer = std::make_unique<MockDeviceSerializer>();
-            EXPECT_CALL(*mockSerializer, hasMore()).WillOnce(testing::Return(false));
-            EXPECT_CALL(*mockSerializer, getNext()).Times(0);
+            EXPECT_CALL(*mockSerializer, hasMore())
+                .WillOnce(testing::Return(true))
+                .WillOnce(testing::Return(false));
+            EXPECT_CALL(*mockSerializer, getNext())
+                .WillOnce(testing::Return(expVals_[0]));
             return mockSerializer;
         }));
     // Calling proceed and testing the output

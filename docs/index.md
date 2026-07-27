@@ -32,6 +32,4 @@
 
 [C++ SDK Documentation](doxygen/index.html)
 
-Java SDK
-
 

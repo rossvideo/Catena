@@ -46,11 +46,8 @@ import (
 
 func TestCommandReply(t *testing.T) {
 	val, _ := ToValue(int32(42))
-	result, status := CommandReply(val)
+	result := CommandValue(val)
 
-	if status.Code != StatusCodeOk {
-		t.Errorf("expected OK status, got %v", status.Code)
-	}
 	if result.IsEmpty() {
 		t.Error("expected non-empty result")
 	}
@@ -58,7 +55,7 @@ func TestCommandReply(t *testing.T) {
 		t.Error("expected non-exception result")
 	}
 
-	proto := result.GetProtoResponse()
+	proto := result.Proto
 	resp := proto.GetResponse()
 	if resp == nil {
 		t.Fatal("expected response in proto")
@@ -69,11 +66,8 @@ func TestCommandReply(t *testing.T) {
 }
 
 func TestCommandNoResponse(t *testing.T) {
-	result, status := CommandNoResponse()
+	result := CommandNoResponse()
 
-	if status.Code != StatusCodeOk {
-		t.Errorf("expected OK status, got %v", status.Code)
-	}
 	if !result.IsEmpty() {
 		t.Error("expected empty result")
 	}
@@ -81,7 +75,7 @@ func TestCommandNoResponse(t *testing.T) {
 		t.Error("expected non-exception result")
 	}
 
-	proto := result.GetProtoResponse()
+	proto := result.Proto
 	if proto.GetNoResponse() == nil {
 		t.Error("expected no_response in proto")
 	}
@@ -95,11 +89,8 @@ func TestCommandNoResponse(t *testing.T) {
 
 func TestCommandExceptionResult(t *testing.T) {
 	errorMsg := NewPolyglotText("en", "Something failed")
-	result, status := CommandExceptionResult("TestError", "detailed info", errorMsg)
+	result := CommandException("TestError", "detailed info", errorMsg)
 
-	if status.Code != StatusCodeOk {
-		t.Errorf("expected OK status, got %v", status.Code)
-	}
 	if result.IsEmpty() {
 		t.Error("expected non-empty result")
 	}
@@ -119,7 +110,7 @@ func TestCommandExceptionResult(t *testing.T) {
 			exc.GetErrorMessage().GetDisplayStrings()["en"])
 	}
 
-	proto := result.GetProtoResponse()
+	proto := result.Proto
 	protoExc := proto.GetException()
 	if protoExc == nil {
 		t.Fatal("expected exception in proto")
@@ -138,7 +129,7 @@ func TestCommandExceptionResult(t *testing.T) {
 
 func TestCommandExceptionResult_MultipleLanguages(t *testing.T) {
 	errorMsg := NewPolyglotText("en", "Command not found").With("fr", "Commande introuvable")
-	result, _ := CommandExceptionResult("NotFound", "missing", errorMsg)
+	result := CommandException("NotFound", "missing", errorMsg)
 
 	exc := result.GetException()
 	ds := exc.GetErrorMessage().GetDisplayStrings()
@@ -151,9 +142,9 @@ func TestCommandExceptionResult_MultipleLanguages(t *testing.T) {
 }
 
 func TestCommandExceptionResult_NilErrorMessage(t *testing.T) {
-	result, _ := CommandExceptionResult("Error", "details", nil)
+	result := CommandException("Error", "details", nil)
 
-	proto := result.GetProtoResponse()
+	proto := result.Proto
 	protoExc := proto.GetException()
 	if protoExc == nil {
 		t.Fatal("expected exception in proto")
@@ -163,34 +154,10 @@ func TestCommandExceptionResult_NilErrorMessage(t *testing.T) {
 	}
 }
 
-func TestCommandError(t *testing.T) {
-	result, status := CommandError(StatusCodeUnimplemented, "not implemented")
-
-	if status.Code != StatusCodeUnimplemented {
-		t.Errorf("expected UNIMPLEMENTED status, got %v", status.Code)
-	}
-	if status.Error != "not implemented" {
-		t.Errorf("expected error 'not implemented', got %s", status.Error)
-	}
-	if !result.IsEmpty() {
-		t.Error("expected empty result for CommandError")
-	}
-}
-
-func TestCommandError_NilResponse(t *testing.T) {
-	result, _ := CommandError(StatusCodeInternal, "error")
-	if result.GetProtoResponse() != nil {
-		t.Error("expected nil proto response for CommandError")
-	}
-	if result.GetException() != nil {
-		t.Error("expected nil exception for CommandError")
-	}
-}
-
 func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
 	val, _ := ToValue("hello")
-	result, _ := CommandReply(val)
-	proto := result.GetProtoResponse()
+	result := CommandValue(val)
+	proto := result.Proto
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_Response); !ok {
 		t.Errorf("expected CommandResponse_Response, got %T", proto.Kind)
@@ -201,8 +168,8 @@ func TestCommandResult_GetProtoResponse_Response(t *testing.T) {
 }
 
 func TestCommandResult_GetProtoResponse_NoResponse(t *testing.T) {
-	result, _ := CommandNoResponse()
-	proto := result.GetProtoResponse()
+	result := CommandNoResponse()
+	proto := result.Proto
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_NoResponse); !ok {
 		t.Errorf("expected CommandResponse_NoResponse, got %T", proto.Kind)
@@ -210,8 +177,8 @@ func TestCommandResult_GetProtoResponse_NoResponse(t *testing.T) {
 }
 
 func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
-	result, _ := CommandExceptionResult("E", "d", NewPolyglotText("fr", "erreur"))
-	proto := result.GetProtoResponse()
+	result := CommandException("E", "d", NewPolyglotText("fr", "erreur"))
+	proto := result.Proto
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_Exception); !ok {
 		t.Errorf("expected CommandResponse_Exception, got %T", proto.Kind)
@@ -222,5 +189,18 @@ func TestCommandResult_GetProtoResponse_Exception(t *testing.T) {
 	}
 	if exc.GetErrorMessage().GetDisplayStrings()["fr"] != "erreur" {
 		t.Errorf("expected fr='erreur', got %s", exc.GetErrorMessage().GetDisplayStrings()["fr"])
+	}
+}
+
+func TestCommandResult_Wire(t *testing.T) {
+	val, _ := ToValue(123)
+	result := CommandValue(val)
+
+	wire := result.Wire()
+	if wire == nil {
+		t.Fatal("Wire() returned nil")
+	}
+	if wire != result.Proto {
+		t.Errorf("expected Wire() to return the underlying proto, got %v", wire)
 	}
 }

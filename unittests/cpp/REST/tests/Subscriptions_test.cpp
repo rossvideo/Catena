@@ -92,8 +92,7 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
             responses_.back().set_oid(oids_[i]);
             responses_.back().mutable_param()->mutable_value()->set_string_value("value" + std::to_string(i + 1));
             responsesJson_.emplace_back();
-            auto status = google::protobuf::util::MessageToJsonString(responses_.back(), &responsesJson_.back());
-            EXPECT_TRUE(status.ok()) << "Failed to convert test response to JSON";
+            protoToJsonString(responses_.back(), responsesJson_.back());
 
             // Default expectations for test params_ for GET calls.
             EXPECT_CALL(dm0_, getParam(oids_[i], testing::_, testing::_)).WillRepeatedly(testing::Invoke(
@@ -145,8 +144,7 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
         // Adding remOids.
         for (const auto& oid : remOids) { inVal_.add_removed_oids(oid); }
         // Converting to JSON body.
-        auto status = google::protobuf::util::MessageToJsonString(inVal_, &jsonBody_);
-        ASSERT_TRUE(status.ok()) << "Failed to convert input value to JSON";
+        protoToJsonString(inVal_, jsonBody_);
     }
 
     /*
@@ -160,8 +158,7 @@ class RESTSubscriptionsTests : public RESTEndpointTest {
             if (method_ == Method_GET) {
                 for (auto param : responses_) {
                     jsonBodies.emplace_back();
-                    auto status = google::protobuf::util::MessageToJsonString(param, &jsonBodies.back());
-                    ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+                    protoToJsonString(param, jsonBodies.back());
                 }
             } else if (method_ == Method_PUT) {
                 EXPECT_EQ(addedOids_, inVal_.added_oids().size());

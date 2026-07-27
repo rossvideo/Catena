@@ -69,7 +69,7 @@ class MenuGroupTest : public ::testing::Test {
             testing::Invoke([](const std::string &key, IMenuGroup *item){
                 EXPECT_TRUE(item) << "No item passed into dm.addItem()";
             }));
-        menuGroup_.reset(new MenuGroup(oid_, {name_[0], name_[1]}, dm_));
+        menuGroup_.reset(new MenuGroup(oid_, 1, {name_[0], name_[1]}, dm_));
     }
 
     std::unique_ptr<MenuGroup> menuGroup_;
@@ -95,7 +95,7 @@ TEST_F(MenuGroupTest, MenuGroup_ErrCreate) {
     MockDevice errDm;
     EXPECT_CALL(errDm, addItem(oid_, testing::An<IMenuGroup*>())).Times(1)
         .WillOnce(testing::Throw(std::runtime_error("Device error")));
-    EXPECT_THROW(MenuGroup(oid_, {name_[0], name_[1]}, errDm), std::runtime_error);
+    EXPECT_THROW(MenuGroup(oid_, 1, {name_[0], name_[1]}, errDm), std::runtime_error);
 }
 
 /*
@@ -158,6 +158,7 @@ TEST_F(MenuGroupTest, MenuGroup_ToProto) {
     for (auto& oid : menus) {
         EXPECT_EQ(protoMenuGroup.menus().at(oid).name().display_strings().at("en"), oid);
     }
+    EXPECT_EQ(protoMenuGroup.order(), 1) << "MenuGroup order should be serialized";
 }
 
 /*
