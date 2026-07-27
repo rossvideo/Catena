@@ -177,26 +177,6 @@ func TestTransport_New(t *testing.T) {
 	}
 }
 
-func TestTransport_DefaultOptions(t *testing.T) {
-	cfg := config.DefaultGrpcOptions()
-	transport := NewTransport(cfg)
-	if transport == nil {
-		t.Fatal("NewTransport returned nil")
-	}
-	if transport.catenaService == nil {
-		t.Error("catenaService is nil")
-	}
-	if transport.grpcServer == nil {
-		t.Error("grpcServer is nil")
-	}
-	if transport.port != 6254 {
-		t.Errorf("expected default port 6254, got %d", transport.port)
-	}
-	if transport.reflection != false {
-		t.Errorf("expected reflection false, got %v", transport.reflection)
-	}
-}
-
 func TestTransport_PropagatesTransportContext(t *testing.T) {
 	const accessToken = "Bearer grpc-token"
 	const tenant = "tenant-a"

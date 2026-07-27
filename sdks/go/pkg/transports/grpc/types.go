@@ -30,7 +30,7 @@
 
 /**
  * @brief Redeclare transport configuration types from the config package for
- *        easier access from the transports package.
+ *        easier access from the transports/grpc package.
  * @file types.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
@@ -43,6 +43,6 @@ import "github.com/rossvideo/catena/sdks/go/pkg/config"
 
 type Options = config.GrpcOptions
 
-var (
-	DefaultOptions = config.DefaultGrpcOptions
-)
+func DefaultOptions() Options {
+	return config.DefaultGrpcOptions()
+}

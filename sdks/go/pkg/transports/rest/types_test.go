@@ -29,20 +29,26 @@
  */
 
 /**
- * @brief Redeclare transport configuration types from the config package for
- *        easier access from the transports/rest package.
- * @file types.go
+ * @brief Tests for the re-exported transport configuration types.
+ * @file types_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-06-19
+ * @date 2026-07-27
  */
 
 package rest
 
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
+import (
+	"reflect"
+	"testing"
 
-type Options = config.RestOptions
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
+)
 
-func DefaultOptions() Options {
-	return config.DefaultRestOptions()
+// TestDefaultOptions verifies the package's re-exported DefaultOptions matches
+// the underlying config default.
+func TestDefaultOptions(t *testing.T) {
+	if !reflect.DeepEqual(DefaultOptions(), config.DefaultRestOptions()) {
+		t.Errorf("expected DefaultOptions() to equal config.DefaultRestOptions(), got %+v and %+v",
+			DefaultOptions(), config.DefaultRestOptions())
+	}
 }

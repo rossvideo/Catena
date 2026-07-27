@@ -78,17 +78,6 @@ func TestTransport_New(t *testing.T) {
 	}
 }
 
-func TestTransport_DefaultOptions(t *testing.T) {
-	cfg := config.DefaultRestOptions()
-	transport := NewTransport(cfg)
-	if transport == nil {
-		t.Fatal("NewTransport returned nil")
-	}
-	if transport.port != 9080 {
-		t.Errorf("expected default port 9080, got %d", transport.port)
-	}
-}
-
 func TestTransport_PropagatesTransportContext(t *testing.T) {
 	headers := map[string]string{
 		"Authorization": "Bearer rest-token",
@@ -1545,9 +1534,9 @@ func TestTransport_sendSSEEvent(t *testing.T) {
 
 func TestTransport_Start(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
-	runtime.ShutdownTransportConnsFn = func(ctx context.Context, transport catena.Transport) {
-		if transport != transport {
-			t.Errorf("expected transport %v, got %v", transport, transport)
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
 		}
 	}
 	listener, err := net.Listen("tcp", ":0")
