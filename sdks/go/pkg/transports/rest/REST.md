@@ -1,20 +1,25 @@
 # REST Transport
 
-`RestTransport` exposes Catena handlers over HTTP and Server-Sent Events (SSE).
+`rest.Transport` exposes Catena handlers over HTTP and Server-Sent Events (SSE).
+
+## Import
+```go
+import "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
+```
 
 ## Constructor
 
 ```go
-rest := transports.NewRestTransport(config.RestOptions{Port: 9080})
+restTransport := rest.NewTransport(rest.Options{Port: 9080})
 // or with defaults
-rest := transports.NewRestTransport(config.DefaultRestOptions())
+restTransport := rest.NewTransport(rest.DefaultOptions())
 ```
 
 Register it on the shared server:
 
 ```go
 srv := catena.NewServer(100)
-if err := srv.RegisterTransport(rest); err != nil {
+if err := srv.RegisterTransport(restTransport); err != nil {
     panic(err)
 }
 ```

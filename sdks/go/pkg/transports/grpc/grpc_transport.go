@@ -38,7 +38,7 @@
  * @date 2026-05-11
  */
 
-package transports
+package grpc
 
 import (
 	"context"
@@ -48,9 +48,9 @@ import (
 	"net"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos/rpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -59,7 +59,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type GrpcTransport struct {
+type Transport struct {
 	catenaService *catenaService
 	grpcServer    *grpc.Server
 	listener      net.Listener
@@ -69,11 +69,11 @@ type GrpcTransport struct {
 	reflection bool
 }
 
-var _ catena.Transport = (*GrpcTransport)(nil)
+var _ catena.Transport = (*Transport)(nil)
 
-// NewGrpcTransport creates a new gRPC transport with the given configuration.
-func NewGrpcTransport(cfg config.GrpcOptions) *GrpcTransport {
-	transport := &GrpcTransport{
+// NewTransport creates a new gRPC transport with the given configuration.
+func NewTransport(cfg Options) *Transport {
+	transport := &Transport{
 		catenaService: &catenaService{},
 		port:          cfg.Port,
 		reflection:    cfg.Reflection,
@@ -84,7 +84,7 @@ func NewGrpcTransport(cfg config.GrpcOptions) *GrpcTransport {
 		grpc.StreamInterceptor(transport.streamInterceptor),
 	)
 
-	protos.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
+	rpc.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
 
 	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
@@ -95,7 +95,7 @@ func NewGrpcTransport(cfg config.GrpcOptions) *GrpcTransport {
 	return transport
 }
 
-func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRuntime) error {
+func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
 	t.runtime = runtime
 
 	if t.listener == nil {
@@ -122,7 +122,7 @@ func (t *GrpcTransport) Start(context context.Context, runtime catena.ServerRunt
 	return nil
 }
 
-func (t *GrpcTransport) Shutdown(ctx context.Context) error {
+func (t *Transport) Shutdown(ctx context.Context) error {
 	logger.Info("Shutting down gRPC transport")
 
 	// Gracefully stop the gRPC server in a goroutine so we can also listen for context
@@ -168,7 +168,7 @@ func (t *GrpcTransport) Shutdown(ctx context.Context) error {
 
 // sanitizeGRPCError replaces detailed error messages with generic status code
 // descriptions in production mode, matching the REST server's IsDev behavior.
-func (t *GrpcTransport) sanitizeGRPCError(err error) error {
+func (t *Transport) sanitizeGRPCError(err error) error {
 	if err == nil {
 		return nil
 	}
@@ -185,7 +185,7 @@ func (t *GrpcTransport) sanitizeGRPCError(err error) error {
 }
 
 // unaryInterceptor logs all incoming unary RPC calls
-func (t *GrpcTransport) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (t *Transport) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	logger.Debug("gRPC unary call received", "method", info.FullMethod)
 	resp, err := handler(ctx, req)
 	if err != nil {
@@ -195,7 +195,7 @@ func (t *GrpcTransport) unaryInterceptor(ctx context.Context, req interface{}, i
 }
 
 // streamInterceptor logs all incoming streaming RPC calls
-func (t *GrpcTransport) streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func (t *Transport) streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	logger.Debug("gRPC stream call received", "method", info.FullMethod, "isClientStream", info.IsClientStream, "isServerStream", info.IsServerStream)
 	err := handler(srv, ss)
 	if err != nil {
@@ -209,7 +209,7 @@ func (t *GrpcTransport) streamInterceptor(srv interface{}, ss grpc.ServerStream,
 	return t.sanitizeGRPCError(err)
 }
 
-func (t *GrpcTransport) retrieveMetadataFromContext(ctx context.Context) catena.TransportContext {
+func (t *Transport) retrieveMetadataFromContext(ctx context.Context) catena.TransportContext {
 	var accessToken string
 	requestMetadata, ok := metadata.FromIncomingContext(ctx)
 	metadataMap := make(map[string][]string)
@@ -237,8 +237,8 @@ func (t *GrpcTransport) retrieveMetadataFromContext(ctx context.Context) catena.
 
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
 type catenaService struct {
-	transport *GrpcTransport
-	protos.UnimplementedCatenaServiceServer
+	transport *Transport
+	rpc.UnimplementedCatenaServiceServer
 }
 
 func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {

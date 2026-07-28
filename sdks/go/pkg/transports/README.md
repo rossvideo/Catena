@@ -10,8 +10,8 @@ The server architecture is now transport-agnostic:
 
 ## Package Overview
 
-- `RestTransport`: HTTP/REST transport (`st2138-api` routes, SSE streaming)
-- `GrpcTransport`: gRPC transport (`CatenaService`, server-streaming endpoints)
+- `rest.Transport`: HTTP/REST transport (`st2138-api` routes, SSE streaming)
+- `grpc.Transport`: gRPC transport (`CatenaService`, server-streaming endpoints)
 - Shared status and JSON helpers used by the REST layer
 
 ## Quick Start
@@ -27,9 +27,9 @@ import (
     "syscall"
 
     "github.com/rossvideo/catena/sdks/go/pkg/catena"
-    "github.com/rossvideo/catena/sdks/go/pkg/config"
     "github.com/rossvideo/catena/sdks/go/pkg/st2138"
-    "github.com/rossvideo/catena/sdks/go/pkg/transports"
+    "github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
+    "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 )
 
 func main() {
@@ -49,17 +49,17 @@ func main() {
         return catena.Reply(*device)
     })
 
-    if err := srv.RegisterTransport(transports.NewGrpcTransport(config.DefaultGrpcOptions())); err != nil {
+    if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {
         panic(err)
     }
 
-    rest := transports.NewRestTransport(config.DefaultRestOptions())
-    if err := srv.RegisterTransport(rest); err != nil {
+    restTransport := rest.NewTransport(rest.DefaultOptions())
+    if err := srv.RegisterTransport(restTransport); err != nil {
         panic(err)
     }
 
     // Optional custom fallback endpoints on REST.
-    rest.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
+    restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
         return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found")
     })
 
@@ -147,8 +147,8 @@ Caller guidance:
 
 ## Choosing Transports
 
-- Use `RestTransport` for browser-first and JSON/HTTP workflows
-- Use `GrpcTransport` for service-to-service and protobuf-native workflows
+- Use `rest.Transport` for browser-first and JSON/HTTP workflows
+- Use `grpc.Transport` for service-to-service and protobuf-native workflows
 - Register both when you want one server process to expose both APIs
 
 ## Defaults

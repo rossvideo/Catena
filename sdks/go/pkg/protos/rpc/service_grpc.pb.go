@@ -32,10 +32,11 @@
 // - protoc             v3.21.12
 // source: service.proto
 
-package protos
+package rpc
 
 import (
 	context "context"
+	protos "github.com/rossvideo/catena/sdks/go/pkg/protos"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -71,28 +72,28 @@ const (
 //
 // Catena's API
 type CatenaServiceClient interface {
-	DeviceRequest(ctx context.Context, in *DeviceRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeviceComponent], error)
-	GetPopulatedSlots(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SlotList, error)
-	ExecuteCommand(ctx context.Context, in *ExecuteCommandPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[CommandResponse], error)
-	ExternalObjectRequest(ctx context.Context, in *ExternalObjectRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ExternalObjectPayload], error)
-	ParamInfoRequest(ctx context.Context, in *ParamInfoRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ParamInfoResponse], error)
-	SetValue(ctx context.Context, in *SingleSetValuePayload, opts ...grpc.CallOption) (*Empty, error)
-	GetValue(ctx context.Context, in *GetValuePayload, opts ...grpc.CallOption) (*Value, error)
-	MultiSetValue(ctx context.Context, in *MultiSetValuePayload, opts ...grpc.CallOption) (*Empty, error)
-	UpdateSubscriptions(ctx context.Context, in *UpdateSubscriptionsPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeviceComponent_ComponentParam], error)
-	GetParam(ctx context.Context, in *GetParamPayload, opts ...grpc.CallOption) (*DeviceComponent_ComponentParam, error)
+	DeviceRequest(ctx context.Context, in *protos.DeviceRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.DeviceComponent], error)
+	GetPopulatedSlots(ctx context.Context, in *protos.Empty, opts ...grpc.CallOption) (*protos.SlotList, error)
+	ExecuteCommand(ctx context.Context, in *protos.ExecuteCommandPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.CommandResponse], error)
+	ExternalObjectRequest(ctx context.Context, in *protos.ExternalObjectRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.ExternalObjectPayload], error)
+	ParamInfoRequest(ctx context.Context, in *protos.ParamInfoRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.ParamInfoResponse], error)
+	SetValue(ctx context.Context, in *protos.SingleSetValuePayload, opts ...grpc.CallOption) (*protos.Empty, error)
+	GetValue(ctx context.Context, in *protos.GetValuePayload, opts ...grpc.CallOption) (*protos.Value, error)
+	MultiSetValue(ctx context.Context, in *protos.MultiSetValuePayload, opts ...grpc.CallOption) (*protos.Empty, error)
+	UpdateSubscriptions(ctx context.Context, in *protos.UpdateSubscriptionsPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.DeviceComponent_ComponentParam], error)
+	GetParam(ctx context.Context, in *protos.GetParamPayload, opts ...grpc.CallOption) (*protos.DeviceComponent_ComponentParam, error)
 	// The stream of PushUpdates is open-ended, terminating only when the
 	// logical connection with the client is terminated.
 	// Connected clients should use the RefreshToken RPC to prevent the
 	// connection from being terminated on token expiry.
-	Connect(ctx context.Context, in *ConnectPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[PushUpdates], error)
+	Connect(ctx context.Context, in *protos.ConnectPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.PushUpdates], error)
 	// Multi-language support
-	AddLanguage(ctx context.Context, in *AddLanguagePayload, opts ...grpc.CallOption) (*Empty, error)
-	LanguagePackRequest(ctx context.Context, in *LanguagePackRequestPayload, opts ...grpc.CallOption) (*DeviceComponent_ComponentLanguagePack, error)
-	ListLanguages(ctx context.Context, in *Slot, opts ...grpc.CallOption) (*LanguageList, error)
+	AddLanguage(ctx context.Context, in *protos.AddLanguagePayload, opts ...grpc.CallOption) (*protos.Empty, error)
+	LanguagePackRequest(ctx context.Context, in *protos.LanguagePackRequestPayload, opts ...grpc.CallOption) (*protos.DeviceComponent_ComponentLanguagePack, error)
+	ListLanguages(ctx context.Context, in *protos.Slot, opts ...grpc.CallOption) (*protos.LanguageList, error)
 	// Token management RPCs
-	RefreshToken(ctx context.Context, in *RefreshTokenPayload, opts ...grpc.CallOption) (*ConnectionStatus, error)
-	RevokeAccess(ctx context.Context, in *RevokeAccessPayload, opts ...grpc.CallOption) (*RevocationResponse, error)
+	RefreshToken(ctx context.Context, in *protos.RefreshTokenPayload, opts ...grpc.CallOption) (*protos.ConnectionStatus, error)
+	RevokeAccess(ctx context.Context, in *protos.RevokeAccessPayload, opts ...grpc.CallOption) (*protos.RevocationResponse, error)
 }
 
 type catenaServiceClient struct {
@@ -103,13 +104,13 @@ func NewCatenaServiceClient(cc grpc.ClientConnInterface) CatenaServiceClient {
 	return &catenaServiceClient{cc}
 }
 
-func (c *catenaServiceClient) DeviceRequest(ctx context.Context, in *DeviceRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeviceComponent], error) {
+func (c *catenaServiceClient) DeviceRequest(ctx context.Context, in *protos.DeviceRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.DeviceComponent], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &CatenaService_ServiceDesc.Streams[0], CatenaService_DeviceRequest_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[DeviceRequestPayload, DeviceComponent]{ClientStream: stream}
+	x := &grpc.GenericClientStream[protos.DeviceRequestPayload, protos.DeviceComponent]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -120,11 +121,11 @@ func (c *catenaServiceClient) DeviceRequest(ctx context.Context, in *DeviceReque
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_DeviceRequestClient = grpc.ServerStreamingClient[DeviceComponent]
+type CatenaService_DeviceRequestClient = grpc.ServerStreamingClient[protos.DeviceComponent]
 
-func (c *catenaServiceClient) GetPopulatedSlots(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SlotList, error) {
+func (c *catenaServiceClient) GetPopulatedSlots(ctx context.Context, in *protos.Empty, opts ...grpc.CallOption) (*protos.SlotList, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SlotList)
+	out := new(protos.SlotList)
 	err := c.cc.Invoke(ctx, CatenaService_GetPopulatedSlots_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -132,13 +133,13 @@ func (c *catenaServiceClient) GetPopulatedSlots(ctx context.Context, in *Empty, 
 	return out, nil
 }
 
-func (c *catenaServiceClient) ExecuteCommand(ctx context.Context, in *ExecuteCommandPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[CommandResponse], error) {
+func (c *catenaServiceClient) ExecuteCommand(ctx context.Context, in *protos.ExecuteCommandPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &CatenaService_ServiceDesc.Streams[1], CatenaService_ExecuteCommand_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ExecuteCommandPayload, CommandResponse]{ClientStream: stream}
+	x := &grpc.GenericClientStream[protos.ExecuteCommandPayload, protos.CommandResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -149,15 +150,15 @@ func (c *catenaServiceClient) ExecuteCommand(ctx context.Context, in *ExecuteCom
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ExecuteCommandClient = grpc.ServerStreamingClient[CommandResponse]
+type CatenaService_ExecuteCommandClient = grpc.ServerStreamingClient[protos.CommandResponse]
 
-func (c *catenaServiceClient) ExternalObjectRequest(ctx context.Context, in *ExternalObjectRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ExternalObjectPayload], error) {
+func (c *catenaServiceClient) ExternalObjectRequest(ctx context.Context, in *protos.ExternalObjectRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.ExternalObjectPayload], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &CatenaService_ServiceDesc.Streams[2], CatenaService_ExternalObjectRequest_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ExternalObjectRequestPayload, ExternalObjectPayload]{ClientStream: stream}
+	x := &grpc.GenericClientStream[protos.ExternalObjectRequestPayload, protos.ExternalObjectPayload]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -168,15 +169,15 @@ func (c *catenaServiceClient) ExternalObjectRequest(ctx context.Context, in *Ext
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ExternalObjectRequestClient = grpc.ServerStreamingClient[ExternalObjectPayload]
+type CatenaService_ExternalObjectRequestClient = grpc.ServerStreamingClient[protos.ExternalObjectPayload]
 
-func (c *catenaServiceClient) ParamInfoRequest(ctx context.Context, in *ParamInfoRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ParamInfoResponse], error) {
+func (c *catenaServiceClient) ParamInfoRequest(ctx context.Context, in *protos.ParamInfoRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.ParamInfoResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &CatenaService_ServiceDesc.Streams[3], CatenaService_ParamInfoRequest_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ParamInfoRequestPayload, ParamInfoResponse]{ClientStream: stream}
+	x := &grpc.GenericClientStream[protos.ParamInfoRequestPayload, protos.ParamInfoResponse]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -187,11 +188,11 @@ func (c *catenaServiceClient) ParamInfoRequest(ctx context.Context, in *ParamInf
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ParamInfoRequestClient = grpc.ServerStreamingClient[ParamInfoResponse]
+type CatenaService_ParamInfoRequestClient = grpc.ServerStreamingClient[protos.ParamInfoResponse]
 
-func (c *catenaServiceClient) SetValue(ctx context.Context, in *SingleSetValuePayload, opts ...grpc.CallOption) (*Empty, error) {
+func (c *catenaServiceClient) SetValue(ctx context.Context, in *protos.SingleSetValuePayload, opts ...grpc.CallOption) (*protos.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
+	out := new(protos.Empty)
 	err := c.cc.Invoke(ctx, CatenaService_SetValue_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -199,9 +200,9 @@ func (c *catenaServiceClient) SetValue(ctx context.Context, in *SingleSetValuePa
 	return out, nil
 }
 
-func (c *catenaServiceClient) GetValue(ctx context.Context, in *GetValuePayload, opts ...grpc.CallOption) (*Value, error) {
+func (c *catenaServiceClient) GetValue(ctx context.Context, in *protos.GetValuePayload, opts ...grpc.CallOption) (*protos.Value, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Value)
+	out := new(protos.Value)
 	err := c.cc.Invoke(ctx, CatenaService_GetValue_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -209,9 +210,9 @@ func (c *catenaServiceClient) GetValue(ctx context.Context, in *GetValuePayload,
 	return out, nil
 }
 
-func (c *catenaServiceClient) MultiSetValue(ctx context.Context, in *MultiSetValuePayload, opts ...grpc.CallOption) (*Empty, error) {
+func (c *catenaServiceClient) MultiSetValue(ctx context.Context, in *protos.MultiSetValuePayload, opts ...grpc.CallOption) (*protos.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
+	out := new(protos.Empty)
 	err := c.cc.Invoke(ctx, CatenaService_MultiSetValue_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -219,13 +220,13 @@ func (c *catenaServiceClient) MultiSetValue(ctx context.Context, in *MultiSetVal
 	return out, nil
 }
 
-func (c *catenaServiceClient) UpdateSubscriptions(ctx context.Context, in *UpdateSubscriptionsPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeviceComponent_ComponentParam], error) {
+func (c *catenaServiceClient) UpdateSubscriptions(ctx context.Context, in *protos.UpdateSubscriptionsPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.DeviceComponent_ComponentParam], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &CatenaService_ServiceDesc.Streams[4], CatenaService_UpdateSubscriptions_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[UpdateSubscriptionsPayload, DeviceComponent_ComponentParam]{ClientStream: stream}
+	x := &grpc.GenericClientStream[protos.UpdateSubscriptionsPayload, protos.DeviceComponent_ComponentParam]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -236,11 +237,11 @@ func (c *catenaServiceClient) UpdateSubscriptions(ctx context.Context, in *Updat
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_UpdateSubscriptionsClient = grpc.ServerStreamingClient[DeviceComponent_ComponentParam]
+type CatenaService_UpdateSubscriptionsClient = grpc.ServerStreamingClient[protos.DeviceComponent_ComponentParam]
 
-func (c *catenaServiceClient) GetParam(ctx context.Context, in *GetParamPayload, opts ...grpc.CallOption) (*DeviceComponent_ComponentParam, error) {
+func (c *catenaServiceClient) GetParam(ctx context.Context, in *protos.GetParamPayload, opts ...grpc.CallOption) (*protos.DeviceComponent_ComponentParam, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeviceComponent_ComponentParam)
+	out := new(protos.DeviceComponent_ComponentParam)
 	err := c.cc.Invoke(ctx, CatenaService_GetParam_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -248,13 +249,13 @@ func (c *catenaServiceClient) GetParam(ctx context.Context, in *GetParamPayload,
 	return out, nil
 }
 
-func (c *catenaServiceClient) Connect(ctx context.Context, in *ConnectPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[PushUpdates], error) {
+func (c *catenaServiceClient) Connect(ctx context.Context, in *protos.ConnectPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.PushUpdates], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &CatenaService_ServiceDesc.Streams[5], CatenaService_Connect_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ConnectPayload, PushUpdates]{ClientStream: stream}
+	x := &grpc.GenericClientStream[protos.ConnectPayload, protos.PushUpdates]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -265,11 +266,11 @@ func (c *catenaServiceClient) Connect(ctx context.Context, in *ConnectPayload, o
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ConnectClient = grpc.ServerStreamingClient[PushUpdates]
+type CatenaService_ConnectClient = grpc.ServerStreamingClient[protos.PushUpdates]
 
-func (c *catenaServiceClient) AddLanguage(ctx context.Context, in *AddLanguagePayload, opts ...grpc.CallOption) (*Empty, error) {
+func (c *catenaServiceClient) AddLanguage(ctx context.Context, in *protos.AddLanguagePayload, opts ...grpc.CallOption) (*protos.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
+	out := new(protos.Empty)
 	err := c.cc.Invoke(ctx, CatenaService_AddLanguage_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -277,9 +278,9 @@ func (c *catenaServiceClient) AddLanguage(ctx context.Context, in *AddLanguagePa
 	return out, nil
 }
 
-func (c *catenaServiceClient) LanguagePackRequest(ctx context.Context, in *LanguagePackRequestPayload, opts ...grpc.CallOption) (*DeviceComponent_ComponentLanguagePack, error) {
+func (c *catenaServiceClient) LanguagePackRequest(ctx context.Context, in *protos.LanguagePackRequestPayload, opts ...grpc.CallOption) (*protos.DeviceComponent_ComponentLanguagePack, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeviceComponent_ComponentLanguagePack)
+	out := new(protos.DeviceComponent_ComponentLanguagePack)
 	err := c.cc.Invoke(ctx, CatenaService_LanguagePackRequest_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -287,9 +288,9 @@ func (c *catenaServiceClient) LanguagePackRequest(ctx context.Context, in *Langu
 	return out, nil
 }
 
-func (c *catenaServiceClient) ListLanguages(ctx context.Context, in *Slot, opts ...grpc.CallOption) (*LanguageList, error) {
+func (c *catenaServiceClient) ListLanguages(ctx context.Context, in *protos.Slot, opts ...grpc.CallOption) (*protos.LanguageList, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LanguageList)
+	out := new(protos.LanguageList)
 	err := c.cc.Invoke(ctx, CatenaService_ListLanguages_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -297,9 +298,9 @@ func (c *catenaServiceClient) ListLanguages(ctx context.Context, in *Slot, opts 
 	return out, nil
 }
 
-func (c *catenaServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenPayload, opts ...grpc.CallOption) (*ConnectionStatus, error) {
+func (c *catenaServiceClient) RefreshToken(ctx context.Context, in *protos.RefreshTokenPayload, opts ...grpc.CallOption) (*protos.ConnectionStatus, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ConnectionStatus)
+	out := new(protos.ConnectionStatus)
 	err := c.cc.Invoke(ctx, CatenaService_RefreshToken_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -307,9 +308,9 @@ func (c *catenaServiceClient) RefreshToken(ctx context.Context, in *RefreshToken
 	return out, nil
 }
 
-func (c *catenaServiceClient) RevokeAccess(ctx context.Context, in *RevokeAccessPayload, opts ...grpc.CallOption) (*RevocationResponse, error) {
+func (c *catenaServiceClient) RevokeAccess(ctx context.Context, in *protos.RevokeAccessPayload, opts ...grpc.CallOption) (*protos.RevocationResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RevocationResponse)
+	out := new(protos.RevocationResponse)
 	err := c.cc.Invoke(ctx, CatenaService_RevokeAccess_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -323,28 +324,28 @@ func (c *catenaServiceClient) RevokeAccess(ctx context.Context, in *RevokeAccess
 //
 // Catena's API
 type CatenaServiceServer interface {
-	DeviceRequest(*DeviceRequestPayload, grpc.ServerStreamingServer[DeviceComponent]) error
-	GetPopulatedSlots(context.Context, *Empty) (*SlotList, error)
-	ExecuteCommand(*ExecuteCommandPayload, grpc.ServerStreamingServer[CommandResponse]) error
-	ExternalObjectRequest(*ExternalObjectRequestPayload, grpc.ServerStreamingServer[ExternalObjectPayload]) error
-	ParamInfoRequest(*ParamInfoRequestPayload, grpc.ServerStreamingServer[ParamInfoResponse]) error
-	SetValue(context.Context, *SingleSetValuePayload) (*Empty, error)
-	GetValue(context.Context, *GetValuePayload) (*Value, error)
-	MultiSetValue(context.Context, *MultiSetValuePayload) (*Empty, error)
-	UpdateSubscriptions(*UpdateSubscriptionsPayload, grpc.ServerStreamingServer[DeviceComponent_ComponentParam]) error
-	GetParam(context.Context, *GetParamPayload) (*DeviceComponent_ComponentParam, error)
+	DeviceRequest(*protos.DeviceRequestPayload, grpc.ServerStreamingServer[protos.DeviceComponent]) error
+	GetPopulatedSlots(context.Context, *protos.Empty) (*protos.SlotList, error)
+	ExecuteCommand(*protos.ExecuteCommandPayload, grpc.ServerStreamingServer[protos.CommandResponse]) error
+	ExternalObjectRequest(*protos.ExternalObjectRequestPayload, grpc.ServerStreamingServer[protos.ExternalObjectPayload]) error
+	ParamInfoRequest(*protos.ParamInfoRequestPayload, grpc.ServerStreamingServer[protos.ParamInfoResponse]) error
+	SetValue(context.Context, *protos.SingleSetValuePayload) (*protos.Empty, error)
+	GetValue(context.Context, *protos.GetValuePayload) (*protos.Value, error)
+	MultiSetValue(context.Context, *protos.MultiSetValuePayload) (*protos.Empty, error)
+	UpdateSubscriptions(*protos.UpdateSubscriptionsPayload, grpc.ServerStreamingServer[protos.DeviceComponent_ComponentParam]) error
+	GetParam(context.Context, *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error)
 	// The stream of PushUpdates is open-ended, terminating only when the
 	// logical connection with the client is terminated.
 	// Connected clients should use the RefreshToken RPC to prevent the
 	// connection from being terminated on token expiry.
-	Connect(*ConnectPayload, grpc.ServerStreamingServer[PushUpdates]) error
+	Connect(*protos.ConnectPayload, grpc.ServerStreamingServer[protos.PushUpdates]) error
 	// Multi-language support
-	AddLanguage(context.Context, *AddLanguagePayload) (*Empty, error)
-	LanguagePackRequest(context.Context, *LanguagePackRequestPayload) (*DeviceComponent_ComponentLanguagePack, error)
-	ListLanguages(context.Context, *Slot) (*LanguageList, error)
+	AddLanguage(context.Context, *protos.AddLanguagePayload) (*protos.Empty, error)
+	LanguagePackRequest(context.Context, *protos.LanguagePackRequestPayload) (*protos.DeviceComponent_ComponentLanguagePack, error)
+	ListLanguages(context.Context, *protos.Slot) (*protos.LanguageList, error)
 	// Token management RPCs
-	RefreshToken(context.Context, *RefreshTokenPayload) (*ConnectionStatus, error)
-	RevokeAccess(context.Context, *RevokeAccessPayload) (*RevocationResponse, error)
+	RefreshToken(context.Context, *protos.RefreshTokenPayload) (*protos.ConnectionStatus, error)
+	RevokeAccess(context.Context, *protos.RevokeAccessPayload) (*protos.RevocationResponse, error)
 	mustEmbedUnimplementedCatenaServiceServer()
 }
 
@@ -355,52 +356,52 @@ type CatenaServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCatenaServiceServer struct{}
 
-func (UnimplementedCatenaServiceServer) DeviceRequest(*DeviceRequestPayload, grpc.ServerStreamingServer[DeviceComponent]) error {
+func (UnimplementedCatenaServiceServer) DeviceRequest(*protos.DeviceRequestPayload, grpc.ServerStreamingServer[protos.DeviceComponent]) error {
 	return status.Error(codes.Unimplemented, "method DeviceRequest not implemented")
 }
-func (UnimplementedCatenaServiceServer) GetPopulatedSlots(context.Context, *Empty) (*SlotList, error) {
+func (UnimplementedCatenaServiceServer) GetPopulatedSlots(context.Context, *protos.Empty) (*protos.SlotList, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPopulatedSlots not implemented")
 }
-func (UnimplementedCatenaServiceServer) ExecuteCommand(*ExecuteCommandPayload, grpc.ServerStreamingServer[CommandResponse]) error {
+func (UnimplementedCatenaServiceServer) ExecuteCommand(*protos.ExecuteCommandPayload, grpc.ServerStreamingServer[protos.CommandResponse]) error {
 	return status.Error(codes.Unimplemented, "method ExecuteCommand not implemented")
 }
-func (UnimplementedCatenaServiceServer) ExternalObjectRequest(*ExternalObjectRequestPayload, grpc.ServerStreamingServer[ExternalObjectPayload]) error {
+func (UnimplementedCatenaServiceServer) ExternalObjectRequest(*protos.ExternalObjectRequestPayload, grpc.ServerStreamingServer[protos.ExternalObjectPayload]) error {
 	return status.Error(codes.Unimplemented, "method ExternalObjectRequest not implemented")
 }
-func (UnimplementedCatenaServiceServer) ParamInfoRequest(*ParamInfoRequestPayload, grpc.ServerStreamingServer[ParamInfoResponse]) error {
+func (UnimplementedCatenaServiceServer) ParamInfoRequest(*protos.ParamInfoRequestPayload, grpc.ServerStreamingServer[protos.ParamInfoResponse]) error {
 	return status.Error(codes.Unimplemented, "method ParamInfoRequest not implemented")
 }
-func (UnimplementedCatenaServiceServer) SetValue(context.Context, *SingleSetValuePayload) (*Empty, error) {
+func (UnimplementedCatenaServiceServer) SetValue(context.Context, *protos.SingleSetValuePayload) (*protos.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetValue not implemented")
 }
-func (UnimplementedCatenaServiceServer) GetValue(context.Context, *GetValuePayload) (*Value, error) {
+func (UnimplementedCatenaServiceServer) GetValue(context.Context, *protos.GetValuePayload) (*protos.Value, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetValue not implemented")
 }
-func (UnimplementedCatenaServiceServer) MultiSetValue(context.Context, *MultiSetValuePayload) (*Empty, error) {
+func (UnimplementedCatenaServiceServer) MultiSetValue(context.Context, *protos.MultiSetValuePayload) (*protos.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method MultiSetValue not implemented")
 }
-func (UnimplementedCatenaServiceServer) UpdateSubscriptions(*UpdateSubscriptionsPayload, grpc.ServerStreamingServer[DeviceComponent_ComponentParam]) error {
+func (UnimplementedCatenaServiceServer) UpdateSubscriptions(*protos.UpdateSubscriptionsPayload, grpc.ServerStreamingServer[protos.DeviceComponent_ComponentParam]) error {
 	return status.Error(codes.Unimplemented, "method UpdateSubscriptions not implemented")
 }
-func (UnimplementedCatenaServiceServer) GetParam(context.Context, *GetParamPayload) (*DeviceComponent_ComponentParam, error) {
+func (UnimplementedCatenaServiceServer) GetParam(context.Context, *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetParam not implemented")
 }
-func (UnimplementedCatenaServiceServer) Connect(*ConnectPayload, grpc.ServerStreamingServer[PushUpdates]) error {
+func (UnimplementedCatenaServiceServer) Connect(*protos.ConnectPayload, grpc.ServerStreamingServer[protos.PushUpdates]) error {
 	return status.Error(codes.Unimplemented, "method Connect not implemented")
 }
-func (UnimplementedCatenaServiceServer) AddLanguage(context.Context, *AddLanguagePayload) (*Empty, error) {
+func (UnimplementedCatenaServiceServer) AddLanguage(context.Context, *protos.AddLanguagePayload) (*protos.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method AddLanguage not implemented")
 }
-func (UnimplementedCatenaServiceServer) LanguagePackRequest(context.Context, *LanguagePackRequestPayload) (*DeviceComponent_ComponentLanguagePack, error) {
+func (UnimplementedCatenaServiceServer) LanguagePackRequest(context.Context, *protos.LanguagePackRequestPayload) (*protos.DeviceComponent_ComponentLanguagePack, error) {
 	return nil, status.Error(codes.Unimplemented, "method LanguagePackRequest not implemented")
 }
-func (UnimplementedCatenaServiceServer) ListLanguages(context.Context, *Slot) (*LanguageList, error) {
+func (UnimplementedCatenaServiceServer) ListLanguages(context.Context, *protos.Slot) (*protos.LanguageList, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListLanguages not implemented")
 }
-func (UnimplementedCatenaServiceServer) RefreshToken(context.Context, *RefreshTokenPayload) (*ConnectionStatus, error) {
+func (UnimplementedCatenaServiceServer) RefreshToken(context.Context, *protos.RefreshTokenPayload) (*protos.ConnectionStatus, error) {
 	return nil, status.Error(codes.Unimplemented, "method RefreshToken not implemented")
 }
-func (UnimplementedCatenaServiceServer) RevokeAccess(context.Context, *RevokeAccessPayload) (*RevocationResponse, error) {
+func (UnimplementedCatenaServiceServer) RevokeAccess(context.Context, *protos.RevokeAccessPayload) (*protos.RevocationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RevokeAccess not implemented")
 }
 func (UnimplementedCatenaServiceServer) mustEmbedUnimplementedCatenaServiceServer() {}
@@ -425,18 +426,18 @@ func RegisterCatenaServiceServer(s grpc.ServiceRegistrar, srv CatenaServiceServe
 }
 
 func _CatenaService_DeviceRequest_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(DeviceRequestPayload)
+	m := new(protos.DeviceRequestPayload)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(CatenaServiceServer).DeviceRequest(m, &grpc.GenericServerStream[DeviceRequestPayload, DeviceComponent]{ServerStream: stream})
+	return srv.(CatenaServiceServer).DeviceRequest(m, &grpc.GenericServerStream[protos.DeviceRequestPayload, protos.DeviceComponent]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_DeviceRequestServer = grpc.ServerStreamingServer[DeviceComponent]
+type CatenaService_DeviceRequestServer = grpc.ServerStreamingServer[protos.DeviceComponent]
 
 func _CatenaService_GetPopulatedSlots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(protos.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -448,46 +449,46 @@ func _CatenaService_GetPopulatedSlots_Handler(srv interface{}, ctx context.Conte
 		FullMethod: CatenaService_GetPopulatedSlots_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).GetPopulatedSlots(ctx, req.(*Empty))
+		return srv.(CatenaServiceServer).GetPopulatedSlots(ctx, req.(*protos.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_ExecuteCommand_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ExecuteCommandPayload)
+	m := new(protos.ExecuteCommandPayload)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(CatenaServiceServer).ExecuteCommand(m, &grpc.GenericServerStream[ExecuteCommandPayload, CommandResponse]{ServerStream: stream})
+	return srv.(CatenaServiceServer).ExecuteCommand(m, &grpc.GenericServerStream[protos.ExecuteCommandPayload, protos.CommandResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ExecuteCommandServer = grpc.ServerStreamingServer[CommandResponse]
+type CatenaService_ExecuteCommandServer = grpc.ServerStreamingServer[protos.CommandResponse]
 
 func _CatenaService_ExternalObjectRequest_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ExternalObjectRequestPayload)
+	m := new(protos.ExternalObjectRequestPayload)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(CatenaServiceServer).ExternalObjectRequest(m, &grpc.GenericServerStream[ExternalObjectRequestPayload, ExternalObjectPayload]{ServerStream: stream})
+	return srv.(CatenaServiceServer).ExternalObjectRequest(m, &grpc.GenericServerStream[protos.ExternalObjectRequestPayload, protos.ExternalObjectPayload]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ExternalObjectRequestServer = grpc.ServerStreamingServer[ExternalObjectPayload]
+type CatenaService_ExternalObjectRequestServer = grpc.ServerStreamingServer[protos.ExternalObjectPayload]
 
 func _CatenaService_ParamInfoRequest_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ParamInfoRequestPayload)
+	m := new(protos.ParamInfoRequestPayload)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(CatenaServiceServer).ParamInfoRequest(m, &grpc.GenericServerStream[ParamInfoRequestPayload, ParamInfoResponse]{ServerStream: stream})
+	return srv.(CatenaServiceServer).ParamInfoRequest(m, &grpc.GenericServerStream[protos.ParamInfoRequestPayload, protos.ParamInfoResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ParamInfoRequestServer = grpc.ServerStreamingServer[ParamInfoResponse]
+type CatenaService_ParamInfoRequestServer = grpc.ServerStreamingServer[protos.ParamInfoResponse]
 
 func _CatenaService_SetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SingleSetValuePayload)
+	in := new(protos.SingleSetValuePayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -499,13 +500,13 @@ func _CatenaService_SetValue_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: CatenaService_SetValue_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).SetValue(ctx, req.(*SingleSetValuePayload))
+		return srv.(CatenaServiceServer).SetValue(ctx, req.(*protos.SingleSetValuePayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_GetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetValuePayload)
+	in := new(protos.GetValuePayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -517,13 +518,13 @@ func _CatenaService_GetValue_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: CatenaService_GetValue_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).GetValue(ctx, req.(*GetValuePayload))
+		return srv.(CatenaServiceServer).GetValue(ctx, req.(*protos.GetValuePayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_MultiSetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MultiSetValuePayload)
+	in := new(protos.MultiSetValuePayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -535,24 +536,24 @@ func _CatenaService_MultiSetValue_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: CatenaService_MultiSetValue_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).MultiSetValue(ctx, req.(*MultiSetValuePayload))
+		return srv.(CatenaServiceServer).MultiSetValue(ctx, req.(*protos.MultiSetValuePayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_UpdateSubscriptions_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(UpdateSubscriptionsPayload)
+	m := new(protos.UpdateSubscriptionsPayload)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(CatenaServiceServer).UpdateSubscriptions(m, &grpc.GenericServerStream[UpdateSubscriptionsPayload, DeviceComponent_ComponentParam]{ServerStream: stream})
+	return srv.(CatenaServiceServer).UpdateSubscriptions(m, &grpc.GenericServerStream[protos.UpdateSubscriptionsPayload, protos.DeviceComponent_ComponentParam]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_UpdateSubscriptionsServer = grpc.ServerStreamingServer[DeviceComponent_ComponentParam]
+type CatenaService_UpdateSubscriptionsServer = grpc.ServerStreamingServer[protos.DeviceComponent_ComponentParam]
 
 func _CatenaService_GetParam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetParamPayload)
+	in := new(protos.GetParamPayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -564,24 +565,24 @@ func _CatenaService_GetParam_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: CatenaService_GetParam_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).GetParam(ctx, req.(*GetParamPayload))
+		return srv.(CatenaServiceServer).GetParam(ctx, req.(*protos.GetParamPayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ConnectPayload)
+	m := new(protos.ConnectPayload)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(CatenaServiceServer).Connect(m, &grpc.GenericServerStream[ConnectPayload, PushUpdates]{ServerStream: stream})
+	return srv.(CatenaServiceServer).Connect(m, &grpc.GenericServerStream[protos.ConnectPayload, protos.PushUpdates]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CatenaService_ConnectServer = grpc.ServerStreamingServer[PushUpdates]
+type CatenaService_ConnectServer = grpc.ServerStreamingServer[protos.PushUpdates]
 
 func _CatenaService_AddLanguage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddLanguagePayload)
+	in := new(protos.AddLanguagePayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -593,13 +594,13 @@ func _CatenaService_AddLanguage_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: CatenaService_AddLanguage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).AddLanguage(ctx, req.(*AddLanguagePayload))
+		return srv.(CatenaServiceServer).AddLanguage(ctx, req.(*protos.AddLanguagePayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_LanguagePackRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LanguagePackRequestPayload)
+	in := new(protos.LanguagePackRequestPayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -611,13 +612,13 @@ func _CatenaService_LanguagePackRequest_Handler(srv interface{}, ctx context.Con
 		FullMethod: CatenaService_LanguagePackRequest_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).LanguagePackRequest(ctx, req.(*LanguagePackRequestPayload))
+		return srv.(CatenaServiceServer).LanguagePackRequest(ctx, req.(*protos.LanguagePackRequestPayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_ListLanguages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Slot)
+	in := new(protos.Slot)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -629,13 +630,13 @@ func _CatenaService_ListLanguages_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: CatenaService_ListLanguages_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).ListLanguages(ctx, req.(*Slot))
+		return srv.(CatenaServiceServer).ListLanguages(ctx, req.(*protos.Slot))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RefreshTokenPayload)
+	in := new(protos.RefreshTokenPayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -647,13 +648,13 @@ func _CatenaService_RefreshToken_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: CatenaService_RefreshToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).RefreshToken(ctx, req.(*RefreshTokenPayload))
+		return srv.(CatenaServiceServer).RefreshToken(ctx, req.(*protos.RefreshTokenPayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CatenaService_RevokeAccess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RevokeAccessPayload)
+	in := new(protos.RevokeAccessPayload)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -665,7 +666,7 @@ func _CatenaService_RevokeAccess_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: CatenaService_RevokeAccess_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatenaServiceServer).RevokeAccess(ctx, req.(*RevokeAccessPayload))
+		return srv.(CatenaServiceServer).RevokeAccess(ctx, req.(*protos.RevokeAccessPayload))
 	}
 	return interceptor(ctx, in, info, handler)
 }

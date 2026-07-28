@@ -30,13 +30,13 @@
 
 /**
  * @brief Test helpers for the REST server tests.
- * @file test_helpers_test.go
+ * @file helpers_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @date 2026-02-25
  */
 
-package transports
+package rest
 
 import (
 	"bytes"
@@ -48,9 +48,6 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // TestMain sets up test environment for all tests in this package.
@@ -103,7 +100,7 @@ func (f *failFlusherWriter) Flush() {
 
 // makeRequest creates an HTTP request, serves it through the server mux, and
 // returns the response recorder. Non-empty bodies get Content-Type: application/json.
-func makeRequest(t *testing.T, transport *RestTransport, method, path, body string) *httptest.ResponseRecorder {
+func makeRequest(t *testing.T, transport *Transport, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	var req *http.Request
 	if body != "" {
@@ -119,7 +116,7 @@ func makeRequest(t *testing.T, transport *RestTransport, method, path, body stri
 
 // makeRequestWithHeaders is like makeRequest but sets explicit headers instead
 // of the default Content-Type.
-func makeRequestWithHeaders(t *testing.T, transport *RestTransport, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
+func makeRequestWithHeaders(t *testing.T, transport *Transport, method, path, body string, headers map[string]string) *httptest.ResponseRecorder {
 	t.Helper()
 	var req *http.Request
 	if body != "" {
@@ -197,7 +194,7 @@ func assertBodyNotContains(t *testing.T, rec *httptest.ResponseRecorder, substr 
 // setupSSEConnection starts a background SSE connection to /st2138-api/v1/connect
 // and waits for the handler to be established. Returns the recorder and a cleanup
 // function to tear down the connection.
-func setupSSEConnection(t *testing.T, transport *RestTransport) (*httptest.ResponseRecorder, func()) {
+func setupSSEConnection(t *testing.T, transport *Transport) (*httptest.ResponseRecorder, func()) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
@@ -222,12 +219,4 @@ func setupSSEConnection(t *testing.T, transport *RestTransport) (*httptest.Respo
 func cleanupSSE(cleanup func()) {
 	cleanup()
 	time.Sleep(50 * time.Millisecond)
-}
-
-func makeTestConnection(id int) *catena.Connection {
-	return &catena.Connection{
-		ID:      id,
-		Updates: make(chan *protos.PushUpdates, 10),
-		Done:    make(chan struct{}),
-	}
 }

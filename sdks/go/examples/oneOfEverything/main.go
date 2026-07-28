@@ -71,7 +71,8 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 )
 
 //go:embed static/*
@@ -397,7 +398,7 @@ func main() {
 	// Register one or both; the same handlers serve REST and gRPC on their configured ports.
 	if options.UseGrpc {
 		// Reflection enabled so grpcurl works without -proto (local demo only).
-		if err := srv.RegisterTransport(transports.NewGrpcTransport(options.Grpc)); err != nil {
+		if err := srv.RegisterTransport(grpc.NewTransport(options.Grpc)); err != nil {
 			logger.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
@@ -408,7 +409,7 @@ func main() {
 	}
 
 	if options.UseRest {
-		restTransport := transports.NewRestTransport(options.Rest)
+		restTransport := rest.NewTransport(options.Rest)
 
 		// RegisterFallbackHandler is for custom HTTP routes that are not part of
 		// the Catena API. SDK endpoints are still handled by the REST transport;

@@ -29,22 +29,26 @@
  */
 
 /**
- * @brief Redeclare transport configuration types from the config package for
- *        easier access from the transports package.
- * @file types.go
+ * @brief Tests for the re-exported transport configuration types.
+ * @file types_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-06-19
+ * @date 2026-07-27
  */
 
-package transports
+package grpc
 
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
+import (
+	"reflect"
+	"testing"
 
-type GrpcOptions = config.GrpcOptions
-type RestOptions = config.RestOptions
-
-var (
-	DefaultGrpcOptions = config.DefaultGrpcOptions
-	DefaultRestOptions = config.DefaultRestOptions
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
+
+// TestDefaultOptions verifies the package's re-exported DefaultOptions matches
+// the underlying config default.
+func TestDefaultOptions(t *testing.T) {
+	if !reflect.DeepEqual(DefaultOptions(), config.DefaultGrpcOptions()) {
+		t.Errorf("expected DefaultOptions() to equal config.DefaultGrpcOptions(), got %+v and %+v",
+			DefaultOptions(), config.DefaultGrpcOptions())
+	}
+}

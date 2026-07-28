@@ -30,13 +30,13 @@
 
 /**
  * @brief Test helpers for gRPC server tests.
- * @file test_helpers_test.go
+ * @file helpers_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @date 2026-03-15
  */
 
-package transports
+package grpc
 
 import (
 	"context"
@@ -49,6 +49,7 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos/rpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -56,7 +57,7 @@ import (
 
 // setupGRPCClient creates a gRPC client connected to the test server.
 // Returns the client and a cleanup function that should be deferred.
-func setupGRPCClient(t *testing.T, ctx context.Context, lis *bufconn.Listener) (protos.CatenaServiceClient, func()) {
+func setupGRPCClient(t *testing.T, ctx context.Context, lis *bufconn.Listener) (rpc.CatenaServiceClient, func()) {
 	t.Helper()
 
 	conn, err := dialTestServer(ctx, lis)
@@ -64,7 +65,7 @@ func setupGRPCClient(t *testing.T, ctx context.Context, lis *bufconn.Listener) (
 		t.Fatalf("failed to dial test server: %v", err)
 	}
 
-	client := protos.NewCatenaServiceClient(conn)
+	client := rpc.NewCatenaServiceClient(conn)
 
 	cleanup := func() {
 		conn.Close()
@@ -76,13 +77,13 @@ func setupGRPCClient(t *testing.T, ctx context.Context, lis *bufconn.Listener) (
 // --- Unary RPC helpers ---
 
 // makeGetPopulatedSlotsRequest makes a GetPopulatedSlots RPC call.
-func makeGetPopulatedSlotsRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context) (*protos.SlotList, error) {
+func makeGetPopulatedSlotsRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context) (*protos.SlotList, error) {
 	t.Helper()
 	return client.GetPopulatedSlots(ctx, &protos.Empty{})
 }
 
 // makeGetValueRequest makes a GetValue RPC call with the specified slot and OID.
-func makeGetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string) (*protos.Value, error) {
+func makeGetValueRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, slot uint32, oid string) (*protos.Value, error) {
 	t.Helper()
 	return client.GetValue(ctx, &protos.GetValuePayload{
 		Slot: slot,
@@ -91,7 +92,7 @@ func makeGetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx co
 }
 
 // makeSetValueRequest makes a SetValue RPC call with the specified slot, OID, and value.
-func makeSetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, value any) (*protos.Empty, error) {
+func makeSetValueRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, slot uint32, oid string, value any) (*protos.Empty, error) {
 	t.Helper()
 
 	protoValue, err := st2138.ToProto(value)
@@ -109,7 +110,7 @@ func makeSetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx co
 }
 
 // makeMultiSetValueRequest makes a MultiSetValue RPC call with multiple OID/value pairs.
-func makeMultiSetValueRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, values map[string]any) (*protos.Empty, error) {
+func makeMultiSetValueRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, slot uint32, values map[string]any) (*protos.Empty, error) {
 	t.Helper()
 
 	setValues := make([]*protos.SetValuePayload, 0, len(values))
@@ -133,13 +134,13 @@ func makeMultiSetValueRequest(t *testing.T, client protos.CatenaServiceClient, c
 // --- Streaming RPC helpers ---
 
 // makeDeviceRequest initiates a DeviceRequest stream and returns the stream handle.
-func makeDeviceRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32) (grpc.ServerStreamingClient[protos.DeviceComponent], error) {
+func makeDeviceRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, slot uint32) (grpc.ServerStreamingClient[protos.DeviceComponent], error) {
 	t.Helper()
 	return client.DeviceRequest(ctx, &protos.DeviceRequestPayload{Slot: slot})
 }
 
 // makeExternalObjectRequest initiates an ExternalObjectRequest stream.
-func makeExternalObjectRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string) (grpc.ServerStreamingClient[protos.ExternalObjectPayload], error) {
+func makeExternalObjectRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, slot uint32, oid string) (grpc.ServerStreamingClient[protos.ExternalObjectPayload], error) {
 	t.Helper()
 	return client.ExternalObjectRequest(ctx, &protos.ExternalObjectRequestPayload{
 		Slot: slot,
@@ -148,7 +149,7 @@ func makeExternalObjectRequest(t *testing.T, client protos.CatenaServiceClient, 
 }
 
 // makeExecuteCommandRequest initiates an ExecuteCommand stream with optional payload.
-func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oid string, payload any, respond bool) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
+func makeExecuteCommandRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, slot uint32, oid string, payload any, respond bool) (grpc.ServerStreamingClient[protos.CommandResponse], error) {
 	t.Helper()
 
 	req := &protos.ExecuteCommandPayload{
@@ -169,13 +170,13 @@ func makeExecuteCommandRequest(t *testing.T, client protos.CatenaServiceClient, 
 }
 
 // makeConnectRequest initiates a Connect stream for push updates.
-func makeConnectRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context) (grpc.ServerStreamingClient[protos.PushUpdates], error) {
+func makeConnectRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context) (grpc.ServerStreamingClient[protos.PushUpdates], error) {
 	t.Helper()
 	return client.Connect(ctx, &protos.ConnectPayload{})
 }
 
 // makeParamInfoRequest initiates a ParamInfoRequest stream for parameter info entries.
-func makeParamInfoRequest(t *testing.T, client protos.CatenaServiceClient, ctx context.Context, slot uint32, oidPrefix string, recursive bool) (grpc.ServerStreamingClient[protos.ParamInfoResponse], error) {
+func makeParamInfoRequest(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, slot uint32, oidPrefix string, recursive bool) (grpc.ServerStreamingClient[protos.ParamInfoResponse], error) {
 	t.Helper()
 	return client.ParamInfoRequest(ctx, &protos.ParamInfoRequestPayload{
 		Slot:      slot,

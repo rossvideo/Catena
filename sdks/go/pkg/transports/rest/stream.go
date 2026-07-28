@@ -34,7 +34,7 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
-package transports
+package rest
 
 import (
 	"context"
@@ -42,23 +42,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 )
-
-// grpcStream adapts a gRPC server stream to catena.Stream. Because
-// grpc.ServerStream.SendMsg accepts any proto message, one generic adapter
-// serves every streaming endpoint - each chunk is sent as its wire proto.
-type grpcStream[T catena.Message] struct {
-	ss grpc.ServerStream
-}
-
-// Send transmits the chunk's wire proto over the gRPC stream.
-func (s *grpcStream[T]) Send(chunk T) error {
-	return s.ss.SendMsg(chunk.Wire())
-}
 
 // restStream adapts an HTTP response to catena.Stream, emitting each chunk as a
 // Server-Sent Events frame. The SSE headers are written lazily on the first

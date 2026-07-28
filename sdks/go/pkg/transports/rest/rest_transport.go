@@ -30,7 +30,7 @@
 
 /**
  * @brief REST server for the Catena SDK.
- * @file server.go
+ * @file rest_transport.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
@@ -38,7 +38,7 @@
  * @date 2026-05-14
  */
 
-package transports
+package rest
 
 import (
 	"context"
@@ -52,7 +52,6 @@ import (
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
@@ -61,7 +60,7 @@ import (
 
 type FallbackHandler func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult)
 
-type RestTransport struct {
+type Transport struct {
 	mu              sync.Mutex
 	server          *http.Server
 	mux             *http.ServeMux
@@ -71,11 +70,11 @@ type RestTransport struct {
 	port int
 }
 
-var _ catena.Transport = (*RestTransport)(nil)
+var _ catena.Transport = (*Transport)(nil)
 
-// NewRestTransport creates a new REST transport with the given configuration.
-func NewRestTransport(cfg config.RestOptions) *RestTransport {
-	t := &RestTransport{
+// NewTransport creates a new REST transport with the given configuration.
+func NewTransport(cfg Options) *Transport {
+	t := &Transport{
 		port: cfg.Port,
 		mux:  http.NewServeMux(),
 	}
@@ -84,7 +83,7 @@ func NewRestTransport(cfg config.RestOptions) *RestTransport {
 }
 
 // Start starts the HTTP server on the specified port using this server's mux
-func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
+func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
 	addr := fmt.Sprintf(":%d", t.port)
 	// Bind synchronously so that startup errors (privileged port, address
 	// already in use, invalid address, etc.) are returned to the caller
@@ -114,7 +113,7 @@ func (t *RestTransport) Start(ctx context.Context, runtime catena.ServerRuntime)
 	return nil
 }
 
-func (t *RestTransport) Shutdown(ctx context.Context) error {
+func (t *Transport) Shutdown(ctx context.Context) error {
 	// Ordering is intentional:
 	// 1) start HTTP shutdown first so the listener stops accepting new requests/connections,
 	// 2) then signal runtime-owned streaming connections (SSE) to drain,
@@ -158,13 +157,13 @@ func (t *RestTransport) Shutdown(ctx context.Context) error {
 	return <-errCh
 }
 
-func (t *RestTransport) RegisterFallbackHandler(handler FallbackHandler) {
+func (t *Transport) RegisterFallbackHandler(handler FallbackHandler) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.fallbackHandler = handler
 }
 
-func (t *RestTransport) retrieveMetadataFromRequest(r *http.Request) catena.TransportContext {
+func (t *Transport) retrieveMetadataFromRequest(r *http.Request) catena.TransportContext {
 	transportContext := catena.TransportContext{
 		AccessToken: r.Header.Get("Authorization"),
 		Metadata:    maps.Clone(r.Header), // include all headers as metadata for now; could be filtered in the future if needed
@@ -173,12 +172,12 @@ func (t *RestTransport) retrieveMetadataFromRequest(r *http.Request) catena.Tran
 	return transportContext
 }
 
-func (t *RestTransport) isDevMode() bool {
+func (t *Transport) isDevMode() bool {
 	return t != nil && t.runtime != nil && t.runtime.IsDev()
 }
 
 // writeHTTPResult is a unified function that handles writing different response types
-func (t *RestTransport) writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
+func (t *Transport) writeHTTPResult(w http.ResponseWriter, result catena.StatusResult, value interface{}) {
 	httpStatus := ToHTTPStatus(result.Code)
 
 	if result.IsError() {
@@ -211,7 +210,7 @@ func (t *RestTransport) writeHTTPResult(w http.ResponseWriter, result catena.Sta
 // enforcement is a transport-only concern, so it bypasses StatusCode entirely.
 // 405 is not in ST 2138-12, but is emitted here for HTTP correctness when a
 // route is reached with the wrong method.
-func (t *RestTransport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg string) {
+func (t *Transport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg string) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	if t.isDevMode() {
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
@@ -226,7 +225,7 @@ func (t *RestTransport) writeHTTPMethodNotAllowed(w http.ResponseWriter, msg str
 // and §7.11.3-5 (SetValue, SetValues, language-pack mutations). 204 vs 200
 // is a route-level choice, not a handler outcome, so it lives here in the
 // transport rather than in StatusCode.
-func (t *RestTransport) writeHTTPStatusResultNoBody(w http.ResponseWriter, result catena.StatusResult) {
+func (t *Transport) writeHTTPStatusResultNoBody(w http.ResponseWriter, result catena.StatusResult) {
 	if result.IsOk() {
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -235,7 +234,7 @@ func (t *RestTransport) writeHTTPStatusResultNoBody(w http.ResponseWriter, resul
 }
 
 // t.writeHTTPStatusResult writes a StatusResult to the HTTP response (no value).
-func (t *RestTransport) writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
+func (t *Transport) writeHTTPStatusResult(w http.ResponseWriter, result catena.StatusResult) {
 	httpStatus := ToHTTPStatus(result.Code)
 	logger.Info("t.writeHTTPStatusResult", "httpStatus", httpStatus, "error", result.Error, "code", result.Code)
 
@@ -317,7 +316,7 @@ var marshalSSEFunc = MarshalProtoJSON
 
 // sendSSEEvent writes a single SSE event to the response writer,
 // serializing the proto PushUpdates message via MarshalProtoJSON.
-func (t *RestTransport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
+func (t *Transport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, update *protos.PushUpdates) error {
 	data, err := marshalSSEFunc(update)
 	if err != nil {
 		return err
@@ -332,7 +331,7 @@ func (t *RestTransport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher
 }
 
 // handleConnect handles GET /st2138-api/v1/connect (SSE streaming)
-func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
+func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is GET
 	if r.Method != http.MethodGet {
 		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
@@ -401,7 +400,7 @@ func (t *RestTransport) handleConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 // registerRoutes sets up all HTTP routes
-func (t *RestTransport) registerRoutes() {
+func (t *Transport) registerRoutes() {
 	// Device endpoint: GET /st2138-api/v1/{slot}
 	t.mux.HandleFunc("/st2138-api/v1/", func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Device endpoint", "path", r.URL.Path, "method", r.Method)
@@ -493,7 +492,7 @@ func (t *RestTransport) registerRoutes() {
 
 // handleGetPopulatedSlots handles GET /st2138-api/v1/devices
 // Returns the list of populated slots
-func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request) {
+func (t *Transport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
 		return
@@ -525,7 +524,7 @@ func (t *RestTransport) handleGetPopulatedSlots(w http.ResponseWriter, r *http.R
 // handleLanguagesEndpoint handles GET /st2138-api/v1/{slot}/languages (Languages).
 // Per the OpenAPI contract (GET /{slot}/languages), the body is a bare JSON array
 // of language codes, e.g. ["en","fr","es","de"]. An empty result serializes as [].
-func (t *RestTransport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
+func (t *Transport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
 	if r.Method != http.MethodGet {
 		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
 		return
@@ -549,7 +548,7 @@ func (t *RestTransport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.R
 	}
 }
 
-func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *Transport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	fqoid := strings.Join(pathParts, "/")
 
 	switch r.Method {
@@ -589,7 +588,7 @@ func (t *RestTransport) handleValueEndpoint(w http.ResponseWriter, r *http.Reque
 // handleValuesEndpoint handles PUT /st2138-api/v1/{slot}/values (SetValues).
 // The full set of values is applied via the runtime's SetValue handler.
 // On success it returns 204
-func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
+func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request, slot uint16) {
 	if r.Method != http.MethodPut {
 		t.writeHTTPMethodNotAllowed(w, "only PUT allowed")
 		return
@@ -611,7 +610,7 @@ func (t *RestTransport) handleValuesEndpoint(w http.ResponseWriter, r *http.Requ
 // the four asset operations: GET (ReadAsset), POST (CreateAsset), PUT
 // (UpdateAsset) and DELETE (DeleteAsset). The three write operations return
 // 204 No Content on success per the OpenAPI spec.
-func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *Transport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	fqoid := strings.Join(pathParts, "/")
 
 	switch r.Method {
@@ -632,7 +631,7 @@ func (t *RestTransport) handleAssetEndpoint(w http.ResponseWriter, r *http.Reque
 
 // handleReadAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid}, with optional
 // payload transcoding via the ?compression= query parameter.
-func (t *RestTransport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
+func (t *Transport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
 	transportContext := t.retrieveMetadataFromRequest(r)
 	asset, result := t.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
 
@@ -659,7 +658,7 @@ func (t *RestTransport) handleReadAsset(w http.ResponseWriter, r *http.Request, 
 // handleWriteAsset handles POST (CreateAsset) and PUT (UpdateAsset). Both read
 // an external_object_payload body, hand it to the given invoke function, and
 // return 204 No Content on success.
-func (t *RestTransport) handleWriteAsset(
+func (t *Transport) handleWriteAsset(
 	w http.ResponseWriter,
 	r *http.Request,
 	slot uint16,
@@ -681,7 +680,7 @@ func (t *RestTransport) handleWriteAsset(
 // handleParamEndpoint handles GET /st2138-api/v1/{slot}/param/{fqoid} (GetParam).
 // It returns the full parameter (metadata + value) as a component_param object
 // of the form {"oid": ..., "param": {...}}.
-func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *Transport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
 		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
 		return
@@ -725,7 +724,7 @@ func (t *RestTransport) handleParamEndpoint(w http.ResponseWriter, r *http.Reque
 }
 
 // handleParamInfoEndpoint handles param info requests and streaming (SSE).
-func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *Transport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodGet {
 		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
 		return
@@ -785,7 +784,7 @@ func (t *RestTransport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.R
 	}
 }
 
-func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	// The language code is a single path segment; an empty code (if any) is
 	// left for the server layer to validate.
 	if len(pathParts) != 1 {
@@ -870,7 +869,7 @@ func (t *RestTransport) handleLanguagePackEndpoint(w http.ResponseWriter, r *htt
 // handler emits nothing before erroring this method can still report a status;
 // once chunks have been sent, a later error is reported in-band as an SSE
 // "error" event carrying the HTTP status code.
-func (t *RestTransport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
+func (t *Transport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
@@ -907,7 +906,7 @@ func (t *RestTransport) streamParamInfo(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
 	if r.Method != http.MethodPost {
 		t.writeHTTPMethodNotAllowed(w, "only POST allowed")
 		return
@@ -993,7 +992,7 @@ func (t *RestTransport) handleCommandEndpoint(w http.ResponseWriter, r *http.Req
 // Events. The restStream writes SSE headers lazily on the first chunk, so if the
 // handler emits nothing before erroring this method can still report a status.
 // respond is passed through so a smart handler can skip emitting responses.
-func (t *RestTransport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandOid string, payload any, respond bool, transportContext catena.TransportContext) {
+func (t *Transport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandOid string, payload any, respond bool, transportContext catena.TransportContext) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
