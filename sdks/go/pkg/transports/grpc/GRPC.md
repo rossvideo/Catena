@@ -2,6 +2,11 @@
 
 `grpc.Transport` exposes Catena handlers through the generated `CatenaService` gRPC API.
 
+## Import
+```go
+import "github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
+```
+
 ## Constructor
 
 ```go

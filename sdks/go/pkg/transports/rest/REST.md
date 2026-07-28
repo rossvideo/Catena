@@ -2,6 +2,11 @@
 
 `rest.Transport` exposes Catena handlers over HTTP and Server-Sent Events (SSE).
 
+## Import
+```go
+import "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
+```
+
 ## Constructor
 
 ```go
