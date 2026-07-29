@@ -1301,6 +1301,21 @@ func TestNewParamStruct_AutoDescriptors(t *testing.T) {
 	}
 }
 
+// structFieldDescriptors is unreachable with empty fields via NewParamStruct
+// (ToProto rejects nil/empty maps), so exercise the guard directly: a nil or
+// field-less struct value must yield no descriptors rather than an empty map.
+func TestStructFieldDescriptors_NoFields(t *testing.T) {
+	if got := structFieldDescriptors(nil); got != nil {
+		t.Errorf("expected nil descriptors for nil struct value, got %v", got)
+	}
+	if got := structFieldDescriptors(&protos.StructValue{}); got != nil {
+		t.Errorf("expected nil descriptors for struct value without fields, got %v", got)
+	}
+	if got := structFieldDescriptors(&protos.StructValue{Fields: map[string]*protos.Value{}}); got != nil {
+		t.Errorf("expected nil descriptors for struct value with empty fields map, got %v", got)
+	}
+}
+
 // A valueless sub-param can refine an auto-created descriptor (name,
 // constraint, ...) without overriding the value that came from the map.
 func TestWithParam_ValuelessDoesNotOverrideMapValue(t *testing.T) {
