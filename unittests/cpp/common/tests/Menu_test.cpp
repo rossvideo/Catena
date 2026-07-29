@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author (Nelson Daniels) nelson.daniels@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -48,6 +48,7 @@
 // common
 #include "Menu.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 
@@ -55,8 +56,7 @@ class MenuTest : public ::testing::Test {
 protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("MenuTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "MenuTest");
     }
 
     static void TearDownTestSuite() {
@@ -72,7 +72,7 @@ protected:
         Menu({names_[0],       names_[1]}, hidden_, disabled_,
              {paramOids_[0],   paramOids_[1]},
              {commandOids_[0], commandOids_[1]},
-             {clientHints_[0], clientHints_[1]}, oid_, menuGroup_);
+             {clientHints_[0], clientHints_[1]}, oid_, order_, menuGroup_);
     }
 
     std::unique_ptr<IMenu> menu_;
@@ -95,6 +95,7 @@ protected:
         {"hint2", "This is another hint"}
     };
     std::string oid_ = "test_menu";
+    int32_t order_ = 1;
     MockMenuGroup menuGroup_;
 };
 
@@ -112,7 +113,7 @@ TEST_F(MenuTest, Menu_ErrCreate) {
     MockMenuGroup errMenuGroup;
     EXPECT_CALL(errMenuGroup, addMenu(oid_, testing::_)).Times(1)
         .WillOnce(testing::Throw(std::runtime_error("MenuGroup error")));
-    EXPECT_THROW(Menu({}, hidden_, disabled_, {}, {}, {}, oid_, errMenuGroup), std::runtime_error);
+    EXPECT_THROW(Menu({}, hidden_, disabled_, {}, {}, {}, oid_, order_, errMenuGroup), std::runtime_error);
 }
 
 /*
@@ -137,4 +138,5 @@ TEST_F(MenuTest, Menu_ToProto) {
     for (auto& [key, value] : clientHints_) {
         EXPECT_EQ(protoMenu.client_hints().at(key), value);
     }
+    EXPECT_EQ(protoMenu.order(), order_) << "Menu order should be serialized";
 }

@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -32,13 +32,14 @@
  * @brief This file is for testing the GetPopulatedSlots.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "controllers/GetPopulatedSlots.h"
@@ -51,8 +52,7 @@ class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("RESTGetPopulatedSlotsTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTGetPopulatedSlotsTest");
     }
 
     static void TearDownTestSuite() {
@@ -70,8 +70,7 @@ class RESTGetPopulatedSlotsTests : public RESTEndpointTest {
         endpoint_->proceed();
         std::string expJson = "";
         if (!expVal_.slots().empty()) {
-            auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson);
-            ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+            protoToJsonString(expVal_, expJson);
         }
         EXPECT_EQ(readResponse(), expectedResponse(expRc_, expJson));
     }

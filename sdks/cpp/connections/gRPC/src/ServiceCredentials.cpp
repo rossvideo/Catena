@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -49,7 +49,7 @@ grpc::Status catena::gRPC::JWTAuthMetadataProcessor::Process(const InputMetadata
 
     // remove the 'Bearer ' text from the beginning
     try {
-        VLOG(1) << "Removed bearer text";
+        LOG(DEBUG) << "Removed bearer text";
         constexpr size_t kPrefixLength {std::string("Bearer ").length()};
         grpc::string_ref t = authz->second.substr(kPrefixLength);
         std::string token(t.begin(), t.end());

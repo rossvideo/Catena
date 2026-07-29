@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -52,7 +52,7 @@ catena::gRPC::Connect::Connect(IServiceImpl *service, SlotMap& dms, bool ok)
 
 // Manages gRPC command execution process using the state variable status.
 void catena::gRPC::Connect::proceed(bool ok) {
-    VLOG(1) << "Connect proceed[" << objectId_ << "]: " << timeNow()
+    LOG(DEBUG) << "Connect proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: "
                 << std::boolalpha << ok;
 
@@ -61,8 +61,8 @@ void catena::gRPC::Connect::proceed(bool ok) {
      * client request) will send shutdown signal to cancel all open connections
      */
     if (!ok && status_ == CallStatus::kProcess) {
-        VLOG(1) << "Connect[" << objectId_ << "] cancelled";
-        VLOG(1) << "Cancelling all open connections";
+        LOG(DEBUG) << "Connect[" << objectId_ << "] cancelled";
+        LOG(DEBUG) << "Cancelling all open connections";
         shutdownSignal_.emit();
         status_ = CallStatus::kFinish;
     }

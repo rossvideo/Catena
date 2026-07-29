@@ -20,7 +20,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -82,10 +82,11 @@ class MenuGroup : public IMenuGroup {
     /**
      * @brief Construct a Menu Group from a list of Menus.
      * @param oid The oid of the Menu Group.
+     * @param order The display order of the Menu Group.
      * @param name The name of the Menu Group.
      * @param dev The device to add the menu group to.
      */
-    MenuGroup(std::string oid, const PolyglotText::ListInitializer name, IDevice& dev) : name_{name} {
+    MenuGroup(std::string oid, int32_t order, const PolyglotText::ListInitializer name, IDevice& dev) : order_{order}, name_{name} {
         dev.addItem(oid, this);
     }
 
@@ -127,6 +128,10 @@ class MenuGroup : public IMenuGroup {
      * @brief A map of the menu group's menus.
      */
     MenuMap menus_;
+    /**
+     * @brief The display order of the menu group.
+     */
+    int32_t order_ = 0;
 };
 
 

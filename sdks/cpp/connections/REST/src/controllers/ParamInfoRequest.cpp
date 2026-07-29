@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -43,7 +43,7 @@ ParamInfoRequest::ParamInfoRequest(tcp::socket& socket, ISocketReader& context, 
         writer_ = std::make_unique<SSEWriter>(socket_, context_.origin());
     // Unary response
     } else {
-        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin(), true);
+        writer_ = std::make_unique<SocketWriter>(socket_, context_.origin());
     }
 
     
@@ -76,6 +76,11 @@ void ParamInfoRequest::proceed() {
         } else if (!context_.stream() && recursive_) {
             rc_ = catena::exception_with_status("Recursive parameter info request is not supported with unary response", catena::StatusCode::INVALID_ARGUMENT);
         } else {
+            // Check if valid Unary, Unary only supports Mode 3
+            if (!context_.stream() && context_.fqoid().empty()) {
+                throw catena::exception_with_status("Unary request must include fqoid", catena::StatusCode::INVALID_ARGUMENT);
+            }
+
             // Handle authorization setup
             if (context_.authorizationEnabled()) {
                 sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
@@ -183,14 +188,20 @@ void ParamInfoRequest::proceed() {
         rc_ = catena::exception_with_status("Unknown error in ParamInfoRequest", catena::StatusCode::UNKNOWN);
     }
 
-    // Writing responses to the client.
-    if (rc_.status == catena::StatusCode::OK && !responses_.empty()) {
-        for (auto& response : responses_) {
-            writer_->sendResponse(rc_, response);
+    if (context_.stream()) {
+        // Writing responses to the client.
+        if (rc_.status == catena::StatusCode::OK && !responses_.empty()) {
+            for (auto& response : responses_) {
+                writer_->sendResponse(rc_, response);
+            }
         }
+        // Required to send errors.
+        writer_->sendResponse(rc_);
+    } else if (responses_.size() == 1) {
+        writer_->sendResponse(rc_, responses_[0]);
+    } else {
+        writer_->sendResponse(rc_);
     }
-    // Required to send errors or flush unary response.
-    writer_->sendResponse(rc_);
     
     // Writing the final status to the console.
     writeConsole_(CallStatus::kFinish, socket_.is_open());

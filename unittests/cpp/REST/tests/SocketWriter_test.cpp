@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -42,6 +42,7 @@
 
 // Test helpers
 #include "RESTTest.h"
+#include "CommonTestHelpers.h"
 
 // REST
 #include "SocketWriter.h"
@@ -53,8 +54,7 @@ class RESTSocketWriterTests : public testing::Test, public RESTTest {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("RESTSocketWriterTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTSocketWriterTest");
     }
 
     static void TearDownTestSuite() {
@@ -88,8 +88,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write200) {
 
     // Reading from clientSocket_ and checking the response.
     std::string jsonBody;
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = google::protobuf::util::MessageToJsonString(msg, &jsonBody, options);
+    protoToJsonString(msg, jsonBody);
     EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
 }
 
@@ -137,7 +136,6 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Buffer200) {
     msgs[1].set_string_value("test-string-2");
     msgs[2].set_string_value("test-string-3");
     std::string expJson = "";
-    google::protobuf::util::JsonPrintOptions options; // Default options
 
     // Initializing SocketWriter with serverSocket_ and writing messages.
     SocketWriter writer(serverSocket_, origin_, true);
@@ -145,7 +143,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Buffer200) {
         writer.sendResponse(rc, msg);
         // Adding to expected response.
         std::string jsonBody;
-        auto status = google::protobuf::util::MessageToJsonString(msg, &jsonBody, options);
+        protoToJsonString(msg, jsonBody);
         if (expJson.empty()) {
             expJson = "{\"data\":[" + jsonBody;
         } else {
@@ -209,10 +207,10 @@ TEST_F(RESTSocketWriterTests, SSEWriter_Write200) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::vector<std::string> msgs = {
-        "{\"stringValue\":\"Test string #1\"}",
-        "{\"float32Value\":2}",
-        "{\"stringValue\":\"Test string #3\"}",
-        "{\"int32Value\":5}",
+        "{\"string_value\":\"Test string #1\"}",
+        "{\"float32_value\":2}",
+        "{\"string_value\":\"Test string #3\"}",
+        "{\"int32_value\":5}",
     };
 
     // Initializing SSEWriter with serverSocket_ and writing messages.
@@ -251,8 +249,8 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmptyEnd) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::vector<std::string> msgs = {
-        "{\"stringValue\":\"Test string #1\"}",
-        "{\"float32Value\":2}"
+        "{\"string_value\":\"Test string #1\"}",
+        "{\"float32_value\":2}"
     };
     st2138::Empty emptyMsg = st2138::Empty();
 
@@ -292,8 +290,8 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::vector<std::string> msgs = {
-        "{\"stringValue\":\"Test string #1\"}",
-        "{\"float32Value\":2}"
+        "{\"string_value\":\"Test string #1\"}",
+        "{\"float32_value\":2}"
     };
     catena::exception_with_status err("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
     st2138::Empty emptyMsg = st2138::Empty();
@@ -327,10 +325,9 @@ TEST_F(RESTSocketWriterTests, GracefulShutdownOnClientDisconnect) {
     writer.sendResponse(rc, msg1);
 
     // Reading first response to verify successful write.
-    std::string jsonBody1;
-    google::protobuf::util::JsonPrintOptions options;
-    auto status = google::protobuf::util::MessageToJsonString(msg1, &jsonBody1, options);
-    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody1));
+    std::string jsonBody;
+    protoToJsonString(msg1, jsonBody);
+    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
 
     // Shutdown and close client socket to simulate unexpected client disconnect.
     boost::system::error_code ec;

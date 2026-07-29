@@ -203,14 +203,18 @@ class CppGen {
 
     let menuGroups = this.device.desc.menu_groups;
     for (let group in menuGroups) {
+      const groupOrder = menuGroups[group].order || 0;
       let groupName = menuGroups[group].name.display_strings;
       let groupNamePairs = Object.keys(groupName);
-      bloc(`MenuGroup _${group}Group {\n  "${group}", `);
+      bloc(`MenuGroup _${group}Group {\n  "${group}", ${groupOrder},`);
       bloc(`  {\n    ${groupNamePairs.map((key) => { return `{ "${key}", "${groupName[key]}" }` }).join(",\n    ")}`);
       bloc(`  },\n  dm\n};`);
       
       let menus = menuGroups[group].menus;
       for (let menu in menus) {
+        const menuHidden = menus[menu].hidden || false;
+        const menuDisabled = menus[menu].disabled || false;
+        const menuOrder = menus[menu].order || 0;
         let paramOids = (menus[menu].param_oids || []).map(oid => `"${oid}"`).join(", ");
         let commandOids = (menus[menu].command_oids || []).map(oid => `"${oid}"`).join(", ");
         let menuName = menus[menu].name.display_strings;
@@ -224,10 +228,10 @@ class CppGen {
 
         bloc(`Menu _${group}Group_${menu}Menu {`);
         bloc(`  { ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(", ")} },`);
-        bloc(`  false, false,`);
+        bloc(`  ${menuHidden}, ${menuDisabled},`);
         bloc(`  { ${paramOids} },`);
         bloc(`  { ${commandOids} },`);
-        bloc(`  { ${clientHintsStr} }, "${menu}", _${group}Group`);
+        bloc(`  { ${clientHintsStr} }, "${menu}", ${menuOrder}, _${group}Group`);
         bloc(`};`);
       }
     }

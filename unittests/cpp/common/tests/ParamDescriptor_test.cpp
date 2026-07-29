@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author (Nelson Daniels) nelson.daniels@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -42,6 +42,7 @@
 #include "Enums.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 #include "MockConstraint.h"
 #include "MockDevice.h"
@@ -58,8 +59,7 @@ class ParamDescriptorTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("ParamDescriptorTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "ParamDescriptorTest");
     }
 
     static void TearDownTestSuite() {
@@ -331,6 +331,26 @@ TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProto) {
     create();
     pd->toProto(param, authz_);
     EXPECT_FALSE(param.has_constraint()) << "Param should not have a constraint";
+}
+/*
+ * TEST 8b - Testing ParamDescriptor toProto serializes the inherited readOnly status.
+ * A child param with read_only_ == false under a read-only parent should serialize
+ * read_only == true because toProto uses readOnly() rather than the raw read_only_ member.
+ */
+TEST_F(ParamDescriptorTest, ParamDescriptor_ParamToProtoInheritsReadOnly) {
+    // pd has readOnly == true. Create a child with read_only_ == false parented to pd.
+    auto child = createRealParamDescriptor("child_oid", "child", false, pd.get());
+    ASSERT_TRUE(child->readOnly()) << "Child should inherit read-only status from parent";
+    // toProto should serialize the inherited (true) readOnly status.
+    st2138::Param param;
+    child->toProto(param, authz_);
+    EXPECT_TRUE(param.read_only()) << "toProto should serialize inherited readOnly status from parent";
+    // Now clear the parent's readOnly status and verify the child serializes read_only == false.
+    pd->readOnly(false);
+    ASSERT_FALSE(child->readOnly()) << "Child should no longer be read-only once parent is not read-only";
+    param.Clear();
+    child->toProto(param, authz_);
+    EXPECT_FALSE(param.read_only()) << "toProto should serialize read_only == false when neither child nor parent is read-only";
 }
 /*
  * TEST 9 - Testing ParamDescriptor ExecuteCommand default command definition.

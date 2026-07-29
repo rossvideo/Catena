@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -87,7 +87,7 @@ class ISocketReader {
      * @param socket The socket to read from.
      * @param timeout How long to read for in ms before cancelling. Socket can be read from twice and timeout is applied in full both times.
      */
-    virtual void read(tcp::socket& socket, uint32_t timeout = DEFAULT_TIMEOUT) = 0;
+    virtual void read(std::shared_ptr<tcp::socket>& socket, uint32_t timeout = DEFAULT_TIMEOUT) = 0;
     /**
      * @brief Returns the HTTP method of the request.
      */

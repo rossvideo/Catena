@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -35,7 +35,7 @@
 using namespace catena::common;
 
 NodeCode NmosNode::init(int port, int32_t heartbeatInterval) {
-    VLOG(1) << "Starting Catena REST Discovery Example";
+    LOG(DEBUG) << "Starting Catena REST Discovery Example";
 
     int error;
     simple_poll_ = avahi_simple_poll_new();
@@ -44,7 +44,7 @@ NodeCode NmosNode::init(int port, int32_t heartbeatInterval) {
         return NodeCode::POLL_FAILED;
     }
 
-    VLOG(1) << "Starting mDNS discovery for _nmos-registration._tcp services...";
+    LOG(DEBUG) << "Starting mDNS discovery for _nmos-registration._tcp services...";
 
     // Create Avahi client
     client_ = avahi_client_new(
@@ -56,7 +56,7 @@ NodeCode NmosNode::init(int port, int32_t heartbeatInterval) {
         return NodeCode::CLIENT_FAILED;
     }
 
-    VLOG(1) << "Avahi client created successfully.";
+    LOG(DEBUG) << "Avahi client created successfully.";
 
     // Browse for _nmos-registration services, change as needed
     if (!CLIENT_FAILURE) {
@@ -66,14 +66,14 @@ NodeCode NmosNode::init(int port, int32_t heartbeatInterval) {
     }
     else return NodeCode::CLIENT_FAILED;
 
-    VLOG(1) << "Starting service browser for _nmos-registration._tcp...";
+    LOG(DEBUG) << "Starting service browser for _nmos-registration._tcp...";
 
     if (!sb_) {
         LOG(ERROR) << "Failed to create service browser: " << avahi_strerror(avahi_client_errno(client_));
         return NodeCode::NO_SERVICE_BROWSER;
     }
 
-    VLOG(1) << "Service browser created successfully.";
+    LOG(DEBUG) << "Service browser created successfully.";
 
     // Run discovery for a short window (e.g., 2 seconds) then proceed
     runDiscovery();
@@ -363,7 +363,7 @@ void NmosNode::resolve_cb(
         c.port = port;
         parse_txt_into_candidate(txt, c);
         node->addCandidate(std::move(c));
-        VLOG(1) << "Registry candidate: " << name << " @ " << addr_str << ":" << port
+        LOG(DEBUG) << "Registry candidate: " << name << " @ " << addr_str << ":" << port
         << " https=" << (node->getCandidates().back().https?"yes":"no") << " pri=" << node->getCandidates().back().priority;
     } else {
         LOG(ERROR) << "Failed to resolve service: " << avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r)));
@@ -386,12 +386,11 @@ void NmosNode::browse_cb(
     NmosNode* node = static_cast<NmosNode*>(userdata);
     switch (event) {
         case AVAHI_BROWSER_NEW:
-            VLOG(1) << "Discovered service: " << name << " of type " << type << " in domain " << domain;
+            LOG(DEBUG) << "Discovered service: " << name << " of type " << type << " in domain " << domain;
             // Found a new service, resolve it
             if (!(avahi_service_resolver_new(
                 node->getClient(), interface, protocol, name, type, domain,
-                AVAHI_PROTO_UNSPEC, (AvahiLookupFlags)0, resolve_cb, node)))
-            {
+                AVAHI_PROTO_UNSPEC, (AvahiLookupFlags)0, resolve_cb, node))) {
                 LOG(ERROR) << "Failed to resolve service '" << name << "': " << avahi_strerror(avahi_client_errno(node->getClient()));
             }
             break;
@@ -433,7 +432,7 @@ std::optional<NmosNode::RegistrySelection> NmosNode::choose_registry_and_build_b
         if (std::find(c.api_versions.begin(), c.api_versions.end(), ver) != c.api_versions.end()) {
             std::string scheme = c.https ? "https" : "http";
             std::string base = fmt("%s://%s:%u/x-nmos/registration/%s", scheme.c_str(), c.host.c_str(), c.port, ver.c_str());
-            VLOG(1) << "Chosen registry base: " << base;
+            LOG(DEBUG) << "Chosen registry base: " << base;
             return NmosNode::RegistrySelection{base, ver};
         }
     }
@@ -443,7 +442,7 @@ std::optional<NmosNode::RegistrySelection> NmosNode::choose_registry_and_build_b
 void NmosNode::startHeartbeat(std::string base, int32_t interval) {
     std::string url = base + "/health/nodes/" + node_id_;
     heartbeat_->getHeartbeatSignal().connect([this, url]() {
-        VLOG(1) << "Heartbeat sent for Node " << this->node_id_;
+        LOG(DEBUG) << "Heartbeat sent for Node " << this->node_id_;
         http_post_json(url, "{}", this->bearer_token_);
     });
     heartbeat_->start(interval);

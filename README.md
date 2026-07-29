@@ -32,10 +32,6 @@ Learn more about Ross Video [here](https://www.rossvideo.com/company/about-ross/
 
 * Follow the steps in [here](./sdks/cpp/docs/cpp_sdk_main_page.md).
 
-#### Java
-
-* todo
-
 ### Breakdown
 
 * `/docs/`: Documentation and images
@@ -47,7 +43,6 @@ Learn more about Ross Video [here](https://www.rossvideo.com/company/about-ross/
   * `./validate.js`: Tool to validate device models using schema
 * `/sdks/`: SDK source
   * `/sdks/cpp`: C++ implementation
-  * `/sdk/java`: Java implementation
 * `./package.json`: NPM package with scripts
 
 ## Contribution Guide

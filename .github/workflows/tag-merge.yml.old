@@ -1,0 +1,46 @@
+name: Add tag to main after merge
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'sdks/cpp/VERSION.txt'
+      - 'sdks/go/VERSION.txt'
+
+jobs:
+  update_version_file:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sdk: [ 'cpp', 'go' ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Put the version tags on main (${{ matrix.sdk }})
+        run: |
+          # Derive version from VERSION.txt
+          TEXT_FILE="$(cat sdks/${{ matrix.sdk }}/VERSION.txt)"
+          VERSION=${TEXT_FILE#${{ matrix.sdk }}-}
+
+          if [ "$(echo "$VERSION" | cut -d'-' -f1)" = "" ]; then
+            echo "❌ Bad version file: sdks/${{ matrix.sdk }}/VERSION.txt"
+            exit 1
+          fi
+
+          VERSION_PART="$(echo "$VERSION" | cut -d'-' -f1)-$(echo "$VERSION" | cut -d'-' -f2)"
+          TAG="${{ matrix.sdk }}-$VERSION_PART"
+          echo "Tagging with $TAG"
+
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # Create only tags that don't exist (workflow can run when only one SDK's VERSION.txt changed)
+          if ! git rev-parse --verify "$TAG" >/dev/null 2>&1; then
+            git tag -a "$TAG" -m "Version $TAG"
+          fi
+          git push origin "$TAG"

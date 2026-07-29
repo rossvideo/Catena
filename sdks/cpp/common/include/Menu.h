@@ -20,7 +20,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -104,13 +104,14 @@ class Menu : public IMenu {
      * @param comand_oids The menu's command members
      * @param client_hints map of client hints
      * @param oid the oid of the menu
+     * @param order The display order of the menu.
      * @param menuGroup the menu group to add the menu to
      */
     Menu(const catena::common::PolyglotText::ListInitializer name, bool hidden, bool disabled,
          const OidInitializer param_oids,
          const OidInitializer command_oids,
          const PairInitializer& client_hints, 
-         std::string oid, IMenuGroup& menuGroup);
+         std::string oid, int32_t order, IMenuGroup& menuGroup);
 
 
     /**
@@ -144,6 +145,10 @@ class Menu : public IMenu {
      * @brief A collection of client hints for use with this menu.
      */
     std::unordered_map<std::string, std::string> client_hints_;
+    /**
+     * @brief The display order of the menu.
+     */
+    int32_t order_ = 0;
 };
 
 

@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -44,8 +44,26 @@
 
 #include "StructInfo.h"
 
+#include <Config.h>
+#include <Logger.h>
+
 namespace catena {
 namespace common {
+
+/**
+ * @brief Configure and init logging for unit tests.
+ */
+inline void set_up_test_logs(std::string directory, std::string appName) {
+    config::log_level = "trace";
+    config::log_console = true;
+    config::log_file = true;
+    config::log_dir = directory;
+    config::log_size = 10;
+    config::log_count = 3; // 1 active + 2 archived; final rotation leaves up to 2 archives after teardown
+    config::log_final_rotation = true;
+    config::log_append = false;
+    Logger::init(std::move(appName));
+}
 
 /*
  * A test CatenaStruct with two int fields.

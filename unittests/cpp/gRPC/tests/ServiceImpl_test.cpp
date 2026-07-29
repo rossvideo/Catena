@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -32,7 +32,7 @@
  * @brief This file is for testing the ServiceImpl.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -58,6 +58,7 @@
 // common
 #include <Status.h>
 #include <Logger.h>
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 using namespace catena::gRPC;
@@ -67,8 +68,7 @@ class gRPCServiceImplTests : public testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("gRPCServiceImplTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "gRPCServiceImplTest");
     }
 
     static void TearDownTestSuite() {
@@ -82,7 +82,7 @@ class gRPCServiceImplTests : public testing::Test {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         EXPECT_CALL(dm_, slot()).WillRepeatedly(testing::Return(0));
         // Creating the gRPC server.
-        builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
+        builder_.AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials(), &selectedPort_);
         cq_ = builder_.AddCompletionQueue();
         ServiceConfig config = ServiceConfig()
             .set_EOPath(EOPath_)
@@ -97,6 +97,7 @@ class gRPCServiceImplTests : public testing::Test {
         ASSERT_EQ(service_->registrySize(), 14) << "ServiceImpl failed to register " << 14 - service_->registrySize() << " CallData objects";
         cqthread_ = std::make_unique<std::thread>([&]() { service_->processEvents(); });
         // Creating the gRPC client.
+        serverAddr_ = "127.0.0.1:" + std::to_string(selectedPort_);
         channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
         client_ = st2138::CatenaService::NewStub(channel_);
     }
@@ -121,7 +122,8 @@ class gRPCServiceImplTests : public testing::Test {
     std::streambuf* oldCout_;
 
     // Address used for gRPC tests.
-    std::string serverAddr_ = "0.0.0.0:50051";
+    std::string serverAddr_ = "";
+    int selectedPort_ = 0;
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;
@@ -191,7 +193,7 @@ TEST(gRPCServiceImplTests_NoFixture, ServiceImpl_CreateDuplicateSlot) {
     ServiceConfig config;
     // Adding completion queue
     grpc::ServerBuilder builder;
-    builder.AddListeningPort("0.0.0.0:50051", grpc::InsecureServerCredentials());
+    builder.AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials());
     auto cq = builder.AddCompletionQueue();
     config.cq = cq.get();
     // Adding devices

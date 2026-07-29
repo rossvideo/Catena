@@ -1,0 +1,319 @@
+/*
+ * Copyright 2026 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @brief Configuration structures
+ * @file config.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-05-29
+ */
+
+package config
+
+import (
+	"log/slog"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type RuntimeOptions struct {
+	UseGrpc   bool `env:"USE_GRPC" flag:"use-grpc"`
+	UseRest   bool `env:"USE_REST" flag:"use-rest"`
+	Rest      RestOptions
+	Grpc      GrpcOptions
+	Server    ServerOptions
+	Logger    LoggerOptions
+	Dashboard DashboardOptions
+}
+
+// RestOptions configures the REST transport.
+type RestOptions struct {
+	// Port is the TCP port the REST/HTTP server listens on (default 9080).
+	Port int `env:"REST_PORT" flag:"rest-port"`
+}
+
+// GrpcOptions configures the gRPC transport.
+type GrpcOptions struct {
+	// Port is the TCP port the gRPC server listens on (default 6254).
+	Port int `env:"GRPC_PORT" flag:"grpc-port"`
+	// Reflection enables the gRPC server reflection service, which lets tools
+	// like grpcurl discover services at runtime (default false).
+	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
+}
+
+type ServerOptions struct {
+	// true for development mode, false for production mode
+	IsDev bool `env:"DEV_MODE" flag:"dev"`
+
+	// maximum number of concurrent connections (default: 100)
+	MaxConnections int `env:"MAX_CONNECTIONS" flag:"max-connections"`
+	// AuthzEnabled enables authorization checks for all endpoints. If false, all requests are allowed.
+	AuthzEnabled bool `env:"AUTHZ" flag:"authz"`
+	// JwtOptions configures JWT validation for incoming requests when AuthzEnabled is true
+	JwtOptions JwtValidationOptions
+}
+
+// JwtValidationOptions controls optional claim validation and HTTP behavior.
+type JwtValidationOptions struct {
+	// AllowedAlgs specifies which signing algorithms are allowed. If empty, defaults to ES256.
+	AllowedAlgs []string
+	// Audience used to validate the "aud" claim. Optional.
+	Audience string `env:"JWT_AUDIENCE" flag:"jwt-audience"`
+	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if ValidateSignature is true. Optional.
+	Issuer string `env:"JWT_ISSUER" flag:"jwt-issuer"`
+	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
+	Leeway time.Duration
+	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
+	ValidateSignature bool `env:"JWT_VALIDATE_SIGNATURE" flag:"jwt-validate-signature"`
+
+	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
+	Http *http.Client
+}
+
+// ResolvedAllowedAlgs returns configured signing algorithms, defaulting to ES256 when unset.
+func (o JwtValidationOptions) ResolvedAllowedAlgs() []string {
+	if len(o.AllowedAlgs) == 0 {
+		// Ross Way To Auth specifies ES256, so we default to that
+		// but allow users to specify other algorithms if needed.
+		return []string{jwt.SigningMethodES256.Alg()}
+	}
+	return append([]string(nil), o.AllowedAlgs...)
+}
+
+// ConnectionProtocol identifies the Catena transport advertised to DashBoard.
+type ConnectionProtocol string
+
+const (
+	// ProtocolST2138Rest advertises a ST 2138 REST device.
+	ProtocolST2138Rest ConnectionProtocol = "st2138-rest"
+	// ProtocolST2138Grpc advertises a ST 2138 gRPC device.
+	ProtocolST2138Grpc ConnectionProtocol = "st2138-grpc"
+	// ProtocolST2138Catena advertises a legacy "catena" device.
+	ProtocolST2138Catena ConnectionProtocol = "catena"
+)
+
+// DashboardOptions configures the DashBoard connection-props HTTP server that
+// advertises this device for the "Detect Frame Information" workflow. It is
+// transport-agnostic and can front either a REST or gRPC Catena device.
+//
+// DashboardOptions must be initialized before use.
+// Prefer config.InitOptions or config.DefaultDashboardOptions().
+type DashboardOptions struct {
+	// ServiceHostname is the address advertised to DashBoard (default "localhost").
+	ServiceHostname string `env:"DASHBOARD_SERVICE_HOSTNAME" flag:"dashboard-service-hostname"`
+	// Port is the port the connection-props HTTP server listens on (default 8080).
+	Port int `env:"DASHBOARD_PORT" flag:"dashboard-port"`
+	// ServicePort is the Catena service port advertised to DashBoard (default 6254).
+	ServicePort int `env:"DASHBOARD_SERVICE_PORT" flag:"dashboard-service-port"`
+	// ServiceTLS controls whether the advertised connection uses TLS/SSL (default false).
+	ServiceTLS bool `env:"DASHBOARD_SERVICE_TLS_ENABLED" flag:"dashboard-service-tls-enabled"`
+	// Protocol is the transport being advertised (used for logging and the
+	// advertised equipmentType).
+	Protocol ConnectionProtocol `env:"DASHBOARD_PROTOCOL" flag:"dashboard-protocol"`
+	// RefreshInterval is the DashBoard refresh interval in milliseconds (default 30000).
+	RefreshInterval uint32
+	// NodeName is the optional human-readable node name.
+	NodeName string `env:"DASHBOARD_NODE_NAME" flag:"dashboard-node-name"`
+	// NodeID is the optional unique node identifier.
+	NodeID string `env:"DASHBOARD_NODE_ID" flag:"dashboard-node-id"`
+	// ServiceName is the advertised service URL (default "service:catena-device").
+	ServiceName string `env:"DASHBOARD_SERVICE_NAME" flag:"dashboard-service-name"`
+	// Endpoint is the path served (default "/connect/connection-props.xml").
+	Endpoint string `env:"DASHBOARD_ENDPOINT" flag:"dashboard-endpoint"`
+}
+
+type LoggerOptions struct {
+	// AppName is used in log file naming
+	AppName string
+	// LogDir is the directory for log files
+	LogDir string `env:"LOG_DIR" flag:"log-dir"`
+	// Silent suppresses all log output
+	Silent bool `env:"SILENT" flag:"silent"`
+	// Level is the minimum log level to output
+	Level slog.Level `env:"LOG_LEVEL" flag:"log-level"`
+	// WriteToFile enables file logging
+	WriteToFile bool `env:"LOG_TO_FILE" flag:"log-to-file"`
+	// WriteToConsole enables console (stderr) logging
+	WriteToConsole bool `env:"LOG_TO_CONSOLE" flag:"log-to-console"`
+	// UseJSON outputs logs in JSON format (useful for structured logging)
+	UseJSON bool `env:"LOG_USE_JSON" flag:"log-use-json"`
+}
+
+func DefaultRuntimeOptions() RuntimeOptions {
+	return RuntimeOptions{
+		UseGrpc:   false,
+		UseRest:   false,
+		Rest:      DefaultRestOptions(),
+		Grpc:      DefaultGrpcOptions(),
+		Server:    DefaultServerOptions(),
+		Logger:    DefaultLoggerOptions(),
+		Dashboard: DefaultDashboardOptions(),
+	}
+}
+
+// DefaultDashboardOptions returns sensible defaults for the DashBoard
+// connection-props server.
+func DefaultDashboardOptions() DashboardOptions {
+	return DashboardOptions{
+		ServiceHostname: "localhost",
+		Port:            8080,
+		ServicePort:     6254,
+		ServiceTLS:      false,
+		Protocol:        ProtocolST2138Grpc,
+		RefreshInterval: 30000,
+		ServiceName:     "service:catena-device",
+		Endpoint:        "/connect/connection-props.xml",
+	}
+}
+
+func DefaultRestOptions() RestOptions {
+	return RestOptions{Port: 9080}
+}
+
+func DefaultGrpcOptions() GrpcOptions {
+	return GrpcOptions{Port: 6254, Reflection: false}
+}
+
+func DefaultServerOptions() ServerOptions {
+	return ServerOptions{
+		IsDev:          false,
+		MaxConnections: 100,
+		AuthzEnabled:   true,
+		JwtOptions:     DefaultJwtValidationOptions(),
+	}
+}
+
+func DefaultJwtValidationOptions() JwtValidationOptions {
+	return JwtValidationOptions{
+		AllowedAlgs:       nil, // will default to ES256 in the code if empty
+		Audience:          "",
+		Issuer:            "",
+		Leeway:            0,
+		ValidateSignature: false,
+		Http:              nil, // will default to http.DefaultClient in the code if nil
+	}
+}
+
+// DefaultLoggerOptions returns sensible defaults for release mode
+func DefaultLoggerOptions() LoggerOptions {
+	return LoggerOptions{
+		AppName:        "catena",
+		LogDir:         "./logs",
+		Silent:         false,
+		Level:          slog.LevelInfo, // INFO default in prod
+		WriteToFile:    true,
+		WriteToConsole: true,
+		UseJSON:        false,
+	}
+}
+
+// make sure all options types implement slog.LogValuer for structured logging of the config
+var _ slog.LogValuer = RuntimeOptions{}
+var _ slog.LogValuer = RestOptions{}
+var _ slog.LogValuer = GrpcOptions{}
+var _ slog.LogValuer = ServerOptions{}
+var _ slog.LogValuer = JwtValidationOptions{}
+var _ slog.LogValuer = LoggerOptions{}
+var _ slog.LogValuer = DashboardOptions{}
+
+func (o JwtValidationOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("issuer", o.Issuer),
+		slog.String("audience", o.Audience),
+		slog.Bool("validate_signature", o.ValidateSignature),
+		slog.Duration("leeway", o.Leeway),
+		slog.String("allowed_algs", strings.Join(o.ResolvedAllowedAlgs(), ",")),
+	)
+}
+
+func (o ServerOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Bool("dev", o.IsDev),
+		slog.Int("max_connections", o.MaxConnections),
+		slog.Bool("authz_enabled", o.AuthzEnabled),
+		slog.Any("jwt_validation", o.JwtOptions),
+	)
+}
+
+func (o LoggerOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("app_name", o.AppName),
+		slog.Bool("silent", o.Silent),
+		slog.String("log_dir", o.LogDir),
+		slog.String("level", o.Level.String()),
+		slog.Bool("write_to_file", o.WriteToFile),
+		slog.Bool("write_to_console", o.WriteToConsole),
+		slog.Bool("use_json", o.UseJSON),
+	)
+}
+
+func (o RestOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+	)
+}
+
+func (o GrpcOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("port", o.Port),
+		slog.Bool("reflection", o.Reflection),
+	)
+}
+
+func (o DashboardOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("service_hostname", o.ServiceHostname),
+		slog.Int("port", o.Port),
+		slog.Int("service_port", o.ServicePort),
+		slog.Bool("service_tls", o.ServiceTLS),
+		slog.String("protocol", string(o.Protocol)),
+		slog.Uint64("refresh_interval", uint64(o.RefreshInterval)),
+		slog.String("node_name", o.NodeName),
+		slog.String("node_id", o.NodeID),
+		slog.String("service_name", o.ServiceName),
+		slog.String("endpoint", o.Endpoint),
+	)
+}
+
+func (o RuntimeOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Bool("use_grpc", o.UseGrpc),
+		slog.Bool("use_rest", o.UseRest),
+		slog.Any("rest", o.Rest),
+		slog.Any("grpc", o.Grpc),
+		slog.Any("server", o.Server),
+		slog.Any("logger", o.Logger),
+		slog.Any("dashboard", o.Dashboard),
+	)
+}

@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author (Nelson Daniels) nelson.daniels@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -49,6 +49,7 @@
 #include "MenuGroup.h"
 #include "Logger.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 using namespace catena::common;
 
@@ -56,8 +57,7 @@ class MenuGroupTest : public ::testing::Test {
   protected:
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("MenuGroupTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "MenuGroupTest");
     }
 
     static void TearDownTestSuite() {
@@ -69,7 +69,7 @@ class MenuGroupTest : public ::testing::Test {
             testing::Invoke([](const std::string &key, IMenuGroup *item){
                 EXPECT_TRUE(item) << "No item passed into dm.addItem()";
             }));
-        menuGroup_.reset(new MenuGroup(oid_, {name_[0], name_[1]}, dm_));
+        menuGroup_.reset(new MenuGroup(oid_, 1, {name_[0], name_[1]}, dm_));
     }
 
     std::unique_ptr<MenuGroup> menuGroup_;
@@ -95,7 +95,7 @@ TEST_F(MenuGroupTest, MenuGroup_ErrCreate) {
     MockDevice errDm;
     EXPECT_CALL(errDm, addItem(oid_, testing::An<IMenuGroup*>())).Times(1)
         .WillOnce(testing::Throw(std::runtime_error("Device error")));
-    EXPECT_THROW(MenuGroup(oid_, {name_[0], name_[1]}, errDm), std::runtime_error);
+    EXPECT_THROW(MenuGroup(oid_, 1, {name_[0], name_[1]}, errDm), std::runtime_error);
 }
 
 /*
@@ -158,6 +158,7 @@ TEST_F(MenuGroupTest, MenuGroup_ToProto) {
     for (auto& oid : menus) {
         EXPECT_EQ(protoMenuGroup.menus().at(oid).name().display_strings().at("en"), oid);
     }
+    EXPECT_EQ(protoMenuGroup.order(), 1) << "MenuGroup order should be serialized";
 }
 
 /*

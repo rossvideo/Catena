@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -32,7 +32,7 @@
  * @brief This file is for testing the NmosNode.cpp file.
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -47,6 +47,7 @@
 #include <unistd.h>
 #include "WrapAvahiClient.h"
 #include "Config.h"
+#include "CommonTestHelpers.h"
 
 inline AvahiTestControl g_avahi_test_control;
 
@@ -97,7 +98,7 @@ struct FakeRegistry {
                 } else if (method == "POST" &&
                            path.rfind("/x-nmos/registration/v1.3/health/nodes/", 0) == 0) {
                     heartbeats++; write_resp(fd, 200);
-                    VLOG(1) << "Heartbeat received: " << heartbeats << "\n";
+                    LOG(DEBUG) << "Heartbeat received: " << heartbeats << "\n";
                 } else {
                     write_resp(fd, 404);
                 }
@@ -174,8 +175,7 @@ protected:
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("NmosNodeTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "NmosNodeTest");
     }
 
     static void TearDownTestSuite() {

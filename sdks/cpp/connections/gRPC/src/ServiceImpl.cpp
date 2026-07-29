@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -79,7 +79,7 @@ vdk::signal<void()> catena::gRPC::Connect::shutdownSignal_;
 void ServiceImpl::processEvents() {
     void *tag;
     bool ok;
-    VLOG(1) << "Start processing events\n";
+    LOG(DEBUG) << "Start processing events\n";
     while (true) {
         gpr_timespec deadline =
             gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(1, GPR_TIMESPAN));
@@ -113,5 +113,5 @@ void ServiceImpl::deregisterItem(ICallData *cd) {
     if (it != registry_.end()) {
         registry_.erase(it);
     }
-    VLOG(1) << "Active RPCs remaining: " << registry_.size() << '\n';
+    LOG(DEBUG) << "Active RPCs remaining: " << registry_.size() << '\n';
 }

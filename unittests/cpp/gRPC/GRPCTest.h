@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -102,10 +102,13 @@ class GRPCTest : public ::testing::Test {
         oldCout_ = std::cout.rdbuf(MockConsole_.rdbuf());
         
         // Creating the gRPC server.
-        builder_.AddListeningPort(serverAddr_, grpc::InsecureServerCredentials());
+        builder_.AddListeningPort("0.0.0.0:0", grpc::InsecureServerCredentials(), &selectedPort_);
         cq_ = builder_.AddCompletionQueue();
         builder_.RegisterService(&service_);
         server_ = builder_.BuildAndStart();
+
+        // Build the client address from the actual bound server port.
+        serverAddr_ = "127.0.0.1:" + std::to_string(selectedPort_);
 
         // Creating the gRPC client.
         channel_ = grpc::CreateChannel(serverAddr_, grpc::InsecureChannelCredentials());
@@ -159,7 +162,8 @@ class GRPCTest : public ::testing::Test {
     catena::exception_with_status expRc_{"", catena::StatusCode::OK};
 
     // Address used for gRPC tests.
-    std::string serverAddr_ = "0.0.0.0:50051";
+    std::string serverAddr_ = "";
+    int selectedPort_ = 0;
     // Server and service variables.
     grpc::ServerBuilder builder_;
     std::unique_ptr<grpc::Server> server_ = nullptr;

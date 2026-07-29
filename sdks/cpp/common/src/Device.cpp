@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -134,7 +134,7 @@ catena::exception_with_status Device::commitMultiSetValue (st2138::MultiSetValue
                 LOG(INFO) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(setValuePayload.value());
             }
             else {
-                VLOG(1) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(setValuePayload.value());
+                LOG(DEBUG) << "Device::commitMultiSetValue: Param \"" << path.fqoid() << "\" set to new value: " << catena::param_value_string(setValuePayload.value());
             }
 
             // Resetting trackers to match new value.

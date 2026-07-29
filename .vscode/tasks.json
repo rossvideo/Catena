@@ -123,6 +123,16 @@
                 "Generate Clean Coverage Report (Rebuild)",
                 "Generate Coverage Report with HTML Server"
             ]
+        },
+        {
+            "label": "Generate Protobufs",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/protos.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ],
     "version": "2.0.0"

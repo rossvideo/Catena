@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -33,7 +33,7 @@
  * @author benjamin.whitten@rossvideo.com
  * @author jason.chen@rossvideo.com
  * @author Keon Foster (keon.foster@rossvideo.com)
- * @date 2026-02-19
+ * @date 2026-03-20
  * @copyright Copyright © 2026 Ross Video Ltd
  */
 
@@ -55,8 +55,7 @@ class RESTGetParamTests : public RESTEndpointTest {
 
     // Set up and tear down Google Logging
     static void SetUpTestSuite() {
-        config::log_dir = UNITTEST_LOG_DIR;
-        Logger::init("RESTGetParamTest");
+        set_up_test_logs(UNITTEST_LOG_DIR, "RESTGetParamTest");
     }
 
     static void TearDownTestSuite() {
@@ -89,8 +88,7 @@ class RESTGetParamTests : public RESTEndpointTest {
         param->mutable_value()->set_string_value(value);
         param->add_oid_aliases(alias);
         (*param->mutable_name()->mutable_display_strings())["en"] = enName;
-        auto status = google::protobuf::util::MessageToJsonString(expVal_, &expJson_);
-        ASSERT_TRUE(status.ok()) << "Failed to convert expected value to JSON";
+        protoToJsonString(expVal_, expJson_);
     }
 
     /*

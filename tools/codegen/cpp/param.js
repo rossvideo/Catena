@@ -167,7 +167,10 @@ class Descriptor {
         return ("total_length" in desc) ? `${desc.total_length}` : "0";
       },
       precision: () => {
-        return ("precision" in desc) ? `${desc.precision}` : "2";
+        if (["FLOAT32", "FLOAT32_ARRAY"].includes(desc.type)) {
+          return ("precision" in desc) ? `${desc.precision}` : "2";
+        }
+        return "0";
       },
       minimal_set: () => {
         return ("minimal_set" in desc) ? `${desc.minimal_set}` : "false";
@@ -265,7 +268,7 @@ class Param {
    */
   getParam(path) {
     let front = path.shift();
-    if (!front in this.subParams) {
+    if (!(front in this.subParams)) {
       return undefined;
     }
 

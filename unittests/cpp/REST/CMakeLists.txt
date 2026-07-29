@@ -14,6 +14,7 @@ include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
 set(REST_TEST_FILES
     SocketReader_test.cpp
     SocketWriter_test.cpp
+    RestJsonFormatter_test.cpp
     GetValue_test.cpp
     LanguagePack_test.cpp
     Languages_test.cpp
@@ -37,10 +38,6 @@ foreach(test_file ${REST_TEST_FILES})
         catena_connections_REST
         pthread
         ${GTEST_BOTH_LIBRARIES}
-        absl::log
-        absl::log_globals
-        absl::log_initialize
-        absl::log_severity
         GTest::GTest
         GTest::Main
         GTest::gmock
