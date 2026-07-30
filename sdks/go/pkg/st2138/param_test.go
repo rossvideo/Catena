@@ -1176,7 +1176,7 @@ func TestWithParam_StructValuesFromSubParams(t *testing.T) {
 	}
 }
 
-// --- Variadic factory / hasValue tests ---
+// --- Variadic factory value tests ---
 
 func TestNewParamX_NoValue(t *testing.T) {
 	tests := []struct {
@@ -1205,22 +1205,21 @@ func TestNewParamX_NoValue(t *testing.T) {
 			if tt.param.Proto.GetValue() != nil {
 				t.Error("expected nil value when no value given")
 			}
-			if tt.param.HasValue() {
-				t.Error("expected HasValue()=false when no value given")
-			}
 		})
 	}
 }
 
-func TestNewParamX_HasValue(t *testing.T) {
-	if !NewParamInt32(0).HasValue() {
-		t.Error("expected HasValue()=true for intentionally default value")
+// Intentionally default values (zero int, empty string, EMPTY) still produce
+// a non-nil value, which is what distinguishes them from no-arg factories.
+func TestNewParamX_DefaultValueIsSet(t *testing.T) {
+	if NewParamInt32(0).Proto.GetValue() == nil {
+		t.Error("expected non-nil value for intentionally default int32")
 	}
-	if !NewParamString("").HasValue() {
-		t.Error("expected HasValue()=true for intentionally empty string")
+	if NewParamString("").Proto.GetValue() == nil {
+		t.Error("expected non-nil value for intentionally empty string")
 	}
-	if !NewParamEmpty().HasValue() {
-		t.Error("expected HasValue()=true for EMPTY param")
+	if NewParamEmpty().Proto.GetValue() == nil {
+		t.Error("expected non-nil value for EMPTY param")
 	}
 }
 
@@ -1229,36 +1228,15 @@ func TestNewParamX_ExtraValuesIgnored(t *testing.T) {
 	if p.Proto.GetValue().GetInt32Value() != 1 {
 		t.Errorf("expected first value 1 to win, got %d", p.Proto.GetValue().GetInt32Value())
 	}
-	if !p.HasValue() {
-		t.Error("expected HasValue()=true when values were given")
-	}
 }
 
-func TestWithValue_SetsHasValue(t *testing.T) {
-	v, _ := ToValue(int32(42))
-	cp := NewParamInt32().WithValue(v)
-	if !cp.HasValue() {
-		t.Error("expected HasValue()=true after WithValue")
-	}
-}
-
-func TestSetValue_SetsHasValue(t *testing.T) {
-	cp := NewParamInt32()
-	if err := cp.SetValue(int32(5)); err != nil {
-		t.Fatalf("SetValue failed: %v", err)
-	}
-	if !cp.HasValue() {
-		t.Error("expected HasValue()=true after SetValue")
-	}
-}
-
-func TestSetValue_FailureDoesNotSetHasValue(t *testing.T) {
+func TestSetValue_FailureLeavesValueNil(t *testing.T) {
 	cp := NewParamInt32()
 	if err := cp.SetValue("wrong type"); err == nil {
 		t.Fatal("expected SetValue to fail")
 	}
-	if cp.HasValue() {
-		t.Error("expected HasValue()=false after failed SetValue")
+	if cp.Proto.GetValue() != nil {
+		t.Error("expected value to remain nil after failed SetValue")
 	}
 }
 
@@ -1365,8 +1343,8 @@ func TestWithParam_CleanBuilderEquivalence(t *testing.T) {
 		t.Errorf("expected clean builder proto to equal up-front map proto:\nclean:   %v\nupfront: %v",
 			clean.Proto, upfront.Proto)
 	}
-	if !clean.HasValue() {
-		t.Error("expected struct built via valued WithParam calls to report HasValue()=true")
+	if clean.Proto.GetValue() == nil {
+		t.Error("expected struct built via valued WithParam calls to have a non-nil value")
 	}
 
 	outer := NewParamStruct().WithParam("inner", clean)
