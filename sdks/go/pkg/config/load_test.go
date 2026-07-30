@@ -394,6 +394,89 @@ func TestInitOptions_Transport(t *testing.T) {
 			t.Errorf("expected CLI flag to override env (Rest.Port=4444), got %d", opts.Rest.Port)
 		}
 	})
+
+	t.Run("rest tls from env", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_TLS_ENABLED", "true")
+		t.Setenv("TESTCFG_REST_TLS_CERT_FILE", "/certs/rest.crt")
+		t.Setenv("TESTCFG_REST_TLS_KEY_FILE", "/certs/rest.key")
+		t.Setenv("TESTCFG_REST_TLS_CA_FILE", "/certs/rest-ca.crt")
+		t.Setenv("TESTCFG_REST_TLS_MUTUAL_AUTH", "true")
+		opts := init(t)
+		want := TLSOptions{
+			Enabled:    true,
+			CertFile:   "/certs/rest.crt",
+			KeyFile:    "/certs/rest.key",
+			CAFile:     "/certs/rest-ca.crt",
+			MutualAuth: true,
+		}
+		if !reflect.DeepEqual(opts.Rest.TLS, want) {
+			t.Errorf("expected Rest.TLS %+v, got %+v", want, opts.Rest.TLS)
+		}
+	})
+
+	t.Run("grpc tls from env", func(t *testing.T) {
+		t.Setenv("TESTCFG_GRPC_TLS_ENABLED", "true")
+		t.Setenv("TESTCFG_GRPC_TLS_CERT_FILE", "/certs/grpc.crt")
+		t.Setenv("TESTCFG_GRPC_TLS_KEY_FILE", "/certs/grpc.key")
+		t.Setenv("TESTCFG_GRPC_TLS_CA_FILE", "/certs/grpc-ca.crt")
+		t.Setenv("TESTCFG_GRPC_TLS_MUTUAL_AUTH", "true")
+		opts := init(t)
+		want := TLSOptions{
+			Enabled:    true,
+			CertFile:   "/certs/grpc.crt",
+			KeyFile:    "/certs/grpc.key",
+			CAFile:     "/certs/grpc-ca.crt",
+			MutualAuth: true,
+		}
+		if !reflect.DeepEqual(opts.Grpc.TLS, want) {
+			t.Errorf("expected Grpc.TLS %+v, got %+v", want, opts.Grpc.TLS)
+		}
+	})
+
+	// the rest and grpc TLS env vars must not bleed into each other
+	t.Run("rest and grpc tls are independent", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_TLS_ENABLED", "true")
+		t.Setenv("TESTCFG_REST_TLS_CERT_FILE", "/certs/rest.crt")
+		opts := init(t)
+		if !opts.Rest.TLS.Enabled || opts.Rest.TLS.CertFile != "/certs/rest.crt" {
+			t.Errorf("expected Rest.TLS to be set from env, got %+v", opts.Rest.TLS)
+		}
+		if opts.Grpc.TLS.Enabled || opts.Grpc.TLS.CertFile != "" {
+			t.Errorf("expected Grpc.TLS to stay at defaults, got %+v", opts.Grpc.TLS)
+		}
+	})
+
+	t.Run("tls defaults to disabled when unset", func(t *testing.T) {
+		opts := init(t)
+		if !reflect.DeepEqual(opts.Rest.TLS, TLSOptions{}) {
+			t.Errorf("expected default Rest.TLS to be zero, got %+v", opts.Rest.TLS)
+		}
+		if !reflect.DeepEqual(opts.Grpc.TLS, TLSOptions{}) {
+			t.Errorf("expected default Grpc.TLS to be zero, got %+v", opts.Grpc.TLS)
+		}
+	})
+
+	t.Run("cli overrides tls env", func(t *testing.T) {
+		t.Setenv("TESTCFG_GRPC_TLS_CERT_FILE", "/env/grpc.crt")
+		opts := init(t, "--grpc-tls-cert-file=/cli/grpc.crt", "--rest-tls-enabled", "--rest-tls-mutual-auth")
+		if opts.Grpc.TLS.CertFile != "/cli/grpc.crt" {
+			t.Errorf("expected CLI flag to override env (Grpc.TLS.CertFile=/cli/grpc.crt), got %q", opts.Grpc.TLS.CertFile)
+		}
+		if !opts.Rest.TLS.Enabled {
+			t.Error("expected --rest-tls-enabled to set Rest.TLS.Enabled")
+		}
+		if !opts.Rest.TLS.MutualAuth {
+			t.Error("expected --rest-tls-mutual-auth to set Rest.TLS.MutualAuth")
+		}
+	})
+
+	t.Run("invalid tls bool env errors", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_TLS_ENABLED", "notabool")
+		_, err := InitOptions("test_app", []string{}, WithPrefix("TESTCFG"))
+		if err == nil {
+			t.Error("expected error for invalid TESTCFG_REST_TLS_ENABLED, got nil")
+		}
+	})
 }
 
 func makeTestLoader(t *testing.T) *configLoader {

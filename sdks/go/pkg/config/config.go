@@ -57,10 +57,35 @@ type RuntimeOptions struct {
 	Dashboard DashboardOptions
 }
 
+// TLSOptions configures optional TLS for a transport listener.
+//
+// TLSOptions is shared between the REST and gRPC transports, so the env var
+// and CLI flag names are prefixed per transport: {REST|GRPC}_TLS_* and
+// --{rest|grpc}-tls-* respectively (e.g. CATENA_REST_TLS_CERT_FILE,
+// --grpc-tls-key-file).
+type TLSOptions struct {
+	// Enabled turns on TLS for the transport listener (default false).
+	Enabled bool
+	// CertFile is the path to the PEM-encoded server certificate.
+	// Required when Enabled is true.
+	CertFile string
+	// KeyFile is the path to the PEM-encoded server private key.
+	// Required when Enabled is true.
+	KeyFile string
+	// CAFile is the path to a PEM-encoded CA bundle used to verify client
+	// certificates. Required when MutualAuth is true; ignored otherwise.
+	CAFile string
+	// MutualAuth requires clients to present a certificate signed by the CA
+	// in CAFile (mTLS). Default false.
+	MutualAuth bool
+}
+
 // RestOptions configures the REST transport.
 type RestOptions struct {
 	// Port is the TCP port the REST/HTTP server listens on (default 9080).
 	Port int `env:"REST_PORT" flag:"rest-port"`
+	// TLS configures optional TLS for the REST listener (env: REST_TLS_*).
+	TLS TLSOptions
 }
 
 // GrpcOptions configures the gRPC transport.
@@ -70,6 +95,8 @@ type GrpcOptions struct {
 	// Reflection enables the gRPC server reflection service, which lets tools
 	// like grpcurl discover services at runtime (default false).
 	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
+	// TLS configures optional TLS for the gRPC listener (env: GRPC_TLS_*).
+	TLS TLSOptions
 }
 
 type ServerOptions struct {
@@ -242,6 +269,7 @@ func DefaultLoggerOptions() LoggerOptions {
 var _ slog.LogValuer = RuntimeOptions{}
 var _ slog.LogValuer = RestOptions{}
 var _ slog.LogValuer = GrpcOptions{}
+var _ slog.LogValuer = TLSOptions{}
 var _ slog.LogValuer = ServerOptions{}
 var _ slog.LogValuer = JwtValidationOptions{}
 var _ slog.LogValuer = LoggerOptions{}
@@ -281,6 +309,7 @@ func (o LoggerOptions) LogValue() slog.Value {
 func (o RestOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Int("port", o.Port),
+		slog.Any("tls", o.TLS),
 	)
 }
 
@@ -288,6 +317,17 @@ func (o GrpcOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Int("port", o.Port),
 		slog.Bool("reflection", o.Reflection),
+		slog.Any("tls", o.TLS),
+	)
+}
+
+func (o TLSOptions) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Bool("enabled", o.Enabled),
+		slog.String("cert_file", o.CertFile),
+		slog.String("key_file", o.KeyFile),
+		slog.String("ca_file", o.CAFile),
+		slog.Bool("mutual_auth", o.MutualAuth),
 	)
 }
 

@@ -151,10 +151,24 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 		"use_rest": false,
 		"rest": map[string]any{
 			"port": json.Number("0"),
+			"tls": map[string]any{
+				"enabled":     false,
+				"cert_file":   "",
+				"key_file":    "",
+				"ca_file":     "",
+				"mutual_auth": false,
+			},
 		},
 		"grpc": map[string]any{
 			"port":       json.Number("0"),
 			"reflection": false,
+			"tls": map[string]any{
+				"enabled":     false,
+				"cert_file":   "",
+				"key_file":    "",
+				"ca_file":     "",
+				"mutual_auth": false,
+			},
 		},
 		"server": map[string]any{
 			"dev":             true,
@@ -256,5 +270,48 @@ func TestDefaultOptions_TransportFlags(t *testing.T) {
 	}
 	if opts.UseRest != false {
 		t.Errorf("expected default UseRest=false, got %v", opts.UseRest)
+	}
+	if !reflect.DeepEqual(opts.Rest.TLS, TLSOptions{}) {
+		t.Errorf("expected default Rest.TLS to be disabled/zero, got %+v", opts.Rest.TLS)
+	}
+	if !reflect.DeepEqual(opts.Grpc.TLS, TLSOptions{}) {
+		t.Errorf("expected default Grpc.TLS to be disabled/zero, got %+v", opts.Grpc.TLS)
+	}
+}
+
+func TestTLSOptions_LogValuer(t *testing.T) {
+	opts := TLSOptions{
+		Enabled:    true,
+		CertFile:   "/certs/server.crt",
+		KeyFile:    "/certs/server.key",
+		CAFile:     "/certs/ca.crt",
+		MutualAuth: true,
+	}
+
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+	log.Info("tls options", "options", opts)
+
+	var entry map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &entry); err != nil {
+		t.Fatalf("decode slog output: %v\noutput: %s", err, buf.String())
+	}
+
+	got, ok := entry["options"].(map[string]any)
+	if !ok {
+		t.Fatalf("options field missing or wrong type: %#v", entry["options"])
+	}
+
+	want := map[string]any{
+		"enabled":     true,
+		"cert_file":   "/certs/server.crt",
+		"key_file":    "/certs/server.key",
+		"ca_file":     "/certs/ca.crt",
+		"mutual_auth": true,
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("logged tls options mismatch\n got: %#v\nwant: %#v", got, want)
 	}
 }

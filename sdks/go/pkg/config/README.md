@@ -212,6 +212,25 @@ All options can be configured via env and CLI.
 - `PREFIX_USE_GRPC` <-> `--use-grpc`
 - `PREFIX_USE_REST` <-> `--use-rest`
 
+### REST Transport
+
+- `PREFIX_REST_PORT` <-> `--rest-port`
+- `PREFIX_REST_TLS_ENABLED` <-> `--rest-tls-enabled`
+- `PREFIX_REST_TLS_CERT_FILE` <-> `--rest-tls-cert-file`
+- `PREFIX_REST_TLS_KEY_FILE` <-> `--rest-tls-key-file`
+- `PREFIX_REST_TLS_CA_FILE` <-> `--rest-tls-ca-file`
+- `PREFIX_REST_TLS_MUTUAL_AUTH` <-> `--rest-tls-mutual-auth`
+
+### gRPC Transport
+
+- `PREFIX_GRPC_PORT` <-> `--grpc-port`
+- `PREFIX_GRPC_REFLECTION` <-> `--grpc-reflection`
+- `PREFIX_GRPC_TLS_ENABLED` <-> `--grpc-tls-enabled`
+- `PREFIX_GRPC_TLS_CERT_FILE` <-> `--grpc-tls-cert-file`
+- `PREFIX_GRPC_TLS_KEY_FILE` <-> `--grpc-tls-key-file`
+- `PREFIX_GRPC_TLS_CA_FILE` <-> `--grpc-tls-ca-file`
+- `PREFIX_GRPC_TLS_MUTUAL_AUTH` <-> `--grpc-tls-mutual-auth`
+
 ### Server
 
 - `PREFIX_MAX_CONNECTIONS` <-> `--max-connections`
@@ -252,6 +271,25 @@ All options can be configured via env and CLI.
 - `-vvv` sets debug
 
 If `--log-level` is explicitly set, it takes priority over these shortcuts.
+
+## Transport TLS
+
+The REST and gRPC transports each accept an independent `TLSOptions` (`Rest.TLS` / `Grpc.TLS`), so one can run with TLS while the other runs plaintext. All file options take full paths to PEM-encoded files.
+
+- `*_TLS_ENABLED`: turn TLS on for that transport's listener (default off).
+- `*_TLS_CERT_FILE` / `*_TLS_KEY_FILE`: server certificate and private key. Both are required when TLS is enabled; the transport fails to start if either is missing or unreadable.
+- `*_TLS_MUTUAL_AUTH`: require clients to present a certificate signed by the CA in `*_TLS_CA_FILE` (mTLS).
+- `*_TLS_CA_FILE`: client CA bundle. Required when mutual auth is enabled; ignored (with a warning) otherwise.
+
+Example:
+
+```bash
+export CATENA_GRPC_TLS_ENABLED=true
+export CATENA_GRPC_TLS_CERT_FILE=/etc/catena/certs/server.crt
+export CATENA_GRPC_TLS_KEY_FILE=/etc/catena/certs/server.key
+```
+
+Note: `PREFIX_DASHBOARD_SERVICE_TLS_ENABLED` only controls what is *advertised* to DashBoard; it does not enable TLS on any listener. When you enable transport TLS on the service advertised to DashBoard, set `PREFIX_DASHBOARD_SERVICE_TLS_ENABLED=true` as well so the advertisement matches.
 
 ## Parsing Notes
 

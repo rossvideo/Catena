@@ -139,8 +139,18 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractBool("USE_REST", "use-rest", "Enable REST transport", &opts.UseRest).
 		// transport options
 		extractInt("REST_PORT", "rest-port", "Port the REST transport listens on", &opts.Rest.Port).
+		extractBool("REST_TLS_ENABLED", "rest-tls-enabled", "Enable TLS on the REST transport listener", &opts.Rest.TLS.Enabled).
+		extractString("REST_TLS_CERT_FILE", "rest-tls-cert-file", "Path to the PEM server certificate for the REST transport", &opts.Rest.TLS.CertFile).
+		extractString("REST_TLS_KEY_FILE", "rest-tls-key-file", "Path to the PEM server private key for the REST transport", &opts.Rest.TLS.KeyFile).
+		extractString("REST_TLS_CA_FILE", "rest-tls-ca-file", "Path to the PEM client CA bundle for REST mutual TLS", &opts.Rest.TLS.CAFile).
+		extractBool("REST_TLS_MUTUAL_AUTH", "rest-tls-mutual-auth", "Require and verify client certificates on the REST transport (mTLS)", &opts.Rest.TLS.MutualAuth).
 		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
 		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
+		extractBool("GRPC_TLS_ENABLED", "grpc-tls-enabled", "Enable TLS on the gRPC transport listener", &opts.Grpc.TLS.Enabled).
+		extractString("GRPC_TLS_CERT_FILE", "grpc-tls-cert-file", "Path to the PEM server certificate for the gRPC transport", &opts.Grpc.TLS.CertFile).
+		extractString("GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "Path to the PEM server private key for the gRPC transport", &opts.Grpc.TLS.KeyFile).
+		extractString("GRPC_TLS_CA_FILE", "grpc-tls-ca-file", "Path to the PEM client CA bundle for gRPC mutual TLS", &opts.Grpc.TLS.CAFile).
+		extractBool("GRPC_TLS_MUTUAL_AUTH", "grpc-tls-mutual-auth", "Require and verify client certificates on the gRPC transport (mTLS)", &opts.Grpc.TLS.MutualAuth).
 		//server options
 		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		extractBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).

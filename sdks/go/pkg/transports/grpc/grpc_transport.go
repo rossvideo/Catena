@@ -54,6 +54,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -67,11 +68,19 @@ type Transport struct {
 
 	port       int
 	reflection bool
+	tlsEnabled bool
+	// initErr records a construction-time failure (e.g. invalid TLS config).
+	// grpc.Creds must be supplied when the server is created, but NewTransport
+	// cannot return an error, so the error is surfaced from Start instead.
+	initErr error
 }
 
 var _ catena.Transport = (*Transport)(nil)
 
 // NewTransport creates a new gRPC transport with the given configuration.
+//
+// If the TLS configuration is invalid, the returned transport is unusable and
+// Start will return the configuration error.
 func NewTransport(cfg Options) *Transport {
 	transport := &Transport{
 		catenaService: &catenaService{},
@@ -79,23 +88,41 @@ func NewTransport(cfg Options) *Transport {
 		reflection:    cfg.Reflection,
 	}
 	transport.catenaService.transport = transport
-	transport.grpcServer = grpc.NewServer(
+
+	serverOpts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(transport.unaryInterceptor),
 		grpc.StreamInterceptor(transport.streamInterceptor),
-	)
+	}
+
+	tlsConfig, err := cfg.TLS.ServerTLSConfig()
+	if err != nil {
+		logger.Error("gRPC Transport TLS configuration error", "error", err)
+		transport.initErr = fmt.Errorf("gRPC transport TLS configuration error: %w", err)
+		return transport
+	}
+	if tlsConfig != nil {
+		serverOpts = append(serverOpts, grpc.Creds(credentials.NewTLS(tlsConfig)))
+		transport.tlsEnabled = true
+	}
+
+	transport.grpcServer = grpc.NewServer(serverOpts...)
 
 	rpc.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
 
 	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
-		logger.Info("gRPC server created with reflection enabled")
+		logger.Info("gRPC server created with reflection enabled", "tls", transport.tlsEnabled)
 	} else {
-		logger.Info("gRPC server created")
+		logger.Info("gRPC server created", "tls", transport.tlsEnabled)
 	}
 	return transport
 }
 
 func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
+	if t.initErr != nil {
+		return t.initErr
+	}
+
 	t.runtime = runtime
 
 	if t.listener == nil {
@@ -123,6 +150,10 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 }
 
 func (t *Transport) Shutdown(ctx context.Context) error {
+	if t.grpcServer == nil {
+		// construction failed (see initErr); there is nothing to shut down
+		return nil
+	}
 	logger.Info("Shutting down gRPC transport")
 
 	// Gracefully stop the gRPC server in a goroutine so we can also listen for context

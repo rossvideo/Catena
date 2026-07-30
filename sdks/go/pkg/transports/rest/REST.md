@@ -24,6 +24,31 @@ if err := srv.RegisterTransport(restTransport); err != nil {
 }
 ```
 
+## TLS
+
+The listener serves HTTPS when `Options.TLS.Enabled` is true:
+
+```go
+restTransport := rest.NewTransport(rest.Options{
+    Port: 9080,
+    TLS: config.TLSOptions{
+        Enabled:  true,
+        CertFile: "/etc/catena/certs/server.crt", // PEM server certificate
+        KeyFile:  "/etc/catena/certs/server.key", // PEM private key
+        // Optional mutual TLS (client certificate verification):
+        // CAFile:     "/etc/catena/certs/clients-ca.crt",
+        // MutualAuth: true,
+    },
+})
+```
+
+Behavior:
+
+- `CertFile` and `KeyFile` are required when TLS is enabled; `Start` returns an error if either is missing, unreadable, or invalid PEM.
+- With `MutualAuth`, clients must present a certificate signed by the CA bundle in `CAFile` or the TLS handshake is rejected.
+- Minimum accepted protocol version is TLS 1.2.
+- Env/CLI configuration: `{PREFIX}_REST_TLS_ENABLED`, `{PREFIX}_REST_TLS_CERT_FILE`, `{PREFIX}_REST_TLS_KEY_FILE`, `{PREFIX}_REST_TLS_CA_FILE`, `{PREFIX}_REST_TLS_MUTUAL_AUTH` (flags `--rest-tls-*`).
+
 ## Implemented Endpoints
 
 Core routes:
