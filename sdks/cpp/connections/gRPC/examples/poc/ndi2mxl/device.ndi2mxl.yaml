@@ -98,6 +98,25 @@ params:
         name:
           display_strings:
             en: "Grain Rate Denominator"
+      alpha:
+        type: INT32
+        name:
+          display_strings:
+            en: "Alpha Channel"
+        widget: checkbox
+        constraint:
+          type: INT_CHOICE
+          int32_choice:
+            choices:
+              - value: 0
+                name:
+                  display_strings:
+                    en: "Off"
+              - value: 1
+                name:
+                  display_strings:
+                    en: "On"
+
     value:
       struct_value:
         fields:
@@ -115,6 +134,8 @@ params:
             int32_value: 30000
           denominator:
             int32_value: 1001
+          alpha:
+            int32_value: 0
 
   ndi_sources:
     type: STRUCT_ARRAY

@@ -45,6 +45,7 @@ std::atomic<uint32_t> readIndex = 0;  // index the MXL writer reads from
 uint8_t* videoBuffer[2];              // double buffering between reader and writer threads
 std::atomic<int32_t> frameWidth = 1920;
 std::atomic<int32_t> frameHeight = 1080;
+std::atomic<bool> mxlAlpha = false;  // true when the mxl flow is video/v210a (fill + key)
 
 struct NdiSource {
     std::string name;
@@ -251,10 +252,15 @@ void RunNdiRecv() {
         } else if (recvResult == NDIlib_frame_type_video) {
             // write to the buffer the MXL writer is NOT reading
             uint32_t writeIndex = 1 - readIndex.load();
+            bool ndiHasAlpha = (videoFrame.FourCC == NDIlib_FourCC_video_type_BGRA);
+            LOG(INFO) << "Received video format: " << videoFrame.FourCC;
+            LOG(INFO) << "Is BGRA: " << (videoFrame.FourCC == NDIlib_FourCC_video_type_BGRA);
+            LOG(INFO) << "Is UYVY: " << (videoFrame.FourCC == NDIlib_FourCC_video_type_UYVY);
+
             convertFrame(videoFrame.p_data, videoBuffer[writeIndex],
                          std::min(static_cast<int32_t>(videoFrame.xres), frameWidth.load()),
                          std::min(static_cast<int32_t>(videoFrame.yres), frameHeight.load()),
-                         videoFrame.line_stride_in_bytes);
+                         videoFrame.line_stride_in_bytes, ndiHasAlpha, mxlAlpha.load());
 
             // swap: tell the MXL writer to read from the freshly written buffer
             {
@@ -317,6 +323,7 @@ void RunVideoFlow() {
 
     frameWidth = createFlowValue->get().width;
     frameHeight = createFlowValue->get().height;
+    mxlAlpha = createFlowValue->get().alpha != 0;
     createFlowDef(createFlowValue->get(), flowDefValue->get());
     std::string flowDefJson = createVideoFlowJson(flowDefValue->get());
     LOG(INFO) << "Generated flow definition: " << flowDefJson;
@@ -347,8 +354,13 @@ void RunVideoFlow() {
 
     // init the buffer, need to make the frames v210 width x height
     // which is (width / 6) * 16 for 6 pixels per group and 16 bytes per group,
-    // times the height for the full frame size
-    uint32_t bufferSize = ((flowDefValue->get().frame_width / 6) * 16) * flowDefValue->get().frame_height;
+    // times the height for the full frame size. For v210a (alpha) an additional
+    // key buffer of (width / 3) * 4 bytes per line is appended after the fill.
+    const int32_t fw = flowDefValue->get().frame_width;
+    const int32_t fh = flowDefValue->get().frame_height;
+    uint32_t fillSize = static_cast<uint32_t>(v210FillStride(fw)) * fh;
+    uint32_t keySize = mxlAlpha ? static_cast<uint32_t>(v210aKeyStride(fw)) * fh : 0;
+    uint32_t bufferSize = fillSize + keySize;
     LOG(INFO) << "Allocating video buffers with size " << bufferSize << " bytes each";
     for (int i = 0; i < 2; i++) {
         videoBuffer[i] = new uint8_t[bufferSize];

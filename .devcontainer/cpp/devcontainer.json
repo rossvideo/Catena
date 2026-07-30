@@ -24,14 +24,15 @@
   },
   "runArgs": [
     "--env-file",
-    "./.devcontainer/cpp/devcontainer.env"
+    "./.devcontainer/cpp/devcontainer.env",
+    "--network=host"
   ],
-  "forwardPorts": [
-    6254,
-    8000,
-    8080,
-    443
-  ],
+  // "forwardPorts": [
+  //   6254,
+  //   8000,
+  //   8080,
+  //   443
+  // ],
   "remoteUser": "${localEnv:USER}",
   "workspaceFolder": "/home/${localEnv:USER}/Catena",
   "containerEnv": {
