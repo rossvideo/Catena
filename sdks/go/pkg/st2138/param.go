@@ -53,43 +53,94 @@ type Param struct {
 }
 
 // --- Factory functions (one per ParamType) ---
+//
+// Each factory accepts an optional value. With no arguments the param is
+// created without a value, which is useful for valueless sub-param
+// descriptors. If more than one value is passed, the first is used and the
+// rest are ignored with a warning.
 
-func NewParamInt32(value int32) *Param {
-	return &Param{
-		Proto: &protos.Param{
-			Type:  protos.ParamType_INT32,
-			Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: value}},
-		},
+// pickValue returns the first element of values, warning when extras beyond
+// the first were supplied. values must be non-empty.
+func pickValue[T any](fn string, values []T) T {
+	if len(values) > 1 {
+		logger.Warning(fn+": more than one value provided; using the first and ignoring the rest",
+			"ignored", len(values)-1)
 	}
+	return values[0]
 }
 
-func NewParamFloat32(value float32) *Param {
-	return &Param{
-		Proto: &protos.Param{
-			Type:  protos.ParamType_FLOAT32,
-			Value: &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: value}},
-		},
+func NewParamInt32(value ...int32) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_INT32}}
+	if len(value) > 0 {
+		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: pickValue("NewParamInt32", value)}}
 	}
+	return cp
 }
 
-func NewParamString(value string) *Param {
-	return &Param{
-		Proto: &protos.Param{
-			Type:  protos.ParamType_STRING,
-			Value: &protos.Value{Kind: &protos.Value_StringValue{StringValue: value}},
-		},
+func NewParamFloat32(value ...float32) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_FLOAT32}}
+	if len(value) > 0 {
+		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: pickValue("NewParamFloat32", value)}}
 	}
+	return cp
 }
 
-func NewParamStruct(value map[string]any) *Param {
-	cp := &Param{
-		Proto: &protos.Param{
-			Type: protos.ParamType_STRUCT,
-		},
+func NewParamString(value ...string) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRING}}
+	if len(value) > 0 {
+		cp.Proto.Value = &protos.Value{Kind: &protos.Value_StringValue{StringValue: pickValue("NewParamString", value)}}
 	}
-	pv, err := ToProto(value)
+	return cp
+}
+
+// NewParamStruct creates a STRUCT param. When a map of field values is given,
+// it becomes the struct's Value and a valueless sub-param descriptor is
+// auto-created for every field (recursively for nested maps), so trivial
+// fields need no explicit WithParam calls.
+func NewParamStruct(value ...map[string]any) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT}}
+	if len(value) == 0 {
+		return cp
+	}
+	pv, err := ToProto(pickValue("NewParamStruct", value))
 	if err != nil {
 		logger.Warning("NewParamStruct: failed to convert value; value left nil",
+			"error", err)
+		return cp
+	}
+	cp.Proto.Value = pv
+	cp.Proto.Params = structFieldDescriptors(pv.GetStructValue())
+	return cp
+}
+
+// structFieldDescriptors builds a valueless sub-param descriptor for each
+// field of a struct value, inferring each descriptor's type from the field's
+// value kind. Nested struct fields recurse so their fields get descriptors
+// too.
+func structFieldDescriptors(sv *protos.StructValue) map[string]*protos.Param {
+	fields := sv.GetFields()
+	if len(fields) == 0 {
+		return nil
+	}
+	params := make(map[string]*protos.Param, len(fields))
+	for oid, fv := range fields {
+		p := &protos.Param{Type: paramTypeFromValueKind(fv)}
+		if nested := fv.GetStructValue(); nested != nil {
+			p.Params = structFieldDescriptors(nested)
+		}
+		params[oid] = p
+	}
+	return params
+}
+
+func NewParamStructVariant(value ...StructVariantValue) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
+	if len(value) == 0 {
+		return cp
+	}
+	pv, err := ToProto(pickValue("NewParamStructVariant", value))
+	if err != nil {
+		logger.Warning("NewParamStructVariant: failed to convert value; value left nil",
 			"error", err)
 		return cp
 	}
@@ -97,67 +148,44 @@ func NewParamStruct(value map[string]any) *Param {
 	return cp
 }
 
-func NewParamStructVariant(value *StructVariantValue) *Param {
-	cp := &Param{
-		Proto: &protos.Param{
-			Type: protos.ParamType_STRUCT_VARIANT,
-		},
-	}
-	if value != nil {
-		pv, err := ToProto(*value)
-		if err != nil {
-			logger.Warning("NewParamStructVariant: failed to convert value; value left nil",
-				"error", err)
-			return cp
-		}
-		cp.Proto.Value = pv
+func NewParamInt32Array(value ...[]int32) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_INT32_ARRAY}}
+	if len(value) > 0 {
+		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: pickValue("NewParamInt32Array", value)}}}
 	}
 	return cp
 }
 
-func NewParamInt32Array(value []int32) *Param {
-	return &Param{
-		Proto: &protos.Param{
-			Type:  protos.ParamType_INT32_ARRAY,
-			Value: &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: value}}},
-		},
+func NewParamFloat32Array(value ...[]float32) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_FLOAT32_ARRAY}}
+	if len(value) > 0 {
+		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: pickValue("NewParamFloat32Array", value)}}}
 	}
+	return cp
 }
 
-func NewParamFloat32Array(value []float32) *Param {
-	return &Param{
-		Proto: &protos.Param{
-			Type:  protos.ParamType_FLOAT32_ARRAY,
-			Value: &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: value}}},
-		},
+func NewParamStringArray(value ...[]string) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRING_ARRAY}}
+	if len(value) > 0 {
+		cp.Proto.Value = &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: pickValue("NewParamStringArray", value)}}}
 	}
+	return cp
 }
 
-func NewParamStringArray(value []string) *Param {
-	return &Param{
-		Proto: &protos.Param{
-			Type:  protos.ParamType_STRING_ARRAY,
-			Value: &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: value}}},
-		},
+func NewParamBinary(value ...[]byte) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_BINARY}}
+	if len(value) > 0 {
+		cp.Proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: pickValue("NewParamBinary", value)}}}}
 	}
+	return cp
 }
 
-func NewParamBinary(value []byte) *Param {
-	return &Param{
-		Proto: &protos.Param{
-			Type:  protos.ParamType_BINARY,
-			Value: &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: value}}}},
-		},
+func NewParamStructArray(value ...[]map[string]any) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
+	if len(value) == 0 {
+		return cp
 	}
-}
-
-func NewParamStructArray(value []map[string]any) *Param {
-	cp := &Param{
-		Proto: &protos.Param{
-			Type: protos.ParamType_STRUCT_ARRAY,
-		},
-	}
-	pv, err := ToProto(value)
+	pv, err := ToProto(pickValue("NewParamStructArray", value))
 	if err != nil {
 		logger.Warning("NewParamStructArray: failed to convert value; value left nil",
 			"error", err)
@@ -167,13 +195,12 @@ func NewParamStructArray(value []map[string]any) *Param {
 	return cp
 }
 
-func NewParamStructVariantArray(value []StructVariantValue) *Param {
-	cp := &Param{
-		Proto: &protos.Param{
-			Type: protos.ParamType_STRUCT_VARIANT_ARRAY,
-		},
+func NewParamStructVariantArray(value ...[]StructVariantValue) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
+	if len(value) == 0 {
+		return cp
 	}
-	pv, err := ToProto(value)
+	pv, err := ToProto(pickValue("NewParamStructVariantArray", value))
 	if err != nil {
 		logger.Warning("NewParamStructVariantArray: failed to convert value; value left nil",
 			"error", err)
@@ -192,13 +219,12 @@ func NewParamEmpty() *Param {
 	}
 }
 
-func NewParamData(payload DataPayload) *Param {
-	cp := &Param{
-		Proto: &protos.Param{
-			Type: protos.ParamType_DATA,
-		},
+func NewParamData(payload ...DataPayload) *Param {
+	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_DATA}}
+	if len(payload) == 0 {
+		return cp
 	}
-	pdp, err := dataPayloadToProto(payload)
+	pdp, err := dataPayloadToProto(pickValue("NewParamData", payload))
 	if err != nil {
 		logger.Warning("NewParamData: failed to convert DataPayload; value left nil",
 			"error", err)
@@ -326,6 +352,13 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 	protos.ParamType_STRUCT_VARIANT_ARRAY: {},
 }
 
+// WithParam attaches a sub-param descriptor under oid. On a STRUCT parent, a
+// sub-param with a value contributes that value to the struct's own
+// Value.Fields[oid]; the stored descriptor is kept valueless, since field
+// values live in the struct's Value and sub-params are descriptors only. A
+// valueless sub-param never touches the parent's Value, so it can refine a
+// descriptor (name, constraint, ...) without overriding a value that came
+// from the NewParamStruct map.
 func (cp *Param) WithParam(oid string, param *Param) *Param {
 	if param == nil {
 		logger.Warning("WithParam called with nil sub-param; ignoring",
@@ -333,13 +366,27 @@ func (cp *Param) WithParam(oid string, param *Param) *Param {
 		return cp
 	}
 
-	cloned := proto.Clone(param.Proto).(*protos.Param)
-
 	if _, ok := paramTypesWithSubParams[cp.Proto.Type]; !ok {
 		logger.Warning("WithParam called on param type that does not support sub-params; ignoring",
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
+
+	cloned := proto.Clone(param.Proto).(*protos.Param)
+
+	if cp.Proto.Type == protos.ParamType_STRUCT && cloned.Value != nil {
+		sv := cp.Proto.Value.GetStructValue()
+		if sv == nil {
+			sv = &protos.StructValue{}
+			cp.Proto.Value = &protos.Value{Kind: &protos.Value_StructValue{StructValue: sv}}
+		}
+		if sv.Fields == nil {
+			sv.Fields = map[string]*protos.Value{}
+		}
+		sv.Fields[oid] = cloned.Value
+		cloned.Value = nil
+	}
+
 	if cp.Proto.Params == nil {
 		cp.Proto.Params = map[string]*protos.Param{}
 	}
