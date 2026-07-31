@@ -104,9 +104,14 @@ func main() {
 		SerialNumber: "SN-HELLO-0001",
 	})
 
-	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (st2138.Device, catena.StatusResult) {
+	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 		logger.Info("GetDevice", "slot", slot)
-		return catena.Reply(*buildDevice())
+		// A small device fits in a single component; large devices may stream
+		// several (see the oneOfEverything example).
+		if err := stream.Send(st2138.ComponentDevice(buildDevice())); err != nil {
+			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
+		}
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {

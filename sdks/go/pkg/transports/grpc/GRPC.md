@@ -55,12 +55,12 @@ Behavior:
 Implemented against shared runtime handlers:
 
 - `GetPopulatedSlots`
-- `DeviceRequest`
+- `DeviceRequest` (server-streaming response)
 - `GetValue`
 - `GetParam`
 - `SetValue`
 - `MultiSetValue`
-- `ExternalObjectRequest`
+- `ExternalObjectRequest` (server-streaming response)
 - `ExecuteCommand` (server-streaming response)
 - `ParamInfoRequest` (server-streaming response)
 - `Connect`
@@ -86,16 +86,27 @@ RPC methods invoke the same handlers registered on `catena.Server`:
 - `ExecuteCommand` -> `RegisterExecuteCommandHandler`
 - `ParamInfoRequest` -> `RegisterParamInfoHandler`
 
-## Streaming Responses (`ParamInfoRequest`, `ExecuteCommand`)
+## Streaming Responses (`DeviceRequest`, `ExternalObjectRequest`, `ParamInfoRequest`, `ExecuteCommand`)
 
-`ParamInfoRequest` and `ExecuteCommand` are server-streaming RPCs. Each response
-chunk is sent over the gRPC stream as its wire proto (`ParamInfoResponse` /
-`CommandResponse`).
+`DeviceRequest`, `ExternalObjectRequest`, `ParamInfoRequest`, and
+`ExecuteCommand` are server-streaming RPCs. The registered handler receives a
+`catena.Stream[T]` and calls `stream.Send(chunk)` for each response; every
+chunk is sent over the gRPC stream as its wire proto (`DeviceComponent` /
+`ExternalObjectPayload` / `ParamInfoResponse` / `CommandResponse`).
 
 - A stream that produces no chunks completes as an empty successful stream
   (EOF), not an error.
 - A terminal error is returned as the RPC status via `ToGRPCCode`; any chunks
   already sent remain on the stream.
+- `DeviceRequest`: a small device model is typically one `ComponentDevice`
+  chunk; a large one may be broken into a device skeleton followed by
+  param / shared-constraint / menu / command / language-pack components
+  (built with the `st2138.Component*` constructors). Clients merge the
+  components back into one device model.
+- `ExternalObjectRequest`: a large asset may be broken into several
+  `ExternalObjectPayload` chunks; the client concatenates the embedded
+  payload bytes in send order (metadata, digest, and cachable come from the
+  first chunk).
 - `ExecuteCommand` reads `req.Respond` (a proto bool, defaulting to `false`) to
   gate responses. When `Respond` is `false` the stream completes with no
   `CommandResponse` messages; a client must set `Respond=true` to receive them.

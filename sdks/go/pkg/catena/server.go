@@ -135,10 +135,19 @@ func (e EndpointType) String() string {
 // RegisterProductStruct), the SDK owns product/* requests and handlers never
 // see them; otherwise product/* requests fall through to the handler.
 
-// DeviceHandler returns the full device model for a slot (GetDevice). It
-// returns the device with an Ok status, or a zero Device with an error status
-// (e.g. StatusCodeNotFound) when the slot has no device to report.
-type DeviceHandler func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult)
+// DeviceHandler streams the device model for a slot (GetDevice /
+// DeviceRequest). A small device is typically emitted as a single
+// st2138.ComponentDevice chunk through stream.Send; a large one may be broken
+// into a ComponentDevice skeleton followed by ComponentParam /
+// ComponentConstraint / ComponentMenu / ComponentCommand /
+// ComponentLanguagePack chunks that fill in the pieces. The handler returns a
+// terminal StatusResult: Ok once every chunk has been sent, or an error status
+// (e.g. StatusCodeNotFound) when the slot has no device to report. A Send
+// error means the chunk could not be delivered - the client may have
+// disconnected, the transport hit an encoding or write failure, or the server
+// is shutting down (the SDK wraps the stream so Send fails once shutdown
+// begins) - so the handler should stop and return.
+type DeviceHandler func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult
 
 // GetValueHandler returns the current value of the parameter at fqoid for a
 // slot (GetValue). It returns the value with an Ok status, or a zero Value
@@ -163,10 +172,18 @@ type SetValueEntry struct {
 // an error status. On success it returns an Ok status.
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 
-// ReadAssetHandler returns the asset stored at fqoid for a slot (ReadAsset).
-// It returns the asset with an Ok status, or a zero Asset with an error status
-// (e.g. StatusCodeNotFound for an unknown fqoid).
-type ReadAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult)
+// ReadAssetHandler streams the asset stored at fqoid for a slot (ReadAsset /
+// ExternalObjectRequest). A small asset is typically emitted as a single
+// st2138.Asset chunk through stream.Send; a large one may be broken into
+// several chunks whose embedded payload bytes the client concatenates in send
+// order (metadata, digest, and cachable are taken from the first chunk). The
+// handler returns a terminal StatusResult: Ok once every chunk has been sent,
+// or an error status (e.g. StatusCodeNotFound for an unknown fqoid). A Send
+// error means the chunk could not be delivered - the client may have
+// disconnected, the transport hit an encoding or write failure, or the server
+// is shutting down (the SDK wraps the stream so Send fails once shutdown
+// begins) - so the handler should stop and return.
+type ReadAssetHandler func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult
 
 // CreateAssetHandler stores a new asset at fqoid (HTTP POST / CreateAsset).
 // Business logic decides create-vs-conflict semantics and reports the outcome
@@ -296,12 +313,13 @@ type Server interface {
 	// restates the handler signature so it can be read at the call site; the
 	// handler type's doc carries the full implementation contract.
 
-	// RegisterGetDeviceHandler registers the GetDevice handler for a slot.
-	// See DeviceHandler.
+	// RegisterGetDeviceHandler registers the GetDevice handler for a slot. The
+	// handler streams device components through stream.Send, stops on a Send
+	// error, and returns a terminal status; see DeviceHandler.
 	//
 	// Handler signature:
 	//
-	//	func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult)
+	//	func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult
 	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
 
 	// RegisterGetValueHandler registers the GetValue handler for a slot.
@@ -329,12 +347,13 @@ type Server interface {
 	//	func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
 
-	// RegisterReadAssetHandler registers the ReadAsset handler for a slot.
-	// See ReadAssetHandler.
+	// RegisterReadAssetHandler registers the ReadAsset handler for a slot. The
+	// handler streams asset chunks through stream.Send, stops on a Send error,
+	// and returns a terminal status; see ReadAssetHandler.
 	//
 	// Handler signature:
 	//
-	//	func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult)
+	//	func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult
 	RegisterReadAssetHandler(slot uint16, handler ReadAssetHandler)
 
 	// RegisterCreateAssetHandler registers the CreateAsset handler for a slot.
@@ -463,11 +482,11 @@ type Server interface {
 type ServerRuntime interface {
 	IsDev() bool
 	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
-	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (st2138.Device, StatusResult)
+	InvokeGetDeviceHandler(slot uint16, stream Stream[st2138.DeviceComponent], transportContext TransportContext) StatusResult
 	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Value, StatusResult)
 	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Param, StatusResult)
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
-	InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Asset, StatusResult)
+	InvokeReadAssetHandler(slot uint16, fqoid string, stream Stream[st2138.Asset], transportContext TransportContext) StatusResult
 	InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult
 	InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult
 	InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult
@@ -999,30 +1018,33 @@ func (s *server) productForSlot(slot uint16) (ProductStruct, bool) {
 	return product, ok
 }
 
-func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (st2138.Device, StatusResult) {
-	return invokeHandler(s, transportContext, EndpointGetDevice, false, s.getDeviceHandlers, slot,
+func (s *server) InvokeGetDeviceHandler(slot uint16, stream Stream[st2138.DeviceComponent], transportContext TransportContext) StatusResult {
+	// Wrap the transport's stream so Send also fails on server shutdown, not just
+	// client disconnect. Cancellation is then transparent to the handler: it just
+	// gets an error from the next Send once the server is shutting down.
+	stream = shutdownStream[st2138.DeviceComponent]{inner: stream, shutdown: s.ctx}
+	_, res := invokeHandler(s, transportContext, EndpointGetDevice, false, s.getDeviceHandlers, slot,
 		"No device defined at slot",
-		func(handler DeviceHandler, ctx HandlerContext) (st2138.Device, StatusResult) {
-			device, res := handler(slot, ctx)
-			// Only touch the device return when the SDK manages the product for this
-			// slot; otherwise leave whatever the business logic produced untouched.
-			if res.IsOk() && device.Proto != nil {
-				// Only enforce the product's st2138:mon read scope when the SDK manages
-				// the product struct for this slot. Callers with mon get the SDK-managed
-				// product injected (overwriting whatever the business logic returned);
-				// callers without mon get no product param at all, even one the business
-				// logic added, since the SDK-managed product struct is read-only and
-				// mon-scoped regardless of who created it.
-				if product, has := s.productForSlot(slot); has {
-					if ctx.RequireReadScope(st2138.ScopeMon).IsOk() {
-						device.WithParam(ProductOid, ProductParam(product))
-					} else {
-						delete(device.Proto.Params, ProductOid)
-					}
+		func(handler DeviceHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			out := stream
+			// Only touch the handler's chunks when the SDK manages the product for
+			// this slot; otherwise deliver whatever the business logic produces
+			// untouched. The wrapper enforces the product's st2138:mon read scope:
+			// callers with mon get the SDK-managed product injected into Device
+			// chunks (overwriting whatever the business logic sent); callers
+			// without mon get no product param at all, even one the business logic
+			// added, since the SDK-managed product struct is read-only and
+			// mon-scoped regardless of who created it.
+			if product, has := s.productForSlot(slot); has {
+				out = productDeviceStream{
+					inner:   stream,
+					product: product,
+					hasMon:  ctx.RequireReadScope(st2138.ScopeMon).IsOk(),
 				}
 			}
-			return device, res
+			return struct{}{}, handler(slot, ctx, out)
 		})
+	return res
 }
 
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Value, StatusResult) {
@@ -1089,12 +1111,17 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 	return res
 }
 
-func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Asset, StatusResult) {
-	return invokeHandler(s, transportContext, EndpointReadAsset, false, s.readAssetHandlers, slot,
+func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, stream Stream[st2138.Asset], transportContext TransportContext) StatusResult {
+	// Wrap the transport's stream so Send also fails on server shutdown, not just
+	// client disconnect. Cancellation is then transparent to the handler: it just
+	// gets an error from the next Send once the server is shutting down.
+	stream = shutdownStream[st2138.Asset]{inner: stream, shutdown: s.ctx}
+	_, res := invokeHandler(s, transportContext, EndpointReadAsset, false, s.readAssetHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
-		func(handler ReadAssetHandler, ctx HandlerContext) (st2138.Asset, StatusResult) {
-			return handler(slot, fqoid, ctx)
+		func(handler ReadAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			return struct{}{}, handler(slot, fqoid, ctx, stream)
 		})
+	return res
 }
 
 // enforceAssetWriteScope authorizes an asset mutation. Per ST 2138 the asset

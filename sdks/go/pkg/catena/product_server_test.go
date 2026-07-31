@@ -88,25 +88,45 @@ func expectedProductParam() *protos.Param {
 	}
 }
 
+// deviceFromStream extracts the device proto from the single Device-kind chunk
+// the handler streamed, failing the test if the stream does not carry exactly
+// one Device chunk.
+func deviceFromStream(t *testing.T, stream *sliceStream[st2138.DeviceComponent]) *protos.Device {
+	t.Helper()
+	if len(stream.Items) != 1 {
+		t.Fatalf("expected 1 streamed device component, got %d", len(stream.Items))
+	}
+	device := stream.Items[0].Proto.GetDevice()
+	if device == nil {
+		t.Fatalf("expected a Device-kind chunk, got %v", stream.Items[0].Proto)
+	}
+	return device
+}
+
 // TestServer_GetDevice_InjectsProduct verifies GetDevice overwrites the product
-// param in whatever the business logic returned with the SDK-managed product.
+// param in whatever the business logic streamed with the SDK-managed product.
 func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult) {
-		// Business logic returns a device with a bogus product that must be
+	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+		// Business logic sends a device with a bogus product that must be
 		// overwritten, plus its own param that must be preserved.
-		return Reply(*st2138.NewDevice(0).
+		device := st2138.NewDevice(0).
 			WithParam("product", st2138.NewParamString("wrong")).
-			WithParam("brightness", st2138.NewParamInt32(50)))
+			WithParam("brightness", st2138.NewParamInt32(50))
+		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+			return StatusWithCode(StatusCodeInternal, err.Error())
+		}
+		return StatusWithCode(StatusCodeOk, "")
 	})
 
-	device, res := srv.InvokeGetDeviceHandler(0, TransportContext{})
+	stream := &sliceStream[st2138.DeviceComponent]{}
+	res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 
-	params := device.Proto.GetParams()
+	params := deviceFromStream(t, stream).GetParams()
 	if _, ok := params["brightness"]; !ok {
 		t.Error("expected business-logic 'brightness' param to be preserved")
 	}
@@ -119,19 +139,67 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 	}
 }
 
+// TestServer_GetDevice_ProductParamChunk verifies the SDK's product policy on
+// standalone ComponentParam chunks: a chunk for the product oid itself is
+// rewritten to the SDK-managed param, and product/* sub-param chunks are
+// dropped since the SDK owns the product struct's contents.
+func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
+	srv := newTestServer(t, false)
+	srv.RegisterProductStruct(0, testProduct())
+	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+		chunks := []st2138.DeviceComponent{
+			st2138.ComponentParam("product", st2138.NewParamString("wrong")),
+			st2138.ComponentParam("product/name", st2138.NewParamString("wrong")),
+			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
+		}
+		for _, chunk := range chunks {
+			if err := stream.Send(chunk); err != nil {
+				return StatusWithCode(StatusCodeInternal, err.Error())
+			}
+		}
+		return StatusWithCode(StatusCodeOk, "")
+	})
+
+	stream := &sliceStream[st2138.DeviceComponent]{}
+	res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
+	}
+
+	// product/name is dropped; product and brightness pass (product rewritten).
+	if len(stream.Items) != 2 {
+		t.Fatalf("expected 2 delivered chunks, got %d", len(stream.Items))
+	}
+	product := stream.Items[0].Proto.GetParam()
+	if product.GetOid() != "product" {
+		t.Fatalf("expected first chunk oid 'product', got %q", product.GetOid())
+	}
+	if !proto.Equal(product.GetParam(), expectedProductParam()) {
+		t.Errorf("product chunk was not rewritten to the SDK-managed param, got %v", product.GetParam())
+	}
+	if got := stream.Items[1].Proto.GetParam().GetOid(); got != "brightness" {
+		t.Errorf("expected second chunk oid 'brightness', got %q", got)
+	}
+}
+
 // TestServer_GetDevice_NoProductRegistered verifies the device is passed through
 // untouched when no product is registered for the slot.
 func TestServer_GetDevice_NoProductRegistered(t *testing.T) {
 	srv := newTestServer(t, false)
-	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult) {
-		return Reply(*st2138.NewDevice(0).WithParam("brightness", st2138.NewParamInt32(50)))
+	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+		device := st2138.NewDevice(0).WithParam("brightness", st2138.NewParamInt32(50))
+		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+			return StatusWithCode(StatusCodeInternal, err.Error())
+		}
+		return StatusWithCode(StatusCodeOk, "")
 	})
 
-	device, res := srv.InvokeGetDeviceHandler(0, TransportContext{})
+	stream := &sliceStream[st2138.DeviceComponent]{}
+	res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
-	if _, ok := device.Proto.GetParams()["product"]; ok {
+	if _, ok := deviceFromStream(t, stream).GetParams()["product"]; ok {
 		t.Error("did not expect a product param when none is registered")
 	}
 }
@@ -365,11 +433,15 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 		srv := newTestServer(t, true)
 		srv.RegisterProductStruct(0, testProduct())
 		called := false
-		srv.RegisterGetDeviceHandler(0, func(slot uint16, hctx HandlerContext) (st2138.Device, StatusResult) {
+		srv.RegisterGetDeviceHandler(0, func(slot uint16, hctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
 			called = true
-			return Reply(*st2138.NewDevice(0).
+			device := st2138.NewDevice(0).
 				WithParam("product", st2138.NewParamString("wrong")).
-				WithParam("brightness", st2138.NewParamInt32(50)))
+				WithParam("brightness", st2138.NewParamInt32(50))
+			if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+				return StatusWithCode(StatusCodeInternal, err.Error())
+			}
+			return StatusWithCode(StatusCodeOk, "")
 		})
 		mockInvokeGateFn(t, srv, EndpointGetDevice, false, ctx, StatusWithCode(StatusCodeOk, ""))
 		return srv, &called
@@ -377,14 +449,15 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 
 	t.Run("MonInjectsProduct", func(t *testing.T) {
 		srv, called := newDeviceServer(t, monScopeContext())
-		device, res := srv.InvokeGetDeviceHandler(0, TransportContext{})
+		stream := &sliceStream[st2138.DeviceComponent]{}
+		res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 		}
 		if !*called {
 			t.Error("expected business-logic GetDevice to be called")
 		}
-		params := device.Proto.GetParams()
+		params := deviceFromStream(t, stream).GetParams()
 		if _, ok := params["brightness"]; !ok {
 			t.Error("expected business-logic 'brightness' param to be preserved")
 		}
@@ -399,14 +472,15 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 
 	t.Run("NonMonStripsProduct", func(t *testing.T) {
 		srv, called := newDeviceServer(t, nonMonScopeContext())
-		device, res := srv.InvokeGetDeviceHandler(0, TransportContext{})
+		stream := &sliceStream[st2138.DeviceComponent]{}
+		res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 		}
 		if !*called {
 			t.Error("expected business-logic GetDevice to be called")
 		}
-		params := device.Proto.GetParams()
+		params := deviceFromStream(t, stream).GetParams()
 		if _, ok := params["brightness"]; !ok {
 			t.Error("expected business-logic 'brightness' param to be preserved")
 		}

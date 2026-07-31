@@ -298,26 +298,15 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 	logger.Info("DeviceRequest", "slot", slot)
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
-	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot, transportContext)
+
+	adapter := &grpcStream[st2138.DeviceComponent]{ss: stream}
+	res := s.transport.runtime.InvokeGetDeviceHandler(slot, adapter, transportContext)
 	if res.IsError() {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
 	}
 
-	protoDevice := device.Proto
-	if protoDevice == nil {
-		logger.Error("DeviceRequest device returned nil", "slot", slot)
-		return status.Error(codes.Internal, "device returned nil")
-	}
-
-	// Wrap the device in a DeviceComponent
-	component := &protos.DeviceComponent{
-		Kind: &protos.DeviceComponent_Device{
-			Device: protoDevice,
-		},
-	}
-
-	return stream.Send(component)
+	return nil
 }
 
 // GetValue returns the value of a parameter
@@ -417,19 +406,14 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	asset, result := s.transport.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
+	adapter := &grpcStream[st2138.Asset]{ss: stream}
+	result := s.transport.runtime.InvokeReadAssetHandler(slot, fqoid, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	protoAsset := asset.Proto
-	if protoAsset == nil {
-		logger.Error("ExternalObjectRequest asset returned nil", "slot", slot, "fqoid", fqoid)
-		return status.Error(codes.Internal, "asset returned nil")
-	}
-
-	return stream.Send(protoAsset)
+	return nil
 }
 
 // ExecuteCommand executes a command and streams the response

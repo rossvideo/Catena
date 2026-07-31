@@ -44,9 +44,12 @@ func main() {
     })
 
     // Register handlers once. All registered transports share this runtime.
-    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext) (st2138.Device, catena.StatusResult) {
+    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
         device := st2138.NewDevice(slot)
-        return catena.Reply(*device)
+        if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+            return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+        }
+        return catena.StatusWithCode(catena.StatusCodeOk, "")
     })
 
     if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {

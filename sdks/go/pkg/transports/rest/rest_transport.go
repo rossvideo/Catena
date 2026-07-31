@@ -440,10 +440,18 @@ func (t *Transport) registerRoutes() {
 
 		// Route based on path structure
 		if len(parts) == 3 && r.Method == http.MethodGet {
-			// GET /st2138-api/v1/{slot} - Get device info
-			transportContext := t.retrieveMetadataFromRequest(r)
-			device, result := t.runtime.InvokeGetDeviceHandler(slot, transportContext)
-			t.writeHTTPResult(w, result, device)
+			// GET /st2138-api/v1/{slot} - Get device info (unary)
+			t.handleGetDevice(w, r, slot)
+			return
+		}
+
+		if len(parts) == 4 && parts[3] == "stream" {
+			// GET /st2138-api/v1/{slot}/stream - SSE device component stream
+			if r.Method != http.MethodGet {
+				t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+				return
+			}
+			t.streamDeviceRequest(w, r, slot)
 			return
 		}
 
@@ -625,12 +633,97 @@ func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request,
 	t.writeHTTPStatusResultNoBody(w, res)
 }
 
+// handleGetDevice serves GET /st2138-api/v1/{slot} (unary DeviceRequest). The
+// handler streams DeviceComponent chunks; they are assembled back into one
+// complete device for the single JSON response.
+func (t *Transport) handleGetDevice(w http.ResponseWriter, r *http.Request, slot uint16) {
+	transportContext := t.retrieveMetadataFromRequest(r)
+
+	stream := &deviceAggregateStream{}
+	result := t.runtime.InvokeGetDeviceHandler(slot, stream, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+
+	device, ok := stream.result()
+	if !ok {
+		// A unary device request must resolve to a device. A handler that
+		// reports success yet emits nothing has violated that contract; surface
+		// it as an internal error rather than inventing a NotFound over what may
+		// be a genuine handler bug. Handlers own NotFound for missing devices.
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "device handler reported success but produced no device"))
+		return
+	}
+
+	t.writeHTTPResult(w, result, device)
+}
+
+// streamDeviceRequest serves GET /st2138-api/v1/{slot}/stream, forwarding each
+// DeviceComponent chunk the handler sends as one Server-Sent Events frame. The
+// restStream writes SSE headers lazily on the first chunk, so if the handler
+// emits nothing before erroring this method can still report a status; once
+// chunks have been sent, a later error is reported in-band as an SSE "error"
+// event carrying the HTTP status code.
+func (t *Transport) streamDeviceRequest(w http.ResponseWriter, r *http.Request, slot uint16) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+
+	stream := &restStream[st2138.DeviceComponent]{
+		w:       w,
+		flusher: flusher,
+		marshal: marshalDeviceComponentWire,
+		ctx:     r.Context(),
+		devMode: t.isDevMode(),
+	}
+	result := t.runtime.InvokeGetDeviceHandler(slot, stream, transportContext)
+
+	if result.IsError() {
+		// With nothing sent yet the HTTP status is still uncommitted, so we can
+		// set a normal error status. Once any chunk has been streamed the 200 is
+		// already on the wire, so the error is reported in-band as an SSE "error"
+		// event carrying the status code that would have been returned.
+		if stream.sent == 0 {
+			t.writeHTTPStatusResult(w, result)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send device SSE error event", "slot", slot, "error", err)
+		}
+		return
+	}
+
+	// A successful handler that produced no chunks still gets a well-formed empty
+	// event stream so the client receives a valid 200 response.
+	if stream.sent == 0 {
+		stream.writeHeaders()
+	}
+}
+
 // handleAssetEndpoint dispatches /st2138-api/v1/{slot}/asset/{fqoid} across
 // the four asset operations: GET (ReadAsset), POST (CreateAsset), PUT
 // (UpdateAsset) and DELETE (DeleteAsset). The three write operations return
-// 204 No Content on success per the OpenAPI spec.
+// 204 No Content on success per the OpenAPI spec. A trailing "stream" path
+// segment selects the SSE variant of the GET read; what remains is the fqoid.
 func (t *Transport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	streaming := false
+	if len(pathParts) > 0 && pathParts[len(pathParts)-1] == "stream" {
+		streaming = true
+		pathParts = pathParts[:len(pathParts)-1]
+	}
 	fqoid := strings.Join(pathParts, "/")
+
+	if streaming {
+		if r.Method != http.MethodGet {
+			t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+			return
+		}
+		t.streamReadAsset(w, r, slot, fqoid)
+		return
+	}
 
 	switch r.Method {
 	case http.MethodGet:
@@ -648,30 +741,94 @@ func (t *Transport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-// handleReadAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid}, with optional
-// payload transcoding via the ?compression= query parameter.
+// handleReadAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid} (unary
+// ReadAsset), with optional payload transcoding via the ?compression= query
+// parameter. The handler streams asset chunks; their embedded payload bytes
+// are concatenated back into one complete asset for the single JSON response
+// (so transcoding operates on the assembled payload).
 func (t *Transport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
 	transportContext := t.retrieveMetadataFromRequest(r)
-	asset, result := t.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
 
-	if result.IsOk() {
-		if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
-			targetEncoding, encErr := st2138.ParsePayloadEncoding(compressionStr)
-			if encErr != nil {
-				val, errRes := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, encErr.Error())
-				t.writeHTTPResult(w, errRes, val)
-				return
-			}
-			if tcErr := st2138.TranscodeAssetPayload(&asset, targetEncoding); tcErr != nil {
-				logger.Error("failed to transcode asset payload", "error", tcErr)
-				val, errRes := catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to transcode payload: "+tcErr.Error())
-				t.writeHTTPResult(w, errRes, val)
-				return
-			}
+	stream := &assetAggregateStream{}
+	result := t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, transportContext)
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+
+	asset, ok := stream.result()
+	if !ok {
+		// A unary asset request must resolve to an asset. A handler that reports
+		// success yet emits nothing has violated that contract; surface it as an
+		// internal error rather than inventing a NotFound over what may be a
+		// genuine handler bug. Handlers own NotFound for missing fqoids.
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "asset handler reported success but produced no asset"))
+		return
+	}
+
+	if compressionStr := r.URL.Query().Get("compression"); compressionStr != "" {
+		targetEncoding, encErr := st2138.ParsePayloadEncoding(compressionStr)
+		if encErr != nil {
+			val, errRes := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, encErr.Error())
+			t.writeHTTPResult(w, errRes, val)
+			return
+		}
+		if tcErr := st2138.TranscodeAssetPayload(&asset, targetEncoding); tcErr != nil {
+			logger.Error("failed to transcode asset payload", "error", tcErr)
+			val, errRes := catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to transcode payload: "+tcErr.Error())
+			t.writeHTTPResult(w, errRes, val)
+			return
 		}
 	}
 
 	t.writeHTTPResult(w, result, asset)
+}
+
+// streamReadAsset serves GET /st2138-api/v1/{slot}/asset/{fqoid}/stream,
+// forwarding each asset chunk the handler sends as one Server-Sent Events
+// frame (the client concatenates the chunks' embedded payload bytes in send
+// order). The ?compression= query parameter is not supported on the streaming
+// route: transcoding requires the whole payload, which the transport never
+// assembles here. The restStream writes SSE headers lazily on the first chunk,
+// so if the handler emits nothing before erroring this method can still report
+// a status; once chunks have been sent, a later error is reported in-band as
+// an SSE "error" event carrying the HTTP status code.
+func (t *Transport) streamReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+
+	stream := &restStream[st2138.Asset]{
+		w:       w,
+		flusher: flusher,
+		marshal: MarshalProtoJSON,
+		ctx:     r.Context(),
+		devMode: t.isDevMode(),
+	}
+	result := t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, transportContext)
+
+	if result.IsError() {
+		// With nothing sent yet the HTTP status is still uncommitted, so we can
+		// set a normal error status. Once any chunk has been streamed the 200 is
+		// already on the wire, so the error is reported in-band as an SSE "error"
+		// event carrying the status code that would have been returned.
+		if stream.sent == 0 {
+			t.writeHTTPStatusResult(w, result)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send asset SSE error event", "slot", slot, "fqoid", fqoid, "error", err)
+		}
+		return
+	}
+
+	// A successful handler that produced no chunks still gets a well-formed empty
+	// event stream so the client receives a valid 200 response.
+	if stream.sent == 0 {
+		stream.writeHeaders()
+	}
 }
 
 // handleWriteAsset handles POST (CreateAsset) and PUT (UpdateAsset). Both read

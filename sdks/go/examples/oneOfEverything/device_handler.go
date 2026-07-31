@@ -17,17 +17,46 @@ func registerProductStructs(srv catena.Server, state *ExampleState) {
 }
 
 func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
-	// GetDeviceHandler returns the complete device descriptor for a slot.
-	// Build the descriptor from the same data model your app uses at runtime;
-	// this example rebuilds per request so "value" fields stay current.
+	// GetDeviceHandler streams the device descriptor for a slot as
+	// DeviceComponent chunks. Build the descriptor from the same data model
+	// your app uses at runtime; this example rebuilds per request so "value"
+	// fields stay current.
 	for _, slot := range slotList {
-		srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext) (st2138.Device, catena.StatusResult) {
+		srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 			logger.Info("GetDevice", "slot", slot)
 			device, ok := buildDeviceDefinition(slot, counter, state)
 			if !ok {
-				return catena.ReplyError[st2138.Device](catena.StatusCodeNotFound, "device not found")
+				return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 			}
-			return catena.Reply(*device)
+
+			// Stream the model in components to demonstrate the chunked form
+			// of DeviceRequest: first the device skeleton (everything except
+			// params and commands), then one chunk per param and command.
+			// Clients merge the components back into one device model; a small
+			// model could equally be sent as a single ComponentDevice chunk
+			// carrying the whole device (see the hello_world example).
+			params := device.Proto.Params
+			commands := device.Proto.Commands
+			device.Proto.Params = nil
+			device.Proto.Commands = nil
+
+			if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+				logger.Warning("GetDevice stream closed", "slot", slot, "error", err)
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
+			}
+			for oid, param := range params {
+				if err := stream.Send(st2138.ComponentParam(oid, &st2138.Param{Proto: param})); err != nil {
+					logger.Warning("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
+					return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send param: "+err.Error())
+				}
+			}
+			for oid, command := range commands {
+				if err := stream.Send(st2138.ComponentCommand(oid, &st2138.Param{Proto: command})); err != nil {
+					logger.Warning("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
+					return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send command: "+err.Error())
+				}
+			}
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 	}
 }

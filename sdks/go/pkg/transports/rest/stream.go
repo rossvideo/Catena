@@ -41,10 +41,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 // restStream adapts an HTTP response to catena.Stream, emitting each chunk as a
@@ -169,4 +172,186 @@ func (s *lastStream[T]) Send(chunk T) error {
 	s.item = chunk
 	s.has = true
 	return nil
+}
+
+// deviceAggregateStream assembles a streamed DeviceRequest response back into
+// one complete device. The REST unary device route uses it: the handler may
+// stream a Device chunk plus component chunks (params, constraints, menus,
+// commands, language packs), but the HTTP reply carries a single device JSON
+// body, so each component is merged into the accumulating device. Send always
+// returns nil so the handler runs to completion.
+type deviceAggregateStream struct {
+	device *protos.Device
+}
+
+var _ catena.Stream[st2138.DeviceComponent] = (*deviceAggregateStream)(nil)
+
+// Send merges one DeviceComponent chunk into the accumulating device. A Device
+// chunk becomes the base (a second Device chunk is proto-merged into it);
+// component chunks are placed at the location their oid names, creating the
+// device skeleton and any intermediate params on demand so chunk order does
+// not matter. Chunks with a nil body are ignored.
+func (s *deviceAggregateStream) Send(chunk st2138.DeviceComponent) error {
+	if chunk.Proto == nil {
+		return nil
+	}
+	switch kind := chunk.Proto.Kind.(type) {
+	case *protos.DeviceComponent_Device:
+		if kind.Device == nil {
+			return nil
+		}
+		if s.device == nil {
+			s.device = kind.Device
+		} else {
+			proto.Merge(s.device, kind.Device)
+		}
+	case *protos.DeviceComponent_Param:
+		if kind.Param.GetParam() == nil {
+			return nil
+		}
+		s.ensureDevice()
+		s.device.Params = setNestedParam(s.device.Params, kind.Param.GetOid(), kind.Param.GetParam())
+	case *protos.DeviceComponent_SharedConstraint:
+		if kind.SharedConstraint.GetConstraint() == nil {
+			return nil
+		}
+		s.ensureDevice()
+		if s.device.Constraints == nil {
+			s.device.Constraints = map[string]*protos.Constraint{}
+		}
+		s.device.Constraints[kind.SharedConstraint.GetOid()] = kind.SharedConstraint.GetConstraint()
+	case *protos.DeviceComponent_Menu:
+		if kind.Menu.GetMenu() == nil {
+			return nil
+		}
+		// The oid identifies the menu as "menu-group-name/menu-name".
+		group, menu, found := strings.Cut(kind.Menu.GetOid(), "/")
+		if !found {
+			return nil
+		}
+		s.ensureDevice()
+		if s.device.MenuGroups == nil {
+			s.device.MenuGroups = map[string]*protos.MenuGroup{}
+		}
+		menuGroup, ok := s.device.MenuGroups[group]
+		if !ok || menuGroup == nil {
+			menuGroup = &protos.MenuGroup{}
+			s.device.MenuGroups[group] = menuGroup
+		}
+		if menuGroup.Menus == nil {
+			menuGroup.Menus = map[string]*protos.Menu{}
+		}
+		menuGroup.Menus[menu] = kind.Menu.GetMenu()
+	case *protos.DeviceComponent_Command:
+		if kind.Command.GetCommand() == nil {
+			return nil
+		}
+		s.ensureDevice()
+		s.device.Commands = setNestedParam(s.device.Commands, kind.Command.GetOid(), kind.Command.GetCommand())
+	case *protos.DeviceComponent_LanguagePack:
+		if kind.LanguagePack.GetLanguagePack() == nil {
+			return nil
+		}
+		s.ensureDevice()
+		if s.device.LanguagePacks == nil {
+			s.device.LanguagePacks = &protos.LanguagePacks{}
+		}
+		if s.device.LanguagePacks.Packs == nil {
+			s.device.LanguagePacks.Packs = map[string]*protos.LanguagePack{}
+		}
+		s.device.LanguagePacks.Packs[kind.LanguagePack.GetLanguage()] = kind.LanguagePack.GetLanguagePack()
+	}
+	return nil
+}
+
+// ensureDevice creates an empty base device when a component chunk arrives
+// before (or without) a Device chunk.
+func (s *deviceAggregateStream) ensureDevice() {
+	if s.device == nil {
+		s.device = &protos.Device{}
+	}
+}
+
+// result returns the assembled device. ok is false when the handler produced
+// no chunks at all.
+func (s *deviceAggregateStream) result() (st2138.Device, bool) {
+	if s.device == nil {
+		return st2138.Device{}, false
+	}
+	return st2138.Device{Proto: s.device}, true
+}
+
+// setNestedParam places param at the location oid names inside a params map,
+// walking the oid's JSON-pointer segments through sub-param maps and creating
+// intermediate params on demand (so a "monitor/eq" chunk can arrive before, or
+// without, its "monitor" parent). It returns the (possibly newly created) map.
+func setNestedParam(params map[string]*protos.Param, oid string, param *protos.Param) map[string]*protos.Param {
+	if params == nil {
+		params = map[string]*protos.Param{}
+	}
+	segments := strings.Split(oid, "/")
+	current := params
+	for i, segment := range segments {
+		if i == len(segments)-1 {
+			current[segment] = param
+			break
+		}
+		parent, ok := current[segment]
+		if !ok || parent == nil {
+			parent = &protos.Param{}
+			current[segment] = parent
+		}
+		if parent.Params == nil {
+			parent.Params = map[string]*protos.Param{}
+		}
+		current = parent.Params
+	}
+	return params
+}
+
+// assetAggregateStream assembles a streamed ReadAsset response back into one
+// complete asset. The REST unary asset route uses it: the handler may break a
+// large asset into several chunks, but the HTTP reply carries a single
+// external_object_payload JSON body, so the embedded payload bytes of every
+// chunk are concatenated in send order while metadata, digest, cachable, and
+// the payload encoding are taken from the first chunk. Send always returns nil
+// so the handler runs to completion.
+type assetAggregateStream struct {
+	first   *protos.ExternalObjectPayload
+	data    []byte
+	hasData bool
+}
+
+var _ catena.Stream[st2138.Asset] = (*assetAggregateStream)(nil)
+
+// Send accumulates one asset chunk. Chunks with a nil proto are ignored.
+func (s *assetAggregateStream) Send(chunk st2138.Asset) error {
+	if chunk.Proto == nil {
+		return nil
+	}
+	if s.first == nil {
+		s.first = chunk.Proto
+	}
+	if payload := chunk.Proto.GetPayload().GetPayload(); len(payload) > 0 {
+		s.data = append(s.data, payload...)
+		s.hasData = true
+	}
+	return nil
+}
+
+// result returns the assembled asset. ok is false when the handler produced no
+// chunks at all. The returned asset clones the first chunk's proto so the
+// concatenated payload does not alias any handler-owned buffer.
+func (s *assetAggregateStream) result() (st2138.Asset, bool) {
+	if s.first == nil {
+		return st2138.Asset{}, false
+	}
+	out := proto.Clone(s.first).(*protos.ExternalObjectPayload)
+	if s.hasData {
+		if out.Payload == nil {
+			out.Payload = &protos.DataPayload{}
+		}
+		out.Payload.Kind = &protos.DataPayload_Payload{Payload: s.data}
+	}
+	return st2138.Asset{Proto: out}, true
 }

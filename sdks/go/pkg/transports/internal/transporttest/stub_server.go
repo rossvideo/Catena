@@ -54,11 +54,11 @@ type StubServerRuntime struct {
 	Dev                      bool
 	Slots                    []uint16
 	GetSlotsFn               func(ctx catena.TransportContext) ([]uint16, catena.StatusResult)
-	GetDeviceFn              func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult)
+	GetDeviceFn              func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult)
 	GetValueFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult)
 	GetParamFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult)
 	SetValueFn               func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult
-	ReadAssetFn              func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult)
+	ReadAssetFn              func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult)
 	CreateAssetFn            func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult
 	UpdateAssetFn            func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult
 	DeleteAssetFn            func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
@@ -104,12 +104,18 @@ func (s *StubServerRuntime) GetSlots(ctx catena.TransportContext) ([]uint16, cat
 	return s.Slots, catena.StatusResult{Code: catena.StatusCodeOk}
 }
 
-func (s *StubServerRuntime) InvokeGetDeviceHandler(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
+func (s *StubServerRuntime) InvokeGetDeviceHandler(slot uint16, stream catena.Stream[st2138.DeviceComponent], ctx catena.TransportContext) catena.StatusResult {
 	if s.GetDeviceFn != nil {
-		return s.GetDeviceFn(slot, ctx)
+		components, status := s.GetDeviceFn(slot, ctx)
+		for _, component := range components {
+			if err := stream.Send(component); err != nil {
+				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+			}
+		}
+		return status
 	}
 	s.panicf("GetDevice handler not implemented in stubServerRuntime for slot %d", slot)
-	return catena.ReplyError[st2138.Device](catena.StatusCodeInternal, "GetDevice handler not implemented")
+	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "GetDevice handler not implemented"}
 }
 
 func (s *StubServerRuntime) InvokeGetValueHandler(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
@@ -136,12 +142,18 @@ func (s *StubServerRuntime) InvokeSetValueHandler(slot uint16, entries []catena.
 	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
-func (s *StubServerRuntime) InvokeReadAssetHandler(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+func (s *StubServerRuntime) InvokeReadAssetHandler(slot uint16, fqoid string, stream catena.Stream[st2138.Asset], ctx catena.TransportContext) catena.StatusResult {
 	if s.ReadAssetFn != nil {
-		return s.ReadAssetFn(slot, fqoid, ctx)
+		chunks, status := s.ReadAssetFn(slot, fqoid, ctx)
+		for _, chunk := range chunks {
+			if err := stream.Send(chunk); err != nil {
+				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+			}
+		}
+		return status
 	}
 	s.panicf("ReadAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
-	return catena.ReplyError[st2138.Asset](catena.StatusCodeInternal, "ReadAsset handler not implemented")
+	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "ReadAsset handler not implemented"}
 }
 
 func (s *StubServerRuntime) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult {
