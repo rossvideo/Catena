@@ -33,6 +33,7 @@
  * @file testcerts.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @date 2026-07-30
+ * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  */
 
 // Package testcerts generates ephemeral self-signed certificate chains for
