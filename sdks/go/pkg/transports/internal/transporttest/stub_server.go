@@ -152,8 +152,7 @@ func (s *StubServerRuntime) InvokeReadAssetHandler(slot uint16, fqoid string, st
 		}
 		return status
 	}
-	s.panicf("ReadAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
-	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "ReadAsset handler not implemented"}
+	panic(fmt.Sprintf("ReadAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid))
 }
 
 func (s *StubServerRuntime) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult {
