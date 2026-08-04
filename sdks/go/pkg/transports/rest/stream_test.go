@@ -48,6 +48,8 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 // failingResponseWriter is an http.ResponseWriter+http.Flusher whose Write
@@ -79,6 +81,106 @@ var _ catena.Message = stubMessage{}
 
 func (m stubMessage) Wire() proto.Message {
 	return wrapperspb.String(m.value)
+}
+
+func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
+	// Component chunk order must not matter: a parent arriving after a nested
+	// child must keep children already hung under a synthesized intermediate.
+	sendOrders := []struct {
+		name   string
+		chunks func() []st2138.DeviceComponent
+	}{
+		{
+			name: "childBeforeParent",
+			chunks: func() []st2138.DeviceComponent {
+				parent := st2138.NewParamEmpty()
+				parent.Proto.Type = protos.ParamType_STRUCT
+				return []st2138.DeviceComponent{
+					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42)),
+					st2138.ComponentParam("monitor", parent),
+				}
+			},
+		},
+		{
+			name: "parentBeforeChild",
+			chunks: func() []st2138.DeviceComponent {
+				parent := st2138.NewParamEmpty()
+				parent.Proto.Type = protos.ParamType_STRUCT
+				return []st2138.DeviceComponent{
+					st2138.ComponentParam("monitor", parent),
+					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42)),
+				}
+			},
+		},
+	}
+
+	for _, tc := range sendOrders {
+		t.Run(tc.name, func(t *testing.T) {
+			stream := &deviceAggregateStream{}
+			for _, chunk := range tc.chunks() {
+				if err := stream.Send(chunk); err != nil {
+					t.Fatalf("Send returned error: %v", err)
+				}
+			}
+
+			device, ok := stream.result()
+			if !ok {
+				t.Fatal("expected an assembled device")
+			}
+			monitor := device.Proto.GetParams()["monitor"]
+			if monitor == nil {
+				t.Fatal("expected params.monitor")
+			}
+			if monitor.GetType() != protos.ParamType_STRUCT {
+				t.Errorf("monitor type = %v, want STRUCT", monitor.GetType())
+			}
+			eq := monitor.GetParams()["eq"]
+			if eq == nil {
+				t.Fatal("expected params.monitor.params.eq to survive aggregation")
+			}
+			if got := eq.GetValue().GetInt32Value(); got != 42 {
+				t.Errorf("eq value = %d, want 42", got)
+			}
+		})
+	}
+}
+
+func TestDeviceAggregateStream_NestedCommandOrderIndependent(t *testing.T) {
+	// Commands nest the same way as params; parent-after-child must not wipe
+	// a nested command hung under a synthesized intermediate.
+	parent := st2138.NewParamEmpty()
+	parent.Proto.Type = protos.ParamType_STRUCT
+	child := st2138.NewParamEmpty()
+	child.Proto.Type = protos.ParamType_INT32
+
+	stream := &deviceAggregateStream{}
+	for _, chunk := range []st2138.DeviceComponent{
+		st2138.ComponentCommand("group/action", child),
+		st2138.ComponentCommand("group", parent),
+	} {
+		if err := stream.Send(chunk); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+	}
+
+	device, ok := stream.result()
+	if !ok {
+		t.Fatal("expected an assembled device")
+	}
+	group := device.Proto.GetCommands()["group"]
+	if group == nil {
+		t.Fatal("expected commands.group")
+	}
+	if group.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("group type = %v, want STRUCT", group.GetType())
+	}
+	action := group.GetParams()["action"]
+	if action == nil {
+		t.Fatal("expected commands.group.params.action to survive aggregation")
+	}
+	if action.GetType() != protos.ParamType_INT32 {
+		t.Errorf("action type = %v, want INT32", action.GetType())
+	}
 }
 
 func TestFirstStream(t *testing.T) {

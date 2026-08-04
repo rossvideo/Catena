@@ -284,7 +284,10 @@ func (s *deviceAggregateStream) result() (st2138.Device, bool) {
 // setNestedParam places param at the location oid names inside a params map,
 // walking the oid's JSON-pointer segments through sub-param maps and creating
 // intermediate params on demand (so a "monitor/eq" chunk can arrive before, or
-// without, its "monitor" parent). It returns the (possibly newly created) map.
+// without, its "monitor" parent). If an entry already exists at the final
+// segment — for example a parent synthesized while placing an earlier child —
+// the incoming param is proto-merged into it so nested children are preserved.
+// It returns the (possibly newly created) map.
 func setNestedParam(params map[string]*protos.Param, oid string, param *protos.Param) map[string]*protos.Param {
 	if params == nil {
 		params = map[string]*protos.Param{}
@@ -293,7 +296,11 @@ func setNestedParam(params map[string]*protos.Param, oid string, param *protos.P
 	current := params
 	for i, segment := range segments {
 		if i == len(segments)-1 {
-			current[segment] = param
+			if existing, ok := current[segment]; ok && existing != nil {
+				proto.Merge(existing, param)
+			} else {
+				current[segment] = param
+			}
 			break
 		}
 		parent, ok := current[segment]
