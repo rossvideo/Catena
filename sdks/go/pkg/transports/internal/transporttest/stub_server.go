@@ -115,7 +115,6 @@ func (s *StubServerRuntime) InvokeGetDeviceHandler(slot uint16, stream catena.St
 		return status
 	}
 	s.panicf("GetDevice handler not implemented in stubServerRuntime for slot %d", slot)
-	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "GetDevice handler not implemented"}
 }
 
 func (s *StubServerRuntime) InvokeGetValueHandler(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
