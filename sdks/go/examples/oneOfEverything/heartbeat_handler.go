@@ -1,6 +1,9 @@
 package main
 
-import "github.com/rossvideo/catena/sdks/go/pkg/catena"
+import (
+	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
+)
 
 func registerHeartbeatHandlers(srv catena.Server, state *ExampleState) {
 	// Counter ticks often enough in slot 0 that a heartbeat isn't needed.
@@ -14,13 +17,13 @@ func registerHeartbeatHandlers(srv catena.Server, state *ExampleState) {
 		state.mu.RLock()
 		resolution, _ := state.slotOneParams.Load("resolution")
 		state.mu.RUnlock()
-		srv.BroadcastUpdate(1, "resolution", resolution, catena.ScopeMon)
+		srv.BroadcastUpdate(1, "resolution", resolution, st2138.ScopeMon)
 	})
 	srv.RegisterHeartbeatHandler(2, func(slot uint16) {
 		// Example ticking on a different param to show any can be used for heartbeats.
 		state.mu.RLock()
 		volume := state.volume
 		state.mu.RUnlock()
-		srv.BroadcastUpdate(2, "volume", volume, catena.ScopeMon)
+		srv.BroadcastUpdate(2, "volume", volume, st2138.ScopeMon)
 	})
 }

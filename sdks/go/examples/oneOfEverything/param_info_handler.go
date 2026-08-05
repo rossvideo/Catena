@@ -5,13 +5,14 @@ import (
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
 	// Slot 0: fully manual ParamInfo construction with a switch. This is useful
 	// when an application has only a few params or does not keep a full device
 	// definition around for ParamInfo requests.
-	srv.RegisterParamInfoHandler(0, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[catena.ParamInfo]) catena.StatusResult {
+	srv.RegisterParamInfoHandler(0, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
 		logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 		infos, res := slotZeroParamInfos(fqoid, recursive)
 		return streamParamInfos(stream, infos, res)
@@ -20,7 +21,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// Slot 1: generate the current device definition and delegate to the SDK
 	// helper. This demonstrates the simplest path when your business logic can
 	// already produce device["params"].
-	srv.RegisterParamInfoHandler(1, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[catena.ParamInfo]) catena.StatusResult {
+	srv.RegisterParamInfoHandler(1, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
 		logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 
 		deviceInfo, ok := buildDeviceDefinition(slot, counter, state)
@@ -34,7 +35,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// Slot 2: prefix-based if statements with manual responses. This is useful
 	// when params are grouped by naming convention or owned by different pieces
 	// of application code.
-	srv.RegisterParamInfoHandler(2, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[catena.ParamInfo]) catena.StatusResult {
+	srv.RegisterParamInfoHandler(2, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
 		logger.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 		infos, res := slotTwoParamInfos(fqoid, recursive, state)
 		return streamParamInfos(stream, infos, res)
@@ -45,7 +46,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 // the stream, bridging the existing slice-based builders to the streaming
 // handler signature. If res is an error nothing is sent; a Send failure stops
 // the stream and is reported as an internal error.
-func streamParamInfos(stream catena.Stream[catena.ParamInfo], infos []catena.ParamInfo, res catena.StatusResult) catena.StatusResult {
+func streamParamInfos(stream catena.Stream[st2138.ParamInfo], infos []st2138.ParamInfo, res catena.StatusResult) catena.StatusResult {
 	if res.IsError() {
 		return res
 	}
@@ -57,122 +58,122 @@ func streamParamInfos(stream catena.Stream[catena.ParamInfo], infos []catena.Par
 	return res
 }
 
-func slotZeroParamInfos(fqoid string, recursive bool) ([]catena.ParamInfo, catena.StatusResult) {
+func slotZeroParamInfos(fqoid string, recursive bool) ([]st2138.ParamInfo, catena.StatusResult) {
 	// product/* is served by the SDK (RegisterProductStruct); this handler only
 	// covers the business-logic params.
 	switch fqoid {
 	case "":
-		return []catena.ParamInfo{newCounterParamInfo(), newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{newCounterParamInfo(), newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "counter":
-		return []catena.ParamInfo{newCounterParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{newCounterParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "running":
-		return []catena.ParamInfo{newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	default:
-		return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
+		return []st2138.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 	}
 }
 
-func slotTwoParamInfos(fqoid string, recursive bool, state *ExampleState) ([]catena.ParamInfo, catena.StatusResult) {
+func slotTwoParamInfos(fqoid string, recursive bool, state *ExampleState) ([]st2138.ParamInfo, catena.StatusResult) {
 	if fqoid == "" {
 		// product/* is served by the SDK (RegisterProductStruct); omit it here.
-		return []catena.ParamInfo{
-			catena.NewParamInfo("volume", catena.NewPolyglotText("en", "Volume"), catena.ParamTypeInt32, "", 0),
-			catena.NewParamInfo("muted", catena.NewPolyglotText("en", "Muted"), catena.ParamTypeInt32, "", 0),
-			catena.NewParamInfo("device_name", catena.NewPolyglotText("en", "Device Name"), catena.ParamTypeString, "", 0),
-			catena.NewParamInfo("struct_example", catena.NewPolyglotText("en", "Struct Example"), catena.ParamTypeStruct, "", 0),
-			catena.NewParamInfo("sample_float", catena.NewPolyglotText("en", "Sample Float"), catena.ParamTypeFloat32, "", 0),
+		return []st2138.ParamInfo{
+			st2138.NewParamInfo("volume", st2138.NewPolyglotText("en", "Volume"), st2138.ParamTypeInt32, "", 0),
+			st2138.NewParamInfo("muted", st2138.NewPolyglotText("en", "Muted"), st2138.ParamTypeInt32, "", 0),
+			st2138.NewParamInfo("device_name", st2138.NewPolyglotText("en", "Device Name"), st2138.ParamTypeString, "", 0),
+			st2138.NewParamInfo("struct_example", st2138.NewPolyglotText("en", "Struct Example"), st2138.ParamTypeStruct, "", 0),
+			st2138.NewParamInfo("sample_float", st2138.NewPolyglotText("en", "Sample Float"), st2138.ParamTypeFloat32, "", 0),
 			newSampleIntArrayParamInfo(state),
-			catena.NewParamInfo("sample_float_array", catena.NewPolyglotText("en", "Sample Float Array"), catena.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue()))),
-			catena.NewParamInfo("sample_string_array", catena.NewPolyglotText("en", "Sample String Array"), catena.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue()))),
-			catena.NewParamInfo("sample_binary", catena.NewPolyglotText("en", "Sample Binary"), catena.ParamTypeBinary, "", 0),
-			catena.NewParamInfo("sample_struct_variant", catena.NewPolyglotText("en", "Sample Struct Variant"), catena.ParamTypeStructVariant, "", 0),
-			catena.NewParamInfo("sample_struct_array", catena.NewPolyglotText("en", "Sample Struct Array"), catena.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue()))),
-			catena.NewParamInfo("sample_struct_variant_array", catena.NewPolyglotText("en", "Sample Struct Variant Array"), catena.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue()))),
+			st2138.NewParamInfo("sample_float_array", st2138.NewPolyglotText("en", "Sample Float Array"), st2138.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue()))),
+			st2138.NewParamInfo("sample_string_array", st2138.NewPolyglotText("en", "Sample String Array"), st2138.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue()))),
+			st2138.NewParamInfo("sample_binary", st2138.NewPolyglotText("en", "Sample Binary"), st2138.ParamTypeBinary, "", 0),
+			st2138.NewParamInfo("sample_struct_variant", st2138.NewPolyglotText("en", "Sample Struct Variant"), st2138.ParamTypeStructVariant, "", 0),
+			st2138.NewParamInfo("sample_struct_array", st2138.NewPolyglotText("en", "Sample Struct Array"), st2138.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue()))),
+			st2138.NewParamInfo("sample_struct_variant_array", st2138.NewPolyglotText("en", "Sample Struct Variant Array"), st2138.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue()))),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	if strings.HasPrefix(fqoid, "struct_example") {
-		infos := []catena.ParamInfo{
-			catena.NewParamInfo("struct_example", catena.NewPolyglotText("en", "Struct Example"), catena.ParamTypeStruct, "", 0),
+		infos := []st2138.ParamInfo{
+			st2138.NewParamInfo("struct_example", st2138.NewPolyglotText("en", "Struct Example"), st2138.ParamTypeStruct, "", 0),
 		}
 		if recursive {
 			infos = append(infos,
-				catena.NewParamInfo("struct_example/number", nil, catena.ParamTypeInt32, "", 0),
-				catena.NewParamInfo("struct_example/text", nil, catena.ParamTypeString, "", 0),
+				st2138.NewParamInfo("struct_example/number", nil, st2138.ParamTypeInt32, "", 0),
+				st2138.NewParamInfo("struct_example/text", nil, st2138.ParamTypeString, "", 0),
 			)
 		}
 		switch fqoid {
 		case "struct_example":
 			return infos, catena.StatusWithCode(catena.StatusCodeOk, "")
 		case "struct_example/number":
-			return []catena.ParamInfo{catena.NewParamInfo("struct_example/number", nil, catena.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.ParamInfo{st2138.NewParamInfo("struct_example/number", nil, st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		case "struct_example/text":
-			return []catena.ParamInfo{catena.NewParamInfo("struct_example/text", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.ParamInfo{st2138.NewParamInfo("struct_example/text", nil, st2138.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 	}
 
 	if strings.HasPrefix(fqoid, "device_name") {
-		return []catena.ParamInfo{catena.NewParamInfo("device_name", catena.NewPolyglotText("en", "Device Name"), catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("device_name", st2138.NewPolyglotText("en", "Device Name"), st2138.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "volume") {
-		return []catena.ParamInfo{catena.NewParamInfo("volume", catena.NewPolyglotText("en", "Volume"), catena.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("volume", st2138.NewPolyglotText("en", "Volume"), st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "muted") {
-		return []catena.ParamInfo{catena.NewParamInfo("muted", catena.NewPolyglotText("en", "Muted"), catena.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("muted", st2138.NewPolyglotText("en", "Muted"), st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	if strings.HasPrefix(fqoid, "sample_struct_variant_array") {
-		return []catena.ParamInfo{catena.NewParamInfo("sample_struct_variant_array", catena.NewPolyglotText("en", "Sample Struct Variant Array"), catena.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_variant_array", st2138.NewPolyglotText("en", "Sample Struct Variant Array"), st2138.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_struct_variant") {
-		infos := []catena.ParamInfo{
-			catena.NewParamInfo("sample_struct_variant", catena.NewPolyglotText("en", "Sample Struct Variant"), catena.ParamTypeStructVariant, "", 0),
+		infos := []st2138.ParamInfo{
+			st2138.NewParamInfo("sample_struct_variant", st2138.NewPolyglotText("en", "Sample Struct Variant"), st2138.ParamTypeStructVariant, "", 0),
 		}
 		if recursive {
 			infos = append(infos,
-				catena.NewParamInfo("sample_struct_variant/int_kind", nil, catena.ParamTypeInt32, "", 0),
-				catena.NewParamInfo("sample_struct_variant/string_kind", nil, catena.ParamTypeString, "", 0),
+				st2138.NewParamInfo("sample_struct_variant/int_kind", nil, st2138.ParamTypeInt32, "", 0),
+				st2138.NewParamInfo("sample_struct_variant/string_kind", nil, st2138.ParamTypeString, "", 0),
 			)
 		}
 		switch fqoid {
 		case "sample_struct_variant":
 			return infos, catena.StatusWithCode(catena.StatusCodeOk, "")
 		case "sample_struct_variant/int_kind":
-			return []catena.ParamInfo{catena.NewParamInfo("sample_struct_variant/int_kind", nil, catena.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_variant/int_kind", nil, st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		case "sample_struct_variant/string_kind":
-			return []catena.ParamInfo{catena.NewParamInfo("sample_struct_variant/string_kind", nil, catena.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_variant/string_kind", nil, st2138.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 	}
 	if strings.HasPrefix(fqoid, "sample_struct_array") {
-		return []catena.ParamInfo{catena.NewParamInfo("sample_struct_array", catena.NewPolyglotText("en", "Sample Struct Array"), catena.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_array", st2138.NewPolyglotText("en", "Sample Struct Array"), st2138.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_int_array") {
-		return []catena.ParamInfo{newSampleIntArrayParamInfo(state)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{newSampleIntArrayParamInfo(state)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_float_array") {
-		return []catena.ParamInfo{catena.NewParamInfo("sample_float_array", catena.NewPolyglotText("en", "Sample Float Array"), catena.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_float_array", st2138.NewPolyglotText("en", "Sample Float Array"), st2138.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_string_array") {
-		return []catena.ParamInfo{catena.NewParamInfo("sample_string_array", catena.NewPolyglotText("en", "Sample String Array"), catena.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_string_array", st2138.NewPolyglotText("en", "Sample String Array"), st2138.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_binary") {
-		return []catena.ParamInfo{catena.NewParamInfo("sample_binary", catena.NewPolyglotText("en", "Sample Binary"), catena.ParamTypeBinary, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_binary", st2138.NewPolyglotText("en", "Sample Binary"), st2138.ParamTypeBinary, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_float") {
-		return []catena.ParamInfo{catena.NewParamInfo("sample_float", catena.NewPolyglotText("en", "Sample Float"), catena.ParamTypeFloat32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_float", st2138.NewPolyglotText("en", "Sample Float"), st2138.ParamTypeFloat32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
-	return []catena.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
+	return []st2138.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 }
 
-func newCounterParamInfo() catena.ParamInfo {
-	return catena.NewParamInfo("counter", catena.NewPolyglotText("en", "Counter"), catena.ParamTypeInt32, "", 0)
+func newCounterParamInfo() st2138.ParamInfo {
+	return st2138.NewParamInfo("counter", st2138.NewPolyglotText("en", "Counter"), st2138.ParamTypeInt32, "", 0)
 }
 
-func newRunningParamInfo() catena.ParamInfo {
-	return catena.NewParamInfo("running", catena.NewPolyglotText("en", "Counter Running Status"), catena.ParamTypeInt32, "", 0)
+func newRunningParamInfo() st2138.ParamInfo {
+	return st2138.NewParamInfo("running", st2138.NewPolyglotText("en", "Counter Running Status"), st2138.ParamTypeInt32, "", 0)
 }
 
-func newSampleIntArrayParamInfo(state *ExampleState) catena.ParamInfo {
-	return catena.NewParamInfo("sample_int_array", catena.NewPolyglotText("en", "Sample Int Array"), catena.ParamTypeInt32Array, "", uint32(len(state.sampleIntArrayValue())))
+func newSampleIntArrayParamInfo(state *ExampleState) st2138.ParamInfo {
+	return st2138.NewParamInfo("sample_int_array", st2138.NewPolyglotText("en", "Sample Int Array"), st2138.ParamTypeInt32Array, "", uint32(len(state.sampleIntArrayValue())))
 }

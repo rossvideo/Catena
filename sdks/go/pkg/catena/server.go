@@ -53,6 +53,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 type EndpointType int
@@ -127,11 +128,27 @@ func (e EndpointType) String() string {
 }
 
 // Handler function types used by both REST and gRPC servers.
-type DeviceHandler func(slot uint16, ctx HandlerContext) (Device, StatusResult)
-type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (Value, StatusResult)
+//
+// A handler runs only after the SDK's authorization gate has enforced scope
+// and endpoint access for the caller, so handlers do not re-check
+// authorization. When a product struct is registered for a slot (see
+// RegisterProductStruct), the SDK owns product/* requests and handlers never
+// see them; otherwise product/* requests fall through to the handler.
 
-// GetParamHandler returns the full parameter (metadata + value) for a slot/fqoid.
-type GetParamHandler func(slot uint16, fqoid string, ctx HandlerContext) (Param, StatusResult)
+// DeviceHandler returns the full device model for a slot (GetDevice). It
+// returns the device with an Ok status, or a zero Device with an error status
+// (e.g. StatusCodeNotFound) when the slot has no device to report.
+type DeviceHandler func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult)
+
+// GetValueHandler returns the current value of the parameter at fqoid for a
+// slot (GetValue). It returns the value with an Ok status, or a zero Value
+// with an error status (e.g. StatusCodeNotFound for an unknown fqoid).
+type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult)
+
+// GetParamHandler returns the full parameter (metadata + value) at fqoid for a
+// slot (GetParam). It returns the param with an Ok status, or a zero Param
+// with an error status (e.g. StatusCodeNotFound for an unknown fqoid).
+type GetParamHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult)
 
 // SetValueEntry is a single fqoid/value pair within a SetValue request.
 type SetValueEntry struct {
@@ -141,38 +158,89 @@ type SetValueEntry struct {
 
 // SetValueHandler applies one or more parameter values for a slot. Single-value
 // endpoints invoke it with a one-element slice; multi-value endpoints pass the
-// full slice so the handler can apply them atomically (all-or-nothing).
+// full slice. The handler must apply the batch atomically (all-or-nothing): if
+// any entry cannot be applied, it must leave every value unchanged and return
+// an error status. On success it returns an Ok status.
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
-type ReadAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (Asset, StatusResult)
 
-// CreateAssetHandler stores a new asset at fqoid (HTTP POST / CreateAsset). Business
-// logic decides create-vs-conflict semantics.
-type CreateAssetHandler func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult
+// ReadAssetHandler returns the asset stored at fqoid for a slot (ReadAsset).
+// It returns the asset with an Ok status, or a zero Asset with an error status
+// (e.g. StatusCodeNotFound for an unknown fqoid).
+type ReadAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult)
+
+// CreateAssetHandler stores a new asset at fqoid (HTTP POST / CreateAsset).
+// Business logic decides create-vs-conflict semantics and reports the outcome
+// in the returned StatusResult.
+type CreateAssetHandler func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 
 // UpdateAssetHandler replaces an existing asset at fqoid (HTTP PUT /
-// UpdateAsset). Business logic decides overwrite-vs-not-found semantics.
-type UpdateAssetHandler func(slot uint16, fqoid string, asset Asset, ctx HandlerContext) StatusResult
+// UpdateAsset). Business logic decides overwrite-vs-not-found semantics and
+// reports the outcome in the returned StatusResult.
+type UpdateAssetHandler func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 
 // DeleteAssetHandler removes the asset at fqoid (HTTP DELETE / DeleteAsset).
+// Business logic decides delete-vs-not-found semantics and reports the outcome
+// in the returned StatusResult.
 type DeleteAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[CommandResult]) StatusResult
+
+// ExecuteCommandHandler executes the command at commandFqoid for a slot with
+// the given payload, emitting any responses through stream.Send and returning
+// a terminal StatusResult. respond=false means the caller opted out of
+// responses; the SDK already substitutes a stream that discards chunks, so the
+// handler may either skip sending or send as usual. A Send error means the
+// chunk could not be delivered - the client may have disconnected, the
+// transport hit an encoding or write failure, or the server is shutting down
+// (the SDK wraps the stream so Send fails once shutdown begins) - so the
+// handler should stop and return.
+type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult
 
 // ParamInfoHandler streams parameter information for a slot. The handler emits
-// each ParamInfo chunk through stream.Send and returns a terminal StatusResult.
-// A Send error means the chunk could not be delivered - the client may have
-// disconnected, or the transport hit an encoding or write failure - so the
-// handler should stop and return.
-type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[ParamInfo]) StatusResult
+// one ParamInfo chunk through stream.Send per parameter under oidPrefix
+// (descending into children when recursive is true) and returns a terminal
+// StatusResult: Ok once every descriptor has been sent, NotFound for an
+// unknown oidPrefix, or Internal when a Send fails. A Send error means the
+// chunk could not be delivered - the client may have disconnected, the
+// transport hit an encoding or write failure, or the server is shutting down
+// (the SDK wraps the stream so Send fails once shutdown begins) - so the
+// handler should stop and return without polling ctx itself. See
+// ParamInfosForRequest in param_info.go for a reference implementation.
+type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult
 
 // ListLanguagesHandler returns the language codes supported by the device model
 // at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
 type ListLanguagesHandler func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
 
+// ReadLanguagePackHandler returns the language pack for a language code at a
+// slot (e.g. "en"). It returns the pack with an Ok status, or a zero
+// LanguagePack with an error status (e.g. StatusCodeNotFound for an unknown
+// language).
 type ReadLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
+
+// CreateLanguagePackHandler stores a new language pack for a language code at
+// a slot. Business logic decides create-vs-conflict semantics and reports the
+// outcome in the returned StatusResult.
 type CreateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+
+// UpdateLanguagePackHandler replaces the language pack for a language code at
+// a slot. Business logic decides overwrite-vs-not-found semantics and reports
+// the outcome in the returned StatusResult.
 type UpdateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+
+// DeleteLanguagePackHandler removes the language pack for a language code at a
+// slot. Business logic decides delete-vs-not-found semantics and reports the
+// outcome in the returned StatusResult.
 type DeleteLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) StatusResult
+
+// HeartbeatHandler is invoked for its slot on every heartbeat tick while
+// StartHeartbeat is running. It is called outside the server lock; a panic is
+// recovered and logged, so one slot's failure does not stop the others.
 type HeartbeatHandler func(slot uint16)
+
+// AccessHandler decides whether the caller described by ctx may use an
+// endpoint. It is global (not per-slot) and is consulted by the authorization
+// gate - only when authorization is enabled - after the scope checks and
+// before any endpoint handler runs. Returning false rejects the request with
+// StatusCodePermissionDenied. Registering nil resets to allow-all.
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
 var allowAllAccessHandler AccessHandler = func(endpointType EndpointType, ctx HandlerContext) bool { return true }
@@ -221,22 +289,152 @@ type Server interface {
 	Wait()
 	Shutdown(ctx context.Context)
 
+	// The Register*Handler methods below store the handler for a slot,
+	// replacing any handler previously registered for that slot and endpoint.
+	// Registering the first handler for a new slot makes the slot visible via
+	// GetSlots and pushes a SlotsAdded update to connected clients. Each doc
+	// restates the handler signature so it can be read at the call site; the
+	// handler type's doc carries the full implementation contract.
+
+	// RegisterGetDeviceHandler registers the GetDevice handler for a slot.
+	// See DeviceHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult)
 	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
+
+	// RegisterGetValueHandler registers the GetValue handler for a slot.
+	// See GetValueHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult)
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
+
+	// RegisterGetParamHandler registers the GetParam handler for a slot.
+	// See GetParamHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult)
 	RegisterGetParamHandler(slot uint16, handler GetParamHandler)
+
+	// RegisterSetValueHandler registers the SetValue handler for a slot. The
+	// handler must apply its batch atomically (all-or-nothing); see
+	// SetValueHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
+
+	// RegisterReadAssetHandler registers the ReadAsset handler for a slot.
+	// See ReadAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult)
 	RegisterReadAssetHandler(slot uint16, handler ReadAssetHandler)
+
+	// RegisterCreateAssetHandler registers the CreateAsset handler for a slot.
+	// See CreateAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 	RegisterCreateAssetHandler(slot uint16, handler CreateAssetHandler)
+
+	// RegisterUpdateAssetHandler registers the UpdateAsset handler for a slot.
+	// See UpdateAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 	RegisterUpdateAssetHandler(slot uint16, handler UpdateAssetHandler)
+
+	// RegisterDeleteAssetHandler registers the DeleteAsset handler for a slot.
+	// See DeleteAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
 	RegisterDeleteAssetHandler(slot uint16, handler DeleteAssetHandler)
+
+	// RegisterExecuteCommandHandler registers the ExecuteCommand handler for a
+	// slot. The handler streams responses through stream.Send, stops on a Send
+	// error, and returns a terminal status; see ExecuteCommandHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
+
+	// RegisterParamInfoHandler registers the ParamInfo handler for a slot. The
+	// handler streams descriptors through stream.Send, stops on a Send error,
+	// and returns a terminal status (Ok / NotFound / Internal); see
+	// ParamInfoHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
+
+	// RegisterListLanguagesHandler registers the ListLanguages handler for a
+	// slot. See ListLanguagesHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
 	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
+
+	// RegisterReadLanguagePackHandler registers the ReadLanguagePack handler
+	// for a slot. See ReadLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
 	RegisterReadLanguagePackHandler(slot uint16, handler ReadLanguagePackHandler)
+
+	// RegisterCreateLanguagePackHandler registers the CreateLanguagePack
+	// handler for a slot. See CreateLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
 	RegisterCreateLanguagePackHandler(slot uint16, handler CreateLanguagePackHandler)
+
+	// RegisterUpdateLanguagePackHandler registers the UpdateLanguagePack
+	// handler for a slot. See UpdateLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
 	RegisterUpdateLanguagePackHandler(slot uint16, handler UpdateLanguagePackHandler)
+
+	// RegisterDeleteLanguagePackHandler registers the DeleteLanguagePack
+	// handler for a slot. See DeleteLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, ctx HandlerContext) StatusResult
 	RegisterDeleteLanguagePackHandler(slot uint16, handler DeleteLanguagePackHandler)
+
+	// RegisterHeartbeatHandler registers the heartbeat handler for a slot. The
+	// handler fires only while StartHeartbeat is running; see HeartbeatHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
+
+	// RegisterAccessHandler registers the global access handler. Unlike the
+	// per-slot methods above, it applies to every slot, has no slot-visibility
+	// side effect, and passing nil resets to allow-all. See AccessHandler.
+	//
+	// Handler signature:
+	//
+	//	func(endpointType EndpointType, ctx HandlerContext) bool
 	RegisterAccessHandler(handler AccessHandler)
 
 	// RegisterProductStruct hands the mandatory product struct for a slot to the
@@ -244,7 +442,13 @@ type Server interface {
 	// GetDevice, answers GetValue and ParamInfo for product/*, and rejects
 	// SetValue writes to product/* with StatusCodePermissionDenied — business
 	// logic no longer needs to handle the product struct.
-	// Note: If you do not register a product struct for a slot, requests for product/* values or info will fail with StatusCodeNotFound.
+	// The product param carries the st2138:mon access scope: when authorization
+	// is enabled and a product struct is registered for the slot, GetDevice omits
+	// the product param for callers without the monitor read scope, and
+	// GetValue/GetParam/ParamInfo reject product/* requests from such callers with
+	// StatusCodePermissionDenied.
+	// Note: If you do not register a product struct for a slot, product/* requests
+	// fall through to the registered handler for that slot.
 	RegisterProductStruct(slot uint16, product ProductStruct)
 
 	SetMaxConnections(max int)
@@ -259,16 +463,16 @@ type Server interface {
 type ServerRuntime interface {
 	IsDev() bool
 	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
-	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult)
-	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult)
-	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult)
+	InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (st2138.Device, StatusResult)
+	InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Value, StatusResult)
+	InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Param, StatusResult)
 	InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult
-	InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult)
-	InvokeCreateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult
-	InvokeUpdateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult
+	InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Asset, StatusResult)
+	InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult
+	InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult
 	InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult
-	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult
-	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult
+	InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[st2138.CommandResponse], transportContext TransportContext) StatusResult
+	InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo], transportContext TransportContext) StatusResult
 	InvokeListLanguagesHandler(slot uint16, transportContext TransportContext) ([]string, StatusResult)
 	InvokeReadLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult)
 	InvokeCreateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult
@@ -795,30 +999,46 @@ func (s *server) productForSlot(slot uint16) (ProductStruct, bool) {
 	return product, ok
 }
 
-func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (Device, StatusResult) {
+func (s *server) InvokeGetDeviceHandler(slot uint16, transportContext TransportContext) (st2138.Device, StatusResult) {
 	return invokeHandler(s, transportContext, EndpointGetDevice, false, s.getDeviceHandlers, slot,
 		"No device defined at slot",
-		func(handler DeviceHandler, ctx HandlerContext) (Device, StatusResult) {
+		func(handler DeviceHandler, ctx HandlerContext) (st2138.Device, StatusResult) {
 			device, res := handler(slot, ctx)
-			// Overwrite the product/* fields in whatever the business logic returned
-			// with the SDK-managed product struct, if one is registered for the slot.
-			if res.IsOk() {
-				if product, has := s.productForSlot(slot); has && device.Proto != nil {
-					device.WithParam(ProductOid, ProductParam(product))
+			// Only touch the device return when the SDK manages the product for this
+			// slot; otherwise leave whatever the business logic produced untouched.
+			if res.IsOk() && device.Proto != nil {
+				// Only enforce the product's st2138:mon read scope when the SDK manages
+				// the product struct for this slot. Callers with mon get the SDK-managed
+				// product injected (overwriting whatever the business logic returned);
+				// callers without mon get no product param at all, even one the business
+				// logic added, since the SDK-managed product struct is read-only and
+				// mon-scoped regardless of who created it.
+				if product, has := s.productForSlot(slot); has {
+					if ctx.RequireReadScope(st2138.ScopeMon).IsOk() {
+						device.WithParam(ProductOid, ProductParam(product))
+					} else {
+						delete(device.Proto.Params, ProductOid)
+					}
 				}
 			}
 			return device, res
 		})
 }
 
-func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (Value, StatusResult) {
+func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Value, StatusResult) {
 	return invokeHandler(s, transportContext, EndpointGetValue, false, s.getValueHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
-		func(handler GetValueHandler, ctx HandlerContext) (Value, StatusResult) {
-			// The SDK owns product/* when a product struct is registered for the slot;
-			// answer it directly instead of passing to business logic.
+		func(handler GetValueHandler, ctx HandlerContext) (st2138.Value, StatusResult) {
+			// The SDK owns product/* only when a product struct is registered for the
+			// slot; answer it directly instead of passing to business logic. The
+			// product param is mon-scoped, so gate the SDK-managed read on mon. When
+			// no product struct is registered, product/* falls through to the
+			// business-logic handler, which does its own scoping.
 			if isProductOid(fqoid) {
 				if product, has := s.productForSlot(slot); has {
+					if scopeRes := ctx.RequireReadScope(st2138.ScopeMon); scopeRes.IsError() {
+						return ReplyError[st2138.Value](scopeRes.Code, scopeRes.Error)
+					}
 					return productValueForOid(product, fqoid)
 				}
 			}
@@ -827,14 +1047,20 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 		})
 }
 
-func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (Param, StatusResult) {
+func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Param, StatusResult) {
 	return invokeHandler(s, transportContext, EndpointGetParam, false, s.getParamHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
-		func(handler GetParamHandler, ctx HandlerContext) (Param, StatusResult) {
-			// The SDK owns product/* when a product struct is registered for the slot;
-			// answer it directly instead of passing to business logic.
+		func(handler GetParamHandler, ctx HandlerContext) (st2138.Param, StatusResult) {
+			// The SDK owns product/* only when a product struct is registered for the
+			// slot; answer it directly instead of passing to business logic. The
+			// product param is mon-scoped, so gate the SDK-managed read on mon. When
+			// no product struct is registered, product/* falls through to the
+			// business-logic handler, which does its own scoping.
 			if isProductOid(fqoid) {
 				if product, has := s.productForSlot(slot); has {
+					if scopeRes := ctx.RequireReadScope(st2138.ScopeMon); scopeRes.IsError() {
+						return st2138.Param{}, scopeRes
+					}
 					return productParamForOid(product, fqoid)
 				}
 			}
@@ -863,10 +1089,10 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 	return res
 }
 
-func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (Asset, StatusResult) {
+func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Asset, StatusResult) {
 	return invokeHandler(s, transportContext, EndpointReadAsset, false, s.readAssetHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
-		func(handler ReadAssetHandler, ctx HandlerContext) (Asset, StatusResult) {
+		func(handler ReadAssetHandler, ctx HandlerContext) (st2138.Asset, StatusResult) {
 			return handler(slot, fqoid, ctx)
 		})
 }
@@ -879,13 +1105,13 @@ func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, transportCont
 // HasWriteScope returns true for every scope when authorization is disabled, so
 // this passes in that mode.
 func enforceAssetWriteScope(ctx HandlerContext) StatusResult {
-	if ctx.HasWriteScope(ScopeOp) || ctx.HasWriteScope(ScopeCfg) || ctx.HasWriteScope(ScopeAdm) {
+	if ctx.HasWriteScope(st2138.ScopeOp) || ctx.HasWriteScope(st2138.ScopeCfg) || ctx.HasWriteScope(st2138.ScopeAdm) {
 		return StatusWithCode(StatusCodeOk, "")
 	}
 	return StatusWithCode(StatusCodePermissionDenied, "asset writes require adm, op, or cfg write scope")
 }
 
-func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult {
+func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult {
 	_, res := invokeHandler(s, transportContext, EndpointCreateAsset, true, s.createAssetHandlers, slot,
 		"no CreateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler CreateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -897,7 +1123,7 @@ func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset Asset
 	return res
 }
 
-func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset Asset, transportContext TransportContext) StatusResult {
+func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult {
 	_, res := invokeHandler(s, transportContext, EndpointUpdateAsset, true, s.updateAssetHandlers, slot,
 		"no UpdateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -921,17 +1147,17 @@ func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportCo
 	return res
 }
 
-func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[CommandResult], transportContext TransportContext) StatusResult {
+func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[st2138.CommandResponse], transportContext TransportContext) StatusResult {
 	// When the caller opts out of responses, swap in a nullStream so any chunks
 	// the handler sends are discarded here rather than each transport having to
 	// gobble them itself. The handler still receives respond and may skip sending.
 	if !respond {
-		stream = nullStream[CommandResult]{}
+		stream = nullStream[st2138.CommandResponse]{}
 	}
 	// wrap the transport's stream so Send also fails on server shutdown, not just
 	// client disconnect. Cancellation is then transparent to the handler: it just
 	// gets an error from the next Send once the server is shutting down.
-	stream = shutdownStream[CommandResult]{inner: stream, shutdown: s.ctx}
+	stream = shutdownStream[st2138.CommandResponse]{inner: stream, shutdown: s.ctx}
 	_, res := invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, slot,
 		"ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ExecuteCommandHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -940,18 +1166,24 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	return res
 }
 
-func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[ParamInfo], transportContext TransportContext) StatusResult {
+func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo], transportContext TransportContext) StatusResult {
 	// Wrap the transport's stream so Send also fails on server shutdown, not just
 	// client disconnect. Cancellation is then transparent to the handler: it just
 	// gets an error from the next Send once the server is shutting down.
-	stream = shutdownStream[ParamInfo]{inner: stream, shutdown: s.ctx}
+	stream = shutdownStream[st2138.ParamInfo]{inner: stream, shutdown: s.ctx}
 	_, res := invokeHandler(s, transportContext, EndpointParamInfo, false, s.paramInfoHandlers, slot,
 		"ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ParamInfoHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			// The SDK owns product/* ParamInfo when a product struct is registered for
-			// the slot; answer it directly instead of passing to business logic.
+			// The SDK owns product/* ParamInfo only when a product struct is registered
+			// for the slot; answer it directly instead of passing to business logic. The
+			// product param is mon-scoped, so gate the SDK-managed request on mon. When
+			// no product struct is registered, product/* falls through to the
+			// business-logic handler, which does its own scoping.
 			if isProductOid(oidPrefix) {
 				if product, has := s.productForSlot(slot); has {
+					if scopeRes := ctx.RequireReadScope(st2138.ScopeMon); scopeRes.IsError() {
+						return struct{}{}, scopeRes
+					}
 					return struct{}{}, productParamInfosForOid(product, oidPrefix, recursive, stream)
 				}
 			}
@@ -988,7 +1220,7 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 		func(handler CreateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			// Mutations require the adm scope specifically, not merely any write
 			// scope, so narrow the coarse write gate now that we have the context.
-			if res := ctx.RequireWriteScope(ScopeAdm); res.IsError() {
+			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
 			}
 			// Argument validation runs after the scope check so an unauthorized
@@ -1009,7 +1241,7 @@ func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, l
 		"UpdateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			// Mutations require the adm scope specifically, not merely any write scope.
-			if res := ctx.RequireWriteScope(ScopeAdm); res.IsError() {
+			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
 			}
 			if language == "" {
@@ -1028,7 +1260,7 @@ func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, t
 		"DeleteLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			// Mutations require the adm scope specifically, not merely any write scope.
-			if res := ctx.RequireWriteScope(ScopeAdm); res.IsError() {
+			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
 			}
 			if language == "" {
@@ -1105,9 +1337,9 @@ func (s *server) ConnectionCount() int {
 // mutate or discard the original input after BroadcastUpdate returns.
 // Callers must still prevent concurrent mutation of value while this function is running.
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
-	protoValue, res := ToProto(value)
-	if res.Code != StatusCodeOk {
-		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", res.Error)
+	protoValue, err := st2138.ToProto(value)
+	if err != nil {
+		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
 		return
 	}
 	update := &protos.PushUpdates{

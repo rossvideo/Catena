@@ -6,6 +6,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 // registerGetParamHandlers wires GetParam for every slot. GetParam returns the
@@ -18,20 +19,20 @@ import (
 // never drift between the two endpoints because both come from one source.
 func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
 	for _, slot := range slotList {
-		srv.RegisterGetParamHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (catena.Param, catena.StatusResult) {
+		srv.RegisterGetParamHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Param, catena.StatusResult) {
 			logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 			device, ok := buildDeviceDefinition(slot, counter, state)
 			if !ok {
-				return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+				return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 			}
 
 			param, found := lookupParam(device.Proto, fqoid)
 			if !found {
-				return catena.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
+				return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 			}
 
-			return catena.Param{Proto: param}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			return st2138.Param{Proto: param}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 	}
 }
