@@ -890,10 +890,11 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 		}
 	})
 
-	// A body sent without a declared length (chunked transfer encoding) reports
-	// ContentLength == -1. The payload must still be read and parsed rather than
-	// silently dropped, so the handler must not gate parsing on Content-Length.
-	t.Run("ChunkedBodyIsParsed", func(t *testing.T) {
+	// Regression test: a request with an unknown body length reports
+	// ContentLength == -1 (e.g. chunked transfer encoding from a real server).
+	// The payload must still be read and parsed rather than silently dropped,
+	// so the handler must not gate parsing on Content-Length.
+	t.Run("UnknownContentLengthBodyIsParsed", func(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
 		var receivedPayload any
 		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
@@ -903,13 +904,13 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", strings.NewReader(`{"int32_value": 42}`))
 		req.Header.Set("Content-Type", "application/json")
-		req.ContentLength = -1 // simulate chunked / unknown-length body
+		req.ContentLength = -1 // unknown length, as a real chunked request would report
 		rec := httptest.NewRecorder()
 		transport.mux.ServeHTTP(rec, req)
 
 		assertStatus(t, rec, http.StatusOK)
-		if receivedPayload == nil {
-			t.Error("expected chunked body to be parsed into a non-nil payload")
+		if v, ok := receivedPayload.(int32); !ok || v != 42 {
+			t.Errorf("expected unknown-length body to be parsed into payload 42, got %v (%T)", receivedPayload, receivedPayload)
 		}
 	})
 
