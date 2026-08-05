@@ -208,6 +208,7 @@ void RunNdiRecv() {
     std::deque<std::chrono::nanoseconds> frameTimes;
     std::chrono::milliseconds logInterval(5000);
     std::chrono::steady_clock::time_point lastLogTime = lastTime;
+    uint32_t lastFourCC = 0;
 
     while (!shutdownToken && isRunning) {
         // check if we need to change sources
@@ -252,10 +253,8 @@ void RunNdiRecv() {
         } else if (recvResult == NDIlib_frame_type_video) {
             // write to the buffer the MXL writer is NOT reading
             uint32_t writeIndex = 1 - readIndex.load();
+            lastFourCC = videoFrame.FourCC;
             bool ndiHasAlpha = (videoFrame.FourCC == NDIlib_FourCC_video_type_BGRA);
-            LOG(INFO) << "Received video format: " << videoFrame.FourCC;
-            LOG(INFO) << "Is BGRA: " << (videoFrame.FourCC == NDIlib_FourCC_video_type_BGRA);
-            LOG(INFO) << "Is UYVY: " << (videoFrame.FourCC == NDIlib_FourCC_video_type_UYVY);
 
             convertFrame(videoFrame.p_data, videoBuffer[writeIndex],
                          std::min(static_cast<int32_t>(videoFrame.xres), frameWidth.load()),
@@ -283,8 +282,13 @@ void RunNdiRecv() {
                   std::accumulate(frameTimes.begin(), frameTimes.end(), std::chrono::nanoseconds(0)).count() /
                   static_cast<double>(frameTimes.size());
                 double fps = 1e9 / avgFrameTime;
+                char fourCCStr[5] = {static_cast<char>(lastFourCC & 0xff),
+                                     static_cast<char>((lastFourCC >> 8) & 0xff),
+                                     static_cast<char>((lastFourCC >> 16) & 0xff),
+                                     static_cast<char>((lastFourCC >> 24) & 0xff), '\0'};
                 LOG(INFO) << "Current NDI source: " << source.p_ndi_name << " actual FPS: " << fps
-                          << " (based on " << frameTimes.size() << " frames)";
+                          << " (based on " << frameTimes.size() << " frames)"
+                          << " FourCC: " << fourCCStr;
             }
             lastLogTime = now;
         }
