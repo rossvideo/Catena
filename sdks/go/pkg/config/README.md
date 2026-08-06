@@ -278,7 +278,7 @@ The REST and gRPC transports each accept an independent `TLSOptions` (`Rest.TLS`
 
 - `*_TLS_ENABLED`: turn TLS on for that transport's listener (default off).
 - `*_TLS_CERT_FILE` / `*_TLS_KEY_FILE`: server certificate and private key. Both are required when TLS is enabled; the transport fails to start if either is missing or unreadable.
-- `*_TLS_MUTUAL_AUTH`: require clients to present a certificate signed by the CA in `*_TLS_CLIENT_CA_FILE` (mTLS).
+- `*_TLS_MUTUAL_AUTH`: require clients to present a certificate signed by the CA in `*_TLS_CLIENT_CA_FILE` (mTLS, default off).
 - `*_TLS_CLIENT_CA_FILE`: client CA bundle. Required when mutual auth is enabled; ignored otherwise.
 
 Example:
