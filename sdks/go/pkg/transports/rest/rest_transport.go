@@ -937,12 +937,24 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 		respond = true
 	}
 
-	// Read command payload
+	// Read command payload. Per ST 2138 an empty body is valid and means "no
+	// value": leave payload nil and skip all body validation, mirroring the
+	// gRPC path (which keys off a nil Value). Only a non-empty body is parsed
+	// and validated. We read the body directly rather than trusting
+	// Content-Length, which the server reports as -1 for chunked requests.
 	var payload any
-	if r.ContentLength > 0 {
-		reqValue, err := ReadRequestJSON(r)
-		if err.Code != catena.StatusCodeOk {
-			logger.Error("failed to read command payload", "error", err)
+	body, err := io.ReadAll(r.Body)
+	r.Body.Close()
+	if err != nil {
+		logger.Error("failed to read command payload", "error", err)
+		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
+		t.writeHTTPResult(w, res, val)
+		return
+	}
+	if len(body) > 0 {
+		reqValue, parseErr := parseValueJSON(r.Header.Get("Content-Type"), body)
+		if parseErr.IsError() {
+			logger.Error("failed to read command payload", "error", parseErr)
 			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
 			return

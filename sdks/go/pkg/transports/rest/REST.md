@@ -94,8 +94,10 @@ Param-info routes:
 
 Command routes:
 
-- The request body is the command payload (a JSON value); omit the body for
-  commands that take no argument.
+- The request body is the command payload (a JSON value). An empty body is
+  valid and is treated as "no value" (a nil payload), bypassing body
+  validation; a non-empty body is fully validated and unmarshalled. Emptiness
+  is determined by the body itself, not the `Content-Length` header.
 - `respond` defaults to `false`; only `?respond=true` opts into receiving
   responses, and `respond` is passed through to the handler.
 - The unary route replies with the final `CommandResponse` from the stream, or an
