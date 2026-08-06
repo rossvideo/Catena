@@ -399,15 +399,15 @@ func TestInitOptions_Transport(t *testing.T) {
 		t.Setenv("TESTCFG_REST_TLS_ENABLED", "true")
 		t.Setenv("TESTCFG_REST_TLS_CERT_FILE", "/certs/rest.crt")
 		t.Setenv("TESTCFG_REST_TLS_KEY_FILE", "/certs/rest.key")
-		t.Setenv("TESTCFG_REST_TLS_CA_FILE", "/certs/rest-ca.crt")
+		t.Setenv("TESTCFG_REST_TLS_CLIENT_CA_FILE", "/certs/rest-ca.crt")
 		t.Setenv("TESTCFG_REST_TLS_MUTUAL_AUTH", "true")
 		opts := init(t)
 		want := TLSOptions{
-			Enabled:    true,
-			CertFile:   "/certs/rest.crt",
-			KeyFile:    "/certs/rest.key",
-			CAFile:     "/certs/rest-ca.crt",
-			MutualAuth: true,
+			Enabled:      true,
+			CertFile:     "/certs/rest.crt",
+			KeyFile:      "/certs/rest.key",
+			ClientCAFile: "/certs/rest-ca.crt",
+			MutualAuth:   true,
 		}
 		if !reflect.DeepEqual(opts.Rest.TLS, want) {
 			t.Errorf("expected Rest.TLS %+v, got %+v", want, opts.Rest.TLS)
@@ -418,15 +418,15 @@ func TestInitOptions_Transport(t *testing.T) {
 		t.Setenv("TESTCFG_GRPC_TLS_ENABLED", "true")
 		t.Setenv("TESTCFG_GRPC_TLS_CERT_FILE", "/certs/grpc.crt")
 		t.Setenv("TESTCFG_GRPC_TLS_KEY_FILE", "/certs/grpc.key")
-		t.Setenv("TESTCFG_GRPC_TLS_CA_FILE", "/certs/grpc-ca.crt")
+		t.Setenv("TESTCFG_GRPC_TLS_CLIENT_CA_FILE", "/certs/grpc-ca.crt")
 		t.Setenv("TESTCFG_GRPC_TLS_MUTUAL_AUTH", "true")
 		opts := init(t)
 		want := TLSOptions{
-			Enabled:    true,
-			CertFile:   "/certs/grpc.crt",
-			KeyFile:    "/certs/grpc.key",
-			CAFile:     "/certs/grpc-ca.crt",
-			MutualAuth: true,
+			Enabled:      true,
+			CertFile:     "/certs/grpc.crt",
+			KeyFile:      "/certs/grpc.key",
+			ClientCAFile: "/certs/grpc-ca.crt",
+			MutualAuth:   true,
 		}
 		if !reflect.DeepEqual(opts.Grpc.TLS, want) {
 			t.Errorf("expected Grpc.TLS %+v, got %+v", want, opts.Grpc.TLS)

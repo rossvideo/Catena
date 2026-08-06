@@ -218,7 +218,7 @@ All options can be configured via env and CLI.
 - `PREFIX_REST_TLS_ENABLED` <-> `--rest-tls-enabled`
 - `PREFIX_REST_TLS_CERT_FILE` <-> `--rest-tls-cert-file`
 - `PREFIX_REST_TLS_KEY_FILE` <-> `--rest-tls-key-file`
-- `PREFIX_REST_TLS_CA_FILE` <-> `--rest-tls-ca-file`
+- `PREFIX_REST_TLS_CLIENT_CA_FILE` <-> `--rest-tls-client-ca-file`
 - `PREFIX_REST_TLS_MUTUAL_AUTH` <-> `--rest-tls-mutual-auth`
 
 ### gRPC Transport
@@ -228,7 +228,7 @@ All options can be configured via env and CLI.
 - `PREFIX_GRPC_TLS_ENABLED` <-> `--grpc-tls-enabled`
 - `PREFIX_GRPC_TLS_CERT_FILE` <-> `--grpc-tls-cert-file`
 - `PREFIX_GRPC_TLS_KEY_FILE` <-> `--grpc-tls-key-file`
-- `PREFIX_GRPC_TLS_CA_FILE` <-> `--grpc-tls-ca-file`
+- `PREFIX_GRPC_TLS_CLIENT_CA_FILE` <-> `--grpc-tls-client-ca-file`
 - `PREFIX_GRPC_TLS_MUTUAL_AUTH` <-> `--grpc-tls-mutual-auth`
 
 ### Server
@@ -278,8 +278,8 @@ The REST and gRPC transports each accept an independent `TLSOptions` (`Rest.TLS`
 
 - `*_TLS_ENABLED`: turn TLS on for that transport's listener (default off).
 - `*_TLS_CERT_FILE` / `*_TLS_KEY_FILE`: server certificate and private key. Both are required when TLS is enabled; the transport fails to start if either is missing or unreadable.
-- `*_TLS_MUTUAL_AUTH`: require clients to present a certificate signed by the CA in `*_TLS_CA_FILE` (mTLS).
-- `*_TLS_CA_FILE`: client CA bundle. Required when mutual auth is enabled; ignored (with a warning) otherwise.
+- `*_TLS_MUTUAL_AUTH`: require clients to present a certificate signed by the CA in `*_TLS_CLIENT_CA_FILE` (mTLS).
+- `*_TLS_CLIENT_CA_FILE`: client CA bundle. Required when mutual auth is enabled; ignored otherwise.
 
 Example:
 

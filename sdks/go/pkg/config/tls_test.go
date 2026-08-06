@@ -150,11 +150,11 @@ func TestTLSOptions_ServerTLSConfig(t *testing.T) {
 
 	t.Run("mutual auth with CA file", func(t *testing.T) {
 		cfg, err := TLSOptions{
-			Enabled:    true,
-			CertFile:   certs.ServerCertFile,
-			KeyFile:    certs.ServerKeyFile,
-			CAFile:     certs.CACertFile,
-			MutualAuth: true,
+			Enabled:      true,
+			CertFile:     certs.ServerCertFile,
+			KeyFile:      certs.ServerKeyFile,
+			ClientCAFile: certs.CACertFile,
+			MutualAuth:   true,
 		}.ServerTLSConfig()
 		if err != nil {
 			t.Fatalf("expected no error, got: %v", err)
@@ -169,11 +169,11 @@ func TestTLSOptions_ServerTLSConfig(t *testing.T) {
 
 	t.Run("mutual auth with nonexistent CA file errors", func(t *testing.T) {
 		_, err := TLSOptions{
-			Enabled:    true,
-			CertFile:   certs.ServerCertFile,
-			KeyFile:    certs.ServerKeyFile,
-			CAFile:     filepath.Join(t.TempDir(), "does-not-exist-ca.crt"),
-			MutualAuth: true,
+			Enabled:      true,
+			CertFile:     certs.ServerCertFile,
+			KeyFile:      certs.ServerKeyFile,
+			ClientCAFile: filepath.Join(t.TempDir(), "does-not-exist-ca.crt"),
+			MutualAuth:   true,
 		}.ServerTLSConfig()
 		if err == nil {
 			t.Fatal("expected error for nonexistent CA file, got nil")
@@ -186,11 +186,11 @@ func TestTLSOptions_ServerTLSConfig(t *testing.T) {
 			t.Fatalf("failed to write bad CA: %v", err)
 		}
 		_, err := TLSOptions{
-			Enabled:    true,
-			CertFile:   certs.ServerCertFile,
-			KeyFile:    certs.ServerKeyFile,
-			CAFile:     badCA,
-			MutualAuth: true,
+			Enabled:      true,
+			CertFile:     certs.ServerCertFile,
+			KeyFile:      certs.ServerKeyFile,
+			ClientCAFile: badCA,
+			MutualAuth:   true,
 		}.ServerTLSConfig()
 		if err == nil {
 			t.Fatal("expected error for invalid CA PEM, got nil")
@@ -199,10 +199,10 @@ func TestTLSOptions_ServerTLSConfig(t *testing.T) {
 
 	t.Run("CA file without mutual auth is ignored", func(t *testing.T) {
 		cfg, err := TLSOptions{
-			Enabled:  true,
-			CertFile: certs.ServerCertFile,
-			KeyFile:  certs.ServerKeyFile,
-			CAFile:   certs.CACertFile,
+			Enabled:      true,
+			CertFile:     certs.ServerCertFile,
+			KeyFile:      certs.ServerKeyFile,
+			ClientCAFile: certs.CACertFile,
 		}.ServerTLSConfig()
 		if err != nil {
 			t.Fatalf("expected no error, got: %v", err)

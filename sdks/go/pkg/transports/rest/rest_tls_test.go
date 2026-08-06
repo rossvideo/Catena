@@ -150,11 +150,11 @@ func TestTransport_Start_TLS(t *testing.T) {
 func TestTransport_Start_TLS_MutualAuth(t *testing.T) {
 	certs := testcerts.Generate(t)
 	port := startTLSTransport(t, config.TLSOptions{
-		Enabled:    true,
-		CertFile:   certs.ServerCertFile,
-		KeyFile:    certs.ServerKeyFile,
-		CAFile:     certs.CACertFile,
-		MutualAuth: true,
+		Enabled:      true,
+		CertFile:     certs.ServerCertFile,
+		KeyFile:      certs.ServerKeyFile,
+		ClientCAFile: certs.CACertFile,
+		MutualAuth:   true,
 	})
 	url := fmt.Sprintf("https://127.0.0.1:%d/st2138-api/v1", port)
 

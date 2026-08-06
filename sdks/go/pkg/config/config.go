@@ -72,11 +72,11 @@ type TLSOptions struct {
 	// KeyFile is the path to the PEM-encoded server private key.
 	// Required when Enabled is true.
 	KeyFile string
-	// CAFile is the path to a PEM-encoded CA bundle used to verify client
-	// certificates. Required when MutualAuth is true; ignored otherwise.
-	CAFile string
+	// ClientCAFile is the path to a PEM-encoded CA bundle used to verify
+	// client certificates. Required when MutualAuth is true; ignored otherwise.
+	ClientCAFile string
 	// MutualAuth requires clients to present a certificate signed by the CA
-	// in CAFile (mTLS). Default false.
+	// in ClientCAFile (mTLS). Default false.
 	MutualAuth bool
 }
 
@@ -326,7 +326,7 @@ func (o TLSOptions) LogValue() slog.Value {
 		slog.Bool("enabled", o.Enabled),
 		slog.String("cert_file", o.CertFile),
 		slog.String("key_file", o.KeyFile),
-		slog.String("ca_file", o.CAFile),
+		slog.String("client_ca_file", o.ClientCAFile),
 		slog.Bool("mutual_auth", o.MutualAuth),
 	)
 }

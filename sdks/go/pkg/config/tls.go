@@ -42,16 +42,17 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"log/slog"
 	"os"
 )
 
 // ServerTLSConfig builds a *tls.Config for a server listener from the options.
 //
 // It returns (nil, nil) when TLS is not enabled. When enabled, CertFile and
-// KeyFile are required, and CAFile is required when MutualAuth is true. Any
-// missing or unparseable file results in an error so callers can fail startup
-// instead of silently serving plaintext.
+// KeyFile are required, and ClientCAFile is required when MutualAuth is true.
+// Any missing or unparseable file results in an error so callers can fail
+// startup instead of silently serving plaintext.
+//
+// ClientCAFile is ignored when MutualAuth is false.
 func (o TLSOptions) ServerTLSConfig() (*tls.Config, error) {
 	if !o.Enabled {
 		return nil, nil
@@ -75,22 +76,19 @@ func (o TLSOptions) ServerTLSConfig() (*tls.Config, error) {
 	}
 
 	if o.MutualAuth {
-		if o.CAFile == "" {
+		if o.ClientCAFile == "" {
 			return nil, fmt.Errorf("TLS mutual auth is enabled but no client CA file was provided")
 		}
-		caPEM, err := os.ReadFile(o.CAFile)
+		caPEM, err := os.ReadFile(o.ClientCAFile)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read client CA file %q: %w", o.CAFile, err)
+			return nil, fmt.Errorf("failed to read client CA file %q: %w", o.ClientCAFile, err)
 		}
 		caPool := x509.NewCertPool()
 		if !caPool.AppendCertsFromPEM(caPEM) {
-			return nil, fmt.Errorf("client CA file %q contains no valid PEM certificates", o.CAFile)
+			return nil, fmt.Errorf("client CA file %q contains no valid PEM certificates", o.ClientCAFile)
 		}
 		tlsConfig.ClientCAs = caPool
 		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
-	} else if o.CAFile != "" {
-		slog.Warn("TLS client CA file is set but mutual auth is disabled; the CA file will be ignored",
-			"ca_file", o.CAFile)
 	}
 
 	return tlsConfig, nil

@@ -36,8 +36,8 @@ grpcTransport := grpc.NewTransport(grpc.Options{
         CertFile: "/etc/catena/certs/server.crt", // PEM server certificate
         KeyFile:  "/etc/catena/certs/server.key", // PEM private key
         // Optional mutual TLS (client certificate verification):
-        // CAFile:     "/etc/catena/certs/clients-ca.crt",
-        // MutualAuth: true,
+        // ClientCAFile: "/etc/catena/certs/clients-ca.crt",
+        // MutualAuth:   true,
     },
 })
 ```
@@ -45,10 +45,10 @@ grpcTransport := grpc.NewTransport(grpc.Options{
 Behavior:
 
 - `CertFile` and `KeyFile` are required when TLS is enabled. Because gRPC credentials must be supplied at server construction, an invalid TLS configuration is recorded by `NewTransport` and returned as an error from `Start` (registration via `RegisterTransport` fails).
-- With `MutualAuth`, clients must present a certificate signed by the CA bundle in `CAFile` or the TLS handshake is rejected.
+- With `MutualAuth`, clients must present a certificate signed by the CA bundle in `ClientCAFile` or the TLS handshake is rejected.
 - Minimum accepted protocol version is TLS 1.2.
 - Clients must then dial with TLS credentials, e.g. `grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{...}))`; plaintext (insecure) clients will fail to connect.
-- Env/CLI configuration: `{PREFIX}_GRPC_TLS_ENABLED`, `{PREFIX}_GRPC_TLS_CERT_FILE`, `{PREFIX}_GRPC_TLS_KEY_FILE`, `{PREFIX}_GRPC_TLS_CA_FILE`, `{PREFIX}_GRPC_TLS_MUTUAL_AUTH` (flags `--grpc-tls-*`).
+- Env/CLI configuration: `{PREFIX}_GRPC_TLS_ENABLED`, `{PREFIX}_GRPC_TLS_CERT_FILE`, `{PREFIX}_GRPC_TLS_KEY_FILE`, `{PREFIX}_GRPC_TLS_CLIENT_CA_FILE`, `{PREFIX}_GRPC_TLS_MUTUAL_AUTH` (flags `--grpc-tls-*`).
 
 ## Implemented RPCs
 

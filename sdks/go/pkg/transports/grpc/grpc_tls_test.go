@@ -159,11 +159,11 @@ func TestTransport_Start_TLS(t *testing.T) {
 func TestTransport_Start_TLS_MutualAuth(t *testing.T) {
 	certs := testcerts.Generate(t)
 	addr := startTLSTransport(t, config.TLSOptions{
-		Enabled:    true,
-		CertFile:   certs.ServerCertFile,
-		KeyFile:    certs.ServerKeyFile,
-		CAFile:     certs.CACertFile,
-		MutualAuth: true,
+		Enabled:      true,
+		CertFile:     certs.ServerCertFile,
+		KeyFile:      certs.ServerKeyFile,
+		ClientCAFile: certs.CACertFile,
+		MutualAuth:   true,
 	})
 
 	t.Run("client with certificate succeeds", func(t *testing.T) {

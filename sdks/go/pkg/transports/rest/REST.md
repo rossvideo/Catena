@@ -36,8 +36,8 @@ restTransport := rest.NewTransport(rest.Options{
         CertFile: "/etc/catena/certs/server.crt", // PEM server certificate
         KeyFile:  "/etc/catena/certs/server.key", // PEM private key
         // Optional mutual TLS (client certificate verification):
-        // CAFile:     "/etc/catena/certs/clients-ca.crt",
-        // MutualAuth: true,
+        // ClientCAFile: "/etc/catena/certs/clients-ca.crt",
+        // MutualAuth:   true,
     },
 })
 ```
@@ -45,9 +45,9 @@ restTransport := rest.NewTransport(rest.Options{
 Behavior:
 
 - `CertFile` and `KeyFile` are required when TLS is enabled; `Start` returns an error if either is missing, unreadable, or invalid PEM.
-- With `MutualAuth`, clients must present a certificate signed by the CA bundle in `CAFile` or the TLS handshake is rejected.
+- With `MutualAuth`, clients must present a certificate signed by the CA bundle in `ClientCAFile` or the TLS handshake is rejected.
 - Minimum accepted protocol version is TLS 1.2.
-- Env/CLI configuration: `{PREFIX}_REST_TLS_ENABLED`, `{PREFIX}_REST_TLS_CERT_FILE`, `{PREFIX}_REST_TLS_KEY_FILE`, `{PREFIX}_REST_TLS_CA_FILE`, `{PREFIX}_REST_TLS_MUTUAL_AUTH` (flags `--rest-tls-*`).
+- Env/CLI configuration: `{PREFIX}_REST_TLS_ENABLED`, `{PREFIX}_REST_TLS_CERT_FILE`, `{PREFIX}_REST_TLS_KEY_FILE`, `{PREFIX}_REST_TLS_CLIENT_CA_FILE`, `{PREFIX}_REST_TLS_MUTUAL_AUTH` (flags `--rest-tls-*`).
 
 ## Implemented Endpoints
 
