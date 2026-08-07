@@ -160,28 +160,22 @@ Caller guidance:
 
 ## TLS
 
-Both transports support optional server-side TLS, configured independently via the `TLS` field on their options (`config.TLSOptions`):
+Both transports support optional server-side TLS, configured independently via the `TLS` field on their options structs. Example:
 
 ```go
-grpcTransport := grpc.NewTransport(grpc.Options{
-    Port: 6254,
-    TLS: config.TLSOptions{
-        Enabled:  true,
-        CertFile: "/etc/catena/certs/server.crt",
-        KeyFile:  "/etc/catena/certs/server.key",
-    },
-})
+grpcOpts := grpc.DefaultOptions()
+grpcOpts.TLS.Enabled = true
+grpcOpts.TLS.CertFile = "/etc/catena/certs/server.crt"
+grpcOpts.TLS.KeyFile = "/etc/catena/certs/server.key"
+grpcTransport := grpc.NewTransport(grpcOpts)
 
-restTransport := rest.NewTransport(rest.Options{
-    Port: 9080,
-    TLS: config.TLSOptions{
-        Enabled:      true,
-        CertFile:     "/etc/catena/certs/server.crt",
-        KeyFile:      "/etc/catena/certs/server.key",
-        ClientCAFile: "/etc/catena/certs/clients-ca.crt",
-        MutualAuth:   true, // require client certificates (mTLS)
-    },
-})
+restOpts := rest.DefaultOptions()
+restOpts.TLS.Enabled = true
+restOpts.TLS.CertFile = "/etc/catena/certs/server.crt"
+restOpts.TLS.KeyFile = "/etc/catena/certs/server.key"
+restOpts.TLS.ClientCAFile = "/etc/catena/certs/clients-ca.crt"
+restOpts.TLS.MutualAuth = true // require client certificates (mTLS)
+restTransport := rest.NewTransport(restOpts)
 ```
 
 - `CertFile` and `KeyFile` are required when `Enabled` is true; a missing or unreadable file causes transport startup to fail rather than silently serving plaintext.

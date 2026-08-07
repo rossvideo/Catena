@@ -10,9 +10,12 @@ import "github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
 ## Constructor
 
 ```go
-grpcTransport := grpc.NewTransport(grpc.Options{Port: 6254, Reflection: false})
-// or with defaults
 grpcTransport := grpc.NewTransport(grpc.DefaultOptions())
+// or start from the defaults and customize
+opts := grpc.DefaultOptions()
+opts.Port = 6254
+opts.Reflection = false
+grpcTransport := grpc.NewTransport(opts)
 ```
 
 Register it on the shared server:
@@ -29,17 +32,14 @@ if err := srv.RegisterTransport(grpcTransport); err != nil {
 The server uses TLS transport credentials when `Options.TLS.Enabled` is true:
 
 ```go
-grpcTransport := grpc.NewTransport(grpc.Options{
-    Port: 6254,
-    TLS: config.TLSOptions{
-        Enabled:  true,
-        CertFile: "/etc/catena/certs/server.crt", // PEM server certificate
-        KeyFile:  "/etc/catena/certs/server.key", // PEM private key
-        // Optional mutual TLS (client certificate verification):
-        // ClientCAFile: "/etc/catena/certs/clients-ca.crt",
-        // MutualAuth:   true,
-    },
-})
+opts := grpc.DefaultOptions()
+opts.TLS.Enabled = true
+opts.TLS.CertFile = "/etc/catena/certs/server.crt" // PEM server certificate
+opts.TLS.KeyFile = "/etc/catena/certs/server.key"  // PEM private key
+// Optional mutual TLS (client certificate verification):
+// opts.TLS.ClientCAFile = "/etc/catena/certs/clients-ca.crt"
+// opts.TLS.MutualAuth = true
+grpcTransport := grpc.NewTransport(opts)
 ```
 
 Behavior:
@@ -142,7 +142,9 @@ In production mode, detailed error text is sanitized to status code names.
 Reflection can be enabled at construction time:
 
 ```go
-grpcTransport := grpc.NewTransport(grpc.Options{Port: 6254, Reflection: true})
+opts := grpc.DefaultOptions()
+opts.Reflection = true
+grpcTransport := grpc.NewTransport(opts)
 ```
 
 When enabled, tools such as `grpcurl` can discover services and methods dynamically.

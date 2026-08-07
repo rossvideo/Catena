@@ -10,9 +10,11 @@ import "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 ## Constructor
 
 ```go
-restTransport := rest.NewTransport(rest.Options{Port: 9080})
-// or with defaults
 restTransport := rest.NewTransport(rest.DefaultOptions())
+// or start from the defaults and customize
+opts := rest.DefaultOptions()
+opts.Port = 9080
+restTransport := rest.NewTransport(opts)
 ```
 
 Register it on the shared server:
@@ -29,17 +31,14 @@ if err := srv.RegisterTransport(restTransport); err != nil {
 The listener serves HTTPS when `Options.TLS.Enabled` is true:
 
 ```go
-restTransport := rest.NewTransport(rest.Options{
-    Port: 9080,
-    TLS: config.TLSOptions{
-        Enabled:  true,
-        CertFile: "/etc/catena/certs/server.crt", // PEM server certificate
-        KeyFile:  "/etc/catena/certs/server.key", // PEM private key
-        // Optional mutual TLS (client certificate verification):
-        // ClientCAFile: "/etc/catena/certs/clients-ca.crt",
-        // MutualAuth:   true,
-    },
-})
+opts := rest.DefaultOptions()
+opts.TLS.Enabled = true
+opts.TLS.CertFile = "/etc/catena/certs/server.crt" // PEM server certificate
+opts.TLS.KeyFile = "/etc/catena/certs/server.key"  // PEM private key
+// Optional mutual TLS (client certificate verification):
+// opts.TLS.ClientCAFile = "/etc/catena/certs/clients-ca.crt"
+// opts.TLS.MutualAuth = true
+restTransport := rest.NewTransport(opts)
 ```
 
 Behavior:
