@@ -45,6 +45,7 @@ type ServerOptions = config.ServerOptions
 type JwtValidationOptions = config.JwtValidationOptions
 type DashboardOptions = config.DashboardOptions
 type ConnectionProtocol = config.ConnectionProtocol
+type TLSOptions = config.TLSOptions
 
 const (
 	ProtocolST2138Rest   = config.ProtocolST2138Rest
