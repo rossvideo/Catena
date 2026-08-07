@@ -14,9 +14,11 @@ name: Release
 #       4. Merge the release branch into develop (merge commit, not squashed)
 #          so main and develop share the version-bump commit as a common ancestor.
 #          └─ If the develop merge fails, automatically revert the main merge.
-#       5a. Create a GitHub release (tagged on main) with grouped release notes.
-#           Also push a Go module tag (sdks/go/vX.Y.Z) so `go get` resolves it.
-#       5b. Retag toolchain containers develop → latest  (parallel with 5a).
+#       5. Retag toolchain containers develop → latest (and → vX.Y.Z).
+#          └─ A retag failure blocks the release: the vX.Y.Z images are attached
+#             to the GitHub release as artifacts.
+#       6. Create a GitHub release (tagged on main) with grouped release notes.
+#          Also push a Go module tag (sdks/go/vX.Y.Z) so `go get` resolves it.
 #     If closed without merging:
 #       → Release is cancelled; nothing further happens.
 # ══════════════════════════════════════════════════════════════════════════════
@@ -850,7 +852,9 @@ jobs:
           wait_for_version_image() {
             local repo="$1"
             local image_ref="${repo}:$NEW_VERSION"
-            local max_attempts=40
+            # The retag job (a hard dependency) already pushed this tag, so the
+            # image should exist; these retries only absorb GHCR propagation lag.
+            local max_attempts=6
             local attempt=1
 
             while (( attempt <= max_attempts )); do
