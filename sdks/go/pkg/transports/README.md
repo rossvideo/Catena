@@ -44,12 +44,11 @@ func main() {
     })
 
     // Register handlers once. All registered transports share this runtime.
+    // catena.DeviceComponentsForRequest chunks a whole device into
+    // DeviceComponent stream sends; a small model could equally be sent as a
+    // single st2138.ComponentDevice chunk.
     srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-        device := st2138.NewDevice(slot)
-        if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
-            return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
-        }
-        return catena.StatusWithCode(catena.StatusCodeOk, "")
+        return catena.DeviceComponentsForRequest(st2138.NewDevice(slot), stream)
     })
 
     if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {

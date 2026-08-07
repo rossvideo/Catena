@@ -20,51 +20,122 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	// GetDeviceHandler streams the device descriptor for a slot as
 	// DeviceComponent chunks. Build the descriptor from the same data model
 	// your app uses at runtime; this example rebuilds per request so "value"
-	// fields stay current.
+	// fields stay current. Two chunking styles are shown:
+	//
+	//   - Slot 0 assembles its chunks by hand with the st2138.ComponentXxx
+	//     constructors — the "extra fancy" form for handlers that want full
+	//     control over what goes in each chunk.
+	//   - Slots 1 and 2 build a whole st2138.Device and delegate the chunking
+	//     to catena.DeviceComponentsForRequest — the everyday form, where
+	//     business logic never touches the DeviceComponent protos. (A small
+	//     model could also be sent as a single ComponentDevice chunk carrying
+	//     the whole device; see the hello_world example.)
+
+	// Slot 0: hand-rolled chunking. First the device skeleton (slot metadata,
+	// scopes, menus), then one chunk per param and command. The chunks are
+	// built from the same slotZero* pieces buildDeviceDefinition composes (the
+	// GetParam / ParamInfo handlers use it), so the two views of slot 0 cannot
+	// drift apart. ComponentConstraint, ComponentMenu, and
+	// ComponentLanguagePack constructors exist for the other component kinds;
+	// slot 0 keeps its menus on the skeleton.
+	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+		logger.Info("GetDevice", "slot", slot)
+		if err := stream.Send(st2138.ComponentDevice(slotZeroSkeleton())); err != nil {
+			logger.Warning("GetDevice stream closed", "slot", slot, "error", err)
+			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
+		}
+		for _, entry := range slotZeroParams(counter) {
+			if err := stream.Send(st2138.ComponentParam(entry.oid, entry.param)); err != nil {
+				logger.Warning("GetDevice stream closed", "slot", slot, "oid", entry.oid, "error", err)
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send param: "+err.Error())
+			}
+		}
+		for _, entry := range slotZeroCommands() {
+			if err := stream.Send(st2138.ComponentCommand(entry.oid, entry.param)); err != nil {
+				logger.Warning("GetDevice stream closed", "slot", slot, "oid", entry.oid, "error", err)
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send command: "+err.Error())
+			}
+		}
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	})
+
+	// Slots 1 and 2: build the device, then let the SDK chunk and stream it.
 	for _, slot := range slotList {
+		if slot == 0 {
+			continue
+		}
 		srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 			logger.Info("GetDevice", "slot", slot)
 			device, ok := buildDeviceDefinition(slot, counter, state)
 			if !ok {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 			}
-
-			// Stream the model in components to demonstrate the chunked form
-			// of DeviceRequest: first the device skeleton (everything except
-			// params and commands), then one chunk per param and command.
-			// Clients merge the components back into one device model; a small
-			// model could equally be sent as a single ComponentDevice chunk
-			// carrying the whole device (see the hello_world example).
-			params := device.Proto.Params
-			commands := device.Proto.Commands
-			device.Proto.Params = nil
-			device.Proto.Commands = nil
-
-			if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
-				logger.Warning("GetDevice stream closed", "slot", slot, "error", err)
-				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
-			}
-			for oid, param := range params {
-				if err := stream.Send(st2138.ComponentParam(oid, &st2138.Param{Proto: param})); err != nil {
-					logger.Warning("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
-					return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send param: "+err.Error())
-				}
-			}
-			for oid, command := range commands {
-				if err := stream.Send(st2138.ComponentCommand(oid, &st2138.Param{Proto: command})); err != nil {
-					logger.Warning("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
-					return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send command: "+err.Error())
-				}
-			}
-			return catena.StatusWithCode(catena.StatusCodeOk, "")
+			return catena.DeviceComponentsForRequest(device, stream)
 		})
+	}
+}
+
+// namedParam pairs an oid with its descriptor so slot 0's params and commands
+// can be listed once and consumed two ways: attached to a Device by
+// buildDeviceDefinition, or streamed chunk-by-chunk by the GetDevice handler.
+type namedParam struct {
+	oid   string
+	param *st2138.Param
+}
+
+// slotZeroSkeleton returns slot 0's device minus its params and commands: slot
+// metadata, access scopes, and menus. The GetDevice handler sends it as the
+// leading ComponentDevice chunk; buildDeviceDefinition attaches the params and
+// commands to it.
+func slotZeroSkeleton() *st2138.Device {
+	return st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).
+		WithMultiSetEnabled(true).
+		WithSubscriptions(true).
+		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
+		WithDefaultScope("st2138:cfg").
+		WithMenuGroup("status", st2138.NewMenuGroup().
+			WithName(st2138.NewPolyglotText("en", "Status")).
+			WithOrder(0).
+			WithMenu("status", st2138.NewMenu().
+				WithName(st2138.NewPolyglotText("en", "Status")).
+				WithParamOids("product", "counter", "running"))).
+		WithMenuGroup("config", st2138.NewMenuGroup().
+			WithName(st2138.NewPolyglotText("en", "Configuration")).
+			WithOrder(1).
+			WithMenu("control", st2138.NewMenu().
+				WithName(st2138.NewPolyglotText("en", "Control")).
+				WithCommandOids("start", "stop", "add10", "reset")))
+}
+
+// slotZeroParams lists slot 0's params in the order they are streamed.
+func slotZeroParams(counter *CounterState) []namedParam {
+	return []namedParam{
+		{"counter", makeCounterParam(counter)},
+		{"running", makeRunningParam(counter)},
+	}
+}
+
+// slotZeroCommands lists slot 0's commands in the order they are streamed.
+func slotZeroCommands() []namedParam {
+	return []namedParam{
+		{"start", st2138.NewParamEmpty().
+			WithName(st2138.NewPolyglotText("en", "Start Counter"))},
+		{"stop", st2138.NewParamEmpty().
+			WithName(st2138.NewPolyglotText("en", "Stop Counter"))},
+		{"add10", st2138.NewParamEmpty().
+			WithName(st2138.NewPolyglotText("en", "Add 10 to Counter"))},
+		{"reset", st2138.NewParamEmpty().
+			WithName(st2138.NewPolyglotText("en", "Reset Counter"))},
 	}
 }
 
 // buildDeviceDefinition returns the descriptor for one slot. It is a function
 // (not a static YAML file) so every param's value field reflects live state at
-// GetDevice time. device_handler.go calls this and returns the result directly.
-// Keep param OIDs in sync with value_handlers and param_info_handler.
+// GetDevice time. The GetParam and ParamInfo handlers call this for every slot;
+// the GetDevice handler calls it for slots 1 and 2 (slot 0's GetDevice streams
+// the same slotZero* pieces directly, see registerDeviceHandlers). Keep param
+// OIDs in sync with value_handlers and param_info_handler.
 //
 // st2138.NewDevice(slot) creates an empty device for the slot; params, commands,
 // constraints, and menus are attached with the fluent With* builders. The
@@ -81,34 +152,15 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 	switch slot {
 	case 0:
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
-		device := st2138.NewDevice(0).
-			WithDetailLevel(st2138.DetailLevelFull).
-			WithMultiSetEnabled(true).
-			WithSubscriptions(true).
-			WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
-			WithDefaultScope("st2138:cfg").
-			WithParam("counter", makeCounterParam(counter)).
-			WithParam("running", makeRunningParam(counter)).
-			WithCommand("start", st2138.NewParamEmpty().
-				WithName(st2138.NewPolyglotText("en", "Start Counter"))).
-			WithCommand("stop", st2138.NewParamEmpty().
-				WithName(st2138.NewPolyglotText("en", "Stop Counter"))).
-			WithCommand("add10", st2138.NewParamEmpty().
-				WithName(st2138.NewPolyglotText("en", "Add 10 to Counter"))).
-			WithCommand("reset", st2138.NewParamEmpty().
-				WithName(st2138.NewPolyglotText("en", "Reset Counter"))).
-			WithMenuGroup("status", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Status")).
-				WithOrder(0).
-				WithMenu("status", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Status")).
-					WithParamOids("product", "counter", "running"))).
-			WithMenuGroup("config", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Configuration")).
-				WithOrder(1).
-				WithMenu("control", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Control")).
-					WithCommandOids("start", "stop", "add10", "reset")))
+		// Composed from the same slotZero* helpers the GetDevice handler
+		// streams chunk-by-chunk, so the two views stay in sync.
+		device := slotZeroSkeleton()
+		for _, entry := range slotZeroParams(counter) {
+			device.WithParam(entry.oid, entry.param)
+		}
+		for _, entry := range slotZeroCommands() {
+			device.WithCommand(entry.oid, entry.param)
+		}
 		return device, true
 	case 1:
 		// Slot 1 intentionally stores its business data in a sync.Map to show

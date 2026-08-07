@@ -146,7 +146,9 @@ func (e EndpointType) String() string {
 // error means the chunk could not be delivered - the client may have
 // disconnected, the transport hit an encoding or write failure, or the server
 // is shutting down (the SDK wraps the stream so Send fails once shutdown
-// begins) - so the handler should stop and return.
+// begins) - so the handler should stop and return. A handler that can produce
+// a whole st2138.Device can delegate the chunking to
+// DeviceComponentsForRequest in device_components.go.
 type DeviceHandler func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult
 
 // GetValueHandler returns the current value of the parameter at fqoid for a
