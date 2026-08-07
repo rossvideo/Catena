@@ -596,8 +596,9 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────────
   # Job 4: Retag toolchain containers  develop → latest  (and → $NEW_VERSION).
   #
-  # Runs in parallel with create_github_release.
-  # Failures here are warnings only — the release is NOT blocked.
+  # Runs BEFORE create_github_release, which depends on it.  A retag failure
+  # blocks the release because the $NEW_VERSION images are attached to the
+  # GitHub release as artifacts.
   # ────────────────────────────────────────────────────────────────────────────
   retag_toolchain_containers:
     name: "4 - Retag Toolchain Containers (develop → latest)"
@@ -633,7 +634,6 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────────
       - name: Retag cpp toolchain  develop → latest + ${{ env.NEW_VERSION }}
         id: retag_cpp
-        continue-on-error: true  # retag failure is a warning, not a release blocker
         run: |
           set -euo pipefail
           SRC="ghcr.io/rossvideo/catena-cpp-toolchain:develop"
@@ -653,7 +653,6 @@ jobs:
       # ─────────────────────────────────────────────────────────────────────────
       - name: Retag go toolchain  develop → latest + ${{ env.NEW_VERSION }}
         id: retag_go
-        continue-on-error: true  # retag failure is a warning, not a release blocker
         run: |
           set -euo pipefail
           SRC="ghcr.io/rossvideo/catena-go-toolchain:develop"
@@ -665,19 +664,19 @@ jobs:
 
           echo "✅ go toolchain retagged → latest and $NEW_VERSION"
 
-      # ── Surface a clear warning if either retag failed ───────────────────────
+      # ── Surface a clear error if either retag failed ─────────────────────────
       - name: Report retag results
-        if: steps.retag_cpp.outcome == 'failure' || steps.retag_go.outcome == 'failure'
+        if: failure()
         run: |
-          echo "⚠️  One or more container retag operations failed:"
+          echo "❌ One or more container retag operations failed:"
           echo "     cpp retag : ${{ steps.retag_cpp.outcome }}"
           echo "     go  retag : ${{ steps.retag_go.outcome }}"
           echo ""
-          echo "The GitHub release was created successfully."
-          echo "Please retag the following images manually:"
+          echo "The release is blocked because the $NEW_VERSION images are"
+          echo "attached to the GitHub release as artifacts."
+          echo "Retag the following images and re-run the release:"
           echo "  ghcr.io/rossvideo/catena-cpp-toolchain:develop  →  latest / $NEW_VERSION"
           echo "  ghcr.io/rossvideo/catena-go-toolchain:develop   →  latest / $NEW_VERSION"
-          # Not exiting non-zero — retag failure is explicitly non-blocking per spec
 
   # ────────────────────────────────────────────────────────────────────────────
   # Job 5: Build release notes and create the GitHub release on main.
@@ -689,7 +688,7 @@ jobs:
     if: >
       needs.detect_release_pr.outputs.merged == 'true' &&
       needs.merge_release_develop.result == 'success' &&
-      needs.retag_toolchain_containers.outcome != 'failure'
+      needs.retag_toolchain_containers.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write      # create release and upload artifacts
@@ -856,17 +855,17 @@ jobs:
 
             while (( attempt <= max_attempts )); do
               if docker pull "$image_ref" >/dev/null 2>&1; then
-                echo "✅ Found image: $image_ref (attempt $attempt/$max_attempts)"
+                echo "✅ Found image: $image_ref (attempt $attempt/$max_attempts)" >&2
                 echo "$image_ref"
                 return 0
               fi
 
-              echo "⏳ Waiting for image: $image_ref (attempt $attempt/$max_attempts)"
+              echo "⏳ Waiting for image: $image_ref (attempt $attempt/$max_attempts)" >&2
               attempt=$(( attempt + 1 ))
               sleep 30
             done
 
-            echo "❌ Timed out waiting for image: $image_ref"
+            echo "❌ Timed out waiting for image: $image_ref" >&2
             return 1
           }
 
