@@ -110,11 +110,10 @@ func (nullStream[T]) Send(chunk T) error { return nil }
 //   - Device chunks: with mon, the SDK-managed product param is injected
 //     (overwriting any product param the business logic added); without mon,
 //     any product param is stripped.
-//   - ComponentParam chunks targeting product or product/*: without mon the
-//     chunk is silently dropped (Send returns nil so the handler keeps
-//     streaming). With mon, a chunk for the product oid itself is rewritten to
-//     the SDK-managed param, and product/* sub-param chunks are dropped since
-//     the SDK already delivers the whole product struct and owns its contents.
+//   - ComponentParam chunks targeting product or product/*: always dropped
+//     (Send returns nil so the handler keeps streaming). The SDK owns the
+//     product struct and already delivers it on the Device chunk when the
+//     caller holds mon, so a standalone product chunk is never needed.
 type productDeviceStream struct {
 	inner   Stream[st2138.DeviceComponent]
 	product ProductStruct
@@ -141,10 +140,7 @@ func (s productDeviceStream) Send(chunk st2138.DeviceComponent) error {
 		}
 	case *protos.DeviceComponent_Param:
 		if kind.Param != nil && isProductOid(kind.Param.GetOid()) {
-			if !s.hasMon || kind.Param.GetOid() != ProductOid {
-				return nil
-			}
-			kind.Param.Param = ProductParam(s.product).Proto
+			return nil
 		}
 	}
 	return s.inner.Send(chunk)

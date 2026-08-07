@@ -140,9 +140,9 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 }
 
 // TestServer_GetDevice_ProductParamChunk verifies the SDK's product policy on
-// standalone ComponentParam chunks: a chunk for the product oid itself is
-// rewritten to the SDK-managed param, and product/* sub-param chunks are
-// dropped since the SDK owns the product struct's contents.
+// standalone ComponentParam chunks: chunks targeting product or product/* are
+// dropped, since the SDK owns the product struct and already delivers it on
+// the Device chunk.
 func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
@@ -166,19 +166,12 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 
-	// product/name is dropped; product and brightness pass (product rewritten).
-	if len(stream.Items) != 2 {
-		t.Fatalf("expected 2 delivered chunks, got %d", len(stream.Items))
+	// product and product/name are dropped; only brightness passes through.
+	if len(stream.Items) != 1 {
+		t.Fatalf("expected 1 delivered chunk, got %d", len(stream.Items))
 	}
-	product := stream.Items[0].Proto.GetParam()
-	if product.GetOid() != "product" {
-		t.Fatalf("expected first chunk oid 'product', got %q", product.GetOid())
-	}
-	if !proto.Equal(product.GetParam(), expectedProductParam()) {
-		t.Errorf("product chunk was not rewritten to the SDK-managed param, got %v", product.GetParam())
-	}
-	if got := stream.Items[1].Proto.GetParam().GetOid(); got != "brightness" {
-		t.Errorf("expected second chunk oid 'brightness', got %q", got)
+	if got := stream.Items[0].Proto.GetParam().GetOid(); got != "brightness" {
+		t.Errorf("expected delivered chunk oid 'brightness', got %q", got)
 	}
 }
 
