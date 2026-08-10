@@ -637,22 +637,12 @@ func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request,
 // handler streams DeviceComponent chunks; they are assembled back into one
 // complete device for the single JSON response.
 func (t *Transport) handleGetDevice(w http.ResponseWriter, r *http.Request, slot uint16) {
-	transportContext := t.retrieveMetadataFromRequest(r)
-
-	stream := &deviceAggregateStream{}
-	result := t.runtime.InvokeGetDeviceHandler(slot, stream, transportContext)
+	device, result := resolveUnary(&deviceAggregateStream{}, "device",
+		func(stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+			return t.runtime.InvokeGetDeviceHandler(slot, stream, t.retrieveMetadataFromRequest(r))
+		})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
-		return
-	}
-
-	device, ok := stream.result()
-	if !ok {
-		// A unary device request must resolve to a device. A handler that
-		// reports success yet emits nothing has violated that contract; surface
-		// it as an internal error rather than inventing a NotFound over what may
-		// be a genuine handler bug. Handlers own NotFound for missing devices.
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "device handler reported success but produced no device"))
 		return
 	}
 
@@ -660,47 +650,14 @@ func (t *Transport) handleGetDevice(w http.ResponseWriter, r *http.Request, slot
 }
 
 // streamDeviceRequest serves GET /st2138-api/v1/{slot}/stream, forwarding each
-// DeviceComponent chunk the handler sends as one Server-Sent Events frame. The
-// restStream writes SSE headers lazily on the first chunk, so if the handler
-// emits nothing before erroring this method can still report a status; once
-// chunks have been sent, a later error is reported in-band as an SSE "error"
-// event carrying the HTTP status code.
+// DeviceComponent chunk the handler sends as one Server-Sent Events frame. See
+// streamSSE for the shared SSE semantics.
 func (t *Transport) streamDeviceRequest(w http.ResponseWriter, r *http.Request, slot uint16) {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
-		return
-	}
-
-	transportContext := t.retrieveMetadataFromRequest(r)
-
-	stream := &restStream[st2138.DeviceComponent]{
-		w:       w,
-		flusher: flusher,
-		marshal: marshalDeviceComponentWire,
-		ctx:     r.Context(),
-		devMode: t.isDevMode(),
-	}
-	result := t.runtime.InvokeGetDeviceHandler(slot, stream, transportContext)
-
-	if result.IsError() {
-		// With nothing sent yet the HTTP status is still uncommitted, so we can
-		// set a normal error status. Once any chunk has been streamed the 200 is
-		// already on the wire, so the error is reported in-band as an SSE "error"
-		// event carrying the status code that would have been returned.
-		if stream.sent == 0 {
-			t.writeHTTPStatusResult(w, result)
-		} else if err := stream.sendError(result); err != nil {
-			logger.Error("failed to send device SSE error event", "slot", slot, "error", err)
-		}
-		return
-	}
-
-	// A successful handler that produced no chunks still gets a well-formed empty
-	// event stream so the client receives a valid 200 response.
-	if stream.sent == 0 {
-		stream.writeHeaders()
-	}
+	streamSSE(t, w, r, marshalDeviceComponentWire,
+		func(stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+			return t.runtime.InvokeGetDeviceHandler(slot, stream, t.retrieveMetadataFromRequest(r))
+		},
+		"endpoint", "device", "slot", slot)
 }
 
 // handleAssetEndpoint dispatches /st2138-api/v1/{slot}/asset/{fqoid} across
@@ -747,22 +704,12 @@ func (t *Transport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, 
 // are concatenated back into one complete asset for the single JSON response
 // (so transcoding operates on the assembled payload).
 func (t *Transport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
-	transportContext := t.retrieveMetadataFromRequest(r)
-
-	stream := &assetAggregateStream{}
-	result := t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, transportContext)
+	asset, result := resolveUnary(&assetAggregateStream{}, "asset",
+		func(stream catena.Stream[st2138.Asset]) catena.StatusResult {
+			return t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, t.retrieveMetadataFromRequest(r))
+		})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
-		return
-	}
-
-	asset, ok := stream.result()
-	if !ok {
-		// A unary asset request must resolve to an asset. A handler that reports
-		// success yet emits nothing has violated that contract; surface it as an
-		// internal error rather than inventing a NotFound over what may be a
-		// genuine handler bug. Handlers own NotFound for missing fqoids.
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "asset handler reported success but produced no asset"))
 		return
 	}
 
@@ -789,46 +736,13 @@ func (t *Transport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot
 // frame (the client concatenates the chunks' embedded payload bytes in send
 // order). The ?compression= query parameter is not supported on the streaming
 // route: transcoding requires the whole payload, which the transport never
-// assembles here. The restStream writes SSE headers lazily on the first chunk,
-// so if the handler emits nothing before erroring this method can still report
-// a status; once chunks have been sent, a later error is reported in-band as
-// an SSE "error" event carrying the HTTP status code.
+// assembles here. See streamSSE for the shared SSE semantics.
 func (t *Transport) streamReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
-		return
-	}
-
-	transportContext := t.retrieveMetadataFromRequest(r)
-
-	stream := &restStream[st2138.Asset]{
-		w:       w,
-		flusher: flusher,
-		marshal: MarshalProtoJSON,
-		ctx:     r.Context(),
-		devMode: t.isDevMode(),
-	}
-	result := t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, transportContext)
-
-	if result.IsError() {
-		// With nothing sent yet the HTTP status is still uncommitted, so we can
-		// set a normal error status. Once any chunk has been streamed the 200 is
-		// already on the wire, so the error is reported in-band as an SSE "error"
-		// event carrying the status code that would have been returned.
-		if stream.sent == 0 {
-			t.writeHTTPStatusResult(w, result)
-		} else if err := stream.sendError(result); err != nil {
-			logger.Error("failed to send asset SSE error event", "slot", slot, "fqoid", fqoid, "error", err)
-		}
-		return
-	}
-
-	// A successful handler that produced no chunks still gets a well-formed empty
-	// event stream so the client receives a valid 200 response.
-	if stream.sent == 0 {
-		stream.writeHeaders()
-	}
+	streamSSE(t, w, r, MarshalProtoJSON,
+		func(stream catena.Stream[st2138.Asset]) catena.StatusResult {
+			return t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, t.retrieveMetadataFromRequest(r))
+		},
+		"endpoint", "asset", "slot", slot, "fqoid", fqoid)
 }
 
 // handleWriteAsset handles POST (CreateAsset) and PUT (UpdateAsset). Both read
@@ -939,23 +853,16 @@ func (t *Transport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Unary: the handler still streams, so collect its first message and discard the rest.
-	stream := &firstStream[st2138.ParamInfo]{}
-	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
+	info, result := resolveUnary(&firstStream[st2138.ParamInfo]{}, "param info",
+		func(stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
+			return t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
+		})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
 
-	if !stream.has {
-		// A unary request must resolve to exactly one parameter. A handler that
-		// reports success yet emits nothing has violated that contract; surface
-		// it as an internal error rather than inventing a NotFound over what may
-		// be a genuine handler bug. Handlers own NotFound for missing oids.
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "param info handler reported success but produced no result"))
-		return
-	}
-
-	if err := WriteProtoJSON(w, stream.item.Wire(), http.StatusOK); err != nil {
+	if err := WriteProtoJSON(w, info.Wire(), http.StatusOK); err != nil {
 		logger.Error("failed to write param info response", "error", err)
 	}
 }
@@ -1041,45 +948,15 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 }
 
 // streamParamInfo streams param info entries to the client as Server-Sent
-// Events. The restStream writes SSE headers lazily on the first chunk, so if the
-// handler emits nothing before erroring this method can still report a status;
-// once chunks have been sent, a later error is reported in-band as an SSE
-// "error" event carrying the HTTP status code.
+// Events. See streamSSE for the shared SSE semantics; here a successful handler
+// that produced no chunks is a legitimate empty result (e.g. a device with no
+// top-level params), not a NotFound, and yields an empty event stream.
 func (t *Transport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
-		return
-	}
-
-	stream := &restStream[st2138.ParamInfo]{
-		w:       w,
-		flusher: flusher,
-		marshal: MarshalProtoJSON,
-		ctx:     r.Context(),
-		devMode: t.isDevMode(),
-	}
-	result := t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
-
-	if result.IsError() {
-		// With nothing sent yet the HTTP status is still uncommitted, so we can
-		// set a normal error status. Once any chunk has been streamed the 200 is
-		// already on the wire, so the error is reported in-band as an SSE "error"
-		// event carrying the status code that would have been returned.
-		if stream.sent == 0 {
-			t.writeHTTPStatusResult(w, result)
-		} else if err := stream.sendError(result); err != nil {
-			logger.Error("failed to send param-info SSE error event", "slot", slot, "oid_prefix", oidPrefix, "error", err)
-		}
-		return
-	}
-
-	// A successful handler that produced no chunks is a legitimate empty result
-	// (e.g. a device with no top-level params), not a NotFound. Commit the SSE
-	// headers so the client still receives a well-formed empty event stream.
-	if stream.sent == 0 {
-		stream.writeHeaders()
-	}
+	streamSSE(t, w, r, MarshalProtoJSON,
+		func(stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
+			return t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
+		},
+		"endpoint", "param-info", "slot", slot, "oid_prefix", oidPrefix)
 }
 
 func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
@@ -1165,10 +1042,12 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 
 	// Reply with the final CommandResponse the handler sent. When the caller opted
 	// out (respond=false) the server gobbled every chunk, so nothing was retained
-	// and we reply with an explicit no_response.
+	// and we reply with an explicit no_response. That makes an empty stream
+	// legitimate here, which is why this route resolves the stream itself instead
+	// of going through resolveUnary.
 	cmdResult := st2138.CommandNoResponse()
-	if stream.has {
-		cmdResult = stream.item
+	if item, ok := stream.result(); ok {
+		cmdResult = item
 	}
 
 	if err := WriteProtoJSON(w, cmdResult.Proto, http.StatusOK); err != nil {
@@ -1177,42 +1056,14 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 }
 
 // streamExecuteCommand streams command responses to the client as Server-Sent
-// Events. The restStream writes SSE headers lazily on the first chunk, so if the
-// handler emits nothing before erroring this method can still report a status.
-// respond is passed through so a smart handler can skip emitting responses.
+// Events. See streamSSE for the shared SSE semantics. respond is passed through
+// so a smart handler can skip emitting responses.
 func (t *Transport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandOid string, payload any, respond bool, transportContext catena.TransportContext) {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
-		return
-	}
-
-	stream := &restStream[st2138.CommandResponse]{
-		w:       w,
-		flusher: flusher,
-		marshal: MarshalProtoJSON,
-		ctx:     r.Context(),
-		devMode: t.isDevMode(),
-	}
-	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
-
-	if result.IsError() {
-		// Once any chunk has been streamed the HTTP status is committed, so a
-		// late error can only be logged. With nothing sent yet we can still set
-		// the error status.
-		if stream.sent == 0 {
-			t.writeHTTPStatusResult(w, result)
-		} else if err := stream.sendError(result); err != nil {
-			logger.Error("failed to send command SSE error event", "slot", slot, "command", commandOid, "error", err)
-		}
-		return
-	}
-
-	// A successful handler that produced no chunks still gets a well-formed empty
-	// event stream so the client receives a valid 200 response.
-	if stream.sent == 0 {
-		stream.writeHeaders()
-	}
+	streamSSE(t, w, r, MarshalProtoJSON,
+		func(stream catena.Stream[st2138.CommandResponse]) catena.StatusResult {
+			return t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
+		},
+		"endpoint", "command", "slot", slot, "command_oid", commandOid)
 }
 
 // ToHTTPStatus converts a transport-neutral StatusCode to an HTTP status code.

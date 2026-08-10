@@ -52,11 +52,14 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
-// failingResponseWriter is an http.ResponseWriter+http.Flusher whose Write
-// always fails, used to exercise the SSE write-error branch.
+// failingResponseWriter is an http.ResponseWriter+http.Flusher that serves the
+// first failAfter writes and fails every one after that, used to exercise the
+// SSE write-error branches. The zero value fails the very first write.
 type failingResponseWriter struct {
-	header http.Header
-	status int
+	header    http.Header
+	status    int
+	writes    int
+	failAfter int
 }
 
 func (w *failingResponseWriter) Header() http.Header {
@@ -65,9 +68,31 @@ func (w *failingResponseWriter) Header() http.Header {
 	}
 	return w.header
 }
-func (w *failingResponseWriter) Write([]byte) (int, error) { return 0, errors.New("write failed") }
-func (w *failingResponseWriter) WriteHeader(status int)    { w.status = status }
-func (w *failingResponseWriter) Flush()                    {}
+func (w *failingResponseWriter) Write(b []byte) (int, error) {
+	w.writes++
+	if w.writes > w.failAfter {
+		return 0, errors.New("write failed")
+	}
+	return len(b), nil
+}
+func (w *failingResponseWriter) WriteHeader(status int) { w.status = status }
+func (w *failingResponseWriter) Flush()                 {}
+
+// unflushableResponseWriter is an http.ResponseWriter that deliberately does not
+// implement http.Flusher, which SSE routes require.
+type unflushableResponseWriter struct {
+	header http.Header
+	status int
+}
+
+func (w *unflushableResponseWriter) Header() http.Header {
+	if w.header == nil {
+		w.header = http.Header{}
+	}
+	return w.header
+}
+func (w *unflushableResponseWriter) Write(b []byte) (int, error) { return len(b), nil }
+func (w *unflushableResponseWriter) WriteHeader(status int)      { w.status = status }
 
 // stubMessage is a minimal catena.Message for exercising the generic stream
 // adapters without depending on any domain chunk type. Wire returns a real
@@ -81,6 +106,52 @@ var _ catena.Message = stubMessage{}
 
 func (m stubMessage) Wire() proto.Message {
 	return wrapperspb.String(m.value)
+}
+
+// Each SSE route's own tests cover streamSSE's normal paths through the mux;
+// these two cases are easier to reach by driving it directly.
+func TestStreamSSE(t *testing.T) {
+	t.Run("rejects a writer that cannot flush", func(t *testing.T) {
+		// SSE has to push each frame as it is produced, so a writer that cannot
+		// flush is rejected before the handler runs.
+		w := &unflushableResponseWriter{}
+		invoked := false
+
+		streamSSE(&Transport{}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
+			func(catena.Stream[stubMessage]) catena.StatusResult {
+				invoked = true
+				return catena.StatusWithCode(catena.StatusCodeOk, "")
+			})
+
+		if invoked {
+			t.Error("handler should not run without a flushable writer")
+		}
+		if w.status != http.StatusInternalServerError {
+			t.Errorf("status = %d, want %d", w.status, http.StatusInternalServerError)
+		}
+	})
+
+	t.Run("tolerates a failed error event after a chunk was sent", func(t *testing.T) {
+		// The chunk commits a 200, so the handler's late error can only go out as
+		// an SSE error event; when that write fails too there is nothing left to
+		// do but log it.
+		w := &failingResponseWriter{failAfter: 1}
+
+		streamSSE(&Transport{}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
+			func(stream catena.Stream[stubMessage]) catena.StatusResult {
+				if err := stream.Send(stubMessage{value: "a"}); err != nil {
+					t.Fatalf("first Send returned error: %v", err)
+				}
+				return catena.StatusWithCode(catena.StatusCodeInternal, "boom")
+			})
+
+		if w.writes < 2 {
+			t.Errorf("writes = %d, want the chunk plus an attempted error event", w.writes)
+		}
+		if w.status != http.StatusOK {
+			t.Errorf("status = %d, want the already-committed %d", w.status, http.StatusOK)
+		}
+	})
 }
 
 func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {

@@ -46,6 +46,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -138,6 +139,102 @@ func (s *restStream[T]) sendError(result catena.StatusResult) error {
 	return nil
 }
 
+// streamSSE runs one server-streaming endpoint as a Server-Sent Events
+// response. Every SSE route has the same shape - check the writer can flush,
+// hand the handler a restStream, then turn the terminal StatusResult into
+// either an HTTP status or an in-band error event - so only the chunk type, its
+// JSON marshaller, and the runtime call it wraps are per-endpoint. invoke
+// receives the stream to pass to the handler; logContext carries the key/value
+// pairs identifying the request (slot, oid, ...) for the one failure that can
+// only be logged. It is a plain function rather than a method because Go
+// methods cannot have type parameters.
+//
+// The restStream writes SSE headers lazily on the first chunk, so if the
+// handler emits nothing before erroring the status is still uncommitted and a
+// normal HTTP error status can be set. Once any chunk has been streamed the 200
+// is already on the wire, so a later error is reported in-band as an SSE
+// "error" event carrying the status code that would have been returned. A
+// successful handler that produced no chunks still gets committed headers, so
+// the client receives a well-formed empty event stream rather than a bare 200.
+func streamSSE[T catena.Message](
+	t *Transport,
+	w http.ResponseWriter,
+	r *http.Request,
+	marshal func(proto.Message) ([]byte, error),
+	invoke func(stream catena.Stream[T]) catena.StatusResult,
+	logContext ...any,
+) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "streaming not supported"))
+		return
+	}
+
+	stream := &restStream[T]{
+		w:       w,
+		flusher: flusher,
+		marshal: marshal,
+		ctx:     r.Context(),
+		devMode: t.isDevMode(),
+	}
+	result := invoke(stream)
+
+	if result.IsError() {
+		if stream.sent == 0 {
+			t.writeHTTPStatusResult(w, result)
+		} else if err := stream.sendError(result); err != nil {
+			logger.Error("failed to send SSE error event", append([]any{"error", err}, logContext...)...)
+		}
+		return
+	}
+
+	if stream.sent == 0 {
+		stream.writeHeaders()
+	}
+}
+
+// unaryStream is the shape shared by the collector streams the unary REST
+// routes use: a catena.Stream that reduces the chunks a streaming handler sends
+// to the single value the HTTP response body carries. T is the chunk type the
+// handler streams; R is what the collector resolves to, which is T itself for
+// the first/last collectors and an assembled Device or Asset for the
+// aggregating ones.
+type unaryStream[T catena.Message, R any] interface {
+	catena.Stream[T]
+	// result returns the resolved value. ok is false when the handler sent
+	// nothing at all.
+	result() (R, bool)
+}
+
+// resolveUnary runs a streaming handler for a unary route and reduces its
+// stream to the one value that route replies with. A handler error is returned
+// unchanged; otherwise the returned status is Ok and the value is ready to
+// write.
+//
+// A unary route must resolve to exactly one value, so a handler that reports
+// success yet sends nothing has violated that contract: that is reported as an
+// Internal error naming noun (e.g. "device") rather than a NotFound invented
+// over what may be a genuine handler bug. Handlers own NotFound for missing
+// devices and oids. ExecuteCommand is the one unary route that does not use
+// this helper, because an empty stream there is a legitimate no_response.
+func resolveUnary[T catena.Message, R any](
+	collector unaryStream[T, R],
+	noun string,
+	invoke func(stream catena.Stream[T]) catena.StatusResult,
+) (R, catena.StatusResult) {
+	var zero R
+
+	if result := invoke(collector); result.IsError() {
+		return zero, result
+	}
+
+	value, ok := collector.result()
+	if !ok {
+		return zero, catena.StatusWithCode(catena.StatusCodeInternal, noun+" handler reported success but produced no result")
+	}
+	return value, catena.StatusResult{Code: catena.StatusCodeOk}
+}
+
 // firstStream retains only the first sent chunk, silently discarding the rest.
 // The REST transport uses it for unary param-info requests, where the streaming
 // handler still emits chunks but only the first is written back as a single JSON
@@ -158,6 +255,11 @@ func (s *firstStream[T]) Send(chunk T) error {
 	return nil
 }
 
+// result returns the retained chunk. ok is false when nothing was sent.
+func (s *firstStream[T]) result() (T, bool) {
+	return s.item, s.has
+}
+
 // lastStream retains only the most recently sent chunk. The REST ExecuteCommand
 // endpoint is unary: the handler may stream several CommandResponses, but the HTTP
 // reply carries a single response, so only the final Send is kept (earlier ones
@@ -174,6 +276,11 @@ func (s *lastStream[T]) Send(chunk T) error {
 	return nil
 }
 
+// result returns the retained chunk. ok is false when nothing was sent.
+func (s *lastStream[T]) result() (T, bool) {
+	return s.item, s.has
+}
+
 // deviceAggregateStream assembles a streamed DeviceRequest response back into
 // one complete device. The REST unary device route uses it: the handler may
 // stream a Device chunk plus component chunks (params, constraints, menus,
@@ -184,7 +291,7 @@ type deviceAggregateStream struct {
 	device *protos.Device
 }
 
-var _ catena.Stream[st2138.DeviceComponent] = (*deviceAggregateStream)(nil)
+var _ unaryStream[st2138.DeviceComponent, st2138.Device] = (*deviceAggregateStream)(nil)
 
 // Send merges one DeviceComponent chunk into the accumulating device. A Device
 // chunk becomes the base (a second Device chunk is proto-merged into it);
@@ -329,7 +436,7 @@ type assetAggregateStream struct {
 	hasData bool
 }
 
-var _ catena.Stream[st2138.Asset] = (*assetAggregateStream)(nil)
+var _ unaryStream[st2138.Asset, st2138.Asset] = (*assetAggregateStream)(nil)
 
 // Send accumulates one asset chunk. Chunks with a nil proto are ignored.
 func (s *assetAggregateStream) Send(chunk st2138.Asset) error {
