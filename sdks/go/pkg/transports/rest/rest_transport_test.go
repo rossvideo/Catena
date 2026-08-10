@@ -867,6 +867,64 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 		}
 	})
 
+	// An empty body is a valid command invocation ("no value" per ST 2138). It
+	// must not require a Content-Type and must reach the handler with a nil
+	// payload, mirroring the gRPC path.
+	t.Run("EmptyBodyIsNilPayload", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+		called := false
+		receivedPayload := any("sentinel")
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+			called = true
+			receivedPayload = payload
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/test", "")
+		assertStatus(t, rec, http.StatusOK)
+		if !called {
+			t.Fatal("expected command handler to be invoked for an empty body")
+		}
+		if receivedPayload != nil {
+			t.Errorf("expected nil payload for empty body, got %v", receivedPayload)
+		}
+	})
+
+	// Regression test: a request with an unknown body length reports
+	// ContentLength == -1 (e.g. chunked transfer encoding from a real server).
+	// The payload must still be read and parsed rather than silently dropped,
+	// so the handler must not gate parsing on Content-Length.
+	t.Run("UnknownContentLengthBodyIsParsed", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+		var receivedPayload any
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+			receivedPayload = payload
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", strings.NewReader(`{"int32_value": 42}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.ContentLength = -1 // unknown length, as a real chunked request would report
+		rec := httptest.NewRecorder()
+		transport.mux.ServeHTTP(rec, req)
+
+		assertStatus(t, rec, http.StatusOK)
+		if v, ok := receivedPayload.(int32); !ok || v != 42 {
+			t.Errorf("expected unknown-length body to be parsed into payload 42, got %v (%T)", receivedPayload, receivedPayload)
+		}
+	})
+
+	// A body that fails mid-read should surface as an invalid-argument error
+	// rather than being treated as an empty body.
+	t.Run("BodyReadError", func(t *testing.T) {
+		transport, _ := makeTestTransport(t)
+		req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", errReader{})
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		transport.mux.ServeHTTP(rec, req)
+		assertStatus(t, rec, http.StatusBadRequest)
+	})
+
 	t.Run("InvalidJSON", func(t *testing.T) {
 		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/test", `{invalid json}`)

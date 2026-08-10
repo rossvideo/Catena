@@ -52,6 +52,7 @@ import (
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
@@ -68,6 +69,7 @@ type Transport struct {
 	fallbackHandler FallbackHandler
 
 	port int
+	tls  config.TLSOptions
 }
 
 var _ catena.Transport = (*Transport)(nil)
@@ -76,6 +78,7 @@ var _ catena.Transport = (*Transport)(nil)
 func NewTransport(cfg Options) *Transport {
 	t := &Transport{
 		port: cfg.Port,
+		tls:  cfg.TLS,
 		mux:  http.NewServeMux(),
 	}
 	t.registerRoutes()
@@ -84,6 +87,14 @@ func NewTransport(cfg Options) *Transport {
 
 // Start starts the HTTP server on the specified port using this server's mux
 func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
+	// Build the TLS config up front so misconfiguration (missing cert/key,
+	// unreadable files, etc.) fails Start instead of silently serving plaintext.
+	tlsConfig, err := t.tls.ServerTLSConfig()
+	if err != nil {
+		logger.Error("REST Transport TLS configuration error", "error", err)
+		return fmt.Errorf("REST transport TLS configuration error: %w", err)
+	}
+
 	addr := fmt.Sprintf(":%d", t.port)
 	// Bind synchronously so that startup errors (privileged port, address
 	// already in use, invalid address, etc.) are returned to the caller
@@ -96,16 +107,24 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 	}
 
 	t.server = &http.Server{
-		Addr:    addr,
-		Handler: t.mux,
+		Addr:      addr,
+		Handler:   t.mux,
+		TLSConfig: tlsConfig,
 	}
 	t.runtime = runtime
 
 	// http server does not use context
 	// serve blocks so do it in a goroutine
 	go func() {
-		logger.Info("REST Transport listening", "address", addr)
-		err := t.server.Serve(listener)
+		logger.Info("REST Transport listening", "address", addr, "tls", tlsConfig != nil)
+		var err error
+		if tlsConfig != nil {
+			// cert and key files are empty because the certificates are
+			// already loaded into TLSConfig
+			err = t.server.ServeTLS(listener, "", "")
+		} else {
+			err = t.server.Serve(listener)
+		}
 		if err != nil && err != http.ErrServerClosed {
 			logger.Error("HTTP server error", "error", err)
 		}
@@ -937,12 +956,24 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 		respond = true
 	}
 
-	// Read command payload
+	// Read command payload. Per ST 2138 an empty body is valid and means "no
+	// value": leave payload nil and skip all body validation, mirroring the
+	// gRPC path (which keys off a nil Value). Only a non-empty body is parsed
+	// and validated. We read the body directly rather than trusting
+	// Content-Length, which the server reports as -1 for chunked requests.
 	var payload any
-	if r.ContentLength > 0 {
-		reqValue, err := ReadRequestJSON(r)
-		if err.Code != catena.StatusCodeOk {
-			logger.Error("failed to read command payload", "error", err)
+	body, err := io.ReadAll(r.Body)
+	r.Body.Close()
+	if err != nil {
+		logger.Error("failed to read command payload", "error", err)
+		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
+		t.writeHTTPResult(w, res, val)
+		return
+	}
+	if len(body) > 0 {
+		reqValue, parseErr := parseValueJSON(r.Header.Get("Content-Type"), body)
+		if parseErr.IsError() {
+			logger.Error("failed to read command payload", "error", parseErr)
 			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
 			t.writeHTTPResult(w, res, val)
 			return

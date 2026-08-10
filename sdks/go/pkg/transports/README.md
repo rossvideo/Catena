@@ -156,6 +156,32 @@ Caller guidance:
 - REST default port: `9080`
 - gRPC default port: `6254`
 - gRPC reflection default: disabled
+- TLS default: disabled on both transports
+
+## TLS
+
+Both transports support optional server-side TLS, configured independently via the `TLS` field on their options structs. Example:
+
+```go
+grpcOpts := grpc.DefaultOptions()
+grpcOpts.TLS.Enabled = true
+grpcOpts.TLS.CertFile = "/etc/catena/certs/server.crt"
+grpcOpts.TLS.KeyFile = "/etc/catena/certs/server.key"
+grpcTransport := grpc.NewTransport(grpcOpts)
+
+restOpts := rest.DefaultOptions()
+restOpts.TLS.Enabled = true
+restOpts.TLS.CertFile = "/etc/catena/certs/server.crt"
+restOpts.TLS.KeyFile = "/etc/catena/certs/server.key"
+restOpts.TLS.ClientCAFile = "/etc/catena/certs/clients-ca.crt"
+restOpts.TLS.MutualAuth = true // require client certificates (mTLS)
+restTransport := rest.NewTransport(restOpts)
+```
+
+- `CertFile` and `KeyFile` are required when `Enabled` is true; a missing or unreadable file causes transport startup to fail rather than silently serving plaintext.
+- `MutualAuth` requires clients to present a certificate signed by the CA bundle in `ClientCAFile`.
+- The minimum accepted protocol version is TLS 1.2.
+- When loading options from env/CLI via `config.InitOptions`, the corresponding inputs are `{PREFIX}_REST_TLS_*` / `--rest-tls-*` and `{PREFIX}_GRPC_TLS_*` / `--grpc-tls-*` (see `pkg/config/README.md`).
 
 ## Related Docs
 

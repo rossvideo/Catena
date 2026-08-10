@@ -128,10 +128,26 @@ func (e EndpointType) String() string {
 }
 
 // Handler function types used by both REST and gRPC servers.
+//
+// A handler runs only after the SDK's authorization gate has enforced scope
+// and endpoint access for the caller, so handlers do not re-check
+// authorization. When a product struct is registered for a slot (see
+// RegisterProductStruct), the SDK owns product/* requests and handlers never
+// see them; otherwise product/* requests fall through to the handler.
+
+// DeviceHandler returns the full device model for a slot (GetDevice). It
+// returns the device with an Ok status, or a zero Device with an error status
+// (e.g. StatusCodeNotFound) when the slot has no device to report.
 type DeviceHandler func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult)
+
+// GetValueHandler returns the current value of the parameter at fqoid for a
+// slot (GetValue). It returns the value with an Ok status, or a zero Value
+// with an error status (e.g. StatusCodeNotFound for an unknown fqoid).
 type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult)
 
-// GetParamHandler returns the full parameter (metadata + value) for a slot/fqoid.
+// GetParamHandler returns the full parameter (metadata + value) at fqoid for a
+// slot (GetParam). It returns the param with an Ok status, or a zero Param
+// with an error status (e.g. StatusCodeNotFound for an unknown fqoid).
 type GetParamHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult)
 
 // SetValueEntry is a single fqoid/value pair within a SetValue request.
@@ -142,38 +158,89 @@ type SetValueEntry struct {
 
 // SetValueHandler applies one or more parameter values for a slot. Single-value
 // endpoints invoke it with a one-element slice; multi-value endpoints pass the
-// full slice so the handler can apply them atomically (all-or-nothing).
+// full slice. The handler must apply the batch atomically (all-or-nothing): if
+// any entry cannot be applied, it must leave every value unchanged and return
+// an error status. On success it returns an Ok status.
 type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
+
+// ReadAssetHandler returns the asset stored at fqoid for a slot (ReadAsset).
+// It returns the asset with an Ok status, or a zero Asset with an error status
+// (e.g. StatusCodeNotFound for an unknown fqoid).
 type ReadAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult)
 
-// CreateAssetHandler stores a new asset at fqoid (HTTP POST / CreateAsset). Business
-// logic decides create-vs-conflict semantics.
+// CreateAssetHandler stores a new asset at fqoid (HTTP POST / CreateAsset).
+// Business logic decides create-vs-conflict semantics and reports the outcome
+// in the returned StatusResult.
 type CreateAssetHandler func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 
 // UpdateAssetHandler replaces an existing asset at fqoid (HTTP PUT /
-// UpdateAsset). Business logic decides overwrite-vs-not-found semantics.
+// UpdateAsset). Business logic decides overwrite-vs-not-found semantics and
+// reports the outcome in the returned StatusResult.
 type UpdateAssetHandler func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 
 // DeleteAssetHandler removes the asset at fqoid (HTTP DELETE / DeleteAsset).
+// Business logic decides delete-vs-not-found semantics and reports the outcome
+// in the returned StatusResult.
 type DeleteAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
+
+// ExecuteCommandHandler executes the command at commandFqoid for a slot with
+// the given payload, emitting any responses through stream.Send and returning
+// a terminal StatusResult. respond=false means the caller opted out of
+// responses; the SDK already substitutes a stream that discards chunks, so the
+// handler may either skip sending or send as usual. A Send error means the
+// chunk could not be delivered - the client may have disconnected, the
+// transport hit an encoding or write failure, or the server is shutting down
+// (the SDK wraps the stream so Send fails once shutdown begins) - so the
+// handler should stop and return.
 type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult
 
 // ParamInfoHandler streams parameter information for a slot. The handler emits
-// each ParamInfo chunk through stream.Send and returns a terminal StatusResult.
-// A Send error means the chunk could not be delivered - the client may have
-// disconnected, or the transport hit an encoding or write failure - so the
-// handler should stop and return.
+// one ParamInfo chunk through stream.Send per parameter under oidPrefix
+// (descending into children when recursive is true) and returns a terminal
+// StatusResult: Ok once every descriptor has been sent, NotFound for an
+// unknown oidPrefix, or Internal when a Send fails. A Send error means the
+// chunk could not be delivered - the client may have disconnected, the
+// transport hit an encoding or write failure, or the server is shutting down
+// (the SDK wraps the stream so Send fails once shutdown begins) - so the
+// handler should stop and return without polling ctx itself. See
+// ParamInfosForRequest in param_info.go for a reference implementation.
 type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult
 
 // ListLanguagesHandler returns the language codes supported by the device model
 // at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
 type ListLanguagesHandler func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
 
+// ReadLanguagePackHandler returns the language pack for a language code at a
+// slot (e.g. "en"). It returns the pack with an Ok status, or a zero
+// LanguagePack with an error status (e.g. StatusCodeNotFound for an unknown
+// language).
 type ReadLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
+
+// CreateLanguagePackHandler stores a new language pack for a language code at
+// a slot. Business logic decides create-vs-conflict semantics and reports the
+// outcome in the returned StatusResult.
 type CreateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+
+// UpdateLanguagePackHandler replaces the language pack for a language code at
+// a slot. Business logic decides overwrite-vs-not-found semantics and reports
+// the outcome in the returned StatusResult.
 type UpdateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+
+// DeleteLanguagePackHandler removes the language pack for a language code at a
+// slot. Business logic decides delete-vs-not-found semantics and reports the
+// outcome in the returned StatusResult.
 type DeleteLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) StatusResult
+
+// HeartbeatHandler is invoked for its slot on every heartbeat tick while
+// StartHeartbeat is running. It is called outside the server lock; a panic is
+// recovered and logged, so one slot's failure does not stop the others.
 type HeartbeatHandler func(slot uint16)
+
+// AccessHandler decides whether the caller described by ctx may use an
+// endpoint. It is global (not per-slot) and is consulted by the authorization
+// gate - only when authorization is enabled - after the scope checks and
+// before any endpoint handler runs. Returning false rejects the request with
+// StatusCodePermissionDenied. Registering nil resets to allow-all.
 type AccessHandler func(endpointType EndpointType, ctx HandlerContext) bool
 
 var allowAllAccessHandler AccessHandler = func(endpointType EndpointType, ctx HandlerContext) bool { return true }
@@ -222,22 +289,152 @@ type Server interface {
 	Wait()
 	Shutdown(ctx context.Context)
 
+	// The Register*Handler methods below store the handler for a slot,
+	// replacing any handler previously registered for that slot and endpoint.
+	// Registering the first handler for a new slot makes the slot visible via
+	// GetSlots and pushes a SlotsAdded update to connected clients. Each doc
+	// restates the handler signature so it can be read at the call site; the
+	// handler type's doc carries the full implementation contract.
+
+	// RegisterGetDeviceHandler registers the GetDevice handler for a slot.
+	// See DeviceHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult)
 	RegisterGetDeviceHandler(slot uint16, handler DeviceHandler)
+
+	// RegisterGetValueHandler registers the GetValue handler for a slot.
+	// See GetValueHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult)
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
+
+	// RegisterGetParamHandler registers the GetParam handler for a slot.
+	// See GetParamHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult)
 	RegisterGetParamHandler(slot uint16, handler GetParamHandler)
+
+	// RegisterSetValueHandler registers the SetValue handler for a slot. The
+	// handler must apply its batch atomically (all-or-nothing); see
+	// SetValueHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
 	RegisterSetValueHandler(slot uint16, handler SetValueHandler)
+
+	// RegisterReadAssetHandler registers the ReadAsset handler for a slot.
+	// See ReadAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult)
 	RegisterReadAssetHandler(slot uint16, handler ReadAssetHandler)
+
+	// RegisterCreateAssetHandler registers the CreateAsset handler for a slot.
+	// See CreateAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 	RegisterCreateAssetHandler(slot uint16, handler CreateAssetHandler)
+
+	// RegisterUpdateAssetHandler registers the UpdateAsset handler for a slot.
+	// See UpdateAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
 	RegisterUpdateAssetHandler(slot uint16, handler UpdateAssetHandler)
+
+	// RegisterDeleteAssetHandler registers the DeleteAsset handler for a slot.
+	// See DeleteAssetHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
 	RegisterDeleteAssetHandler(slot uint16, handler DeleteAssetHandler)
+
+	// RegisterExecuteCommandHandler registers the ExecuteCommand handler for a
+	// slot. The handler streams responses through stream.Send, stops on a Send
+	// error, and returns a terminal status; see ExecuteCommandHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult
 	RegisterExecuteCommandHandler(slot uint16, handler ExecuteCommandHandler)
+
+	// RegisterParamInfoHandler registers the ParamInfo handler for a slot. The
+	// handler streams descriptors through stream.Send, stops on a Send error,
+	// and returns a terminal status (Ok / NotFound / Internal); see
+	// ParamInfoHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult
 	RegisterParamInfoHandler(slot uint16, handler ParamInfoHandler)
+
+	// RegisterListLanguagesHandler registers the ListLanguages handler for a
+	// slot. See ListLanguagesHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
 	RegisterListLanguagesHandler(slot uint16, handler ListLanguagesHandler)
+
+	// RegisterReadLanguagePackHandler registers the ReadLanguagePack handler
+	// for a slot. See ReadLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
 	RegisterReadLanguagePackHandler(slot uint16, handler ReadLanguagePackHandler)
+
+	// RegisterCreateLanguagePackHandler registers the CreateLanguagePack
+	// handler for a slot. See CreateLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
 	RegisterCreateLanguagePackHandler(slot uint16, handler CreateLanguagePackHandler)
+
+	// RegisterUpdateLanguagePackHandler registers the UpdateLanguagePack
+	// handler for a slot. See UpdateLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
 	RegisterUpdateLanguagePackHandler(slot uint16, handler UpdateLanguagePackHandler)
+
+	// RegisterDeleteLanguagePackHandler registers the DeleteLanguagePack
+	// handler for a slot. See DeleteLanguagePackHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16, language string, ctx HandlerContext) StatusResult
 	RegisterDeleteLanguagePackHandler(slot uint16, handler DeleteLanguagePackHandler)
+
+	// RegisterHeartbeatHandler registers the heartbeat handler for a slot. The
+	// handler fires only while StartHeartbeat is running; see HeartbeatHandler.
+	//
+	// Handler signature:
+	//
+	//	func(slot uint16)
 	RegisterHeartbeatHandler(slot uint16, handler HeartbeatHandler)
+
+	// RegisterAccessHandler registers the global access handler. Unlike the
+	// per-slot methods above, it applies to every slot, has no slot-visibility
+	// side effect, and passing nil resets to allow-all. See AccessHandler.
+	//
+	// Handler signature:
+	//
+	//	func(endpointType EndpointType, ctx HandlerContext) bool
 	RegisterAccessHandler(handler AccessHandler)
 
 	// RegisterProductStruct hands the mandatory product struct for a slot to the

@@ -225,22 +225,27 @@ func ReadAssetRequestJSON(r *http.Request) (*protos.ExternalObjectPayload, error
 func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 	defer r.Body.Close()
 
-	contentType := r.Header.Get("Content-Type")
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
+	}
+	return parseValueJSON(r.Header.Get("Content-Type"), data)
+}
+
+// parseValueJSON validates a Content-Type and unmarshals already-read JSON bytes
+// into a protos.Value. It is split out of ReadRequestJSON so callers that must
+// treat an empty body specially (the command endpoint accepts an empty body as
+// "no value" per ST 2138) can inspect the body before deciding to parse it.
+func parseValueJSON(contentType string, data []byte) (*protos.Value, catena.StatusResult) {
 	if contentType == "" {
 		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "missing Content-Type header"}
-	} else {
-		mediaType, _, err := mime.ParseMediaType(contentType)
-		if err != nil {
-			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
-		}
-		if mediaType != "application/json" {
-			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
-		}
 	}
-
-	data, err := io.ReadAll(r.Body)
-	if err != nil || err == io.EOF {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
+	}
+	if mediaType != "application/json" {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
 	}
 
 	v := &protos.Value{}
