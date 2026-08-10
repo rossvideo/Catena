@@ -183,6 +183,70 @@ func TestDeviceAggregateStream_NestedCommandOrderIndependent(t *testing.T) {
 	}
 }
 
+func TestDeviceAggregateStream_IgnoresChunksWithNothingToMerge(t *testing.T) {
+	// Every component kind guards against a missing body, and a menu oid that
+	// does not name its group cannot be placed. None of these chunks contribute
+	// anything, so no device is assembled at all.
+	chunks := []st2138.DeviceComponent{
+		{}, // no proto at all
+		st2138.ComponentDevice(nil),
+		st2138.ComponentParam("brightness", nil),
+		st2138.ComponentConstraint("range", nil),
+		st2138.ComponentMenu("status/main", nil),
+		// A menu oid must be "menu-group-name/menu-name".
+		st2138.ComponentMenu("groupless", st2138.NewMenu()),
+		st2138.ComponentCommand("reset", nil),
+		// ComponentLanguagePack always builds a pack, so the empty-pack chunk is
+		// assembled by hand.
+		{Proto: &protos.DeviceComponent{
+			Kind: &protos.DeviceComponent_LanguagePack{
+				LanguagePack: &protos.DeviceComponent_ComponentLanguagePack{Language: "en"},
+			},
+		}},
+	}
+
+	stream := &deviceAggregateStream{}
+	for i, chunk := range chunks {
+		if err := stream.Send(chunk); err != nil {
+			t.Fatalf("Send(chunks[%d]) returned error: %v", i, err)
+		}
+	}
+
+	if device, ok := stream.result(); ok {
+		t.Errorf("expected no assembled device, got %v", device.Proto)
+	}
+}
+
+func TestDeviceAggregateStream_MergesSecondDeviceChunk(t *testing.T) {
+	// A handler may split the device itself across two Device chunks; the second
+	// is merged into the first rather than replacing it.
+	stream := &deviceAggregateStream{}
+	for _, chunk := range []st2138.DeviceComponent{
+		st2138.ComponentDevice(st2138.NewDevice(1).WithDetailLevel(st2138.DetailLevelMinimal)),
+		st2138.ComponentDevice(st2138.NewDevice(1).
+			WithMultiSetEnabled(true).
+			WithParam("brightness", st2138.NewParamInt32(50))),
+	} {
+		if err := stream.Send(chunk); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+	}
+
+	device, ok := stream.result()
+	if !ok {
+		t.Fatal("expected an assembled device")
+	}
+	if got := device.Proto.GetDetailLevel(); got != st2138.DetailLevelMinimal {
+		t.Errorf("detail level = %v, want MINIMAL to survive the merge", got)
+	}
+	if !device.Proto.GetMultiSetEnabled() {
+		t.Error("expected multi_set_enabled from the second chunk")
+	}
+	if device.Proto.GetParams()["brightness"] == nil {
+		t.Error("expected params.brightness from the second chunk")
+	}
+}
+
 func TestFirstStream(t *testing.T) {
 	// firstStream retains only the first chunk sent, discarding any subsequent chunks.
 	t.Run("KeepsFirst", func(t *testing.T) {

@@ -896,6 +896,23 @@ func TestTransport_AssetStream(t *testing.T) {
 		}
 	})
 
+	// A successful handler that streams nothing yields a well-formed empty event
+	// stream (200), not an error.
+	t.Run("StreamEmptyOk", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/empty/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+		if body := rec.Body.String(); strings.Contains(body, "data:") {
+			t.Errorf("expected no data events, got %q", body)
+		}
+	})
+
 	t.Run("MethodNotAllowed", func(t *testing.T) {
 		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/big.txt/stream", "")
