@@ -805,6 +805,30 @@ func TestTransport_SetValue_Success(t *testing.T) {
 	}
 }
 
+// Clients such as DashBoard send oids with a leading slash; the transport must
+// strip it so handlers see the slash-free form the REST transport produces.
+func TestTransport_SetValue_LeadingSlashNormalized(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		if entries[0].Fqoid != "brightness" {
+			t.Errorf("expected fqoid 'brightness', got %q", entries[0].Fqoid)
+		}
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := makeSetValueRequest(t, client, ctx, 0, "/brightness", int32(50))
+	assertNoError(t, err)
+}
+
 func TestTransport_SetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestTransport(t, []uint16{0})
