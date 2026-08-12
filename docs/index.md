@@ -4,6 +4,8 @@
 
 # Index
 
+[Onboarding Guide (start here if you're new)](Onboarding.md)
+
 [Introduction](Introduction.html)
 
 [Device Model](DeviceModel.html)
