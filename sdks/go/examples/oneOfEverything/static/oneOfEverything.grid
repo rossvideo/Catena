@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Custom DashBoard panel for slot 0 of the oneOfEverything example.
+
+  DashBoard discovers this panel through the "dashboard_UI" param (well-known
+  oid alias 0xFF0E), whose value "eo://oneOfEverything.grid" points at this
+  file. DashBoard downloads it via ExternalObjectRequest (served chunked by
+  asset_handler.go) and renders it in place of the auto-generated UI.
+-->
+<abs id="_top" keepalive="false" style="">
+   <table width="750">
+      <tr>
+         <label name="Catena Go SDK - One of Everything (Slot 0)"/>
+      </tr>
+
+      <tr>
+         <param oid="counter" showlabel="true" fill="both" widget="spinner" width="200"/>
+      </tr>
+
+      <tr>
+         <param oid="running" showlabel="true" fill="both" widget="combo"/>
+      </tr>
+
+      <tr>
+         <button buttontype="push" name="Start Counter">
+            <task tasktype="ogscript">
+               params.executeCommand("start", null, null);
+            </task>
+         </button>
+      </tr>
+
+      <tr>
+         <button buttontype="push" name="Stop Counter">
+            <task tasktype="ogscript">
+               params.executeCommand("stop", null, null);
+            </task>
+         </button>
+      </tr>
+
+      <tr>
+         <button buttontype="push" name="Add 10 to Counter">
+            <task tasktype="ogscript">
+               params.executeCommand("add10", null, null);
+            </task>
+         </button>
+      </tr>
+
+      <tr>
+         <button buttontype="push" name="Reset Counter">
+            <task tasktype="ogscript">
+               params.executeCommand("reset", null, null);
+            </task>
+         </button>
+      </tr>
+   </table>
+</abs>

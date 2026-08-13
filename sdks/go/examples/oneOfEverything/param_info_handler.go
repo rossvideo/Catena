@@ -63,11 +63,13 @@ func slotZeroParamInfos(fqoid string, recursive bool) ([]st2138.ParamInfo, caten
 	// covers the business-logic params.
 	switch fqoid {
 	case "":
-		return []st2138.ParamInfo{newCounterParamInfo(), newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{newDashboardUIParamInfo(), newCounterParamInfo(), newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "counter":
 		return []st2138.ParamInfo{newCounterParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "running":
 		return []st2138.ParamInfo{newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	case "dashboard_UI":
+		return []st2138.ParamInfo{newDashboardUIParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	default:
 		return []st2138.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 	}
@@ -164,6 +166,10 @@ func slotTwoParamInfos(fqoid string, recursive bool, state *ExampleState) ([]st2
 	}
 
 	return []st2138.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
+}
+
+func newDashboardUIParamInfo() st2138.ParamInfo {
+	return st2138.NewParamInfo("dashboard_UI", st2138.NewPolyglotText("en", "DashBoard UI"), st2138.ParamTypeString, "", 0)
 }
 
 func newCounterParamInfo() st2138.ParamInfo {
