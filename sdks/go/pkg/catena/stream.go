@@ -133,7 +133,7 @@ func (s productDeviceStream) Send(chunk st2138.DeviceComponent) error {
 	case *protos.DeviceComponent_Device:
 		if device := kind.Device; device != nil {
 			if s.hasMon {
-				(&st2138.Device{Proto: device}).WithParam(ProductOid, ProductParam(s.product))
+				device.Params[ProductOid] = ProductParam(s.product).Proto
 			} else {
 				delete(device.Params, ProductOid)
 			}
