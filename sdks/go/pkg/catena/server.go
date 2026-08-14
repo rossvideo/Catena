@@ -1041,7 +1041,7 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, stream Stream[st2138.Device
 				out = productDeviceStream{
 					inner:   stream,
 					product: product,
-					hasMon:  ctx.RequireReadScope(st2138.ScopeMon).IsOk(),
+					hasMon:  ctx.HasReadScope(st2138.ScopeMon),
 				}
 			}
 			return struct{}{}, handler(slot, ctx, out)
