@@ -39,8 +39,6 @@
 package catena
 
 import (
-	"sort"
-
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -50,12 +48,13 @@ import (
 // DeviceComponentsForRequest streams a complete device model as DeviceComponent
 // chunks: first a skeleton Device chunk (the device minus its params, commands,
 // shared constraints, menus, and language packs), then one chunk per shared
-// constraint, menu, top-level param, command, and language pack, each group
-// sorted by oid so the stream order is deterministic. It is a business-logic
-// helper a GetDevice handler can delegate to once it can produce a Device
-// definition; the returned StatusResult is the terminal status a handler
-// returns directly: Ok once every component has been sent, or Internal if a
-// Send fails (a failed Send stops the stream immediately).
+// constraint, menu, top-level param, command, and language pack. The component
+// kinds are emitted in that fixed order, but chunks within a kind follow map
+// iteration order, so clients must not rely on oid ordering. It is a
+// business-logic helper a GetDevice handler can delegate to once it can
+// produce a Device definition; the returned StatusResult is the terminal
+// status a handler returns directly: Ok once every component has been sent, or
+// Internal if a Send fails (a failed Send stops the stream immediately).
 //
 // Menu-group metadata (display name, order) stays on the skeleton because a
 // ComponentMenu chunk carries only the menu itself; each group's menus are
@@ -75,9 +74,7 @@ func DeviceComponentsForRequest(device *st2138.Device, stream Stream[st2138.Devi
 		return StatusWithCode(StatusCodeInternal, err.Error())
 	}
 
-	constraints := device.Proto.GetConstraints()
-	for _, oid := range sortedKeys(constraints) {
-		constraint := constraints[oid]
+	for oid, constraint := range device.Proto.GetConstraints() {
 		if constraint == nil {
 			continue
 		}
@@ -86,11 +83,8 @@ func DeviceComponentsForRequest(device *st2138.Device, stream Stream[st2138.Devi
 		}
 	}
 
-	menuGroups := device.Proto.GetMenuGroups()
-	for _, group := range sortedKeys(menuGroups) {
-		menus := menuGroups[group].GetMenus()
-		for _, name := range sortedKeys(menus) {
-			menu := menus[name]
+	for group, menuGroup := range device.Proto.GetMenuGroups() {
+		for name, menu := range menuGroup.GetMenus() {
 			if menu == nil {
 				continue
 			}
@@ -100,9 +94,7 @@ func DeviceComponentsForRequest(device *st2138.Device, stream Stream[st2138.Devi
 		}
 	}
 
-	params := device.Proto.GetParams()
-	for _, oid := range sortedKeys(params) {
-		param := params[oid]
+	for oid, param := range device.Proto.GetParams() {
 		if param == nil {
 			continue
 		}
@@ -111,9 +103,7 @@ func DeviceComponentsForRequest(device *st2138.Device, stream Stream[st2138.Devi
 		}
 	}
 
-	commands := device.Proto.GetCommands()
-	for _, oid := range sortedKeys(commands) {
-		command := commands[oid]
+	for oid, command := range device.Proto.GetCommands() {
 		if command == nil {
 			continue
 		}
@@ -122,9 +112,7 @@ func DeviceComponentsForRequest(device *st2138.Device, stream Stream[st2138.Devi
 		}
 	}
 
-	packs := device.Proto.GetLanguagePacks().GetPacks()
-	for _, code := range sortedKeys(packs) {
-		pack := packs[code]
+	for code, pack := range device.Proto.GetLanguagePacks().GetPacks() {
 		if pack == nil {
 			continue
 		}
@@ -154,15 +142,4 @@ func deviceSkeleton(device *protos.Device) *protos.Device {
 		}
 	}
 	return skeleton
-}
-
-// sortedKeys returns m's keys in ascending order so component chunks are
-// emitted deterministically.
-func sortedKeys[V any](m map[string]V) []string {
-	keys := make([]string, 0, len(m))
-	for key := range m {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	return keys
 }

@@ -35,15 +35,17 @@ func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 			// Stream the asset in chunks to demonstrate large-object delivery:
 			// the first chunk carries the metadata, digest, encoding, and
 			// cachable flag plus the first slice of payload bytes; later
-			// chunks carry only payload bytes, which the client concatenates
-			// in send order. Assets up to assetChunkSize (and URL-kind assets,
-			// which have no embedded bytes) go out as a single chunk.
+			// chunks carry only payload bytes (never the URL: a payload can
+			// have one or the other, and continuation chunks only ever exist
+			// for embedded payloads), which the client concatenates in send
+			// order. Assets up to assetChunkSize (and URL-kind assets, which
+			// have no embedded bytes) go out as a single chunk.
 			stored := val.(storedAsset)
 			data := stored.payload.Payload
 			sent := 0
 			for first := true; first || sent < len(data); first = false {
 				end := min(sent+assetChunkSize, len(data))
-				dp := st2138.DataPayload{Url: stored.payload.Url, Payload: data[sent:end]}
+				dp := st2138.DataPayload{Payload: data[sent:end]}
 				if first {
 					dp = stored.payload
 					dp.Payload = data[sent:end]

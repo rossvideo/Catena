@@ -41,6 +41,8 @@ package catena
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -70,8 +72,10 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 			WithLanguagePack("es", "Global Spanish", map[string]string{"greeting": "Hola"})
 	}
 
-	// Skeleton first, then each component kind sorted by oid.
-	expectedOrder := []string{
+	// Skeleton first, then each component kind in a fixed sequence; chunks
+	// within a kind follow map iteration order, so tests assert set
+	// membership rather than exact position.
+	expectedComponents := []string{
 		"device",
 		"constraint:percent",
 		"menu:status/advanced",
@@ -89,7 +93,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
-		assertComponentOrder(t, stream.Items, expectedOrder)
+		assertComponentSet(t, stream.Items, expectedComponents)
 
 		skeleton := stream.Items[0].Proto.GetDevice()
 		if skeleton.GetSlot() != 3 {
@@ -114,7 +118,8 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 		}
 
 		// Component chunks reference the device's protos, not copies.
-		if stream.Items[4].Proto.GetParam().GetParam() != device.Proto.GetParams()["alpha"] {
+		alphaChunk := findComponent(t, stream.Items, "param:alpha")
+		if alphaChunk.Proto.GetParam().GetParam() != device.Proto.GetParams()["alpha"] {
 			t.Error("expected param chunk to reference the device's param proto")
 		}
 
@@ -180,7 +185,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 		// Fail each of the eight Sends in turn: the walk must stop at the
 		// failure and report INTERNAL, so every send site's error return is
 		// exercised.
-		for failAfter := range expectedOrder {
+		for failAfter := range expectedComponents {
 			stream := &sliceStream[st2138.DeviceComponent]{Err: errors.New("boom"), FailAfter: failAfter}
 			res := DeviceComponentsForRequest(componentTestDevice(), stream)
 			if res.Code != StatusCodeInternal {
@@ -207,6 +212,45 @@ func assertComponentOrder(t *testing.T, chunks []st2138.DeviceComponent, expecte
 			t.Errorf("expected chunk[%d] %q, got %q", i, want, got)
 		}
 	}
+}
+
+// assertComponentSet checks that the skeleton chunk arrives first and that the
+// remaining chunks match the expected kind:oid descriptions regardless of
+// order, since chunks within a kind follow map iteration order.
+func assertComponentSet(t *testing.T, chunks []st2138.DeviceComponent, expected []string) {
+	t.Helper()
+
+	if len(chunks) != len(expected) {
+		t.Fatalf("expected %d chunks, got %d", len(expected), len(chunks))
+	}
+	if got := describeComponent(chunks[0]); got != "device" {
+		t.Fatalf("expected first chunk %q, got %q", "device", got)
+	}
+
+	got := make([]string, 0, len(chunks))
+	for _, chunk := range chunks {
+		got = append(got, describeComponent(chunk))
+	}
+	want := append([]string(nil), expected...)
+	sort.Strings(got)
+	sort.Strings(want)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("component set mismatch:\n got %v\nwant %v", got, want)
+	}
+}
+
+// findComponent returns the chunk whose kind:oid description matches want,
+// failing the test if it is absent.
+func findComponent(t *testing.T, chunks []st2138.DeviceComponent, want string) st2138.DeviceComponent {
+	t.Helper()
+
+	for _, chunk := range chunks {
+		if describeComponent(chunk) == want {
+			return chunk
+		}
+	}
+	t.Fatalf("no %q chunk in stream", want)
+	return st2138.DeviceComponent{}
 }
 
 // describeComponent renders a chunk as "kind" or "kind:oid" for compact
