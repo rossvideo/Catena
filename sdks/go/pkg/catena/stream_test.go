@@ -42,6 +42,8 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/proto"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 type stubMessage struct {
@@ -98,6 +100,65 @@ func TestNullStream(t *testing.T) {
 
 		if err := stream.Send(stubMessage{id: 1}); err != nil {
 			t.Fatalf("Send returned error: %v", err)
+		}
+	})
+}
+
+// The product policy in productDeviceStream is exercised end-to-end through the
+// server in product_server_test.go; this covers the wrapper's own guard.
+func TestProductDeviceStream(t *testing.T) {
+	t.Run("passes a bodyless chunk straight through", func(t *testing.T) {
+		// A chunk with no proto body carries no device and no param oid, so
+		// there is nothing for the policy to inject, strip, or drop.
+		inner := &sliceStream[st2138.DeviceComponent]{}
+		stream := productDeviceStream{inner: inner, product: testProduct(), hasMon: true}
+
+		if err := stream.Send(st2138.DeviceComponent{}); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+		if len(inner.Items) != 1 {
+			t.Fatalf("inner received %d chunks, want 1", len(inner.Items))
+		}
+		if inner.Items[0].Proto != nil {
+			t.Errorf("chunk proto = %v, want it delivered untouched (nil)", inner.Items[0].Proto)
+		}
+	})
+
+	t.Run("injects product into a device chunk whose params map is nil", func(t *testing.T) {
+		// NewDevice leaves Params nil, and handlers may stream such a
+		// skeleton (oneOfEverything slot 0 does); injection must initialize
+		// the map rather than assign into nil.
+		inner := &sliceStream[st2138.DeviceComponent]{}
+		stream := productDeviceStream{inner: inner, product: testProduct(), hasMon: true}
+
+		if err := stream.Send(st2138.ComponentDevice(st2138.NewDevice(0))); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+		if len(inner.Items) != 1 {
+			t.Fatalf("inner received %d chunks, want 1", len(inner.Items))
+		}
+		device := inner.Items[0].Proto.GetDevice()
+		if device == nil {
+			t.Fatal("chunk carries no device")
+		}
+		if device.GetParams()[ProductOid] == nil {
+			t.Errorf("product param not injected; params = %v", device.GetParams())
+		}
+	})
+
+	t.Run("strips product from a device chunk without mon scope", func(t *testing.T) {
+		device := st2138.NewDevice(0).WithParam(ProductOid, ProductParam(testProduct()))
+		inner := &sliceStream[st2138.DeviceComponent]{}
+		stream := productDeviceStream{inner: inner, product: testProduct(), hasMon: false}
+
+		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+		if len(inner.Items) != 1 {
+			t.Fatalf("inner received %d chunks, want 1", len(inner.Items))
+		}
+		if params := inner.Items[0].Proto.GetDevice().GetParams(); params[ProductOid] != nil {
+			t.Errorf("product param not stripped; params = %v", params)
 		}
 	})
 }

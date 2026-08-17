@@ -723,8 +723,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetDevice,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetDeviceHandler(slot, func(uint16, HandlerContext) (st2138.Device, StatusResult) {
-					return Reply(st2138.Device{})
+				srv.RegisterGetDeviceHandler(slot, func(uint16, HandlerContext, Stream[st2138.DeviceComponent]) StatusResult {
+					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
 			has: func(srv *server, slot uint16) bool { return srv.getDeviceHandlers[slot] != nil },
@@ -759,8 +759,8 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointReadAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterReadAssetHandler(slot, func(uint16, string, HandlerContext) (st2138.Asset, StatusResult) {
-					return Reply(st2138.Asset{})
+				srv.RegisterReadAssetHandler(slot, func(uint16, string, HandlerContext, Stream[st2138.Asset]) StatusResult {
+					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
 			has: func(srv *server, slot uint16) bool { return srv.readAssetHandlers[slot] != nil },
@@ -1236,9 +1236,9 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointGetDevice, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		expected := st2138.Device{Proto: &protos.Device{}}
+		expected := st2138.ComponentDevice(&st2138.Device{Proto: &protos.Device{Slot: 11}})
 		handlerCalled := 0
-		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult) {
+		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
 			handlerCalled++
 			if slot != 11 {
 				t.Errorf("expected slot 11, got %d", slot)
@@ -1246,10 +1246,14 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
 			}
-			return Reply(expected)
+			if err := stream.Send(expected); err != nil {
+				t.Errorf("unexpected Send error: %v", err)
+			}
+			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		actual, status := srv.InvokeGetDeviceHandler(11, validTestTransportContext(nil))
+		stream := &sliceStream[st2138.DeviceComponent]{}
+		status := srv.InvokeGetDeviceHandler(11, stream, validTestTransportContext(nil))
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1257,8 +1261,36 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if actual.Proto != expected.Proto {
-			t.Errorf("expected device %v, got %v", expected, actual)
+		if len(stream.Items) != 1 {
+			t.Fatalf("expected 1 streamed device component, got %d", len(stream.Items))
+		}
+		if stream.Items[0].Proto != expected.Proto {
+			t.Errorf("expected device component %v, got %v", expected, stream.Items[0])
+		}
+	})
+
+	t.Run("SendFailsAfterShutdown", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
+		mockInvokeGateFn(t, srv, EndpointGetDevice, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+
+		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+			// Simulate the server shutting down mid-stream; the shutdownStream
+			// wrapper must surface it as a Send error.
+			srv.ctxCancel()
+			if err := stream.Send(st2138.ComponentDevice(nil)); err == nil {
+				t.Error("expected Send to fail after shutdown began")
+			}
+			return StatusWithCode(StatusCodeInternal, "send failed")
+		}
+
+		stream := &sliceStream[st2138.DeviceComponent]{}
+		status := srv.InvokeGetDeviceHandler(11, stream, validTestTransportContext(nil))
+		if status.Code != StatusCodeInternal {
+			t.Errorf("expected internal status from handler, got %v", status)
+		}
+		if len(stream.Items) != 0 {
+			t.Errorf("expected no chunks delivered after shutdown, got %d", len(stream.Items))
 		}
 	})
 }
@@ -1425,7 +1457,7 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		expected, _ := st2138.ToAsset(dp, false)
 
 		handlerCalled := 0
-		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult) {
+		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult {
 			handlerCalled++
 			if slot != 5 {
 				t.Errorf("expected slot 5, got %d", slot)
@@ -1436,10 +1468,14 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
 			}
-			return Reply(expected)
+			if err := stream.Send(expected); err != nil {
+				t.Errorf("unexpected Send error: %v", err)
+			}
+			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		actual, status := srv.InvokeReadAssetHandler(5, "test/asset", validTestTransportContext(nil))
+		stream := &sliceStream[st2138.Asset]{}
+		status := srv.InvokeReadAssetHandler(5, "test/asset", stream, validTestTransportContext(nil))
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1447,8 +1483,36 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if !proto.Equal(actual.Proto, expected.Proto) {
-			t.Errorf("expected asset %v, got %v", expected, actual)
+		if len(stream.Items) != 1 {
+			t.Fatalf("expected 1 streamed asset chunk, got %d", len(stream.Items))
+		}
+		if !proto.Equal(stream.Items[0].Proto, expected.Proto) {
+			t.Errorf("expected asset %v, got %v", expected, stream.Items[0])
+		}
+	})
+
+	t.Run("SendFailsAfterShutdown", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
+		mockInvokeGateFn(t, srv, EndpointReadAsset, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+
+		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult {
+			// Simulate the server shutting down mid-stream; the shutdownStream
+			// wrapper must surface it as a Send error.
+			srv.ctxCancel()
+			if err := stream.Send(st2138.Asset{}); err == nil {
+				t.Error("expected Send to fail after shutdown began")
+			}
+			return StatusWithCode(StatusCodeInternal, "send failed")
+		}
+
+		stream := &sliceStream[st2138.Asset]{}
+		status := srv.InvokeReadAssetHandler(5, "test/asset", stream, validTestTransportContext(nil))
+		if status.Code != StatusCodeInternal {
+			t.Errorf("expected internal status from handler, got %v", status)
+		}
+		if len(stream.Items) != 0 {
+			t.Errorf("expected no chunks delivered after shutdown, got %d", len(stream.Items))
 		}
 	})
 }
@@ -1886,12 +1950,11 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointGetDevice,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetDeviceHandler(0, func(uint16, HandlerContext) (st2138.Device, StatusResult) {
+				srv.RegisterGetDeviceHandler(0, func(uint16, HandlerContext, Stream[st2138.DeviceComponent]) StatusResult {
 					*handlerCalled = true
-					return Reply(st2138.Device{})
+					return StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeGetDeviceHandler(0, invalidContext)
-				return status
+				return srv.InvokeGetDeviceHandler(0, &sliceStream[st2138.DeviceComponent]{}, invalidContext)
 			},
 		},
 		{
@@ -1929,12 +1992,11 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointReadAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadAssetHandler(0, func(uint16, string, HandlerContext) (st2138.Asset, StatusResult) {
+				srv.RegisterReadAssetHandler(0, func(uint16, string, HandlerContext, Stream[st2138.Asset]) StatusResult {
 					*handlerCalled = true
-					return Reply(st2138.Asset{})
+					return StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeReadAssetHandler(0, "test/asset", invalidContext)
-				return status
+				return srv.InvokeReadAssetHandler(0, "test/asset", &sliceStream[st2138.Asset]{}, invalidContext)
 			},
 		},
 		{
@@ -2311,12 +2373,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointGetDevice,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext) (st2138.Device, StatusResult) {
+				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
 					*handlerCalled = true
-					return Reply(st2138.Device{})
+					return StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeGetDeviceHandler(0, TransportContext{})
-				return status
+				return srv.InvokeGetDeviceHandler(0, &sliceStream[st2138.DeviceComponent]{}, TransportContext{})
 			},
 		},
 		{
@@ -2358,12 +2419,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointReadAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Asset, StatusResult) {
+				srv.RegisterReadAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult {
 					*handlerCalled = true
-					return Reply(st2138.Asset{})
+					return StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeReadAssetHandler(0, "test/asset", TransportContext{})
-				return status
+				return srv.InvokeReadAssetHandler(0, "test/asset", &sliceStream[st2138.Asset]{}, TransportContext{})
 			},
 		},
 		{

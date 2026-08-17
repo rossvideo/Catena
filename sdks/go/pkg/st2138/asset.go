@@ -88,6 +88,16 @@ type Asset struct {
 	Proto *protos.ExternalObjectPayload
 }
 
+// Ensure Asset can be streamed as a Message (one chunk of a streamed
+// ReadAsset / ExternalObjectRequest response).
+var _ Message = Asset{}
+
+// Wire returns the underlying protos.ExternalObjectPayload as the streamed
+// chunk's wire representation.
+func (a Asset) Wire() proto.Message {
+	return a.Proto
+}
+
 // DataPayload is a helper type for business logic to create assets
 // It mirrors protos.DataPayload structure for convenient construction
 type DataPayload struct {
