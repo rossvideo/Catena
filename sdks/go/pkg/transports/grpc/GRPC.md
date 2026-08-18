@@ -10,9 +10,12 @@ import "github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
 ## Constructor
 
 ```go
-grpcTransport := grpc.NewTransport(grpc.Options{Port: 6254, Reflection: false})
-// or with defaults
 grpcTransport := grpc.NewTransport(grpc.DefaultOptions())
+// or start from the defaults and customize
+opts := grpc.DefaultOptions()
+opts.Port = 6254
+opts.Reflection = false
+grpcTransport := grpc.NewTransport(opts)
 ```
 
 Register it on the shared server:
@@ -24,17 +27,40 @@ if err := srv.RegisterTransport(grpcTransport); err != nil {
 }
 ```
 
+## TLS
+
+The server uses TLS transport credentials when `Options.TLS.Enabled` is true:
+
+```go
+opts := grpc.DefaultOptions()
+opts.TLS.Enabled = true
+opts.TLS.CertFile = "/etc/catena/certs/server.crt" // PEM server certificate
+opts.TLS.KeyFile = "/etc/catena/certs/server.key"  // PEM private key
+// Optional mutual TLS (client certificate verification):
+// opts.TLS.ClientCAFile = "/etc/catena/certs/clients-ca.crt"
+// opts.TLS.MutualAuth = true
+grpcTransport := grpc.NewTransport(opts)
+```
+
+Behavior:
+
+- `CertFile` and `KeyFile` are required when TLS is enabled. Because gRPC credentials must be supplied at server construction, an invalid TLS configuration is recorded by `NewTransport` and returned as an error from `Start` (registration via `RegisterTransport` fails).
+- With `MutualAuth`, clients must present a certificate signed by the CA bundle in `ClientCAFile` or the TLS handshake is rejected.
+- Minimum accepted protocol version is TLS 1.2.
+- Clients must then dial with TLS credentials, e.g. `grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{...}))`; plaintext (insecure) clients will fail to connect.
+- Env/CLI configuration: `{PREFIX}_GRPC_TLS_ENABLED`, `{PREFIX}_GRPC_TLS_CERT_FILE`, `{PREFIX}_GRPC_TLS_KEY_FILE`, `{PREFIX}_GRPC_TLS_CLIENT_CA_FILE`, `{PREFIX}_GRPC_TLS_MUTUAL_AUTH` (flags `--grpc-tls-*`).
+
 ## Implemented RPCs
 
 Implemented against shared runtime handlers:
 
 - `GetPopulatedSlots`
-- `DeviceRequest`
+- `DeviceRequest` (server-streaming response)
 - `GetValue`
 - `GetParam`
 - `SetValue`
 - `MultiSetValue`
-- `ExternalObjectRequest`
+- `ExternalObjectRequest` (server-streaming response)
 - `ExecuteCommand` (server-streaming response)
 - `ParamInfoRequest` (server-streaming response)
 - `Connect`
@@ -60,16 +86,27 @@ RPC methods invoke the same handlers registered on `catena.Server`:
 - `ExecuteCommand` -> `RegisterExecuteCommandHandler`
 - `ParamInfoRequest` -> `RegisterParamInfoHandler`
 
-## Streaming Responses (`ParamInfoRequest`, `ExecuteCommand`)
+## Streaming Responses (`DeviceRequest`, `ExternalObjectRequest`, `ParamInfoRequest`, `ExecuteCommand`)
 
-`ParamInfoRequest` and `ExecuteCommand` are server-streaming RPCs. Each response
-chunk is sent over the gRPC stream as its wire proto (`ParamInfoResponse` /
-`CommandResponse`).
+`DeviceRequest`, `ExternalObjectRequest`, `ParamInfoRequest`, and
+`ExecuteCommand` are server-streaming RPCs. The registered handler receives a
+`catena.Stream[T]` and calls `stream.Send(chunk)` for each response; every
+chunk is sent over the gRPC stream as its wire proto (`DeviceComponent` /
+`ExternalObjectPayload` / `ParamInfoResponse` / `CommandResponse`).
 
 - A stream that produces no chunks completes as an empty successful stream
   (EOF), not an error.
 - A terminal error is returned as the RPC status via `ToGRPCCode`; any chunks
   already sent remain on the stream.
+- `DeviceRequest`: a small device model is typically one `ComponentDevice`
+  chunk; a large one may be broken into a device skeleton followed by
+  param / shared-constraint / menu / command / language-pack components
+  (built with the `st2138.Component*` constructors). Clients merge the
+  components back into one device model.
+- `ExternalObjectRequest`: a large asset may be broken into several
+  `ExternalObjectPayload` chunks; the client concatenates the embedded
+  payload bytes in send order (metadata, digest, and cachable come from the
+  first chunk).
 - `ExecuteCommand` reads `req.Respond` (a proto bool, defaulting to `false`) to
   gate responses. When `Respond` is `false` the stream completes with no
   `CommandResponse` messages; a client must set `Respond=true` to receive them.
@@ -116,7 +153,9 @@ In production mode, detailed error text is sanitized to status code names.
 Reflection can be enabled at construction time:
 
 ```go
-grpcTransport := grpc.NewTransport(grpc.Options{Port: 6254, Reflection: true})
+opts := grpc.DefaultOptions()
+opts.Reflection = true
+grpcTransport := grpc.NewTransport(opts)
 ```
 
 When enabled, tools such as `grpcurl` can discover services and methods dynamically.

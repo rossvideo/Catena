@@ -119,6 +119,32 @@ func MarshalAssetJSON(asset *protos.ExternalObjectPayload) ([]byte, error) {
 	return protoMarshalOpts.Marshal(asset)
 }
 
+// MarshalDeviceComponentJSON marshals one streamed DeviceComponent chunk to
+// JSON with the same SMPTE-compliant treatment as MarshalDeviceJSON: it uses
+// EmitUnpopulated so meaningful proto3 defaults survive (e.g. a constraint's
+// min_value:0, or a current value of 0/0.0/""), then strips the
+// schema-forbidden extras from whichever oneof shape the chunk carries.
+func MarshalDeviceComponentJSON(component *protos.DeviceComponent) ([]byte, error) {
+	if component == nil {
+		return nil, nil
+	}
+	data, err := deviceMarshalOpts.Marshal(component)
+	if err != nil {
+		return nil, err
+	}
+	return cleanDeviceComponentJSON(data)
+}
+
+// marshalDeviceComponentWire adapts MarshalDeviceComponentJSON to the
+// restStream marshal signature, which hands over the chunk's wire proto.
+func marshalDeviceComponentWire(msg proto.Message) ([]byte, error) {
+	component, ok := msg.(*protos.DeviceComponent)
+	if !ok {
+		return nil, fmt.Errorf("expected *protos.DeviceComponent, got %T", msg)
+	}
+	return MarshalDeviceComponentJSON(component)
+}
+
 type jsonPrimitive interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
@@ -225,22 +251,27 @@ func ReadAssetRequestJSON(r *http.Request) (*protos.ExternalObjectPayload, error
 func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 	defer r.Body.Close()
 
-	contentType := r.Header.Get("Content-Type")
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
+	}
+	return parseValueJSON(r.Header.Get("Content-Type"), data)
+}
+
+// parseValueJSON validates a Content-Type and unmarshals already-read JSON bytes
+// into a protos.Value. It is split out of ReadRequestJSON so callers that must
+// treat an empty body specially (the command endpoint accepts an empty body as
+// "no value" per ST 2138) can inspect the body before deciding to parse it.
+func parseValueJSON(contentType string, data []byte) (*protos.Value, catena.StatusResult) {
 	if contentType == "" {
 		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "missing Content-Type header"}
-	} else {
-		mediaType, _, err := mime.ParseMediaType(contentType)
-		if err != nil {
-			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
-		}
-		if mediaType != "application/json" {
-			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
-		}
 	}
-
-	data, err := io.ReadAll(r.Body)
-	if err != nil || err == io.EOF {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
+	}
+	if mediaType != "application/json" {
+		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
 	}
 
 	v := &protos.Value{}
@@ -325,6 +356,34 @@ func cleanDeviceJSON(data []byte) ([]byte, error) {
 
 	deleteDefaultFields(v)
 	deleteResponseFromParams(v)
+	deleteEmptyFields(v)
+
+	return v.MarshalTo(nil), nil
+}
+
+// cleanDeviceComponentJSON strips the same schema-forbidden extras as
+// cleanDeviceJSON but for one streamed DeviceComponent chunk, whose oneof
+// determines where the device-shaped subtree lives: a device chunk nests the
+// full device under "device", a param chunk carries {"oid","param"} under
+// "param", and a command chunk keeps its "response" field since response is
+// valid on commands.
+func cleanDeviceComponentJSON(data []byte) ([]byte, error) {
+	var p fastjson.Parser
+	v, err := p.ParseBytes(data)
+	if err != nil {
+		return nil, fmt.Errorf("cleanDeviceComponentJSON parse: %w", err)
+	}
+
+	deleteDefaultFields(v)
+
+	if deviceVal := v.Get("device"); deviceVal != nil {
+		deleteResponseFromParams(deviceVal)
+	}
+	// "response" is only valid on commands; strip it from a param chunk's subtree.
+	if paramVal := v.Get("param"); paramVal != nil {
+		deleteResponseFalse(paramVal)
+	}
+
 	deleteEmptyFields(v)
 
 	return v.MarshalTo(nil), nil

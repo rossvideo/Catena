@@ -42,6 +42,7 @@ package rest
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -122,10 +123,9 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "get device",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
+				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					device := *st2138.NewDevice(slot)
-					return catena.Reply(device)
+					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -190,10 +190,10 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "get asset",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+				runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
 					assertContext(t, ctx)
 					asset, _ := st2138.ToAsset(st2138.DataPayload{Payload: []byte("asset")}, false)
-					return catena.Reply(asset)
+					return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -282,15 +282,15 @@ func TestTransport_GetDevice_Route(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	device := *st2138.NewDevice(0).
+	device := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull)
 
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
 		}
-		return catena.Reply(device)
+		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0", "")
@@ -301,16 +301,170 @@ func TestTransport_GetDevice_Route(t *testing.T) {
 	}
 }
 
+// TestTransport_GetDevice_AggregatesComponents verifies the unary device route
+// assembles a multi-chunk stream (device skeleton plus param, command, shared
+// constraint, menu, and language-pack components) into one device JSON body.
+func TestTransport_GetDevice_AggregatesComponents(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+		return []st2138.DeviceComponent{
+			st2138.ComponentDevice(st2138.NewDevice(slot).WithDetailLevel(st2138.DetailLevelFull)),
+			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
+			st2138.ComponentCommand("reset", st2138.NewParamEmpty()),
+			st2138.ComponentConstraint("range", st2138.NewConstraintInt32Range(0, 100, 1)),
+			st2138.ComponentMenu("status/main", st2138.NewMenu().WithParamOids("brightness")),
+			st2138.ComponentLanguagePack("en", "English", map[string]string{"greeting": "Hello"}),
+		}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0", "")
+	assertStatus(t, rec, http.StatusOK)
+
+	var result map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
+	}
+	params, _ := result["params"].(map[string]any)
+	if _, ok := params["brightness"]; !ok {
+		t.Error("expected aggregated 'brightness' param in device body")
+	}
+	commands, _ := result["commands"].(map[string]any)
+	if _, ok := commands["reset"]; !ok {
+		t.Error("expected aggregated 'reset' command in device body")
+	}
+	constraints, _ := result["constraints"].(map[string]any)
+	if _, ok := constraints["range"]; !ok {
+		t.Error("expected aggregated 'range' constraint in device body")
+	}
+	menuGroups, _ := result["menu_groups"].(map[string]any)
+	statusGroup, _ := menuGroups["status"].(map[string]any)
+	menus, _ := statusGroup["menus"].(map[string]any)
+	if _, ok := menus["main"]; !ok {
+		t.Error("expected aggregated 'status/main' menu in device body")
+	}
+	languagePacks, _ := result["language_packs"].(map[string]any)
+	packs, _ := languagePacks["packs"].(map[string]any)
+	if _, ok := packs["en"]; !ok {
+		t.Error("expected aggregated 'en' language pack in device body")
+	}
+}
+
+// TestTransport_GetDevice_EmptyStream verifies a handler that reports success
+// without sending any chunk is surfaced as an internal error on the unary route.
+func TestTransport_GetDevice_EmptyStream(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0", "")
+	assertStatus(t, rec, http.StatusInternalServerError)
+}
+
+func TestTransport_DeviceStream(t *testing.T) {
+	t.Run("StreamRoute", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			return []st2138.DeviceComponent{
+				st2138.ComponentDevice(st2138.NewDevice(slot)),
+				st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
+			}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+
+		body := rec.Body.String()
+		if dataCount := strings.Count(body, "data:"); dataCount != 2 {
+			t.Errorf("expected 2 SSE data events, got %d\nbody:\n%s", dataCount, body)
+		}
+		if !strings.Contains(body, `"device"`) {
+			t.Errorf("expected a device-kind SSE event, got body:\n%s", body)
+		}
+		if !strings.Contains(body, `"brightness"`) {
+			t.Errorf("expected a param-kind SSE event for 'brightness', got body:\n%s", body)
+		}
+	})
+
+	// If the handler errors before sending anything, the stream has not committed
+	// a status yet, so the transport can still report the error as an HTTP status.
+	t.Run("StreamErrorNoneSent", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/stream", "")
+		assertStatus(t, rec, http.StatusNotFound)
+		if err := assertHasError(t, rec); !strings.Contains(err, "device not found") {
+			t.Errorf("expected 'device not found' message, got %q", err)
+		}
+	})
+
+	// A mid-stream error is reported in-band as an SSE error event once chunks
+	// have already been sent.
+	t.Run("StreamErrorAfterSomeSent", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			return []st2138.DeviceComponent{
+				st2138.ComponentDevice(st2138.NewDevice(slot)),
+			}, catena.StatusWithCode(catena.StatusCodeInternal, "internal error")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+		body := rec.Body.String()
+		if !strings.Contains(body, "event: error\n") {
+			t.Errorf("expected an SSE error event, got body:\n%s", body)
+		}
+		if !strings.Contains(body, `"code":500`) {
+			t.Errorf("expected the error event to carry status code 500, got body:\n%s", body)
+		}
+	})
+
+	// A successful handler that streams nothing yields a well-formed empty event
+	// stream (200), not an error.
+	t.Run("StreamEmptyOk", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		if ct := rec.Header().Get("Content-Type"); ct != "text/event-stream" {
+			t.Errorf("expected Content-Type 'text/event-stream', got %q", ct)
+		}
+		if body := rec.Body.String(); strings.Contains(body, "data:") {
+			t.Errorf("expected no data events, got %q", body)
+		}
+	})
+
+	t.Run("MethodNotAllowed", func(t *testing.T) {
+		transport, _ := makeTestTransport(t)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/stream", "")
+		assertStatus(t, rec, http.StatusMethodNotAllowed)
+	})
+}
+
 func TestTransport_GetDevice_NotFound(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 99 {
 			t.Errorf("expected slot 99, got %d", slot)
 		}
-		return catena.ReplyError[st2138.Device](catena.StatusCodeNotFound, "device not found")
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/99", "")
@@ -326,12 +480,12 @@ func TestTransport_GetDevice_InvalidSlot(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
 		}
-		return catena.ReplyError[st2138.Device](catena.StatusCodeInvalidArgument, "invalid slot")
+		return nil, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid slot")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/invalid", "")
@@ -618,24 +772,161 @@ func TestTransport_ReadAsset_Route(t *testing.T) {
 	}
 	asset, _ := st2138.ToAsset(dp, true)
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
 		if fqoid != "logo" {
 			t.Errorf("expected fqoid 'logo', got %s", fqoid)
 		}
-		return catena.Reply(asset)
+		return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/logo", "")
 	assertStatus(t, rec, http.StatusOK)
 }
 
+// TestTransport_ReadAsset_AggregatesChunks verifies the unary asset route
+// concatenates the embedded payload bytes of a multi-chunk stream into one
+// response, keeping the first chunk's metadata.
+func TestTransport_ReadAsset_AggregatesChunks(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+		var assets []st2138.Asset
+		for _, data := range [][]byte{[]byte("first-"), []byte("second-"), []byte("third")} {
+			asset, _ := st2138.ToAsset(st2138.DataPayload{
+				Metadata: map[string]string{"content-type": "text/plain"},
+				Payload:  data,
+			}, false)
+			assets = append(assets, asset)
+		}
+		return assets, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/big.txt", "")
+	assertStatus(t, rec, http.StatusOK)
+
+	var result map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+		t.Fatalf("invalid JSON response: %v", err)
+	}
+	payload, _ := result["payload"].(map[string]any)
+	encoded, _ := payload["payload"].(string)
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		t.Fatalf("payload is not valid base64: %v", err)
+	}
+	if got, want := string(decoded), "first-second-third"; got != want {
+		t.Errorf("aggregated payload = %q, want %q", got, want)
+	}
+}
+
+// TestTransport_ReadAsset_EmptyStream verifies a handler that reports success
+// without sending any chunk is surfaced as an internal error on the unary route.
+func TestTransport_ReadAsset_EmptyStream(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/logo", "")
+	assertStatus(t, rec, http.StatusInternalServerError)
+}
+
+func TestTransport_AssetStream(t *testing.T) {
+	t.Run("StreamRoute", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+			if fqoid != "big.txt" {
+				t.Errorf("expected fqoid 'big.txt', got %s", fqoid)
+			}
+			var assets []st2138.Asset
+			for _, data := range [][]byte{[]byte("first"), []byte("second")} {
+				asset, _ := st2138.ToAsset(st2138.DataPayload{Payload: data}, false)
+				assets = append(assets, asset)
+			}
+			return assets, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/big.txt/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+
+		body := rec.Body.String()
+		if dataCount := strings.Count(body, "data:"); dataCount != 2 {
+			t.Errorf("expected 2 SSE data events, got %d\nbody:\n%s", dataCount, body)
+		}
+	})
+
+	// If the handler errors before sending anything, the stream has not committed
+	// a status yet, so the transport can still report the error as an HTTP status.
+	t.Run("StreamErrorNoneSent", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/missing/stream", "")
+		assertStatus(t, rec, http.StatusNotFound)
+		if err := assertHasError(t, rec); !strings.Contains(err, "asset not found") {
+			t.Errorf("expected 'asset not found' message, got %q", err)
+		}
+	})
+
+	// A mid-stream error is reported in-band as an SSE error event once chunks
+	// have already been sent.
+	t.Run("StreamErrorAfterSomeSent", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+			asset, _ := st2138.ToAsset(st2138.DataPayload{Payload: []byte("first")}, false)
+			return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeInternal, "internal error")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/big.txt/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+		body := rec.Body.String()
+		if !strings.Contains(body, "event: error\n") {
+			t.Errorf("expected an SSE error event, got body:\n%s", body)
+		}
+		if !strings.Contains(body, `"code":500`) {
+			t.Errorf("expected the error event to carry status code 500, got body:\n%s", body)
+		}
+	})
+
+	// A successful handler that streams nothing yields a well-formed empty event
+	// stream (200), not an error.
+	t.Run("StreamEmptyOk", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+
+		runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/asset/empty/stream", "")
+		assertStatus(t, rec, http.StatusOK)
+		assertContentType(t, rec, "text/event-stream")
+		if body := rec.Body.String(); strings.Contains(body, "data:") {
+			t.Errorf("expected no data events, got %q", body)
+		}
+	})
+
+	t.Run("MethodNotAllowed", func(t *testing.T) {
+		transport, _ := makeTestTransport(t)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/big.txt/stream", "")
+		assertStatus(t, rec, http.StatusMethodNotAllowed)
+	})
+}
+
 func TestTransport_Asset_MethodNotAllowed(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	getCalled := false
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
 		getCalled = true
-		return catena.Reply(st2138.Asset{})
+		return []st2138.Asset{{}}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	// PATCH is not a supported asset method.
@@ -865,6 +1156,64 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 				}
 			})
 		}
+	})
+
+	// An empty body is a valid command invocation ("no value" per ST 2138). It
+	// must not require a Content-Type and must reach the handler with a nil
+	// payload, mirroring the gRPC path.
+	t.Run("EmptyBodyIsNilPayload", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+		called := false
+		receivedPayload := any("sentinel")
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+			called = true
+			receivedPayload = payload
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/test", "")
+		assertStatus(t, rec, http.StatusOK)
+		if !called {
+			t.Fatal("expected command handler to be invoked for an empty body")
+		}
+		if receivedPayload != nil {
+			t.Errorf("expected nil payload for empty body, got %v", receivedPayload)
+		}
+	})
+
+	// Regression test: a request with an unknown body length reports
+	// ContentLength == -1 (e.g. chunked transfer encoding from a real server).
+	// The payload must still be read and parsed rather than silently dropped,
+	// so the handler must not gate parsing on Content-Length.
+	t.Run("UnknownContentLengthBodyIsParsed", func(t *testing.T) {
+		transport, runtime := makeTestTransport(t)
+		var receivedPayload any
+		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+			receivedPayload = payload
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", strings.NewReader(`{"int32_value": 42}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.ContentLength = -1 // unknown length, as a real chunked request would report
+		rec := httptest.NewRecorder()
+		transport.mux.ServeHTTP(rec, req)
+
+		assertStatus(t, rec, http.StatusOK)
+		if v, ok := receivedPayload.(int32); !ok || v != 42 {
+			t.Errorf("expected unknown-length body to be parsed into payload 42, got %v (%T)", receivedPayload, receivedPayload)
+		}
+	})
+
+	// A body that fails mid-read should surface as an invalid-argument error
+	// rather than being treated as an empty body.
+	t.Run("BodyReadError", func(t *testing.T) {
+		transport, _ := makeTestTransport(t)
+		req := httptest.NewRequest(http.MethodPost, "/st2138-api/v1/0/command/test", errReader{})
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		transport.mux.ServeHTTP(rec, req)
+		assertStatus(t, rec, http.StatusBadRequest)
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
@@ -1691,11 +2040,11 @@ func TestTransport_ReadAsset_CompressionQueryParam_Gzip(t *testing.T) {
 	}
 	asset, _ := st2138.ToAsset(dp, true)
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
-		return catena.Reply(asset)
+		return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=GZIP", nil)
@@ -1725,11 +2074,11 @@ func TestTransport_ReadAsset_CompressionQueryParam_Deflate(t *testing.T) {
 	}
 	asset, _ := st2138.ToAsset(dp, true)
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
-		return catena.Reply(asset)
+		return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=DEFLATE", nil)
@@ -1762,11 +2111,11 @@ func TestTransport_ReadAsset_CompressionQueryParam_Uncompressed(t *testing.T) {
 	}
 	asset, _ := st2138.ToAsset(dp, true)
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
 		if fqoid != "test.txt" {
 			t.Errorf("expected fqoid 'test.txt', got %s", fqoid)
 		}
-		return catena.Reply(asset)
+		return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=UNCOMPRESSED", nil)
@@ -2000,8 +2349,8 @@ func TestTransport_ReadAsset_CompressionQueryParam_Invalid(t *testing.T) {
 	}
 	asset, _ := st2138.ToAsset(dp, true)
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
-		return catena.Reply(asset)
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+		return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt?compression=INVALID", nil)
@@ -2022,8 +2371,8 @@ func TestTransport_ReadAsset_NoCompressionParam(t *testing.T) {
 	}
 	asset, _ := st2138.ToAsset(dp, true)
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
-		return catena.Reply(asset)
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+		return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/test.txt", nil)
@@ -2038,8 +2387,8 @@ func TestTransport_ReadAsset_NoCompressionParam(t *testing.T) {
 func TestTransport_ReadAsset_CompressionWithError(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
-		return catena.ReplyError[st2138.Asset](catena.StatusCodeNotFound, "asset not found")
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/0/asset/missing?compression=GZIP", nil)

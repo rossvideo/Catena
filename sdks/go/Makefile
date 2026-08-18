@@ -70,10 +70,11 @@ clean-protos:
 # Test targets
 .PHONY: test race coverage coverage-html coverage-lcov coverage-cobertura clean-coverage
 
-# Exclude generated protos from tests + coverage accounting
+# Exclude generated protos and test-only helper packages from tests + coverage accounting
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
 TRANSPORTTEST_PKG := github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest
-TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG))($$|/)')
+TESTCERTS_PKG := github.com/rossvideo/catena/sdks/go/pkg/internal/testcerts
+TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG)|$(TESTCERTS_PKG))($$|/)')
 
 COVERAGE_DIR ?= $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out

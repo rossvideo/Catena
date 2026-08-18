@@ -950,6 +950,54 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 	}
 }
 
+// --- MarshalDeviceComponentJSON tests ---
+
+func TestMarshalDeviceComponentJSON(t *testing.T) {
+	component := st2138.ComponentParam("brightness", st2138.NewParamInt32(0).
+		WithName(st2138.NewPolyglotText("en", "Brightness")))
+
+	jsonData, err := MarshalDeviceComponentJSON(component.Proto)
+	if err != nil {
+		t.Fatalf("MarshalDeviceComponentJSON error: %v", err)
+	}
+	body := string(jsonData)
+	if !strings.Contains(body, `"oid":"brightness"`) {
+		t.Errorf("expected the chunk's oid in output, got %s", body)
+	}
+	// EmitUnpopulated keeps a meaningful zero value on a bare param.
+	if !strings.Contains(body, `"int32_value":0`) {
+		t.Errorf("expected the param's zero value to survive, got %s", body)
+	}
+}
+
+func TestMarshalDeviceComponentJSON_Nil(t *testing.T) {
+	jsonData, err := MarshalDeviceComponentJSON(nil)
+	if err != nil {
+		t.Fatalf("MarshalDeviceComponentJSON error: %v", err)
+	}
+	if jsonData != nil {
+		t.Error("expected nil JSON data for a nil component")
+	}
+}
+
+func TestMarshalDeviceComponentJSON_MarshalError(t *testing.T) {
+	// An invalid UTF-8 string cannot be marshalled, so the error surfaces
+	// before the cleanup step ever runs.
+	component := st2138.ComponentParam("label", st2138.NewParamString("\xff"))
+
+	if _, err := MarshalDeviceComponentJSON(component.Proto); err == nil {
+		t.Fatal("expected error for invalid UTF-8 string")
+	}
+}
+
+func TestMarshalDeviceComponentWire_WrongType(t *testing.T) {
+	// The restStream hands over a bare proto.Message, so the adapter reports a
+	// chunk that is not a DeviceComponent rather than panicking on the cast.
+	if _, err := marshalDeviceComponentWire(&protos.Device{}); err == nil {
+		t.Fatal("expected error for a non-DeviceComponent message")
+	}
+}
+
 // --- MarshalAssetJSON tests (migrated from catena/asset_test.go) ---
 
 func TestInjectJSONField_String(t *testing.T) {

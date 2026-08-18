@@ -1062,6 +1062,16 @@ func TestCompressDeflateTo_CloseError(t *testing.T) {
 	}
 }
 
+func TestAsset_Wire(t *testing.T) {
+	asset, err := ToAsset(DataPayload{Payload: []byte("data")}, false)
+	if err != nil {
+		t.Fatalf("ToAsset failed: %v", err)
+	}
+	if wire := asset.Wire(); wire != asset.Proto {
+		t.Errorf("expected Wire() to return the underlying proto, got %v", wire)
+	}
+}
+
 func TestEncoding_String(t *testing.T) {
 	tests := []struct {
 		enc  Encoding

@@ -28,43 +28,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Redeclare types from sub packages for easier access
- * @file types.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-06-08
- */
-
-package catena
-
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
-
-type RuntimeOptions = config.RuntimeOptions
-type ServerOptions = config.ServerOptions
-type JwtValidationOptions = config.JwtValidationOptions
-type DashboardOptions = config.DashboardOptions
-type ConnectionProtocol = config.ConnectionProtocol
-type TLSOptions = config.TLSOptions
-
-const (
-	ProtocolST2138Rest   = config.ProtocolST2138Rest
-	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
-	ProtocolST2138Catena = config.ProtocolST2138Catena
-)
-
-func DefaultRuntimeOptions() RuntimeOptions {
-	return config.DefaultRuntimeOptions()
-}
-
-func DefaultServerOptions() ServerOptions {
-	return config.DefaultServerOptions()
-}
-
-func DefaultJwtValidationOptions() JwtValidationOptions {
-	return config.DefaultJwtValidationOptions()
-}
-
-func DefaultDashboardOptions() DashboardOptions {
-	return config.DefaultDashboardOptions()
-}
+// Package st2138 implements the SMPTE ST 2138 device model for the Catena Go SDK.
+//
+// It provides the in-memory, business-logic-facing representation of a device
+// and its building blocks, including devices, parameters and parameter info,
+// values, constraints, menus and menu groups, commands, external object assets,
+// and polyglot (multi-language) text.
+//
+// These types wrap and convert to and from the generated protobuf messages in
+// package protos, giving application code ergonomic Go types while preserving
+// wire compatibility. The core runtime in package catena and the transport
+// packages exchange these types with a service's business logic.
+package st2138

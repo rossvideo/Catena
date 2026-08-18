@@ -28,43 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Redeclare types from sub packages for easier access
- * @file types.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-06-08
- */
-
-package catena
-
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
-
-type RuntimeOptions = config.RuntimeOptions
-type ServerOptions = config.ServerOptions
-type JwtValidationOptions = config.JwtValidationOptions
-type DashboardOptions = config.DashboardOptions
-type ConnectionProtocol = config.ConnectionProtocol
-type TLSOptions = config.TLSOptions
-
-const (
-	ProtocolST2138Rest   = config.ProtocolST2138Rest
-	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
-	ProtocolST2138Catena = config.ProtocolST2138Catena
-)
-
-func DefaultRuntimeOptions() RuntimeOptions {
-	return config.DefaultRuntimeOptions()
-}
-
-func DefaultServerOptions() ServerOptions {
-	return config.DefaultServerOptions()
-}
-
-func DefaultJwtValidationOptions() JwtValidationOptions {
-	return config.DefaultJwtValidationOptions()
-}
-
-func DefaultDashboardOptions() DashboardOptions {
-	return config.DefaultDashboardOptions()
-}
+// Package logger provides structured logging for the Catena Go SDK on top of
+// the standard library's log/slog.
+//
+// It exposes a configurable logger with adjustable severity levels and output
+// destinations, so SDK components and applications can emit consistent,
+// leveled log records. Logging configuration integrates with package config,
+// allowing the level and related settings to be driven from defaults,
+// environment variables, or command-line flags.
+package logger

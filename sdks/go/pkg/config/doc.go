@@ -28,43 +28,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Redeclare types from sub packages for easier access
- * @file types.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-06-08
- */
-
-package catena
-
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
-
-type RuntimeOptions = config.RuntimeOptions
-type ServerOptions = config.ServerOptions
-type JwtValidationOptions = config.JwtValidationOptions
-type DashboardOptions = config.DashboardOptions
-type ConnectionProtocol = config.ConnectionProtocol
-type TLSOptions = config.TLSOptions
-
-const (
-	ProtocolST2138Rest   = config.ProtocolST2138Rest
-	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
-	ProtocolST2138Catena = config.ProtocolST2138Catena
-)
-
-func DefaultRuntimeOptions() RuntimeOptions {
-	return config.DefaultRuntimeOptions()
-}
-
-func DefaultServerOptions() ServerOptions {
-	return config.DefaultServerOptions()
-}
-
-func DefaultJwtValidationOptions() JwtValidationOptions {
-	return config.DefaultJwtValidationOptions()
-}
-
-func DefaultDashboardOptions() DashboardOptions {
-	return config.DefaultDashboardOptions()
-}
+// Package config builds runtime configuration for the Catena Go SDK from code
+// defaults, environment variables, and command-line flags.
+//
+// The SDK is built around typed options structs passed into its constructors
+// and setup functions. This package offers a convenient, standard way to
+// populate those structs, but using it is optional: callers who already have
+// their own configuration system can populate the same options structs directly.
+//
+// InitOptions is the primary entry point. It resolves values using the
+// precedence:
+//
+//  1. command-line flags,
+//  2. environment variables,
+//  3. code defaults.
+//
+// By default the CATENA_* environment-variable prefix is used. InitOption
+// values customize behavior, for example WithPrefix to change the env prefix,
+// WithDefaults to replace the baseline defaults, and WithSuppressedInputs to
+// disable env and CLI handling for selected inputs.
+package config

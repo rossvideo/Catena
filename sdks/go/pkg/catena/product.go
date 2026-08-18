@@ -108,24 +108,13 @@ const (
 
 // ProductParam builds the mandatory read-only "product" STRUCT param from p,
 // including the SDK-managed catena_sdk and catena_sdk_version fields. The field
-// values live in the struct's Value; the sub-params carry only the field
-// descriptors (their STRING type). The SDK uses this to seed the product param
-// into the device on GetDevice.
+// values live in the struct's Value; NewParamStruct auto-creates the valueless
+// STRING field descriptors from the values map. The SDK uses this to seed the
+// product param into the device on GetDevice.
 func ProductParam(p ProductStruct) *st2138.Param {
-	values := ProductValues(p)
-	param := st2138.NewParamStruct(values).
+	return st2138.NewParamStruct(ProductValues(p)).
 		WithReadOnly(true).
 		WithAccessScope(st2138.ScopeMon)
-	for oid := range values {
-		param.WithParam(oid, productFieldDescriptor())
-	}
-	return param
-}
-
-// productFieldDescriptor is a valueless STRING sub-param used to describe a
-// product field. The field's value lives in the parent struct's Value.
-func productFieldDescriptor() *st2138.Param {
-	return &st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING}}
 }
 
 // ProductValues returns the product field values keyed by their sub-OID,

@@ -48,13 +48,18 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
-// failingResponseWriter is an http.ResponseWriter+http.Flusher whose Write
-// always fails, used to exercise the SSE write-error branch.
+// failingResponseWriter is an http.ResponseWriter+http.Flusher that serves the
+// first failAfter writes and fails every one after that, used to exercise the
+// SSE write-error branches. The zero value fails the very first write.
 type failingResponseWriter struct {
-	header http.Header
-	status int
+	header    http.Header
+	status    int
+	writes    int
+	failAfter int
 }
 
 func (w *failingResponseWriter) Header() http.Header {
@@ -63,9 +68,31 @@ func (w *failingResponseWriter) Header() http.Header {
 	}
 	return w.header
 }
-func (w *failingResponseWriter) Write([]byte) (int, error) { return 0, errors.New("write failed") }
-func (w *failingResponseWriter) WriteHeader(status int)    { w.status = status }
-func (w *failingResponseWriter) Flush()                    {}
+func (w *failingResponseWriter) Write(b []byte) (int, error) {
+	w.writes++
+	if w.writes > w.failAfter {
+		return 0, errors.New("write failed")
+	}
+	return len(b), nil
+}
+func (w *failingResponseWriter) WriteHeader(status int) { w.status = status }
+func (w *failingResponseWriter) Flush()                 {}
+
+// unflushableResponseWriter is an http.ResponseWriter that deliberately does not
+// implement http.Flusher, which SSE routes require.
+type unflushableResponseWriter struct {
+	header http.Header
+	status int
+}
+
+func (w *unflushableResponseWriter) Header() http.Header {
+	if w.header == nil {
+		w.header = http.Header{}
+	}
+	return w.header
+}
+func (w *unflushableResponseWriter) Write(b []byte) (int, error) { return len(b), nil }
+func (w *unflushableResponseWriter) WriteHeader(status int)      { w.status = status }
 
 // stubMessage is a minimal catena.Message for exercising the generic stream
 // adapters without depending on any domain chunk type. Wire returns a real
@@ -79,6 +106,216 @@ var _ catena.Message = stubMessage{}
 
 func (m stubMessage) Wire() proto.Message {
 	return wrapperspb.String(m.value)
+}
+
+// Each SSE route's own tests cover streamSSE's normal paths through the mux;
+// these two cases are easier to reach by driving it directly.
+func TestStreamSSE(t *testing.T) {
+	t.Run("rejects a writer that cannot flush", func(t *testing.T) {
+		// SSE has to push each frame as it is produced, so a writer that cannot
+		// flush is rejected before the handler runs.
+		w := &unflushableResponseWriter{}
+		invoked := false
+
+		streamSSE(&Transport{}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
+			func(catena.Stream[stubMessage]) catena.StatusResult {
+				invoked = true
+				return catena.StatusWithCode(catena.StatusCodeOk, "")
+			})
+
+		if invoked {
+			t.Error("handler should not run without a flushable writer")
+		}
+		if w.status != http.StatusInternalServerError {
+			t.Errorf("status = %d, want %d", w.status, http.StatusInternalServerError)
+		}
+	})
+
+	t.Run("tolerates a failed error event after a chunk was sent", func(t *testing.T) {
+		// The chunk commits a 200, so the handler's late error can only go out as
+		// an SSE error event; when that write fails too there is nothing left to
+		// do but log it.
+		w := &failingResponseWriter{failAfter: 1}
+
+		streamSSE(&Transport{}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
+			func(stream catena.Stream[stubMessage]) catena.StatusResult {
+				if err := stream.Send(stubMessage{value: "a"}); err != nil {
+					t.Fatalf("first Send returned error: %v", err)
+				}
+				return catena.StatusWithCode(catena.StatusCodeInternal, "boom")
+			})
+
+		if w.writes < 2 {
+			t.Errorf("writes = %d, want the chunk plus an attempted error event", w.writes)
+		}
+		if w.status != http.StatusOK {
+			t.Errorf("status = %d, want the already-committed %d", w.status, http.StatusOK)
+		}
+	})
+}
+
+func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
+	// Component chunk order must not matter: a parent arriving after a nested
+	// child must keep children already hung under a synthesized intermediate.
+	sendOrders := []struct {
+		name   string
+		chunks func() []st2138.DeviceComponent
+	}{
+		{
+			name: "childBeforeParent",
+			chunks: func() []st2138.DeviceComponent {
+				parent := st2138.NewParamEmpty()
+				parent.Proto.Type = protos.ParamType_STRUCT
+				return []st2138.DeviceComponent{
+					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42)),
+					st2138.ComponentParam("monitor", parent),
+				}
+			},
+		},
+		{
+			name: "parentBeforeChild",
+			chunks: func() []st2138.DeviceComponent {
+				parent := st2138.NewParamEmpty()
+				parent.Proto.Type = protos.ParamType_STRUCT
+				return []st2138.DeviceComponent{
+					st2138.ComponentParam("monitor", parent),
+					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42)),
+				}
+			},
+		},
+	}
+
+	for _, tc := range sendOrders {
+		t.Run(tc.name, func(t *testing.T) {
+			stream := &deviceAggregateStream{}
+			for _, chunk := range tc.chunks() {
+				if err := stream.Send(chunk); err != nil {
+					t.Fatalf("Send returned error: %v", err)
+				}
+			}
+
+			device, ok := stream.result()
+			if !ok {
+				t.Fatal("expected an assembled device")
+			}
+			monitor := device.Proto.GetParams()["monitor"]
+			if monitor == nil {
+				t.Fatal("expected params.monitor")
+			}
+			if monitor.GetType() != protos.ParamType_STRUCT {
+				t.Errorf("monitor type = %v, want STRUCT", monitor.GetType())
+			}
+			eq := monitor.GetParams()["eq"]
+			if eq == nil {
+				t.Fatal("expected params.monitor.params.eq to survive aggregation")
+			}
+			if got := eq.GetValue().GetInt32Value(); got != 42 {
+				t.Errorf("eq value = %d, want 42", got)
+			}
+		})
+	}
+}
+
+func TestDeviceAggregateStream_NestedCommandOrderIndependent(t *testing.T) {
+	// Commands nest the same way as params; parent-after-child must not wipe
+	// a nested command hung under a synthesized intermediate.
+	parent := st2138.NewParamEmpty()
+	parent.Proto.Type = protos.ParamType_STRUCT
+	child := st2138.NewParamEmpty()
+	child.Proto.Type = protos.ParamType_INT32
+
+	stream := &deviceAggregateStream{}
+	for _, chunk := range []st2138.DeviceComponent{
+		st2138.ComponentCommand("group/action", child),
+		st2138.ComponentCommand("group", parent),
+	} {
+		if err := stream.Send(chunk); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+	}
+
+	device, ok := stream.result()
+	if !ok {
+		t.Fatal("expected an assembled device")
+	}
+	group := device.Proto.GetCommands()["group"]
+	if group == nil {
+		t.Fatal("expected commands.group")
+	}
+	if group.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("group type = %v, want STRUCT", group.GetType())
+	}
+	action := group.GetParams()["action"]
+	if action == nil {
+		t.Fatal("expected commands.group.params.action to survive aggregation")
+	}
+	if action.GetType() != protos.ParamType_INT32 {
+		t.Errorf("action type = %v, want INT32", action.GetType())
+	}
+}
+
+func TestDeviceAggregateStream_IgnoresChunksWithNothingToMerge(t *testing.T) {
+	// Every component kind guards against a missing body, and a menu oid that
+	// does not name its group cannot be placed. None of these chunks contribute
+	// anything, so no device is assembled at all.
+	chunks := []st2138.DeviceComponent{
+		{}, // no proto at all
+		st2138.ComponentDevice(nil),
+		st2138.ComponentParam("brightness", nil),
+		st2138.ComponentConstraint("range", nil),
+		st2138.ComponentMenu("status/main", nil),
+		// A menu oid must be "menu-group-name/menu-name".
+		st2138.ComponentMenu("groupless", st2138.NewMenu()),
+		st2138.ComponentCommand("reset", nil),
+		// ComponentLanguagePack always builds a pack, so the empty-pack chunk is
+		// assembled by hand.
+		{Proto: &protos.DeviceComponent{
+			Kind: &protos.DeviceComponent_LanguagePack{
+				LanguagePack: &protos.DeviceComponent_ComponentLanguagePack{Language: "en"},
+			},
+		}},
+	}
+
+	stream := &deviceAggregateStream{}
+	for i, chunk := range chunks {
+		if err := stream.Send(chunk); err != nil {
+			t.Fatalf("Send(chunks[%d]) returned error: %v", i, err)
+		}
+	}
+
+	if device, ok := stream.result(); ok {
+		t.Errorf("expected no assembled device, got %v", device.Proto)
+	}
+}
+
+func TestDeviceAggregateStream_MergesSecondDeviceChunk(t *testing.T) {
+	// A handler may split the device itself across two Device chunks; the second
+	// is merged into the first rather than replacing it.
+	stream := &deviceAggregateStream{}
+	for _, chunk := range []st2138.DeviceComponent{
+		st2138.ComponentDevice(st2138.NewDevice(1).WithDetailLevel(st2138.DetailLevelMinimal)),
+		st2138.ComponentDevice(st2138.NewDevice(1).
+			WithMultiSetEnabled(true).
+			WithParam("brightness", st2138.NewParamInt32(50))),
+	} {
+		if err := stream.Send(chunk); err != nil {
+			t.Fatalf("Send returned error: %v", err)
+		}
+	}
+
+	device, ok := stream.result()
+	if !ok {
+		t.Fatal("expected an assembled device")
+	}
+	if got := device.Proto.GetDetailLevel(); got != st2138.DetailLevelMinimal {
+		t.Errorf("detail level = %v, want MINIMAL to survive the merge", got)
+	}
+	if !device.Proto.GetMultiSetEnabled() {
+		t.Error("expected multi_set_enabled from the second chunk")
+	}
+	if device.Proto.GetParams()["brightness"] == nil {
+		t.Error("expected params.brightness from the second chunk")
+	}
 }
 
 func TestFirstStream(t *testing.T) {

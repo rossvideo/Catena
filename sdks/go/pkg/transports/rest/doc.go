@@ -28,43 +28,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Redeclare types from sub packages for easier access
- * @file types.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-06-08
- */
-
-package catena
-
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
-
-type RuntimeOptions = config.RuntimeOptions
-type ServerOptions = config.ServerOptions
-type JwtValidationOptions = config.JwtValidationOptions
-type DashboardOptions = config.DashboardOptions
-type ConnectionProtocol = config.ConnectionProtocol
-type TLSOptions = config.TLSOptions
-
-const (
-	ProtocolST2138Rest   = config.ProtocolST2138Rest
-	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
-	ProtocolST2138Catena = config.ProtocolST2138Catena
-)
-
-func DefaultRuntimeOptions() RuntimeOptions {
-	return config.DefaultRuntimeOptions()
-}
-
-func DefaultServerOptions() ServerOptions {
-	return config.DefaultServerOptions()
-}
-
-func DefaultJwtValidationOptions() JwtValidationOptions {
-	return config.DefaultJwtValidationOptions()
-}
-
-func DefaultDashboardOptions() DashboardOptions {
-	return config.DefaultDashboardOptions()
-}
+// Package rest provides the HTTP/REST transport for the Catena Go SDK.
+//
+// It exposes a Transport that serves the st2138-api routes over HTTP, using
+// JSON serialization and Server-Sent Events (SSE) for streaming responses, and
+// bridges incoming requests to the handlers registered on a catena.Server.
+// Create a transport with NewTransport and register it with the server via
+// RegisterTransport; multiple transports may share the same server and handlers.
+//
+// This package is deliberately isolated from the gRPC transport: it links its
+// own JSON stack but not the gRPC runtime. That boundary is verified by package
+// transports/isolation.
+package rest

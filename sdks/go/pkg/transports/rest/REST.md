@@ -10,9 +10,11 @@ import "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 ## Constructor
 
 ```go
-restTransport := rest.NewTransport(rest.Options{Port: 9080})
-// or with defaults
 restTransport := rest.NewTransport(rest.DefaultOptions())
+// or start from the defaults and customize
+opts := rest.DefaultOptions()
+opts.Port = 9080
+restTransport := rest.NewTransport(opts)
 ```
 
 Register it on the shared server:
@@ -24,16 +26,40 @@ if err := srv.RegisterTransport(restTransport); err != nil {
 }
 ```
 
+## TLS
+
+The listener serves HTTPS when `Options.TLS.Enabled` is true:
+
+```go
+opts := rest.DefaultOptions()
+opts.TLS.Enabled = true
+opts.TLS.CertFile = "/etc/catena/certs/server.crt" // PEM server certificate
+opts.TLS.KeyFile = "/etc/catena/certs/server.key"  // PEM private key
+// Optional mutual TLS (client certificate verification):
+// opts.TLS.ClientCAFile = "/etc/catena/certs/clients-ca.crt"
+// opts.TLS.MutualAuth = true
+restTransport := rest.NewTransport(opts)
+```
+
+Behavior:
+
+- `CertFile` and `KeyFile` are required when TLS is enabled; `Start` returns an error if either is missing, unreadable, or invalid PEM.
+- With `MutualAuth`, clients must present a certificate signed by the CA bundle in `ClientCAFile` or the TLS handshake is rejected.
+- Minimum accepted protocol version is TLS 1.2.
+- Env/CLI configuration: `{PREFIX}_REST_TLS_ENABLED`, `{PREFIX}_REST_TLS_CERT_FILE`, `{PREFIX}_REST_TLS_KEY_FILE`, `{PREFIX}_REST_TLS_CLIENT_CA_FILE`, `{PREFIX}_REST_TLS_MUTUAL_AUTH` (flags `--rest-tls-*`).
+
 ## Implemented Endpoints
 
 Core routes:
 
-- `GET /st2138-api/v1/{slot}` - DeviceRequest equivalent
+- `GET /st2138-api/v1/{slot}` - DeviceRequest equivalent (unary; aggregates the component stream into one device)
+- `GET /st2138-api/v1/{slot}/stream` - SSE DeviceRequest component stream
 - `GET /st2138-api/v1/{slot}/value/{oid}` - GetValue
 - `PUT /st2138-api/v1/{slot}/value/{oid}` - SetValue
 - `PUT /st2138-api/v1/{slot}/values` - SetValues (MultiSetValue)
 - `GET /st2138-api/v1/{slot}/param/{oid...}` - GetParam (full param: metadata + value)
-- `GET /st2138-api/v1/{slot}/asset/{oid}` - ExternalObjectRequest equivalent (ReadAsset)
+- `GET /st2138-api/v1/{slot}/asset/{oid}` - ExternalObjectRequest equivalent (ReadAsset; unary, aggregates the chunk stream into one asset)
+- `GET /st2138-api/v1/{slot}/asset/{oid}/stream` - SSE ReadAsset chunk stream
 - `POST /st2138-api/v1/{slot}/asset/{oid}` - CreateAsset (store a new asset, returns 204)
 - `PUT /st2138-api/v1/{slot}/asset/{oid}` - UpdateAsset (replace an asset, returns 204)
 - `DELETE /st2138-api/v1/{slot}/asset/{oid}` - DeleteAsset (remove an asset, returns 204)
@@ -54,20 +80,20 @@ Fallback and root behavior:
 
 REST routes invoke handlers registered on `catena.Server`:
 
-- Device route -> `RegisterGetDeviceHandler`
+- Device routes -> `RegisterGetDeviceHandler` (both the unary and `/stream` routes invoke the same streaming handler)
 - Value routes -> `RegisterGetValueHandler`, `RegisterSetValueHandler` (the set route delivers a one-element `[]SetValueEntry`)
 - Param route -> `RegisterGetParamHandler`
 - Values route -> `RegisterSetValueHandler` (delivers the full `[]SetValueEntry` for atomic application)
-- Asset routes -> `RegisterReadAssetHandler` (GET), `RegisterCreateAssetHandler` (POST), `RegisterUpdateAssetHandler` (PUT), `RegisterDeleteAssetHandler` (DELETE)
+- Asset routes -> `RegisterReadAssetHandler` (GET, both unary and `/stream`), `RegisterCreateAssetHandler` (POST), `RegisterUpdateAssetHandler` (PUT), `RegisterDeleteAssetHandler` (DELETE)
 - Command routes -> `RegisterExecuteCommandHandler` (both the unary and `/stream` routes invoke the same streaming handler)
 - Param-info routes -> `RegisterParamInfoHandler` (both the unary and `/stream` routes invoke the same streaming handler)
 
 ## Streaming Responses (SSE)
 
-Param-info and command each expose a unary route and a `/stream` route. The
-transport adapts the underlying response stream to the requested shape: the
-unary route collapses the stream to a single JSON body, while the `/stream`
-route emits Server-Sent Events.
+Device, asset read, param-info, and command each expose a unary route and a
+`/stream` route. The transport adapts the underlying response stream to the
+requested shape: the unary route collapses the stream to a single JSON body,
+while the `/stream` route emits Server-Sent Events.
 
 SSE framing:
 
@@ -86,6 +112,26 @@ Mid-stream errors (`SseError`):
 - The detailed message is only exposed in dev mode; otherwise it is generalized
   to the standard HTTP status text (and omitted when blank).
 
+Device routes:
+
+- The unary route aggregates the handler's `DeviceComponent` chunks back into
+  one complete device JSON body: a `device` chunk is the base, and later
+  `param` / `shared_constraint` / `menu` / `command` / `language_pack` chunks
+  are merged into the corresponding device maps. A success with no chunks is
+  reported as an internal error.
+- The `/stream` route forwards each `DeviceComponent` as one SSE frame.
+
+Asset routes:
+
+- The unary GET aggregates the handler's chunk stream into one
+  `external_object_payload` JSON body: metadata, digest, cachable, and the
+  payload encoding come from the first chunk, and the embedded payload bytes of
+  every chunk are concatenated in send order. A success with no chunks is
+  reported as an internal error.
+- The `/stream` route forwards each `ExternalObjectPayload` chunk as one SSE
+  frame; the client concatenates the embedded payload bytes. `?compression=` is
+  not supported on the streaming route (transcoding needs the whole payload).
+
 Param-info routes:
 
 - The unary route requires an fqoid, is never recursive, and returns a single
@@ -94,8 +140,10 @@ Param-info routes:
 
 Command routes:
 
-- The request body is the command payload (a JSON value); omit the body for
-  commands that take no argument.
+- The request body is the command payload (a JSON value). An empty body is
+  valid and is treated as "no value" (a nil payload), bypassing body
+  validation; a non-empty body is fully validated and unmarshalled. Emptiness
+  is determined by the body itself, not the `Content-Length` header.
 - `respond` defaults to `false`; only `?respond=true` opts into receiving
   responses, and `respond` is passed through to the handler.
 - The unary route replies with the final `CommandResponse` from the stream, or an
@@ -152,11 +200,14 @@ In production mode, error payload messages are sanitized to HTTP status text.
 
 ## Asset Compression
 
-Asset reads support optional payload transcoding via query parameter:
+Unary asset reads support optional payload transcoding via query parameter:
 
 - `GET /st2138-api/v1/{slot}/asset/{oid}?compression=<encoding>`
 
-If the requested encoding is invalid or transcoding fails, the transport returns a Catena error mapped to HTTP.
+Transcoding is applied to the fully assembled payload after chunk aggregation.
+If the requested encoding is invalid or transcoding fails, the transport
+returns a Catena error mapped to HTTP. The `/stream` route does not support
+`?compression=`.
 
 ## Graceful Shutdown
 
