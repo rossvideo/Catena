@@ -213,6 +213,98 @@ params:
     value:
       string_value: "Stopped"
 
+  metrics:
+    type: STRUCT
+    read_only: true
+    params:
+      frames_recv_total:
+        type: INT32
+        name:
+          display_strings:
+            en: "Frames Received"
+        help:
+          display_strings:
+            en: "Total number of frames received from the NDI source since startup."
+      frames_sent_total:
+        type: INT32
+        name:
+          display_strings:
+            en: "Frames Sent"
+        help:
+          display_strings:
+            en: "Total number of frames written to the MXL flow since startup."
+      frames_recv_dropped_total:
+        type: INT32
+        name:
+          display_strings:
+            en: "Frames Dropped (Recv)"
+        help:
+          display_strings:
+            en: "Total number of frames dropped on the NDI receive side since startup."
+      frames_send_dropped_total:
+        type: INT32
+        name:
+          display_strings:
+            en: "Frames Dropped (Send)"
+        help:
+          display_strings:
+            en: "Total number of frames dropped on the MXL send side since startup."
+      recv_time_ms:
+        type: FLOAT32
+        name:
+          display_strings:
+            en: "NDI Receive Time (ms)"
+        help:
+          display_strings:
+            en: "Average time in milliseconds spent capturing a frame from the NDI source."
+        widget: chart
+      processing_time_ms:
+        type: FLOAT32
+        name:
+          display_strings:
+            en: "Processing Time (ms)"
+        help:
+          display_strings:
+            en: "Average time in milliseconds spent converting a frame for the MXL flow."
+        widget: chart
+      send_time_ms:
+        type: FLOAT32
+        name:
+          display_strings:
+            en: "MXL Send Time (ms)"
+        help:
+          display_strings:
+            en: "Average time in milliseconds spent writing a frame to the MXL flow."
+        widget: chart
+      ndi_fourcc:
+        type: STRING
+        name:
+          display_strings:
+            en: "NDI FourCC"
+        help:
+          display_strings:
+            en: "FourCC pixel format code of the most recently received NDI frame."
+
+    value:
+      struct_value:
+        fields:
+          frames_recv_total:
+            int32_value: 0
+          frames_sent_total:
+            int32_value: 0
+          frames_recv_dropped_total:
+            int32_value: 0
+          frames_send_dropped_total:
+            int32_value: 0
+          recv_time_ms:
+            float32_value: 0
+          processing_time_ms:
+            float32_value: 0
+          send_time_ms:
+            float32_value: 0
+          ndi_fourcc:
+            string_value: ""
+
 commands:
   start:
     type: EMPTY
@@ -272,6 +364,15 @@ menu_groups:
           - /flow_def/interlace_mode
           - /flow_def/colorspace
           - /flow_def/components
+      metrics:
+        name:
+          display_strings:
+            en: "Metrics"
+        param_oids:
+          - /metrics/ndi_fourcc
+          - /metrics/recv_time_ms
+          - /metrics/processing_time_ms
+          - /metrics/send_time_ms
   config:
     name:
       display_strings:

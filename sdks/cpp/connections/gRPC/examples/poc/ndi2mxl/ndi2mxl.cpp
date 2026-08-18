@@ -202,13 +202,23 @@ void RunNdiRecv() {
 
     NDIlib_video_frame_v2_t videoFrame;
 
-    // stuff for printing the frame rate
+    // frameTimes is the interval between received frames (drives the FPS log);
+    // recvTimes is the blocking duration of NDIlib_recv_capture_v2 itself (drives recv_time_ms).
     const int32_t windowSize = 100;
     std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
     std::deque<std::chrono::nanoseconds> frameTimes;
+    std::deque<std::chrono::nanoseconds> recvTimes;
     std::chrono::milliseconds logInterval(5000);
     std::chrono::steady_clock::time_point lastLogTime = lastTime;
     uint32_t lastFourCC = 0;
+
+    // metrics published to the device model on the log cadence
+    std::unique_ptr<IParam> metricsParam = dm.getParam("/metrics", status);
+    ParamWithValue<ndi2mxl::Metrics>* metricsValue =
+      dynamic_cast<ParamWithValue<ndi2mxl::Metrics>*>(metricsParam.get());
+    int32_t framesRecv = 0;
+    int32_t framesRecvDropped = 0;
+    std::deque<std::chrono::nanoseconds> processingTimes;  // convertFrame duration
 
     while (!shutdownToken && isRunning) {
         // check if we need to change sources
@@ -242,11 +252,14 @@ void RunNdiRecv() {
             }
         }
 
+        std::chrono::steady_clock::time_point captureStart = std::chrono::steady_clock::now();
         NDIlib_frame_type_e recvResult =
           NDIlib_recv_capture_v2(ndi_recv, &videoFrame, nullptr, nullptr, 10000);
         std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        std::chrono::nanoseconds recvDuration = now - captureStart;
         if (recvResult == NDIlib_frame_type_none) {
             LOG(WARNING) << "No frame received within timeout";
+            ++framesRecvDropped;
         } else if (recvResult == NDIlib_frame_type_error) {
             LOG(ERROR) << "Error receiving frame";
             break;
@@ -256,10 +269,12 @@ void RunNdiRecv() {
             lastFourCC = videoFrame.FourCC;
             bool ndiHasAlpha = (videoFrame.FourCC == NDIlib_FourCC_video_type_BGRA);
 
+            std::chrono::steady_clock::time_point processStart = std::chrono::steady_clock::now();
             convertFrame(videoFrame.p_data, videoBuffer[writeIndex],
                          std::min(static_cast<int32_t>(videoFrame.xres), frameWidth.load()),
                          std::min(static_cast<int32_t>(videoFrame.yres), frameHeight.load()),
                          videoFrame.line_stride_in_bytes, ndiHasAlpha, mxlAlpha.load());
+            std::chrono::nanoseconds processDuration = std::chrono::steady_clock::now() - processStart;
 
             // swap: tell the MXL writer to read from the freshly written buffer
             {
@@ -273,22 +288,51 @@ void RunNdiRecv() {
             if (frameTimes.size() > windowSize) {
                 frameTimes.pop_front();
             }
+
+            recvTimes.emplace_back(recvDuration);
+            if (recvTimes.size() > windowSize) {
+                recvTimes.pop_front();
+            }
+
+            ++framesRecv;
+            processingTimes.emplace_back(processDuration);
+            if (processingTimes.size() > windowSize) {
+                processingTimes.pop_front();
+            }
         }
         if (now - lastLogTime > logInterval) {
+            char fourCCStr[5] = {static_cast<char>(lastFourCC & 0xff),
+                                 static_cast<char>((lastFourCC >> 8) & 0xff),
+                                 static_cast<char>((lastFourCC >> 16) & 0xff),
+                                 static_cast<char>((lastFourCC >> 24) & 0xff), '\0'};
+            // frame interval drives the FPS log; recv block duration drives recv_time_ms
+            double avgFrameMs = frameTimes.empty() ? 0.0 :
+              std::accumulate(frameTimes.begin(), frameTimes.end(), std::chrono::nanoseconds(0)).count() /
+                static_cast<double>(frameTimes.size()) / 1e6;
+            double avgRecvMs = recvTimes.empty() ? 0.0 :
+              std::accumulate(recvTimes.begin(), recvTimes.end(), std::chrono::nanoseconds(0)).count() /
+                static_cast<double>(recvTimes.size()) / 1e6;
             if (frameTimes.empty()) {
                 LOG(INFO) << "Current NDI source: " << source.p_ndi_name << " no frames received yet";
             } else {
-                double avgFrameTime =
-                  std::accumulate(frameTimes.begin(), frameTimes.end(), std::chrono::nanoseconds(0)).count() /
-                  static_cast<double>(frameTimes.size());
-                double fps = 1e9 / avgFrameTime;
-                char fourCCStr[5] = {static_cast<char>(lastFourCC & 0xff),
-                                     static_cast<char>((lastFourCC >> 8) & 0xff),
-                                     static_cast<char>((lastFourCC >> 16) & 0xff),
-                                     static_cast<char>((lastFourCC >> 24) & 0xff), '\0'};
+                double fps = 1e3 / avgFrameMs;
                 LOG(INFO) << "Current NDI source: " << source.p_ndi_name << " actual FPS: " << fps
                           << " (based on " << frameTimes.size() << " frames)"
                           << " FourCC: " << fourCCStr;
+            }
+
+            float avgProcessMs = processingTimes.empty() ? 0.0f :
+              static_cast<float>(
+                std::accumulate(processingTimes.begin(), processingTimes.end(), std::chrono::nanoseconds(0)).count() /
+                static_cast<double>(processingTimes.size()) / 1e6);
+            {
+                std::lock_guard<std::mutex> lock(dm.mutex());
+                metricsValue->get().frames_recv_total = framesRecv;
+                metricsValue->get().frames_recv_dropped_total = framesRecvDropped;
+                metricsValue->get().recv_time_ms = static_cast<float>(avgRecvMs);
+                metricsValue->get().processing_time_ms = avgProcessMs;
+                metricsValue->get().ndi_fourcc = fourCCStr;
+                dm.getValueSetByServer().emit("/metrics", metricsParam.get());
             }
             lastLogTime = now;
         }
@@ -382,12 +426,20 @@ void RunVideoFlow() {
     std::chrono::milliseconds logInterval(5000);
     std::chrono::steady_clock::time_point lastLogTime = lastTime;
 
+    // metrics published to the device model on the log cadence
+    std::unique_ptr<IParam> metricsParam = dm.getParam("/metrics", status);
+    ParamWithValue<ndi2mxl::Metrics>* metricsValue =
+      dynamic_cast<ParamWithValue<ndi2mxl::Metrics>*>(metricsParam.get());
+    int32_t framesSent = 0;
+    std::deque<std::chrono::nanoseconds> sendTimes;  // MXL open + copy + commit duration
+
     // get the time
     currentIndex = mxlGetCurrentIndex(&videoGrainRate);
     while (isRunning && !shutdownToken) {
         mxlGrainInfo gInfo;
         uint8_t* mxl_buffer = nullptr;
 
+        std::chrono::steady_clock::time_point sendStart = std::chrono::steady_clock::now();
         mxl_status = mxlFlowWriterOpenGrain(writer, currentIndex, &gInfo, &mxl_buffer);
         if (mxl_status != MXL_STATUS_OK) {
             LOG(ERROR) << "Failed to open grain for writing at index " << currentIndex << ": " << mxl_status;
@@ -412,12 +464,30 @@ void RunVideoFlow() {
         if (frameTimes.size() > windowSize) {
             frameTimes.pop_front();
         }
+
+        ++framesSent;
+        sendTimes.emplace_back(now - sendStart);
+        if (sendTimes.size() > windowSize) {
+            sendTimes.pop_front();
+        }
+
         if (now - lastLogTime > logInterval) {
             double avgFrameTime =
               std::accumulate(frameTimes.begin(), frameTimes.end(), std::chrono::nanoseconds(0)).count() /
               static_cast<double>(frameTimes.size());
             double fps = 1e9 / avgFrameTime;
             LOG(INFO) << "MXL writer index " << currentIndex << " committed, actual FPS: " << fps;
+
+            float avgSendMs = sendTimes.empty() ? 0.0f :
+              static_cast<float>(
+                std::accumulate(sendTimes.begin(), sendTimes.end(), std::chrono::nanoseconds(0)).count() /
+                static_cast<double>(sendTimes.size()) / 1e6);
+            {
+                std::lock_guard<std::mutex> lock(dm.mutex());
+                metricsValue->get().frames_sent_total = framesSent;
+                metricsValue->get().send_time_ms = avgSendMs;
+                dm.getValueSetByServer().emit("/metrics", metricsParam.get());
+            }
             lastLogTime = now;
         }
 
