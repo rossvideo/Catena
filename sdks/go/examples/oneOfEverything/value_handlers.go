@@ -26,6 +26,8 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return replyValue(fqoid, counter.GetValue(), true)
 		case "running":
 			return replyValue(fqoid, counter.RunningInt32(), true)
+		case "dashboard_UI":
+			return replyValue(fqoid, dashboardUIValue, true)
 		default:
 			return replyValue(fqoid, nil, false)
 		}
@@ -114,6 +116,9 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			case "running":
 				logger.Warning("SetValue rejected for running param", "slot", slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "Running state is read-only")
+			case "dashboard_UI":
+				logger.Warning("SetValue rejected for dashboard_UI param", "slot", slot, "fqoid", entry.Fqoid)
+				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "DashBoard UI reference is read-only")
 			case "counter":
 				if _, ok := entry.Value.(int32); !ok {
 					logger.Error("SetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid, "expected", "int32", "got", entry.Value)

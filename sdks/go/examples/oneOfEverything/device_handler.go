@@ -120,8 +120,9 @@ func slotZeroMenus() map[string]*st2138.Menu {
 // slotZeroParams returns slot 0's params keyed by oid.
 func slotZeroParams(counter *CounterState) map[string]*st2138.Param {
 	return map[string]*st2138.Param{
-		"counter": makeCounterParam(counter),
-		"running": makeRunningParam(counter),
+		"dashboard_UI": makeDashboardUIParam(),
+		"counter":      makeCounterParam(counter),
+		"running":      makeRunningParam(counter),
 	}
 }
 

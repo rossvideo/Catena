@@ -46,6 +46,7 @@ import (
 	"fmt"
 	"maps"
 	"net"
+	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -266,6 +267,13 @@ func (t *Transport) retrieveMetadataFromContext(ctx context.Context) catena.Tran
 	return transportContext
 }
 
+// normalizeFqoid strips the leading slash some clients (e.g. DashBoard) put on
+// wire oids, so handlers always see the slash-free form the spec defines and
+// the REST transport already produces from URL path segments.
+func normalizeFqoid(fqoid string) string {
+	return strings.TrimPrefix(fqoid, "/")
+}
+
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
 type catenaService struct {
 	transport *Transport
@@ -316,7 +324,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	fqoid := req.Oid
+	fqoid := normalizeFqoid(req.Oid)
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
@@ -341,7 +349,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 		return nil, status.Error(codes.InvalidArgument, "value payload is nil")
 	}
 
-	fqoid := req.Value.Oid
+	fqoid := normalizeFqoid(req.Value.Oid)
 	logger.Info("SetValue", "slot", slot, "fqoid", fqoid)
 
 	// Convert proto value to native Go type
@@ -374,7 +382,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 
 	entries := make([]catena.SetValueEntry, 0, len(req.Values))
 	for _, setValue := range req.Values {
-		fqoid := setValue.Oid
+		fqoid := normalizeFqoid(setValue.Oid)
 
 		nativeValue, errProto := st2138.FromProto(setValue.Value)
 		if errProto != nil {
@@ -401,7 +409,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	fqoid := req.Oid
+	fqoid := normalizeFqoid(req.Oid)
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
@@ -423,7 +431,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	commandFqoid := req.Oid
+	commandFqoid := normalizeFqoid(req.Oid)
 	logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 	var payload any
@@ -455,7 +463,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	fqoid := req.Oid
+	fqoid := normalizeFqoid(req.Oid)
 	logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
@@ -482,7 +490,7 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	oidPrefix := req.GetOidPrefix()
+	oidPrefix := normalizeFqoid(req.GetOidPrefix())
 	recursive := req.GetRecursive()
 	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
 
