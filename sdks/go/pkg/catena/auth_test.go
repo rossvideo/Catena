@@ -347,6 +347,30 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 		}
 	})
 
+	// A nil client must fall back to http.DefaultClient rather than panic. The
+	// httptest server listens on localhost so http.DefaultClient can reach it.
+	t.Run("nil client uses default", func(t *testing.T) {
+		var server *httptest.Server
+		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/.well-known/openid-configuration" {
+				t.Fatalf("unexpected path: %s", r.URL.Path)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprintf(w, `{"jwks_uri":"%s/keys"}`, server.URL)
+		}))
+		defer server.Close()
+
+		jwksURL, err := discoverJWKSEndpoint(context.Background(), server.URL, nil)
+		if err != nil {
+			t.Fatalf("discoverJWKSEndpoint() error = %v", err)
+		}
+
+		want := server.URL + "/keys"
+		if jwksURL != want {
+			t.Fatalf("discoverJWKSEndpoint() got = %q, want = %q", jwksURL, want)
+		}
+	})
+
 	t.Run("empty issuer", func(t *testing.T) {
 		_, err := discoverJWKSEndpoint(context.Background(), "  ", http.DefaultClient)
 		if err == nil || !strings.Contains(err.Error(), "issuer is required") {

@@ -72,13 +72,12 @@ type jwtValidatorInterface interface {
 // If ValidateSignature is true, it discovers the JWKS endpoint and sets up signature validation.
 // If ValidateSignature is false, it only validates claims without verifying the signature.
 func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidatorInterface, error) {
+	// Use the default HTTP client if none was provided.
+	if opts.Http == nil {
+		opts.Http = http.DefaultClient
+	}
 	v := &jwtValidator{
 		options: opts,
-	}
-
-	// Use the default HTTP client if none was provided.
-	if v.options.Http == nil {
-		v.options.Http = http.DefaultClient
 	}
 
 	// determine whether to validate signature based on options
@@ -114,6 +113,11 @@ func (v *jwtValidator) signingMethods() []string {
 
 // discoverJWKSEndpoint resolves the JWKS URL from an OpenID Connect issuer.
 func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Client) (string, error) {
+	// guard against a nil client so this function is correct regardless of caller
+	if client == nil {
+		client = http.DefaultClient
+	}
+
 	// process issuer URL: trim whitespace and trailing slashes, and validate it's not empty
 	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
 	if issuer == "" {
