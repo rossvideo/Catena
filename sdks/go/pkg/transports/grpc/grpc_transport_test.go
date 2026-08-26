@@ -258,10 +258,9 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "device request",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
+				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					device := *st2138.NewDevice(slot)
-					return catena.Reply(device)
+					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
@@ -386,11 +385,11 @@ func TestTransport_DeviceRequest_Success(t *testing.T) {
 
 	// Register mock handler
 	handlerCalled := false
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
-		device := *st2138.NewDevice(slot).
+		device := st2138.NewDevice(slot).
 			WithDetailLevel(st2138.DetailLevelFull)
-		return catena.Reply(device)
+		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -408,6 +407,46 @@ func TestTransport_DeviceRequest_Success(t *testing.T) {
 	}
 
 	// Verify stream is closed
+	_, err = stream.Recv()
+	if err != io.EOF {
+		t.Errorf("expected EOF, got %v", err)
+	}
+}
+
+func TestTransport_DeviceRequest_MultipleChunks(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	// The handler streams the device in pieces: a skeleton Device chunk
+	// followed by a param and a command component.
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+		return []st2138.DeviceComponent{
+			st2138.ComponentDevice(st2138.NewDevice(slot)),
+			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
+			st2138.ComponentCommand("reset", st2138.NewParamEmpty()),
+		}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeDeviceRequest(t, client, ctx, 0)
+	assertNoError(t, err)
+
+	first := receiveDeviceComponent(t, stream)
+	assertDevice(t, first.GetDevice(), 0)
+
+	second := receiveDeviceComponent(t, stream)
+	if got := second.GetParam().GetOid(); got != "brightness" {
+		t.Errorf("expected param chunk oid 'brightness', got %q", got)
+	}
+
+	third := receiveDeviceComponent(t, stream)
+	if got := third.GetCommand().GetOid(); got != "reset" {
+		t.Errorf("expected command chunk oid 'reset', got %q", got)
+	}
+
 	_, err = stream.Recv()
 	if err != io.EOF {
 		t.Errorf("expected EOF, got %v", err)
@@ -455,8 +494,8 @@ func TestTransport_DeviceRequest_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	// Register handler that returns error
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
-		return catena.ReplyError[st2138.Device](catena.StatusCodeNotFound, "device not found")
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -766,6 +805,30 @@ func TestTransport_SetValue_Success(t *testing.T) {
 	}
 }
 
+// Clients such as DashBoard send oids with a leading slash; the transport must
+// strip it so handlers see the slash-free form the REST transport produces.
+func TestTransport_SetValue_LeadingSlashNormalized(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		if entries[0].Fqoid != "brightness" {
+			t.Errorf("expected fqoid 'brightness', got %q", entries[0].Fqoid)
+		}
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := makeSetValueRequest(t, client, ctx, 0, "/brightness", int32(50))
+	assertNoError(t, err)
+}
+
 func TestTransport_SetValue_InvalidSlot(t *testing.T) {
 	ctx := context.Background()
 	_, _, lis, cleanup := setupTestTransport(t, []uint16{0})
@@ -928,14 +991,14 @@ func TestTransport_ExternalObjectRequest_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
 		handlerCalled = true
 		if fqoid != "device.image1" {
 			t.Errorf("expected fqoid 'device.image1', got %s", fqoid)
 		}
 		payload := st2138.ToPayloadFromURL("http://example.com/asset.jpg")
 		asset, _ := st2138.ToAsset(payload, true)
-		return catena.Reply(asset)
+		return []st2138.Asset{asset}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -952,6 +1015,41 @@ func TestTransport_ExternalObjectRequest_Success(t *testing.T) {
 	}
 
 	// Verify stream is closed
+	assertStreamEOF(t, stream)
+}
+
+func TestTransport_ExternalObjectRequest_MultipleChunks(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	// The handler streams a large asset as several chunks whose payload bytes
+	// the client concatenates in send order.
+	chunks := [][]byte{[]byte("first-"), []byte("second-"), []byte("third")}
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+		assets := make([]st2138.Asset, 0, len(chunks))
+		for _, data := range chunks {
+			asset, _ := st2138.ToAsset(st2138.ToPayload(data, "application/octet-stream", "blob.bin"), false)
+			assets = append(assets, asset)
+		}
+		return assets, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	stream, err := makeExternalObjectRequest(t, client, ctx, 0, "device.image1")
+	assertNoError(t, err)
+
+	var received []byte
+	for range chunks {
+		msg := receiveExternalObject(t, stream)
+		received = append(received, msg.GetPayload().GetPayload()...)
+	}
+	if got, want := string(received), "first-second-third"; got != want {
+		t.Errorf("concatenated payload = %q, want %q", got, want)
+	}
+
 	assertStreamEOF(t, stream)
 }
 
@@ -978,8 +1076,8 @@ func TestTransport_ExternalObjectRequest_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
-		return catena.ReplyError[st2138.Asset](catena.StatusCodeNotFound, "asset not found")
+	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -1653,8 +1751,8 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "device not found",
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
-					return catena.ReplyError[st2138.Device](catena.StatusCodeNotFound, "device not found")
+				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+					return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 				}
 			},
 			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
@@ -1671,8 +1769,8 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "asset not found",
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Asset, catena.StatusResult) {
-					return catena.ReplyError[st2138.Asset](catena.StatusCodeNotFound, "asset not found")
+				runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+					return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
 				}
 			},
 			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
@@ -2222,10 +2320,10 @@ func TestTransport_Start_EndpointsReachable(t *testing.T) {
 		return catena.Reply(value)
 	}
 
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) (st2138.Device, catena.StatusResult) {
-		device := *st2138.NewDevice(slot).
+	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+		device := st2138.NewDevice(slot).
 			WithDetailLevel(st2138.DetailLevelFull)
-		return catena.Reply(device)
+		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	// Start server in background. Port 0 makes net.Listen pick an available

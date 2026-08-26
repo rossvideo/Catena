@@ -29,8 +29,8 @@
  */
 
 /**
- * @brief Redeclare types from sub packages for easier access
- * @file types.go
+ * @brief Tests for the re-exported configuration types.
+ * @file types_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Andrew Brown (andrew.brown@rossvideo.com)
  * @date 2026-06-08
@@ -38,33 +38,37 @@
 
 package catena
 
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
+import (
+	"reflect"
+	"testing"
 
-type RuntimeOptions = config.RuntimeOptions
-type ServerOptions = config.ServerOptions
-type JwtValidationOptions = config.JwtValidationOptions
-type DashboardOptions = config.DashboardOptions
-type ConnectionProtocol = config.ConnectionProtocol
-type TLSOptions = config.TLSOptions
-
-const (
-	ProtocolST2138Rest   = config.ProtocolST2138Rest
-	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
-	ProtocolST2138Catena = config.ProtocolST2138Catena
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
-func DefaultRuntimeOptions() RuntimeOptions {
-	return config.DefaultRuntimeOptions()
+func TestDefaultRuntimeOptions(t *testing.T) {
+	if !reflect.DeepEqual(DefaultRuntimeOptions(), config.DefaultRuntimeOptions()) {
+		t.Errorf("expected DefaultRuntimeOptions() to equal config.DefaultRuntimeOptions(), got %+v and %+v",
+			DefaultRuntimeOptions(), config.DefaultRuntimeOptions())
+	}
 }
 
-func DefaultServerOptions() ServerOptions {
-	return config.DefaultServerOptions()
+func TestDefaultServerOptions(t *testing.T) {
+	if !reflect.DeepEqual(DefaultServerOptions(), config.DefaultServerOptions()) {
+		t.Errorf("expected DefaultServerOptions() to equal config.DefaultServerOptions(), got %+v and %+v",
+			DefaultServerOptions(), config.DefaultServerOptions())
+	}
 }
 
-func DefaultJwtValidationOptions() JwtValidationOptions {
-	return config.DefaultJwtValidationOptions()
+func TestDefaultJwtValidationOptions(t *testing.T) {
+	if !reflect.DeepEqual(DefaultJwtValidationOptions(), config.DefaultJwtValidationOptions()) {
+		t.Errorf("expected DefaultJwtValidationOptions() to equal config.DefaultJwtValidationOptions(), got %+v and %+v",
+			DefaultJwtValidationOptions(), config.DefaultJwtValidationOptions())
+	}
 }
 
-func DefaultDashboardOptions() DashboardOptions {
-	return config.DefaultDashboardOptions()
+func TestDefaultDashboardOptions(t *testing.T) {
+	if !reflect.DeepEqual(DefaultDashboardOptions(), config.DefaultDashboardOptions()) {
+		t.Errorf("expected DefaultDashboardOptions() to equal config.DefaultDashboardOptions(), got %+v and %+v",
+			DefaultDashboardOptions(), config.DefaultDashboardOptions())
+	}
 }

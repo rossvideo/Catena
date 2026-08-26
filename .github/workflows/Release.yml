@@ -14,9 +14,11 @@ name: Release
 #       4. Merge the release branch into develop (merge commit, not squashed)
 #          so main and develop share the version-bump commit as a common ancestor.
 #          └─ If the develop merge fails, automatically revert the main merge.
-#       5a. Create a GitHub release (tagged on main) with grouped release notes.
-#           Also push a Go module tag (sdks/go/vX.Y.Z) so `go get` resolves it.
-#       5b. Retag toolchain containers develop → latest  (parallel with 5a).
+#       5. Retag toolchain containers develop → latest (and → vX.Y.Z).
+#          └─ A retag failure blocks the release: the vX.Y.Z images are attached
+#             to the GitHub release as artifacts.
+#       6. Create a GitHub release (tagged on main) with grouped release notes.
+#          Also push a Go module tag (sdks/go/vX.Y.Z) so `go get` resolves it.
 #     If closed without merging:
 #       → Release is cancelled; nothing further happens.
 # ══════════════════════════════════════════════════════════════════════════════
@@ -593,21 +595,107 @@ jobs:
             echo "::warning title=Merge setting not restored::Failed to restore allow_merge_commit=$ORIG_ALLOW_MERGE; restore it manually in the repository settings."
             echo "⚠️  Failed to restore allow_merge_commit=$ORIG_ALLOW_MERGE — restore it manually in the repository settings." >> "$GITHUB_STEP_SUMMARY"
           fi
-
   # ────────────────────────────────────────────────────────────────────────────
-  # Job 4: Build release notes and create the GitHub release on main.
-  # Runs after merge_release_develop succeeds.
+  # Job 4: Retag toolchain containers  develop → latest  (and → $NEW_VERSION).
+  #
+  # Runs BEFORE create_github_release, which depends on it.  A retag failure
+  # blocks the release because the $NEW_VERSION images are attached to the
+  # GitHub release as artifacts.
   # ────────────────────────────────────────────────────────────────────────────
-  create_github_release:
-    name: "4 - Create GitHub Release"
+  retag_toolchain_containers:
+    name: "4 - Retag Toolchain Containers (develop → latest)"
     needs: [detect_release_pr, merge_release_develop]
     if: >
       needs.detect_release_pr.outputs.merged == 'true' &&
       needs.merge_release_develop.result == 'success'
     runs-on: ubuntu-latest
     permissions:
+      packages: write  # push retagged images to GHCR
+      contents: read
+
+    env:
+      NEW_VERSION: ${{ needs.detect_release_pr.outputs.new_version }}
+
+    steps:
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Retag C++ toolchain ───────────────────────────────────────────────────
+      #
+      # Source:  ghcr.io/rossvideo/catena-cpp-toolchain:develop
+      # Targets: ghcr.io/rossvideo/catena-cpp-toolchain:latest
+      #          ghcr.io/rossvideo/catena-cpp-toolchain:<new_version>
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Retag cpp toolchain  develop → latest + ${{ env.NEW_VERSION }}
+        id: retag_cpp
+        run: |
+          set -euo pipefail
+          SRC="ghcr.io/rossvideo/catena-cpp-toolchain:develop"
+
+          docker buildx imagetools create \
+            --tag "ghcr.io/rossvideo/catena-cpp-toolchain:latest" \
+            --tag "ghcr.io/rossvideo/catena-cpp-toolchain:$NEW_VERSION" \
+            "$SRC"
+
+          echo "✅ cpp toolchain retagged → latest and $NEW_VERSION"
+
+      # ── Retag Go toolchain ────────────────────────────────────────────────────
+      #
+      # Source:  ghcr.io/rossvideo/catena-go-toolchain:develop
+      # Targets: ghcr.io/rossvideo/catena-go-toolchain:latest
+      #          ghcr.io/rossvideo/catena-go-toolchain:<new_version>
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Retag go toolchain  develop → latest + ${{ env.NEW_VERSION }}
+        id: retag_go
+        run: |
+          set -euo pipefail
+          SRC="ghcr.io/rossvideo/catena-go-toolchain:develop"
+
+          docker buildx imagetools create \
+            --tag "ghcr.io/rossvideo/catena-go-toolchain:latest" \
+            --tag "ghcr.io/rossvideo/catena-go-toolchain:$NEW_VERSION" \
+            "$SRC"
+
+          echo "✅ go toolchain retagged → latest and $NEW_VERSION"
+
+      # ── Surface a clear error if either retag failed ─────────────────────────
+      - name: Report retag results
+        if: failure()
+        run: |
+          echo "❌ One or more container retag operations failed:"
+          echo "     cpp retag : ${{ steps.retag_cpp.outcome }}"
+          echo "     go  retag : ${{ steps.retag_go.outcome }}"
+          echo ""
+          echo "The release is blocked because the $NEW_VERSION images are"
+          echo "attached to the GitHub release as artifacts."
+          echo "Retag the following images and re-run the release:"
+          echo "  ghcr.io/rossvideo/catena-cpp-toolchain:develop  →  latest / $NEW_VERSION"
+          echo "  ghcr.io/rossvideo/catena-go-toolchain:develop   →  latest / $NEW_VERSION"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Job 5: Build release notes and create the GitHub release on main.
+  # Runs after retag_toolchain_containers succeeds.
+  # ────────────────────────────────────────────────────────────────────────────
+  create_github_release:
+    name: "5 - Create GitHub Release"
+    needs: [detect_release_pr, merge_release_develop, retag_toolchain_containers]
+    if: >
+      needs.detect_release_pr.outputs.merged == 'true' &&
+      needs.merge_release_develop.result == 'success' &&
+      needs.retag_toolchain_containers.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
       contents: write      # create release and upload artifacts
       pull-requests: read  # fetch PR titles for release notes
+      packages: read       # pull container images from GHCR for release assets
 
     env:
       NEW_VERSION: ${{ needs.detect_release_pr.outputs.new_version }}
@@ -648,6 +736,7 @@ jobs:
 
           # Fetch PR titles and bucket them by [TAG]
           declare -A PR_GROUPS
+          declare -A PR_GROUP_LABELS
           while IFS= read -r PR_NUM; do
             [[ -z "$PR_NUM" ]] && continue
 
@@ -656,9 +745,16 @@ jobs:
 
             # Only include titles that start with "[" — extract the group tag
             if [[ "$TITLE" =~ ^\[([^]]+)\] ]]; then
-              GROUP_KEY="${BASH_REMATCH[1]}"
+              RAW_GROUP_KEY="${BASH_REMATCH[1]}"
+              GROUP_KEY=$(echo "$RAW_GROUP_KEY" | tr '[:upper:]' '[:lower:]')
+
+              # Preserve the first-seen display label while grouping case-insensitively.
+              if [[ -z "${PR_GROUP_LABELS[$GROUP_KEY]+x}" ]]; then
+                PR_GROUP_LABELS["$GROUP_KEY"]="$RAW_GROUP_KEY"
+              fi
+
               PR_GROUPS["$GROUP_KEY"]+="- $TITLE"$'\n'
-              echo "  ✅ [$GROUP_KEY] $TITLE"
+              echo "  ✅ [${PR_GROUP_LABELS[$GROUP_KEY]}] $TITLE"
             else
               echo "  ⏭  Skipped (no [tag]): $TITLE"
             fi
@@ -671,8 +767,9 @@ jobs:
             if [[ ${#PR_GROUPS[@]} -eq 0 ]]; then
               echo "_No tagged PR titles found since the last release._"
             else
-              for KEY in $(echo "${!PR_GROUPS[@]}" | tr ' ' '\n' | sort); do
-                echo "### [$KEY]"
+              mapfile -t SORTED_KEYS < <(printf '%s\n' "${!PR_GROUPS[@]}" | LC_ALL=C sort)
+              for KEY in "${SORTED_KEYS[@]}"; do
+                echo "### [${PR_GROUP_LABELS[$KEY]}]"
                 echo "${PR_GROUPS[$KEY]}"
               done
             fi
@@ -720,62 +817,19 @@ jobs:
           set -euo pipefail
 
           RELEASE_DATE=$(date +"%Y/%m/%d")
-          RELEASE_TITLE="Catena version $NEW_VERSION made on $RELEASE_DATE"
+          LEGACY_TITLE="Catena version $NEW_VERSION made on $RELEASE_DATE"
+
+          {
+            echo "$LEGACY_TITLE"
+            echo ""
+            cat /tmp/release_notes.md
+          } > /tmp/release_notes_with_header.md
 
           gh release create "$NEW_VERSION" \
-            --title "$RELEASE_TITLE" \
-            --notes-file /tmp/release_notes.md
+            --title "$NEW_VERSION" \
+            --notes-file /tmp/release_notes_with_header.md
 
-          echo "✅ GitHub release created: $RELEASE_TITLE"
-
-      # ── Generate and attach a container image manifest ────────────────────────
-      #
-      # This manifest lists the toolchain images that are part of this release.
-      # Add further artifacts below this step as needed.
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Generate container image manifest and attach to release
-        run: |
-          set -euo pipefail
-
-          MANIFEST="container-images.txt"
-          cat > "$MANIFEST" <<EOF
-          # Catena toolchain container images — release $NEW_VERSION
-          # Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-          ghcr.io/rossvideo/catena-cpp-toolchain:$NEW_VERSION
-          ghcr.io/rossvideo/catena-go-toolchain:$NEW_VERSION
-          EOF
-
-          echo "Manifest contents:"
-          cat "$MANIFEST"
-
-          gh release upload "$NEW_VERSION" "$MANIFEST" --clobber
-          echo "✅ Container manifest attached to release $NEW_VERSION"
-
-  # ────────────────────────────────────────────────────────────────────────────
-  # Job 5: Retag toolchain containers  develop → latest  (and → $NEW_VERSION).
-  #
-  # Runs in parallel with create_github_release.
-  # Failures here are warnings only — the release is NOT blocked.
-  # ────────────────────────────────────────────────────────────────────────────
-  retag_toolchain_containers:
-    name: "5 - Retag Toolchain Containers (develop → latest)"
-    needs: [detect_release_pr, merge_release_develop]
-    if: >
-      needs.detect_release_pr.outputs.merged == 'true' &&
-      needs.merge_release_develop.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write  # push retagged images to GHCR
-      contents: read
-
-    env:
-      NEW_VERSION: ${{ needs.detect_release_pr.outputs.new_version }}
-
-    steps:
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+          echo "✅ GitHub release created: $NEW_VERSION"
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -784,56 +838,70 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── Retag C++ toolchain ───────────────────────────────────────────────────
+      # ── Generate and attach a container image manifest ────────────────────────
       #
-      # Source:  ghcr.io/rossvideo/catena-cpp-toolchain:develop
-      # Targets: ghcr.io/rossvideo/catena-cpp-toolchain:latest
-      #          ghcr.io/rossvideo/catena-cpp-toolchain:<new_version>
+      # This manifest lists the toolchain images that are part of this release.
+      # Add further artifacts below this step as needed.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: Retag cpp toolchain  develop → latest + ${{ env.NEW_VERSION }}
-        id: retag_cpp
-        continue-on-error: true  # retag failure is a warning, not a release blocker
+      - name: Generate container image artifacts and attach to release
         run: |
           set -euo pipefail
-          SRC="ghcr.io/rossvideo/catena-cpp-toolchain:develop"
 
-          docker buildx imagetools create \
-            --tag "ghcr.io/rossvideo/catena-cpp-toolchain:latest" \
-            --tag "ghcr.io/rossvideo/catena-cpp-toolchain:$NEW_VERSION" \
-            "$SRC"
+          MANIFEST="container-images.txt"
 
-          echo "✅ cpp toolchain retagged → latest and $NEW_VERSION"
+          wait_for_version_image() {
+            local repo="$1"
+            local image_ref="${repo}:$NEW_VERSION"
+            # The retag job (a hard dependency) already pushed this tag, so the
+            # image should exist; these retries only absorb GHCR propagation lag.
+            local max_attempts=6
+            local attempt=1
 
-      # ── Retag Go toolchain ────────────────────────────────────────────────────
-      #
-      # Source:  ghcr.io/rossvideo/catena-go-toolchain:develop
-      # Targets: ghcr.io/rossvideo/catena-go-toolchain:latest
-      #          ghcr.io/rossvideo/catena-go-toolchain:<new_version>
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Retag go toolchain  develop → latest + ${{ env.NEW_VERSION }}
-        id: retag_go
-        continue-on-error: true  # retag failure is a warning, not a release blocker
-        run: |
-          set -euo pipefail
-          SRC="ghcr.io/rossvideo/catena-go-toolchain:develop"
+            while (( attempt <= max_attempts )); do
+              if docker pull "$image_ref" >/dev/null 2>&1; then
+                echo "✅ Found image: $image_ref (attempt $attempt/$max_attempts)" >&2
+                echo "$image_ref"
+                return 0
+              fi
 
-          docker buildx imagetools create \
-            --tag "ghcr.io/rossvideo/catena-go-toolchain:latest" \
-            --tag "ghcr.io/rossvideo/catena-go-toolchain:$NEW_VERSION" \
-            "$SRC"
+              echo "⏳ Waiting for image: $image_ref (attempt $attempt/$max_attempts)" >&2
+              attempt=$(( attempt + 1 ))
+              sleep 30
+            done
 
-          echo "✅ go toolchain retagged → latest and $NEW_VERSION"
+            echo "❌ Timed out waiting for image: $image_ref" >&2
+            return 1
+          }
 
-      # ── Surface a clear warning if either retag failed ───────────────────────
-      - name: Report retag results
-        if: steps.retag_cpp.outcome == 'failure' || steps.retag_go.outcome == 'failure'
-        run: |
-          echo "⚠️  One or more container retag operations failed:"
-          echo "     cpp retag : ${{ steps.retag_cpp.outcome }}"
-          echo "     go  retag : ${{ steps.retag_go.outcome }}"
-          echo ""
-          echo "The GitHub release was created successfully."
-          echo "Please retag the following images manually:"
-          echo "  ghcr.io/rossvideo/catena-cpp-toolchain:develop  →  latest / $NEW_VERSION"
-          echo "  ghcr.io/rossvideo/catena-go-toolchain:develop   →  latest / $NEW_VERSION"
-          # Not exiting non-zero — retag failure is explicitly non-blocking per spec
+          CPP_REF=$(wait_for_version_image "ghcr.io/rossvideo/catena-cpp-toolchain")
+          GO_REF=$(wait_for_version_image "ghcr.io/rossvideo/catena-go-toolchain")
+
+          CPP_ASSET="catena-cpp-toolchain-${NEW_VERSION}.tar.gz"
+          GO_ASSET="catena-go-toolchain-${NEW_VERSION}.tar.gz"
+
+          docker save "$CPP_REF" | gzip -c > "$CPP_ASSET"
+          docker save "$GO_REF" | gzip -c > "$GO_ASSET"
+
+          cat > "$MANIFEST" <<EOF
+          # Catena toolchain container images — release $NEW_VERSION
+          # Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          $CPP_REF
+          $GO_REF
+
+          Release assets:
+          - $CPP_ASSET
+          - $GO_ASSET
+          EOF
+
+          echo "Manifest contents:"
+          cat "$MANIFEST"
+
+          gh release upload "$NEW_VERSION" \
+            "$MANIFEST" \
+            "$CPP_ASSET" \
+            "$GO_ASSET" \
+            --clobber
+
+          echo "✅ Container image assets and manifest attached to release $NEW_VERSION"
+

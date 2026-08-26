@@ -16,26 +16,54 @@ type storedAsset struct {
 	cachable bool
 }
 
+// assetChunkSize is the maximum number of embedded payload bytes streamed per
+// ReadAsset chunk. Kept small enough to bound per-message memory but large
+// enough that small assets go out in a single chunk.
+const assetChunkSize = 64 * 1024
+
 func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 	// Slot 0-2: direct map-backed lookup, matching the sync.Map data-model example.
 	for _, slot := range slotList {
-		srv.RegisterReadAssetHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Asset, catena.StatusResult) {
+		srv.RegisterReadAssetHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext, stream catena.Stream[st2138.Asset]) catena.StatusResult {
 			logger.Info("Asset download request", "slot", slot, "fqoid", fqoid)
 			val, ok := assets.Load(fqoid)
 			if !ok {
 				logger.Warning("Asset not found", "slot", slot, "fqoid", fqoid)
-				return catena.ReplyError[st2138.Asset](catena.StatusCodeNotFound, "asset not found: "+fqoid)
+				return catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found: "+fqoid)
 			}
 
+			// Stream the asset in chunks to demonstrate large-object delivery:
+			// the first chunk carries the metadata, digest, encoding, and
+			// cachable flag plus the first slice of payload bytes; later
+			// chunks carry only payload bytes (never the URL: a payload can
+			// have one or the other, and continuation chunks only ever exist
+			// for embedded payloads), which the client concatenates in send
+			// order. Assets up to assetChunkSize (and URL-kind assets, which
+			// have no embedded bytes) go out as a single chunk.
 			stored := val.(storedAsset)
-			catenaAsset, err := st2138.ToAsset(stored.payload, stored.cachable)
-			if err != nil {
-				logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
-				return catena.ReplyError[st2138.Asset](catena.StatusCodeInternal, "failed to convert asset: "+err.Error())
+			data := stored.payload.Payload
+			sent := 0
+			for first := true; first || sent < len(data); first = false {
+				end := min(sent+assetChunkSize, len(data))
+				dp := st2138.DataPayload{Payload: data[sent:end]}
+				if first {
+					dp = stored.payload
+					dp.Payload = data[sent:end]
+				}
+				chunk, err := st2138.ToAsset(dp, stored.cachable)
+				if err != nil {
+					logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+					return catena.StatusWithCode(catena.StatusCodeInternal, "failed to convert asset: "+err.Error())
+				}
+				if err := stream.Send(chunk); err != nil {
+					logger.Warning("Asset download stream closed", "slot", slot, "fqoid", fqoid, "error", err)
+					return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send asset: "+err.Error())
+				}
+				sent = end
 			}
 
-			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(stored.payload.Payload))
-			return catena.Reply(catenaAsset)
+			logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(data))
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 
 		// POST / CreateAsset: create a new asset, conflict if one already exists.

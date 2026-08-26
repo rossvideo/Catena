@@ -39,6 +39,7 @@ package catena
 import (
 	"context"
 
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -98,3 +99,52 @@ var _ Stream[Message] = (*nullStream[Message])(nil)
 
 // Send discards the chunk and always returns nil.
 func (nullStream[T]) Send(chunk T) error { return nil }
+
+// productDeviceStream wraps a DeviceRequest stream so the SDK-managed product
+// struct is enforced on the chunks a handler sends. The server installs it in
+// InvokeGetDeviceHandler only when a product struct is registered for the slot;
+// otherwise the handler's chunks pass through untouched.
+//
+// hasMon records whether the caller holds the st2138:mon read scope (the
+// product param's scope):
+//   - Device chunks: with mon, the SDK-managed product param is injected
+//     (overwriting any product param the business logic added); without mon,
+//     any product param is stripped.
+//   - ComponentParam chunks targeting product or product/*: always dropped
+//     (Send returns nil so the handler keeps streaming). The SDK owns the
+//     product struct and already delivers it on the Device chunk when the
+//     caller holds mon, so a standalone product chunk is never needed.
+type productDeviceStream struct {
+	inner   Stream[st2138.DeviceComponent]
+	product ProductStruct
+	hasMon  bool
+}
+
+var _ Stream[st2138.DeviceComponent] = productDeviceStream{}
+
+// Send applies the product policy to the chunk, then delivers it to the inner
+// stream (or drops it, returning nil, when the policy says the caller may not
+// see it).
+func (s productDeviceStream) Send(chunk st2138.DeviceComponent) error {
+	if chunk.Proto == nil {
+		return s.inner.Send(chunk)
+	}
+	switch kind := chunk.Proto.Kind.(type) {
+	case *protos.DeviceComponent_Device:
+		if device := kind.Device; device != nil {
+			if s.hasMon {
+				if device.Params == nil {
+					device.Params = map[string]*protos.Param{}
+				}
+				device.Params[ProductOid] = ProductParam(s.product).Proto
+			} else {
+				delete(device.Params, ProductOid)
+			}
+		}
+	case *protos.DeviceComponent_Param:
+		if kind.Param != nil && isProductOid(kind.Param.GetOid()) {
+			return nil
+		}
+	}
+	return s.inner.Send(chunk)
+}

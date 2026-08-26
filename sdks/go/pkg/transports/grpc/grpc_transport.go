@@ -46,6 +46,7 @@ import (
 	"fmt"
 	"maps"
 	"net"
+	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
@@ -54,6 +55,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -67,11 +69,19 @@ type Transport struct {
 
 	port       int
 	reflection bool
+	tlsEnabled bool
+	// initErr records a construction-time failure (e.g. invalid TLS config).
+	// grpc.Creds must be supplied when the server is created, but NewTransport
+	// cannot return an error, so the error is surfaced from Start instead.
+	initErr error
 }
 
 var _ catena.Transport = (*Transport)(nil)
 
 // NewTransport creates a new gRPC transport with the given configuration.
+//
+// If the TLS configuration is invalid, the returned transport is unusable and
+// Start will return the configuration error.
 func NewTransport(cfg Options) *Transport {
 	transport := &Transport{
 		catenaService: &catenaService{},
@@ -79,23 +89,41 @@ func NewTransport(cfg Options) *Transport {
 		reflection:    cfg.Reflection,
 	}
 	transport.catenaService.transport = transport
-	transport.grpcServer = grpc.NewServer(
+
+	serverOpts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(transport.unaryInterceptor),
 		grpc.StreamInterceptor(transport.streamInterceptor),
-	)
+	}
+
+	tlsConfig, err := cfg.TLS.ServerTLSConfig()
+	if err != nil {
+		logger.Error("gRPC Transport TLS configuration error", "error", err)
+		transport.initErr = fmt.Errorf("gRPC transport TLS configuration error: %w", err)
+		return transport
+	}
+	if tlsConfig != nil {
+		serverOpts = append(serverOpts, grpc.Creds(credentials.NewTLS(tlsConfig)))
+		transport.tlsEnabled = true
+	}
+
+	transport.grpcServer = grpc.NewServer(serverOpts...)
 
 	rpc.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
 
 	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
-		logger.Info("gRPC server created with reflection enabled")
+		logger.Info("gRPC server created with reflection enabled", "tls", transport.tlsEnabled)
 	} else {
-		logger.Info("gRPC server created")
+		logger.Info("gRPC server created", "tls", transport.tlsEnabled)
 	}
 	return transport
 }
 
 func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
+	if t.initErr != nil {
+		return t.initErr
+	}
+
 	t.runtime = runtime
 
 	if t.listener == nil {
@@ -123,6 +151,10 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 }
 
 func (t *Transport) Shutdown(ctx context.Context) error {
+	if t.grpcServer == nil {
+		// construction failed (see initErr); there is nothing to shut down
+		return nil
+	}
 	logger.Info("Shutting down gRPC transport")
 
 	// Gracefully stop the gRPC server in a goroutine so we can also listen for context
@@ -235,6 +267,13 @@ func (t *Transport) retrieveMetadataFromContext(ctx context.Context) catena.Tran
 	return transportContext
 }
 
+// normalizeFqoid strips the leading slash some clients (e.g. DashBoard) put on
+// wire oids, so handlers always see the slash-free form the spec defines and
+// the REST transport already produces from URL path segments.
+func normalizeFqoid(fqoid string) string {
+	return strings.TrimPrefix(fqoid, "/")
+}
+
 // struct to hold the endpoint implementations for the gRPC service. We embed the unimplemented server
 type catenaService struct {
 	transport *Transport
@@ -267,26 +306,15 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 	logger.Info("DeviceRequest", "slot", slot)
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
-	device, res := s.transport.runtime.InvokeGetDeviceHandler(slot, transportContext)
+
+	adapter := &grpcStream[st2138.DeviceComponent]{ss: stream}
+	res := s.transport.runtime.InvokeGetDeviceHandler(slot, adapter, transportContext)
 	if res.IsError() {
 		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
 	}
 
-	protoDevice := device.Proto
-	if protoDevice == nil {
-		logger.Error("DeviceRequest device returned nil", "slot", slot)
-		return status.Error(codes.Internal, "device returned nil")
-	}
-
-	// Wrap the device in a DeviceComponent
-	component := &protos.DeviceComponent{
-		Kind: &protos.DeviceComponent_Device{
-			Device: protoDevice,
-		},
-	}
-
-	return stream.Send(component)
+	return nil
 }
 
 // GetValue returns the value of a parameter
@@ -296,7 +324,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	fqoid := req.Oid
+	fqoid := normalizeFqoid(req.Oid)
 	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
@@ -321,7 +349,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 		return nil, status.Error(codes.InvalidArgument, "value payload is nil")
 	}
 
-	fqoid := req.Value.Oid
+	fqoid := normalizeFqoid(req.Value.Oid)
 	logger.Info("SetValue", "slot", slot, "fqoid", fqoid)
 
 	// Convert proto value to native Go type
@@ -354,7 +382,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 
 	entries := make([]catena.SetValueEntry, 0, len(req.Values))
 	for _, setValue := range req.Values {
-		fqoid := setValue.Oid
+		fqoid := normalizeFqoid(setValue.Oid)
 
 		nativeValue, errProto := st2138.FromProto(setValue.Value)
 		if errProto != nil {
@@ -381,24 +409,19 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	fqoid := req.Oid
+	fqoid := normalizeFqoid(req.Oid)
 	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
-	asset, result := s.transport.runtime.InvokeReadAssetHandler(slot, fqoid, transportContext)
+	adapter := &grpcStream[st2138.Asset]{ss: stream}
+	result := s.transport.runtime.InvokeReadAssetHandler(slot, fqoid, adapter, transportContext)
 	if result.IsError() {
 		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
-	protoAsset := asset.Proto
-	if protoAsset == nil {
-		logger.Error("ExternalObjectRequest asset returned nil", "slot", slot, "fqoid", fqoid)
-		return status.Error(codes.Internal, "asset returned nil")
-	}
-
-	return stream.Send(protoAsset)
+	return nil
 }
 
 // ExecuteCommand executes a command and streams the response
@@ -408,7 +431,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	commandFqoid := req.Oid
+	commandFqoid := normalizeFqoid(req.Oid)
 	logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 	var payload any
@@ -440,7 +463,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	fqoid := req.Oid
+	fqoid := normalizeFqoid(req.Oid)
 	logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
@@ -467,7 +490,7 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	oidPrefix := req.GetOidPrefix()
+	oidPrefix := normalizeFqoid(req.GetOidPrefix())
 	recursive := req.GetRecursive()
 	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
 

@@ -28,43 +28,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Redeclare types from sub packages for easier access
- * @file types.go
- * @copyright Copyright © 2026 Ross Video Ltd
- * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-06-08
- */
-
+// Package catena is the core, transport-agnostic runtime of the Catena Go SDK.
+//
+// It provides the Server, which owns the SDK runtime and mediates between a
+// service's business logic and connected clients. Applications create a single
+// Server, register their per-slot handlers once (GetDevice, GetValue, SetValue,
+// asset handlers, and so on), and then attach one or more transports from the
+// transports packages (for example REST and gRPC). All attached transports
+// share the same handlers and runtime state.
+//
+// The package also manages the concerns common to every transport, including:
+//
+//   - authorization of incoming requests (see the auth types),
+//   - the mandatory product struct describing each slot,
+//   - connection management and the push/streaming connection queue,
+//   - heartbeat and language-pack handling,
+//   - parameter metadata and status/reply result types.
+//
+// Business logic co-owns the in-memory device model (see package st2138) with
+// the Server and notifies it of changes so they can be relayed to clients.
 package catena
-
-import "github.com/rossvideo/catena/sdks/go/pkg/config"
-
-type RuntimeOptions = config.RuntimeOptions
-type ServerOptions = config.ServerOptions
-type JwtValidationOptions = config.JwtValidationOptions
-type DashboardOptions = config.DashboardOptions
-type ConnectionProtocol = config.ConnectionProtocol
-type TLSOptions = config.TLSOptions
-
-const (
-	ProtocolST2138Rest   = config.ProtocolST2138Rest
-	ProtocolST2138Grpc   = config.ProtocolST2138Grpc
-	ProtocolST2138Catena = config.ProtocolST2138Catena
-)
-
-func DefaultRuntimeOptions() RuntimeOptions {
-	return config.DefaultRuntimeOptions()
-}
-
-func DefaultServerOptions() ServerOptions {
-	return config.DefaultServerOptions()
-}
-
-func DefaultJwtValidationOptions() JwtValidationOptions {
-	return config.DefaultJwtValidationOptions()
-}
-
-func DefaultDashboardOptions() DashboardOptions {
-	return config.DefaultDashboardOptions()
-}
