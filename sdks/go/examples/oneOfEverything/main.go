@@ -361,6 +361,8 @@ func main() {
 
 	srv.StartHeartbeat(5 * time.Second)
 
+	registerAuthz(srv)
+
 	if !options.UseGrpc && !options.UseRest {
 		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
 		os.Exit(1)
