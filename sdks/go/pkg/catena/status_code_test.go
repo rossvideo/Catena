@@ -167,6 +167,29 @@ func TestStatusWithCode_NoMessage(t *testing.T) {
 	}
 }
 
+func TestStatusOk(t *testing.T) {
+	status := StatusOk()
+
+	if status.Code != StatusCodeOk {
+		t.Errorf("StatusOk code = %d, want %d", status.Code, StatusCodeOk)
+	}
+	if status.Error != "" {
+		t.Errorf("StatusOk error = %q, want empty", status.Error)
+	}
+}
+
+func TestStatusError(t *testing.T) {
+	err := fmt.Errorf("something went wrong")
+	status := StatusError(err)
+
+	if status.Code != StatusCodeInternal {
+		t.Errorf("StatusError code = %d, want %d", status.Code, StatusCodeInternal)
+	}
+	if status.Error != "something went wrong" {
+		t.Errorf("StatusError error = %q, want 'something went wrong'", status.Error)
+	}
+}
+
 func TestStatusResult_Fields(t *testing.T) {
 	result := StatusResult{
 		Code:  StatusCodeNotFound,
