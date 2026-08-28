@@ -170,3 +170,13 @@ func ReplyError[T ResponseType](code StatusCode, msg string) (T, StatusResult) {
 func StatusWithCode(code StatusCode, msg string) StatusResult {
 	return StatusResult{Code: code, Error: msg}
 }
+
+// StatusOk returns a StatusResult with StatusCodeOk and no message.
+func StatusOk() StatusResult {
+	return StatusWithCode(StatusCodeOk, "")
+}
+
+// StatusError returns a StatusResult with StatusCodeInternal and the error message.
+func StatusError(err error) StatusResult {
+	return StatusWithCode(StatusCodeInternal, err.Error())
+}

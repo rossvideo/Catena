@@ -55,6 +55,18 @@ func TestHandlerContext(t *testing.T) {
 		}
 	})
 
+	t.Run("AuthzEnabled", func(t *testing.T) {
+		enabled := HandlerContext{authzEnabled: true}
+		if !enabled.AuthzEnabled() {
+			t.Fatal("expected AuthzEnabled to return true when authz is enabled")
+		}
+
+		disabled := HandlerContext{authzEnabled: false}
+		if disabled.AuthzEnabled() {
+			t.Fatal("expected AuthzEnabled to return false when authz is disabled")
+		}
+	})
+
 	t.Run("ScopeChecksUseSeparateReadAndWriteScopes", func(t *testing.T) {
 		readOnly := HandlerContext{
 			readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
