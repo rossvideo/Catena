@@ -101,6 +101,15 @@ func (ctx HandlerContext) HasWriteScope(scopeName string) bool {
 	return ok
 }
 
+// AuthzEnabled reports whether the server is enforcing authorization for this
+// request. When false, the HasReadScope/HasWriteScope helpers return true for
+// every scope regardless of the caller, so handlers that surface per-user,
+// token-derived information should branch on this rather than trusting the
+// scope helpers.
+func (ctx HandlerContext) AuthzEnabled() bool {
+	return ctx.authzEnabled
+}
+
 // RequireReadScope is the enforcing counterpart to HasReadScope: it returns an
 // OK StatusResult when the caller holds the named read scope and a
 // PermissionDenied result with a standard message otherwise. Prefer it over
