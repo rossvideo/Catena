@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abs id="_top" keepalive="false" style="">
+   <table width="750" >
+      <tr>
+         <label name="Catena gRPC DashBoard Demo"/>
+      </tr>
+
+      <tr>
+         <param oid="counter" showlabel="true" fill="both" widget="spinner" width="200"  />
+      </tr>
+
+      <tr>
+         <param oid="text_box" showlabel="true" fill="both" widget="default" />
+      </tr>
+
+      <tr>
+         <param oid="button" showlabel="true" fill="both" widget="toggle"/>
+      </tr>
+      <tr>
+         <param oid="slider" showlabel="true" fill="both" widget="slider-horizontal"/>
+      </tr>
+      <tr>
+         <param oid="combo_box" showlabel="true" fill="both" widget="combo"/>
+      </tr>
+
+   </table>
+</abs>
