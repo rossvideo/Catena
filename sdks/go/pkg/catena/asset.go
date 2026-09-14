@@ -28,6 +28,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @brief Asset streaming business logic for the Catena SDK.
+ * @author Omar Shah (omar.shah@rossvideo.com)
+ * @date 2026-09-14
+ * @file asset.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ */
+
 package catena
 
 import (
@@ -35,10 +43,19 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
-// assetChunkSize is the maximum number of embedded payload bytes streamed per
+// defaultAssetChunkSize is the maximum number of embedded payload bytes streamed per
 // ReadAsset chunk. Kept small enough to bound per-message memory but large
 // enough that small assets go out in a single chunk.
-const assetChunkSize = 64 * 1024
+const defaultAssetChunkSize = 64 * 1024
+
+func SendAssetChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool) StatusResult {
+	return sendChunks(slot, fqoid, stream, payload, cachable, defaultAssetChunkSize)
+}
+
+// Override the default chunk size for special cases
+func SendAssetChunksWithSize(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
+	return sendChunks(slot, fqoid, stream, payload, cachable, assetChunkSize)
+}
 
 // Stream the asset in chunks to demonstrate large-object delivery:
 // the first chunk carries the metadata, digest, encoding, and
@@ -48,7 +65,12 @@ const assetChunkSize = 64 * 1024
 // for embedded payloads), which the client concatenates in send
 // order. Assets up to assetChunkSize (and URL-kind assets, which
 // have no embedded bytes) go out as a single chunk.
-func SendAssetChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool) StatusResult {
+func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
+
+	if assetChunkSize <= 0 {
+		logger.Error("Invalid asset chunk size", "slot", slot, "fqoid", fqoid, "assetChunkSize", assetChunkSize)
+		return StatusWithCode(StatusCodeInvalidArgument, "invalid asset chunk size")
+	}
 
 	data := payload.Payload
 	sent := 0
