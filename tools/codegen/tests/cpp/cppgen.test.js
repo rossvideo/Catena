@@ -298,7 +298,7 @@ describe('CppGen.generate', () => {
             type: 'FLOAT32',
             constraint: {
               type: 'FLOAT_RANGE',
-              float32_range: {
+              float_range: {
                 min_value: 0,
                 max_value: 1,
                 display_min: 0,

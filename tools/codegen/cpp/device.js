@@ -115,7 +115,6 @@ class Device extends CppCtor {
      */
     getParam(fqoid) {
         const path = fqoid.split('/');
-        path.shift(); // remove leading empty string
         let front = path.shift();
 
         if (!(front in this.params)) {

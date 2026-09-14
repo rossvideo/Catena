@@ -41,7 +41,7 @@ const MINIMAL_DESCRIPTOR_WITH_KEYWORDS = {
     item_list: {
       type: 'STRUCT_ARRAY',
       name: { display_strings: { en: 'Item List' } },
-      template_oid: '/item'
+      template_oid: 'item'
     },
     product: {
       type: 'STRUCT',
@@ -143,7 +143,7 @@ describe('getCppIdentifier', () => {
 describe('mock device getParam/getConstraint during Param tree build', () => {
   test('template_oid resolution calls device.getParam with fqoid', () => {
     const { device } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
-    expect(device.getParam).toHaveBeenCalledWith('/item');
+    expect(device.getParam).toHaveBeenCalledWith('item');
   });
 
   test('constraint ref_oid resolution calls device.getConstraint', () => {
@@ -157,9 +157,9 @@ describe('Param class', () => {
   const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
 
   test('getFQOid returns correct path', () => {
-    expect(params.product.getFQOid()).toBe('/product');
-    expect(params.auto.getFQOid()).toBe('/auto');
-    expect(params.product.getParam(['name']).getFQOid()).toBe('/product/name');
+    expect(params.product.getFQOid()).toBe('product');
+    expect(params.auto.getFQOid()).toBe('auto');
+    expect(params.product.getParam(['name']).getFQOid()).toBe('product/name');
   });
 
   test('getParam returns correct param', () => {
@@ -626,7 +626,7 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
       row_list: {
         type: 'STRUCT_ARRAY',
         name: { display_strings: { en: 'Row List' } },
-        template_oid: '/row'
+        template_oid: 'row'
       }
     }
   };
@@ -666,7 +666,7 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
       row2_list: {
         type: 'STRUCT_ARRAY',
         name: { display_strings: { en: 'Row2 List' } },
-        template_oid: '/row2'
+        template_oid: 'row2'
       }
     }
   };

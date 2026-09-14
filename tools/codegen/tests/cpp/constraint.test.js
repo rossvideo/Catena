@@ -32,7 +32,7 @@ describe('Constraint shared vs param-owned', () => {
       'c',
       {
         type: 'FLOAT_RANGE',
-        float32_range: { min_value: 0, max_value: 1, display_min: 0, display_max: 1 }
+        float_range: { min_value: 0, max_value: 1, display_min: 0, display_max: 1 }
       },
       parentParam
     );
@@ -107,10 +107,10 @@ describe('Constraint INT_RANGE', () => {
 });
 
 describe('Constraint FLOAT_RANGE', () => {
-  test('argsToString uses float32_range and step branch', () => {
+  test('argsToString uses float_range and step branch', () => {
     const desc = {
       type: 'FLOAT_RANGE',
-      float32_range: {
+      float_range: {
         min_value: 0.0,
         max_value: 1.0,
         step: 0.1,
@@ -130,7 +130,7 @@ describe('Constraint FLOAT_RANGE', () => {
   test('getInitializer emits RangeConstraint<float>', () => {
     const desc = {
       type: 'FLOAT_RANGE',
-      float32_range: { min_value: -1, max_value: 1, display_min: -1, display_max: 1 }
+      float_range: { min_value: -1, max_value: 1, display_min: -1, display_max: 1 }
     };
     const line = new Constraint('f', desc).getInitializer();
     expect(line).toContain('RangeConstraint<float>');
@@ -139,7 +139,7 @@ describe('Constraint FLOAT_RANGE', () => {
   test('display min/max for float default to min/max when display fields omitted', () => {
     const desc = {
       type: 'FLOAT_RANGE',
-      float32_range: { min_value: 0.5, max_value: 2.5 }
+      float_range: { min_value: 0.5, max_value: 2.5 }
     };
     const s = new Constraint('f', desc).argsToString().split(", ");
     expect(s[3]).toContain('0.5');

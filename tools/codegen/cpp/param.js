@@ -618,7 +618,7 @@ class Param {
     if (this.parent != undefined) {
       return `${this.parent.getFQOid()}/${this.oid}`;
     } else {
-      return `/${this.oid}`;
+      return `${this.oid}`;
     }
   }
 }

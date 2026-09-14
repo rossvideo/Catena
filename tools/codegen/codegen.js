@@ -18,9 +18,8 @@ import { program } from 'commander';
 
 import packageJson from './package.json' with { type: "json" };
 import { QUIET_OPTION, MANDATORY_OPTION, OUTPUT_OPTION, VERSION, createLogger, sync } from './common.js';
-import { DeviceModel } from './DeviceModel.js';
-import Validator from 'smpte-validator';
-import { validateRequiredParamsAndScopes } from './mandatory.js';
+import { throwNoneDevice, toDeviceModel } from './DeviceModel.js';
+import { resolve, printDiagnostics } from 'smpte-validator';
 import CppGen from './cpp/cppgen.js';
 
 //
@@ -66,12 +65,19 @@ async function generate(language, deviceModelPath, options) {
     // log the options being used
     logOptions(log, language, deviceModelPath, options);
 
-    // load and validate the device model
-    const validator = new Validator();
-    const deviceModel = new DeviceModel(deviceModelPath, validator);
-    log(`Validating device model ${deviceModelPath}...`);
-    await deviceModel.load(true);
-    validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
+    // resolve the device model
+    log(`Resolving device model ${deviceModelPath}...`);
+    throwNoneDevice(deviceModelPath);
+    const resolveResults = await resolve(deviceModelPath, {
+        disableMandatoryParams: options.disableMandatoryEnforcement,
+    })
+
+    if (!resolveResults.valid) {
+        printDiagnostics(resolveResults.diagnostics);
+        return;
+    }
+
+    const deviceModel = toDeviceModel(deviceModelPath, resolveResults.data);
 
     // generate code in the requested language
     switch (language) {
