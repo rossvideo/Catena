@@ -92,6 +92,26 @@ func TestSendAssetChunks(t *testing.T) {
 			t.Errorf("URL = %q, want %q", recUrl, payload.Url)
 		}
 	})
+
+	t.Run("InvalidDataPayload", func(t *testing.T) {
+		stream := &sliceStream[st2138.Asset]{}
+		payload := st2138.DataPayload{
+			Metadata:        map[string]string{"file-name": "test.txt"},
+			Digest:          []byte("digest"),
+			PayloadEncoding: st2138.EncodingGzip,
+			Payload:         []byte("test"),
+			Url:             "https://example.com/test.txt", // Invalid: both payload and URL set
+		}
+
+		result := SendAssetChunks(1, "asset", stream, payload, true)
+		if result.Code != StatusCodeInternal {
+			t.Fatalf("expected INTERNAL, got %v", result)
+		}
+
+		if len(stream.Items) != 0 {
+			t.Fatalf("expected no chunks, got %d", len(stream.Items))
+		}
+	})
 }
 
 func TestSendAssetChunksWithSize(t *testing.T) {
