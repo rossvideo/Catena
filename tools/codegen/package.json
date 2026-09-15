@@ -4,7 +4,9 @@
   "description": "Code Generator. Converts Catena JSON device models into source code representations in various languages.",
   "type": "module",
   "scripts": {
+    "features": "cucumber-js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:all": "npm run test && npm run features",
     "clean": "rm -rf ./coverage && rm -rf ./junit.xml && rm -rf tests/output/*"
   },
   "repository": {
@@ -33,6 +35,7 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^13.2.1",
     "jest": "^30.5.1",
     "jest-junit": "^17.0.0"
   }

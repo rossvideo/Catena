@@ -1,0 +1,92 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:op
+params:
+  product:
+    import:
+      url: ./param.product.yaml
+
+  # Scalar types
+  int32_scalar:
+    type: INT32
+    name: { display_strings: { en: Int32 } }
+    value: { int32_value: 42 }
+  float32_scalar:
+    type: FLOAT32
+    name: { display_strings: { en: Float32 } }
+    value: { float32_value: 0.707 }
+  string_scalar:
+    type: STRING
+    name: { display_strings: { en: String } }
+    value: { string_value: "hello" }
+
+  # Array types
+  int32_array:
+    type: INT32_ARRAY
+    name: { display_strings: { en: Int32 Array } }
+    value: { int32_array_values: { ints: [1, 2, 3] } }
+  float32_array:
+    type: FLOAT32_ARRAY
+    name: { display_strings: { en: Float32 Array } }
+    value: { float32_array_values: { floats: [1.1, 2.2, 3.3] } }
+  string_array:
+    type: STRING_ARRAY
+    name: { display_strings: { en: String Array } }
+    value: { string_array_values: { strings: ["a", "b", "c"] } }
+
+  # Struct and struct array
+  point:
+    type: STRUCT
+    name: { display_strings: { en: Point } }
+    params:
+      x: { type: INT32 }
+      y: { type: INT32 }
+    value:
+      struct_value:
+        fields:
+          x: { int32_value: 5 }
+          y: { int32_value: 10 }
+  points:
+    type: STRUCT_ARRAY
+    name: { display_strings: { en: Points } }
+    params:
+      x: { type: INT32 }
+      y: { type: INT32 }
+    value:
+      struct_array_values:
+        struct_values:
+          - fields:
+              x: { int32_value: 1 }
+              y: { int32_value: 2 }
+          - fields:
+              x: { int32_value: 3 }
+              y: { int32_value: 4 }
+
+  # Struct variant and struct variant array
+  number:
+    type: STRUCT_VARIANT
+    name: { display_strings: { en: Number } }
+    params:
+      words: { type: STRING }
+      digits: { type: INT32 }
+    value:
+      struct_variant_value:
+        struct_variant_type: words
+        value: { string_value: "one" }
+  numbers:
+    type: STRUCT_VARIANT_ARRAY
+    name: { display_strings: { en: Numbers } }
+    params:
+      label: { type: STRING }
+      amount: { type: FLOAT32 }
+    value:
+      struct_variant_array_values:
+        struct_variants:
+          - struct_variant_value:
+              struct_variant_type: label
+              value: { string_value: "two" }
+          - struct_variant_value:
+              struct_variant_type: amount
+              value: { float32_value: 3.5 }
