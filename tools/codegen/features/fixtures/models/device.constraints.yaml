@@ -3,6 +3,13 @@ multi_set_enabled: true
 detail_level: FULL
 access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
 default_scope: st2138:op
+constraints:
+  sexagesimal:
+    type: INT_RANGE
+    int32_range:
+      min_value: 0
+      max_value: 59
+      step: 1
 params:
   product:
     import:
@@ -13,11 +20,7 @@ params:
     value: { int32_value: 0 }
     widget: number
     constraint:
-      type: INT_RANGE
-      int32_range:
-        min_value: 0
-        max_value: 59
-        step: 1
+      ref_oid: sexagesimal
   power:
     type: INT32
     name: { display_strings: { en: Power } }

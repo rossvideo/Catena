@@ -9,11 +9,13 @@ Feature: Generate source from a device model
     Examples:
       | model                            | language |
       | device.hello_world.yaml          | cpp      |
+      | device.hello_world.json          | cpp      |
       | device.params.yaml               | cpp      |
       | device.constraints.yaml          | cpp      |
       | device.commands.yaml             | cpp      |
       | device.menus.yaml                | cpp      |
       | device.language_packs.yaml       | cpp      |
+      | device.templates.yaml            | cpp      |
 
   Scenario: Generation is deterministic across runs
     Given the device model "device.hello_world.yaml"

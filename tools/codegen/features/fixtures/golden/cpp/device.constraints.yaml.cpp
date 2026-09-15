@@ -35,6 +35,7 @@ catena::common::Device dm {1, DetailLevel("FULL")(), {"st2138:mon", "st2138:op",
 using catena::common::LanguagePack;
 using catena::common::Menu;
 using catena::common::MenuGroup;
+catena::common::RangeConstraint<int32_t> shared_sexagesimal(0, 59, 1, 0, 59, "sexagesimal", true, dm);
 Product product{.name{"Cucumber Fixture"},.vendor{"Ross Video"},.version{"1.0.0"},.serial_number{"SN-7K9M-2024-XR485-BLU"}};
 catena::common::ParamDescriptor _productDescriptor(st2138::ParamType::STRUCT, {}, {}, "", "st2138:mon", true, false, "product", "", nullptr, false, false, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamDescriptor _product_nameDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "name", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
@@ -45,8 +46,7 @@ catena::common::ParamDescriptor _product_catena_sdk_versionDescriptor(st2138::Pa
 catena::common::ParamDescriptor _product_serial_numberDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "serial_number", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
 catena::common::ParamWithValue<constraints::Product> _productParam(product, _productDescriptor, dm, false);
 int32_t sexagesimal{0};
-catena::common::RangeConstraint<int32_t> _sexagesimalConstraint(0, 59, 1, 0, 59, "sexagesimal", false);
-catena::common::ParamDescriptor _sexagesimalDescriptor(st2138::ParamType::INT32, {}, {{"en", "Seconds"}}, "number", "", false, false, "sexagesimal", "", &_sexagesimalConstraint, false, false, dm, 0, 0, 0, false, nullptr);
+catena::common::ParamDescriptor _sexagesimalDescriptor(st2138::ParamType::INT32, {}, {{"en", "Seconds"}}, "number", "", false, false, "sexagesimal", "", &shared_sexagesimal, false, false, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamWithValue<int32_t> _sexagesimalParam(sexagesimal, _sexagesimalDescriptor, dm, false);
 int32_t power{0};
 catena::common::ChoiceConstraint<int32_t, st2138::Constraint::INT_CHOICE> _powerConstraint({{0,{{"en","Off"}}},{1,{{"en","On"}}}}, false, "power", false);
