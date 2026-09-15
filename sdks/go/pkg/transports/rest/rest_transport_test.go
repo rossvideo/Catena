@@ -2166,7 +2166,9 @@ func TestTransport_Connect_WithOrigin(t *testing.T) {
 	cancel()
 	time.Sleep(50 * time.Millisecond)
 
-	assertHeader(t, rec, "Access-Control-Allow-Origin", "https://example.com")
+	// CORS is off by default; connect must not reflect Origin on its own.
+	assertHeader(t, rec, "Access-Control-Allow-Origin", "")
+	assertHeader(t, rec, "Access-Control-Allow-Credentials", "")
 }
 
 func TestWriteValueResult_WriteError(t *testing.T) {
