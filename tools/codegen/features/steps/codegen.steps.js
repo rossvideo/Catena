@@ -34,12 +34,28 @@ Given('the device model {string}', function (model) {
   this.model = model;
 });
 
+Given('a nonexistent device model {string}', function (model) {
+  this.model = model;
+});
+
 When('I run codegen for {string}', function (language) {
   this.runCodegen(language);
 });
 
 When('I run codegen for {string} again', function (language) {
   this.runCodegen(language);
+});
+
+When('I run codegen for {string} with {string}', function (language, extra) {
+  this.runCodegen(language, { extraArgs: extra.split(/\s+/).filter(Boolean) });
+});
+
+When('I run codegen for {string} without --quiet', function (language) {
+  this.runCodegen(language, { quiet: false });
+});
+
+When('I run codegen with {string}', function (args) {
+  this.runArgs(args.split(/\s+/).filter(Boolean));
 });
 
 Then('the command exits successfully', function () {
@@ -67,6 +83,40 @@ Then('no output files are written', function () {
     written.length,
     0,
     `Expected no output files but codegen wrote: ${written.join(', ')}`
+  );
+});
+
+Then('output files are written', function () {
+  const run = this.lastRun();
+  assert.ok(
+    Object.keys(run.files).length > 0,
+    'Expected codegen to write output files but none were found'
+  );
+});
+
+Then('the output is not empty', function () {
+  const run = this.lastRun();
+  assert.ok(
+    run.stdout.trim().length > 0,
+    'Expected progress output on stdout but it was empty'
+  );
+});
+
+Then('nothing is printed to standard output', function () {
+  const run = this.lastRun();
+  assert.equal(
+    run.stdout.trim(),
+    '',
+    `Expected empty stdout but got:\n${run.stdout}`
+  );
+});
+
+Then('the output matches a semantic version', function () {
+  const run = this.lastRun();
+  assert.match(
+    run.stdout.trim(),
+    /^\d+\.\d+\.\d+/,
+    `Expected a semantic version on stdout but got: ${run.stdout.trim()}`
   );
 });
 

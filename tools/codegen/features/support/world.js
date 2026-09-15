@@ -68,15 +68,17 @@ class CodegenWorld extends World {
   /**
    * Invoke codegen.js as a subprocess and capture its output files.
    * @param {string} language target language (e.g. "cpp")
+   * @param {object} [opts]
+   * @param {boolean} [opts.quiet=true] pass --quiet
+   * @param {string[]} [opts.extraArgs=[]] extra flags placed before the language
    * @returns {object} run record { language, exitCode, stdout, stderr, outDir, files }
    */
-  runCodegen(language) {
+  runCodegen(language, { quiet = true, extraArgs = [] } = {}) {
     const outDir = fs.mkdtempSync(path.join(this.workDir, `${language}-`));
-    const result = spawnSync(
-      process.execPath,
-      [CODEGEN_JS, '--quiet', language, this.modelPath(), '--output', outDir],
-      { encoding: 'utf8' }
-    );
+    const args = [CODEGEN_JS];
+    if (quiet) args.push('--quiet');
+    args.push(...extraArgs, language, this.modelPath(), '--output', outDir);
+    const result = spawnSync(process.execPath, args, { encoding: 'utf8' });
 
     const files = {};
     const base = outputBase(this.model);
@@ -95,6 +97,28 @@ class CodegenWorld extends World {
       stderr: result.stderr ?? '',
       outDir,
       files,
+    };
+    this.runs.push(run);
+    return run;
+  }
+
+  /**
+   * Invoke codegen.js with a raw argument list (no language/model/output added).
+   * Used for CLI-level checks such as --version.
+   * @param {string[]} args argv passed to codegen.js
+   * @returns {object} run record with no captured files
+   */
+  runArgs(args) {
+    const result = spawnSync(process.execPath, [CODEGEN_JS, ...args], {
+      encoding: 'utf8',
+    });
+    const run = {
+      language: null,
+      exitCode: result.status,
+      stdout: result.stdout ?? '',
+      stderr: result.stderr ?? '',
+      outDir: null,
+      files: {},
     };
     this.runs.push(run);
     return run;

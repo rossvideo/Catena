@@ -1,0 +1,10 @@
+# Valid YAML/schema but missing the mandatory `product` param: rejected by
+# default, accepted with --disable-mandatory-enforcement.
+slot: 0
+detail_level: FULL
+access_scopes: ["st2138:op"]
+default_scope: st2138:op
+params:
+  foo:
+    type: INT32
+    value: { int32_value: 1 }
