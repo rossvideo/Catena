@@ -26,7 +26,7 @@ describe('Constraint shared vs param-owned', () => {
 
   test('param-owned constraint uses FQ oid in variableName', () => {
     const parentParam = {
-      getFQOid: () => '/product/gain'
+      getFQOid: () => 'product/gain'
     };
     const c = new Constraint(
       'c',
