@@ -44,7 +44,7 @@ import (
 )
 
 // defaultAssetChunkSize is the maximum number of embedded payload bytes streamed per
-// ReadAsset chunk. Kept small enough to bound per-message memory but large
+// asset chunk. Kept small enough to bound per-message memory but large
 // enough that small assets go out in a single chunk.
 const defaultAssetChunkSize = 64 * 1024
 
