@@ -52,10 +52,10 @@ catena::common::ParamDescriptor _seekDescriptor(st2138::ParamType::INT32, {}, {{
 catena::common::ParamWithValue<catena::common::EmptyValue> _seekParam(catena::common::emptyValue, _seekDescriptor, dm, true);
 catena::common::ParamDescriptor _loadDescriptor(st2138::ParamType::STRING, {}, {{"en", "Load"}}, "button", "", false, false, "load", "", nullptr, true, true, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamWithValue<catena::common::EmptyValue> _loadParam(catena::common::emptyValue, _loadDescriptor, dm, true);
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
+constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 commands::Product& initialize_sdk_version(commands::Product& p) {
+  p.catena_sdk = real_sdk_url;
   p.catena_sdk_version = real_sdk_version;
   return p;
 }

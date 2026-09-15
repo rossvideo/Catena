@@ -85,10 +85,10 @@ catena::common::ParamDescriptor _aux_sends_eq_lowDescriptor(st2138::ParamType::F
 catena::common::ParamDescriptor _aux_sends_eq_midDescriptor(st2138::ParamType::FLOAT32, {}, {{"en", "Mid"}}, "", "", false, false, "mid", "", nullptr, false, false, dm, 0, 0, 1, false, &_aux_sends_eqDescriptor);
 catena::common::ParamDescriptor _aux_sends_eq_highDescriptor(st2138::ParamType::FLOAT32, {}, {{"en", "High"}}, "", "", false, false, "high", "", nullptr, false, false, dm, 0, 0, 1, false, &_aux_sends_eqDescriptor);
 catena::common::ParamWithValue<templates::Aux_sends> _aux_sendsParam(aux_sends, _aux_sendsDescriptor, dm, false);
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
+constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 templates::Product& initialize_sdk_version(templates::Product& p) {
+  p.catena_sdk = real_sdk_url;
   p.catena_sdk_version = real_sdk_version;
   return p;
 }

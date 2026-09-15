@@ -83,10 +83,10 @@ catena::common::ParamWithValue<float> _gainParam(gain, _gainDescriptor, dm, fals
 std::vector<int32_t> primes{2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
 catena::common::ParamDescriptor _primesDescriptor(st2138::ParamType::INT32_ARRAY, {}, {{"en", "The First Few Primes"}}, "", "", false, false, "primes", "", nullptr, false, false, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamWithValue<std::vector<int32_t>> _primesParam(primes, _primesDescriptor, dm, false);
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
+constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 hello_world::Product& initialize_sdk_version(hello_world::Product& p) {
+  p.catena_sdk = real_sdk_url;
   p.catena_sdk_version = real_sdk_version;
   return p;
 }

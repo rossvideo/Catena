@@ -83,10 +83,10 @@ catena::common::ParamWithValue<language_packs::Product> _productParam(product, _
 std::string greeting{"Hello, World!"};
 catena::common::ParamDescriptor _greetingDescriptor(st2138::ParamType::STRING, {}, {{"$key", "greeting"}}, "", "", false, false, "greeting", "", nullptr, false, false, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamWithValue<std::string> _greetingParam(greeting, _greetingDescriptor, dm, false);
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
+constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 language_packs::Product& initialize_sdk_version(language_packs::Product& p) {
+  p.catena_sdk = real_sdk_url;
   p.catena_sdk_version = real_sdk_version;
   return p;
 }

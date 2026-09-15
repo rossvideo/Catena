@@ -68,10 +68,10 @@ std::string state{"stopped"};
 catena::common::ChoiceConstraint<std::string, st2138::Constraint::STRING_STRING_CHOICE> _stateConstraint({{"stopped",{{"en","Stopped"}}},{"playing",{{"en","Playing"}}}}, true, "state", false);
 catena::common::ParamDescriptor _stateDescriptor(st2138::ParamType::STRING, {}, {{"en", "State"}}, "", "", false, false, "state", "", &_stateConstraint, false, false, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamWithValue<std::string> _stateParam(state, _stateDescriptor, dm, false);
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
+constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 constraints::Product& initialize_sdk_version(constraints::Product& p) {
+  p.catena_sdk = real_sdk_url;
   p.catena_sdk_version = real_sdk_version;
   return p;
 }

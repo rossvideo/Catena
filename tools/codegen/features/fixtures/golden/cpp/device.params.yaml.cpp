@@ -82,10 +82,10 @@ catena::common::ParamDescriptor _numbersDescriptor(st2138::ParamType::STRUCT_VAR
 catena::common::ParamDescriptor _numbers_labelDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "label", "", nullptr, false, false, dm, 0, 0, 0, false, &_numbersDescriptor);
 catena::common::ParamDescriptor _numbers_amountDescriptor(st2138::ParamType::FLOAT32, {}, {}, "", "", false, false, "amount", "", nullptr, false, false, dm, 0, 0, 2, false, &_numbersDescriptor);
 catena::common::ParamWithValue<params::Numbers> _numbersParam(numbers, _numbersDescriptor, dm, false);
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
+constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 params::Product& initialize_sdk_version(params::Product& p) {
+  p.catena_sdk = real_sdk_url;
   p.catena_sdk_version = real_sdk_version;
   return p;
 }

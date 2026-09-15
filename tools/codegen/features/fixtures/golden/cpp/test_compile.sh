@@ -50,9 +50,14 @@ fail=0
 #   -isystem $PROTOBUF_INCLUDE  protobuf runtime headers
 # The generated .cpp finds its sibling .h automatically (source dir is searched
 # for #include "..."), so no -I is needed for this directory.
+# CATENA_CPP_VERSION / CATENA_CPP_SDK are normally supplied by CMake
+# (add_compile_definitions) as quoted string literals. Inject dummy values here
+# so the goldens syntax-check.
 rc=0
 for f in "$DIR"/*.cpp; do
   if "$CXX" -std=gnu++20 -fsyntax-only \
+      -DCATENA_CPP_VERSION='"v0.0.0"' \
+      -DCATENA_CPP_SDK='"https://github.com/rossvideo/Catena"' \
       -I"$SDK_INCLUDE" \
       -I"$GRPC_INCLUDE" \
       -isystem "$PROTOBUF_INCLUDE" \

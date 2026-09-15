@@ -80,10 +80,10 @@ catena::common::ParamWithValue<int32_t> _counterParam(counter, _counterDescripto
 std::string label{"hello"};
 catena::common::ParamDescriptor _labelDescriptor(st2138::ParamType::STRING, {}, {{"en", "Label"}}, "", "", false, false, "label", "", nullptr, false, false, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamWithValue<std::string> _labelParam(label, _labelDescriptor, dm, false);
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);
+constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
+constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 menus::Product& initialize_sdk_version(menus::Product& p) {
+  p.catena_sdk = real_sdk_url;
   p.catena_sdk_version = real_sdk_version;
   return p;
 }

@@ -260,13 +260,13 @@ class CppGen {
     for (let oid in this.device.desc.params) {
       // handle special case for product param
       if (oid == "product") {
-        // we need to add code to overwrite the value of catena_sdk_version with
-        // whatever's up-to-date in the SDK.
+        // we need to add code to overwrite the value of catena_sdk and
+        // catena_sdk_version with whatever's up-to-date in the SDK.
         // this is done by adding some code to the coda
-        cloc(`#define STRINGIFY(x) #x`);
-        cloc(`#define TO_STRING(x) STRINGIFY(x)`);
-        cloc(`constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);`);
+        cloc(`constexpr const char* real_sdk_version = CATENA_CPP_VERSION;`);
+        cloc(`constexpr const char* real_sdk_url = CATENA_CPP_SDK;`);
         cloc(`${this.device.namespace}::Product& initialize_sdk_version(${this.device.namespace}::Product& p) {`);
+        cloc(`p.catena_sdk = real_sdk_url;`,1);
         cloc(`p.catena_sdk_version = real_sdk_version;`,1);
         cloc(`return p;`,1);
         cloc(`}`);
