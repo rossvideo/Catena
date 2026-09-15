@@ -38,7 +38,7 @@ params:
         access_scope: st2138:op
         constraint:
           type: FLOAT_RANGE
-          float32_range:
+          float_range:
             min_value: 20
             display_min: 20
             max_value: 20000
@@ -50,7 +50,7 @@ params:
         access_scope: st2138:cfg
         constraint:
           type: FLOAT_RANGE
-          float32_range:
+          float_range:
             min_value: 0
             max_value: 10.0
             step: 0.1
@@ -61,7 +61,7 @@ params:
         access_scope: st2138:adm
         constraint:
           type: FLOAT_RANGE
-          float32_range:
+          float_range:
             min_value: 0
             max_value: 10.0
             step: 0.1
@@ -115,7 +115,7 @@ params:
   audio_deck: 
     type: STRUCT_ARRAY
     name: {display_strings: {en: Audio Deck}}
-    template_oid: /audio_channel
+    template_oid: audio_channel
     value: 
       struct_array_values: 
         struct_values:
@@ -306,7 +306,7 @@ params:
   effect_chain:
     type: STRUCT_VARIANT_ARRAY
     name: {display_strings: {en: Effect Chain}}
-    template_oid: /effect_settings
+    template_oid: effect_settings
     value:
       struct_variant_array_values:
         struct_variants:
@@ -339,7 +339,7 @@ params:
   delay_effects:  
     type: STRUCT_ARRAY
     name: {display_strings: {en: Delay Effects}}
-    template_oid: /delay_effect
+    template_oid: delay_effect
 
   # Variant using structs defined above
   dynamic_effect:
@@ -349,11 +349,11 @@ params:
       single:
         type: STRUCT
         name: {display_strings: {en: Single Effect}}
-        template_oid: /delay_effect
+        template_oid: delay_effect
       multi:
         type: STRUCT_ARRAY
         name: {display_strings: {en: Multi Effect}}
-        template_oid: /delay_effects  
+        template_oid: delay_effects
     value:
       struct_variant_value:
         struct_variant_type: "multi"

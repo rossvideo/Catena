@@ -39,7 +39,7 @@
           "access_scope": "st2138:op",
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float32_range": {"min_value":20, "display_min": 20,  "max_value": 20000, "display_max": 20000}
+            "float_range": {"min_value":20, "display_min": 20,  "max_value": 20000, "display_max": 20000}
           },
           "widget": "wheel"
         },
@@ -49,7 +49,7 @@
           "access_scope": "st2138:cfg",
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
           },
           "widget": "wheel"
         },
@@ -59,7 +59,7 @@
           "access_scope": "st2138:adm",
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float32_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
+            "float_range": {"min_value":0,  "max_value": 10.0, "step": 0.1}
           },
           "widget": "wheel"
         }
@@ -74,7 +74,7 @@
           "name": { "display_strings": { "en": "Fader" } },
           "constraint": {
             "type": "FLOAT_RANGE",
-            "float32_range": {"min_value":0,  "max_value": 1.00, "display_min":0, "display_max":1.00, "step": 0.01}
+            "float_range": {"min_value":0,  "max_value": 1.00, "display_min":0, "display_max":1.00, "step": 0.01}
           },
           "precision": 3,
           "widget": "fader"
@@ -82,7 +82,7 @@
         "eq_list": {
           "type": "STRUCT_ARRAY",
           "name": { "display_strings": { "en": "EQ List" } },
-          "template_oid": "/eq",
+          "template_oid": "eq",
           "value": {
             "struct_array_values": {
               "struct_values": [
@@ -111,7 +111,7 @@
     "audio_deck": {
       "type": "STRUCT_ARRAY",
       "name": { "display_strings": { "en": "Audio Deck" } },
-      "template_oid": "/audio_channel",
+      "template_oid": "audio_channel",
       "minimal_set": true,
       "value": {
         "struct_array_values": {
@@ -426,7 +426,7 @@
     "effect_chain": {
       "type": "STRUCT_VARIANT_ARRAY",
       "name": { "display_strings": { "en": "Effect Chain" } },
-      "template_oid": "/effect_settings",
+      "template_oid": "effect_settings",
       "value": {
         "struct_variant_array_values": {
           "struct_variants": [
@@ -477,7 +477,7 @@
     "delay_effects": {
       "type": "STRUCT_ARRAY",
       "name": { "display_strings": { "en": "Delay Effects" } },
-      "template_oid": "/delay_effect"
+      "template_oid": "delay_effect"
     },
     "dynamic_effect": {
       "type": "STRUCT_VARIANT",
@@ -486,12 +486,12 @@
         "single": {
           "type": "STRUCT",
           "name": { "display_strings": { "en": "Single Effect" } },
-          "template_oid": "/delay_effect"
+          "template_oid": "delay_effect"
         },
         "multi": {
           "type": "STRUCT_ARRAY",
           "name": { "display_strings": { "en": "Multi Effect" } },
-          "template_oid": "/delay_effects"
+          "template_oid": "delay_effects"
         }
       },
       "value": {

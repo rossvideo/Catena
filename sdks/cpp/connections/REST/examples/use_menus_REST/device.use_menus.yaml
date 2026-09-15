@@ -27,20 +27,20 @@ menu_groups:
     menus:
       page_1:
         name: {display_strings: {en: Product, es: Producto, fr: Produit}}
-        param_oids: ["/product/name", "/product/vendor", "/product/version", "/product/serial_number", "/product/catena_sdk", "/product/catena_sdk_version"]
+        param_oids: ["product/name", "product/vendor", "product/version", "product/serial_number", "product/catena_sdk", "product/catena_sdk_version"]
       page_2:
         name: {display_strings: {en: Page 2, es: Página 2, fr: Page 2}}
-        param_oids: ["/offset", "/button", "/counter"]
+        param_oids: ["offset", "button", "counter"]
   config:
     name: {display_strings: {en: config, es: configuración, fr: configuration}}
     order: 1
     menus:
       page_1:
         name: {display_strings: {en: Page 1, es: Página 1, fr: Page 1}}
-        param_oids: ["/counter", "/hello"]
+        param_oids: ["counter", "hello"]
       page_2:
         name: {display_strings: {en: Page 2, es: Página 2, fr: Page 2}}
-        param_oids: ["/offset", "/button", "/inline_button", "/counter"]
+        param_oids: ["offset", "button", "inline_button", "counter"]
 params:
   product:
     type: STRUCT

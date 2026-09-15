@@ -153,14 +153,14 @@
     },
     "button_array": {
       "type": "INT32_ARRAY",
-      "template_oid": "/button",
+      "template_oid": "button",
       "value": { "int32_array_values": { "ints": [0, 0, 0, 0]} }
     }
   },
   "constraints": {
     "basic_slider": {
       "type": "FLOAT_RANGE",
-      "float32_range": {
+      "float_range": {
         "min_value": 0.0,
         "max_value": 10.0,
         "step": 0.25,

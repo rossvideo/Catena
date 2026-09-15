@@ -75,7 +75,7 @@
         "eq_list": {
           "type": "STRUCT_ARRAY",
           "name": { "display_strings": { "en": "EQ List" } },
-          "template_oid": "/eq",
+          "template_oid": "eq",
           "value": {
             "struct_array_values": {
               "struct_values": [
@@ -104,7 +104,7 @@
     "audio_deck": {
       "type": "STRUCT_ARRAY",
       "name": { "display_strings": { "en": "Audio Deck" } },
-      "template_oid": "/audio_channel",
+      "template_oid": "audio_channel",
       "value": {
         "struct_array_values": {
           "struct_values": [
