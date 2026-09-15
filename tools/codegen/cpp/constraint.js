@@ -284,7 +284,9 @@ class Constraint extends CppCtor {
       return `shared_${this.oid}`;
     } else {
       let fqoid = this.parentParam.getFQOid();
-      return `${replaceSlashes(fqoid)}Constraint`;
+      // fqoid used to have leading slashes, which would prefix names with a _
+      // from the replacesSlashes call, manually prefix with _ for consistancy
+      return `_${replaceSlashes(fqoid)}Constraint`;
     }
   }
 

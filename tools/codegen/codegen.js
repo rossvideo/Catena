@@ -70,10 +70,16 @@ async function generate(language, deviceModelPath, options) {
     throwNoneDevice(deviceModelPath);
     const resolveResults = await resolve(deviceModelPath, {
         disableMandatoryParams: options.disableMandatoryEnforcement,
+        // catena_sdk / catena_sdk_version values are injected by the SDK
+        // toolchain (see cppgen), so authors need not provide them.
+        sdkSuppliedProductParams: ['catena_sdk', 'catena_sdk_version'],
     })
 
     if (!resolveResults.valid) {
         printDiagnostics(resolveResults.diagnostics);
+        // Signal failure so the build system (ninja/make) does not mark the
+        // codegen outputs as successfully built and skip them next time.
+        process.exitCode = 1;
         return;
     }
 
