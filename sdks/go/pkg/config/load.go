@@ -46,6 +46,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var ErrHelp = flag.ErrHelp
@@ -159,6 +160,7 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractString("JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
 		extractString("JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
 		extractBool("JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
+		extractDuration("JWT_STARTUP_RETRY_MAX_ELAPSED", "jwt-startup-retry-max-elapsed", "Maximum elapsed time for retrying JWT JWKS discovery during startup", &opts.Server.JwtOptions.StartupRetryMaxElapsedTime).
 		// DashBoard connection-props options
 		extractString("DASHBOARD_SERVICE_HOSTNAME", "dashboard-service-hostname", "Advertised hostname/address for DashBoard connection props", &opts.Dashboard.ServiceHostname).
 		extractInt("DASHBOARD_PORT", "dashboard-port", "Port for the DashBoard connection-props HTTP server", &opts.Dashboard.Port).
@@ -286,6 +288,13 @@ func (l *configLoader) extractConnectionProtocol(envName, cliName, usage string,
 			return "", fmt.Errorf("%q is not a valid protocol (valid: %s, %s, %s)", s,
 				ProtocolST2138Rest, ProtocolST2138Grpc, ProtocolST2138Catena)
 		}
+	})
+	return l
+}
+
+func (l *configLoader) extractDuration(envName, cliName, usage string, val *time.Duration) *configLoader {
+	loadParser(l, envName, cliName, usage, val, func(s string) (time.Duration, error) {
+		return time.ParseDuration(s)
 	})
 	return l
 }

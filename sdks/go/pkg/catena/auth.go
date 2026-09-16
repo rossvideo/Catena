@@ -42,12 +42,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -82,23 +85,20 @@ func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidat
 
 	// determine whether to validate signature based on options
 	if opts.ValidateSignature {
+
+		// add a wrapper function to implement the retry backoff logic
+		// ===
+
 		// If signature validation is enabled, we need to discover the JWKS endpoint and set up the keyfunc.
-		jwksUrl, err := discoverJWKSEndpoint(ctx, opts.Issuer, opts.Http)
-		if err != nil {
-			return nil, fmt.Errorf("discover jwks endpoint: %w", err)
-		}
 
-		// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
-		// within the KeyFunc there is a background goroutine that periodically refreshes
-		// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
-		// goroutine and any in-flight requests.
-		keyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
+		jwksKeyFunc, err := initializeJWTKeyFunc(ctx, opts)
 		if err != nil {
-			return nil, fmt.Errorf("create keyfunc: %w", err)
+			return nil, fmt.Errorf("failed to initialize JWT keyfunc: %w", err)
 		}
+		v.keyfunc = jwksKeyFunc
 
-		// store the keyfunc and set the validateFn to validate both signature and claims
-		v.keyfunc = keyFunc.Keyfunc
+		//======
+
 		v.validateFn = v.validateSignatureAndClaims
 	} else {
 		// not validating signature, just validate claims
@@ -109,6 +109,53 @@ func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidat
 }
 func (v *jwtValidator) signingMethods() []string {
 	return v.options.ResolvedAllowedAlgs()
+}
+
+func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.Keyfunc, error) {
+
+	backoffPolicy := backoff.NewExponentialBackOff()
+	backoffPolicy.InitialInterval = 250 * time.Millisecond
+	backoffPolicy.RandomizationFactor = 0.5
+	backoffPolicy.Multiplier = 2
+	backoffPolicy.MaxInterval = 5 * time.Second
+
+	// discovery and keyfun creation
+	var jwksKeyFunc jwt.Keyfunc
+	jwksKeyFunc, err := backoff.Retry(ctx, func() (jwt.Keyfunc, error) {
+		newJwskKeyFunc, err := createJWTKeyFunc(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		return newJwskKeyFunc, nil
+	}, backoff.WithBackOff(backoffPolicy), backoff.WithNotify(func(err error, d time.Duration) {
+		slog.Warn("Failed to initialize JWT keyfunc, retrying...", slog.String("error", err.Error()), slog.Duration("next_retry_in", d))
+	}), backoff.WithMaxElapsedTime(opts.StartupRetryMaxElapsedTime))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return jwksKeyFunc, nil
+}
+
+func createJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.Keyfunc, error) {
+
+	jwksUrl, err := discoverJWKSEndpoint(ctx, opts.Issuer, opts.Http)
+	if err != nil {
+		return nil, fmt.Errorf("discover jwks endpoint: %w", err)
+	}
+
+	// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
+	// within the KeyFunc there is a background goroutine that periodically refreshes
+	// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
+	// goroutine and any in-flight requests.
+	jwksKeyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
+	if err != nil {
+		return nil, fmt.Errorf("create keyfunc: %w", err)
+	}
+
+	return jwksKeyFunc.Keyfunc, nil
 }
 
 // discoverJWKSEndpoint resolves the JWKS URL from an OpenID Connect issuer.
