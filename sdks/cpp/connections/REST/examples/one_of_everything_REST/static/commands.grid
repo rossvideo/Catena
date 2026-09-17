@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simplegrid cols="5" rows="5">
+   <param oid="state" showlabel="true" fill="both" width="200"/>
+   <button buttontype="push" name="Start Fibonacci">
+      <task tasktype="ogscript">
+         params.executeCommand("fib_start", null, null);
+      </task>
+   </button>
+   <button buttontype="push" name="Stop Fibonacci">
+      <task tasktype="ogscript">
+         params.executeCommand("fib_stop", null, null);
+      </task>
+   </button>
+</simplegrid>
+
