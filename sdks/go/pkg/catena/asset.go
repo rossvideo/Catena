@@ -48,11 +48,12 @@ import (
 // enough that small assets go out in a single chunk.
 const defaultAssetChunkSize = 64 * 1024
 
+// SendAssetChunks streams payload using the default chunk size and returns the terminal status.
 func SendAssetChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool) StatusResult {
 	return sendChunks(slot, fqoid, stream, payload, cachable, defaultAssetChunkSize)
 }
 
-// Override the default chunk size for special cases
+// SendAssetChunksWithSize streams payload using assetChunkSize and returns InvalidArgument when the size is not positive.
 func SendAssetChunksWithSize(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
 	return sendChunks(slot, fqoid, stream, payload, cachable, assetChunkSize)
 }
@@ -85,7 +86,7 @@ func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload 
 			dp.Payload = data[sent:end]
 		}
 
-		chunk, err := st2138.ToAsset(dp, cachable)
+		chunk, err := st2138.ToAsset(dp, cachable && first)
 		if err != nil {
 			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
 			return StatusWithCode(StatusCodeInternal, "failed to convert asset: "+err.Error())
