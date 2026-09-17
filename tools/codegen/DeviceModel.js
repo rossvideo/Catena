@@ -15,7 +15,8 @@
  */
 
 import { basename } from 'path';
-import { descriptorIdFromUrl } from 'smpte-validator';
+import { descriptorIdFromUrl, formatDiagnostic, resolve } from 'smpte-validator';
+import { ExitError } from './common.js';
 
 /**
  * @typedef {Object} DeviceModel
@@ -25,23 +26,30 @@ import { descriptorIdFromUrl } from 'smpte-validator';
  */
 
 /**
- * Throws an error if the given URL does not point to a device model.
- * @param {string} url path to check
+ * Call the smpte resolver to load the path into a DeviceModel
+ * @param {string} url the path to load
+ * @param {function(...any): void} log logging function (e.g., console.log)
+ * @param {object} options resolution options
+ * @param {boolean} options.disableMandatoryEnforcement whether to disable mandatory parameter enforcement
+ * @return {Promise<DeviceModel>}
  */
-export function throwNoneDevice(url) {
+export async function resolveDeviceModel(url, log, options) {
+    // resolve the device model
+    log(`Resolving device model ${url}...`);
+    // make sure its a device, resolve works on anything
     const descId = descriptorIdFromUrl(url);
     if (descId.kind !== 'device') {
-        throw new Error(`File must be a device model, not ${descId.kind}`);
+        throw new ExitError(`File must be a device model, not ${descId.kind}`);
     }
-}
+    const resolveResults = await resolve(url, {
+        disableMandatoryParams: options.disableMandatoryEnforcement,
+        // catena_sdk / catena_sdk_version values are injected by the SDK
+        // toolchain (see cppgen), so authors need not provide them.
+        sdkSuppliedProductParams: ['catena_sdk', 'catena_sdk_version'],
+    })
 
-/**
- * @param {string} url path to the device model
- * @param {object} data resolved descriptor (resolveResult.data)
- * @returns {DeviceModel}
- */
-export function toDeviceModel(url, data) {
-    const baseFilename = basename(url);
-    const descId = descriptorIdFromUrl(url);
-    return { baseFilename, deviceName: descId.name, desc: data };
+    if (!resolveResults.valid) {
+        throw new ExitError(resolveResults.diagnostics.map(d => formatDiagnostic(d)).join('\n'));
+    }
+    return { baseFilename: basename(url), deviceName: descId.name, desc: resolveResults.data };
 }

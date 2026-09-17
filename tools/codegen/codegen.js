@@ -17,9 +17,8 @@
 import { program } from 'commander';
 
 import packageJson from './package.json' with { type: "json" };
-import { QUIET_OPTION, MANDATORY_OPTION, OUTPUT_OPTION, VERSION, createLogger, sync } from './common.js';
-import { throwNoneDevice, toDeviceModel } from './DeviceModel.js';
-import { resolve, printDiagnostics } from 'smpte-validator';
+import { QUIET_OPTION, MANDATORY_OPTION, OUTPUT_OPTION, VERSION, createLogger, sync, ExitError } from './common.js';
+import { resolveDeviceModel } from './DeviceModel.js';
 import CppGen from './cpp/cppgen.js';
 
 //
@@ -65,25 +64,7 @@ async function generate(language, deviceModelPath, options) {
     // log the options being used
     logOptions(log, language, deviceModelPath, options);
 
-    // resolve the device model
-    log(`Resolving device model ${deviceModelPath}...`);
-    throwNoneDevice(deviceModelPath);
-    const resolveResults = await resolve(deviceModelPath, {
-        disableMandatoryParams: options.disableMandatoryEnforcement,
-        // catena_sdk / catena_sdk_version values are injected by the SDK
-        // toolchain (see cppgen), so authors need not provide them.
-        sdkSuppliedProductParams: ['catena_sdk', 'catena_sdk_version'],
-    })
-
-    if (!resolveResults.valid) {
-        printDiagnostics(resolveResults.diagnostics);
-        // Signal failure so the build system (ninja/make) does not mark the
-        // codegen outputs as successfully built and skip them next time.
-        process.exitCode = 1;
-        return;
-    }
-
-    const deviceModel = toDeviceModel(deviceModelPath, resolveResults.data);
+    const deviceModel = await resolveDeviceModel(deviceModelPath, log, options);
 
     // generate code in the requested language
     switch (language) {
@@ -93,7 +74,7 @@ async function generate(language, deviceModelPath, options) {
             cppGen.generate();
             break;
         default:
-            throw new Error(`Unsupported language: ${language}`);
+            throw new ExitError(`Unsupported language: ${language}`);
     }
     log('✅ Code generation completed.');
 }

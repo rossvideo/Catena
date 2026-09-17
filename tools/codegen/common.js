@@ -36,6 +36,24 @@ export function createLogger(options) {
 }
 
 /**
+ * An error for clean CLI reporting that plays nicely with exceptions.
+ *
+ * When caught by {@link sync}, only its `message` is printed (no "Error:"
+ * prefix and no stack trace).
+ */
+export class ExitError extends Error {
+    /**
+     * @param {string} [message] user-facing message
+     * @param {number} [code] exit code
+     */
+    constructor(message = "", code = 1) {
+        super(message);
+        this.name = "ExitError";
+        this.code = code;
+    }
+}
+
+/**
  * helper to run the commander program asynchronously
  * @param {Command} program the commander program
  */
@@ -43,6 +61,10 @@ export function sync(program) {
     (async () => {
         await program.parseAsync();
     })().catch((err) => {
+        if (err instanceof ExitError) {
+            console.error(err.message);
+            process.exit(err.code);
+        }
         console.error("Error:", err);
         process.exit(1);
     });
