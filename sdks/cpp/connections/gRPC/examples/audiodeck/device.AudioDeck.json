@@ -431,27 +431,23 @@
         "struct_variant_array_values": {
           "struct_variants": [
             {
-              "struct_variant_value": {
-                "struct_variant_type": "reverb",
-                "value": {
-                  "struct_value": {
-                    "fields": {
-                      "room_size": { "float32_value": 0.8 },
-                      "damping": { "float32_value": 0.3 }
-                    }
+              "struct_variant_type": "reverb",
+              "value": {
+                "struct_value": {
+                  "fields": {
+                    "room_size": { "float32_value": 0.8 },
+                    "damping": { "float32_value": 0.3 }
                   }
                 }
               }
             },
             {
-              "struct_variant_value": {
-                "struct_variant_type": "delay",
-                "value": {
-                  "struct_value": {
-                    "fields": {
-                      "room_size": { "float32_value": 0.4 },
-                      "damping": { "float32_value": 0.6 }
-                    }
+              "struct_variant_type": "delay",
+              "value": {
+                "struct_value": {
+                  "fields": {
+                    "room_size": { "float32_value": 0.4 },
+                    "damping": { "float32_value": 0.6 }
                   }
                 }
               }

@@ -81,12 +81,21 @@ params:
     params:
       label: { type: STRING }
       amount: { type: FLOAT32 }
+      rational:
+        type: STRUCT
+        params:
+          numerator: { type: INT32}
+          denominator: { type: INT32 }
     value:
       struct_variant_array_values:
         struct_variants:
-          - struct_variant_value:
-              struct_variant_type: label
-              value: { string_value: "two" }
-          - struct_variant_value:
-              struct_variant_type: amount
-              value: { float32_value: 3.5 }
+          - struct_variant_type: label
+            value: { string_value: "two" }
+          - struct_variant_type: amount
+            value: { float32_value: 3.5 }
+          - struct_variant_type: rational
+            value:
+              struct_value:
+                fields:
+                  numerator: { int32_value: 1 }
+                  denominator: { int32_value: 2 }

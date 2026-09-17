@@ -508,7 +508,7 @@ class Param {
 
       struct_variant_array_values: (typeValue) => {
         let arr = typeValue.struct_variants;
-        let mappedArr = arr.map(valueObject.struct_variants);
+        let mappedArr = arr.map(valueObject.struct_variant_value);
         return `${mappedArr.join(",")}`;
       },
 

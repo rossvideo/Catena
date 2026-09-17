@@ -28,6 +28,9 @@ export const FEATURES_DIR = path.resolve(__dirname, '..');
 /** Root of the codegen tool (where codegen.js lives). */
 export const CODEGEN_ROOT = path.resolve(FEATURES_DIR, '..');
 export const CODEGEN_JS = path.join(CODEGEN_ROOT, 'codegen.js');
+export const SER_JS = path.join(CODEGEN_ROOT, 'ser.js');
+export const DES_JS = path.join(CODEGEN_ROOT, 'des.js');
+export const PROTOS_DIR = path.resolve(CODEGEN_ROOT, '../../smpte/interface/proto');
 export const MODELS_DIR = path.join(FEATURES_DIR, 'fixtures', 'models');
 export const GOLDEN_DIR = path.join(FEATURES_DIR, 'fixtures', 'golden');
 
@@ -114,6 +117,108 @@ class CodegenWorld extends World {
     });
     const run = {
       language: null,
+      exitCode: result.status,
+      stdout: result.stdout ?? '',
+      stderr: result.stderr ?? '',
+      outDir: null,
+      files: {},
+    };
+    this.runs.push(run);
+    return run;
+  }
+
+  /**
+   * Invoke ser.js on a device model and capture the produced binary.
+   * @param {string} input path to the device model to serialize
+   * @param {object} [opts]
+   * @param {boolean} [opts.quiet=true] pass --quiet
+   * @param {string[]} [opts.extraArgs=[]] extra flags placed before the model
+   * @returns {object} run record { tool, exitCode, stdout, stderr, outDir, binPath }
+   */
+  runSer(input, { quiet = true, extraArgs = [] } = {}) {
+    const outDir = fs.mkdtempSync(path.join(this.workDir, 'ser-'));
+    const args = [SER_JS];
+    if (quiet) args.push('--quiet');
+    args.push('--protos', PROTOS_DIR, '--output', outDir, ...extraArgs, input);
+    const result = spawnSync(process.execPath, args, { encoding: 'utf8' });
+
+    let binPath = null;
+    if (result.status === 0) {
+      const produced = fs.readdirSync(outDir).filter((f) => f.endsWith('.bin'));
+      if (produced.length > 0) binPath = path.join(outDir, produced[0]);
+    }
+
+    const run = {
+      tool: 'ser',
+      exitCode: result.status,
+      stdout: result.stdout ?? '',
+      stderr: result.stderr ?? '',
+      outDir,
+      binPath,
+      files: {},
+    };
+    this.runs.push(run);
+    if (binPath) this.lastBin = binPath;
+    return run;
+  }
+
+  /**
+   * Invoke des.js on a serialized binary and capture the produced model.
+   * @param {string} input path to the binary to deserialize
+   * @param {object} [opts]
+   * @param {boolean} [opts.quiet=true] pass --quiet
+   * @param {"yaml"|"json"} [opts.format="yaml"] output format
+   * @param {boolean} [opts.metadata=false] pass --metadata (no model file emitted)
+   * @param {string[]} [opts.extraArgs=[]] extra flags placed before the input
+   * @returns {object} run record { tool, exitCode, stdout, stderr, outDir, outPath, format }
+   */
+  runDes(input, { quiet = true, format = 'yaml', metadata = false, extraArgs = [] } = {}) {
+    const outDir = fs.mkdtempSync(path.join(this.workDir, 'des-'));
+    const args = [DES_JS];
+    if (quiet) args.push('--quiet');
+    args.push('--protos', PROTOS_DIR, '--output', outDir);
+    if (metadata) args.push('--metadata');
+    else if (format === 'json') args.push('--json');
+    else args.push('--yaml');
+    args.push(...extraArgs, input);
+    const result = spawnSync(process.execPath, args, { encoding: 'utf8' });
+
+    let outPath = null;
+    if (!metadata && result.status === 0) {
+      const ext = format === 'json' ? '.json' : '.yaml';
+      const produced = fs.readdirSync(outDir).filter((f) => f.endsWith(ext));
+      if (produced.length > 0) outPath = path.join(outDir, produced[0]);
+    }
+
+    const run = {
+      tool: 'des',
+      exitCode: result.status,
+      stdout: result.stdout ?? '',
+      stderr: result.stderr ?? '',
+      outDir,
+      outPath,
+      format,
+      files: {},
+    };
+    this.runs.push(run);
+    if (outPath) this.lastModel = outPath;
+    return run;
+  }
+
+  /**
+   * Invoke ser.js or des.js with a raw argument list (no defaults added).
+   * Used for CLI-level checks such as --version.
+   * @param {"ser"|"des"} tool which tool to invoke
+   * @param {string[]} args argv passed to the tool
+   * @returns {object} run record with no captured files
+   */
+  runToolArgs(tool, args) {
+    const script = tool === 'ser' ? SER_JS : DES_JS;
+    const result = spawnSync(process.execPath, [script, ...args], {
+      encoding: 'utf8',
+    });
+    const run = {
+      tool,
       exitCode: result.status,
       stdout: result.stdout ?? '',
       stderr: result.stderr ?? '',

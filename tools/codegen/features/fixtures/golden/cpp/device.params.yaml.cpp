@@ -77,10 +77,13 @@ catena::common::ParamDescriptor _numberDescriptor(st2138::ParamType::STRUCT_VARI
 catena::common::ParamDescriptor _number_wordsDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "words", "", nullptr, false, false, dm, 0, 0, 0, false, &_numberDescriptor);
 catena::common::ParamDescriptor _number_digitsDescriptor(st2138::ParamType::INT32, {}, {}, "", "", false, false, "digits", "", nullptr, false, false, dm, 0, 0, 0, false, &_numberDescriptor);
 catena::common::ParamWithValue<params::Number> _numberParam(number, _numberDescriptor, dm, false);
-Numbers numbers{{std::string{"two"}},{float{3.5}}};
+Numbers numbers{std::string{"two"},float{3.5},params::_numbers::Rational{.numerator{1},.denominator{2}}};
 catena::common::ParamDescriptor _numbersDescriptor(st2138::ParamType::STRUCT_VARIANT_ARRAY, {}, {{"en", "Numbers"}}, "", "", false, false, "numbers", "", nullptr, false, false, dm, 0, 0, 0, false, nullptr);
 catena::common::ParamDescriptor _numbers_labelDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "label", "", nullptr, false, false, dm, 0, 0, 0, false, &_numbersDescriptor);
 catena::common::ParamDescriptor _numbers_amountDescriptor(st2138::ParamType::FLOAT32, {}, {}, "", "", false, false, "amount", "", nullptr, false, false, dm, 0, 0, 2, false, &_numbersDescriptor);
+catena::common::ParamDescriptor _numbers_rationalDescriptor(st2138::ParamType::STRUCT, {}, {}, "", "", false, false, "rational", "", nullptr, false, false, dm, 0, 0, 0, false, &_numbersDescriptor);
+catena::common::ParamDescriptor _numbers_rational_numeratorDescriptor(st2138::ParamType::INT32, {}, {}, "", "", false, false, "numerator", "", nullptr, false, false, dm, 0, 0, 0, false, &_numbers_rationalDescriptor);
+catena::common::ParamDescriptor _numbers_rational_denominatorDescriptor(st2138::ParamType::INT32, {}, {}, "", "", false, false, "denominator", "", nullptr, false, false, dm, 0, 0, 0, false, &_numbers_rationalDescriptor);
 catena::common::ParamWithValue<params::Numbers> _numbersParam(numbers, _numbersDescriptor, dm, false);
 constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
 constexpr const char* real_sdk_url = CATENA_CPP_SDK;

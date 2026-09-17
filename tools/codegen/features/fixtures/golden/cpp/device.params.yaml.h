@@ -28,8 +28,13 @@ namespace _number {
 } // namespace _number
 using Number = std::variant<std::string, int32_t>;
 namespace _numbers {
+  struct Rational {
+    int32_t numerator;
+    int32_t denominator;
+    using isCatenaStruct = void;
+  };
 } // namespace _numbers
-using Numbers_elem = std::variant<std::string, float>;
+using Numbers_elem = std::variant<std::string, float, params::_numbers::Rational>;
 using Numbers = std::vector<Numbers_elem>;
 } // namespace params
 template<>
@@ -53,4 +58,10 @@ struct catena::common::StructInfo<params::Points_elem> {
 template<>
 inline std::array<const char*, 2> catena::common::alternativeNames<params::Number>{"words", "digits"};
 template<>
-inline std::array<const char*, 2> catena::common::alternativeNames<params::Numbers_elem>{"label", "amount"};
+struct catena::common::StructInfo<params::_numbers::Rational> {
+  using Rational = params::_numbers::Rational;
+  using Type = std::tuple<FieldInfo<int32_t, Rational>, FieldInfo<int32_t, Rational>>;
+  static constexpr Type fields = {{"numerator", &Rational::numerator}, {"denominator", &Rational::denominator}};
+};
+template<>
+inline std::array<const char*, 3> catena::common::alternativeNames<params::Numbers_elem>{"label", "amount", "rational"};

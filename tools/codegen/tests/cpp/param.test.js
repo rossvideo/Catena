@@ -297,16 +297,12 @@ describe('Param class', () => {
                   struct_variant_array_values: {
                     struct_variants: [
                       {
-                        struct_variant_value: {
-                          struct_variant_type: 'a',
-                          value: { string_value: 'first' }
-                        }
+                        struct_variant_type: 'a',
+                        value: { string_value: 'first' }
                       },
                       {
-                        struct_variant_value: {
-                          struct_variant_type: 'b',
-                          value: { int32_value: 42 }
-                        }
+                        struct_variant_type: 'b',
+                        value: { int32_value: 42 }
                       }
                     ]
                   }
@@ -891,16 +887,12 @@ describe('valueInitializer struct and variant', () => {
             struct_variant_array_values: {
               struct_variants: [
                 {
-                  struct_variant_value: {
-                    struct_variant_type: 'a',
-                    value: { string_value: 'first' }
-                  }
+                  struct_variant_type: 'a',
+                  value: { string_value: 'first' }
                 },
                 {
-                  struct_variant_value: {
-                    struct_variant_type: 'b',
-                    value: { int32_value: 10 }
-                  }
+                  struct_variant_type: 'b',
+                  value: { int32_value: 10 }
                 }
               ]
             }
