@@ -576,7 +576,7 @@ type RemoveComponents_SharedConstraints struct {
 
 type RemoveComponents_Menus struct {
 	// Note that menus are grouped into menu groups. They are uniquely identified
-	// by the json_pointer field which is relative to the Device's top-level
+	// by the OID field which is relative to the Device's top-level
 	// menu-groups object thus: menu-group-name/menu-name.
 	// example: status/vendor_info
 	Menus *RemoveComponents_IdList `protobuf:"bytes,5,opt,name=menus,proto3,oneof"`
@@ -1266,24 +1266,25 @@ func (x *RevocationResponse) GetRevokedSubjects() []string {
 
 // A parameter or sub-parameter, or sub-sub-parameter, or ...
 //
-// These can be arbitrarily nested so a JSON pointer (RFC 6901) is used to
+// These can be arbitrarily nested so a fully qualified OID is used to
 // locate the component within the data model.
 // This is to allow large parameter trees to be broken into smaller
 // components.
 //
-// The json_pointer is relative to device["params"].
+// The OID is relative to device["params"] and does not use a leading
+// solidus.
 // Let's see how this could be arranged for an audio processing device
 // which has a monitor output mix that has gain and eq controls.
 //
-// monitor - top level object id. The json_pointer is an object id in this
+// monitor - top level object id. The OID is a simple object id in this
 // case. The whole multi-level parameter descriptor would form the body
 // of the message.
 //
 // monitor/eq, monitor/level - sub-params of the top-level monitor
-// parameter. The json_pointer is a cascade of object IDs.
+// parameter. The OID is a cascade of object IDs.
 // Only the selected sub-param occupies the message body. Note that the eq
 // param is likely an array of 4 objects. Without an index in the
-// json_pointer, the whole array forms the body of the message.
+// OID, the whole array forms the body of the message.
 //
 // monitor/eq/1/f, monitor/eq/1/q, monitor/eq/1/gain sub-sub params of
 // eq 2 in the monitor output audio processing.
@@ -1343,7 +1344,7 @@ func (x *DeviceComponent_ComponentParam) GetParam() *Param {
 
 // A menu.
 // Note that menus are grouped into menu groups. They are uniquely identified
-// by the json_pointer field which is relative to the Device's top-level
+// by the OID field which is relative to the Device's top-level
 // menu-groups object thus: menu-group-name/menu-name.
 // example: status/vendor_info
 type DeviceComponent_ComponentMenu struct {

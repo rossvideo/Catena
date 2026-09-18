@@ -441,7 +441,7 @@ type Param struct {
 	// Import directive
 	Import *Import `protobuf:"bytes,16,opt,name=import,proto3" json:"import,omitempty"`
 	// Additional OIDs represented by this parameter - used to allow a client to locate a parameter that may have been moved or renamed.
-	// The aliases must be fully-qualified.
+	// An alias must be unique and must not conflict with any other alias or fully qualified OID (FQOID)
 	OidAliases []string `protobuf:"bytes,17,rep,name=oid_aliases,json=oidAliases,proto3" json:"oid_aliases,omitempty"`
 	// When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device
 	MinimalSet bool `protobuf:"varint,18,opt,name=minimal_set,json=minimalSet,proto3" json:"minimal_set,omitempty"`

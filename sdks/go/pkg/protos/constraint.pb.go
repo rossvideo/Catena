@@ -115,6 +115,7 @@ const (
 	Constraint_STRING_CHOICE        Constraint_ConstraintType = 6
 	Constraint_STRING_STRING_CHOICE Constraint_ConstraintType = 7
 	Constraint_ALARM_TABLE          Constraint_ConstraintType = 8
+	Constraint_FORMATTED_STRING     Constraint_ConstraintType = 9
 )
 
 // Enum value maps for Constraint_ConstraintType.
@@ -127,6 +128,7 @@ var (
 		6: "STRING_CHOICE",
 		7: "STRING_STRING_CHOICE",
 		8: "ALARM_TABLE",
+		9: "FORMATTED_STRING",
 	}
 	Constraint_ConstraintType_value = map[string]int32{
 		"UNDEFINED":            0,
@@ -136,6 +138,7 @@ var (
 		"STRING_CHOICE":        6,
 		"STRING_STRING_CHOICE": 7,
 		"ALARM_TABLE":          8,
+		"FORMATTED_STRING":     9,
 	}
 )
 
@@ -163,7 +166,7 @@ func (x Constraint_ConstraintType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Constraint_ConstraintType.Descriptor instead.
 func (Constraint_ConstraintType) EnumDescriptor() ([]byte, []int) {
-	return file_constraint_proto_rawDescGZIP(), []int{7, 0}
+	return file_constraint_proto_rawDescGZIP(), []int{8, 0}
 }
 
 type Alarm struct {
@@ -578,6 +581,70 @@ func (x *StringStringChoiceConstraint) GetStrict() bool {
 	return false
 }
 
+// Constrains a string to a named format, e.g. a JSON Schema format such as
+// date-time, email, ipv4 or uri, or a custom regular expression. Strict turns
+// the constraint on or off: when true the value must conform to format (and
+// regex); when false the format is advisory and any string is accepted.
+type FormattedStringConstraint struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Format        string                 `protobuf:"bytes,1,opt,name=format,proto3" json:"format,omitempty"`  // the format name, e.g. a JSON Schema format, or "regex"
+	Regex         string                 `protobuf:"bytes,2,opt,name=regex,proto3" json:"regex,omitempty"`    // pattern the value must match; required when format is "regex"
+	Strict        bool                   `protobuf:"varint,3,opt,name=strict,proto3" json:"strict,omitempty"` // true: enforce the format; false: advisory only
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FormattedStringConstraint) Reset() {
+	*x = FormattedStringConstraint{}
+	mi := &file_constraint_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FormattedStringConstraint) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FormattedStringConstraint) ProtoMessage() {}
+
+func (x *FormattedStringConstraint) ProtoReflect() protoreflect.Message {
+	mi := &file_constraint_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FormattedStringConstraint.ProtoReflect.Descriptor instead.
+func (*FormattedStringConstraint) Descriptor() ([]byte, []int) {
+	return file_constraint_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *FormattedStringConstraint) GetFormat() string {
+	if x != nil {
+		return x.Format
+	}
+	return ""
+}
+
+func (x *FormattedStringConstraint) GetRegex() string {
+	if x != nil {
+		return x.Regex
+	}
+	return ""
+}
+
+func (x *FormattedStringConstraint) GetStrict() bool {
+	if x != nil {
+		return x.Strict
+	}
+	return false
+}
+
 type Constraint struct {
 	state protoimpl.MessageState    `protogen:"open.v1"`
 	Type  Constraint_ConstraintType `protobuf:"varint,1,opt,name=type,proto3,enum=st2138.Constraint_ConstraintType" json:"type,omitempty"`
@@ -590,6 +657,7 @@ type Constraint struct {
 	//	*Constraint_FloatRange
 	//	*Constraint_StringChoice
 	//	*Constraint_StringStringChoice
+	//	*Constraint_FormattedString
 	Kind          isConstraint_Kind `protobuf_oneof:"kind"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -597,7 +665,7 @@ type Constraint struct {
 
 func (x *Constraint) Reset() {
 	*x = Constraint{}
-	mi := &file_constraint_proto_msgTypes[7]
+	mi := &file_constraint_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -609,7 +677,7 @@ func (x *Constraint) String() string {
 func (*Constraint) ProtoMessage() {}
 
 func (x *Constraint) ProtoReflect() protoreflect.Message {
-	mi := &file_constraint_proto_msgTypes[7]
+	mi := &file_constraint_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -622,7 +690,7 @@ func (x *Constraint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Constraint.ProtoReflect.Descriptor instead.
 func (*Constraint) Descriptor() ([]byte, []int) {
-	return file_constraint_proto_rawDescGZIP(), []int{7}
+	return file_constraint_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Constraint) GetType() Constraint_ConstraintType {
@@ -702,6 +770,15 @@ func (x *Constraint) GetStringStringChoice() *StringStringChoiceConstraint {
 	return nil
 }
 
+func (x *Constraint) GetFormattedString() *FormattedStringConstraint {
+	if x != nil {
+		if x, ok := x.Kind.(*Constraint_FormattedString); ok {
+			return x.FormattedString
+		}
+	}
+	return nil
+}
+
 type isConstraint_Kind interface {
 	isConstraint_Kind()
 }
@@ -738,6 +815,10 @@ type Constraint_StringStringChoice struct {
 	StringStringChoice *StringStringChoiceConstraint `protobuf:"bytes,8,opt,name=string_string_choice,json=stringStringChoice,proto3,oneof"`
 }
 
+type Constraint_FormattedString struct {
+	FormattedString *FormattedStringConstraint `protobuf:"bytes,9,opt,name=formatted_string,json=formattedString,proto3,oneof"`
+}
+
 func (*Constraint_RefOid) isConstraint_Kind() {}
 
 func (*Constraint_AlarmTable) isConstraint_Kind() {}
@@ -752,6 +833,8 @@ func (*Constraint_StringChoice) isConstraint_Kind() {}
 
 func (*Constraint_StringStringChoice) isConstraint_Kind() {}
 
+func (*Constraint_FormattedString) isConstraint_Kind() {}
+
 type Int32ChoiceConstraint_IntChoice struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Value         int32                  `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
@@ -762,7 +845,7 @@ type Int32ChoiceConstraint_IntChoice struct {
 
 func (x *Int32ChoiceConstraint_IntChoice) Reset() {
 	*x = Int32ChoiceConstraint_IntChoice{}
-	mi := &file_constraint_proto_msgTypes[8]
+	mi := &file_constraint_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -774,7 +857,7 @@ func (x *Int32ChoiceConstraint_IntChoice) String() string {
 func (*Int32ChoiceConstraint_IntChoice) ProtoMessage() {}
 
 func (x *Int32ChoiceConstraint_IntChoice) ProtoReflect() protoreflect.Message {
-	mi := &file_constraint_proto_msgTypes[8]
+	mi := &file_constraint_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -814,7 +897,7 @@ type StringStringChoiceConstraint_StringStringChoice struct {
 
 func (x *StringStringChoiceConstraint_StringStringChoice) Reset() {
 	*x = StringStringChoiceConstraint_StringStringChoice{}
-	mi := &file_constraint_proto_msgTypes[9]
+	mi := &file_constraint_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -826,7 +909,7 @@ func (x *StringStringChoiceConstraint_StringStringChoice) String() string {
 func (*StringStringChoiceConstraint_StringStringChoice) ProtoMessage() {}
 
 func (x *StringStringChoiceConstraint_StringStringChoice) ProtoReflect() protoreflect.Message {
-	mi := &file_constraint_proto_msgTypes[9]
+	mi := &file_constraint_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -903,7 +986,11 @@ const file_constraint_proto_rawDesc = "" +
 	"\x06strict\x18\x02 \x01(\bR\x06strict\x1aT\n" +
 	"\x12StringStringChoice\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\x12(\n" +
-	"\x04name\x18\x02 \x01(\v2\x14.st2138.PolyglotTextR\x04name\"\x9e\x05\n" +
+	"\x04name\x18\x02 \x01(\v2\x14.st2138.PolyglotTextR\x04name\"a\n" +
+	"\x19FormattedStringConstraint\x12\x16\n" +
+	"\x06format\x18\x01 \x01(\tR\x06format\x12\x14\n" +
+	"\x05regex\x18\x02 \x01(\tR\x05regex\x12\x16\n" +
+	"\x06strict\x18\x03 \x01(\bR\x06strict\"\x84\x06\n" +
 	"\n" +
 	"Constraint\x125\n" +
 	"\x04type\x18\x01 \x01(\x0e2!.st2138.Constraint.ConstraintTypeR\x04type\x12\x19\n" +
@@ -916,7 +1003,8 @@ const file_constraint_proto_rawDesc = "" +
 	"\vfloat_range\x18\x06 \x01(\v2\x1c.st2138.FloatRangeConstraintH\x00R\n" +
 	"floatRange\x12E\n" +
 	"\rstring_choice\x18\a \x01(\v2\x1e.st2138.StringChoiceConstraintH\x00R\fstringChoice\x12X\n" +
-	"\x14string_string_choice\x18\b \x01(\v2$.st2138.StringStringChoiceConstraintH\x00R\x12stringStringChoice\"\x8d\x01\n" +
+	"\x14string_string_choice\x18\b \x01(\v2$.st2138.StringStringChoiceConstraintH\x00R\x12stringStringChoice\x12N\n" +
+	"\x10formatted_string\x18\t \x01(\v2!.st2138.FormattedStringConstraintH\x00R\x0fformattedString\"\xa3\x01\n" +
 	"\x0eConstraintType\x12\r\n" +
 	"\tUNDEFINED\x10\x00\x12\r\n" +
 	"\tINT_RANGE\x10\x02\x12\x0f\n" +
@@ -925,7 +1013,8 @@ const file_constraint_proto_rawDesc = "" +
 	"INT_CHOICE\x10\x05\x12\x11\n" +
 	"\rSTRING_CHOICE\x10\x06\x12\x18\n" +
 	"\x14STRING_STRING_CHOICE\x10\a\x12\x0f\n" +
-	"\vALARM_TABLE\x10\bB\x06\n" +
+	"\vALARM_TABLE\x10\b\x12\x14\n" +
+	"\x10FORMATTED_STRING\x10\tB\x06\n" +
 	"\x04kindB.\n" +
 	"\x16catena.core.constraintB\x10ConstraintProtosH\x01P\x01b\x06proto3"
 
@@ -942,7 +1031,7 @@ func file_constraint_proto_rawDescGZIP() []byte {
 }
 
 var file_constraint_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_constraint_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_constraint_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_constraint_proto_goTypes = []any{
 	(Alarm_Severity)(0),                                     // 0: st2138.Alarm.Severity
 	(Constraint_ConstraintType)(0),                          // 1: st2138.Constraint.ConstraintType
@@ -953,17 +1042,18 @@ var file_constraint_proto_goTypes = []any{
 	(*FloatRangeConstraint)(nil),                            // 6: st2138.FloatRangeConstraint
 	(*StringChoiceConstraint)(nil),                          // 7: st2138.StringChoiceConstraint
 	(*StringStringChoiceConstraint)(nil),                    // 8: st2138.StringStringChoiceConstraint
-	(*Constraint)(nil),                                      // 9: st2138.Constraint
-	(*Int32ChoiceConstraint_IntChoice)(nil),                 // 10: st2138.Int32ChoiceConstraint.IntChoice
-	(*StringStringChoiceConstraint_StringStringChoice)(nil), // 11: st2138.StringStringChoiceConstraint.StringStringChoice
-	(*PolyglotText)(nil),                                    // 12: st2138.PolyglotText
+	(*FormattedStringConstraint)(nil),                       // 9: st2138.FormattedStringConstraint
+	(*Constraint)(nil),                                      // 10: st2138.Constraint
+	(*Int32ChoiceConstraint_IntChoice)(nil),                 // 11: st2138.Int32ChoiceConstraint.IntChoice
+	(*StringStringChoiceConstraint_StringStringChoice)(nil), // 12: st2138.StringStringChoiceConstraint.StringStringChoice
+	(*PolyglotText)(nil),                                    // 13: st2138.PolyglotText
 }
 var file_constraint_proto_depIdxs = []int32{
 	0,  // 0: st2138.Alarm.severity:type_name -> st2138.Alarm.Severity
-	12, // 1: st2138.Alarm.description:type_name -> st2138.PolyglotText
+	13, // 1: st2138.Alarm.description:type_name -> st2138.PolyglotText
 	2,  // 2: st2138.AlarmTableConstraint.alarms:type_name -> st2138.Alarm
-	10, // 3: st2138.Int32ChoiceConstraint.choices:type_name -> st2138.Int32ChoiceConstraint.IntChoice
-	11, // 4: st2138.StringStringChoiceConstraint.choices:type_name -> st2138.StringStringChoiceConstraint.StringStringChoice
+	11, // 3: st2138.Int32ChoiceConstraint.choices:type_name -> st2138.Int32ChoiceConstraint.IntChoice
+	12, // 4: st2138.StringStringChoiceConstraint.choices:type_name -> st2138.StringStringChoiceConstraint.StringStringChoice
 	1,  // 5: st2138.Constraint.type:type_name -> st2138.Constraint.ConstraintType
 	3,  // 6: st2138.Constraint.alarm_table:type_name -> st2138.AlarmTableConstraint
 	5,  // 7: st2138.Constraint.int32_range:type_name -> st2138.Int32RangeConstraint
@@ -971,13 +1061,14 @@ var file_constraint_proto_depIdxs = []int32{
 	6,  // 9: st2138.Constraint.float_range:type_name -> st2138.FloatRangeConstraint
 	7,  // 10: st2138.Constraint.string_choice:type_name -> st2138.StringChoiceConstraint
 	8,  // 11: st2138.Constraint.string_string_choice:type_name -> st2138.StringStringChoiceConstraint
-	12, // 12: st2138.Int32ChoiceConstraint.IntChoice.name:type_name -> st2138.PolyglotText
-	12, // 13: st2138.StringStringChoiceConstraint.StringStringChoice.name:type_name -> st2138.PolyglotText
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	9,  // 12: st2138.Constraint.formatted_string:type_name -> st2138.FormattedStringConstraint
+	13, // 13: st2138.Int32ChoiceConstraint.IntChoice.name:type_name -> st2138.PolyglotText
+	13, // 14: st2138.StringStringChoiceConstraint.StringStringChoice.name:type_name -> st2138.PolyglotText
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_constraint_proto_init() }
@@ -986,7 +1077,7 @@ func file_constraint_proto_init() {
 		return
 	}
 	file_language_proto_init()
-	file_constraint_proto_msgTypes[7].OneofWrappers = []any{
+	file_constraint_proto_msgTypes[8].OneofWrappers = []any{
 		(*Constraint_RefOid)(nil),
 		(*Constraint_AlarmTable)(nil),
 		(*Constraint_Int32Range)(nil),
@@ -994,6 +1085,7 @@ func file_constraint_proto_init() {
 		(*Constraint_FloatRange)(nil),
 		(*Constraint_StringChoice)(nil),
 		(*Constraint_StringStringChoice)(nil),
+		(*Constraint_FormattedString)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1001,7 +1093,7 @@ func file_constraint_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_constraint_proto_rawDesc), len(file_constraint_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

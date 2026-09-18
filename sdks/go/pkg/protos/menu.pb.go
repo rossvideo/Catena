@@ -53,7 +53,7 @@ const (
 // Defines a logical grouping of commands and parameters that can be displayed
 // together in a GUI and have client access control applied.
 // Note that sub-parameters (and sub-sub-parameters) can be selected by
-// specifying a JSON pointer relative to the device's "params" component.
+// specifying a fully qualified OID relative to the device's "params" component.
 type Menu struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Display name for the Menu
