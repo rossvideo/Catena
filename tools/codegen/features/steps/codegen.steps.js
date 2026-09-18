@@ -125,12 +125,17 @@ Then('the generated files match the golden {string} output', function (language)
   const extensions = LANGUAGE_EXTENSIONS[language] ?? [];
   assert.ok(extensions.length > 0, `Unknown language: ${language}`);
 
+  // the model-named files must always be emitted
   for (const ext of extensions) {
     const name = `${this.model}.${ext}`;
-    const actual = run.files[name];
-    assert.ok(actual !== undefined, `codegen did not emit ${name}`);
+    assert.ok(run.files[name] !== undefined, `codegen did not emit ${name}`);
+  }
 
-    const goldenFile = this.goldenPath(language, ext);
+  // verify every emitted file (model-named plus any shared namespace headers)
+  // against a golden of the same name
+  for (const name of Object.keys(run.files)) {
+    const actual = run.files[name];
+    const goldenFile = path.join(GOLDEN_DIR, language, name);
     if (UPDATE_GOLDENS) {
       fs.mkdirSync(path.dirname(goldenFile), { recursive: true });
       fs.writeFileSync(goldenFile, actual);

@@ -83,13 +83,13 @@ class CodegenWorld extends World {
     args.push(...extraArgs, language, this.modelPath(), '--output', outDir);
     const result = spawnSync(process.execPath, args, { encoding: 'utf8' });
 
+    // capture every file codegen wrote, not just the model-named .h/.cpp, so
+    // shared namespace headers (e.g. shared_geo.h) are verified too
     const files = {};
-    const base = outputBase(this.model);
-    const extensions = LANGUAGE_EXTENSIONS[language] ?? [];
-    for (const ext of extensions) {
-      const filePath = path.join(outDir, `${base}.${ext}`);
-      if (fs.existsSync(filePath)) {
-        files[`${base}.${ext}`] = fs.readFileSync(filePath, 'utf8');
+    for (const entry of fs.readdirSync(outDir)) {
+      const filePath = path.join(outDir, entry);
+      if (fs.statSync(filePath).isFile()) {
+        files[entry] = fs.readFileSync(filePath, 'utf8');
       }
     }
 

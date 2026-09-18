@@ -406,15 +406,23 @@ describe('CppGen.generate namespace and definition-only handling', () => {
       }
     });
 
-  test('emits shared namespace at global scope, before the device namespace', () => {
+  test('emits shared namespace into its own guarded header, included by the device header', () => {
     const { headerPath } = runGenerate('ns.json', 'DevNs', NAMESPACE_DESC());
     const header = fs.readFileSync(headerPath, 'utf8');
-    expect(header).toContain('namespace shared::geo {');
-    expect(header).toContain('struct Point');
-    expect(header).toContain('struct Segment');
-    expect(header).toContain('catena::common::StructInfo<shared::geo::Point>');
-    // shared namespace opens before the device namespace
-    expect(header.indexOf('namespace shared::geo {')).toBeLessThan(header.indexOf('namespace DevNs {'));
+    // the device header pulls in the shared namespace rather than inlining it
+    expect(header).toContain('#include "shared_geo.h"');
+    expect(header).not.toContain('namespace shared::geo {');
+
+    const sharedPath = path.join(OUTPUT_DIR, 'shared_geo.h');
+    expect(fs.existsSync(sharedPath)).toBe(true);
+    const shared = fs.readFileSync(sharedPath, 'utf8');
+    expect(shared).toContain('#ifndef ST2138_SHARED_GEO_H');
+    expect(shared).toContain('#define ST2138_SHARED_GEO_H');
+    expect(shared).toContain('namespace shared::geo {');
+    expect(shared).toContain('struct Point');
+    expect(shared).toContain('struct Segment');
+    expect(shared).toContain('catena::common::StructInfo<shared::geo::Point>');
+    expect(shared).toContain('#endif // ST2138_SHARED_GEO_H');
   });
 
   test('namespace root emits no struct and no runtime param', () => {

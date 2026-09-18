@@ -102,6 +102,8 @@ class CppGen {
     cloc = Cloc.write.bind(Cloc);
     coda = Cloc.deliver.bind(Cloc);
 
+    this.outputDir = outputDir;
+    this.sharedHeaders = [];
     this.device = new Device(deviceModel);
   }
 
@@ -109,8 +111,8 @@ class CppGen {
    * generate header and body files to represent the device model
    */
   generate() {
+    this.prepareNamespaces();
     this.init();
-    this.namespaceDefinitions();
     this.openDeviceNamespace();
     this.deviceInit();
     this.languagePacks();
@@ -130,6 +132,9 @@ class CppGen {
     hloc(warning);
     hloc(`#include <Device.h>`);
     hloc(`#include <StructInfo.h>`);
+    for (let sharedHeader of this.sharedHeaders) {
+      hloc(`#include "${sharedHeader}"`);
+    }
     hloc(`extern catena::common::Device dm;`);
 
     bloc(warning);
@@ -174,36 +179,78 @@ class CppGen {
   }
 
   /**
-   * emit shared namespaces (params carrying st2138_namespace) at global scope,
-   * before the device namespace is opened, so their types are shareable
+   * build the namespace-root params and emit each shared namespace into its
+   * own include-guarded header so the types can be shared across device models
    */
-  namespaceDefinitions() {
+  prepareNamespaces() {
     if (!("params" in this.device.desc)) {
       return;
     }
+    // group namespace-root params by their C++ namespace so params sharing a
+    // namespace land in one guarded header
+    const groups = new Map();
     for (let oid in this.device.desc.params) {
       let desc = this.device.desc.params[oid];
       if (!(desc.client_hints && desc.client_hints[ST2138_NAMESPACE_KEY])) {
         continue;
       }
       let param = this.device.params[oid] = new Param(oid, desc, this.device.namespace, this.device);
-      this.writeNamespaceTypeInfo(param);
+      const cppNs = param.getCppNamespace();
+      if (!groups.has(cppNs)) {
+        groups.set(cppNs, []);
+      }
+      groups.get(cppNs).push(param);
+    }
+    for (let [cppNs, params] of groups) {
+      this.writeSharedNamespaceHeader(cppNs, params);
     }
   }
 
   /**
-   * emit the members of a namespace root as a C++ namespace block
-   * @param {Param} param the namespace-root param
+   * write a shared namespace (its member types and StructInfo specializations)
+   * to its own include-guarded header in the output directory
+   * @param {string} cppNs the C++ namespace (e.g. "shared::geo")
+   * @param {Param[]} params the namespace-root params contributing to it
    */
-  writeNamespaceTypeInfo(param) {
-    const ns = param.getCppNamespace();
-    hloc(`namespace ${ns} {`, hindent++);
-    for (let subParam of param.getSubParams()) {
-      if (subParam.hasTypeInfo()) {
-        this.writeTypeInfo(subParam);
+  writeSharedNamespaceHeader(cppNs, params) {
+    const fileBase = cppNs.split("::").join("_");
+    const filename = `${fileBase}.h`;
+    const guard = `ST2138_${fileBase.toUpperCase()}_H`;
+    this.sharedHeaders.push(filename);
+
+    const fd = fs.openSync(path.join(this.outputDir, filename), "w");
+    const Sloc = new loc(fd);
+    const Sploc = new bufloc(fd);
+
+    // redirect the header/postscript writers at this shared file while emitting
+    const savedHloc = hloc, savedPloc = ploc;
+    const savedHindent = hindent, savedPindent = pindent;
+    hloc = Sloc.write.bind(Sloc);
+    ploc = Sploc.write.bind(Sploc);
+    hindent = 0;
+    pindent = 0;
+
+    hloc(`#ifndef ${guard}`);
+    hloc(`#define ${guard}`);
+    hloc(`// This file was auto-generated. Do not modify by hand.`);
+    hloc(`#include <StructInfo.h>`);
+    hloc(`namespace ${cppNs} {`, hindent++);
+    for (let param of params) {
+      for (let subParam of param.getSubParams()) {
+        if (subParam.hasTypeInfo()) {
+          this.writeTypeInfo(subParam);
+        }
       }
     }
-    hloc(`} // namespace ${ns}`, --hindent);
+    hloc(`} // namespace ${cppNs}`, --hindent);
+    Sploc.deliver();
+    hloc(`#endif // ${guard}`);
+    fs.closeSync(fd);
+
+    hloc = savedHloc;
+    ploc = savedPloc;
+    hindent = savedHindent;
+    pindent = savedPindent;
   }
 
   /**
