@@ -745,6 +745,16 @@ func TestLoader_Duration(t *testing.T) {
 			t.Errorf("Expected val 50s got: %v", val)
 		}
 	})
+
+	t.Run("invalid duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_DURATION", "notaduration")
+		loader.extractDuration("TEST_DURATION", "test-duration", "Test duration flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
 }
 
 func TestLoader_LogLevel(t *testing.T) {

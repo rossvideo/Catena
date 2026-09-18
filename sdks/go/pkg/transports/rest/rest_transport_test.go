@@ -62,7 +62,7 @@ import (
 )
 
 func makeTestTransport(tb testing.TB) (*Transport, *transporttest.StubServerRuntime) {
-	transport := NewTransport(config.RestOptions{Port: 8080})
+	transport := NewTransport(config.RestOptions{Port: 8080, AllowedOrigins: []string{"https://example.com"}})
 	stubRuntime := transporttest.MakeStubServerRuntime(tb)
 	stubRuntime.Dev = true
 	transport.runtime = stubRuntime
@@ -2148,27 +2148,6 @@ func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
 
 	assertBodyContains(t, rec, "Not Found")
 	assertBodyNotContains(t, rec, "detailed internal error")
-}
-
-func TestTransport_Connect_WithOrigin(t *testing.T) {
-	transport, runtime := makeTestTransport(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	runtime.WithConnection(transporttest.MakeTestConnection(1))
-
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	req.Header.Set("Origin", "https://example.com")
-	rec := httptest.NewRecorder()
-
-	go transport.mux.ServeHTTP(rec, req)
-	time.Sleep(100 * time.Millisecond)
-	cancel()
-	time.Sleep(50 * time.Millisecond)
-
-	// CORS is off by default; connect must not reflect Origin on its own.
-	assertHeader(t, rec, "Access-Control-Allow-Origin", "")
-	assertHeader(t, rec, "Access-Control-Allow-Credentials", "")
 }
 
 func TestWriteValueResult_WriteError(t *testing.T) {

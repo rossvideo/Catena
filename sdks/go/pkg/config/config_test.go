@@ -51,7 +51,13 @@ func TestDefaultOptions(t *testing.T) {
 	opts := DefaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
-		Rest: RestOptions{Port: 9080, CorsMaxAge: 600 * time.Second},
+		Rest: RestOptions{
+			Port:                9080,
+			AllowedOrigins:      nil,
+			ExtraAllowedHeaders: nil,
+			ExtraAllowedMethods: nil,
+			CorsMaxAge:          600 * time.Second,
+		},
 		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
 			IsDev:          false,
