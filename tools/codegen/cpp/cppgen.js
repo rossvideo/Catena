@@ -19,7 +19,7 @@
 import fs from "fs";
 import path from "path";
 import Device from "./device.js";
-import Param from "./param.js";
+import Param, { ST2138_NAMESPACE_KEY } from "./param.js";
 import LanguagePacks from "../language.js";
 import Constraint from "./constraint.js";
 
@@ -110,6 +110,8 @@ class CppGen {
    */
   generate() {
     this.init();
+    this.namespaceDefinitions();
+    this.openDeviceNamespace();
     this.deviceInit();
     this.languagePacks();
     this.menu();
@@ -129,7 +131,6 @@ class CppGen {
     hloc(`#include <Device.h>`);
     hloc(`#include <StructInfo.h>`);
     hloc(`extern catena::common::Device dm;`);
-    hloc(`namespace ${this.device.namespace} {`);
 
     bloc(warning);
     bloc(`#include "${this.headerFilename}"`);
@@ -163,6 +164,81 @@ class CppGen {
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);
     bloc(`using ParamAdder = catena::common::AddItem<ParamTag>;`);
+  }
+
+  /**
+   * open the device namespace in the header file
+   */
+  openDeviceNamespace() {
+    hloc(`namespace ${this.device.namespace} {`);
+  }
+
+  /**
+   * emit shared namespaces (params carrying st2138_namespace) at global scope,
+   * before the device namespace is opened, so their types are shareable
+   */
+  namespaceDefinitions() {
+    if (!("params" in this.device.desc)) {
+      return;
+    }
+    for (let oid in this.device.desc.params) {
+      let desc = this.device.desc.params[oid];
+      if (!(desc.client_hints && desc.client_hints[ST2138_NAMESPACE_KEY])) {
+        continue;
+      }
+      let param = this.device.params[oid] = new Param(oid, desc, this.device.namespace, this.device);
+      this.writeNamespaceTypeInfo(param);
+    }
+  }
+
+  /**
+   * emit the members of a namespace root as a C++ namespace block
+   * @param {Param} param the namespace-root param
+   */
+  writeNamespaceTypeInfo(param) {
+    const ns = param.getCppNamespace();
+    hloc(`namespace ${ns} {`, hindent++);
+    for (let subParam of param.getSubParams()) {
+      if (subParam.hasTypeInfo()) {
+        this.writeTypeInfo(subParam);
+      }
+    }
+    hloc(`} // namespace ${ns}`, --hindent);
+  }
+
+  /**
+   * @returns the set of top-level oids targeted by any template_oid in the model
+   */
+  referencedRoots() {
+    if (this._referencedRoots == undefined) {
+      this._referencedRoots = new Set();
+      const walk = (params) => {
+        for (let oid in params) {
+          let d = params[oid];
+          if (d.template_oid) {
+            this._referencedRoots.add(d.template_oid.split("/")[0]);
+          }
+          if (d.params) {
+            walk(d.params);
+          }
+        }
+      };
+      if ("params" in this.device.desc) {
+        walk(this.device.desc.params);
+      }
+      if ("commands" in this.device.desc) {
+        walk(this.device.desc.commands);
+      }
+    }
+    return this._referencedRoots;
+  }
+
+  /**
+   * @param {Param} param
+   * @returns true if some template_oid in the model targets this param
+   */
+  isReferenced(param) {
+    return this.referencedRoots().has(param.oid);
   }
 
   /**
@@ -258,6 +334,11 @@ class CppGen {
       return;
     }
     for (let oid in this.device.desc.params) {
+      // namespace roots were already emitted as shared namespaces
+      if (this.device.params[oid] != undefined) {
+        continue;
+      }
+
       // handle special case for product param
       if (oid == "product") {
         // we need to add code to overwrite the value of catena_sdk and
@@ -275,6 +356,14 @@ class CppGen {
 
       // add the param to the device
       let param = this.device.params[oid] = new Param(oid, this.device.desc.params[oid], this.device.namespace, this.device);
+
+      // definition-only params contribute types (when referenced) but no runtime param
+      if (param.isDefinitionOnly()) {
+        if (param.hasTypeInfo() && this.isReferenced(param)) {
+          this.writeTypeInfo(param);
+        }
+        continue;
+      }
 
       // define the param in the header file
       if (param.hasTypeInfo()) {
@@ -374,6 +463,14 @@ class CppGen {
     for (let oid in this.device.desc.commands) {
       // add the command to the device
       let command = this.device.commands[oid] = new Param(oid, this.device.desc.commands[oid], this.device.namespace, this.device, undefined, true);
+
+      // definition-only commands contribute types (when referenced) but no runtime param
+      if (command.isDefinitionOnly()) {
+        if (command.hasTypeInfo() && this.isReferenced(command)) {
+          this.writeTypeInfo(command);
+        }
+        continue;
+      }
 
       // define the command in the header file
       if (command.hasTypeInfo()) {

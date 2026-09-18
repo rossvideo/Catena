@@ -995,3 +995,90 @@ describe('C++ codegen keyword safeguarding', () => {
     expect(body).toMatch(/"switch"/);
   });
 });
+
+describe('reserved client_hints: st2138_namespace and st2138_definition_only', () => {
+  const NAMESPACE_DESC = {
+    slot: 1,
+    detail_level: 'FULL',
+    access_scopes: ['st2138:op'],
+    default_scope: 'st2138:op',
+    params: {
+      geo_lib: {
+        type: 'STRUCT',
+        client_hints: { st2138_namespace: 'shared.geo' },
+        params: {
+          point: {
+            type: 'STRUCT',
+            client_hints: { st2138_definition_only: 'true' },
+            params: {
+              latitude: { type: 'FLOAT32' },
+              longitude: { type: 'FLOAT32' }
+            }
+          },
+          segment: {
+            type: 'STRUCT',
+            client_hints: { st2138_definition_only: 'true' },
+            params: {
+              start: { type: 'STRUCT', template_oid: 'geo_lib/point' },
+              end: { type: 'STRUCT', template_oid: 'geo_lib/point' }
+            }
+          }
+        }
+      },
+      flight_path: {
+        type: 'STRUCT',
+        name: { display_strings: { en: 'Flight Path' } },
+        template_oid: 'geo_lib/segment'
+      }
+    }
+  };
+
+  const { params } = createMockDeviceWithParams(NAMESPACE_DESC, 'DevNs');
+  const geoLib = params.geo_lib;
+  const point = geoLib.subParams.point;
+  const segment = geoLib.subParams.segment;
+
+  test('namespace root is detected and translated to C++ form', () => {
+    expect(geoLib.isNamespaceRoot()).toBe(true);
+    expect(geoLib.getNamespaceHint()).toBe('shared.geo');
+    expect(geoLib.getCppNamespace()).toBe('shared::geo');
+  });
+
+  test('namespace root is implicitly definition-only', () => {
+    expect(geoLib.isDefinitionOnly()).toBe(true);
+  });
+
+  test('explicit definition-only members are flagged but are not namespace roots', () => {
+    expect(point.isDefinitionOnly()).toBe(true);
+    expect(point.isNamespaceRoot()).toBe(false);
+  });
+
+  test('members of a namespace root live in the shared namespace', () => {
+    expect(point.namespace).toBe('shared::geo');
+    expect(point.objectNamespaceType()).toBe('shared::geo::Point');
+    expect(segment.objectNamespaceType()).toBe('shared::geo::Segment');
+  });
+
+  test('inStNamespace propagates to descendants but not to the root or peers', () => {
+    expect(geoLib.inStNamespace).toBe(false);
+    expect(point.inStNamespace).toBe(true);
+    expect(point.subParams.latitude.inStNamespace).toBe(true);
+    expect(params.flight_path.inStNamespace).toBe(false);
+  });
+
+  test('internal template_oid resolves against the ancestor chain during construction', () => {
+    expect(segment.subParams.start.isTemplated()).toBe(true);
+    expect(segment.subParams.start.template_param).toBe(point);
+  });
+
+  test('a param templated on a namespaced type declares the fully qualified type', () => {
+    expect(params.flight_path.declaredType()).toBe('shared::geo::Segment');
+  });
+});
+
+describe('declaredType for device-local templates stays unqualified', () => {
+  test('STRUCT_ARRAY templated on a device-local STRUCT uses the local alias', () => {
+    const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    expect(params.item_list.declaredType()).toBe('Item_list');
+  });
+});

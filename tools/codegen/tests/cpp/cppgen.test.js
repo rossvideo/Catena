@@ -363,3 +363,122 @@ describe('CppGen.generate', () => {
     expect(header).toContain('struct Nested');
   });
 });
+
+describe('CppGen.generate namespace and definition-only handling', () => {
+  const NAMESPACE_DESC = () =>
+    baseDesc({
+      params: {
+        geo_lib: {
+          type: 'STRUCT',
+          client_hints: { st2138_namespace: 'shared.geo' },
+          params: {
+            point: {
+              type: 'STRUCT',
+              client_hints: { st2138_definition_only: 'true' },
+              params: {
+                latitude: { type: 'FLOAT32' },
+                longitude: { type: 'FLOAT32' }
+              }
+            },
+            segment: {
+              type: 'STRUCT',
+              client_hints: { st2138_definition_only: 'true' },
+              params: {
+                start: { type: 'STRUCT', template_oid: 'geo_lib/point' },
+                end: { type: 'STRUCT', template_oid: 'geo_lib/point' }
+              }
+            }
+          }
+        },
+        flight_path: {
+          type: 'STRUCT',
+          name: { display_strings: { en: 'Flight Path' } },
+          template_oid: 'geo_lib/segment',
+          value: {
+            struct_value: {
+              fields: {
+                start: { struct_value: { fields: { latitude: { float32_value: 1 }, longitude: { float32_value: 2 } } } },
+                end: { struct_value: { fields: { latitude: { float32_value: 3 }, longitude: { float32_value: 4 } } } }
+              }
+            }
+          }
+        }
+      }
+    });
+
+  test('emits shared namespace at global scope, before the device namespace', () => {
+    const { headerPath } = runGenerate('ns.json', 'DevNs', NAMESPACE_DESC());
+    const header = fs.readFileSync(headerPath, 'utf8');
+    expect(header).toContain('namespace shared::geo {');
+    expect(header).toContain('struct Point');
+    expect(header).toContain('struct Segment');
+    expect(header).toContain('catena::common::StructInfo<shared::geo::Point>');
+    // shared namespace opens before the device namespace
+    expect(header.indexOf('namespace shared::geo {')).toBeLessThan(header.indexOf('namespace DevNs {'));
+  });
+
+  test('namespace root emits no struct and no runtime param', () => {
+    const { headerPath, bodyPath } = runGenerate('ns2.json', 'DevNs', NAMESPACE_DESC());
+    const header = fs.readFileSync(headerPath, 'utf8');
+    const body = fs.readFileSync(bodyPath, 'utf8');
+    expect(header).not.toContain('struct Geo_lib');
+    expect(body).not.toContain('_geo_libParam');
+    expect(body).not.toContain('_geo_libDescriptor');
+  });
+
+  test('consumer of a namespaced type uses the fully qualified type', () => {
+    const { bodyPath } = runGenerate('ns3.json', 'DevNs', NAMESPACE_DESC());
+    const body = fs.readFileSync(bodyPath, 'utf8');
+    expect(body).toContain('shared::geo::Segment flight_path');
+    expect(body).toContain('ParamWithValue<shared::geo::Segment>');
+    expect(body).toContain('_flight_pathParam');
+  });
+
+  test('explicit definition-only param emits its type when referenced but no runtime param', () => {
+    const { headerPath, bodyPath } = runGenerate(
+      'defonly.json',
+      'DevNs',
+      baseDesc({
+        params: {
+          tmpl: {
+            type: 'STRUCT',
+            client_hints: { st2138_definition_only: 'true' },
+            params: { a: { type: 'STRING' } }
+          },
+          concrete: {
+            type: 'STRUCT',
+            template_oid: 'tmpl',
+            value: { struct_value: { fields: { a: { string_value: 'x' } } } }
+          }
+        }
+      })
+    );
+    const header = fs.readFileSync(headerPath, 'utf8');
+    const body = fs.readFileSync(bodyPath, 'utf8');
+    expect(header).toContain('struct Tmpl');
+    expect(body).not.toContain('_tmplParam');
+    expect(body).not.toContain('_tmplDescriptor');
+    expect(body).toContain('_concreteParam');
+  });
+
+  test('unreferenced definition-only param is omitted entirely', () => {
+    const { headerPath, bodyPath } = runGenerate(
+      'defonly_unref.json',
+      'DevNs',
+      baseDesc({
+        params: {
+          orphan: {
+            type: 'STRUCT',
+            client_hints: { st2138_definition_only: 'true' },
+            params: { a: { type: 'STRING' } }
+          }
+        }
+      })
+    );
+    const header = fs.readFileSync(headerPath, 'utf8');
+    const body = fs.readFileSync(bodyPath, 'utf8');
+    expect(header).not.toContain('struct Orphan');
+    expect(body).not.toContain('_orphanParam');
+    expect(body).not.toContain('_orphanDescriptor');
+  });
+});

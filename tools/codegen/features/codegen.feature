@@ -16,6 +16,7 @@ Feature: Generate source from a device model
       | device.menus.yaml                | cpp      |
       | device.language_packs.yaml       | cpp      |
       | device.templates.yaml            | cpp      |
+      | device.namespaces.yaml           | cpp      |
 
   Scenario: Generation is deterministic across runs
     Given the device model "device.hello_world.yaml"

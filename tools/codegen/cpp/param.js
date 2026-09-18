@@ -15,6 +15,15 @@
 
 import Constraint from "./constraint.js";
 import { CPP_KEYWORDS } from "./cpp-keywords.js";
+import { ST2138_NAMESPACE_KEY, ST2138_DEFINITION_ONLY_KEY } from "smpte-validator";
+
+/**
+ * @param {string} dotted a language-neutral dotted namespace (e.g. "a.b.c")
+ * @returns the C++ form (e.g. "a::b::c")
+ */
+function translateNs(dotted) {
+  return dotted.split(".").join("::");
+}
 
 /**
  *
@@ -216,6 +225,9 @@ class Param {
     this.value = desc.value;
     this.isCommand = isCommand;
     this.parent = parent;
+    this.clientHints = desc.client_hints;
+    // true when this param lives inside a shared (st2138_namespace) scope
+    this.inStNamespace = parent ? (parent.isNamespaceRoot() || parent.inStNamespace) : false;
     this.minimal_set = desc.minimal_set === true;
     this.response = desc.response === true;
 
@@ -228,7 +240,7 @@ class Param {
     }
 
     if ("template_oid" in desc) {
-      this.template_param = device.getParam(desc.template_oid); 
+      this.template_param = this.resolveTemplateParam(device, desc.template_oid);
       if (this.template_param == undefined) {
         throw new Error(`Template param ${desc.template_oid} not found`);
       }
@@ -255,10 +267,43 @@ class Param {
         throw new Error(`${this.type} type can not have subparams`);
       }
       for (let oid in desc.params) {
-        let subParamNamespace = this.isVariantType() ? `${this.namespace}::_${this.cppIdentifier}` : `${this.namespace}::${initialCap(this.cppIdentifier)}`;
+        let subParamNamespace;
+        if (this.isNamespaceRoot()) {
+          // children of a namespace root are members of the shared namespace
+          subParamNamespace = this.getCppNamespace();
+        } else if (this.isVariantType()) {
+          subParamNamespace = `${this.namespace}::_${this.cppIdentifier}`;
+        } else {
+          subParamNamespace = `${this.namespace}::${initialCap(this.cppIdentifier)}`;
+        }
         this.subParams[oid] = new Param(oid, desc.params[oid], `${subParamNamespace}`, device, this);
       }
     }
+  }
+
+  /**
+   * Resolves a template_oid to its Param. An internal reference (its first
+   * segment names an ancestor, e.g. within a namespace library still under
+   * construction) is resolved against the ancestor chain first, since such a
+   * root is not yet registered on the device; otherwise it falls back to the
+   * device's top-level lookup.
+   * @param {Device} device the device object
+   * @param {string} templateOid the template_oid to resolve
+   * @returns the referenced Param, or undefined if not found
+   */
+  resolveTemplateParam(device, templateOid) {
+    const path = templateOid.split("/");
+    let ancestor = this.parent;
+    while (ancestor) {
+      if (ancestor.oid === path[0]) {
+        const found = ancestor.getParam(path.slice(1));
+        if (found) {
+          return found;
+        }
+      }
+      ancestor = ancestor.parent;
+    }
+    return device.getParam(templateOid);
   }
 
   /**
@@ -285,6 +330,36 @@ class Param {
    */
   isTemplated() {
     return this.template_param != undefined;
+  }
+
+  /**
+   * @returns the dotted st2138_namespace hint, or null if absent
+   */
+  getNamespaceHint() {
+    return this.clientHints?.[ST2138_NAMESPACE_KEY] ?? null;
+  }
+
+  /**
+   * @returns true if this param declares an st2138_namespace (making it a
+   * namespace root that emits a C++ namespace rather than a struct)
+   */
+  isNamespaceRoot() {
+    return this.getNamespaceHint() != null;
+  }
+
+  /**
+   * @returns the C++ namespace declared by this namespace root (e.g. "a::b::c")
+   */
+  getCppNamespace() {
+    return translateNs(this.getNamespaceHint());
+  }
+
+  /**
+   * @returns true if this param is build-time only (no runtime param emitted):
+   * a namespace root or an explicit st2138_definition_only
+   */
+  isDefinitionOnly() {
+    return this.isNamespaceRoot() || this.clientHints?.[ST2138_DEFINITION_ONLY_KEY] === "true";
   }
 
   /**
@@ -410,16 +485,30 @@ class Param {
   }
 
   /**
+   * @returns the C++ type name to declare a value with. The body file resolves
+   * names via `using namespace <device>`, so a type living in a foreign
+   * st2138_namespace must be fully qualified; a device-local vector alias stays
+   * unqualified.
+   */
+  declaredType() {
+    if (this.isTemplated() && this.template_param.inStNamespace
+        && !(this.isArrayType() && !this.template_param.isArrayType())) {
+      return this.objectNamespaceType();
+    }
+    return this.objectType();
+  }
+
+  /**
    * 
    * @returns a string to initialize the param's value
    * Example: 'std::string hello{"Hello, World!"};'
    */
   initializeValue() {
     if (!this.hasValue()) {
-      return `${this.objectType()} ${this.cppIdentifier};`;
+      return `${this.declaredType()} ${this.cppIdentifier};`;
     }
     let param = this.template_param || this;
-    return `${this.objectType()} ${this.cppIdentifier}${this.valueInitializer(this.value, this.type, param)};`;
+    return `${this.declaredType()} ${this.cppIdentifier}${this.valueInitializer(this.value, this.type, param)};`;
   }
 
   /**
@@ -623,5 +712,5 @@ class Param {
   }
 }
 
-export { getCppIdentifier };
+export { getCppIdentifier, ST2138_NAMESPACE_KEY };
 export default Param;
