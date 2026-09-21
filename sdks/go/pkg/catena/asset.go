@@ -40,6 +40,7 @@ package catena
 
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -53,49 +54,71 @@ func SendAssetChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], pay
 	return sendChunks(slot, fqoid, stream, payload, cachable, defaultAssetChunkSize)
 }
 
-// SendAssetChunksWithSize streams payload using assetChunkSize and returns InvalidArgument when the size is not positive.
+// SendAssetChunksWithSize streams payload using assetChunkSize and returns StatusCodeInternal when the size is not positive.
 func SendAssetChunksWithSize(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
 	return sendChunks(slot, fqoid, stream, payload, cachable, assetChunkSize)
 }
 
-// Stream the asset in chunks to demonstrate large-object delivery:
-// the first chunk carries the metadata, digest, encoding, and
-// cachable flag plus the first slice of payload bytes; later
-// chunks carry only payload bytes (never the URL: a payload can
-// have one or the other, and continuation chunks only ever exist
-// for embedded payloads), which the client concatenates in send
-// order. Assets up to assetChunkSize (and URL-kind assets, which
-// have no embedded bytes) go out as a single chunk.
+// createEmptyAsset is an helper function that creates an empty asset with the given payload and cachable flag
+func createEmptyAsset(payload st2138.DataPayload, cachable bool) st2138.Asset {
+	return st2138.Asset{Proto: &protos.ExternalObjectPayload{
+		Cachable: cachable,
+		Payload: &protos.DataPayload{
+			Metadata:        payload.Metadata,
+			Digest:          payload.Digest,
+			PayloadEncoding: protos.DataPayload_PayloadEncoding(payload.PayloadEncoding),
+			Kind:            &protos.DataPayload_Payload{Payload: []byte{}},
+		},
+	}}
+}
+
+// Stream the asset in chunks. The first chunk carries the metadata,
+// digest, encoding, and cachable flag plus the first slice of payload bytes.
+// Subsequent chunks carry only payload bytes. Chunks are only generated for
+// embedded payloads, URL-based assets are sent as a single chunk. Asset whose
+// payload fits within assetChunkSize are also sent as a single chunk.
 func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
 
 	if assetChunkSize <= 0 {
 		logger.Error("Invalid asset chunk size", "slot", slot, "fqoid", fqoid, "assetChunkSize", assetChunkSize)
-		return StatusWithCode(StatusCodeInvalidArgument, "invalid asset chunk size")
+		return StatusWithCode(StatusCodeInternal, "invalid asset chunk size")
 	}
 
 	data := payload.Payload
-	sent := 0
 
-	for first := true; first || sent < len(data); first = false {
-		end := min(sent+assetChunkSize, len(data))
-
-		dp := st2138.DataPayload{Payload: data[sent:end]}
-		if first {
-			// First chunk preserves the original metadata/digest/encoding/url
-			dp = payload
-			dp.Payload = data[sent:end]
-		}
-
-		chunk, err := st2138.ToAsset(dp, cachable && first)
-		if err != nil {
-			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
-			return StatusWithCode(StatusCodeInternal, "failed to convert asset: "+err.Error())
-		}
+	// If the payload is empty and there is no URL, create and send a chunk using
+	// the original metadata/digest/encoding and cachable flag, but with an empty payload
+	if len(data) == 0 && payload.Url == "" {
+		chunk := createEmptyAsset(payload, cachable)
 		if err := stream.Send(chunk); err != nil {
 			logger.Warning("Asset download stream closed", "slot", slot, "fqoid", fqoid, "error", err)
 			return StatusWithCode(StatusCodeInternal, "failed to send asset: "+err.Error())
 		}
-		sent = end
+
+		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(data))
+		return StatusWithCode(StatusCodeOk, "")
+	}
+
+	for offset := 0; (offset < len(data)) || (offset == 0); offset += assetChunkSize {
+		end := min(offset+assetChunkSize, len(data))
+
+		dp := st2138.DataPayload{Payload: data[offset:end]}
+		if offset == 0 {
+			// First chunk preserves the original metadata/digest/encoding/url
+			dp = payload
+			dp.Payload = data[offset:end]
+		}
+
+		chunk, err := st2138.ToAsset(dp, cachable && offset == 0)
+		if err != nil {
+			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+			return StatusWithCode(StatusCodeInternal, "failed to convert asset: "+err.Error())
+		}
+
+		if err := stream.Send(chunk); err != nil {
+			logger.Warning("Asset download stream closed", "slot", slot, "fqoid", fqoid, "error", err)
+			return StatusWithCode(StatusCodeInternal, "failed to send asset: "+err.Error())
+		}
 	}
 
 	logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(data))

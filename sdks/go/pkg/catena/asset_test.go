@@ -177,8 +177,8 @@ func TestSendAssetChunksWithSize(t *testing.T) {
 		payload := st2138.DataPayload{Payload: []byte("test")}
 
 		result := SendAssetChunksWithSize(1, "asset", stream, payload, false, 0)
-		if result.Code != StatusCodeInvalidArgument {
-			t.Fatalf("expected InvalidArgument, got %v", result)
+		if result.Code != StatusCodeInternal {
+			t.Fatalf("expected StatusCodeInternal, got %v", result)
 		}
 
 		if len(stream.Items) != 0 {
@@ -198,6 +198,25 @@ func TestSendAssetChunksWithSize(t *testing.T) {
 
 		if len(stream.Items) != 2 {
 			t.Fatalf("expected 2 chunks before failure, got %d", len(stream.Items))
+		}
+	})
+
+	t.Run("SendWithEmptyPayload", func(t *testing.T) {
+		stream := &sliceStream[st2138.Asset]{}
+		payload := st2138.DataPayload{Payload: []byte("")}
+
+		result := SendAssetChunksWithSize(1, "asset", stream, payload, false, 3)
+		if result.Code != StatusCodeOk {
+			t.Fatalf("expected OK, got %v", result)
+		}
+
+		if len(stream.Items) != 1 {
+			t.Fatalf("expected 1 chunk for empty payload, got %d", len(stream.Items))
+		}
+
+		chunk := stream.Items[0].Proto
+		if recPayload := chunk.GetPayload().GetPayload(); string(recPayload) != "" {
+			t.Errorf("payload = %q, want empty string", recPayload)
 		}
 	})
 }

@@ -28,6 +28,12 @@ func registerAssetHandlers(srv catena.Server, assets *sync.Map) {
 			}
 
 			stored := val.(storedAsset)
+
+			// SendAssetChunks streams the stored asset payload to the client,
+			// splitting the embedded payload into chunks when necessary. The
+			// first chunk carries asset metadata/digest/encoding and the cachable
+			// flag. URL-based assets and small embedded assets are sent as a single
+			// chunk while larger assets are split into multiple chunks.
 			return catena.SendAssetChunks(slot, fqoid, stream, stored.payload, stored.cachable)
 		})
 
