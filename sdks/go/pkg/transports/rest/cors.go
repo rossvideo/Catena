@@ -78,9 +78,11 @@ func (t *Transport) withCORS(next http.Handler) http.Handler {
 
 func applyCORSOrigin(w http.ResponseWriter, allowed []string, origin string) {
 	switch {
+	case origin == "" || origin == "null":
+		return
 	case slices.Contains(allowed, "*"):
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-	case origin != "" && origin != "null" && slices.Contains(allowed, origin):
+	case slices.Contains(allowed, origin):
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Add("Vary", "Origin")
 	}
