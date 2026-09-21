@@ -233,10 +233,10 @@ func DefaultDashboardOptions() DashboardOptions {
 func DefaultRestOptions() RestOptions {
 	return RestOptions{
 		Port:                9080,
-		AllowedOrigins:      nil,               // CORS OFF by default (respects gateway/proxy topology)
-		ExtraAllowedHeaders: nil,               // required headers already cover the ST 2138 surface
-		ExtraAllowedMethods: nil,               // fixed REST method set; extension unlikely
-		CorsMaxAge:          600 * time.Second, // 10 min preflight cache; only used once CORS is enabled
+		AllowedOrigins:      nil,              // CORS OFF by default (respects gateway/proxy topology)
+		ExtraAllowedHeaders: nil,              // required headers already cover the ST 2138 surface
+		ExtraAllowedMethods: nil,              // fixed REST method set; extension unlikely
+		CorsMaxAge:          10 * time.Minute, // preflight cache; only used once CORS is enabled
 	}
 }
 
