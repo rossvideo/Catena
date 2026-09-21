@@ -183,17 +183,3 @@ func TestUnionCORSTokens(t *testing.T) {
 		t.Errorf("expected first-seen Authorization casing, got %q", headers[1])
 	}
 }
-
-func assertCSVContains(t *testing.T, csv string, tokens ...string) {
-	t.Helper()
-	parts := strings.Split(csv, ",")
-	have := map[string]struct{}{}
-	for _, p := range parts {
-		have[strings.ToLower(strings.TrimSpace(p))] = struct{}{}
-	}
-	for _, tok := range tokens {
-		if _, ok := have[strings.ToLower(tok)]; !ok {
-			t.Errorf("expected %q in %q", tok, csv)
-		}
-	}
-}

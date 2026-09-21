@@ -46,6 +46,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -188,6 +189,20 @@ func assertBodyNotContains(t *testing.T, rec *httptest.ResponseRecorder, substr 
 	t.Helper()
 	if bytes.Contains(rec.Body.Bytes(), []byte(substr)) {
 		t.Errorf("expected body NOT to contain %q, got %q", substr, rec.Body.String())
+	}
+}
+
+func assertCSVContains(t *testing.T, csv string, tokens ...string) {
+	t.Helper()
+	parts := strings.Split(csv, ",")
+	have := map[string]struct{}{}
+	for _, p := range parts {
+		have[strings.ToLower(strings.TrimSpace(p))] = struct{}{}
+	}
+	for _, tok := range tokens {
+		if _, ok := have[strings.ToLower(tok)]; !ok {
+			t.Errorf("expected %q in %q", tok, csv)
+		}
 	}
 }
 
