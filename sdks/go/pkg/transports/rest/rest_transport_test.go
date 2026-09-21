@@ -62,7 +62,7 @@ import (
 )
 
 func makeTestTransport(tb testing.TB) (*Transport, *transporttest.StubServerRuntime) {
-	transport := NewTransport(config.RestOptions{Port: 8080, AllowedOrigins: []string{"https://example.com"}})
+	transport := NewTransport(config.RestOptions{Port: 8080})
 	stubRuntime := transporttest.MakeStubServerRuntime(tb)
 	stubRuntime.Dev = true
 	transport.runtime = stubRuntime
