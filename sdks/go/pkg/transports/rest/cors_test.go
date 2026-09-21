@@ -72,8 +72,8 @@ func TestCORS_DisabledByDefault(t *testing.T) {
 		t.Fatalf("expected OPTIONS not to be short-circuited when CORS is off, got %d", rec.Code)
 	}
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
-	assertHeader(t, rec, "Access-Control-Allow-Origin", "")
-	assertHeader(t, rec, "Access-Control-Allow-Credentials", "")
+	assertHeaderNotPresent(t, rec, "Access-Control-Allow-Origin")
+	assertHeaderNotPresent(t, rec, "Access-Control-Allow-Credentials")
 }
 
 func TestCORS_Preflight(t *testing.T) {
@@ -91,7 +91,7 @@ func TestCORS_Preflight(t *testing.T) {
 	assertHeader(t, rec, "Access-Control-Allow-Origin", "https://example.com")
 	assertHeader(t, rec, "Vary", "Origin")
 	assertHeader(t, rec, "Access-Control-Max-Age", "600")
-	assertHeader(t, rec, "Access-Control-Allow-Credentials", "")
+	assertHeaderNotPresent(t, rec, "Access-Control-Allow-Credentials")
 	assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Methods"), "GET", "POST", "PUT", "DELETE", "OPTIONS")
 	assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Headers"),
 		"Content-Type", "Authorization", "Accept", "Language", "Detail-Level", "X-Tenant-Id")
@@ -107,7 +107,7 @@ func TestCORS_AllowedOriginEchoedOnGET(t *testing.T) {
 	assertStatus(t, rec, http.StatusOK)
 	assertHeader(t, rec, "Access-Control-Allow-Origin", "https://example.com")
 	assertHeader(t, rec, "Vary", "Origin")
-	assertHeader(t, rec, "Access-Control-Allow-Credentials", "")
+	assertHeaderNotPresent(t, rec, "Access-Control-Allow-Credentials")
 }
 
 func TestCORS_DisallowedOriginOmitted(t *testing.T) {
@@ -128,7 +128,7 @@ func TestCORS_DisallowedOriginOmitted(t *testing.T) {
 			req.Header.Set("Origin", tt.origin)
 			rec := httptest.NewRecorder()
 			h.ServeHTTP(rec, req)
-			assertHeader(t, rec, "Access-Control-Allow-Origin", "")
+			assertHeaderNotPresent(t, rec, "Access-Control-Allow-Origin")
 			assertHeader(t, rec, "Vary", "Origin")
 		})
 	}
@@ -143,7 +143,7 @@ func TestCORS_StarLiteral(t *testing.T) {
 
 	assertStatus(t, rec, http.StatusOK)
 	assertHeader(t, rec, "Access-Control-Allow-Origin", "*")
-	assertHeader(t, rec, "Vary", "")
+	assertHeaderNotPresent(t, rec, "Vary")
 }
 
 func TestCORS_StarBeatsSpecificList(t *testing.T) {
@@ -157,7 +157,7 @@ func TestCORS_StarBeatsSpecificList(t *testing.T) {
 
 	assertStatus(t, rec, http.StatusOK)
 	assertHeader(t, rec, "Access-Control-Allow-Origin", "*")
-	assertHeader(t, rec, "Vary", "")
+	assertHeaderNotPresent(t, rec, "Vary")
 }
 
 func TestCORS_ConnectEchoesAllowedOrigin(t *testing.T) {
@@ -169,7 +169,7 @@ func TestCORS_ConnectEchoesAllowedOrigin(t *testing.T) {
 
 	assertStatus(t, rec, http.StatusOK)
 	assertHeader(t, rec, "Access-Control-Allow-Origin", "https://example.com")
-	assertHeader(t, rec, "Access-Control-Allow-Credentials", "")
+	assertHeaderNotPresent(t, rec, "Access-Control-Allow-Credentials")
 }
 
 func TestUnionCORSTokens(t *testing.T) {

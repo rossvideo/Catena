@@ -158,6 +158,13 @@ func assertHeader(t *testing.T, rec *httptest.ResponseRecorder, key, expected st
 	}
 }
 
+func assertHeaderNotPresent(t *testing.T, rec *httptest.ResponseRecorder, key string) {
+	t.Helper()
+	if rec.Header().Get(key) != "" {
+		t.Errorf("expected header %s not to be present, got %q", key, rec.Header().Get(key))
+	}
+}
+
 func parseJSONBody(t *testing.T, rec *httptest.ResponseRecorder) map[string]any {
 	t.Helper()
 	var response map[string]any
