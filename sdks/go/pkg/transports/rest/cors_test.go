@@ -130,7 +130,7 @@ func TestCORS_DisallowedOriginOmitted(t *testing.T) {
 			rec := httptest.NewRecorder()
 			h.ServeHTTP(rec, req)
 			assertHeader(t, rec, "Access-Control-Allow-Origin", "")
-			assertHeader(t, rec, "Vary", "")
+			assertHeader(t, rec, "Vary", "Origin")
 		})
 	}
 }

@@ -78,12 +78,14 @@ func (t *Transport) withCORS(next http.Handler) http.Handler {
 
 func applyCORSOrigin(w http.ResponseWriter, allowed []string, origin string) {
 	switch {
-	case origin == "" || origin == "null":
-		return
+	case origin == "null":
+		w.Header().Add("Vary", "Origin")
 	case slices.Contains(allowed, "*"):
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 	case slices.Contains(allowed, origin):
 		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Add("Vary", "Origin")
+	default:
 		w.Header().Add("Vary", "Origin")
 	}
 }
