@@ -39,7 +39,6 @@
 package rest
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -162,19 +161,11 @@ func TestCORS_StarBeatsSpecificList(t *testing.T) {
 }
 
 func TestCORS_ConnectEchoesAllowedOrigin(t *testing.T) {
-	transport, h := corsHandler(t, config.RestOptions{AllowedOrigins: []string{"https://example.com"}})
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	transport, _ := corsHandler(t, config.RestOptions{AllowedOrigins: []string{"https://example.com"}})
 	transport.runtime.(*transporttest.StubServerRuntime).WithConnection(transporttest.MakeTestConnection(1))
 
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	req.Header.Set("Origin", "https://example.com")
-	rec := httptest.NewRecorder()
-
-	go h.ServeHTTP(rec, req)
-	time.Sleep(100 * time.Millisecond)
-	cancel()
-	time.Sleep(50 * time.Millisecond)
+	rec, cancel := setupSSEConnection(t, transport, []string{"Origin", "https://example.com"})
+	cleanupSSE(cancel)
 
 	assertStatus(t, rec, http.StatusOK)
 	assertHeader(t, rec, "Access-Control-Allow-Origin", "https://example.com")

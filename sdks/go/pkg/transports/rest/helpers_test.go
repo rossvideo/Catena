@@ -110,7 +110,8 @@ func makeRequest(t *testing.T, transport *Transport, method, path, body string) 
 		req = httptest.NewRequest(method, path, nil)
 	}
 	rec := httptest.NewRecorder()
-	transport.mux.ServeHTTP(rec, req)
+	handler := transport.withCORS(transport.mux)
+	handler.ServeHTTP(rec, req)
 	return rec
 }
 
@@ -128,7 +129,8 @@ func makeRequestWithHeaders(t *testing.T, transport *Transport, method, path, bo
 		req.Header.Set(k, v)
 	}
 	rec := httptest.NewRecorder()
-	transport.mux.ServeHTTP(rec, req)
+	handler := transport.withCORS(transport.mux)
+	handler.ServeHTTP(rec, req)
 	return rec
 }
 
@@ -193,16 +195,21 @@ func assertBodyNotContains(t *testing.T, rec *httptest.ResponseRecorder, substr 
 
 // setupSSEConnection starts a background SSE connection to /st2138-api/v1/connect
 // and waits for the handler to be established. Returns the recorder and a cleanup
-// function to tear down the connection.
-func setupSSEConnection(t *testing.T, transport *Transport) (*httptest.ResponseRecorder, func()) {
+// function to tear down the connection. Optional headers can be provided to set
+// the request headers, formatted as [key, value] pairs.
+func setupSSEConnection(t *testing.T, transport *Transport, headers ...[]string) (*httptest.ResponseRecorder, func()) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
+	for _, header := range headers {
+		req.Header.Set(header[0], header[1])
+	}
 	rec := httptest.NewRecorder()
+	handler := transport.withCORS(transport.mux)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		transport.mux.ServeHTTP(rec, req)
+		handler.ServeHTTP(rec, req)
 	}()
 	time.Sleep(150 * time.Millisecond)
 	return rec, func() {
