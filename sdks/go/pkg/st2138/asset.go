@@ -228,9 +228,6 @@ func dataPayloadFromProto(pdp *protos.DataPayload) (DataPayload, error) {
 		}
 		dp.Url = k.Url
 	case *protos.DataPayload_Payload:
-		if len(k.Payload) == 0 {
-			return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)
-		}
 		dp.Payload = slices.Clone(k.Payload)
 	default:
 		return DataPayload{}, fmt.Errorf("either payload or url must be provided in DataPayload: %w", ErrInvalid)

@@ -333,15 +333,18 @@ func TestFromAsset_EmptyUrl(t *testing.T) {
 }
 
 func TestFromAsset_EmptyPayload(t *testing.T) {
-	// A payload oneof set to an empty byte slice carries no data and must be rejected.
+	// A payload oneof set to an empty byte slice is a valid empty payload.
 	asset := Asset{Proto: &protos.ExternalObjectPayload{
 		Payload: &protos.DataPayload{
 			Kind: &protos.DataPayload_Payload{Payload: []byte{}},
 		},
 	}}
-	_, res := FromAsset(asset)
-	if !errors.Is(res, ErrInvalid) {
-		t.Errorf("expected InvalidArgument for empty payload, got %v", res)
+	dp, res := FromAsset(asset)
+	if res != nil {
+		t.Fatalf("FromAsset error: %v", res)
+	}
+	if dp.Payload == nil || len(dp.Payload) != 0 {
+		t.Errorf("expected empty payload, got %v", dp.Payload)
 	}
 }
 
