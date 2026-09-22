@@ -40,7 +40,6 @@ package catena
 
 import (
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
-	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -57,19 +56,6 @@ func SendAssetChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], pay
 // SendAssetChunksWithSize streams payload using assetChunkSize and returns StatusCodeInternal when the size is not positive.
 func SendAssetChunksWithSize(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
 	return sendChunks(slot, fqoid, stream, payload, cachable, assetChunkSize)
-}
-
-// createEmptyAsset is an helper function that creates an empty asset with the given payload and cachable flag
-func createEmptyAsset(payload st2138.DataPayload, cachable bool) st2138.Asset {
-	return st2138.Asset{Proto: &protos.ExternalObjectPayload{
-		Cachable: cachable,
-		Payload: &protos.DataPayload{
-			Metadata:        payload.Metadata,
-			Digest:          payload.Digest,
-			PayloadEncoding: protos.DataPayload_PayloadEncoding(payload.PayloadEncoding),
-			Kind:            &protos.DataPayload_Payload{Payload: []byte{}},
-		},
-	}}
 }
 
 // Stream the asset in chunks. The first chunk carries the metadata,
