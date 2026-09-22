@@ -160,7 +160,7 @@ func assertHeader(t *testing.T, rec *httptest.ResponseRecorder, key, expected st
 
 func assertHeaderNotPresent(t *testing.T, rec *httptest.ResponseRecorder, key string) {
 	t.Helper()
-	if rec.Header().Get(key) != "" {
+	if values := rec.Header().Values(key); len(values) != 0 {
 		t.Errorf("expected header %s not to be present, got %q", key, rec.Header().Get(key))
 	}
 }
