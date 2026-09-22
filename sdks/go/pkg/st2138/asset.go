@@ -203,8 +203,10 @@ func dataPayloadToProto(dp DataPayload) (*protos.DataPayload, error) {
 		pdp.Kind = &protos.DataPayload_Url{Url: dp.Url}
 	} else if len(dp.Payload) > 0 && dp.Url == "" {
 		pdp.Kind = &protos.DataPayload_Payload{Payload: slices.Clone(dp.Payload)}
+	} else if len(dp.Payload) == 0 && dp.Url == "" {
+		pdp.Kind = &protos.DataPayload_Payload{Payload: []byte{}}
 	} else {
-		return nil, fmt.Errorf("either payload or url must be provided in DataPayload, but not both: %w", ErrInvalid)
+		return nil, fmt.Errorf("Cannot provide both payload and url: %w", ErrInvalid)
 	}
 
 	return pdp, nil

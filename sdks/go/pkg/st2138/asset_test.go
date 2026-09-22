@@ -133,16 +133,29 @@ func TestToAsset_BothPayloadAndUrl_Error(t *testing.T) {
 	}
 }
 
-func TestToAsset_NeitherPayloadNorUrl_Error(t *testing.T) {
+func TestToAsset_NeitherPayloadNorUrl_EmptyPayload(t *testing.T) {
 	dp := DataPayload{
 		Metadata: map[string]string{
 			"content-type": "text/plain",
 		},
 	}
 
-	_, err := ToAsset(dp, true)
-	if err == nil {
-		t.Error("expected error when neither payload nor url are provided")
+	asset, err := ToAsset(dp, true)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
+	}
+
+	if asset.Proto == nil || asset.Proto.GetPayload() == nil {
+		t.Fatal("expected non-nil proto payload")
+	}
+
+	payload, ok := asset.Proto.GetPayload().GetKind().(*protos.DataPayload_Payload)
+	if !ok {
+		t.Fatalf("expected payload kind, got %T", asset.Proto.GetPayload().GetKind())
+	}
+
+	if len(payload.Payload) != 0 {
+		t.Errorf("expected empty payload, got %d bytes", len(payload.Payload))
 	}
 }
 

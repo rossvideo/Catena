@@ -86,19 +86,6 @@ func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload 
 
 	data := payload.Payload
 
-	// If the payload is empty and there is no URL, create and send a chunk using
-	// the original metadata/digest/encoding and cachable flag, but with an empty payload
-	if len(data) == 0 && payload.Url == "" {
-		chunk := createEmptyAsset(payload, cachable)
-		if err := stream.Send(chunk); err != nil {
-			logger.Warning("Asset download stream closed", "slot", slot, "fqoid", fqoid, "error", err)
-			return StatusWithCode(StatusCodeInternal, "failed to send asset: "+err.Error())
-		}
-
-		logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(data))
-		return StatusWithCode(StatusCodeOk, "")
-	}
-
 	for offset := 0; (offset < len(data)) || (offset == 0); offset += assetChunkSize {
 		end := min(offset+assetChunkSize, len(data))
 
