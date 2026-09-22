@@ -41,9 +41,11 @@ package catena
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -168,7 +170,7 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	// process issuer URL: trim whitespace and trailing slashes, and validate it's not empty
 	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
 	if issuer == "" {
-		return "", fmt.Errorf("issuer is required")
+		return "", backoff.Permanent(fmt.Errorf("issuer is required"))
 	}
 
 	// construct the discovery URL and fetch the OpenID Connect discovery document
@@ -184,31 +186,56 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	// make a request using the client and ctx to allow for cancellation and timeouts
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryURL, nil)
 	if err != nil {
-		return "", fmt.Errorf("build request: %w", err)
+		return "", backoff.Permanent((fmt.Errorf("build request: %w", err)))
 	}
 
 	// do it
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("perform request: %w", err)
+		return "", classifyDiscoveryError(err)
 	}
 	defer resp.Body.Close()
 
-	// check for a successful response
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+	// check for a error response status
+	// 4xx errors are permanent, do not retry except for 408 and 429
+	// 1xx, 3xx, and 5xx erros are retriable
+	if (resp.StatusCode == http.StatusRequestTimeout) || (resp.StatusCode == http.StatusTooManyRequests) {
+		return "", fmt.Errorf("unexpected status %s", resp.Status)
+	} else if (resp.StatusCode >= http.StatusBadRequest) && (resp.StatusCode < http.StatusInternalServerError) {
+		return "", backoff.Permanent(fmt.Errorf("Client error: %s", resp.Status))
+	} else if (resp.StatusCode < http.StatusOK) || (resp.StatusCode >= http.StatusMultipleChoices) {
 		return "", fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
 	// decode the discovery document and extract the JWKS URI
 	if err := json.NewDecoder(resp.Body).Decode(&discoveryDoc); err != nil {
-		return "", fmt.Errorf("decode response: %w", err)
+		return "", backoff.Permanent(fmt.Errorf("decode response: %w", err))
 	}
 	// if the discovery document doesn't contain a jwks_uri, we can't validate signatures
 	if discoveryDoc.JwksUri == "" {
-		return "", fmt.Errorf("jwks_uri not found in discovery document")
+		return "", backoff.Permanent(fmt.Errorf("jwks_uri not found in discovery document"))
 	}
 
 	return discoveryDoc.JwksUri, nil
+}
+
+func classifyDiscoveryError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return backoff.Permanent(err)
+	}
+
+	// http.client.Do wraps transport errors in url.Error
+	// those are treated as retriable
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		return err
+	}
+
+	return backoff.Permanent(err)
 }
 
 // ValidateJWT verifies a JWT signature against the provided JWKS URL.
