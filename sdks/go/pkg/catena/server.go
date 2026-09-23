@@ -34,7 +34,8 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-05-14
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-09-23
  */
 
 package catena
@@ -43,6 +44,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
 	"math"
 	"strconv"
@@ -51,7 +53,6 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -502,6 +503,7 @@ type ServerRuntime interface {
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
+	Logger() *slog.Logger
 }
 
 var _ Server = (*server)(nil)
@@ -509,6 +511,7 @@ var _ ServerRuntime = (*server)(nil)
 
 type server struct {
 	options                    ServerOptions
+	log                        *slog.Logger
 	mu                         sync.Mutex
 	ctx                        context.Context
 	ctxCancel                  context.CancelFunc
@@ -561,8 +564,16 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		}
 	}
 
+	var log *slog.Logger
+	if opts.Logger == nil {
+		log = slog.New(slog.DiscardHandler)
+	} else {
+		log = opts.Logger
+	}
+
 	s := &server{
 		options:                    opts,
+		log:                        log,
 		ctx:                        ctx,
 		ctxCancel:                  cancel,
 		authzEnabled:               opts.AuthzEnabled,
@@ -589,7 +600,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		heartbeatHandlers:          make(map[uint16]HeartbeatHandler),
 		productStructs:             make(map[uint16]ProductStruct),
 		accessHandler:              allowAllAccessHandler,
-		connectionQueue:            newConnectionQueue(opts.MaxConnections),
+		connectionQueue:            newConnectionQueue(opts.MaxConnections, log),
 		transports:                 []Transport{},
 	}
 
@@ -663,7 +674,7 @@ func (s *server) DeregisterTransport(ctx context.Context, transport Transport) e
 	// Shutdown may block while draining work; call it outside the server lock.
 	err := transport.Shutdown(shutdownCtx)
 	if err != nil {
-		logger.Error("Error shutting down transport", "error", err)
+		s.log.With("component", "server").Error("Error shutting down transport", "error", err)
 	}
 
 	// drain any remaining connections owned by this transport
@@ -702,7 +713,7 @@ func (s *server) Shutdown(ctx context.Context) {
 	for _, t := range transports {
 		err := t.Shutdown(shutdownCtx)
 		if err != nil {
-			logger.Error("Error shutting down transport", "error", err)
+			s.log.With("component", "server").Error("Error shutting down transport", "error", err)
 		}
 	}
 
@@ -714,6 +725,10 @@ func (s *server) Shutdown(ctx context.Context) {
 
 func (s *server) IsDev() bool {
 	return s.options.IsDev
+}
+
+func (s *server) Logger() *slog.Logger {
+	return s.log
 }
 
 // parseTransportContext parses the transport context and returns a HandlerContext.
@@ -732,7 +747,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 
 	token, err := s.jwtValidator.validateJwt(accessToken)
 	if err != nil {
-		logger.Warning("Failed to validate access token", "error", err)
+		s.log.With("component", "server").Warn("Failed to validate access token", "error", err)
 		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
 	}
 
@@ -893,7 +908,7 @@ func invokeHandler[H, T any](
 
 	//TODO: add default handler lookup when custom default handlers are supported
 	if !ok {
-		logger.Warning("no handler registered for slot", "endpoint", endpoint, "slot", slot)
+		s.log.With("component", "server").Warn("no handler registered for slot", "endpoint", endpoint, "slot", slot)
 		return zero, StatusWithCode(StatusCodeNotFound, notFound)
 	}
 
@@ -1368,7 +1383,7 @@ func (s *server) ConnectionCount() int {
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
 	protoValue, err := st2138.ToProto(value)
 	if err != nil {
-		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
+		s.log.With("component", "server").Error("BroadcastUpdate: failed to convert value to proto", "error", err)
 		return
 	}
 	update := &protos.PushUpdates{
@@ -1391,11 +1406,11 @@ func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope strin
 // If the interval is invalid (zero or negative), the existing heartbeat is preserved.
 func (s *server) StartHeartbeat(interval time.Duration) {
 	if interval <= 0 {
-		logger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
+		s.log.With("component", "server").Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
 		return
 	}
 
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(s.log)
 	hb.OnTick(func() {
 		s.mu.Lock()
 		handlers := make(map[uint16]HeartbeatHandler, len(s.heartbeatHandlers))
@@ -1405,7 +1420,7 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						logger.Error("panic in heartbeat handler", "slot", slot, "error", r)
+						hb.log.Error("panic in heartbeat handler", "slot", slot, "error", r)
 					}
 				}()
 				handler(slot)
@@ -1432,9 +1447,9 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 	s.mu.Unlock()
 
 	if err != nil {
-		logger.Error("Heartbeat failed to start", "interval", interval, "error", err)
+		hb.log.Error("Heartbeat failed to start", "interval", interval, "error", err)
 	} else {
-		logger.Info("Heartbeat started", "interval", interval)
+		hb.log.Info("Heartbeat started", "interval", interval)
 	}
 }
 
@@ -1447,6 +1462,6 @@ func (s *server) StopHeartbeat() {
 
 	if hb != nil {
 		hb.Stop()
-		logger.Info("Heartbeat stopped")
+		hb.log.Info("Heartbeat stopped")
 	}
 }

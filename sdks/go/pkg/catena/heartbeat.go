@@ -32,10 +32,9 @@ package catena
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 // Heartbeat is a periodic timer that invokes a single callback on each tick.
@@ -47,11 +46,12 @@ type Heartbeat struct {
 	stopCh  chan struct{}
 	onTick  func()
 	wg      sync.WaitGroup
+	log     *slog.Logger
 }
 
 // NewHeartbeat creates a new Heartbeat instance.
-func NewHeartbeat() *Heartbeat {
-	return &Heartbeat{}
+func NewHeartbeat(log *slog.Logger) *Heartbeat {
+	return &Heartbeat{log: log.With("component", "heartbeat")}
 }
 
 // OnTick sets the callback to be invoked on each heartbeat tick.
@@ -70,7 +70,7 @@ func (h *Heartbeat) Start(interval time.Duration) error {
 	defer h.mu.Unlock()
 
 	if h.running {
-		logger.Warning("Heartbeat already running, ignoring Start call")
+		h.log.Warn("Heartbeat already running, ignoring Start call")
 		return nil
 	}
 	if interval <= 0 {

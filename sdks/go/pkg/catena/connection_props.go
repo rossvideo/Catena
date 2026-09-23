@@ -33,7 +33,8 @@
  * @file connection_props.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-06-08
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-09-23
  */
 
 package catena
@@ -42,12 +43,11 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 // ConnectionProps is a lightweight HTTP server that serves a single endpoint
@@ -56,6 +56,7 @@ import (
 // and can front either a REST or gRPC Catena device.
 type ConnectionProps struct {
 	opts DashboardOptions
+	log  *slog.Logger
 
 	mu      sync.Mutex
 	server  *http.Server
@@ -71,9 +72,16 @@ func NewConnectionProps(opts DashboardOptions) *ConnectionProps {
 		opts.Endpoint = "/" + opts.Endpoint
 	}
 
-	c := &ConnectionProps{opts: opts}
+	c := &ConnectionProps{
+		opts: opts,
+	}
+	if opts.Logger == nil {
+		c.log = slog.New(slog.DiscardHandler)
+	} else {
+		c.log = opts.Logger.With("component", "connection-props")
+	}
 	c.content = c.generateXML()
-	logger.Info("Connection props server constructed",
+	c.log.Info("Connection props server constructed",
 		"endpoint", opts.Endpoint, "port", opts.Port, "protocol", string(opts.Protocol))
 	return c
 }
@@ -96,7 +104,7 @@ func (c *ConnectionProps) Start() error {
 	c.mu.Lock()
 	if c.running {
 		c.mu.Unlock()
-		logger.Warning("Connection props server already running", "port", c.opts.Port)
+		c.log.Warn("Connection props server already running", "port", c.opts.Port)
 		return fmt.Errorf("connection props server already running")
 	}
 
@@ -114,7 +122,7 @@ func (c *ConnectionProps) Start() error {
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		c.mu.Unlock()
-		logger.Error("Connection props server failed to listen",
+		c.log.Error("Connection props server failed to listen",
 			"address", addr, "error", err)
 		return fmt.Errorf("connection props server failed to listen on %s: %w", addr, err)
 	}
@@ -128,11 +136,11 @@ func (c *ConnectionProps) Start() error {
 	c.mu.Unlock()
 
 	go func() {
-		logger.Info("Connection props server listening",
+		c.log.Info("Connection props server listening",
 			"address", srv.Addr, "endpoint", c.opts.Endpoint)
 		err := srv.Serve(listener)
 		if err != nil && err != http.ErrServerClosed {
-			logger.Error("Connection props server error", "error", err)
+			c.log.Error("Connection props server error", "error", err)
 		}
 		c.mu.Lock()
 		c.running = false
@@ -153,14 +161,14 @@ func (c *ConnectionProps) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	logger.Info("Stopping connection props server", "port", c.opts.Port)
+	c.log.Info("Stopping connection props server", "port", c.opts.Port)
 	err := srv.Shutdown(ctx)
 	if err != nil {
 		// Best-effort hard close so we never leak the listener.
-		logger.Warning("HTTP server shutdown timed out, forcing close")
+		c.log.Warn("HTTP server shutdown timed out, forcing close")
 		closeErr := srv.Close()
 		if closeErr != nil {
-			logger.Error("failed to force close HTTP server", "error", closeErr)
+			c.log.Error("failed to force close HTTP server", "error", closeErr)
 		}
 	}
 
@@ -168,13 +176,13 @@ func (c *ConnectionProps) Stop(ctx context.Context) error {
 	c.running = false
 	c.mu.Unlock()
 
-	logger.Info("Connection props server stopped")
+	c.log.Info("Connection props server stopped")
 	return err
 }
 
 // handleProps serves the connection-props endpoint. Only GET is permitted.
 func (c *ConnectionProps) handleProps(w http.ResponseWriter, r *http.Request) {
-	logger.Debug("Connection props request", "method", r.Method, "path", r.URL.Path)
+	c.log.Debug("Connection props request", "method", r.Method, "path", r.URL.Path)
 
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", "GET")
@@ -195,7 +203,7 @@ func (c *ConnectionProps) handleProps(w http.ResponseWriter, r *http.Request) {
 
 // handleHealth serves the /health probe.
 func (c *ConnectionProps) handleHealth(w http.ResponseWriter, r *http.Request) {
-	logger.Debug("Connection props request", "method", r.Method, "path", r.URL.Path)
+	c.log.Debug("Connection props request", "method", r.Method, "path", r.URL.Path)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("OK"))
@@ -249,7 +257,7 @@ func (c *ConnectionProps) generateXML() string {
 
 	out, err := xml.MarshalIndent(doc, "", "    ")
 	if err != nil {
-		logger.Error("Failed to marshal connection props XML", "error", err)
+		c.log.Error("Failed to marshal connection props XML", "error", err)
 		return ""
 	}
 	return string(out)
