@@ -39,4 +39,8 @@
 // package protos, giving application code ergonomic Go types while preserving
 // wire compatibility. The core runtime in package catena and the transport
 // packages exchange these types with a service's business logic.
+//
+// Builder helpers currently emit slog.Warn via slog.Default() when they ignore
+// invalid input. That is a temporary bridge until builders return errors; this
+// package does not install a process-global logger.
 package st2138

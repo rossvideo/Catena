@@ -40,9 +40,10 @@
 package st2138
 
 import (
+	"log/slog"
+
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -82,7 +83,7 @@ func NewDevice(slot uint16) *Device {
 // do not affect entries already added. A nil param is ignored.
 func (cd *Device) WithParam(oid string, param *Param) *Device {
 	if param == nil || param.Proto == nil {
-		logger.Warning("Device.WithParam called with nil param; ignoring", "oid", oid)
+		slog.Warn("Device.WithParam called with nil param; ignoring", "oid", oid)
 		return cd
 	}
 	if cd.Proto.Params == nil {
@@ -96,7 +97,7 @@ func (cd *Device) WithParam(oid string, param *Param) *Device {
 // command's proto is deep-copied. A nil command is ignored.
 func (cd *Device) WithCommand(oid string, command *Param) *Device {
 	if command == nil || command.Proto == nil {
-		logger.Warning("Device.WithCommand called with nil command; ignoring", "oid", oid)
+		slog.Warn("Device.WithCommand called with nil command; ignoring", "oid", oid)
 		return cd
 	}
 	if cd.Proto.Commands == nil {
@@ -111,7 +112,7 @@ func (cd *Device) WithCommand(oid string, command *Param) *Device {
 // ignored. Params can reference shared constraints via NewConstraintRefOid.
 func (cd *Device) WithConstraint(oid string, constraint *Constraint) *Device {
 	if constraint == nil || constraint.Proto == nil {
-		logger.Warning("Device.WithConstraint called with nil constraint; ignoring", "oid", oid)
+		slog.Warn("Device.WithConstraint called with nil constraint; ignoring", "oid", oid)
 		return cd
 	}
 	if cd.Proto.Constraints == nil {
@@ -125,7 +126,7 @@ func (cd *Device) WithConstraint(oid string, constraint *Constraint) *Device {
 // by oid. The group's proto is deep-copied. A nil group is ignored.
 func (cd *Device) WithMenuGroup(oid string, group *MenuGroup) *Device {
 	if group == nil || group.Proto == nil {
-		logger.Warning("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
+		slog.Warn("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
 		return cd
 	}
 	if cd.Proto.MenuGroups == nil {
