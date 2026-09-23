@@ -1463,6 +1463,57 @@ func TestTransport_Health_MethodNotAllowed(t *testing.T) {
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
+func TestTransport_CORS_PreflightAllEndpoints(t *testing.T) {
+	const origin = "https://example.com"
+	transport := NewTransport(config.RestOptions{
+		Port:                8080,
+		AllowedOrigins:      []string{origin},
+		ExtraAllowedHeaders: []string{"X-Tenant-Id"},
+		CorsMaxAge:          600 * time.Second,
+	})
+	headers := map[string]string{"Origin": origin}
+
+	endpoints := []struct {
+		name string
+		path string
+	}{
+		{"health", "/st2138-api/v1/health"},
+		{"connect", "/st2138-api/v1/connect"},
+		{"devices", "/st2138-api/v1/devices"},
+		{"device", "/st2138-api/v1/0"},
+		{"device stream", "/st2138-api/v1/0/stream"},
+		{"value", "/st2138-api/v1/0/value/brightness"},
+		{"values", "/st2138-api/v1/0/values"},
+		{"asset", "/st2138-api/v1/0/asset/logo"},
+		{"asset stream", "/st2138-api/v1/0/asset/logo/stream"},
+		{"command", "/st2138-api/v1/0/command/reboot"},
+		{"command stream", "/st2138-api/v1/0/command/reboot/stream"},
+		{"param", "/st2138-api/v1/0/param/brightness"},
+		{"param-info", "/st2138-api/v1/0/param-info/text_box"},
+		{"param-info stream", "/st2138-api/v1/0/param-info/text_box/stream"},
+		{"language-pack", "/st2138-api/v1/0/language-pack/fr"},
+		{"languages", "/st2138-api/v1/0/languages"},
+	}
+
+	for _, tt := range endpoints {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := makeRequestWithHeaders(t, transport, http.MethodOptions, tt.path, "", headers)
+			assertStatus(t, rec, http.StatusNoContent)
+			assertHeader(t, rec, "Access-Control-Allow-Origin", origin)
+			assertHeader(t, rec, "Vary", "Origin")
+			assertHeader(t, rec, "Access-Control-Max-Age", "600")
+			assertHeaderNotPresent(t, rec, "Access-Control-Allow-Credentials")
+			assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Methods"),
+				"GET", "POST", "PUT", "DELETE", "OPTIONS")
+			assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Headers"),
+				"Content-Type", "Authorization", "Accept", "Language", "Detail-Level", "X-Tenant-Id")
+			if rec.Body.Len() != 0 {
+				t.Errorf("expected empty preflight body, got %q", rec.Body.String())
+			}
+		})
+	}
+}
+
 func TestTransport_Connect_Route(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
