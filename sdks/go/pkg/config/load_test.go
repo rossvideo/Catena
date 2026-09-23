@@ -757,6 +757,70 @@ func TestLoader_Duration(t *testing.T) {
 	})
 }
 
+func TestLoader_PositiveDuration(t *testing.T) {
+	t.Run("env var parsing", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "10m")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 10*time.Minute {
+			t.Errorf("Expected val 10m got: %v", val)
+		}
+	})
+
+	t.Run("unitless duration from env", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "50")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 50*time.Second {
+			t.Errorf("Expected val 50s got: %v", val)
+		}
+	})
+
+	t.Run("invalid duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "notaduration")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
+
+	t.Run("negative duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "-10m")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 0 {
+			t.Errorf("Expected val to be 0 got: %v", val)
+		}
+	})
+
+	t.Run("zero duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "0")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 0 {
+			t.Errorf("Expected val to be 0 got: %v", val)
+		}
+	})
+}
+
 func TestLoader_LogLevel(t *testing.T) {
 	// valid log levels should be parsed correctly
 	tests := []struct {
