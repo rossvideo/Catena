@@ -799,11 +799,8 @@ func TestLoader_PositiveDuration(t *testing.T) {
 		val := time.Second
 		t.Setenv("TEST_POSITIVE_DURATION", "-10m")
 		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
-		if loader.err != nil {
-			t.Errorf("Expected no error got: %v", loader.err)
-		}
-		if val != 0 {
-			t.Errorf("Expected val to be 0 got: %v", val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
 		}
 	})
 

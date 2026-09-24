@@ -327,23 +327,14 @@ func parseDuration(s string) (time.Duration, error) {
 	return 0, fmt.Errorf("%s is not a valid duration", s)
 }
 
-// parseDuration but only returns a duration if it is greater than 0
-// otherwise it returns 0.
+// parseDuration but only returns a duration if it is non-negative
+// otherwise it errors.
 func parsePositiveDuration(s string) (time.Duration, error) {
 	s = strings.TrimSpace(s)
-	// Duration has units
-	if d, err := time.ParseDuration(s); err == nil && d > 0 {
-		return d, nil
-	} else if err == nil && d <= 0 {
-		return 0, nil
+	if strings.HasPrefix(s, "-") {
+		return 0, fmt.Errorf("%s is not a valid positive duration", s)
 	}
-	// Duration has no units, default to seconds
-	if i, err := strconv.ParseInt(s, 10, 64); err == nil && i > 0 {
-		return time.ParseDuration(s + "s")
-	} else if err == nil && i <= 0 {
-		return 0, nil
-	}
-	return 0, fmt.Errorf("%s is not a valid positive duration", s)
+	return parseDuration(s)
 }
 
 func (l *configLoader) extractConnectionProtocol(envName, cliName, usage string, val *ConnectionProtocol) *configLoader {
