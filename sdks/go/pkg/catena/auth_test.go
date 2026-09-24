@@ -73,9 +73,10 @@ func TestNewJwtValidator(t *testing.T) {
 		defer server.Close()
 
 		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			Issuer:            server.URL,
-			ValidateSignature: true,
-			Http:              server.Client(),
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 1 * time.Second,
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -87,7 +88,8 @@ func TestNewJwtValidator(t *testing.T) {
 
 	t.Run("empty http", func(t *testing.T) {
 		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			ValidateSignature: false,
+			ValidateSignature:          false,
+			StartupRetryMaxElapsedTime: 1 * time.Second,
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -106,9 +108,10 @@ func TestNewJwtValidator(t *testing.T) {
 
 	t.Run("discoverJWKSEndpoint error", func(t *testing.T) {
 		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			Issuer:            "http://[::1",
-			ValidateSignature: true,
-			Http:              http.DefaultClient,
+			Issuer:                     "http://[::1",
+			ValidateSignature:          true,
+			Http:                       http.DefaultClient,
+			StartupRetryMaxElapsedTime: 1 * time.Second,
 		})
 		if err == nil || !strings.Contains(err.Error(), "discover jwks endpoint") {
 			t.Fatalf("newJwtValidator() error = %v, want discover jwks endpoint", err)
@@ -128,9 +131,10 @@ func TestNewJwtValidator(t *testing.T) {
 		}))
 		defer server.Close()
 		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			Issuer:            server.URL,
-			ValidateSignature: true,
-			Http:              server.Client(),
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 1 * time.Second,
 		})
 		if err == nil || !strings.Contains(err.Error(), "create keyfunc") {
 			t.Fatalf("newJwtValidator() error = %v, want create keyfunc", err)
@@ -138,7 +142,7 @@ func TestNewJwtValidator(t *testing.T) {
 	})
 }
 
-func TestNewJwtValidator_TransientFailures_ErrorStatusCodes(t *testing.T) {
+func TestNewJwtValidatorRetry_TransientFailures_ErrorStatusCodes(t *testing.T) {
 
 	newTestServer := func(statusCode int, maxFailures int32, discoveryAttempts *atomic.Int32) *httptest.Server {
 		t.Helper()
@@ -280,7 +284,7 @@ func TestNewJwtValidator_TransientFailures_ErrorStatusCodes(t *testing.T) {
 
 }
 
-func TestNewJwtValidator_PermanentFailures(t *testing.T) {
+func TestNewJwtValidatorRetry_PermanentFailures(t *testing.T) {
 
 	newTestServer := func(statusCode int, createJSONBody func(url string) string, discoveryAttempts *atomic.Int32) *httptest.Server {
 		t.Helper()
@@ -472,7 +476,7 @@ func TestNewJwtValidator_PermanentFailures(t *testing.T) {
 	})
 }
 
-func TestNewJwtValidator_RetryBudgetExceeded(t *testing.T) {
+func TestNewJwtValidatorRetry_RetryBudgetExceeded(t *testing.T) {
 
 	var server *httptest.Server
 	var discoveryAttempts atomic.Int32
@@ -504,9 +508,8 @@ func TestNewJwtValidator_RetryBudgetExceeded(t *testing.T) {
 	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts == 0 { // atleast one retry
 		t.Fatalf("discovery attempts = %d, want atleast 1", numberOfAttempts)
 	}
-
-	fmt.Println(err)
 }
+
 func TestJwtValidator_validateJwt(t *testing.T) {
 	pretendString := "ThisIsNotARealTokenButWeCanPretend"
 	t.Run("success", func(t *testing.T) {

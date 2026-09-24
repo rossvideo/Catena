@@ -126,7 +126,7 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	jwksKeyFunc, err := backoff.Retry(ctx, func() (jwt.Keyfunc, error) {
 		newJwskKeyFunc, err := createJWTKeyFunc(ctx, opts)
 		if err != nil {
-			return nil, err
+			return nil, rewrapBackoffPermanentError(err)
 		}
 
 		return newJwskKeyFunc, nil
@@ -139,6 +139,16 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	}
 
 	return jwksKeyFunc, nil
+}
+
+func rewrapBackoffPermanentError(err error) error {
+
+	var permError *backoff.PermanentError
+	if errors.As(err, &permError) {
+		return backoff.Permanent(fmt.Errorf("Permanent error: %w", err))
+	}
+
+	return err
 }
 
 func createJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.Keyfunc, error) {
@@ -224,18 +234,20 @@ func classifyDiscoveryError(err error) error {
 		return nil
 	}
 
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-		return backoff.Permanent(err)
+	doErr := fmt.Errorf("perform request: %w", err)
+
+	if errors.Is(doErr, context.Canceled) || errors.Is(doErr, context.DeadlineExceeded) {
+		return backoff.Permanent(doErr)
 	}
 
 	// http.client.Do wraps transport errors in url.Error
 	// those are treated as retriable
 	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
-		return err
+	if errors.As(doErr, &urlErr) {
+		return doErr
 	}
 
-	return backoff.Permanent(err)
+	return backoff.Permanent(doErr)
 }
 
 // ValidateJWT verifies a JWT signature against the provided JWKS URL.
