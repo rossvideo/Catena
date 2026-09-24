@@ -1463,75 +1463,6 @@ func TestTransport_Health_MethodNotAllowed(t *testing.T) {
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
-func TestTransport_CORS_Preflight(t *testing.T) {
-	const origin = "https://example.com"
-	transport := NewTransport(config.RestOptions{
-		Port:           8080,
-		AllowedOrigins: []string{origin},
-		CorsMaxAge:     10 * time.Minute,
-	})
-	runtime := transporttest.MakeStubServerRuntime(t)
-	runtime.Dev = true
-	transport.runtime = runtime
-	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
-		if gotTransport != transport {
-			t.Errorf("expected transport %v, got %v", transport, gotTransport)
-		}
-	}
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		t.Fatalf("net.Listen: %v", err)
-	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
-
-	transport.port = port
-	err = transport.Start(context.Background(), runtime)
-	if err != nil {
-		t.Errorf("Start: %v", err)
-	}
-	time.Sleep(200 * time.Millisecond)
-
-	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
-
-	req, err := http.NewRequest(http.MethodOptions, url, nil)
-	if err != nil {
-		t.Fatalf("NewRequest: %v", err)
-	}
-	req.Header.Set("Origin", origin)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("Do: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusNoContent {
-		t.Errorf("expected status %d, got %d", http.StatusNoContent, resp.StatusCode)
-	}
-	if resp.Header.Get("Access-Control-Allow-Origin") != origin {
-		t.Errorf("expected Access-Control-Allow-Origin %s, got %s", origin, resp.Header.Get("Access-Control-Allow-Origin"))
-	}
-	if resp.Header.Get("Vary") != "Origin" {
-		t.Errorf("expected Vary %s, got %s", "Origin", resp.Header.Get("Vary"))
-	}
-	if resp.Header.Get("Access-Control-Max-Age") != "600" {
-		t.Errorf("expected Access-Control-Max-Age %s, got %s", "600", resp.Header.Get("Access-Control-Max-Age"))
-	}
-	if resp.Header.Get("Access-Control-Allow-Methods") != strings.Join(requiredMethods, ", ") {
-		t.Errorf("expected Access-Control-Allow-Methods %s, got %s", requiredMethods, resp.Header.Get("Access-Control-Allow-Methods"))
-	}
-	if resp.Header.Get("Access-Control-Allow-Headers") != strings.Join(requiredHeaders, ", ") {
-		t.Errorf("expected Access-Control-Allow-Headers %s, got %s", requiredHeaders, resp.Header.Get("Access-Control-Allow-Headers"))
-	}
-	if values := resp.Header.Values("Access-Control-Allow-Credentials"); len(values) != 0 {
-		t.Errorf("expected header Access-Control-Allow-Credentials not to be present")
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	transport.Shutdown(ctx)
-}
-
 func TestTransport_Connect_Route(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
@@ -1949,6 +1880,70 @@ func TestTransport_sendSSEEvent(t *testing.T) {
 	if valueObj["oid"] != "test/param" {
 		t.Errorf("expected oid=test/param, got %v", valueObj["oid"])
 	}
+}
+
+func TestTransport_CORS_Preflight(t *testing.T) {
+	const origin = "https://example.com"
+	transport := NewTransport(config.RestOptions{
+		Port:           8080,
+		AllowedOrigins: []string{origin},
+		CorsMaxAge:     10 * time.Minute,
+	})
+	runtime := transporttest.MakeStubServerRuntime(t)
+	runtime.Dev = true
+	transport.runtime = runtime
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
+	transport.port = 0
+	err := transport.Start(context.Background(), runtime)
+	if err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	// figure out the actual port assigned by the OS if port was 0.
+	port := transport.listener.Addr().(*net.TCPAddr).Port
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
+
+	req, err := http.NewRequest(http.MethodOptions, url, nil)
+	if err != nil {
+		t.Fatalf("NewRequest: %v", err)
+	}
+	req.Header.Set("Origin", origin)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("Do: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("expected status %d, got %d", http.StatusNoContent, resp.StatusCode)
+	}
+	if resp.Header.Get("Access-Control-Allow-Origin") != origin {
+		t.Errorf("expected Access-Control-Allow-Origin %s, got %s", origin, resp.Header.Get("Access-Control-Allow-Origin"))
+	}
+	if resp.Header.Get("Vary") != "Origin" {
+		t.Errorf("expected Vary %s, got %s", "Origin", resp.Header.Get("Vary"))
+	}
+	if resp.Header.Get("Access-Control-Max-Age") != "600" {
+		t.Errorf("expected Access-Control-Max-Age %s, got %s", "600", resp.Header.Get("Access-Control-Max-Age"))
+	}
+	if resp.Header.Get("Access-Control-Allow-Methods") != strings.Join(requiredMethods, ", ") {
+		t.Errorf("expected Access-Control-Allow-Methods %s, got %s", requiredMethods, resp.Header.Get("Access-Control-Allow-Methods"))
+	}
+	if resp.Header.Get("Access-Control-Allow-Headers") != strings.Join(requiredHeaders, ", ") {
+		t.Errorf("expected Access-Control-Allow-Headers %s, got %s", requiredHeaders, resp.Header.Get("Access-Control-Allow-Headers"))
+	}
+	if values := resp.Header.Values("Access-Control-Allow-Credentials"); len(values) != 0 {
+		t.Errorf("expected header Access-Control-Allow-Credentials not to be present")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	transport.Shutdown(ctx)
 }
 
 func TestTransport_Start(t *testing.T) {
