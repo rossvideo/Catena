@@ -65,7 +65,7 @@ restTransport := rest.NewTransport(opts)
 Configuration:
 
 - `{PREFIX}_REST_ALLOWED_ORIGINS` / `--rest-allowed-origins` — comma-separated exact origins. `*` allows any origin. Empty disables CORS (`--rest-allowed-origins=` is off).
-- `{PREFIX}_REST_EXTRA_ALLOWED_HEADERS` / `--rest-extra-allowed-headers` — additive; unioned with `Content-Type`, `Authorization`, `Accept`, `Language`, `Detail-Level`.
+- `{PREFIX}_REST_EXTRA_ALLOWED_HEADERS` / `--rest-extra-allowed-headers` — additive; unioned with `Content-Type`, `Authorization`, `Accept`, `Language`, `Detail-Level`, `Request-Start`.
 - `{PREFIX}_REST_EXTRA_ALLOWED_METHODS` / `--rest-extra-allowed-methods` — additive; unioned with `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`.
 - `{PREFIX}_REST_CORS_MAX_AGE` / `--rest-cors-max-age` — Go duration value (default `10m`). Used only when CORS is enabled. Units default to seconds if unspecified.
 
