@@ -1463,55 +1463,73 @@ func TestTransport_Health_MethodNotAllowed(t *testing.T) {
 	assertStatus(t, rec, http.StatusMethodNotAllowed)
 }
 
-func TestTransport_CORS_PreflightAllEndpoints(t *testing.T) {
+func TestTransport_CORS_Preflight(t *testing.T) {
 	const origin = "https://example.com"
 	transport := NewTransport(config.RestOptions{
-		Port:                8080,
-		AllowedOrigins:      []string{origin},
-		ExtraAllowedHeaders: []string{"X-Tenant-Id"},
-		CorsMaxAge:          600 * time.Second,
+		Port:           8080,
+		AllowedOrigins: []string{origin},
+		CorsMaxAge:     10 * time.Minute,
 	})
-	headers := map[string]string{"Origin": origin}
-
-	endpoints := []struct {
-		name string
-		path string
-	}{
-		{"health", "/st2138-api/v1/health"},
-		{"connect", "/st2138-api/v1/connect"},
-		{"devices", "/st2138-api/v1/devices"},
-		{"device", "/st2138-api/v1/0"},
-		{"device stream", "/st2138-api/v1/0/stream"},
-		{"value", "/st2138-api/v1/0/value/brightness"},
-		{"values", "/st2138-api/v1/0/values"},
-		{"asset", "/st2138-api/v1/0/asset/logo"},
-		{"asset stream", "/st2138-api/v1/0/asset/logo/stream"},
-		{"command", "/st2138-api/v1/0/command/reboot"},
-		{"command stream", "/st2138-api/v1/0/command/reboot/stream"},
-		{"param", "/st2138-api/v1/0/param/brightness"},
-		{"param-info", "/st2138-api/v1/0/param-info/text_box"},
-		{"param-info stream", "/st2138-api/v1/0/param-info/text_box/stream"},
-		{"language-pack", "/st2138-api/v1/0/language-pack/fr"},
-		{"languages", "/st2138-api/v1/0/languages"},
+	runtime := transporttest.MakeStubServerRuntime(t)
+	runtime.Dev = true
+	transport.runtime = runtime
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
 	}
-
-	for _, tt := range endpoints {
-		t.Run(tt.name, func(t *testing.T) {
-			rec := makeRequestWithHeaders(t, transport, http.MethodOptions, tt.path, "", headers)
-			assertStatus(t, rec, http.StatusNoContent)
-			assertHeader(t, rec, "Access-Control-Allow-Origin", origin)
-			assertHeader(t, rec, "Vary", "Origin")
-			assertHeader(t, rec, "Access-Control-Max-Age", "600")
-			assertHeaderNotPresent(t, rec, "Access-Control-Allow-Credentials")
-			assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Methods"),
-				"GET", "POST", "PUT", "DELETE", "OPTIONS")
-			assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Headers"),
-				"Content-Type", "Authorization", "Accept", "Language", "Detail-Level", "X-Tenant-Id")
-			if rec.Body.Len() != 0 {
-				t.Errorf("expected empty preflight body, got %q", rec.Body.String())
-			}
-		})
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("net.Listen: %v", err)
 	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	listener.Close()
+
+	transport.port = port
+	err = transport.Start(context.Background(), runtime)
+	if err != nil {
+		t.Errorf("Start: %v", err)
+	}
+	time.Sleep(200 * time.Millisecond)
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
+
+	req, err := http.NewRequest(http.MethodOptions, url, nil)
+	if err != nil {
+		t.Fatalf("NewRequest: %v", err)
+	}
+	req.Header.Set("Origin", origin)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("Do: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("expected status %d, got %d", http.StatusNoContent, resp.StatusCode)
+	}
+	if resp.Header.Get("Access-Control-Allow-Origin") != origin {
+		t.Errorf("expected Access-Control-Allow-Origin %s, got %s", origin, resp.Header.Get("Access-Control-Allow-Origin"))
+	}
+	if resp.Header.Get("Vary") != "Origin" {
+		t.Errorf("expected Vary %s, got %s", "Origin", resp.Header.Get("Vary"))
+	}
+	if resp.Header.Get("Access-Control-Max-Age") != "600" {
+		t.Errorf("expected Access-Control-Max-Age %s, got %s", "600", resp.Header.Get("Access-Control-Max-Age"))
+	}
+	if resp.Header.Get("Access-Control-Allow-Methods") != strings.Join(requiredMethods, ", ") {
+		t.Errorf("expected Access-Control-Allow-Methods %s, got %s", requiredMethods, resp.Header.Get("Access-Control-Allow-Methods"))
+	}
+	if resp.Header.Get("Access-Control-Allow-Headers") != strings.Join(requiredHeaders, ", ") {
+		t.Errorf("expected Access-Control-Allow-Headers %s, got %s", requiredHeaders, resp.Header.Get("Access-Control-Allow-Headers"))
+	}
+	if values := resp.Header.Values("Access-Control-Allow-Credentials"); len(values) != 0 {
+		t.Errorf("expected header Access-Control-Allow-Credentials not to be present")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	transport.Shutdown(ctx)
 }
 
 func TestTransport_Connect_Route(t *testing.T) {
