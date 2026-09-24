@@ -48,7 +48,7 @@ import (
 
 // SDK-owned CORS baselines. Operators append via ExtraAllowed* only.
 var requiredMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-var requiredHeaders = []string{"Content-Type", "Authorization", "Accept", "Language", "Detail-Level"}
+var requiredHeaders = []string{"Content-Type", "Authorization", "Accept", "Language", "Detail-Level", "Request-Start"}
 
 // withCORS wraps next with opt-in CORS. Empty AllowedOrigins leaves the
 // handler unchanged so a gateway that already injects CORS is not doubled.
