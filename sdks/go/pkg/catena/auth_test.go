@@ -46,7 +46,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -136,6 +138,375 @@ func TestNewJwtValidator(t *testing.T) {
 	})
 }
 
+func TestNewJwtValidator_TransientFailures_ErrorStatusCodes(t *testing.T) {
+
+	newTestServer := func(statusCode int, maxFailures int32, discoveryAttempts *atomic.Int32) *httptest.Server {
+		t.Helper()
+
+		var server *httptest.Server
+
+		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/.well-known/openid-configuration" {
+				attempt := discoveryAttempts.Add(1)
+
+				if attempt <= maxFailures {
+					http.Error(w, "Error code", statusCode)
+					return
+				}
+
+				_, _ = fmt.Fprintf(w, `{"jwks_uri":"%s/keys"}`, server.URL)
+				return
+			}
+			if r.URL.Path == "/keys" {
+				_, _ = fmt.Fprint(w, `{"keys":[]}`)
+				return
+			}
+			http.NotFound(w, r)
+		}))
+
+		t.Cleanup(server.Close)
+
+		return server
+	}
+	t.Run("Status 101 Error", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+		var maxFailures int32 = 3
+
+		server := newTestServer(http.StatusSwitchingProtocols, maxFailures, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected newJwtValidator() error: %v", err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
+			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
+		}
+	})
+
+	t.Run("Status 300 Error", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+		var maxFailures int32 = 3
+
+		server := newTestServer(http.StatusMultipleChoices, maxFailures, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected newJwtValidator() error: %v", err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
+			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
+		}
+	})
+
+	t.Run("Status 408 Error", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+		var maxFailures int32 = 3
+
+		server := newTestServer(http.StatusRequestTimeout, maxFailures, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected newJwtValidator() error: %v", err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
+			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
+		}
+	})
+
+	t.Run("Status 429 Error", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+		var maxFailures int32 = 3
+
+		server := newTestServer(http.StatusTooManyRequests, maxFailures, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected newJwtValidator() error: %v", err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
+			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
+		}
+	})
+
+	t.Run("Status 500 Error", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+		var maxFailures int32 = 3
+
+		server := newTestServer(http.StatusInternalServerError, maxFailures, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected newJwtValidator() error: %v", err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
+			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
+		}
+	})
+
+}
+
+func TestNewJwtValidator_PermanentFailures(t *testing.T) {
+
+	newTestServer := func(statusCode int, createJSONBody func(url string) string, discoveryAttempts *atomic.Int32) *httptest.Server {
+		t.Helper()
+
+		var server *httptest.Server
+
+		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/.well-known/openid-configuration" {
+				discoveryAttempts.Add(1)
+
+				w.WriteHeader(statusCode)
+				_, _ = fmt.Fprint(w, createJSONBody(server.URL))
+				return
+			}
+			if r.URL.Path == "/keys" {
+				_, _ = fmt.Fprint(w, `{"keys":[]}`)
+				return
+			}
+			http.NotFound(w, r)
+		}))
+
+		t.Cleanup(server.Close)
+
+		return server
+	}
+
+	t.Run("Status 400 error", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+
+		createJSONBody := func(url string) string {
+			return `{"jwks_uri":"` + url + `/keys"}`
+		}
+
+		server := newTestServer(http.StatusBadRequest, createJSONBody, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
+			t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
+		}
+	})
+
+	t.Run("Empty Issuer URL", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+
+		createJSONBody := func(url string) string {
+			return `{"jwks_uri":"` + url + `/keys"}`
+		}
+
+		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     "",
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 0 { // 0 attempts becuase no issuer provided
+			t.Fatalf("discovery attempts = %d, want 0", numberOfAttempts)
+		}
+	})
+
+	t.Run("Nil Context", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+
+		createJSONBody := func(url string) string {
+			return `{"jwks_uri":"` + url + `/keys"}`
+		}
+
+		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
+
+		_, err := newJwtValidator(nil, JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 0 { // 0 attempts because no context
+			t.Fatalf("discovery attempts = %d, want 0", numberOfAttempts)
+		}
+	})
+
+	t.Run("Malformed Discovery JSON", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+
+		createJSONBody := func(url string) string {
+			return `{"jwks_uri" "` + url + `/keys"}` // Not in valid JSON format - missing a colon
+		}
+
+		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
+			t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
+		}
+	})
+
+	t.Run("Missing JWKS Uri", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+
+		createJSONBody := func(url string) string {
+			return `{"jwks_uri": ""}`
+		}
+
+		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
+
+		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * time.Second,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
+			t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
+		}
+	})
+
+	t.Run("Context Cancelled", func(t *testing.T) {
+		var discoveryAttempts atomic.Int32
+
+		createJSONBody := func(url string) string {
+			return `{"jwks_uri":"` + url + `/keys"}`
+		}
+
+		server := newTestServer(http.StatusInternalServerError, createJSONBody, &discoveryAttempts)
+
+		ctx, cancel := context.WithCancel(t.Context())
+		defer cancel()
+
+		// asynchronously cancel context after one second
+		var cancelTime = 1 * time.Second
+		go func() {
+			time.Sleep(cancelTime)
+			cancel()
+		}()
+
+		_, err := newJwtValidator(ctx, JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 3 * cancelTime,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context.Canceled, got %T: %v", err, err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts == 0 { // atleast one retry
+			t.Fatalf("discovery attempts = %d, want atleast 1", numberOfAttempts)
+		}
+	})
+}
+
+func TestNewJwtValidator_RetryBudgetExceeded(t *testing.T) {
+
+	var server *httptest.Server
+	var discoveryAttempts atomic.Int32
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			discoveryAttempts.Add(1)
+			http.Error(w, "Error code", http.StatusInternalServerError)
+			return
+		}
+		if r.URL.Path == "/keys" {
+			_, _ = fmt.Fprint(w, `{"keys":[]}`)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		Issuer:                     server.URL,
+		ValidateSignature:          true,
+		Http:                       server.Client(),
+		StartupRetryMaxElapsedTime: 2 * time.Second,
+	})
+
+	if err == nil {
+		t.Fatalf("expected an error")
+	}
+
+	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts == 0 { // atleast one retry
+		t.Fatalf("discovery attempts = %d, want atleast 1", numberOfAttempts)
+	}
+
+	fmt.Println(err)
+}
 func TestJwtValidator_validateJwt(t *testing.T) {
 	pretendString := "ThisIsNotARealTokenButWeCanPretend"
 	t.Run("success", func(t *testing.T) {
