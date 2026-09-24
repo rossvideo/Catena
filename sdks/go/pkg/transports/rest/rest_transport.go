@@ -175,7 +175,6 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	// should have signaled all active connections to shut down, so this should complete in
 	// a timely manner.
 	err := <-errCh
-	t.listener = nil
 	return err
 }
 
