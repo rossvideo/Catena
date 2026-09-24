@@ -1958,19 +1958,14 @@ func TestTransport_Start(t *testing.T) {
 			t.Errorf("expected transport %v, got %v", transport, gotTransport)
 		}
 	}
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		t.Fatalf("net.Listen: %v", err)
-	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
 
-	transport.port = port
-	err = transport.Start(context.Background(), runtime)
+	transport.port = 0
+	err := transport.Start(context.Background(), runtime)
 	if err != nil {
-		t.Errorf("Start: %v", err)
+		t.Fatalf("Start: %v", err)
 	}
-	time.Sleep(200 * time.Millisecond)
+	// figure out the actual port assigned by the OS if port was 0.
+	port := transport.listener.Addr().(*net.TCPAddr).Port
 
 	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
 	resp, err := http.Get(url)
