@@ -63,6 +63,7 @@ type FallbackHandler func(w http.ResponseWriter, r *http.Request) (st2138.Value,
 
 type Transport struct {
 	mu              sync.Mutex
+	listener        net.Listener // kept so tests can read the actual bound addr after Start (needed when Port is 0)
 	server          *http.Server
 	mux             *http.ServeMux
 	runtime         catena.ServerRuntime
@@ -100,7 +101,7 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 	// already in use, invalid address, etc.) are returned to the caller
 	// instead of only being logged asynchronously after Start has already
 	// reported success. This mirrors ConnectionProps.Start.
-	listener, err := net.Listen("tcp", addr)
+	t.listener, err = net.Listen("tcp", addr)
 	if err != nil {
 		logger.Error("REST Transport failed to listen", "address", addr, "error", err)
 		return fmt.Errorf("REST transport failed to listen on %s: %w", addr, err)
@@ -121,9 +122,9 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 		if tlsConfig != nil {
 			// cert and key files are empty because the certificates are
 			// already loaded into TLSConfig
-			err = t.server.ServeTLS(listener, "", "")
+			err = t.server.ServeTLS(t.listener, "", "")
 		} else {
-			err = t.server.Serve(listener)
+			err = t.server.Serve(t.listener)
 		}
 		if err != nil && err != http.ErrServerClosed {
 			logger.Error("HTTP server error", "error", err)
@@ -173,7 +174,8 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	// Wait for HTTP shutdown to complete and return its result. By this point, the runtime
 	// should have signaled all active connections to shut down, so this should complete in
 	// a timely manner.
-	return <-errCh
+	err := <-errCh
+	return err
 }
 
 func (t *Transport) RegisterFallbackHandler(handler FallbackHandler) {

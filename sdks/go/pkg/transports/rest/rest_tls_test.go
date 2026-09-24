@@ -56,24 +56,11 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest"
 )
 
-// reserveTestPort finds a free TCP port for a transport to listen on.
-func reserveTestPort(t *testing.T) int {
-	t.Helper()
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("net.Listen: %v", err)
-	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
-	return port
-}
-
 // startTLSTransport starts a REST transport with the given TLS options on a
 // free port and registers shutdown cleanup. Returns the port it listens on.
 func startTLSTransport(t *testing.T, tlsOpts config.TLSOptions) int {
 	t.Helper()
-	port := reserveTestPort(t)
-	transport := NewTransport(config.RestOptions{Port: port, TLS: tlsOpts})
+	transport := NewTransport(config.RestOptions{Port: 0, TLS: tlsOpts})
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {}
 
@@ -85,9 +72,7 @@ func startTLSTransport(t *testing.T, tlsOpts config.TLSOptions) int {
 		defer cancel()
 		transport.Shutdown(ctx)
 	})
-	// give the serve goroutine a moment to begin accepting
-	time.Sleep(100 * time.Millisecond)
-	return port
+	return transport.listener.Addr().(*net.TCPAddr).Port
 }
 
 // caPool loads the test CA into a cert pool for client-side verification.
@@ -229,7 +214,7 @@ func TestTransport_Start_TLS_BadConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			transport := NewTransport(config.RestOptions{Port: reserveTestPort(t), TLS: tt.tls})
+			transport := NewTransport(config.RestOptions{Port: 0, TLS: tt.tls})
 			runtime := transporttest.MakeStubServerRuntime(t)
 			err := transport.Start(context.Background(), runtime)
 			if err == nil {
