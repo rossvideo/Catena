@@ -76,7 +76,7 @@ func TestNewJwtValidator(t *testing.T) {
 			Issuer:                     server.URL,
 			ValidateSignature:          true,
 			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 1 * time.Second,
+			StartupRetryMaxElapsedTime: 0, //single attempt
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -89,7 +89,7 @@ func TestNewJwtValidator(t *testing.T) {
 	t.Run("empty http", func(t *testing.T) {
 		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
 			ValidateSignature:          false,
-			StartupRetryMaxElapsedTime: 1 * time.Second,
+			StartupRetryMaxElapsedTime: 0, //single attempt
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -111,7 +111,7 @@ func TestNewJwtValidator(t *testing.T) {
 			Issuer:                     "http://[::1",
 			ValidateSignature:          true,
 			Http:                       http.DefaultClient,
-			StartupRetryMaxElapsedTime: 1 * time.Second,
+			StartupRetryMaxElapsedTime: 0, //single attempt
 		})
 		if err == nil || !strings.Contains(err.Error(), "discover jwks endpoint") {
 			t.Fatalf("newJwtValidator() error = %v, want discover jwks endpoint", err)
@@ -134,7 +134,7 @@ func TestNewJwtValidator(t *testing.T) {
 			Issuer:                     server.URL,
 			ValidateSignature:          true,
 			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 1 * time.Second,
+			StartupRetryMaxElapsedTime: 0, //single attempt
 		})
 		if err == nil || !strings.Contains(err.Error(), "create keyfunc") {
 			t.Fatalf("newJwtValidator() error = %v, want create keyfunc", err)
@@ -507,6 +507,34 @@ func TestNewJwtValidatorRetry_RetryBudgetExceeded(t *testing.T) {
 
 	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts == 0 { // atleast one retry
 		t.Fatalf("discovery attempts = %d, want atleast 1", numberOfAttempts)
+	}
+}
+
+func TestNewJwtValidatorRetry_ZeroMaxElapsedTimeIsOneShot(t *testing.T) {
+	var discoveryAttempts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			discoveryAttempts.Add(1)
+			http.Error(w, "Error code", http.StatusInternalServerError)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		Issuer:                     server.URL,
+		ValidateSignature:          true,
+		Http:                       server.Client(),
+		StartupRetryMaxElapsedTime: 0,
+	})
+
+	if err == nil {
+		t.Fatalf("expected an error")
+	}
+
+	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
+		t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
 	}
 }
 

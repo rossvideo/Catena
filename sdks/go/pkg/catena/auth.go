@@ -121,6 +121,23 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	backoffPolicy.Multiplier = 2
 	backoffPolicy.MaxInterval = 5 * time.Second
 
+	// Define the retry options
+	retryOpts := []backoff.RetryOption{
+		backoff.WithBackOff(backoffPolicy),
+		backoff.WithNotify(func(err error, d time.Duration) {
+			slog.Warn("Failed to initialize JWT keyfunc, retrying...", slog.String("error", err.Error()), slog.Duration("next_retry_in", d))
+		}),
+	}
+
+	if opts.StartupRetryMaxElapsedTime == 0 {
+		// backoff treats a MaxElapsedTime of 0 as unlimited, this is mapped to a single attempt instead
+		retryOpts = append(retryOpts, backoff.WithMaxTries(1))
+	} else {
+		// Positive values represent a total maximum time to spend retrying
+		// if a negative number is provided, the retry will continue indefinitely
+		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(opts.StartupRetryMaxElapsedTime))
+	}
+
 	// discovery and keyfun creation
 	var jwksKeyFunc jwt.Keyfunc
 	jwksKeyFunc, err := backoff.Retry(ctx, func() (jwt.Keyfunc, error) {
@@ -130,9 +147,7 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 		}
 
 		return newJwskKeyFunc, nil
-	}, backoff.WithBackOff(backoffPolicy), backoff.WithNotify(func(err error, d time.Duration) {
-		slog.Warn("Failed to initialize JWT keyfunc, retrying...", slog.String("error", err.Error()), slog.Duration("next_retry_in", d))
-	}), backoff.WithMaxElapsedTime(opts.StartupRetryMaxElapsedTime))
+	}, retryOpts...)
 
 	if err != nil {
 		return nil, err
