@@ -67,7 +67,9 @@ func (t *Transport) withCORS(next http.Handler) http.Handler {
 		if r.Method == http.MethodOptions {
 			w.Header().Set("Access-Control-Allow-Methods", methods)
 			w.Header().Set("Access-Control-Allow-Headers", headers)
-			w.Header().Set("Access-Control-Max-Age", maxAge)
+			if t.corsMaxAge >= 0 {
+				w.Header().Set("Access-Control-Max-Age", maxAge) // omit if negative
+			}
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

@@ -97,6 +97,20 @@ func TestCORS_Preflight(t *testing.T) {
 		"Content-Type", "Authorization", "Accept", "Language", "Detail-Level", "Request-Start", "X-Tenant-Id")
 }
 
+func TestCORS_Preflight_NegativeMaxAge(t *testing.T) {
+	_, h := corsHandler(t, config.RestOptions{
+		AllowedOrigins: []string{"https://example.com"},
+		CorsMaxAge:     -600 * time.Second,
+	})
+	req := httptest.NewRequest(http.MethodOptions, "/st2138-api/v1/health", nil)
+	req.Header.Set("Origin", "https://example.com")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	assertStatus(t, rec, http.StatusNoContent)
+	assertHeaderNotPresent(t, rec, "Access-Control-Max-Age")
+}
+
 func TestCORS_AllowedOriginEchoedOnGET(t *testing.T) {
 	_, h := corsHandler(t, config.RestOptions{AllowedOrigins: []string{"https://example.com"}})
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/health", nil)
