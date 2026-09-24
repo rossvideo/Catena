@@ -1893,7 +1893,7 @@ func TestTransport_Start(t *testing.T) {
 	transport.port = 0
 	err := transport.Start(context.Background(), runtime)
 	if err != nil {
-		t.Errorf("Start: %v", err)
+		t.Fatalf("Start: %v", err)
 	}
 	// figure out the actual port assigned by the OS if port was 0.
 	port := transport.listener.Addr().(*net.TCPAddr).Port
