@@ -1,0 +1,100 @@
+/*
+ * Copyright 2026 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @brief Asset streaming business logic for the Catena SDK.
+ * @author Omar Shah (omar.shah@rossvideo.com)
+ * @date 2026-09-14
+ * @file asset.go
+ * @copyright Copyright © 2026 Ross Video Ltd
+ */
+
+package catena
+
+import (
+	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
+)
+
+// defaultAssetChunkSize is the maximum number of embedded payload bytes streamed per
+// asset chunk. Kept small enough to bound per-message memory but large
+// enough that small assets go out in a single chunk.
+const defaultAssetChunkSize = 64 * 1024
+
+// SendAssetChunks streams payload using the default chunk size and returns the terminal status.
+func SendAssetChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool) StatusResult {
+	return sendChunks(slot, fqoid, stream, payload, cachable, defaultAssetChunkSize)
+}
+
+// SendAssetChunksWithSize streams payload using assetChunkSize and returns StatusCodeInternal when the size is not positive.
+func SendAssetChunksWithSize(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
+	return sendChunks(slot, fqoid, stream, payload, cachable, assetChunkSize)
+}
+
+// Stream the asset in chunks. The first chunk carries the metadata,
+// digest, encoding, and cachable flag plus the first slice of payload bytes.
+// Subsequent chunks carry only payload bytes. Chunks are only generated for
+// embedded payloads; URL-based assets are sent as a single chunk. Assets whose
+// payloads fit within assetChunkSize are also sent as a single chunk.
+func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
+
+	if assetChunkSize <= 0 {
+		logger.Error("Invalid asset chunk size", "slot", slot, "fqoid", fqoid, "assetChunkSize", assetChunkSize)
+		return StatusWithCode(StatusCodeInternal, "invalid asset chunk size")
+	}
+
+	data := payload.Payload
+
+	for offset := 0; (offset < len(data)) || (offset == 0); offset += assetChunkSize {
+		end := min(offset+assetChunkSize, len(data))
+
+		dp := st2138.DataPayload{Payload: data[offset:end]}
+		if offset == 0 {
+			// First chunk preserves the original metadata/digest/encoding/url
+			dp = payload
+			dp.Payload = data[offset:end]
+		}
+
+		chunk, err := st2138.ToAsset(dp, cachable && offset == 0)
+		if err != nil {
+			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
+			return StatusWithCode(StatusCodeInternal, "failed to convert asset: "+err.Error())
+		}
+
+		if err := stream.Send(chunk); err != nil {
+			logger.Warning("Asset download stream closed", "slot", slot, "fqoid", fqoid, "error", err)
+			return StatusWithCode(StatusCodeInternal, "failed to send asset: "+err.Error())
+		}
+	}
+
+	logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(data))
+	return StatusWithCode(StatusCodeOk, "")
+
+}

@@ -133,16 +133,29 @@ func TestToAsset_BothPayloadAndUrl_Error(t *testing.T) {
 	}
 }
 
-func TestToAsset_NeitherPayloadNorUrl_Error(t *testing.T) {
+func TestToAsset_NeitherPayloadNorUrl_EmptyPayload(t *testing.T) {
 	dp := DataPayload{
 		Metadata: map[string]string{
 			"content-type": "text/plain",
 		},
 	}
 
-	_, err := ToAsset(dp, true)
-	if err == nil {
-		t.Error("expected error when neither payload nor url are provided")
+	asset, err := ToAsset(dp, true)
+	if err != nil {
+		t.Fatalf("ToAsset error: %v", err)
+	}
+
+	if asset.Proto == nil || asset.Proto.GetPayload() == nil {
+		t.Fatal("expected non-nil proto payload")
+	}
+
+	payload, ok := asset.Proto.GetPayload().GetKind().(*protos.DataPayload_Payload)
+	if !ok {
+		t.Fatalf("expected payload kind, got %T", asset.Proto.GetPayload().GetKind())
+	}
+
+	if len(payload.Payload) != 0 {
+		t.Errorf("expected empty payload, got %d bytes", len(payload.Payload))
 	}
 }
 
@@ -320,15 +333,18 @@ func TestFromAsset_EmptyUrl(t *testing.T) {
 }
 
 func TestFromAsset_EmptyPayload(t *testing.T) {
-	// A payload oneof set to an empty byte slice carries no data and must be rejected.
+	// A payload oneof set to an empty byte slice is a valid empty payload.
 	asset := Asset{Proto: &protos.ExternalObjectPayload{
 		Payload: &protos.DataPayload{
 			Kind: &protos.DataPayload_Payload{Payload: []byte{}},
 		},
 	}}
-	_, res := FromAsset(asset)
-	if !errors.Is(res, ErrInvalid) {
-		t.Errorf("expected InvalidArgument for empty payload, got %v", res)
+	dp, res := FromAsset(asset)
+	if res != nil {
+		t.Fatalf("FromAsset error: %v", res)
+	}
+	if dp.Payload == nil || len(dp.Payload) != 0 {
+		t.Errorf("expected empty payload, got %v", dp.Payload)
 	}
 }
 
