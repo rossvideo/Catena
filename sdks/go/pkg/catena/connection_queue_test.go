@@ -40,7 +40,7 @@ import (
 )
 
 func TestNewConnectionQueue(t *testing.T) {
-	cq := newConnectionQueue(10)
+	cq := newConnectionQueue(10, nil)
 
 	if cq == nil {
 		t.Fatal("NewConnectionQueue returned nil")
@@ -51,7 +51,7 @@ func TestNewConnectionQueue(t *testing.T) {
 }
 
 func TestConnectionQueue_RegisterDeregister(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -81,7 +81,7 @@ func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 }
 
 func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	initialUpdate := &protos.PushUpdates{
@@ -116,7 +116,7 @@ func TestConnectionQueue_RegisterConnection_InitialUpdate(t *testing.T) {
 }
 
 func TestConnectionQueue_MaxConnections(t *testing.T) {
-	cq := newConnectionQueue(2)
+	cq := newConnectionQueue(2, nil)
 	owner := &stubTransport{tb: t}
 
 	conn1, res1 := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -146,7 +146,7 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 }
 
 func TestConnectionQueue_SetMaxConnections(t *testing.T) {
-	cq := newConnectionQueue(1)
+	cq := newConnectionQueue(1, nil)
 	owner := &stubTransport{tb: t}
 
 	cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -163,7 +163,7 @@ func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 }
 
 func TestConnectionQueue_NotifyUpdate(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 
 	owner := &stubTransport{tb: t}
 	handlerContext := HandlerContext{
@@ -202,7 +202,7 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 }
 
 func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
@@ -254,7 +254,7 @@ func TestIsValueUpdate_NilUpdate(t *testing.T) {
 }
 
 func TestConnectionQueue_Shutdown(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	conn1, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -278,7 +278,7 @@ func TestConnectionQueue_Shutdown(t *testing.T) {
 }
 
 func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -297,7 +297,7 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 }
 
 func TestConnectionQueue_ShutdownOwner(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	ownerA := &stubTransport{tb: t}
 	ownerB := &stubTransport{tb: t}
 
@@ -331,7 +331,7 @@ func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 }
 
 func TestConnectionQueue_ShutdownConnection_Graceful(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -349,7 +349,7 @@ func TestConnectionQueue_ShutdownConnection_Graceful(t *testing.T) {
 }
 
 func TestConnectionQueue_ShutdownConnection_AlreadyClosed(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -369,7 +369,7 @@ func TestConnectionQueue_ShutdownConnection_AlreadyClosed(t *testing.T) {
 }
 
 func TestConectionQueue_ShutdownConnection_Deadline(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
 
 	conn, _ := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
@@ -386,7 +386,7 @@ func TestConectionQueue_ShutdownConnection_Deadline(t *testing.T) {
 }
 
 func TestConnectionQueue_ShutdownConnection_OneDeadline(t *testing.T) {
-	cq := newConnectionQueue(0)
+	cq := newConnectionQueue(0, nil)
 	ownerA := &stubTransport{tb: t}
 	ownerB := &stubTransport{tb: t}
 

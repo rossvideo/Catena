@@ -473,6 +473,8 @@ type Server interface {
 	// fall through to the registered handler for that slot.
 	RegisterProductStruct(slot uint16, product ProductStruct)
 
+	Logger() *slog.Logger
+
 	SetMaxConnections(max int)
 	ConnectionCount() int
 	BroadcastUpdate(slot uint16, oid string, value any, scope string)

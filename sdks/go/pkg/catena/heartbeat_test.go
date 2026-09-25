@@ -31,6 +31,7 @@
 package catena
 
 import (
+	"log/slog"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -38,7 +39,7 @@ import (
 )
 
 func TestNewHeartbeat(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 	if hb == nil {
 		t.Fatal("NewHeartbeat() returned nil")
 	}
@@ -48,7 +49,7 @@ func TestNewHeartbeat(t *testing.T) {
 }
 
 func TestHeartbeat_StartStop(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	if err := hb.Start(10 * time.Millisecond); err != nil {
 		t.Fatalf("Start failed: %v", err)
@@ -64,7 +65,7 @@ func TestHeartbeat_StartStop(t *testing.T) {
 }
 
 func TestHeartbeat_DoubleStart(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	if err := hb.Start(10 * time.Millisecond); err != nil {
 		t.Fatalf("Start failed: %v", err)
@@ -80,7 +81,7 @@ func TestHeartbeat_DoubleStart(t *testing.T) {
 }
 
 func TestHeartbeat_DoubleStop(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	if err := hb.Start(10 * time.Millisecond); err != nil {
 		t.Fatalf("Start failed: %v", err)
@@ -93,7 +94,7 @@ func TestHeartbeat_DoubleStop(t *testing.T) {
 }
 
 func TestHeartbeat_StopWhenNotRunning(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 	hb.Stop() // should be no-op, not panic
 	if hb.IsRunning() {
 		t.Error("heartbeat should not be running")
@@ -101,7 +102,7 @@ func TestHeartbeat_StopWhenNotRunning(t *testing.T) {
 }
 
 func TestHeartbeat_ZeroInterval(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 	err := hb.Start(0)
 	if err == nil {
 		t.Error("Start with zero interval should return an error")
@@ -114,7 +115,7 @@ func TestHeartbeat_ZeroInterval(t *testing.T) {
 }
 
 func TestHeartbeat_NegativeInterval(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 	err := hb.Start(-1 * time.Second)
 	if err == nil {
 		t.Error("Start with negative interval should return an error")
@@ -127,7 +128,7 @@ func TestHeartbeat_NegativeInterval(t *testing.T) {
 }
 
 func TestHeartbeat_OnTick(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	var tickCount atomic.Int32
 	hb.OnTick(func() {
@@ -149,7 +150,7 @@ func TestHeartbeat_OnTick(t *testing.T) {
 }
 
 func TestHeartbeat_OnTickReplacesPrevious(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	var count1, count2 atomic.Int32
 
@@ -178,7 +179,7 @@ func TestHeartbeat_OnTickReplacesPrevious(t *testing.T) {
 }
 
 func TestHeartbeat_NoTicksAfterStop(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	var tickCount atomic.Int32
 	hb.OnTick(func() {
@@ -201,7 +202,7 @@ func TestHeartbeat_NoTicksAfterStop(t *testing.T) {
 }
 
 func TestHeartbeat_RestartAfterStop(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	var tickCount atomic.Int32
 	hb.OnTick(func() {
@@ -230,7 +231,7 @@ func TestHeartbeat_RestartAfterStop(t *testing.T) {
 }
 
 func TestHeartbeat_OnTickWhileRunning(t *testing.T) {
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 
 	var count1, count2 atomic.Int32
 	hb.OnTick(func() {
@@ -258,7 +259,7 @@ func TestHeartbeat_OnTickWhileRunning(t *testing.T) {
 
 func TestHeartbeat_NoCallback(t *testing.T) {
 	// Starting with no callback should not panic
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 	if err := hb.Start(10 * time.Millisecond); err != nil {
 		t.Fatalf("Start failed: %v", err)
 	}
@@ -269,7 +270,7 @@ func TestHeartbeat_NoCallback(t *testing.T) {
 
 func TestHeartbeat_ConcurrentStartStop(t *testing.T) {
 	// Exercise the race detector — concurrent Start/Stop should not panic or deadlock
-	hb := NewHeartbeat()
+	hb := NewHeartbeat(slog.New(slog.DiscardHandler))
 	var tickCount atomic.Int32
 	hb.OnTick(func() {
 		tickCount.Add(1)

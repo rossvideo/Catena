@@ -41,9 +41,11 @@
 package catena
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 	"sync"
@@ -146,6 +148,55 @@ func validTestTransportContext(metadata map[string][]string) TransportContext {
 // scope, required by the language-pack create/update/delete operations.
 func admTestTransportContext(t *testing.T) TransportContext {
 	return TransportContext{AccessToken: makeTestJwtToken(t, []string{st2138.ScopeAdm + ":w"})}
+}
+
+func TestServer_DefaultLogger_Silent(t *testing.T) {
+	defaultLogger := slog.Default()
+	var buf bytes.Buffer
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	t.Cleanup(func() { slog.SetDefault(defaultLogger) })
+
+	srv, err := NewServer(ServerOptions{AuthzEnabled: false})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+	if srv.Logger() == nil {
+		t.Fatal("Logger() must be non-nil when no logger is injected")
+	}
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	if buf.Len() != 0 {
+		t.Fatalf("Silent Logger must not write to slog.Default(), got %s", buf.String())
+	}
+}
+
+func TestServer_InjectedLogger(t *testing.T) {
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	srv, err := NewServer(ServerOptions{
+		AuthzEnabled: false,
+		Logger:       log,
+	})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+	if srv.Logger() != log {
+		t.Fatal("Logger() should return the injected logger")
+	}
+
+	srv.StartHeartbeat(10 * time.Millisecond)
+	srv.StopHeartbeat()
+
+	out := buf.String()
+	if !strings.Contains(out, `"msg":"Heartbeat started"`) {
+		t.Fatalf("expected heartbeat lifecycle log, got %s", out)
+	}
+	if !strings.Contains(out, `"component":"heartbeat"`) {
+		t.Fatalf("expected component=heartbeat, got %s", out)
+	}
 }
 
 func TestServer_IsDev(t *testing.T) {

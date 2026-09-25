@@ -34,7 +34,8 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-05-14
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-09-25
  */
 
 package logger
@@ -49,13 +50,11 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
-func TestInit(t *testing.T) {
+func TestNew(t *testing.T) {
 	t.Run("creates log directory", func(t *testing.T) {
-		close()
 		dir := t.TempDir()
-
 		logDir := filepath.Join(dir, "logs")
-		_, err := Init(config.LoggerOptions{
+		_, closeFn, err := New(config.LoggerOptions{
 			AppName:        "test",
 			LogDir:         logDir,
 			WriteToFile:    true,
@@ -63,9 +62,9 @@ func TestInit(t *testing.T) {
 			Level:          LevelInfo,
 		})
 		if err != nil {
-			t.Fatalf("Init failed: %v", err)
+			t.Fatalf("New failed: %v", err)
 		}
-		defer close()
+		defer closeFn()
 
 		if _, err := os.Stat(logDir); os.IsNotExist(err) {
 			t.Error("log directory was not created")
@@ -73,10 +72,8 @@ func TestInit(t *testing.T) {
 	})
 
 	t.Run("creates log file with timestamp", func(t *testing.T) {
-		close()
 		dir := t.TempDir()
-
-		_, err := Init(config.LoggerOptions{
+		_, closeFn, err := New(config.LoggerOptions{
 			AppName:        "myapp",
 			LogDir:         dir,
 			WriteToFile:    true,
@@ -84,9 +81,9 @@ func TestInit(t *testing.T) {
 			Level:          LevelInfo,
 		})
 		if err != nil {
-			t.Fatalf("Init failed: %v", err)
+			t.Fatalf("New failed: %v", err)
 		}
-		defer close()
+		defer closeFn()
 
 		// Check that a log file was created
 		entries, err := os.ReadDir(dir)
@@ -104,14 +101,12 @@ func TestInit(t *testing.T) {
 	})
 
 	t.Run("handles invalid log directory", func(t *testing.T) {
-
 		if os.Geteuid() == 0 {
 			t.Skip("skipping permission error test when running as root")
 		}
 
-		close()
 		// Try to create a log directory in a non-existent parent with no permissions
-		_, err := Init(config.LoggerOptions{
+		_, _, err := New(config.LoggerOptions{
 			AppName:        "test",
 			LogDir:         "/nonexistent/path/that/should/fail/logs",
 			WriteToFile:    true,
@@ -119,15 +114,32 @@ func TestInit(t *testing.T) {
 		})
 		if err == nil {
 			t.Error("expected error for invalid log directory")
-			close()
 		}
 	})
 
-	t.Run("only initializes once", func(t *testing.T) {
-		close()
+	t.Run("does not mutate slog.Default", func(t *testing.T) {
+		logDefault := slog.Default()
 		dir := t.TempDir()
+		_, closeFn, err := New(config.LoggerOptions{
+			AppName:        "default-check",
+			LogDir:         dir,
+			WriteToFile:    true,
+			WriteToConsole: false,
+			Level:          LevelInfo,
+		})
+		if err != nil {
+			t.Fatalf("New failed: %v", err)
+		}
+		defer closeFn()
 
-		_, err := Init(config.LoggerOptions{
+		if slog.Default() != logDefault {
+			t.Error("New must not call slog.SetDefault")
+		}
+	})
+
+	t.Run("allows multiple independent loggers", func(t *testing.T) {
+		dir := t.TempDir()
+		first, closeFirst, err := New(config.LoggerOptions{
 			AppName:        "first",
 			LogDir:         dir,
 			WriteToFile:    true,
@@ -135,42 +147,111 @@ func TestInit(t *testing.T) {
 			Level:          LevelInfo,
 		})
 		if err != nil {
-			t.Fatalf("first Init failed: %v", err)
+			t.Fatalf("first New failed: %v", err)
 		}
+		defer closeFirst()
 
-		// Second init should return ErrAlreadyInitialized
-		_, err = Init(config.LoggerOptions{
+		second, closeSecond, err := New(config.LoggerOptions{
 			AppName:        "second",
 			LogDir:         dir,
 			WriteToFile:    true,
 			WriteToConsole: false,
 			Level:          LevelDebug,
 		})
-		if err != ErrAlreadyInitialized {
-			t.Errorf("expected ErrAlreadyInitialized, got %v", err)
+		if err != nil {
+			t.Fatalf("second New failed: %v", err)
+		}
+		defer closeSecond()
+
+		if first == nil || second == nil {
+			t.Fatal("expected both loggers to be non-nil")
+		}
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatalf("failed to read dir: %v", err)
+		}
+		if len(entries) != 2 {
+			t.Errorf("expected 2 files, got %d", len(entries))
+		}
+	})
+}
+
+func TestCloseFunc(t *testing.T) {
+	t.Run("closes the file opened by New", func(t *testing.T) {
+		dir := t.TempDir()
+		log, closeFn, err := New(config.LoggerOptions{
+			AppName:        "close",
+			LogDir:         dir,
+			WriteToFile:    true,
+			WriteToConsole: false,
+			Level:          LevelInfo,
+		})
+		if err != nil {
+			t.Fatalf("New failed: %v", err)
 		}
 
-		// Verify only one log file exists (from first init)
+		log.Info("before close")
+		closeFn()
+
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			t.Fatalf("failed to read dir: %v", err)
 		}
 		if len(entries) != 1 {
-			t.Errorf("expected 1 file, got %d", len(entries))
+			t.Fatalf("expected 1 file, got %d", len(entries))
 		}
-		if !strings.Contains(entries[0].Name(), "first") {
-			t.Errorf("expected filename to contain 'first', got %s", entries[0].Name())
+		path := filepath.Join(dir, entries[0].Name())
+
+		before, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("failed to read log file: %v", err)
+		}
+		if !strings.Contains(string(before), "before close") {
+			t.Fatalf("expected log line before close, got %s", before)
 		}
 
-		close()
+		log.Info("after close")
+		after, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("failed to read log file: %v", err)
+		}
+		if strings.Contains(string(after), "after close") {
+			t.Fatal("CloseFunc should close the file so later records are not written")
+		}
+	})
+
+	t.Run("second call is a no-op", func(t *testing.T) {
+		dir := t.TempDir()
+		_, closeFn, err := New(config.LoggerOptions{
+			AppName:        "close-twice",
+			LogDir:         dir,
+			WriteToFile:    true,
+			WriteToConsole: false,
+			Level:          LevelInfo,
+		})
+		if err != nil {
+			t.Fatalf("New failed: %v", err)
+		}
+		closeFn()
+		closeFn() // must not panic
+	})
+
+	t.Run("silent logger close is a no-op", func(t *testing.T) {
+		_, closeFn, err := New(config.LoggerOptions{Silent: true})
+		if err != nil {
+			t.Fatalf("New failed: %v", err)
+		}
+		if closeFn == nil {
+			t.Fatal("CloseFunc must be non-nil")
+		}
+		closeFn()
 	})
 }
 
 func TestLogToFile(t *testing.T) {
-	close()
 	dir := t.TempDir()
 
-	_, err := Init(config.LoggerOptions{
+	log, closeFn, err := New(config.LoggerOptions{
 		AppName:        "filetest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -178,11 +259,11 @@ func TestLogToFile(t *testing.T) {
 		Level:          LevelInfo,
 	})
 	if err != nil {
-		t.Fatalf("Init failed: %v", err)
+		t.Fatalf("New failed: %v", err)
 	}
 
-	Info("test log message to file")
-	close()
+	log.Info("test log message to file")
+	closeFn()
 
 	// Find and read the log file
 	entries, err := os.ReadDir(dir)
@@ -203,145 +284,10 @@ func TestLogToFile(t *testing.T) {
 	}
 }
 
-func TestClose(t *testing.T) {
-	dir := t.TempDir()
-
-	// First initialization
-	close()
-	_, err := Init(config.LoggerOptions{
-		AppName:        "first",
-		LogDir:         dir,
-		WriteToFile:    true,
-		WriteToConsole: false,
-		Level:          LevelInfo,
-	})
-	if err != nil {
-		t.Fatalf("first Init failed: %v", err)
-	}
-
-	Info("first log")
-	close()
-
-	// Second initialization should work after Close
-	_, err = Init(config.LoggerOptions{
-		AppName:        "second",
-		LogDir:         dir,
-		WriteToFile:    true,
-		WriteToConsole: false,
-		Level:          LevelInfo,
-	})
-	if err != nil {
-		t.Fatalf("second Init failed: %v", err)
-	}
-
-	Info("second log")
-	close()
-
-	// Should have two log files
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatalf("failed to read dir: %v", err)
-	}
-	if len(entries) != 2 {
-		t.Errorf("expected 2 files, got %d", len(entries))
-	}
-}
-
-func TestNoLoggerInitialized(t *testing.T) {
-	close()
-
-	// These should not panic when logger is not initialized
-	// (slog.Default() should handle it gracefully)
-	Debug("test")
-	Info("test")
-	Warning("test")
-	Error("test")
-}
-
-func TestGetLogger(t *testing.T) {
-	logger := GetLogger()
-	if logger == nil {
-		t.Error("GetLogger should return non-nil logger")
-	}
-}
-
-func TestGetNamed(t *testing.T) {
-	close()
-	dir := t.TempDir()
-
-	_, err := Init(config.LoggerOptions{
-		AppName:        "namedtest",
-		LogDir:         dir,
-		WriteToFile:    true,
-		WriteToConsole: false,
-		Level:          LevelDebug,
-	})
-	if err != nil {
-		t.Fatalf("Init failed: %v", err)
-	}
-	defer close()
-
-	namedLogger := GetNamed("mycomponent")
-	if namedLogger == nil {
-		t.Error("GetNamed should return non-nil logger")
-	}
-	// Named logger should work without panicking
-	namedLogger.Info("named log message")
-}
-
-func TestWith(t *testing.T) {
-	close()
-	dir := t.TempDir()
-
-	_, err := Init(config.LoggerOptions{
-		AppName:        "withtest",
-		LogDir:         dir,
-		WriteToFile:    true,
-		WriteToConsole: false,
-		Level:          LevelDebug,
-	})
-	if err != nil {
-		t.Fatalf("Init failed: %v", err)
-	}
-	defer close()
-
-	// With should return a logger with attributes
-	loggerWith := With("key", "value")
-	if loggerWith == nil {
-		t.Error("With should return non-nil logger")
-	}
-	loggerWith.Info("log with attribute")
-}
-
-func TestWithGroup(t *testing.T) {
-	close()
-	dir := t.TempDir()
-
-	_, err := Init(config.LoggerOptions{
-		AppName:        "grouptest",
-		LogDir:         dir,
-		WriteToFile:    true,
-		WriteToConsole: false,
-		Level:          LevelDebug,
-	})
-	if err != nil {
-		t.Fatalf("Init failed: %v", err)
-	}
-	defer close()
-
-	// WithGroup should return a logger with a group prefix
-	groupLogger := WithGroup("mygroup")
-	if groupLogger == nil {
-		t.Error("WithGroup should return non-nil logger")
-	}
-	groupLogger.Info("log in group")
-}
-
 func TestSilentMode(t *testing.T) {
-	close()
 	dir := t.TempDir()
 
-	_, err := Init(config.LoggerOptions{
+	log, closeFn, err := New(config.LoggerOptions{
 		AppName:        "silenttest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -350,15 +296,14 @@ func TestSilentMode(t *testing.T) {
 		Level:          LevelDebug,
 	})
 	if err != nil {
-		t.Fatalf("Init failed: %v", err)
+		t.Fatalf("New failed: %v", err)
 	}
-	defer close()
+	defer closeFn()
 
-	// In silent mode, nothing should be logged
-	Debug("debug message")
-	Info("info message")
-	Warning("warning message")
-	Error("error message")
+	log.Debug("debug message")
+	log.Info("info message")
+	log.Warn("warning message")
+	log.Error("error message")
 
 	// Check that log file is empty or doesn't exist
 	entries, err := os.ReadDir(dir)
@@ -377,10 +322,9 @@ func TestSilentMode(t *testing.T) {
 }
 
 func TestJSONOutput(t *testing.T) {
-	close()
 	dir := t.TempDir()
 
-	_, err := Init(config.LoggerOptions{
+	log, closeFn, err := New(config.LoggerOptions{
 		AppName:        "jsontest",
 		LogDir:         dir,
 		WriteToFile:    true,
@@ -389,11 +333,11 @@ func TestJSONOutput(t *testing.T) {
 		UseJSON:        true,
 	})
 	if err != nil {
-		t.Fatalf("Init failed: %v", err)
+		t.Fatalf("New failed: %v", err)
 	}
 
-	Info("json log message")
-	close()
+	log.Info("json log message")
+	closeFn()
 
 	// Check the log file contains JSON
 	entries, err := os.ReadDir(dir)
