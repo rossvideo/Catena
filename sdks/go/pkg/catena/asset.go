@@ -61,8 +61,8 @@ func SendAssetChunksWithSize(slot uint16, fqoid string, stream Stream[st2138.Ass
 // Stream the asset in chunks. The first chunk carries the metadata,
 // digest, encoding, and cachable flag plus the first slice of payload bytes.
 // Subsequent chunks carry only payload bytes. Chunks are only generated for
-// embedded payloads, URL-based assets are sent as a single chunk. Asset whose
-// payload fits within assetChunkSize are also sent as a single chunk.
+// embedded payloads; URL-based assets are sent as a single chunk. Assets whose
+// payloads fit within assetChunkSize are also sent as a single chunk.
 func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
 
 	if assetChunkSize <= 0 {
