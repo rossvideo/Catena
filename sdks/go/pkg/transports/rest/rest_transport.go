@@ -52,6 +52,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
@@ -64,14 +65,19 @@ type FallbackHandler func(w http.ResponseWriter, r *http.Request) (st2138.Value,
 
 type Transport struct {
 	mu              sync.Mutex
+	listener        net.Listener // kept so tests can read the actual bound addr after Start (needed when Port is 0)
 	server          *http.Server
 	mux             *http.ServeMux
 	runtime         catena.ServerRuntime
 	fallbackHandler FallbackHandler
 	log             *slog.Logger
 
-	port int
-	tls  config.TLSOptions
+	port                int
+	tls                 config.TLSOptions
+	allowedOrigins      []string
+	extraAllowedHeaders []string
+	extraAllowedMethods []string
+	corsMaxAge          time.Duration
 }
 
 var _ catena.Transport = (*Transport)(nil)
@@ -79,10 +85,14 @@ var _ catena.Transport = (*Transport)(nil)
 // NewTransport creates a new REST transport with the given configuration.
 func NewTransport(cfg Options) *Transport {
 	t := &Transport{
-		port: cfg.Port,
-		tls:  cfg.TLS,
-		mux:  http.NewServeMux(),
-		log:  slog.New(slog.DiscardHandler),
+		port:                cfg.Port,
+		tls:                 cfg.TLS,
+		mux:                 http.NewServeMux(),
+		log:                 slog.New(slog.DiscardHandler),
+		allowedOrigins:      cfg.AllowedOrigins,
+		extraAllowedHeaders: cfg.ExtraAllowedHeaders,
+		extraAllowedMethods: cfg.ExtraAllowedMethods,
+		corsMaxAge:          cfg.CorsMaxAge,
 	}
 	t.registerRoutes()
 	return t
@@ -106,7 +116,7 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 	// already in use, invalid address, etc.) are returned to the caller
 	// instead of only being logged asynchronously after Start has already
 	// reported success. This mirrors ConnectionProps.Start.
-	listener, err := net.Listen("tcp", addr)
+	t.listener, err = net.Listen("tcp", addr)
 	if err != nil {
 		t.log.Error("REST Transport failed to listen", "address", addr, "error", err)
 		return fmt.Errorf("REST transport failed to listen on %s: %w", addr, err)
@@ -114,7 +124,7 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 
 	t.server = &http.Server{
 		Addr:      addr,
-		Handler:   t.mux,
+		Handler:   t.withCORS(t.mux),
 		TLSConfig: tlsConfig,
 	}
 	t.runtime = runtime
@@ -127,9 +137,9 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 		if tlsConfig != nil {
 			// cert and key files are empty because the certificates are
 			// already loaded into TLSConfig
-			err = t.server.ServeTLS(listener, "", "")
+			err = t.server.ServeTLS(t.listener, "", "")
 		} else {
-			err = t.server.Serve(listener)
+			err = t.server.Serve(t.listener)
 		}
 		if err != nil && err != http.ErrServerClosed {
 			t.log.Error("HTTP server error", "error", err)
@@ -179,7 +189,8 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	// Wait for HTTP shutdown to complete and return its result. By this point, the runtime
 	// should have signaled all active connections to shut down, so this should complete in
 	// a timely manner.
-	return <-errCh
+	err := <-errCh
+	return err
 }
 
 func (t *Transport) RegisterFallbackHandler(handler FallbackHandler) {
@@ -393,13 +404,7 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	origin := r.Header.Get("Origin")
-	if origin != "" {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, Language, Detail-Level")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-	}
+
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 

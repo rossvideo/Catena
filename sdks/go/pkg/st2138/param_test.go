@@ -1034,14 +1034,17 @@ func TestNewParamStructVariantArray_InvalidValue(t *testing.T) {
 	}
 }
 
-func TestNewParamData_InvalidPayload(t *testing.T) {
+func TestNewParamData_EmptyPayload(t *testing.T) {
 	dp := DataPayload{}
 	p := NewParamData(dp).Proto
 	if p.GetType() != protos.ParamType_DATA {
 		t.Errorf("expected DATA, got %v", p.GetType())
 	}
-	if p.GetValue() != nil {
-		t.Error("expected nil value when DataPayload conversion fails")
+	if p.GetValue() == nil || p.GetValue().GetDataPayload() == nil {
+		t.Fatal("expected DataPayload value")
+	}
+	if payload, ok := p.GetValue().GetDataPayload().GetKind().(*protos.DataPayload_Payload); !ok || len(payload.Payload) != 0 {
+		t.Errorf("expected empty payload kind, got %T", p.GetValue().GetDataPayload().GetKind())
 	}
 }
 
