@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 // LanguageStore holds language packs per slot, keyed by language tag (e.g.
@@ -83,7 +82,7 @@ func registerLanguagePackHandlers(srv catena.Server) {
 	languages := NewLanguageStore(slotList)
 	for _, slot := range slotList {
 		srv.RegisterReadLanguagePackHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) (catena.LanguagePack, catena.StatusResult) {
-			logger.Info("LanguagePackRequest", "slot", slot, "language", language)
+			log.Info("LanguagePackRequest", "slot", slot, "language", language)
 			pack, ok := languages.Get(slot, language)
 			if !ok {
 				return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found: "+language)
@@ -92,13 +91,13 @@ func registerLanguagePackHandlers(srv catena.Server) {
 		})
 
 		srv.RegisterCreateLanguagePackHandler(slot, func(slot uint16, language string, pack catena.LanguagePack, ctx catena.HandlerContext) catena.StatusResult {
-			logger.Info("AddLanguage", "slot", slot, "language", language, "name", pack.GetName())
+			log.Info("AddLanguage", "slot", slot, "language", language, "name", pack.GetName())
 			languages.Set(slot, language, pack)
 			return catena.StatusWithCode(catena.StatusCodeOk, "")
 		})
 
 		srv.RegisterUpdateLanguagePackHandler(slot, func(slot uint16, language string, pack catena.LanguagePack, ctx catena.HandlerContext) catena.StatusResult {
-			logger.Info("UpdateLanguage", "slot", slot, "language", language, "name", pack.GetName())
+			log.Info("UpdateLanguage", "slot", slot, "language", language, "name", pack.GetName())
 			if !languages.Has(slot, language) {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "language not found: "+language)
 			}
@@ -107,7 +106,7 @@ func registerLanguagePackHandlers(srv catena.Server) {
 		})
 
 		srv.RegisterDeleteLanguagePackHandler(slot, func(slot uint16, language string, ctx catena.HandlerContext) catena.StatusResult {
-			logger.Info("DeleteLanguage", "slot", slot, "language", language)
+			log.Info("DeleteLanguage", "slot", slot, "language", language)
 			if !languages.Delete(slot, language) {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "language not found: "+language)
 			}

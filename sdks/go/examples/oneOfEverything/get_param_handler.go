@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -20,7 +19,7 @@ import (
 func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
 	for _, slot := range slotList {
 		srv.RegisterGetParamHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Param, catena.StatusResult) {
-			logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
+			log.Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 			device, ok := buildDeviceDefinition(slot, counter, state)
 			if !ok {

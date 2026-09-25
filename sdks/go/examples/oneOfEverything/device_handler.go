@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -41,26 +40,26 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	// and ComponentLanguagePack constructors exist for the other component
 	// kinds.
 	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-		logger.Info("GetDevice", "slot", slot)
+		log.Info("GetDevice", "slot", slot)
 		if err := stream.Send(st2138.ComponentDevice(slotZeroSkeleton())); err != nil {
-			logger.Warning("GetDevice stream closed", "slot", slot, "error", err)
+			log.Warn("GetDevice stream closed", "slot", slot, "error", err)
 			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
 		}
 		for oid, menu := range slotZeroMenus() {
 			if err := stream.Send(st2138.ComponentMenu(oid, menu)); err != nil {
-				logger.Warning("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
+				log.Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send menu: "+err.Error())
 			}
 		}
 		for oid, param := range slotZeroParams(counter) {
 			if err := stream.Send(st2138.ComponentParam(oid, param)); err != nil {
-				logger.Warning("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
+				log.Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send param: "+err.Error())
 			}
 		}
 		for oid, command := range slotZeroCommands() {
 			if err := stream.Send(st2138.ComponentCommand(oid, command)); err != nil {
-				logger.Warning("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
+				log.Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send command: "+err.Error())
 			}
 		}
@@ -73,7 +72,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 			continue
 		}
 		srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-			logger.Info("GetDevice", "slot", slot)
+			log.Info("GetDevice", "slot", slot)
 			device, ok := buildDeviceDefinition(slot, counter, state)
 			if !ok {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
