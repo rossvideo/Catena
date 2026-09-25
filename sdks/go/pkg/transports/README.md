@@ -21,6 +21,7 @@ package main
 
 import (
     "context"
+    "log/slog"
     "net/http"
     "os"
     "os/signal"
@@ -33,7 +34,14 @@ import (
 )
 
 func main() {
-    srv := catena.NewServer(100) // max concurrent push connections
+    srv, err := catena.NewServer(catena.ServerOptions{
+        MaxConnections: 100, // max concurrent push connections
+        // Optional: without a logger the SDK and its transports stay silent.
+        Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
+    })
+    if err != nil {
+        panic(err)
+    }
 
     // The SDK manages the mandatory product struct; register it once per slot.
     srv.RegisterProductStruct(0, catena.ProductStruct{
@@ -184,6 +192,34 @@ restTransport := rest.NewTransport(restOpts)
 - `MutualAuth` requires clients to present a certificate signed by the CA bundle in `ClientCAFile`.
 - The minimum accepted protocol version is TLS 1.2.
 - When loading options from env/CLI via `config.InitOptions`, the corresponding inputs are `{PREFIX}_REST_TLS_*` / `--rest-tls-*` and `{PREFIX}_GRPC_TLS_*` / `--grpc-tls-*` (see `pkg/config/README.md`).
+## Logging
+
+Transports log through the logger you give the server; they never create one of
+their own and the SDK never calls `slog.SetDefault`.
+
+- Set `catena.ServerOptions.Logger` to any `*slog.Logger` you already have.
+- Leave it `nil` and the SDK is silent: transports discard their log records
+  instead of writing to `slog.Default()` or stderr.
+
+The optional `pkg/logger` package is a convenience builder for the SDK's
+prebuilt console/file handlers if you do not already have a logger:
+
+```go
+log, closeLog, err := logger.New(logger.LoggerOptions{
+    AppName:        "my-app",
+    WriteToConsole: true,
+    Level:          slog.LevelInfo,
+})
+if err != nil {
+    panic(err)
+}
+defer closeLog()
+
+srv, err := catena.NewServer(catena.ServerOptions{Logger: log})
+```
+
+Transport-level verbosity is therefore controlled by the handler and level of
+the logger you inject, not by any SDK-global setting.
 
 ## Related Docs
 

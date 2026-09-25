@@ -28,12 +28,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Package logger provides structured logging for the Catena Go SDK on top of
-// the standard library's log/slog.
+// Package logger is an optional convenience builder for Catena's prebuilt
+// slog handlers. It never mutates slog.Default().
 //
 // It exposes a configurable logger with adjustable severity levels and output
 // destinations, so SDK components and applications can emit consistent,
 // leveled log records. Logging configuration integrates with package config,
 // allowing the level and related settings to be driven from defaults,
 // environment variables, or command-line flags.
+//
+// Typical usage is to build a logger from config.LoggerOptions and inject it
+// into config.ServerOptions.Logger. Consumers who already have a *slog.Logger
+// can skip this package entirely.
 package logger
