@@ -168,9 +168,9 @@ describe('CppGen.generate', () => {
                   name: { string_value: 'T' },
                   vendor: { string_value: 'V' },
                   version: { string_value: '1' },
-                  catena_sdk: { string_value: 'https://x' },
+                  st2138_sdk: { string_value: 'https://x' },
                   serial_number: { string_value: 'SN' },
-                  catena_sdk_version: { string_value: '0' }
+                  st2138_sdk_version: { string_value: '0' }
                 }
               }
             },
@@ -178,8 +178,8 @@ describe('CppGen.generate', () => {
               name: { type: 'STRING' },
               vendor: { type: 'STRING' },
               version: { type: 'STRING' },
-              catena_sdk: { type: 'STRING' },
-              catena_sdk_version: { type: 'STRING' },
+              st2138_sdk: { type: 'STRING' },
+              st2138_sdk_version: { type: 'STRING' },
               serial_number: { type: 'STRING' }
             }
           }

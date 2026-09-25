@@ -43,9 +43,9 @@ export async function resolveDeviceModel(url, log, options) {
     }
     const resolveResults = await resolve(url, {
         disableMandatoryParams: options.disableMandatoryEnforcement,
-        // catena_sdk / catena_sdk_version values are injected by the SDK
+        // st2138_sdk / st2138_sdk_version values are injected by the SDK
         // toolchain (see cppgen), so authors need not provide them.
-        sdkSuppliedProductParams: ['catena_sdk', 'catena_sdk_version'],
+        sdkSuppliedProductParams: ['st2138_sdk', 'st2138_sdk_version'],
     })
 
     if (!resolveResults.valid) {

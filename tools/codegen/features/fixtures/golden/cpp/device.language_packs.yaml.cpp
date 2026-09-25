@@ -76,8 +76,8 @@ catena::common::ParamDescriptor _productDescriptor(st2138::ParamType::STRUCT, {}
 catena::common::ParamDescriptor _product_nameDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "name", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
 catena::common::ParamDescriptor _product_vendorDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "vendor", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
 catena::common::ParamDescriptor _product_versionDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "version", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
-catena::common::ParamDescriptor _product_catena_sdkDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "catena_sdk", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
-catena::common::ParamDescriptor _product_catena_sdk_versionDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "catena_sdk_version", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
+catena::common::ParamDescriptor _product_st2138_sdkDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "st2138_sdk", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
+catena::common::ParamDescriptor _product_st2138_sdk_versionDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "st2138_sdk_version", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
 catena::common::ParamDescriptor _product_serial_numberDescriptor(st2138::ParamType::STRING, {}, {}, "", "", false, false, "serial_number", "", nullptr, false, false, dm, 0, 0, 0, false, &_productDescriptor);
 catena::common::ParamWithValue<language_packs::Product> _productParam(product, _productDescriptor, dm, false);
 std::string greeting{"Hello, World!"};
@@ -86,8 +86,8 @@ catena::common::ParamWithValue<std::string> _greetingParam(greeting, _greetingDe
 constexpr const char* real_sdk_version = CATENA_CPP_VERSION;
 constexpr const char* real_sdk_url = CATENA_CPP_SDK;
 language_packs::Product& initialize_sdk_version(language_packs::Product& p) {
-  p.catena_sdk = real_sdk_url;
-  p.catena_sdk_version = real_sdk_version;
+  p.st2138_sdk = real_sdk_url;
+  p.st2138_sdk_version = real_sdk_version;
   return p;
 }
 language_packs::Product dummy = initialize_sdk_version(product);

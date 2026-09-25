@@ -50,7 +50,7 @@ describe("resolveDeviceModel", () => {
 
         expect(resolve).toHaveBeenCalledWith(url, {
             disableMandatoryParams: true,
-            sdkSuppliedProductParams: ['catena_sdk', 'catena_sdk_version'],
+            sdkSuppliedProductParams: ['st2138_sdk', 'st2138_sdk_version'],
         });
     });
 

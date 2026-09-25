@@ -27,7 +27,7 @@ menu_groups:
     menus:
       page_1:
         name: {display_strings: {en: Product, es: Producto, fr: Produit}}
-        param_oids: ["product/name", "product/vendor", "product/version", "product/serial_number", "product/catena_sdk", "product/catena_sdk_version"]
+        param_oids: ["product/name", "product/vendor", "product/version", "product/serial_number", "product/st2138_sdk", "product/st2138_sdk_version"]
       page_2:
         name: {display_strings: {en: Page 2, es: Página 2, fr: Page 2}}
         param_oids: ["offset", "button", "counter"]
@@ -60,9 +60,9 @@ params:
         type: STRING
       version:
         type: STRING
-      catena_sdk:
+      st2138_sdk:
         type: STRING
-      catena_sdk_version:
+      st2138_sdk_version:
         type: STRING
       serial_number:
         type: STRING
