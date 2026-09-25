@@ -2133,7 +2133,7 @@ const file_param_proto_rawDesc = "" +
 	"\x04DATA\x102*%\n" +
 	"\x0eUndefinedValue\x12\x13\n" +
 	"\x0fUNDEFINED_VALUE\x10\x00B(\n" +
-	"\x15catena.core.parameterB\vParamProtosH\x01P\x01b\x06proto3"
+	"\x15st2138.core.parameterB\vParamProtosH\x01P\x01b\x06proto3"
 
 var (
 	file_param_proto_rawDescOnce sync.Once

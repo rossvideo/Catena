@@ -108,6 +108,67 @@ func (Device_DetailLevel) EnumDescriptor() ([]byte, []int) {
 	return file_device_proto_rawDescGZIP(), []int{0, 0}
 }
 
+// Selects which component namespace `oid` is resolved against.
+// Required: oids are only unique within a kind, so the same string may name
+// both a param and a menu.
+type GetComponentPayload_ComponentKind int32
+
+const (
+	GetComponentPayload_UNUSED        GetComponentPayload_ComponentKind = 0 // protobuf requires enums start at 0; not a valid request
+	GetComponentPayload_PARAM         GetComponentPayload_ComponentKind = 1
+	GetComponentPayload_CONSTRAINT    GetComponentPayload_ComponentKind = 2
+	GetComponentPayload_MENU          GetComponentPayload_ComponentKind = 3
+	GetComponentPayload_COMMAND       GetComponentPayload_ComponentKind = 4
+	GetComponentPayload_LANGUAGE_PACK GetComponentPayload_ComponentKind = 5
+)
+
+// Enum value maps for GetComponentPayload_ComponentKind.
+var (
+	GetComponentPayload_ComponentKind_name = map[int32]string{
+		0: "UNUSED",
+		1: "PARAM",
+		2: "CONSTRAINT",
+		3: "MENU",
+		4: "COMMAND",
+		5: "LANGUAGE_PACK",
+	}
+	GetComponentPayload_ComponentKind_value = map[string]int32{
+		"UNUSED":        0,
+		"PARAM":         1,
+		"CONSTRAINT":    2,
+		"MENU":          3,
+		"COMMAND":       4,
+		"LANGUAGE_PACK": 5,
+	}
+)
+
+func (x GetComponentPayload_ComponentKind) Enum() *GetComponentPayload_ComponentKind {
+	p := new(GetComponentPayload_ComponentKind)
+	*p = x
+	return p
+}
+
+func (x GetComponentPayload_ComponentKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GetComponentPayload_ComponentKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_device_proto_enumTypes[1].Descriptor()
+}
+
+func (GetComponentPayload_ComponentKind) Type() protoreflect.EnumType {
+	return &file_device_proto_enumTypes[1]
+}
+
+func (x GetComponentPayload_ComponentKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GetComponentPayload_ComponentKind.Descriptor instead.
+func (GetComponentPayload_ComponentKind) EnumDescriptor() ([]byte, []int) {
+	return file_device_proto_rawDescGZIP(), []int{4, 0}
+}
+
 type TrapMessage_TrapMessageType int32
 
 const (
@@ -162,11 +223,11 @@ func (x TrapMessage_TrapMessageType) String() string {
 }
 
 func (TrapMessage_TrapMessageType) Descriptor() protoreflect.EnumDescriptor {
-	return file_device_proto_enumTypes[1].Descriptor()
+	return file_device_proto_enumTypes[2].Descriptor()
 }
 
 func (TrapMessage_TrapMessageType) Type() protoreflect.EnumType {
-	return &file_device_proto_enumTypes[1]
+	return &file_device_proto_enumTypes[2]
 }
 
 func (x TrapMessage_TrapMessageType) Number() protoreflect.EnumNumber {
@@ -175,7 +236,7 @@ func (x TrapMessage_TrapMessageType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TrapMessage_TrapMessageType.Descriptor instead.
 func (TrapMessage_TrapMessageType) EnumDescriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{5, 0}
+	return file_device_proto_rawDescGZIP(), []int{7, 0}
 }
 
 // Device model for Catena compatible devices.
@@ -669,6 +730,204 @@ func (x *DeviceRequestPayload) GetSubscribedOids() []string {
 	return nil
 }
 
+// Requests a single addressable DeviceComponent by object id.
+// Generalizes GetParam/LanguagePackRequest to any component kind except the
+// whole-Device model, which is retrieved via DeviceRequest instead.
+type GetComponentPayload struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Slot  uint32                 `protobuf:"varint,1,opt,name=slot,proto3" json:"slot,omitempty"` // Uniquely identifies the device at node scope.
+	// Uniquely identifies the component at device scope, resolved within `kind`.
+	// For LANGUAGE_PACK this carries the language code (e.g. "es"), not an oid.
+	Oid           string                            `protobuf:"bytes,2,opt,name=oid,proto3" json:"oid,omitempty"`
+	Kind          GetComponentPayload_ComponentKind `protobuf:"varint,3,opt,name=kind,proto3,enum=st2138.GetComponentPayload_ComponentKind" json:"kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetComponentPayload) Reset() {
+	*x = GetComponentPayload{}
+	mi := &file_device_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetComponentPayload) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetComponentPayload) ProtoMessage() {}
+
+func (x *GetComponentPayload) ProtoReflect() protoreflect.Message {
+	mi := &file_device_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetComponentPayload.ProtoReflect.Descriptor instead.
+func (*GetComponentPayload) Descriptor() ([]byte, []int) {
+	return file_device_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetComponentPayload) GetSlot() uint32 {
+	if x != nil {
+		return x.Slot
+	}
+	return 0
+}
+
+func (x *GetComponentPayload) GetOid() string {
+	if x != nil {
+		return x.Oid
+	}
+	return ""
+}
+
+func (x *GetComponentPayload) GetKind() GetComponentPayload_ComponentKind {
+	if x != nil {
+		return x.Kind
+	}
+	return GetComponentPayload_UNUSED
+}
+
+// Response for GetComponent: the addressable subset of DeviceComponent (i.e.
+// everything except the whole-Device variant). Field numbers deliberately match
+// DeviceComponent.kind so the two remain wire-compatible.
+type ComponentResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Kind:
+	//
+	//	*ComponentResponse_Param
+	//	*ComponentResponse_SharedConstraint
+	//	*ComponentResponse_Menu
+	//	*ComponentResponse_Command
+	//	*ComponentResponse_LanguagePack
+	Kind          isComponentResponse_Kind `protobuf_oneof:"kind"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ComponentResponse) Reset() {
+	*x = ComponentResponse{}
+	mi := &file_device_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComponentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComponentResponse) ProtoMessage() {}
+
+func (x *ComponentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_device_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComponentResponse.ProtoReflect.Descriptor instead.
+func (*ComponentResponse) Descriptor() ([]byte, []int) {
+	return file_device_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ComponentResponse) GetKind() isComponentResponse_Kind {
+	if x != nil {
+		return x.Kind
+	}
+	return nil
+}
+
+func (x *ComponentResponse) GetParam() *DeviceComponent_ComponentParam {
+	if x != nil {
+		if x, ok := x.Kind.(*ComponentResponse_Param); ok {
+			return x.Param
+		}
+	}
+	return nil
+}
+
+func (x *ComponentResponse) GetSharedConstraint() *DeviceComponent_ComponentConstraint {
+	if x != nil {
+		if x, ok := x.Kind.(*ComponentResponse_SharedConstraint); ok {
+			return x.SharedConstraint
+		}
+	}
+	return nil
+}
+
+func (x *ComponentResponse) GetMenu() *DeviceComponent_ComponentMenu {
+	if x != nil {
+		if x, ok := x.Kind.(*ComponentResponse_Menu); ok {
+			return x.Menu
+		}
+	}
+	return nil
+}
+
+func (x *ComponentResponse) GetCommand() *DeviceComponent_ComponentCommand {
+	if x != nil {
+		if x, ok := x.Kind.(*ComponentResponse_Command); ok {
+			return x.Command
+		}
+	}
+	return nil
+}
+
+func (x *ComponentResponse) GetLanguagePack() *DeviceComponent_ComponentLanguagePack {
+	if x != nil {
+		if x, ok := x.Kind.(*ComponentResponse_LanguagePack); ok {
+			return x.LanguagePack
+		}
+	}
+	return nil
+}
+
+type isComponentResponse_Kind interface {
+	isComponentResponse_Kind()
+}
+
+type ComponentResponse_Param struct {
+	Param *DeviceComponent_ComponentParam `protobuf:"bytes,3,opt,name=param,proto3,oneof"`
+}
+
+type ComponentResponse_SharedConstraint struct {
+	SharedConstraint *DeviceComponent_ComponentConstraint `protobuf:"bytes,4,opt,name=shared_constraint,json=sharedConstraint,proto3,oneof"`
+}
+
+type ComponentResponse_Menu struct {
+	Menu *DeviceComponent_ComponentMenu `protobuf:"bytes,5,opt,name=menu,proto3,oneof"`
+}
+
+type ComponentResponse_Command struct {
+	Command *DeviceComponent_ComponentCommand `protobuf:"bytes,6,opt,name=command,proto3,oneof"`
+}
+
+type ComponentResponse_LanguagePack struct {
+	LanguagePack *DeviceComponent_ComponentLanguagePack `protobuf:"bytes,7,opt,name=language_pack,json=languagePack,proto3,oneof"`
+}
+
+func (*ComponentResponse_Param) isComponentResponse_Kind() {}
+
+func (*ComponentResponse_SharedConstraint) isComponentResponse_Kind() {}
+
+func (*ComponentResponse_Menu) isComponentResponse_Kind() {}
+
+func (*ComponentResponse_Command) isComponentResponse_Kind() {}
+
+func (*ComponentResponse_LanguagePack) isComponentResponse_Kind() {}
+
 // Initial handshake between client and device.
 type ConnectPayload struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -681,7 +940,7 @@ type ConnectPayload struct {
 
 func (x *ConnectPayload) Reset() {
 	*x = ConnectPayload{}
-	mi := &file_device_proto_msgTypes[4]
+	mi := &file_device_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -693,7 +952,7 @@ func (x *ConnectPayload) String() string {
 func (*ConnectPayload) ProtoMessage() {}
 
 func (x *ConnectPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[4]
+	mi := &file_device_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -706,7 +965,7 @@ func (x *ConnectPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectPayload.ProtoReflect.Descriptor instead.
 func (*ConnectPayload) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{4}
+	return file_device_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ConnectPayload) GetLanguage() string {
@@ -741,7 +1000,7 @@ type TrapMessage struct {
 
 func (x *TrapMessage) Reset() {
 	*x = TrapMessage{}
-	mi := &file_device_proto_msgTypes[5]
+	mi := &file_device_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -753,7 +1012,7 @@ func (x *TrapMessage) String() string {
 func (*TrapMessage) ProtoMessage() {}
 
 func (x *TrapMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[5]
+	mi := &file_device_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -766,7 +1025,7 @@ func (x *TrapMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrapMessage.ProtoReflect.Descriptor instead.
 func (*TrapMessage) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{5}
+	return file_device_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TrapMessage) GetType() TrapMessage_TrapMessageType {
@@ -792,7 +1051,7 @@ type SlotList struct {
 
 func (x *SlotList) Reset() {
 	*x = SlotList{}
-	mi := &file_device_proto_msgTypes[6]
+	mi := &file_device_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -804,7 +1063,7 @@ func (x *SlotList) String() string {
 func (*SlotList) ProtoMessage() {}
 
 func (x *SlotList) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[6]
+	mi := &file_device_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -817,7 +1076,7 @@ func (x *SlotList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SlotList.ProtoReflect.Descriptor instead.
 func (*SlotList) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{6}
+	return file_device_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SlotList) GetSlots() []uint32 {
@@ -850,7 +1109,7 @@ type PushUpdates struct {
 
 func (x *PushUpdates) Reset() {
 	*x = PushUpdates{}
-	mi := &file_device_proto_msgTypes[7]
+	mi := &file_device_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -862,7 +1121,7 @@ func (x *PushUpdates) String() string {
 func (*PushUpdates) ProtoMessage() {}
 
 func (x *PushUpdates) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[7]
+	mi := &file_device_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -875,7 +1134,7 @@ func (x *PushUpdates) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PushUpdates.ProtoReflect.Descriptor instead.
 func (*PushUpdates) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{7}
+	return file_device_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PushUpdates) GetSlot() uint32 {
@@ -1058,7 +1317,7 @@ type RefreshTokenPayload struct {
 
 func (x *RefreshTokenPayload) Reset() {
 	*x = RefreshTokenPayload{}
-	mi := &file_device_proto_msgTypes[8]
+	mi := &file_device_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1070,7 +1329,7 @@ func (x *RefreshTokenPayload) String() string {
 func (*RefreshTokenPayload) ProtoMessage() {}
 
 func (x *RefreshTokenPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[8]
+	mi := &file_device_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1083,7 +1342,7 @@ func (x *RefreshTokenPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefreshTokenPayload.ProtoReflect.Descriptor instead.
 func (*RefreshTokenPayload) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{8}
+	return file_device_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *RefreshTokenPayload) GetReason() string {
@@ -1106,7 +1365,7 @@ type ConnectionStatus struct {
 
 func (x *ConnectionStatus) Reset() {
 	*x = ConnectionStatus{}
-	mi := &file_device_proto_msgTypes[9]
+	mi := &file_device_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1118,7 +1377,7 @@ func (x *ConnectionStatus) String() string {
 func (*ConnectionStatus) ProtoMessage() {}
 
 func (x *ConnectionStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[9]
+	mi := &file_device_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1131,7 +1390,7 @@ func (x *ConnectionStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectionStatus.ProtoReflect.Descriptor instead.
 func (*ConnectionStatus) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{9}
+	return file_device_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ConnectionStatus) GetConnected() bool {
@@ -1161,7 +1420,7 @@ type RevokeAccessPayload struct {
 
 func (x *RevokeAccessPayload) Reset() {
 	*x = RevokeAccessPayload{}
-	mi := &file_device_proto_msgTypes[10]
+	mi := &file_device_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1173,7 +1432,7 @@ func (x *RevokeAccessPayload) String() string {
 func (*RevokeAccessPayload) ProtoMessage() {}
 
 func (x *RevokeAccessPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[10]
+	mi := &file_device_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1186,7 +1445,7 @@ func (x *RevokeAccessPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeAccessPayload.ProtoReflect.Descriptor instead.
 func (*RevokeAccessPayload) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{10}
+	return file_device_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RevokeAccessPayload) GetSubject() string {
@@ -1222,7 +1481,7 @@ type RevocationResponse struct {
 
 func (x *RevocationResponse) Reset() {
 	*x = RevocationResponse{}
-	mi := &file_device_proto_msgTypes[11]
+	mi := &file_device_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1234,7 +1493,7 @@ func (x *RevocationResponse) String() string {
 func (*RevocationResponse) ProtoMessage() {}
 
 func (x *RevocationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[11]
+	mi := &file_device_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1247,7 +1506,7 @@ func (x *RevocationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevocationResponse.ProtoReflect.Descriptor instead.
 func (*RevocationResponse) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{11}
+	return file_device_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *RevocationResponse) GetRemainingSubjects() []string {
@@ -1300,7 +1559,7 @@ type DeviceComponent_ComponentParam struct {
 
 func (x *DeviceComponent_ComponentParam) Reset() {
 	*x = DeviceComponent_ComponentParam{}
-	mi := &file_device_proto_msgTypes[16]
+	mi := &file_device_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1312,7 +1571,7 @@ func (x *DeviceComponent_ComponentParam) String() string {
 func (*DeviceComponent_ComponentParam) ProtoMessage() {}
 
 func (x *DeviceComponent_ComponentParam) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[16]
+	mi := &file_device_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1357,7 +1616,7 @@ type DeviceComponent_ComponentMenu struct {
 
 func (x *DeviceComponent_ComponentMenu) Reset() {
 	*x = DeviceComponent_ComponentMenu{}
-	mi := &file_device_proto_msgTypes[17]
+	mi := &file_device_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1369,7 +1628,7 @@ func (x *DeviceComponent_ComponentMenu) String() string {
 func (*DeviceComponent_ComponentMenu) ProtoMessage() {}
 
 func (x *DeviceComponent_ComponentMenu) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[17]
+	mi := &file_device_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1412,7 +1671,7 @@ type DeviceComponent_ComponentConstraint struct {
 
 func (x *DeviceComponent_ComponentConstraint) Reset() {
 	*x = DeviceComponent_ComponentConstraint{}
-	mi := &file_device_proto_msgTypes[18]
+	mi := &file_device_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1424,7 +1683,7 @@ func (x *DeviceComponent_ComponentConstraint) String() string {
 func (*DeviceComponent_ComponentConstraint) ProtoMessage() {}
 
 func (x *DeviceComponent_ComponentConstraint) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[18]
+	mi := &file_device_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1466,7 +1725,7 @@ type DeviceComponent_ComponentCommand struct {
 
 func (x *DeviceComponent_ComponentCommand) Reset() {
 	*x = DeviceComponent_ComponentCommand{}
-	mi := &file_device_proto_msgTypes[19]
+	mi := &file_device_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1478,7 +1737,7 @@ func (x *DeviceComponent_ComponentCommand) String() string {
 func (*DeviceComponent_ComponentCommand) ProtoMessage() {}
 
 func (x *DeviceComponent_ComponentCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[19]
+	mi := &file_device_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1519,7 +1778,7 @@ type DeviceComponent_ComponentLanguagePack struct {
 
 func (x *DeviceComponent_ComponentLanguagePack) Reset() {
 	*x = DeviceComponent_ComponentLanguagePack{}
-	mi := &file_device_proto_msgTypes[20]
+	mi := &file_device_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1531,7 +1790,7 @@ func (x *DeviceComponent_ComponentLanguagePack) String() string {
 func (*DeviceComponent_ComponentLanguagePack) ProtoMessage() {}
 
 func (x *DeviceComponent_ComponentLanguagePack) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[20]
+	mi := &file_device_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1570,7 +1829,7 @@ type RemoveComponents_IdList struct {
 
 func (x *RemoveComponents_IdList) Reset() {
 	*x = RemoveComponents_IdList{}
-	mi := &file_device_proto_msgTypes[21]
+	mi := &file_device_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1582,7 +1841,7 @@ func (x *RemoveComponents_IdList) String() string {
 func (*RemoveComponents_IdList) ProtoMessage() {}
 
 func (x *RemoveComponents_IdList) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[21]
+	mi := &file_device_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1615,7 +1874,7 @@ type PushUpdates_PushExternalObject struct {
 
 func (x *PushUpdates_PushExternalObject) Reset() {
 	*x = PushUpdates_PushExternalObject{}
-	mi := &file_device_proto_msgTypes[22]
+	mi := &file_device_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1627,7 +1886,7 @@ func (x *PushUpdates_PushExternalObject) String() string {
 func (*PushUpdates_PushExternalObject) ProtoMessage() {}
 
 func (x *PushUpdates_PushExternalObject) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[22]
+	mi := &file_device_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1640,7 +1899,7 @@ func (x *PushUpdates_PushExternalObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PushUpdates_PushExternalObject.ProtoReflect.Descriptor instead.
 func (*PushUpdates_PushExternalObject) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{7, 0}
+	return file_device_proto_rawDescGZIP(), []int{9, 0}
 }
 
 func (x *PushUpdates_PushExternalObject) GetOid() string {
@@ -1667,7 +1926,7 @@ type PushUpdates_PushValue struct {
 
 func (x *PushUpdates_PushValue) Reset() {
 	*x = PushUpdates_PushValue{}
-	mi := &file_device_proto_msgTypes[23]
+	mi := &file_device_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1679,7 +1938,7 @@ func (x *PushUpdates_PushValue) String() string {
 func (*PushUpdates_PushValue) ProtoMessage() {}
 
 func (x *PushUpdates_PushValue) ProtoReflect() protoreflect.Message {
-	mi := &file_device_proto_msgTypes[23]
+	mi := &file_device_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1692,7 +1951,7 @@ func (x *PushUpdates_PushValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PushUpdates_PushValue.ProtoReflect.Descriptor instead.
 func (*PushUpdates_PushValue) Descriptor() ([]byte, []int) {
-	return file_device_proto_rawDescGZIP(), []int{7, 1}
+	return file_device_proto_rawDescGZIP(), []int{9, 1}
 }
 
 func (x *PushUpdates_PushValue) GetOid() string {
@@ -1786,7 +2045,27 @@ const file_device_proto_rawDesc = "" +
 	"\x04slot\x18\x01 \x01(\rR\x04slot\x12\x1a\n" +
 	"\blanguage\x18\x02 \x01(\tR\blanguage\x12=\n" +
 	"\fdetail_level\x18\x03 \x01(\x0e2\x1a.st2138.Device.DetailLevelR\vdetailLevel\x12'\n" +
-	"\x0fsubscribed_oids\x18\x04 \x03(\tR\x0esubscribedOids\"\x8a\x01\n" +
+	"\x0fsubscribed_oids\x18\x04 \x03(\tR\x0esubscribedOids\"\xdc\x01\n" +
+	"\x13GetComponentPayload\x12\x12\n" +
+	"\x04slot\x18\x01 \x01(\rR\x04slot\x12\x10\n" +
+	"\x03oid\x18\x02 \x01(\tR\x03oid\x12=\n" +
+	"\x04kind\x18\x03 \x01(\x0e2).st2138.GetComponentPayload.ComponentKindR\x04kind\"`\n" +
+	"\rComponentKind\x12\n" +
+	"\n" +
+	"\x06UNUSED\x10\x00\x12\t\n" +
+	"\x05PARAM\x10\x01\x12\x0e\n" +
+	"\n" +
+	"CONSTRAINT\x10\x02\x12\b\n" +
+	"\x04MENU\x10\x03\x12\v\n" +
+	"\aCOMMAND\x10\x04\x12\x11\n" +
+	"\rLANGUAGE_PACK\x10\x05\"\x90\x03\n" +
+	"\x11ComponentResponse\x12>\n" +
+	"\x05param\x18\x03 \x01(\v2&.st2138.DeviceComponent.ComponentParamH\x00R\x05param\x12Z\n" +
+	"\x11shared_constraint\x18\x04 \x01(\v2+.st2138.DeviceComponent.ComponentConstraintH\x00R\x10sharedConstraint\x12;\n" +
+	"\x04menu\x18\x05 \x01(\v2%.st2138.DeviceComponent.ComponentMenuH\x00R\x04menu\x12D\n" +
+	"\acommand\x18\x06 \x01(\v2(.st2138.DeviceComponent.ComponentCommandH\x00R\acommand\x12T\n" +
+	"\rlanguage_pack\x18\a \x01(\v2-.st2138.DeviceComponent.ComponentLanguagePackH\x00R\flanguagePackB\x06\n" +
+	"\x04kind\"\x8a\x01\n" +
 	"\x0eConnectPayload\x12\x1a\n" +
 	"\blanguage\x18\x01 \x01(\tR\blanguage\x12=\n" +
 	"\fdetail_level\x18\x02 \x01(\x0e2\x1a.st2138.Device.DetailLevelR\vdetailLevel\x12\x1d\n" +
@@ -1844,7 +2123,7 @@ const file_device_proto_rawDesc = "" +
 	"\x12RevocationResponse\x12-\n" +
 	"\x12remaining_subjects\x18\x01 \x03(\tR\x11remainingSubjects\x12)\n" +
 	"\x10revoked_subjects\x18\x02 \x03(\tR\x0frevokedSubjectsB&\n" +
-	"\x12catena.core.deviceB\fDeviceProtosH\x01P\x01b\x06proto3"
+	"\x12st2138.core.deviceB\fDeviceProtosH\x01P\x01b\x06proto3"
 
 var (
 	file_device_proto_rawDescOnce sync.Once
@@ -1858,90 +2137,99 @@ func file_device_proto_rawDescGZIP() []byte {
 	return file_device_proto_rawDescData
 }
 
-var file_device_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_device_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_device_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_device_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_device_proto_goTypes = []any{
-	(Device_DetailLevel)(0),                // 0: st2138.Device.DetailLevel
-	(TrapMessage_TrapMessageType)(0),       // 1: st2138.TrapMessage.TrapMessageType
-	(*Device)(nil),                         // 2: st2138.Device
-	(*DeviceComponent)(nil),                // 3: st2138.DeviceComponent
-	(*RemoveComponents)(nil),               // 4: st2138.RemoveComponents
-	(*DeviceRequestPayload)(nil),           // 5: st2138.DeviceRequestPayload
-	(*ConnectPayload)(nil),                 // 6: st2138.ConnectPayload
-	(*TrapMessage)(nil),                    // 7: st2138.TrapMessage
-	(*SlotList)(nil),                       // 8: st2138.SlotList
-	(*PushUpdates)(nil),                    // 9: st2138.PushUpdates
-	(*RefreshTokenPayload)(nil),            // 10: st2138.RefreshTokenPayload
-	(*ConnectionStatus)(nil),               // 11: st2138.ConnectionStatus
-	(*RevokeAccessPayload)(nil),            // 12: st2138.RevokeAccessPayload
-	(*RevocationResponse)(nil),             // 13: st2138.RevocationResponse
-	nil,                                    // 14: st2138.Device.ConstraintsEntry
-	nil,                                    // 15: st2138.Device.ParamsEntry
-	nil,                                    // 16: st2138.Device.MenuGroupsEntry
-	nil,                                    // 17: st2138.Device.CommandsEntry
-	(*DeviceComponent_ComponentParam)(nil), // 18: st2138.DeviceComponent.ComponentParam
-	(*DeviceComponent_ComponentMenu)(nil),  // 19: st2138.DeviceComponent.ComponentMenu
-	(*DeviceComponent_ComponentConstraint)(nil),   // 20: st2138.DeviceComponent.ComponentConstraint
-	(*DeviceComponent_ComponentCommand)(nil),      // 21: st2138.DeviceComponent.ComponentCommand
-	(*DeviceComponent_ComponentLanguagePack)(nil), // 22: st2138.DeviceComponent.ComponentLanguagePack
-	(*RemoveComponents_IdList)(nil),               // 23: st2138.RemoveComponents.IdList
-	(*PushUpdates_PushExternalObject)(nil),        // 24: st2138.PushUpdates.PushExternalObject
-	(*PushUpdates_PushValue)(nil),                 // 25: st2138.PushUpdates.PushValue
-	(*LanguagePacks)(nil),                         // 26: st2138.LanguagePacks
-	(*Exception)(nil),                             // 27: st2138.Exception
-	(*Constraint)(nil),                            // 28: st2138.Constraint
-	(*Param)(nil),                                 // 29: st2138.Param
-	(*MenuGroup)(nil),                             // 30: st2138.MenuGroup
-	(*Menu)(nil),                                  // 31: st2138.Menu
-	(*LanguagePack)(nil),                          // 32: st2138.LanguagePack
-	(*ExternalObjectPayload)(nil),                 // 33: st2138.ExternalObjectPayload
-	(*Value)(nil),                                 // 34: st2138.Value
+	(Device_DetailLevel)(0),                       // 0: st2138.Device.DetailLevel
+	(GetComponentPayload_ComponentKind)(0),        // 1: st2138.GetComponentPayload.ComponentKind
+	(TrapMessage_TrapMessageType)(0),              // 2: st2138.TrapMessage.TrapMessageType
+	(*Device)(nil),                                // 3: st2138.Device
+	(*DeviceComponent)(nil),                       // 4: st2138.DeviceComponent
+	(*RemoveComponents)(nil),                      // 5: st2138.RemoveComponents
+	(*DeviceRequestPayload)(nil),                  // 6: st2138.DeviceRequestPayload
+	(*GetComponentPayload)(nil),                   // 7: st2138.GetComponentPayload
+	(*ComponentResponse)(nil),                     // 8: st2138.ComponentResponse
+	(*ConnectPayload)(nil),                        // 9: st2138.ConnectPayload
+	(*TrapMessage)(nil),                           // 10: st2138.TrapMessage
+	(*SlotList)(nil),                              // 11: st2138.SlotList
+	(*PushUpdates)(nil),                           // 12: st2138.PushUpdates
+	(*RefreshTokenPayload)(nil),                   // 13: st2138.RefreshTokenPayload
+	(*ConnectionStatus)(nil),                      // 14: st2138.ConnectionStatus
+	(*RevokeAccessPayload)(nil),                   // 15: st2138.RevokeAccessPayload
+	(*RevocationResponse)(nil),                    // 16: st2138.RevocationResponse
+	nil,                                           // 17: st2138.Device.ConstraintsEntry
+	nil,                                           // 18: st2138.Device.ParamsEntry
+	nil,                                           // 19: st2138.Device.MenuGroupsEntry
+	nil,                                           // 20: st2138.Device.CommandsEntry
+	(*DeviceComponent_ComponentParam)(nil),        // 21: st2138.DeviceComponent.ComponentParam
+	(*DeviceComponent_ComponentMenu)(nil),         // 22: st2138.DeviceComponent.ComponentMenu
+	(*DeviceComponent_ComponentConstraint)(nil),   // 23: st2138.DeviceComponent.ComponentConstraint
+	(*DeviceComponent_ComponentCommand)(nil),      // 24: st2138.DeviceComponent.ComponentCommand
+	(*DeviceComponent_ComponentLanguagePack)(nil), // 25: st2138.DeviceComponent.ComponentLanguagePack
+	(*RemoveComponents_IdList)(nil),               // 26: st2138.RemoveComponents.IdList
+	(*PushUpdates_PushExternalObject)(nil),        // 27: st2138.PushUpdates.PushExternalObject
+	(*PushUpdates_PushValue)(nil),                 // 28: st2138.PushUpdates.PushValue
+	(*LanguagePacks)(nil),                         // 29: st2138.LanguagePacks
+	(*Exception)(nil),                             // 30: st2138.Exception
+	(*Constraint)(nil),                            // 31: st2138.Constraint
+	(*Param)(nil),                                 // 32: st2138.Param
+	(*MenuGroup)(nil),                             // 33: st2138.MenuGroup
+	(*Menu)(nil),                                  // 34: st2138.Menu
+	(*LanguagePack)(nil),                          // 35: st2138.LanguagePack
+	(*ExternalObjectPayload)(nil),                 // 36: st2138.ExternalObjectPayload
+	(*Value)(nil),                                 // 37: st2138.Value
 }
 var file_device_proto_depIdxs = []int32{
 	0,  // 0: st2138.Device.detail_level:type_name -> st2138.Device.DetailLevel
-	14, // 1: st2138.Device.constraints:type_name -> st2138.Device.ConstraintsEntry
-	15, // 2: st2138.Device.params:type_name -> st2138.Device.ParamsEntry
-	16, // 3: st2138.Device.menu_groups:type_name -> st2138.Device.MenuGroupsEntry
-	17, // 4: st2138.Device.commands:type_name -> st2138.Device.CommandsEntry
-	26, // 5: st2138.Device.language_packs:type_name -> st2138.LanguagePacks
-	2,  // 6: st2138.DeviceComponent.device:type_name -> st2138.Device
-	18, // 7: st2138.DeviceComponent.param:type_name -> st2138.DeviceComponent.ComponentParam
-	20, // 8: st2138.DeviceComponent.shared_constraint:type_name -> st2138.DeviceComponent.ComponentConstraint
-	19, // 9: st2138.DeviceComponent.menu:type_name -> st2138.DeviceComponent.ComponentMenu
-	21, // 10: st2138.DeviceComponent.command:type_name -> st2138.DeviceComponent.ComponentCommand
-	22, // 11: st2138.DeviceComponent.language_pack:type_name -> st2138.DeviceComponent.ComponentLanguagePack
-	23, // 12: st2138.RemoveComponents.params:type_name -> st2138.RemoveComponents.IdList
-	23, // 13: st2138.RemoveComponents.shared_constraints:type_name -> st2138.RemoveComponents.IdList
-	23, // 14: st2138.RemoveComponents.menus:type_name -> st2138.RemoveComponents.IdList
-	23, // 15: st2138.RemoveComponents.commands:type_name -> st2138.RemoveComponents.IdList
-	23, // 16: st2138.RemoveComponents.language_packs:type_name -> st2138.RemoveComponents.IdList
+	17, // 1: st2138.Device.constraints:type_name -> st2138.Device.ConstraintsEntry
+	18, // 2: st2138.Device.params:type_name -> st2138.Device.ParamsEntry
+	19, // 3: st2138.Device.menu_groups:type_name -> st2138.Device.MenuGroupsEntry
+	20, // 4: st2138.Device.commands:type_name -> st2138.Device.CommandsEntry
+	29, // 5: st2138.Device.language_packs:type_name -> st2138.LanguagePacks
+	3,  // 6: st2138.DeviceComponent.device:type_name -> st2138.Device
+	21, // 7: st2138.DeviceComponent.param:type_name -> st2138.DeviceComponent.ComponentParam
+	23, // 8: st2138.DeviceComponent.shared_constraint:type_name -> st2138.DeviceComponent.ComponentConstraint
+	22, // 9: st2138.DeviceComponent.menu:type_name -> st2138.DeviceComponent.ComponentMenu
+	24, // 10: st2138.DeviceComponent.command:type_name -> st2138.DeviceComponent.ComponentCommand
+	25, // 11: st2138.DeviceComponent.language_pack:type_name -> st2138.DeviceComponent.ComponentLanguagePack
+	26, // 12: st2138.RemoveComponents.params:type_name -> st2138.RemoveComponents.IdList
+	26, // 13: st2138.RemoveComponents.shared_constraints:type_name -> st2138.RemoveComponents.IdList
+	26, // 14: st2138.RemoveComponents.menus:type_name -> st2138.RemoveComponents.IdList
+	26, // 15: st2138.RemoveComponents.commands:type_name -> st2138.RemoveComponents.IdList
+	26, // 16: st2138.RemoveComponents.language_packs:type_name -> st2138.RemoveComponents.IdList
 	0,  // 17: st2138.DeviceRequestPayload.detail_level:type_name -> st2138.Device.DetailLevel
-	0,  // 18: st2138.ConnectPayload.detail_level:type_name -> st2138.Device.DetailLevel
-	1,  // 19: st2138.TrapMessage.type:type_name -> st2138.TrapMessage.TrapMessageType
-	25, // 20: st2138.PushUpdates.value:type_name -> st2138.PushUpdates.PushValue
-	3,  // 21: st2138.PushUpdates.device_component:type_name -> st2138.DeviceComponent
-	27, // 22: st2138.PushUpdates.refused:type_name -> st2138.Exception
-	7,  // 23: st2138.PushUpdates.trap_message:type_name -> st2138.TrapMessage
-	24, // 24: st2138.PushUpdates.external_object:type_name -> st2138.PushUpdates.PushExternalObject
-	4,  // 25: st2138.PushUpdates.remove_device_components:type_name -> st2138.RemoveComponents
-	8,  // 26: st2138.PushUpdates.slots_added:type_name -> st2138.SlotList
-	8,  // 27: st2138.PushUpdates.slots_removed:type_name -> st2138.SlotList
-	28, // 28: st2138.Device.ConstraintsEntry.value:type_name -> st2138.Constraint
-	29, // 29: st2138.Device.ParamsEntry.value:type_name -> st2138.Param
-	30, // 30: st2138.Device.MenuGroupsEntry.value:type_name -> st2138.MenuGroup
-	29, // 31: st2138.Device.CommandsEntry.value:type_name -> st2138.Param
-	29, // 32: st2138.DeviceComponent.ComponentParam.param:type_name -> st2138.Param
-	31, // 33: st2138.DeviceComponent.ComponentMenu.menu:type_name -> st2138.Menu
-	28, // 34: st2138.DeviceComponent.ComponentConstraint.constraint:type_name -> st2138.Constraint
-	29, // 35: st2138.DeviceComponent.ComponentCommand.command:type_name -> st2138.Param
-	32, // 36: st2138.DeviceComponent.ComponentLanguagePack.language_pack:type_name -> st2138.LanguagePack
-	33, // 37: st2138.PushUpdates.PushExternalObject.external_object:type_name -> st2138.ExternalObjectPayload
-	34, // 38: st2138.PushUpdates.PushValue.value:type_name -> st2138.Value
-	39, // [39:39] is the sub-list for method output_type
-	39, // [39:39] is the sub-list for method input_type
-	39, // [39:39] is the sub-list for extension type_name
-	39, // [39:39] is the sub-list for extension extendee
-	0,  // [0:39] is the sub-list for field type_name
+	1,  // 18: st2138.GetComponentPayload.kind:type_name -> st2138.GetComponentPayload.ComponentKind
+	21, // 19: st2138.ComponentResponse.param:type_name -> st2138.DeviceComponent.ComponentParam
+	23, // 20: st2138.ComponentResponse.shared_constraint:type_name -> st2138.DeviceComponent.ComponentConstraint
+	22, // 21: st2138.ComponentResponse.menu:type_name -> st2138.DeviceComponent.ComponentMenu
+	24, // 22: st2138.ComponentResponse.command:type_name -> st2138.DeviceComponent.ComponentCommand
+	25, // 23: st2138.ComponentResponse.language_pack:type_name -> st2138.DeviceComponent.ComponentLanguagePack
+	0,  // 24: st2138.ConnectPayload.detail_level:type_name -> st2138.Device.DetailLevel
+	2,  // 25: st2138.TrapMessage.type:type_name -> st2138.TrapMessage.TrapMessageType
+	28, // 26: st2138.PushUpdates.value:type_name -> st2138.PushUpdates.PushValue
+	4,  // 27: st2138.PushUpdates.device_component:type_name -> st2138.DeviceComponent
+	30, // 28: st2138.PushUpdates.refused:type_name -> st2138.Exception
+	10, // 29: st2138.PushUpdates.trap_message:type_name -> st2138.TrapMessage
+	27, // 30: st2138.PushUpdates.external_object:type_name -> st2138.PushUpdates.PushExternalObject
+	5,  // 31: st2138.PushUpdates.remove_device_components:type_name -> st2138.RemoveComponents
+	11, // 32: st2138.PushUpdates.slots_added:type_name -> st2138.SlotList
+	11, // 33: st2138.PushUpdates.slots_removed:type_name -> st2138.SlotList
+	31, // 34: st2138.Device.ConstraintsEntry.value:type_name -> st2138.Constraint
+	32, // 35: st2138.Device.ParamsEntry.value:type_name -> st2138.Param
+	33, // 36: st2138.Device.MenuGroupsEntry.value:type_name -> st2138.MenuGroup
+	32, // 37: st2138.Device.CommandsEntry.value:type_name -> st2138.Param
+	32, // 38: st2138.DeviceComponent.ComponentParam.param:type_name -> st2138.Param
+	34, // 39: st2138.DeviceComponent.ComponentMenu.menu:type_name -> st2138.Menu
+	31, // 40: st2138.DeviceComponent.ComponentConstraint.constraint:type_name -> st2138.Constraint
+	32, // 41: st2138.DeviceComponent.ComponentCommand.command:type_name -> st2138.Param
+	35, // 42: st2138.DeviceComponent.ComponentLanguagePack.language_pack:type_name -> st2138.LanguagePack
+	36, // 43: st2138.PushUpdates.PushExternalObject.external_object:type_name -> st2138.ExternalObjectPayload
+	37, // 44: st2138.PushUpdates.PushValue.value:type_name -> st2138.Value
+	45, // [45:45] is the sub-list for method output_type
+	45, // [45:45] is the sub-list for method input_type
+	45, // [45:45] is the sub-list for extension type_name
+	45, // [45:45] is the sub-list for extension extendee
+	0,  // [0:45] is the sub-list for field type_name
 }
 
 func init() { file_device_proto_init() }
@@ -1969,7 +2257,14 @@ func file_device_proto_init() {
 		(*RemoveComponents_Commands)(nil),
 		(*RemoveComponents_LanguagePacks)(nil),
 	}
-	file_device_proto_msgTypes[7].OneofWrappers = []any{
+	file_device_proto_msgTypes[5].OneofWrappers = []any{
+		(*ComponentResponse_Param)(nil),
+		(*ComponentResponse_SharedConstraint)(nil),
+		(*ComponentResponse_Menu)(nil),
+		(*ComponentResponse_Command)(nil),
+		(*ComponentResponse_LanguagePack)(nil),
+	}
+	file_device_proto_msgTypes[9].OneofWrappers = []any{
 		(*PushUpdates_Value)(nil),
 		(*PushUpdates_DeviceComponent)(nil),
 		(*PushUpdates_Refused)(nil),
@@ -1986,8 +2281,8 @@ func file_device_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_device_proto_rawDesc), len(file_device_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   24,
+			NumEnums:      3,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

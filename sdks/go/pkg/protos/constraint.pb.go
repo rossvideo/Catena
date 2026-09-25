@@ -1016,7 +1016,7 @@ const file_constraint_proto_rawDesc = "" +
 	"\vALARM_TABLE\x10\b\x12\x14\n" +
 	"\x10FORMATTED_STRING\x10\tB\x06\n" +
 	"\x04kindB.\n" +
-	"\x16catena.core.constraintB\x10ConstraintProtosH\x01P\x01b\x06proto3"
+	"\x16st2138.core.constraintB\x10ConstraintProtosH\x01P\x01b\x06proto3"
 
 var (
 	file_constraint_proto_rawDescOnce sync.Once

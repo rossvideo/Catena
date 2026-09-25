@@ -244,7 +244,7 @@ const file_menu_proto_rawDesc = "" +
 	"MenusEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\"\n" +
 	"\x05value\x18\x02 \x01(\v2\f.st2138.MenuR\x05value:\x028\x01B\"\n" +
-	"\x10catena.core.menuB\n" +
+	"\x10st2138.core.menuB\n" +
 	"MenuProtosH\x01P\x01b\x06proto3"
 
 var (

@@ -164,7 +164,7 @@ const file_externalobject_proto_rawDesc = "" +
 	"\x15ExternalObjectPayload\x12\x1a\n" +
 	"\bcachable\x18\x01 \x01(\bR\bcachable\x12-\n" +
 	"\apayload\x18\x02 \x01(\v2\x13.st2138.DataPayloadR\apayloadB6\n" +
-	"\x1acatena.core.externalobjectB\x14ExternalObjectProtosH\x01P\x01b\x06proto3"
+	"\x1ast2138.core.externalobjectB\x14ExternalObjectProtosH\x01P\x01b\x06proto3"
 
 var (
 	file_externalobject_proto_rawDescOnce sync.Once
