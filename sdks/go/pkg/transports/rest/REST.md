@@ -48,6 +48,34 @@ Behavior:
 - Minimum accepted protocol version is TLS 1.2.
 - Env/CLI configuration: `{PREFIX}_REST_TLS_ENABLED`, `{PREFIX}_REST_TLS_CERT_FILE`, `{PREFIX}_REST_TLS_KEY_FILE`, `{PREFIX}_REST_TLS_CLIENT_CA_FILE`, `{PREFIX}_REST_TLS_MUTUAL_AUTH` (flags `--rest-tls-*`).
 
+## CORS
+
+CORS is **off by default**. `AllowedOrigins` nil or empty means the transport emits no CORS headers and does not answer preflight `OPTIONS`. Leave it off when a gateway or reverse proxy already injects CORS, so responses are not doubled.
+
+Enable it for a **direct browser-to-device** connection:
+
+```go
+opts := rest.DefaultOptions()
+opts.AllowedOrigins = []string{"https://ui.example.com"}
+// or permissive:
+// opts.AllowedOrigins = []string{"*"}
+restTransport := rest.NewTransport(opts)
+```
+
+Configuration:
+
+- `{PREFIX}_REST_ALLOWED_ORIGINS` / `--rest-allowed-origins` — comma-separated exact origins. `*` allows any origin. Empty disables CORS (`--rest-allowed-origins=` is off).
+- `{PREFIX}_REST_EXTRA_ALLOWED_HEADERS` / `--rest-extra-allowed-headers` — additive; unioned with `Content-Type`, `Authorization`, `Accept`, `Language`, `Detail-Level`, `Request-Start`.
+- `{PREFIX}_REST_EXTRA_ALLOWED_METHODS` / `--rest-extra-allowed-methods` — additive; unioned with `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`.
+- `{PREFIX}_REST_CORS_MAX_AGE` / `--rest-cors-max-age` — Go duration value (default `10m`). Used only when CORS is enabled. Units default to seconds if unspecified.
+
+Behavior when enabled:
+
+- Preflight `OPTIONS` returns `204` with `Allow-Methods`, `Allow-Headers`, and `Max-Age`.
+- `*` in the origin list wins: responses use literal `Access-Control-Allow-Origin: *` and no `Vary`.
+- Otherwise the request `Origin` is echoed only on exact string match, with `Vary: Origin`. `Origin: null` is never allowed. Prefix/substring matches are rejected.
+- `Access-Control-Allow-Credentials` is never set, auth is JWT bearer only.
+
 ## Implemented Endpoints
 
 Core routes:

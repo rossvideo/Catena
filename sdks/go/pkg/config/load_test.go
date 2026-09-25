@@ -45,6 +45,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestInitOptions(t *testing.T) {
@@ -470,6 +471,49 @@ func TestInitOptions_Transport(t *testing.T) {
 		}
 	})
 
+	t.Run("cors origins from env", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_ALLOWED_ORIGINS", "https://a.example, https://b.example")
+		opts := init(t)
+		want := []string{"https://a.example", "https://b.example"}
+		if !reflect.DeepEqual(opts.Rest.AllowedOrigins, want) {
+			t.Errorf("expected AllowedOrigins %v, got %v", want, opts.Rest.AllowedOrigins)
+		}
+	})
+
+	t.Run("cors extra headers and methods from env", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_EXTRA_ALLOWED_HEADERS", "X-Tenant-Id, X-Request-Id")
+		t.Setenv("TESTCFG_REST_EXTRA_ALLOWED_METHODS", "PATCH")
+		t.Setenv("TESTCFG_REST_CORS_MAX_AGE", "10m")
+		opts := init(t)
+		if !reflect.DeepEqual(opts.Rest.ExtraAllowedHeaders, []string{"X-Tenant-Id", "X-Request-Id"}) {
+			t.Errorf("unexpected ExtraAllowedHeaders: %v", opts.Rest.ExtraAllowedHeaders)
+		}
+		if !reflect.DeepEqual(opts.Rest.ExtraAllowedMethods, []string{"PATCH"}) {
+			t.Errorf("unexpected ExtraAllowedMethods: %v", opts.Rest.ExtraAllowedMethods)
+		}
+		if opts.Rest.CorsMaxAge != 10*time.Minute {
+			t.Errorf("expected CorsMaxAge 10m, got %v", opts.Rest.CorsMaxAge)
+		}
+	})
+
+	t.Run("empty cors origins flag is nil", func(t *testing.T) {
+		t.Setenv("TESTCFG_REST_ALLOWED_ORIGINS", "https://example.com")
+		opts := init(t, "--rest-allowed-origins=")
+		if opts.Rest.AllowedOrigins != nil {
+			t.Errorf("expected empty flag to disable CORS (nil origins), got %v", opts.Rest.AllowedOrigins)
+		}
+	})
+
+	t.Run("cors defaults when unset", func(t *testing.T) {
+		opts := init(t)
+		if opts.Rest.AllowedOrigins != nil {
+			t.Errorf("expected default AllowedOrigins nil, got %v", opts.Rest.AllowedOrigins)
+		}
+		if opts.Rest.CorsMaxAge != 600*time.Second {
+			t.Errorf("expected default CorsMaxAge 600s, got %v", opts.Rest.CorsMaxAge)
+		}
+	})
+
 	t.Run("invalid tls bool env errors", func(t *testing.T) {
 		t.Setenv("TESTCFG_REST_TLS_ENABLED", "notabool")
 		_, err := InitOptions("test_app", []string{}, WithPrefix("TESTCFG"))
@@ -621,6 +665,157 @@ func TestLoader_String(t *testing.T) {
 	if val != "hello" {
 		t.Errorf("Expected val to be 'hello' got: %s", val)
 	}
+}
+
+func TestParseStringSlice(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want []string
+	}{
+		{"empty", "", nil},
+		{"whitespace", "  , , ", nil},
+		{"trim and drop empties", "a, b, ,c", []string{"a", "b", "c"}},
+		{"star", "*", []string{"*"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseStringSlice(tt.in)
+			if err != nil {
+				t.Fatalf("parseStringSlice(%q) error: %v", tt.in, err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseStringSlice(%q)=%v, want %v", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLoader_StringSlice(t *testing.T) {
+	t.Run("env var parsing", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		var val []string
+		t.Setenv("TEST_SLICE", "a, b, ,c")
+		loader.extractStringSlice("TEST_SLICE", "test-slice", "Test slice flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		want := []string{"a", "b", "c"}
+		if !reflect.DeepEqual(val, want) {
+			t.Errorf("Expected val %v got: %v", want, val)
+		}
+	})
+
+	t.Run("empty flag is nil", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := []string{"keep"}
+		loader.extractStringSlice("TEST_SLICE", "test-slice", "Test slice flag", &val)
+		if err := loader.flags.Parse([]string{"--test-slice="}); err != nil {
+			t.Fatalf("Parse: %v", err)
+		}
+		if val != nil {
+			t.Errorf("expected empty flag to yield nil, got %v", val)
+		}
+	})
+}
+
+func TestLoader_Duration(t *testing.T) {
+	t.Run("env var parsing", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_DURATION", "10m")
+		loader.extractDuration("TEST_DURATION", "test-duration", "Test duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 10*time.Minute {
+			t.Errorf("Expected val 10m got: %v", val)
+		}
+	})
+
+	t.Run("unitless duration from env", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_DURATION", "50")
+		loader.extractDuration("TEST_DURATION", "test-duration", "Test duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 50*time.Second {
+			t.Errorf("Expected val 50s got: %v", val)
+		}
+	})
+
+	t.Run("invalid duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_DURATION", "notaduration")
+		loader.extractDuration("TEST_DURATION", "test-duration", "Test duration flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
+}
+
+func TestLoader_PositiveDuration(t *testing.T) {
+	t.Run("env var parsing", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "10m")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 10*time.Minute {
+			t.Errorf("Expected val 10m got: %v", val)
+		}
+	})
+
+	t.Run("unitless duration from env", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "50")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 50*time.Second {
+			t.Errorf("Expected val 50s got: %v", val)
+		}
+	})
+
+	t.Run("invalid duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "notaduration")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
+
+	t.Run("negative duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "-10m")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
+
+	t.Run("zero duration", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := time.Second
+		t.Setenv("TEST_POSITIVE_DURATION", "0")
+		loader.extractPositiveDuration("TEST_POSITIVE_DURATION", "test-positive-duration", "Test positive duration flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 0 {
+			t.Errorf("Expected val to be 0 got: %v", val)
+		}
+	})
 }
 
 func TestLoader_LogLevel(t *testing.T) {

@@ -44,13 +44,20 @@ import (
 	"log/slog"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestDefaultOptions(t *testing.T) {
 	opts := DefaultRuntimeOptions()
 
 	if !reflect.DeepEqual(opts, RuntimeOptions{
-		Rest: RestOptions{Port: 9080},
+		Rest: RestOptions{
+			Port:                9080,
+			AllowedOrigins:      nil,
+			ExtraAllowedHeaders: nil,
+			ExtraAllowedMethods: nil,
+			CorsMaxAge:          600 * time.Second,
+		},
 		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
 			IsDev:          false,
@@ -158,6 +165,10 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 				"client_ca_file": "",
 				"mutual_auth":    false,
 			},
+			"allowed_origins":       nil,
+			"extra_allowed_headers": nil,
+			"extra_allowed_methods": nil,
+			"cors_max_age":          json.Number("0"),
 		},
 		"grpc": map[string]any{
 			"port":       json.Number("0"),
