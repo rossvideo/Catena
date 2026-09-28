@@ -86,25 +86,15 @@ func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidat
 		options: opts,
 	}
 
-	// determine whether to validate signature based on options
 	if opts.ValidateSignature {
-
-		// add a wrapper function to implement the retry backoff logic
-		// ===
-
-		// If signature validation is enabled, we need to discover the JWKS endpoint and set up the keyfunc.
-
 		jwksKeyFunc, err := initializeJWTKeyFunc(ctx, opts)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize JWT keyfunc: %w", err)
 		}
 		v.keyfunc = jwksKeyFunc
 
-		//======
-
 		v.validateFn = v.validateSignatureAndClaims
 	} else {
-		// not validating signature, just validate claims
 		v.validateFn = v.validateClaims
 	}
 

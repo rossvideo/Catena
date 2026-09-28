@@ -45,6 +45,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -1012,7 +1013,90 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
 		}
 	})
+
+	t.Run("response status 429 with negative retry-after stays retriable", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Retry-After", "-1")
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
+		}
+
+		var retryAfter *backoff.RetryAfterError
+		if errors.As(err, &retryAfter) {
+			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+		}
+	})
+
+	t.Run("response status 429 with past retry-after HTTP-date stays retriable", func(t *testing.T) {
+		when := time.Now().Add(-time.Minute).UTC()
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Retry-After", when.Format(http.TimeFormat))
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
+		}
+
+		var retryAfter *backoff.RetryAfterError
+		if errors.As(err, &retryAfter) {
+			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+		}
+	})
 }
+
+func TestClassifyDiscoveryError(t *testing.T) {
+	t.Run("nil", func(t *testing.T) {
+		if err := classifyDiscoveryError(nil); err != nil {
+			t.Fatalf("classifyDiscoveryError(nil) = %v, want nil", err)
+		}
+	})
+
+	t.Run("context canceled is permanent", func(t *testing.T) {
+		err := classifyDiscoveryError(context.Canceled)
+		var permanent *backoff.PermanentError
+		if !errors.As(err, &permanent) {
+			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
+		}
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("classifyDiscoveryError() error = %v, want context.Canceled", err)
+		}
+	})
+
+	t.Run("deadline exceeded is permanent", func(t *testing.T) {
+		err := classifyDiscoveryError(context.DeadlineExceeded)
+		var permanent *backoff.PermanentError
+		if !errors.As(err, &permanent) {
+			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
+		}
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("classifyDiscoveryError() error = %v, want context.DeadlineExceeded", err)
+		}
+	})
+
+	t.Run("non network error is permanent", func(t *testing.T) {
+		err := classifyDiscoveryError(errors.New("test-error"))
+		var permanent *backoff.PermanentError
+		if !errors.As(err, &permanent) {
+			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
+		}
+		var urlErr *url.Error
+		if errors.As(err, &urlErr) {
+			t.Fatalf("classifyDiscoveryError() unexpectedly returned url.Error: %v", err)
+		}
+		if !strings.Contains(err.Error(), "perform request") || !strings.Contains(err.Error(), "test-error") {
+			t.Fatalf("classifyDiscoveryError() error = %v, want perform request wrapping test-error", err)
+		}
+	})
+}
+
 func TestExtractTokenScopes_NonMapClaims(t *testing.T) {
 	token := &jwt.Token{
 		Claims: &jwt.RegisteredClaims{
