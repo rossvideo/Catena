@@ -337,6 +337,54 @@ func TestNewJwtValidatorRetry_TransientFailures_ErrorStatusCodes(t *testing.T) {
 	})
 }
 
+func TestNewJwtValidatorRetry_TransientFailures_NetworkError(t *testing.T) {
+
+	var discoveryAttempts atomic.Int32
+	var maxFailures int32 = 3
+
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			_, _ = fmt.Fprintf(w, `{"jwks_uri":"%s/keys"}`, server.URL)
+		}
+		if r.URL.Path == "/keys" {
+			_, _ = fmt.Fprint(w, `{"keys":[]}`)
+		}
+		http.NotFound(w, r)
+	}))
+	t.Cleanup(server.Close)
+
+	transport := server.Client().Transport.(*http.Transport)
+	originalDialContext := transport.DialContext
+	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		if discoveryAttempts.Add(1) <= maxFailures {
+			return nil, &net.OpError{
+				Op:  "dial",
+				Net: network,
+				Err: errors.New("network error"),
+			}
+		}
+		return originalDialContext(ctx, network, addr)
+	}
+	client := &http.Client{Transport: transport}
+
+	_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		Issuer:                     server.URL,
+		ValidateSignature:          true,
+		Http:                       client,
+		StartupRetryMaxElapsedTime: 3 * time.Second,
+	})
+
+	if err != nil {
+		t.Fatalf("unexpected newJwtValidator() error: %v", err)
+	}
+
+	if got := discoveryAttempts.Load(); got != maxFailures+1 {
+		t.Fatalf("discovery attempts = %d, want %d", got, maxFailures+1)
+	}
+
+}
+
 func TestNewJwtValidatorRetry_PermanentFailures(t *testing.T) {
 
 	newTestServer := func(statusCode int, createJSONBody func(url string) string, discoveryAttempts *atomic.Int32) *httptest.Server {
