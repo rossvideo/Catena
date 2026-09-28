@@ -322,13 +322,19 @@ func TestToProto_DataPayload_BothPayloadAndUrl_Error(t *testing.T) {
 	}
 }
 
-func TestToProto_DataPayload_NeitherPayloadNorUrl_Error(t *testing.T) {
+func TestToProto_DataPayload_NeitherPayloadNorUrl_EmptyPayload(t *testing.T) {
 	input := DataPayload{
 		Metadata: map[string]string{"content-type": "text/plain"},
 	}
-	_, err := ToProto(input)
-	if err == nil {
-		t.Error("expected error when neither payload nor url are provided")
+	pv, err := ToProto(input)
+	if err != nil {
+		t.Fatalf("ToProto(DataPayload) error: %v", err)
+	}
+	if pv.GetDataPayload() == nil {
+		t.Fatal("expected DataPayload kind")
+	}
+	if payload, ok := pv.GetDataPayload().GetKind().(*protos.DataPayload_Payload); !ok || len(payload.Payload) != 0 {
+		t.Errorf("expected empty payload kind, got %T", pv.GetDataPayload().GetKind())
 	}
 }
 

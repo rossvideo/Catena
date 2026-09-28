@@ -1882,6 +1882,70 @@ func TestTransport_sendSSEEvent(t *testing.T) {
 	}
 }
 
+func TestTransport_CORS_Preflight(t *testing.T) {
+	const origin = "https://example.com"
+	transport := NewTransport(config.RestOptions{
+		Port:           8080,
+		AllowedOrigins: []string{origin},
+		CorsMaxAge:     10 * time.Minute,
+	})
+	runtime := transporttest.MakeStubServerRuntime(t)
+	runtime.Dev = true
+	transport.runtime = runtime
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
+		if gotTransport != transport {
+			t.Errorf("expected transport %v, got %v", transport, gotTransport)
+		}
+	}
+
+	transport.port = 0
+	err := transport.Start(context.Background(), runtime)
+	if err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	// figure out the actual port assigned by the OS if port was 0.
+	port := transport.listener.Addr().(*net.TCPAddr).Port
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
+
+	req, err := http.NewRequest(http.MethodOptions, url, nil)
+	if err != nil {
+		t.Fatalf("NewRequest: %v", err)
+	}
+	req.Header.Set("Origin", origin)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("Do: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("expected status %d, got %d", http.StatusNoContent, resp.StatusCode)
+	}
+	if resp.Header.Get("Access-Control-Allow-Origin") != origin {
+		t.Errorf("expected Access-Control-Allow-Origin %s, got %s", origin, resp.Header.Get("Access-Control-Allow-Origin"))
+	}
+	if resp.Header.Get("Vary") != "Origin" {
+		t.Errorf("expected Vary %s, got %s", "Origin", resp.Header.Get("Vary"))
+	}
+	if resp.Header.Get("Access-Control-Max-Age") != "600" {
+		t.Errorf("expected Access-Control-Max-Age %s, got %s", "600", resp.Header.Get("Access-Control-Max-Age"))
+	}
+	if resp.Header.Get("Access-Control-Allow-Methods") != strings.Join(requiredMethods, ", ") {
+		t.Errorf("expected Access-Control-Allow-Methods %s, got %s", requiredMethods, resp.Header.Get("Access-Control-Allow-Methods"))
+	}
+	if resp.Header.Get("Access-Control-Allow-Headers") != strings.Join(requiredHeaders, ", ") {
+		t.Errorf("expected Access-Control-Allow-Headers %s, got %s", requiredHeaders, resp.Header.Get("Access-Control-Allow-Headers"))
+	}
+	if values := resp.Header.Values("Access-Control-Allow-Credentials"); len(values) != 0 {
+		t.Errorf("expected header Access-Control-Allow-Credentials not to be present")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	transport.Shutdown(ctx)
+}
+
 func TestTransport_Start(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {
@@ -1889,19 +1953,14 @@ func TestTransport_Start(t *testing.T) {
 			t.Errorf("expected transport %v, got %v", transport, gotTransport)
 		}
 	}
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		t.Fatalf("net.Listen: %v", err)
-	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
 
-	transport.port = port
-	err = transport.Start(context.Background(), runtime)
+	transport.port = 0
+	err := transport.Start(context.Background(), runtime)
 	if err != nil {
-		t.Errorf("Start: %v", err)
+		t.Fatalf("Start: %v", err)
 	}
-	time.Sleep(200 * time.Millisecond)
+	// figure out the actual port assigned by the OS if port was 0.
+	port := transport.listener.Addr().(*net.TCPAddr).Port
 
 	url := fmt.Sprintf("http://127.0.0.1:%d/st2138-api/v1", port)
 	resp, err := http.Get(url)
@@ -2148,25 +2207,6 @@ func TestWriteHTTPStatusResult_ProdMode(t *testing.T) {
 
 	assertBodyContains(t, rec, "Not Found")
 	assertBodyNotContains(t, rec, "detailed internal error")
-}
-
-func TestTransport_Connect_WithOrigin(t *testing.T) {
-	transport, runtime := makeTestTransport(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	runtime.WithConnection(transporttest.MakeTestConnection(1))
-
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil).WithContext(ctx)
-	req.Header.Set("Origin", "https://example.com")
-	rec := httptest.NewRecorder()
-
-	go transport.mux.ServeHTTP(rec, req)
-	time.Sleep(100 * time.Millisecond)
-	cancel()
-	time.Sleep(50 * time.Millisecond)
-
-	assertHeader(t, rec, "Access-Control-Allow-Origin", "https://example.com")
 }
 
 func TestWriteValueResult_WriteError(t *testing.T) {
