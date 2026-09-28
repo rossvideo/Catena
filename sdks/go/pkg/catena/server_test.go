@@ -1329,6 +1329,110 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			t.Errorf("expected value %v, got %v", expected, actual)
 		}
 	})
+
+	// With no GetValue handler registered, the value is derived from the
+	// registered GetParam handler by projecting out the param's value. The gate
+	// is still evaluated as a GetValue request.
+	t.Run("DerivesFromGetParamWhenUnregistered", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
+		mockInvokeGateFn(t, srv, EndpointGetValue, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+
+		paramCalled := 0
+		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			paramCalled++
+			if slot != 7 || fqoid != "test/param" {
+				t.Errorf("unexpected args slot=%d fqoid=%q", slot, fqoid)
+			}
+			if ctx.Token != knownCtx.Token {
+				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
+			}
+			return Reply(*st2138.NewParamInt32(42))
+		}
+
+		actual, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+
+		if _, ok := srv.getValueHandlers[7]; ok {
+			t.Error("expected no GetValue handler registered for slot 7")
+		}
+		if paramCalled != 1 {
+			t.Errorf("expected GetParam handler to be called once, got %d", paramCalled)
+		}
+		if status.IsError() {
+			t.Errorf("expected OK status, got %v", status)
+		}
+		if !proto.Equal(actual.Proto, st2138.NewParamInt32(42).Proto.GetValue()) {
+			t.Errorf("expected derived value 42, got %v", actual)
+		}
+	})
+
+	// A registered GetValue handler takes precedence: the GetParam handler must
+	// not be consulted even when both are present.
+	t.Run("PrefersRegisteredGetValueOverGetParam", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		srv.getValueHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+			return Reply(st2138.Value{Proto: st2138.NewParamInt32(1).Proto.GetValue()})
+		}
+		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			t.Error("GetParam handler must not be called when a GetValue handler is registered")
+			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+		}
+
+		actual, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		if status.IsError() {
+			t.Errorf("expected OK status, got %v", status)
+		}
+		if !proto.Equal(actual.Proto, st2138.NewParamInt32(1).Proto.GetValue()) {
+			t.Errorf("expected value 1 from GetValue handler, got %v", actual)
+		}
+	})
+
+	// An error from the GetParam handler propagates unchanged through the derive
+	// path.
+	t.Run("PropagatesGetParamErrorWhenDeriving", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "param not found: test/param")
+		}
+
+		_, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		if status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound propagated from GetParam, got %v", status.Code)
+		}
+	})
+
+	// A GetParam handler that reports Ok but returns a nil Proto violates the
+	// handler contract; the derive path surfaces it as Internal rather than
+	// returning an empty value with an Ok status.
+	t.Run("InternalWhenDerivedParamProtoIsNil", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			return st2138.Param{}, StatusWithCode(StatusCodeOk, "")
+		}
+
+		_, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		if status.Code != StatusCodeInternal {
+			t.Errorf("expected Internal for nil derived param, got %v", status.Code)
+		}
+	})
+
+	// With neither a GetValue nor a GetParam handler registered, the request is a
+	// NotFound as before.
+	t.Run("NotFoundWhenNeitherRegistered", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		_, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		if status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound, got %v", status.Code)
+		}
+	})
 }
 
 func TestServer_InvokeSetValueHandler(t *testing.T) {
@@ -1921,6 +2025,159 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		}
 		if got := stream.Items[0].Proto.GetInfo().GetOid(); got != "test/param" {
 			t.Errorf("streamed param info oid = %q, want %q", got, "test/param")
+		}
+	})
+
+	// With no ParamInfo handler registered, a specific-oid request derives the
+	// descriptor from the registered GetParam handler. The gate is still
+	// evaluated as a ParamInfo request.
+	t.Run("DerivesFromGetParamWhenUnregistered", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+
+		paramCalled := 0
+		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			paramCalled++
+			if slot != 4 || fqoid != "volume" {
+				t.Errorf("unexpected args slot=%d fqoid=%q", slot, fqoid)
+			}
+			if ctx.Token != knownCtx.Token {
+				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
+			}
+			return Reply(*st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")))
+		}
+
+		stream := &sliceStream[st2138.ParamInfo]{}
+		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+
+		if _, ok := srv.paramInfoHandlers[4]; ok {
+			t.Error("expected no ParamInfo handler registered for slot 4")
+		}
+		if paramCalled != 1 {
+			t.Errorf("expected GetParam handler to be called once, got %d", paramCalled)
+		}
+		if status.IsError() {
+			t.Errorf("expected OK status, got %v", status)
+		}
+		if len(stream.Items) != 1 {
+			t.Fatalf("expected 1 derived param info entry, got %d", len(stream.Items))
+		}
+		info := stream.Items[0].Proto.GetInfo()
+		if info.GetOid() != "volume" {
+			t.Errorf("derived oid = %q, want %q", info.GetOid(), "volume")
+		}
+		if info.GetType() != st2138.ParamTypeInt32 {
+			t.Errorf("derived type = %v, want INT32", info.GetType())
+		}
+	})
+
+	// A recursive request flattens the returned param's sub-param subtree into
+	// fully-qualified oids, all derived from the single GetParam result.
+	t.Run("DerivesRecursivelyFromGetParam", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			return Reply(*st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}))
+		}
+
+		stream := &sliceStream[st2138.ParamInfo]{}
+		status := srv.InvokeParamInfoHandler(4, "cfg", true, stream, validTestTransportContext(nil))
+		if status.IsError() {
+			t.Errorf("expected OK status, got %v", status)
+		}
+
+		var oids []string
+		for _, item := range stream.Items {
+			oids = append(oids, item.Proto.GetInfo().GetOid())
+		}
+		want := []string{"cfg", "cfg/number", "cfg/text"}
+		if len(oids) != len(want) {
+			t.Fatalf("derived oids = %v, want %v", oids, want)
+		}
+		for i, w := range want {
+			if oids[i] != w {
+				t.Errorf("derived oid[%d] = %q, want %q", i, oids[i], w)
+			}
+		}
+	})
+
+	// A registered ParamInfo handler takes precedence: the GetParam handler must
+	// not be consulted even when both are present.
+	t.Run("PrefersRegisteredParamInfoOverGetParam", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		srv.paramInfoHandlers[4] = func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
+			if err := stream.Send(st2138.NewParamInfo("volume", nil, st2138.ParamTypeInt32, "", 0)); err != nil {
+				return StatusWithCode(StatusCodeInternal, err.Error())
+			}
+			return StatusWithCode(StatusCodeOk, "")
+		}
+		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			t.Error("GetParam handler must not be called when a ParamInfo handler is registered")
+			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+		}
+
+		stream := &sliceStream[st2138.ParamInfo]{}
+		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+		if status.IsError() {
+			t.Errorf("expected OK status, got %v", status)
+		}
+		if len(stream.Items) != 1 {
+			t.Fatalf("expected 1 streamed param info entry, got %d", len(stream.Items))
+		}
+	})
+
+	// The whole-tree request (oidPrefix == "") is not derivable from single-OID
+	// GetParam, so it stays NotFound even when a GetParam handler exists.
+	t.Run("RootRequestNotDerivable", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			t.Error("GetParam handler must not be called for the whole-tree request")
+			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+		}
+
+		stream := &sliceStream[st2138.ParamInfo]{}
+		status := srv.InvokeParamInfoHandler(4, "", true, stream, validTestTransportContext(nil))
+		if status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound for root request, got %v", status.Code)
+		}
+	})
+
+	// An error from the GetParam handler propagates unchanged through the derive
+	// path.
+	t.Run("PropagatesGetParamErrorWhenDeriving", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+			return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "param not found: volume")
+		}
+
+		stream := &sliceStream[st2138.ParamInfo]{}
+		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+		if status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound propagated from GetParam, got %v", status.Code)
+		}
+		if len(stream.Items) != 0 {
+			t.Errorf("expected nothing streamed on error, got %d items", len(stream.Items))
+		}
+	})
+
+	// With neither a ParamInfo nor a GetParam handler registered, the request is
+	// a NotFound as before.
+	t.Run("NotFoundWhenNeitherRegistered", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		stream := &sliceStream[st2138.ParamInfo]{}
+		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+		if status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound, got %v", status.Code)
 		}
 	})
 }

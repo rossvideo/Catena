@@ -307,6 +307,29 @@ func TestServer_GetParam_Product(t *testing.T) {
 	}
 }
 
+// TestServer_GetParam_ProductNoHandler verifies product/* GetParam is served
+// from the registered product struct even when no GetParam handler exists, so a
+// product-only slot (e.g. a command-only device with no params) still exposes
+// its mandatory product param.
+func TestServer_GetParam_ProductNoHandler(t *testing.T) {
+	srv := newTestServer(t, false)
+	srv.RegisterProductStruct(0, testProduct())
+
+	param, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})
+	if res.Code != StatusCodeOk {
+		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
+	}
+	if !proto.Equal(param.Proto, expectedProductParam()) {
+		t.Errorf("bare 'product' param does not match expected, got %v", param.Proto)
+	}
+
+	// A non-product oid with no handler is still NotFound.
+	_, res = srv.InvokeGetParamHandler(0, "somethingElse", TransportContext{})
+	if res.Code != StatusCodeNotFound {
+		t.Fatalf("somethingElse: expected NOT_FOUND, got %v: %s", res.Code, res.Error)
+	}
+}
+
 // TestServer_GetParam_NoProductRegistered verifies product/* GetParam falls
 // through to the business-logic handler when no product is registered.
 func TestServer_GetParam_NoProductRegistered(t *testing.T) {
