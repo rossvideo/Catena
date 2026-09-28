@@ -46,6 +46,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -223,9 +224,12 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 
 	// check for a error response status
 	// 4xx errors are permanent, do not retry except for 408 and 429
+	// 429 honours Retry-After when present; otherwise the exponential backoff is used
 	// 1xx, 3xx, and 5xx erros are retriable
-	if (resp.StatusCode == http.StatusRequestTimeout) || (resp.StatusCode == http.StatusTooManyRequests) {
+	if resp.StatusCode == http.StatusRequestTimeout {
 		return "", fmt.Errorf("unexpected status %s", resp.Status)
+	} else if resp.StatusCode == http.StatusTooManyRequests {
+		return "", parseTooManyRequestsHeader(resp)
 	} else if (resp.StatusCode >= http.StatusBadRequest) && (resp.StatusCode < http.StatusInternalServerError) {
 		return "", backoff.Permanent(fmt.Errorf("Client error: %s", resp.Status))
 	} else if (resp.StatusCode < http.StatusOK) || (resp.StatusCode >= http.StatusMultipleChoices) {
@@ -242,6 +246,42 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	}
 
 	return discoveryDoc.JwksUri, nil
+}
+
+func parseTooManyRequestsHeader(resp *http.Response) error {
+	statusErr := fmt.Errorf("unexpected status %s", resp.Status)
+	delay, ok := extractRetryAfterDuration(resp.Header.Get("Retry-After"))
+	if !ok {
+		return statusErr
+	}
+	return fmt.Errorf("%w: %w", statusErr, &backoff.RetryAfterError{Duration: delay})
+}
+
+func extractRetryAfterDuration(retryValue string) (time.Duration, bool) {
+
+	retryValue = strings.TrimSpace(retryValue)
+	if retryValue == "" {
+		return 0, false
+	}
+
+	if delaySeconds, err := strconv.ParseInt(retryValue, 10, 64); err == nil {
+		if delaySeconds < 0 {
+			return 0, false
+		}
+
+		return time.Duration(delaySeconds) * time.Second, true
+	}
+
+	if parsedTime, err := time.Parse(http.TimeFormat, retryValue); err == nil {
+		delaySeconds := time.Until(parsedTime)
+		if delaySeconds < 0 {
+			return 0, false
+		}
+
+		return delaySeconds, true
+	}
+
+	return 0, false
 }
 
 func classifyDiscoveryError(err error) error {
