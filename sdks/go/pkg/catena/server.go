@@ -323,7 +323,7 @@ type Server interface {
 	// GetSlots and pushes a SlotsAdded update to connected clients. Each doc
 	// restates the handler signature so it can be read at the call site; the
 	// handler type's doc carries the full implementation contract. Signatures
-	// qualify the SDK's own types with the catena. package prefix so they can be
+	// qualify the SDK's own types with the "catena." package prefix so they can be
 	// pasted directly into application code in another package.
 
 	// RegisterGetDeviceHandler registers the GetDevice handler for a slot. The
