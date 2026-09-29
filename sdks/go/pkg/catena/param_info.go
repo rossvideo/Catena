@@ -116,6 +116,34 @@ func newParamInfoFromDescriptor(oid string, param *protos.Param) st2138.ParamInf
 	return st2138.NewParamInfo(oid, paramDisplayName(param), param.GetType(), param.GetTemplateOid(), paramArrayLength(param))
 }
 
+// ParamInfosFromParam streams ParamInfo responses for oid from a single Param
+// already resolved for it (e.g. the return of a GetParam handler), emitting the
+// param's own descriptor and, when recursive, flattening its sub-param subtree
+// into fully-qualified oids. It is the single-Param mirror of
+// ParamInfosForRequest: a business-logic helper a ParamInfo handler can delegate
+// to once it can produce the Param for oid, without maintaining a separate
+// descriptor path. The whole projection comes from the one Param passed in, so
+// no additional lookups are involved. The returned StatusResult is the terminal
+// status a handler returns directly: Ok once every descriptor has been sent, or
+// Internal for an invalid (nil) param or if a Send fails (a failed Send stops
+// the walk immediately).
+func ParamInfosFromParam(oid string, param *st2138.Param, recursive bool, stream Stream[st2138.ParamInfo]) StatusResult {
+	if param == nil || param.Proto == nil {
+		return StatusWithCode(StatusCodeInternal, "invalid param")
+	}
+	if err := stream.Send(newParamInfoFromDescriptor(oid, param.Proto)); err != nil {
+		return StatusWithCode(StatusCodeInternal, err.Error())
+	}
+	if recursive {
+		if children := param.Proto.GetParams(); len(children) > 0 {
+			if err := sendParamInfos(children, oid, true, stream); err != nil {
+				return StatusWithCode(StatusCodeInternal, err.Error())
+			}
+		}
+	}
+	return StatusResult{Code: StatusCodeOk}
+}
+
 // sendParamInfos walks params in sorted-key order, sending a descriptor for each
 // (and, when recursive, its subtree) into stream. It stops and returns the first
 // Send error encountered.
