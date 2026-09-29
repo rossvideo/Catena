@@ -260,8 +260,8 @@ func DefaultJwtValidationOptions() JwtValidationOptions {
 		Issuer:                     "",
 		Leeway:                     0,
 		ValidateSignature:          false,
-		Http:                       nil,              // will default to http.DefaultClient in the code if nil
-		StartupRetryMaxElapsedTime: 45 * time.Second, // no retry by default
+		Http:                       nil, // will default to http.DefaultClient in the code if nil
+		StartupRetryMaxElapsedTime: 45 * time.Second,
 	}
 }
 

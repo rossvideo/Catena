@@ -612,6 +612,43 @@ func TestNewJwtValidatorRetry_RetryBudgetExceeded(t *testing.T) {
 	}
 }
 
+func TestNewJwtValidatorRetry_HungRequestDeadlineExceeded(t *testing.T) {
+	var discoveryAttempts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		discoveryAttempts.Add(1)
+		if r.URL.Path != "/.well-known/openid-configuration" {
+			for {
+				if r.Context().Err() != nil {
+					break
+				}
+				time.Sleep(1 * time.Millisecond)
+			}
+			return
+		}
+		<-r.Context().Done() // keeps the http handler alive to reach the DeadlineExceeded error
+	}))
+	defer server.Close()
+
+	_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		Issuer:                     server.URL,
+		ValidateSignature:          true,
+		Http:                       server.Client(),
+		StartupRetryMaxElapsedTime: 1 * time.Second,
+	})
+
+	if err == nil {
+		t.Fatalf("expected an error")
+	}
+
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected context.DeadlineExceeded, got %v", err)
+	}
+
+	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
+		t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
+	}
+}
+
 func TestNewJwtValidatorRetry_ZeroMaxElapsedTimeIsOneShot(t *testing.T) {
 	var discoveryAttempts atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -637,6 +674,62 @@ func TestNewJwtValidatorRetry_ZeroMaxElapsedTimeIsOneShot(t *testing.T) {
 
 	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
 		t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
+	}
+}
+
+func TestNewJwtValidatorRetry_NegativeMaxElapsedTimeRetriesUntilCanceled(t *testing.T) {
+	var discoveryAttempts atomic.Int32
+	keptRetrying := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			if discoveryAttempts.Add(1) == 3 {
+				close(keptRetrying)
+			}
+			http.Error(w, "Error code", http.StatusInternalServerError)
+			return
+		}
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	errCh := make(chan error, 1)
+	// Go routine to call newJwtValidator which will retry indefinitely until the context is cancelled
+	go func() {
+		_, err := newJwtValidator(ctx, JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: -1,
+		})
+		errCh <- err
+	}()
+
+	// Wait for the retry to stop or timeout
+	select {
+	case <-keptRetrying:
+		// Retry stopped because 3 attempts were made - pass
+	case err := <-errCh:
+		t.Fatalf("retry stopped before 3 attempts: %v (attempts=%d)", err, discoveryAttempts.Load())
+	case <-time.After(5 * time.Second):
+		t.Fatal("negative retry budget stopped before 3 discovery attempts, attempts = ", discoveryAttempts.Load())
+	}
+
+	cancel()
+
+	select {
+	case err := <-errCh:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("expected context.Canceled, got %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("retry did not stop after context cancellation")
+	}
+
+	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts < 3 {
+		t.Fatalf("discovery attempts = %d, want at least 3", numberOfAttempts)
 	}
 }
 

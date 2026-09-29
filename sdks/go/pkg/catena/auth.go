@@ -120,19 +120,30 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 		}),
 	}
 
+	if ctx == nil {
+		return nil, fmt.Errorf("context is required to initialize JWT keyfunc")
+	}
+	retryCtx := ctx
+
 	if opts.StartupRetryMaxElapsedTime == 0 {
 		// backoff treats a MaxElapsedTime of 0 as unlimited, this is mapped to a single attempt instead
 		retryOpts = append(retryOpts, backoff.WithMaxTries(1))
-	} else {
-		// Positive values represent a total maximum time to spend retrying
-		// if a negative number is provided, the retry will continue indefinitely
+	} else if opts.StartupRetryMaxElapsedTime > 0 {
+		// Create a context with a timeout to prevent stalled requests
+		var cancel context.CancelFunc
+		retryCtx, cancel = context.WithTimeout(ctx, opts.StartupRetryMaxElapsedTime)
+		defer cancel()
+
 		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(opts.StartupRetryMaxElapsedTime))
+	} else {
+		// Negative values are retired indefinitely, until max elapsedtime
+		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(0))
 	}
 
 	// discovery and keyfun creation
 	var jwksKeyFunc jwt.Keyfunc
-	jwksKeyFunc, err := backoff.Retry(ctx, func() (jwt.Keyfunc, error) {
-		newJwskKeyFunc, err := createJWTKeyFunc(ctx, opts)
+	jwksKeyFunc, err := backoff.Retry(retryCtx, func() (jwt.Keyfunc, error) {
+		newJwskKeyFunc, err := createJWTKeyFunc(retryCtx, opts)
 		if err != nil {
 			return nil, rewrapBackoffPermanentError(err)
 		}
