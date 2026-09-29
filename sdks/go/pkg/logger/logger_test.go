@@ -41,11 +41,16 @@
 package logger
 
 import (
+	"bytes"
+	"context"
+	"errors"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
@@ -174,6 +179,19 @@ func TestNew(t *testing.T) {
 			t.Errorf("expected 2 files, got %d", len(entries))
 		}
 	})
+
+	t.Run("Fallback handler when no outputs are configured", func(t *testing.T) {
+		log, closeFn, err := New(config.LoggerOptions{})
+		if err != nil {
+			t.Fatalf("New failed: %v", err)
+		}
+		if closeFn == nil {
+			t.Fatal("CloseFunc must be non-nil")
+		}
+		// Should not panic
+		log.Info("discarded")
+		closeFn()
+	})
 }
 
 func TestCloseFunc(t *testing.T) {
@@ -284,6 +302,29 @@ func TestLogToFile(t *testing.T) {
 	}
 }
 
+func TestLogToConsole(t *testing.T) {
+	dir := t.TempDir()
+	stderr := captureStderr(t, func() {
+		log, closeFn, err := New(config.LoggerOptions{
+			AppName:        "console-test",
+			LogDir:         dir,
+			WriteToFile:    false,
+			WriteToConsole: true,
+			Level:          LevelDebug,
+		})
+		if err != nil {
+			t.Fatalf("New failed: %v", err)
+		}
+		log.With("component", "rest-transport").Info("listening", "port", 9080)
+		closeFn()
+	})
+
+	expectedOutput := ansiGreen + "[INFO]" + ansiReset + ": listening component=rest-transport port=9080"
+	if !strings.Contains(stderr, expectedOutput) {
+		t.Fatalf("console output = %q, want %q", stderr, expectedOutput)
+	}
+}
+
 func TestSilentMode(t *testing.T) {
 	dir := t.TempDir()
 
@@ -359,6 +400,25 @@ func TestJSONOutput(t *testing.T) {
 	}
 }
 
+func TestConsoleJSONOutput(t *testing.T) {
+	stderr := captureStderr(t, func() {
+		log, closeFn, err := New(config.LoggerOptions{
+			WriteToConsole: true,
+			WriteToFile:    false,
+			UseJSON:        true,
+			Level:          LevelInfo,
+		})
+		if err != nil {
+			t.Fatalf("New failed: %v", err)
+		}
+		log.Info("json console")
+		closeFn()
+	})
+	if !strings.Contains(stderr, `"msg":"json console"`) {
+		t.Fatalf("console JSON output = %q", stderr)
+	}
+}
+
 func TestLoggerLevelConstants(t *testing.T) {
 	// Verify level constants match slog levels
 	if LevelDebug != slog.LevelDebug {
@@ -373,4 +433,278 @@ func TestLoggerLevelConstants(t *testing.T) {
 	if LevelError != slog.LevelError {
 		t.Errorf("LevelError = %d, want %d", LevelError, slog.LevelError)
 	}
+}
+
+func TestCatenaTextHandler_Enabled(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("nil options default to log level info", func(t *testing.T) {
+		h := newCatenaTextHandler(&bytes.Buffer{}, nil, false)
+		if h.Enabled(ctx, slog.LevelDebug) {
+			t.Error("debug should be disabled when options are nil")
+		}
+		if !h.Enabled(ctx, slog.LevelInfo) {
+			t.Error("info should be enabled when options are nil")
+		}
+	})
+
+	t.Run("configured level", func(t *testing.T) {
+		h := newCatenaTextHandler(&bytes.Buffer{}, &slog.HandlerOptions{Level: slog.LevelWarn}, false)
+		if h.Enabled(ctx, slog.LevelInfo) {
+			t.Error("info should be disabled at warn level")
+		}
+		if !h.Enabled(ctx, slog.LevelWarn) {
+			t.Error("warn should be enabled at warn level")
+		}
+	})
+}
+
+func TestCatenaTextHandler_Handle(t *testing.T) {
+	when := time.Date(2026, 10, 10, 10, 10, 10, 100*int(time.Millisecond), time.UTC)
+	ctx := context.Background()
+
+	t.Run("formats level message and values", func(t *testing.T) {
+		var buf bytes.Buffer
+		h := newCatenaTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}, false)
+		record := slog.NewRecord(when, slog.LevelInfo, "hello", 0)
+		record.AddAttrs(
+			slog.String("name", "plain"),
+			slog.String("empty", ""),
+			slog.String("spaced", "hello world"),
+			slog.String("quoted", `say "hi"`),
+			slog.Int64("count", -3),
+			slog.Uint64("size", 42),
+			slog.Float64("ratio", 1.25),
+			slog.Bool("ok", true),
+			slog.Duration("elapsed", 1500*time.Millisecond),
+			slog.Time("at", when),
+			slog.Any("raw", struct{ N int }{N: 2}),
+			slog.Any("resolved", fixedLogValue{}),
+		)
+		if err := h.Handle(ctx, record); err != nil {
+			t.Fatalf("Handle: %v", err)
+		}
+
+		got := buf.String()
+		wantParts := []string{
+			"26-10-10T10:10:10.10Z [INFO]: hello",
+			"name=plain",
+			`empty=""`,
+			`spaced="hello world"`,
+			`quoted="say \"hi\""`,
+			"count=-3",
+			"size=42",
+			"ratio=1.25",
+			"ok=true",
+			"elapsed=1.5s",
+			"at=" + when.Format(time.RFC3339Nano),
+			"raw={2}",
+			"resolved=from-valuer",
+		}
+		for _, part := range wantParts {
+			if !strings.Contains(got, part) {
+				t.Errorf("output missing %q\n got: %s", part, got)
+			}
+		}
+		if !strings.HasSuffix(got, "\n") {
+			t.Errorf("output should end with a newline: %q", got)
+		}
+	})
+
+	t.Run("colors the level and stamps a zero time", func(t *testing.T) {
+		var buf bytes.Buffer
+		h := newCatenaTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}, true)
+		record := slog.NewRecord(time.Time{}, slog.LevelError, "", 0)
+		if err := h.Handle(ctx, record); err != nil {
+			t.Fatalf("Handle: %v", err)
+		}
+		got := buf.String()
+		if !strings.Contains(got, ansiRed+"[ERROR]"+ansiReset+":") {
+			t.Errorf("expected colored error level, got %q", got)
+		}
+		if strings.Contains(got, ": ") {
+			t.Errorf("empty message should not add a trailing space, got %q", got)
+		}
+	})
+
+	levels := []struct {
+		level slog.Level
+		text  string
+		color string
+	}{
+		{slog.LevelDebug, "DEBUG", ansiBlue},
+		{slog.LevelInfo, "INFO", ansiGreen},
+		{slog.LevelWarn, "WARNING", ansiYellow},
+		{slog.LevelError, "ERROR", ansiRed},
+	}
+	for _, tt := range levels {
+		t.Run(tt.text, func(t *testing.T) {
+			var buf bytes.Buffer
+			h := newCatenaTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}, true)
+			record := slog.NewRecord(when, tt.level, "msg", 0)
+			if err := h.Handle(ctx, record); err != nil {
+				t.Fatalf("Handle: %v", err)
+			}
+			want := tt.color + "[" + tt.text + "]" + ansiReset
+			if !strings.Contains(buf.String(), want) {
+				t.Errorf("expected %q in %q", want, buf.String())
+			}
+		})
+	}
+
+	t.Run("returns write errors", func(t *testing.T) {
+		h := newCatenaTextHandler(failWriter{}, &slog.HandlerOptions{Level: slog.LevelInfo}, false)
+		err := h.Handle(ctx, slog.NewRecord(when, slog.LevelInfo, "fail", 0))
+		if !errors.Is(err, errWrite) {
+			t.Fatalf("Handle error = %v, want %v", err, errWrite)
+		}
+	})
+}
+
+func TestCatenaTextHandler_WithAttrsAndGroups(t *testing.T) {
+	when := time.Date(2026, 10, 10, 10, 10, 10, 0, time.UTC)
+	ctx := context.Background()
+	var buf bytes.Buffer
+	parent := newCatenaTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}, false)
+
+	child := parent.WithAttrs([]slog.Attr{slog.String("component", "log-test")}).(*catenaTextHandler)
+	grouped := child.WithGroup("testGroup").(*catenaTextHandler)
+	nested := grouped.WithGroup("nestedGroup").(*catenaTextHandler)
+
+	if len(parent.attrs) != 0 || len(parent.groups) != 0 {
+		t.Fatal("WithAttrs and WithGroup must not mutate the parent handler")
+	}
+	if got := child.attrs; len(got) != 1 || got[0].Key != "component" {
+		t.Fatalf("child attrs = %#v, want %#v", got, []slog.Attr{slog.String("component", "log-test")})
+	}
+	if strings.Join(nested.groups, ".") != "testGroup.nestedGroup" {
+		t.Fatalf("groups = %v, want %v", nested.groups, []string{"testGroup", "nestedGroup"})
+	}
+	if child.writeMu != parent.writeMu {
+		t.Fatal("derived handlers should share the write mutex")
+	}
+
+	record := slog.NewRecord(when, slog.LevelDebug, "call", 0)
+	record.AddAttrs(
+		slog.Attr{},
+		slog.Int("id", 7),
+		slog.Group("http",
+			slog.String("method", "GET"),
+			slog.Attr{},
+		),
+		slog.Group("", slog.String("flat", "yes")),
+		slog.Attr{Value: slog.IntValue(1)},
+	)
+	if err := nested.Handle(ctx, record); err != nil {
+		t.Fatalf("Handle: %v", err)
+	}
+
+	got := buf.String()
+	for _, part := range []string{
+		"component=log-test",
+		"testGroup.nestedGroup.id=7",
+		"testGroup.nestedGroup.http.method=GET",
+		"testGroup.nestedGroup.flat=yes",
+	} {
+		if !strings.Contains(got, part) {
+			t.Errorf("output missing %q\n got: %s", part, got)
+		}
+	}
+	if strings.Contains(got, " =") || strings.Contains(got, "=1 ") {
+		t.Errorf("empty attributes should be skipped, got %s", got)
+	}
+}
+
+func TestMultiHandler(t *testing.T) {
+	when := time.Date(2026, 10, 10, 10, 10, 10, 0, time.UTC)
+	ctx := context.Background()
+
+	t.Run("fans out records to multiple handlers", func(t *testing.T) {
+		var infoBuf, errorBuf bytes.Buffer
+		infoH := newCatenaTextHandler(&infoBuf, &slog.HandlerOptions{Level: slog.LevelInfo}, false)
+		errorH := newCatenaTextHandler(&errorBuf, &slog.HandlerOptions{Level: slog.LevelError}, false)
+		handler := (&multiHandler{handlers: []slog.Handler{infoH, errorH}}).
+			WithAttrs([]slog.Attr{slog.String("component", "test-case")}).
+			WithGroup("slot")
+
+		if handler.Enabled(ctx, slog.LevelDebug) {
+			t.Error("debug should be disabled when every child rejects it")
+		}
+		if !handler.Enabled(ctx, slog.LevelInfo) {
+			t.Error("info should be enabled when one child accepts it")
+		}
+
+		infoRecord := slog.NewRecord(when, slog.LevelInfo, "started", 0)
+		infoRecord.AddAttrs(slog.Int("id", 1))
+		if err := handler.Handle(ctx, infoRecord); err != nil {
+			t.Fatalf("Handle info: %v", err)
+		}
+		errorRecord := slog.NewRecord(when, slog.LevelError, "failed", 0)
+		if err := handler.Handle(ctx, errorRecord); err != nil {
+			t.Fatalf("Handle error: %v", err)
+		}
+		expectedInfoOutput := "[INFO]: started slot.component=test-case slot.id=1"
+		expectedErrorOutput := "[ERROR]: failed slot.component=test-case"
+
+		if !strings.Contains(infoBuf.String(), expectedInfoOutput) {
+			t.Fatalf("info handler output = %q, want %q", infoBuf.String(), expectedInfoOutput)
+		}
+		if errorBuf.Len() == 0 || !strings.Contains(errorBuf.String(), expectedErrorOutput) {
+			t.Fatalf("error handler output = %q, want %q", errorBuf.String(), expectedErrorOutput)
+		}
+		if strings.Contains(errorBuf.String(), "started") {
+			t.Fatalf("error handler should skip info records, got %q", errorBuf.String())
+		}
+	})
+
+	t.Run("Handler errors handled separately", func(t *testing.T) {
+		var buf bytes.Buffer
+		okH := newCatenaTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}, false)
+		badH := newCatenaTextHandler(failWriter{}, &slog.HandlerOptions{Level: slog.LevelInfo}, false)
+		handler := &multiHandler{handlers: []slog.Handler{okH, badH}}
+
+		err := handler.Handle(ctx, slog.NewRecord(when, slog.LevelInfo, "partial", 0))
+		if !errors.Is(err, errWrite) {
+			t.Fatalf("Handle error = %v, want %v", err, errWrite)
+		}
+		if !strings.Contains(buf.String(), "partial") {
+			t.Fatalf("successful handler should still write, got %q", buf.String())
+		}
+	})
+}
+
+type fixedLogValue struct{}
+
+func (fixedLogValue) LogValue() slog.Value {
+	return slog.StringValue("from-valuer")
+}
+
+var errWrite = errors.New("write failed")
+
+type failWriter struct{}
+
+func (failWriter) Write([]byte) (int, error) {
+	return 0, errWrite
+}
+
+func captureStderr(t *testing.T, fn func()) string {
+	t.Helper()
+	old := os.Stderr
+	t.Cleanup(func() { os.Stderr = old })
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	os.Stderr = w
+
+	done := make(chan string, 1)
+	go func() {
+		b, _ := io.ReadAll(r)
+		done <- string(b)
+	}()
+
+	fn()
+	_ = w.Close()
+	os.Stderr = old
+	return <-done
 }
