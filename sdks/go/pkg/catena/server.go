@@ -538,7 +538,8 @@ var _ ServerRuntime = (*server)(nil)
 
 type server struct {
 	options                    ServerOptions
-	log                        *slog.Logger
+	log                        *slog.Logger // To be distributed to other components
+	serverLogger               *slog.Logger // To be used for server-specific logging
 	mu                         sync.Mutex
 	ctx                        context.Context
 	ctxCancel                  context.CancelFunc
@@ -601,6 +602,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 	s := &server{
 		options:                    opts,
 		log:                        log,
+		serverLogger:               log.With("component", "server"),
 		ctx:                        ctx,
 		ctxCancel:                  cancel,
 		authzEnabled:               opts.AuthzEnabled,
@@ -701,7 +703,7 @@ func (s *server) DeregisterTransport(ctx context.Context, transport Transport) e
 	// Shutdown may block while draining work; call it outside the server lock.
 	err := transport.Shutdown(shutdownCtx)
 	if err != nil {
-		s.log.With("component", "server").Error("Error shutting down transport", "error", err)
+		s.serverLogger.Error("Error shutting down transport", "error", err)
 	}
 
 	// drain any remaining connections owned by this transport
@@ -740,7 +742,7 @@ func (s *server) Shutdown(ctx context.Context) {
 	for _, t := range transports {
 		err := t.Shutdown(shutdownCtx)
 		if err != nil {
-			s.log.With("component", "server").Error("Error shutting down transport", "error", err)
+			s.serverLogger.Error("Error shutting down transport", "error", err)
 		}
 	}
 
@@ -774,7 +776,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 
 	token, err := s.jwtValidator.validateJwt(accessToken)
 	if err != nil {
-		s.log.With("component", "server").Warn("Failed to validate access token", "error", err)
+		s.serverLogger.Warn("Failed to validate access token", "error", err)
 		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
 	}
 
@@ -929,7 +931,7 @@ func invokeHandler[H, T any](
 
 			//TODO: add default handler lookup when custom default handlers are supported
 			if !ok {
-				s.log.With("component", "server").Warn("no handler registered for slot", "endpoint", endpoint, "slot", slot)
+				s.serverLogger.Warn("no handler registered for slot", "endpoint", endpoint, "slot", slot)
 				return zero, StatusWithCode(StatusCodeNotFound, notFound)
 			}
 
@@ -1147,7 +1149,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 			// without a GetValue handler this is the normal path on every request,
 			// so it must not spam Info.
 			if hasParam {
-				s.log.Debug("GetValue not registered; deriving from GetParam handler", "slot", slot, "fqoid", fqoid)
+				s.serverLogger.Debug("GetValue not registered; deriving from GetParam handler", "slot", slot, "fqoid", fqoid)
 				param, res := paramHandler(slot, fqoid, ctx)
 				if res.IsError() {
 					return st2138.Value{}, res
@@ -1158,7 +1160,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 				return Reply(st2138.Value{Proto: param.Proto.GetValue()})
 			}
 
-			s.log.Warn("no handler registered for slot", "endpoint", EndpointGetValue, "slot", slot)
+			s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointGetValue, "slot", slot)
 			return st2138.Value{}, StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 		})
 }
@@ -1187,7 +1189,7 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 			s.mu.Unlock()
 
 			if !ok {
-				s.log.Warn("no handler registered for slot", "endpoint", EndpointGetParam, "slot", slot)
+				s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointGetParam, "slot", slot)
 				return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 			}
 			return handler(slot, fqoid, ctx)
@@ -1337,7 +1339,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 			// slots without a ParamInfo handler this is the normal path on every
 			// request, so it must not spam Info.
 			if hasParam && oidPrefix != "" {
-				s.log.Debug("ParamInfo not registered; deriving from GetParam handler", "slot", slot, "oidPrefix", oidPrefix)
+				s.serverLogger.Debug("ParamInfo not registered; deriving from GetParam handler", "slot", slot, "oidPrefix", oidPrefix)
 				param, res := paramHandler(slot, oidPrefix, ctx)
 				if res.IsError() {
 					return struct{}{}, res
@@ -1345,7 +1347,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 				return struct{}{}, ParamInfosFromParam(oidPrefix, &param, recursive, stream)
 			}
 
-			s.log.Warn("no handler registered for slot", "endpoint", EndpointParamInfo, "slot", slot)
+			s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointParamInfo, "slot", slot)
 			return struct{}{}, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
 		})
 	return res
@@ -1497,7 +1499,7 @@ func (s *server) ConnectionCount() int {
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
 	protoValue, err := st2138.ToProto(value)
 	if err != nil {
-		s.log.With("component", "server").Error("BroadcastUpdate: failed to convert value to proto", "error", err)
+		s.serverLogger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
 		return
 	}
 	update := &protos.PushUpdates{
@@ -1520,7 +1522,7 @@ func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope strin
 // If the interval is invalid (zero or negative), the existing heartbeat is preserved.
 func (s *server) StartHeartbeat(interval time.Duration) {
 	if interval <= 0 {
-		s.log.With("component", "server").Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
+		s.serverLogger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
 		return
 	}
 
