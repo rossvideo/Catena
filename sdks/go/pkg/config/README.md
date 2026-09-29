@@ -201,6 +201,7 @@ log, closeLog, err := logger.New(opts.Logger)
 defer closeLog()
 
 opts.Server.Logger = log
+opts.Dashboard.Logger = log
 
 srv, err := catena.NewServer(opts.Server)
 ```
