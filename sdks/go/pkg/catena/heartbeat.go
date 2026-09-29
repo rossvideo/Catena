@@ -51,6 +51,9 @@ type Heartbeat struct {
 
 // NewHeartbeat creates a new Heartbeat instance.
 func NewHeartbeat(log *slog.Logger) *Heartbeat {
+	if log == nil {
+		log = slog.New(slog.DiscardHandler)
+	}
 	return &Heartbeat{log: log.With("component", "heartbeat")}
 }
 
