@@ -551,10 +551,12 @@ type server struct {
 func NewServer(opts config.ServerOptions) (Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	log := logger.GetNamed("server") // temporary fix to get the server logger, will remove when logger injection pr is pushed
+
 	var validator jwtValidatorInterface
 	if opts.AuthzEnabled {
 		var err error
-		validator, err = newJwtValidator(ctx, opts.JwtOptions)
+		validator, err = newJwtValidator(ctx, log.With("component", "jwt"), opts.JwtOptions)
 		if err != nil {
 			cancel()
 			return nil, fmt.Errorf("create jwt validator: %w", err)

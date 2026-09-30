@@ -66,6 +66,7 @@ var catenaScopes = []string{
 
 type jwtValidator struct {
 	options    JwtValidationOptions
+	log        *slog.Logger
 	keyfunc    jwt.Keyfunc
 	validateFn func(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error)
 }
@@ -77,17 +78,22 @@ type jwtValidatorInterface interface {
 // newJwtValidator creates a JWT validator based on the provided options.
 // If ValidateSignature is true, it discovers the JWKS endpoint and sets up signature validation.
 // If ValidateSignature is false, it only validates claims without verifying the signature.
-func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidatorInterface, error) {
+// The logger is stored on the validator so it is available to every method
+func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOptions) (jwtValidatorInterface, error) {
 	// Use the default HTTP client if none was provided.
 	if opts.Http == nil {
 		opts.Http = http.DefaultClient
 	}
+	if log == nil {
+		log = slog.Default()
+	}
 	v := &jwtValidator{
 		options: opts,
+		log:     log,
 	}
 
 	if opts.ValidateSignature {
-		jwksKeyFunc, err := initializeJWTKeyFunc(ctx, opts)
+		jwksKeyFunc, err := v.initializeJWTKeyFunc(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize JWT keyfunc: %w", err)
 		}
@@ -104,7 +110,7 @@ func (v *jwtValidator) signingMethods() []string {
 	return v.options.ResolvedAllowedAlgs()
 }
 
-func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.Keyfunc, error) {
+func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, error) {
 
 	backoffPolicy := backoff.NewExponentialBackOff()
 	backoffPolicy.InitialInterval = 250 * time.Millisecond
@@ -116,7 +122,7 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	retryOpts := []backoff.RetryOption{
 		backoff.WithBackOff(backoffPolicy),
 		backoff.WithNotify(func(err error, d time.Duration) {
-			slog.Warn("Failed to initialize JWT keyfunc, retrying...", slog.String("error", err.Error()), slog.Duration("next_retry_in", d))
+			v.log.Warn("Failed to initialize JWT keyfunc, retrying...", slog.String("error", err.Error()), slog.Duration("next_retry_in", d))
 		}),
 	}
 
@@ -125,16 +131,16 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	}
 	retryCtx := ctx
 
-	if opts.StartupRetryMaxElapsedTime == 0 {
+	if v.options.StartupRetryMaxElapsedTime == 0 {
 		// backoff treats a MaxElapsedTime of 0 as unlimited, this is mapped to a single attempt instead
 		retryOpts = append(retryOpts, backoff.WithMaxTries(1))
-	} else if opts.StartupRetryMaxElapsedTime > 0 {
+	} else if v.options.StartupRetryMaxElapsedTime > 0 {
 		// Create a context with a timeout to prevent stalled requests
 		var cancel context.CancelFunc
-		retryCtx, cancel = context.WithTimeout(ctx, opts.StartupRetryMaxElapsedTime)
+		retryCtx, cancel = context.WithTimeout(ctx, v.options.StartupRetryMaxElapsedTime)
 		defer cancel()
 
-		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(opts.StartupRetryMaxElapsedTime))
+		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(v.options.StartupRetryMaxElapsedTime))
 	} else {
 		// Negative values are retired indefinitely, until max elapsedtime
 		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(0))
@@ -143,7 +149,7 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	// discovery and keyfun creation
 	var jwksKeyFunc jwt.Keyfunc
 	jwksKeyFunc, err := backoff.Retry(retryCtx, func() (jwt.Keyfunc, error) {
-		newJwskKeyFunc, err := createJWTKeyFunc(retryCtx, opts)
+		newJwskKeyFunc, err := createJWTKeyFunc(retryCtx, v.options)
 		if err != nil {
 			return nil, err
 		}
