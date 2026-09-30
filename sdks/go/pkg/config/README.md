@@ -197,13 +197,22 @@ through `ServerOptions.Logger` and `DashboardOptions.Logger`:
 
 ```go
 opts, err := config.InitOptions("my-app", os.Args[1:])
+if err != nil {
+	panic(err)
+}
 log, closeLog, err := logger.New(opts.Logger)
+if err != nil {
+	panic(err)
+}
 defer closeLog()
 
 opts.Server.Logger = log
 opts.Dashboard.Logger = log
 
 srv, err := catena.NewServer(opts.Server)
+if err != nil {
+	panic(err)
+}
 ```
 
 Key points:
