@@ -607,8 +607,8 @@ func TestNewJwtValidatorRetry_RetryBudgetExceeded(t *testing.T) {
 		t.Fatalf("expected an error")
 	}
 
-	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts == 0 { // atleast one retry
-		t.Fatalf("discovery attempts = %d, want atleast 1", numberOfAttempts)
+	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts <= 1 { // atleast one retry
+		t.Fatalf("discovery attempts = %d, want 2 or more attempts", numberOfAttempts)
 	}
 }
 
@@ -1147,13 +1147,16 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 
 func TestClassifyDiscoveryError(t *testing.T) {
 	t.Run("nil", func(t *testing.T) {
-		if err := classifyDiscoveryError(nil); err != nil {
+		if err := classifyDiscoveryError(t.Context(), nil); err != nil {
 			t.Fatalf("classifyDiscoveryError(nil) = %v, want nil", err)
 		}
 	})
 
 	t.Run("context canceled is permanent", func(t *testing.T) {
-		err := classifyDiscoveryError(context.Canceled)
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		err := classifyDiscoveryError(ctx, context.Canceled)
 		var permanent *backoff.PermanentError
 		if !errors.As(err, &permanent) {
 			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
@@ -1164,7 +1167,10 @@ func TestClassifyDiscoveryError(t *testing.T) {
 	})
 
 	t.Run("deadline exceeded is permanent", func(t *testing.T) {
-		err := classifyDiscoveryError(context.DeadlineExceeded)
+		ctx, cancel := context.WithTimeout(t.Context(), time.Nanosecond)
+		defer cancel()
+
+		err := classifyDiscoveryError(ctx, context.DeadlineExceeded)
 		var permanent *backoff.PermanentError
 		if !errors.As(err, &permanent) {
 			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
@@ -1175,7 +1181,7 @@ func TestClassifyDiscoveryError(t *testing.T) {
 	})
 
 	t.Run("non network error is permanent", func(t *testing.T) {
-		err := classifyDiscoveryError(errors.New("test-error"))
+		err := classifyDiscoveryError(t.Context(), errors.New("test-error"))
 		var permanent *backoff.PermanentError
 		if !errors.As(err, &permanent) {
 			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)

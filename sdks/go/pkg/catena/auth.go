@@ -145,7 +145,7 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	jwksKeyFunc, err := backoff.Retry(retryCtx, func() (jwt.Keyfunc, error) {
 		newJwskKeyFunc, err := createJWTKeyFunc(retryCtx, opts)
 		if err != nil {
-			return nil, rewrapBackoffPermanentError(err)
+			return nil, err
 		}
 
 		return newJwskKeyFunc, nil
@@ -156,16 +156,6 @@ func initializeJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.K
 	}
 
 	return jwksKeyFunc, nil
-}
-
-func rewrapBackoffPermanentError(err error) error {
-
-	var permError *backoff.PermanentError
-	if errors.As(err, &permError) {
-		return backoff.Permanent(fmt.Errorf("Permanent error: %w", err))
-	}
-
-	return err
 }
 
 func createJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.Keyfunc, error) {
@@ -213,13 +203,13 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	// make a request using the client and ctx to allow for cancellation and timeouts
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryURL, nil)
 	if err != nil {
-		return "", backoff.Permanent((fmt.Errorf("build request: %w", err)))
+		return "", backoff.Permanent(fmt.Errorf("build request: %w", err))
 	}
 
 	// do it
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", classifyDiscoveryError(err)
+		return "", classifyDiscoveryError(ctx, err)
 	}
 	defer resp.Body.Close()
 
@@ -255,7 +245,7 @@ func parseTooManyRequestsHeader(resp *http.Response) error {
 	if !ok {
 		return statusErr
 	}
-	return fmt.Errorf("%w: %w", statusErr, &backoff.RetryAfterError{Duration: delay})
+	return fmt.Errorf("%w: %w", statusErr, backoff.RetryAfter(int(delay.Seconds())))
 }
 
 func extractRetryAfterDuration(retryValue string) (time.Duration, bool) {
@@ -285,21 +275,20 @@ func extractRetryAfterDuration(retryValue string) (time.Duration, bool) {
 	return 0, false
 }
 
-func classifyDiscoveryError(err error) error {
+func classifyDiscoveryError(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}
 
 	doErr := fmt.Errorf("perform request: %w", err)
 
-	if errors.Is(doErr, context.Canceled) || errors.Is(doErr, context.DeadlineExceeded) {
-		return backoff.Permanent(doErr)
+	if ctx.Err() != nil {
+		return backoff.Permanent(ctx.Err())
 	}
 
 	// http.client.Do wraps transport errors in url.Error
 	// those are treated as retriable
-	var urlErr *url.Error
-	if errors.As(doErr, &urlErr) {
+	if _, ok := errors.AsType[*url.Error](doErr); ok {
 		return doErr
 	}
 
