@@ -1526,7 +1526,7 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 		return
 	}
 
-	hb := NewHeartbeat(s.log)
+	hb := NewHeartbeatWithLogger(s.log)
 	hb.OnTick(func() {
 		s.mu.Lock()
 		handlers := make(map[uint16]HeartbeatHandler, len(s.heartbeatHandlers))

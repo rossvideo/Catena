@@ -50,7 +50,13 @@ type Heartbeat struct {
 }
 
 // NewHeartbeat creates a new Heartbeat instance.
-func NewHeartbeat(log *slog.Logger) *Heartbeat {
+func NewHeartbeat() *Heartbeat {
+	return &Heartbeat{log: slog.New(slog.DiscardHandler)}
+}
+
+// NewHeartbeat but attaches the logger to the heartbeat component.
+// If no logger is provided, a discard logger is used.
+func NewHeartbeatWithLogger(log *slog.Logger) *Heartbeat {
 	if log == nil {
 		log = slog.New(slog.DiscardHandler)
 	}
