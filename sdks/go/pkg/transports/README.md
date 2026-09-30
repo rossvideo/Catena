@@ -201,6 +201,10 @@ their own and the SDK never calls `slog.SetDefault`.
 - Leave it `nil` and the SDK is silent: transports discard their log records
   instead of writing to `slog.Default()` or stderr.
 
+This covers transports only. The connection-props HTTP server is started by
+the application, not by the Catena server, and reads `DashboardOptions.Logger`
+instead. Setting only `ServerOptions.Logger` leaves connection-props silent.
+
 The optional `pkg/logger` package is a convenience builder for the SDK's
 prebuilt console/file handlers if you do not already have a logger:
 

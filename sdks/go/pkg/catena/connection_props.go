@@ -75,6 +75,9 @@ func NewConnectionProps(opts DashboardOptions) *ConnectionProps {
 	c := &ConnectionProps{
 		opts: opts,
 	}
+	// Logging uses opts.Logger. The Catena server does not pass its logger here,
+	// because the application constructs this server separately. A nil Logger discards
+	// records.
 	if opts.Logger == nil {
 		c.log = slog.New(slog.DiscardHandler)
 	} else {

@@ -38,6 +38,9 @@
 // environment variables, or command-line flags.
 //
 // Typical usage is to build a logger from config.LoggerOptions and inject it
-// into config.ServerOptions.Logger. Consumers who already have a *slog.Logger
-// can skip this package entirely.
+// into config.ServerOptions.Logger. The server distributes that logger to the
+// components it starts. The connection-props HTTP server is not one of them:
+// the application constructs it, so pass the same logger as
+// config.DashboardOptions.Logger or that server stays silent. Consumers who
+// already have a *slog.Logger can skip this package entirely.
 package logger
