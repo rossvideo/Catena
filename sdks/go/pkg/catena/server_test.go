@@ -194,9 +194,6 @@ func TestServer_InjectedLogger(t *testing.T) {
 	if !strings.Contains(out, `"msg":"Heartbeat started"`) {
 		t.Fatalf("expected heartbeat lifecycle log, got %s", out)
 	}
-	if !strings.Contains(out, `"component":"heartbeat"`) {
-		t.Fatalf("expected component=heartbeat, got %s", out)
-	}
 }
 
 func TestServer_IsDev(t *testing.T) {

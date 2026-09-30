@@ -32,7 +32,6 @@ package catena
 
 import (
 	"fmt"
-	"log/slog"
 	"sync"
 	"time"
 )
@@ -46,21 +45,11 @@ type Heartbeat struct {
 	stopCh  chan struct{}
 	onTick  func()
 	wg      sync.WaitGroup
-	log     *slog.Logger
 }
 
 // NewHeartbeat creates a new Heartbeat instance.
 func NewHeartbeat() *Heartbeat {
-	return &Heartbeat{log: slog.New(slog.DiscardHandler)}
-}
-
-// NewHeartbeat but attaches the logger to the heartbeat component.
-// If no logger is provided, a discard logger is used.
-func NewHeartbeatWithLogger(log *slog.Logger) *Heartbeat {
-	if log == nil {
-		log = slog.New(slog.DiscardHandler)
-	}
-	return &Heartbeat{log: log.With("component", "heartbeat")}
+	return &Heartbeat{}
 }
 
 // OnTick sets the callback to be invoked on each heartbeat tick.
@@ -79,7 +68,6 @@ func (h *Heartbeat) Start(interval time.Duration) error {
 	defer h.mu.Unlock()
 
 	if h.running {
-		h.log.Warn("Heartbeat already running, ignoring Start call")
 		return nil
 	}
 	if interval <= 0 {

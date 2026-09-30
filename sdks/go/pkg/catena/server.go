@@ -1526,7 +1526,7 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 		return
 	}
 
-	hb := NewHeartbeatWithLogger(s.log)
+	hb := NewHeartbeat()
 	hb.OnTick(func() {
 		s.mu.Lock()
 		handlers := make(map[uint16]HeartbeatHandler, len(s.heartbeatHandlers))
@@ -1536,7 +1536,7 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						hb.log.Error("panic in heartbeat handler", "slot", slot, "error", r)
+						s.serverLogger.Error("panic in heartbeat handler", "slot", slot, "error", r)
 					}
 				}()
 				handler(slot)
@@ -1563,9 +1563,9 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 	s.mu.Unlock()
 
 	if err != nil {
-		hb.log.Error("Heartbeat failed to start", "interval", interval, "error", err)
+		s.serverLogger.Error("Heartbeat failed to start", "interval", interval, "error", err)
 	} else {
-		hb.log.Info("Heartbeat started", "interval", interval)
+		s.serverLogger.Info("Heartbeat started", "interval", interval)
 	}
 }
 
@@ -1578,6 +1578,6 @@ func (s *server) StopHeartbeat() {
 
 	if hb != nil {
 		hb.Stop()
-		hb.log.Info("Heartbeat stopped")
+		s.serverLogger.Info("Heartbeat stopped")
 	}
 }
