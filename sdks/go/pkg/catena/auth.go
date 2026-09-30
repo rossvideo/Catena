@@ -127,7 +127,7 @@ func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, e
 	}
 
 	if ctx == nil {
-		return nil, fmt.Errorf("context is required to initialize JWT keyfunc")
+		return nil, fmt.Errorf("nil context provided, context is required to initialize JWT keyfunc")
 	}
 	retryCtx := ctx
 

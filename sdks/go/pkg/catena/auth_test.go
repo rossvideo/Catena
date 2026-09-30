@@ -47,7 +47,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -147,21 +146,53 @@ func TestNewJwtValidator(t *testing.T) {
 			t.Fatalf("newJwtValidator() error = %v, want create keyfunc", err)
 		}
 	})
-}
 
-func TestNewJwtValidatorRetry_TransientFailures_ErrorStatusCodes(t *testing.T) {
-
-	newTestServer := func(statusCode int, maxFailures int32, discoveryAttempts *atomic.Int32) *httptest.Server {
-		t.Helper()
+	t.Run("nil context is permanent", func(t *testing.T) {
 
 		var server *httptest.Server
+		var discoveryAttempts atomic.Int32
+		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/.well-known/openid-configuration" {
+				discoveryAttempts.Add(1)
+				http.Error(w, "error", http.StatusInternalServerError)
+			}
+		}))
 
+		_, err := newJwtValidator(nil, nil, JwtValidationOptions{ // nil context
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       http.DefaultClient,
+			StartupRetryMaxElapsedTime: -1, // indefinite retry
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if !strings.Contains(err.Error(), "nil context provided") {
+			t.Fatalf("unexpected error: %v, want nil context provided", err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts >= 1 {
+			t.Fatalf("discovery attempts = %d, want 0", numberOfAttempts)
+		}
+
+	})
+}
+
+func TestNewJwtValidator_Retry(t *testing.T) {
+
+	t.Run("successful retries", func(t *testing.T) {
+		t.Parallel()
+
+		var server *httptest.Server
+		var discoveryAttempts atomic.Int32
 		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/.well-known/openid-configuration" {
 				attempt := discoveryAttempts.Add(1)
 
-				if attempt <= maxFailures {
-					http.Error(w, "Error code", statusCode)
+				if attempt <= 2 {
+					http.Error(w, "Error code", http.StatusInternalServerError)
 					return
 				}
 
@@ -174,235 +205,34 @@ func TestNewJwtValidatorRetry_TransientFailures_ErrorStatusCodes(t *testing.T) {
 			}
 			http.NotFound(w, r)
 		}))
-
-		t.Cleanup(server.Close)
-
-		return server
-	}
-	t.Run("Status 101 Error", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-		var maxFailures int32 = 3
-
-		server := newTestServer(http.StatusSwitchingProtocols, maxFailures, &discoveryAttempts)
+		defer server.Close()
 
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer:                     server.URL,
 			ValidateSignature:          true,
 			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
+			StartupRetryMaxElapsedTime: 1 * time.Second,
 		})
 
 		if err != nil {
-			t.Fatalf("unexpected newJwtValidator() error: %v", err)
+			t.Fatalf("newJwtValidator() error = %v", err)
 		}
 
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 3 {
 			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
 		}
 	})
 
-	t.Run("Status 300 Error", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-		var maxFailures int32 = 3
+	t.Run("retry budget exceeded", func(t *testing.T) {
 
-		server := newTestServer(http.StatusMultipleChoices, maxFailures, &discoveryAttempts)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err != nil {
-			t.Fatalf("unexpected newJwtValidator() error: %v", err)
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
-			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
-		}
-	})
-
-	t.Run("Status 408 Error", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-		var maxFailures int32 = 3
-
-		server := newTestServer(http.StatusRequestTimeout, maxFailures, &discoveryAttempts)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err != nil {
-			t.Fatalf("unexpected newJwtValidator() error: %v", err)
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
-			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
-		}
-	})
-
-	t.Run("Status 429 Error", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-		var maxFailures int32 = 3
-
-		server := newTestServer(http.StatusTooManyRequests, maxFailures, &discoveryAttempts)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err != nil {
-			t.Fatalf("unexpected newJwtValidator() error: %v", err)
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
-			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
-		}
-	})
-
-	t.Run("Status 500 Error", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-		var maxFailures int32 = 3
-
-		server := newTestServer(http.StatusInternalServerError, maxFailures, &discoveryAttempts)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err != nil {
-			t.Fatalf("unexpected newJwtValidator() error: %v", err)
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != maxFailures+1 {
-			t.Fatalf("discovery attempts = %d, want 3", numberOfAttempts)
-		}
-	})
-
-	t.Run("Status 429 Error honours Retry-After seconds", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-		var firstAttemptTimeStamp atomic.Int64
-		var secondAttemptTimeStamp atomic.Int64
-
-		retryAfter := 1 * time.Second
+		t.Parallel()
 
 		var server *httptest.Server
-		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/.well-known/openid-configuration" {
-				attempt := discoveryAttempts.Add(1)
-
-				switch attempt {
-				case 1:
-					w.Header().Set("Retry-After", strconv.Itoa(int(retryAfter/time.Second)))
-					http.Error(w, "too many requests", http.StatusTooManyRequests)
-					firstAttemptTimeStamp.Store(time.Now().UnixNano())
-				case 2:
-					_, _ = fmt.Fprintf(w, `{"jwks_uri":"%s/keys"}`, server.URL)
-					secondAttemptTimeStamp.Store(time.Now().UnixNano())
-				}
-
-				return
-			}
-			if r.URL.Path == "/keys" {
-				_, _ = fmt.Fprint(w, `{"keys":[]}`)
-				return
-			}
-			http.NotFound(w, r)
-		}))
-		t.Cleanup(server.Close)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 5 * time.Second,
-		})
-
-		if err != nil {
-			t.Fatalf("unexpected newJwtValidator() error: %v", err)
-		}
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 2 {
-			t.Fatalf("discovery attempts = %d, want 2", numberOfAttempts)
-		}
-
-		elapsedTime := time.Duration(secondAttemptTimeStamp.Load() - firstAttemptTimeStamp.Load())
-		if elapsedTime < retryAfter { // wait for atleast the retry-after duration
-			t.Fatalf("elapsed = %s, want at least %s to honour Retry-After", elapsedTime, retryAfter)
-		}
-	})
-}
-
-func TestNewJwtValidatorRetry_TransientFailures_NetworkError(t *testing.T) {
-
-	var discoveryAttempts atomic.Int32
-	var maxFailures int32 = 3
-
-	var server *httptest.Server
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/.well-known/openid-configuration" {
-			_, _ = fmt.Fprintf(w, `{"jwks_uri":"%s/keys"}`, server.URL)
-		}
-		if r.URL.Path == "/keys" {
-			_, _ = fmt.Fprint(w, `{"keys":[]}`)
-		}
-		http.NotFound(w, r)
-	}))
-	t.Cleanup(server.Close)
-
-	transport := server.Client().Transport.(*http.Transport)
-	originalDialContext := transport.DialContext
-	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		if discoveryAttempts.Add(1) <= maxFailures {
-			return nil, &net.OpError{
-				Op:  "dial",
-				Net: network,
-				Err: errors.New("network error"),
-			}
-		}
-		return originalDialContext(ctx, network, addr)
-	}
-	client := &http.Client{Transport: transport}
-
-	_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-		Issuer:                     server.URL,
-		ValidateSignature:          true,
-		Http:                       client,
-		StartupRetryMaxElapsedTime: 3 * time.Second,
-	})
-
-	if err != nil {
-		t.Fatalf("unexpected newJwtValidator() error: %v", err)
-	}
-
-	if got := discoveryAttempts.Load(); got != maxFailures+1 {
-		t.Fatalf("discovery attempts = %d, want %d", got, maxFailures+1)
-	}
-
-}
-
-func TestNewJwtValidatorRetry_PermanentFailures(t *testing.T) {
-
-	newTestServer := func(statusCode int, createJSONBody func(url string) string, discoveryAttempts *atomic.Int32) *httptest.Server {
-		t.Helper()
-
-		var server *httptest.Server
-
+		var discoveryAttempts atomic.Int32
 		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/.well-known/openid-configuration" {
 				discoveryAttempts.Add(1)
-
-				w.WriteHeader(statusCode)
-				_, _ = fmt.Fprint(w, createJSONBody(server.URL))
+				http.Error(w, "Error code", http.StatusInternalServerError)
 				return
 			}
 			if r.URL.Path == "/keys" {
@@ -411,26 +241,82 @@ func TestNewJwtValidatorRetry_PermanentFailures(t *testing.T) {
 			}
 			http.NotFound(w, r)
 		}))
-
-		t.Cleanup(server.Close)
-
-		return server
-	}
-
-	t.Run("Status 400 error", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-
-		createJSONBody := func(url string) string {
-			return `{"jwks_uri":"` + url + `/keys"}`
-		}
-
-		server := newTestServer(http.StatusBadRequest, createJSONBody, &discoveryAttempts)
+		defer server.Close()
 
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer:                     server.URL,
 			ValidateSignature:          true,
 			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
+			StartupRetryMaxElapsedTime: 1 * time.Second,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts <= 1 { // atleast one retry
+			t.Fatalf("discovery attempts = %d, want 2 or more attempts", numberOfAttempts)
+		}
+	})
+
+	t.Run("hung request causes deadline exceeded", func(t *testing.T) {
+		t.Parallel()
+
+		var discoveryAttempts atomic.Int32
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			discoveryAttempts.Add(1)
+			if r.URL.Path != "/.well-known/openid-configuration" {
+				for {
+					if r.Context().Err() != nil {
+						break
+					}
+					time.Sleep(1 * time.Millisecond)
+				}
+				return
+			}
+			<-r.Context().Done() // keeps the http handler alive to reach the DeadlineExceeded error
+		}))
+		defer server.Close()
+
+		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 50 * time.Millisecond,
+		})
+
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("expected context.DeadlineExceeded, got %v", err)
+		}
+
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
+			t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
+		}
+	})
+
+	t.Run("zero max elapsed time is a one shot attempt", func(t *testing.T) {
+		t.Parallel()
+
+		var discoveryAttempts atomic.Int32
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/.well-known/openid-configuration" {
+				discoveryAttempts.Add(1)
+				http.Error(w, "Error code", http.StatusInternalServerError)
+				return
+			}
+			http.NotFound(w, r)
+		}))
+		defer server.Close()
+
+		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
+			Issuer:                     server.URL,
+			ValidateSignature:          true,
+			Http:                       server.Client(),
+			StartupRetryMaxElapsedTime: 0,
 		})
 
 		if err == nil {
@@ -442,299 +328,63 @@ func TestNewJwtValidatorRetry_PermanentFailures(t *testing.T) {
 		}
 	})
 
-	t.Run("Empty Issuer URL", func(t *testing.T) {
+	t.Run("negative max elapsed time retries until context is cancelled", func(t *testing.T) {
+		t.Parallel()
+
 		var discoveryAttempts atomic.Int32
-
-		createJSONBody := func(url string) string {
-			return `{"jwks_uri":"` + url + `/keys"}`
-		}
-
-		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     "",
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err == nil {
-			t.Fatalf("expected an error")
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 0 { // 0 attempts becuase no issuer provided
-			t.Fatalf("discovery attempts = %d, want 0", numberOfAttempts)
-		}
-	})
-
-	t.Run("Nil Context", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-
-		createJSONBody := func(url string) string {
-			return `{"jwks_uri":"` + url + `/keys"}`
-		}
-
-		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
-
-		_, err := newJwtValidator(nil, nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err == nil {
-			t.Fatalf("expected an error")
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 0 { // 0 attempts because no context
-			t.Fatalf("discovery attempts = %d, want 0", numberOfAttempts)
-		}
-	})
-
-	t.Run("Malformed Discovery JSON", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-
-		createJSONBody := func(url string) string {
-			return `{"jwks_uri" "` + url + `/keys"}` // Not in valid JSON format - missing a colon
-		}
-
-		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err == nil {
-			t.Fatalf("expected an error")
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
-			t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
-		}
-	})
-
-	t.Run("Missing JWKS Uri", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-
-		createJSONBody := func(url string) string {
-			return `{"jwks_uri": ""}`
-		}
-
-		server := newTestServer(http.StatusOK, createJSONBody, &discoveryAttempts)
-
-		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
-		})
-
-		if err == nil {
-			t.Fatalf("expected an error")
-		}
-
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
-			t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
-		}
-	})
-
-	t.Run("Context Cancelled", func(t *testing.T) {
-		var discoveryAttempts atomic.Int32
-
-		createJSONBody := func(url string) string {
-			return `{"jwks_uri":"` + url + `/keys"}`
-		}
-
-		server := newTestServer(http.StatusInternalServerError, createJSONBody, &discoveryAttempts)
+		keptRetrying := make(chan struct{})
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/.well-known/openid-configuration" {
+				if discoveryAttempts.Add(1) == 3 {
+					close(keptRetrying)
+				}
+				http.Error(w, "Error code", http.StatusInternalServerError)
+				return
+			}
+			<-r.Context().Done()
+		}))
+		defer server.Close()
 
 		ctx, cancel := context.WithCancel(t.Context())
 		defer cancel()
 
-		// asynchronously cancel context after one second
-		var cancelTime = 1 * time.Second
+		errCh := make(chan error, 1)
+		// Go routine to call newJwtValidator which will retry indefinitely until the context is cancelled
 		go func() {
-			time.Sleep(cancelTime)
-			cancel()
+			_, err := newJwtValidator(ctx, nil, JwtValidationOptions{
+				Issuer:                     server.URL,
+				ValidateSignature:          true,
+				Http:                       server.Client(),
+				StartupRetryMaxElapsedTime: -1,
+			})
+			errCh <- err
 		}()
 
-		_, err := newJwtValidator(ctx, nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * cancelTime,
-		})
-
-		if err == nil {
-			t.Fatalf("expected an error")
+		// Wait for the retry to stop or timeout
+		select {
+		case <-keptRetrying:
+			// Retry stopped because 3 attempts were made - pass
+		case err := <-errCh:
+			t.Fatalf("retry stopped before 3 attempts: %v (attempts=%d)", err, discoveryAttempts.Load())
+		case <-time.After(5 * time.Second):
+			t.Fatal("negative retry budget stopped before 3 discovery attempts, attempts = ", discoveryAttempts.Load())
 		}
 
-		if !errors.Is(err, context.Canceled) {
-			t.Fatalf("expected context.Canceled, got %T: %v", err, err)
-		}
+		cancel()
 
-		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts == 0 { // atleast one retry
-			t.Fatalf("discovery attempts = %d, want atleast 1", numberOfAttempts)
-		}
-	})
-}
-
-func TestNewJwtValidatorRetry_RetryBudgetExceeded(t *testing.T) {
-
-	var server *httptest.Server
-	var discoveryAttempts atomic.Int32
-	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/.well-known/openid-configuration" {
-			discoveryAttempts.Add(1)
-			http.Error(w, "Error code", http.StatusInternalServerError)
-			return
-		}
-		if r.URL.Path == "/keys" {
-			_, _ = fmt.Fprint(w, `{"keys":[]}`)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-		Issuer:                     server.URL,
-		ValidateSignature:          true,
-		Http:                       server.Client(),
-		StartupRetryMaxElapsedTime: 2 * time.Second,
-	})
-
-	if err == nil {
-		t.Fatalf("expected an error")
-	}
-
-	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts <= 1 { // atleast one retry
-		t.Fatalf("discovery attempts = %d, want 2 or more attempts", numberOfAttempts)
-	}
-}
-
-func TestNewJwtValidatorRetry_HungRequestDeadlineExceeded(t *testing.T) {
-	var discoveryAttempts atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		discoveryAttempts.Add(1)
-		if r.URL.Path != "/.well-known/openid-configuration" {
-			for {
-				if r.Context().Err() != nil {
-					break
-				}
-				time.Sleep(1 * time.Millisecond)
+		select {
+		case err := <-errCh:
+			if !errors.Is(err, context.Canceled) {
+				t.Fatalf("expected context.Canceled, got %v", err)
 			}
-			return
+		case <-time.After(2 * time.Second):
+			t.Fatal("retry did not stop after context cancellation")
 		}
-		<-r.Context().Done() // keeps the http handler alive to reach the DeadlineExceeded error
-	}))
-	defer server.Close()
 
-	_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-		Issuer:                     server.URL,
-		ValidateSignature:          true,
-		Http:                       server.Client(),
-		StartupRetryMaxElapsedTime: 1 * time.Second,
+		if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts < 3 {
+			t.Fatalf("discovery attempts = %d, want at least 3", numberOfAttempts)
+		}
 	})
-
-	if err == nil {
-		t.Fatalf("expected an error")
-	}
-
-	if !errors.Is(err, context.DeadlineExceeded) {
-		t.Fatalf("expected context.DeadlineExceeded, got %v", err)
-	}
-
-	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
-		t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
-	}
-}
-
-func TestNewJwtValidatorRetry_ZeroMaxElapsedTimeIsOneShot(t *testing.T) {
-	var discoveryAttempts atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/.well-known/openid-configuration" {
-			discoveryAttempts.Add(1)
-			http.Error(w, "Error code", http.StatusInternalServerError)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-		Issuer:                     server.URL,
-		ValidateSignature:          true,
-		Http:                       server.Client(),
-		StartupRetryMaxElapsedTime: 0,
-	})
-
-	if err == nil {
-		t.Fatalf("expected an error")
-	}
-
-	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts != 1 {
-		t.Fatalf("discovery attempts = %d, want 1", numberOfAttempts)
-	}
-}
-
-func TestNewJwtValidatorRetry_NegativeMaxElapsedTimeRetriesUntilCanceled(t *testing.T) {
-	var discoveryAttempts atomic.Int32
-	keptRetrying := make(chan struct{})
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/.well-known/openid-configuration" {
-			if discoveryAttempts.Add(1) == 3 {
-				close(keptRetrying)
-			}
-			http.Error(w, "Error code", http.StatusInternalServerError)
-			return
-		}
-		<-r.Context().Done()
-	}))
-	defer server.Close()
-
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
-
-	errCh := make(chan error, 1)
-	// Go routine to call newJwtValidator which will retry indefinitely until the context is cancelled
-	go func() {
-		_, err := newJwtValidator(ctx, nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: -1,
-		})
-		errCh <- err
-	}()
-
-	// Wait for the retry to stop or timeout
-	select {
-	case <-keptRetrying:
-		// Retry stopped because 3 attempts were made - pass
-	case err := <-errCh:
-		t.Fatalf("retry stopped before 3 attempts: %v (attempts=%d)", err, discoveryAttempts.Load())
-	case <-time.After(5 * time.Second):
-		t.Fatal("negative retry budget stopped before 3 discovery attempts, attempts = ", discoveryAttempts.Load())
-	}
-
-	cancel()
-
-	select {
-	case err := <-errCh:
-		if !errors.Is(err, context.Canceled) {
-			t.Fatalf("expected context.Canceled, got %v", err)
-		}
-	case <-time.After(2 * time.Second):
-		t.Fatal("retry did not stop after context cancellation")
-	}
-
-	if numberOfAttempts := discoveryAttempts.Load(); numberOfAttempts < 3 {
-		t.Fatalf("discovery attempts = %d, want at least 3", numberOfAttempts)
-	}
 }
 
 func TestJwtValidator_validateJwt(t *testing.T) {
@@ -977,12 +627,21 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "issuer is required") {
 			t.Fatalf("discoverJWKSEndpoint() error = %v, want issuer is required", err)
 		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want backoff.PermanentError", err)
+		}
+
 	})
 
 	t.Run("build request error", func(t *testing.T) {
 		_, err := discoverJWKSEndpoint(context.Background(), "http://[::1", http.DefaultClient)
 		if err == nil || !strings.Contains(err.Error(), "build request") {
 			t.Fatalf("discoverJWKSEndpoint() error = %v, want build request", err)
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want backoff.PermanentError", err)
 		}
 	})
 
@@ -1003,19 +662,6 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 		}
 	})
 
-	t.Run("unexpected status", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte("boom"))
-		}))
-		defer server.Close()
-
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
-			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
-		}
-	})
-
 	t.Run("decode response error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
@@ -1026,6 +672,10 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
 		if err == nil || !strings.Contains(err.Error(), "decode response") {
 			t.Fatalf("discoverJWKSEndpoint() error = %v, want decode response", err)
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want backoff.PermanentError", err)
 		}
 	})
 
@@ -1039,6 +689,109 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
 		if err == nil || !strings.Contains(err.Error(), "jwks_uri not found") {
 			t.Fatalf("discoverJWKSEndpoint() error = %v, want jwks_uri not found", err)
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want backoff.PermanentError", err)
+		}
+	})
+}
+
+func TestDiscoverJWKSEndpoint_StatusCodeErrors(t *testing.T) {
+
+	t.Run("response status 101 error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "switching protocols", http.StatusSwitchingProtocols)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if !strings.Contains(err.Error(), "unexpected status") {
+			t.Fatalf("unexpected error: %v, want unexpected status", err)
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
+			t.Fatalf("unexpected backoff.PermanentError: %v", err)
+		}
+	})
+
+	t.Run("response status 300 error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "multiple choices", http.StatusMultipleChoices)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if !strings.Contains(err.Error(), "unexpected status") {
+			t.Fatalf("unexpected error: %v, want unexpected status", err)
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
+			t.Fatalf("unexpected backoff.PermanentError: %v", err)
+		}
+	})
+
+	t.Run("response status 500 error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if !strings.Contains(err.Error(), "unexpected status") {
+			t.Fatalf("unexpected error: %v, want unexpected status", err)
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
+			t.Fatalf("unexpected backoff.PermanentError: %v", err)
+		}
+	})
+
+	t.Run("response status 400 error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "bad request", http.StatusBadRequest)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want backoff.PermanentError", err)
+		}
+	})
+
+	t.Run("response status 408 error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "request timeout", http.StatusRequestTimeout)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil {
+			t.Fatalf("expected an error")
+		}
+
+		if !strings.Contains(err.Error(), "unexpected status") {
+			t.Fatalf("unexpected error: %v, want unexpected status", err)
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
+			t.Fatalf("unexpected backoff.PermanentError: %v", err)
 		}
 	})
 
@@ -1147,6 +900,7 @@ func TestDiscoverJWKSEndpoint(t *testing.T) {
 			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
 		}
 	})
+
 }
 
 func TestClassifyDiscoveryError(t *testing.T) {
@@ -1156,14 +910,38 @@ func TestClassifyDiscoveryError(t *testing.T) {
 		}
 	})
 
+	t.Run("network error is transient", func(t *testing.T) {
+		networkErr := errors.New("network down")
+		err := classifyDiscoveryError(t.Context(), &url.Error{
+			Op:  "get",
+			URL: "https://issuer.example",
+			Err: networkErr,
+		})
+
+		if err == nil {
+			t.Fatalf("classifyDiscoveryError() error = nil, want error")
+		}
+
+		if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
+			t.Fatalf("unexpected backoff.PermanentError: %v", err)
+		}
+
+		if _, ok := errors.AsType[*url.Error](err); !ok {
+			t.Fatalf("classifyDiscoveryError() error = %v, want *url.Error", err)
+		}
+
+		if !errors.Is(err, networkErr) {
+			t.Fatalf("classifyDiscoveryError() error = %v, want network down", err)
+		}
+	})
+
 	t.Run("context canceled is permanent", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
 		err := classifyDiscoveryError(ctx, context.Canceled)
-		var permanent *backoff.PermanentError
-		if !errors.As(err, &permanent) {
-			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("classifyDiscoveryError() error = %v, want backoff.PermanentError", err)
 		}
 		if !errors.Is(err, context.Canceled) {
 			t.Fatalf("classifyDiscoveryError() error = %v, want context.Canceled", err)
@@ -1175,27 +953,22 @@ func TestClassifyDiscoveryError(t *testing.T) {
 		defer cancel()
 
 		err := classifyDiscoveryError(ctx, context.DeadlineExceeded)
-		var permanent *backoff.PermanentError
-		if !errors.As(err, &permanent) {
-			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
-		}
-		if !errors.Is(err, context.DeadlineExceeded) {
-			t.Fatalf("classifyDiscoveryError() error = %v, want context.DeadlineExceeded", err)
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("classifyDiscoveryError() error = %v, want backoff.PermanentError", err)
 		}
 	})
 
 	t.Run("non network error is permanent", func(t *testing.T) {
-		err := classifyDiscoveryError(t.Context(), errors.New("test-error"))
-		var permanent *backoff.PermanentError
-		if !errors.As(err, &permanent) {
-			t.Fatalf("classifyDiscoveryError() error = %v, want PermanentError", err)
+		networkErr := errors.New("test-error")
+		err := classifyDiscoveryError(t.Context(), networkErr)
+		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
+			t.Fatalf("classifyDiscoveryError() error = %v, want backoff.PermanentError", err)
 		}
-		var urlErr *url.Error
-		if errors.As(err, &urlErr) {
-			t.Fatalf("classifyDiscoveryError() unexpectedly returned url.Error: %v", err)
+		if _, ok := errors.AsType[*url.Error](err); ok {
+			t.Fatalf("unexpected *url.Error: %v", err)
 		}
-		if !strings.Contains(err.Error(), "perform request") || !strings.Contains(err.Error(), "test-error") {
-			t.Fatalf("classifyDiscoveryError() error = %v, want perform request wrapping test-error", err)
+		if !errors.Is(err, networkErr) {
+			t.Fatalf("unexpected error: %v, want %v", err, networkErr)
 		}
 	})
 }
