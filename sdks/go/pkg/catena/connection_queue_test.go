@@ -31,7 +31,10 @@
 package catena
 
 import (
+	"bytes"
 	"context"
+	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -407,5 +410,43 @@ func TestConnectionQueue_ShutdownConnection_OneDeadline(t *testing.T) {
 
 	if cq.connectionCount() != 0 {
 		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
+	}
+}
+
+func TestConnectionQueue_InjectedLogger(t *testing.T) {
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	cq := newConnectionQueue(10, log)
+	conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("registerOwnedConnection: %v", res)
+	}
+	cq.deregisterConnection(conn.ID)
+
+	out := buf.String()
+	if !strings.Contains(out, `"msg":"Streaming connection registered"`) {
+		t.Fatalf("expected registration log, got %s", out)
+	}
+	if !strings.Contains(out, `"component":"connection-queue"`) {
+		t.Fatalf("expected component=connection-queue, got %s", out)
+	}
+}
+
+func TestConnectionQueue_LoggerSilent(t *testing.T) {
+	var buf bytes.Buffer
+	cq := newConnectionQueue(10, nil)
+	conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
+	if res.Code != StatusCodeOk {
+		t.Fatalf("registerOwnedConnection: %v", res)
+	}
+	cq.deregisterConnection(conn.ID)
+
+	out := buf.String()
+	if strings.Contains(out, `"msg":"Streaming connection registered"`) {
+		t.Fatalf("expected no registration log, got %s", out)
+	}
+	if strings.Contains(out, `"component":"connection-queue"`) {
+		t.Fatalf("expected no component=connection-queue, got %s", out)
 	}
 }
