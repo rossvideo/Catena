@@ -71,9 +71,8 @@ func TestNewJwtValidator(t *testing.T) {
 		defer server.Close()
 
 		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			Issuer:            server.URL,
-			ValidateSignature: true,
-			Http:              server.Client(),
+			Issuer: server.URL,
+			Http:   server.Client(),
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -85,7 +84,7 @@ func TestNewJwtValidator(t *testing.T) {
 
 	t.Run("empty http", func(t *testing.T) {
 		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			ValidateSignature: false,
+			InsecureSkipSignatureValidation: true,
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -104,9 +103,8 @@ func TestNewJwtValidator(t *testing.T) {
 
 	t.Run("discoverJWKSEndpoint error", func(t *testing.T) {
 		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			Issuer:            "http://[::1",
-			ValidateSignature: true,
-			Http:              http.DefaultClient,
+			Issuer: "http://[::1",
+			Http:   http.DefaultClient,
 		})
 		if err == nil || !strings.Contains(err.Error(), "discover jwks endpoint") {
 			t.Fatalf("newJwtValidator() error = %v, want discover jwks endpoint", err)
@@ -126,9 +124,8 @@ func TestNewJwtValidator(t *testing.T) {
 		}))
 		defer server.Close()
 		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
-			Issuer:            server.URL,
-			ValidateSignature: true,
-			Http:              server.Client(),
+			Issuer: server.URL,
+			Http:   server.Client(),
 		})
 		if err == nil || !strings.Contains(err.Error(), "create keyfunc") {
 			t.Fatalf("newJwtValidator() error = %v, want create keyfunc", err)

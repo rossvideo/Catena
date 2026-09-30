@@ -126,7 +126,7 @@ func newTestServer(t *testing.T, authzEnabled bool) *server {
 		AuthzEnabled:   authzEnabled,
 		JwtOptions: JwtValidationOptions{
 			// leave everything else unset for testing which will disable all claims checking
-			ValidateSignature: false, // skip signature validation for testing
+			InsecureSkipSignatureValidation: true, // skip signature validation for testing
 		},
 	})
 	if err != nil {

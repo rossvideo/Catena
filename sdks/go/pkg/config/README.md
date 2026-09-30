@@ -245,7 +245,7 @@ All options can be configured via env and CLI.
 
 - `PREFIX_JWT_ISSUER` <-> `--jwt-issuer`
 - `PREFIX_JWT_AUDIENCE` <-> `--jwt-audience`
-- `PREFIX_JWT_VALIDATE_SIGNATURE` <-> `--jwt-validate-signature`
+- `PREFIX_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION` <-> `--jwt-insecure-skip-signature-validation`
 
 ### DashBoard Connection Props
 

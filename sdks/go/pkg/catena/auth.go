@@ -69,8 +69,8 @@ type jwtValidatorInterface interface {
 }
 
 // newJwtValidator creates a JWT validator based on the provided options.
-// If ValidateSignature is true, it discovers the JWKS endpoint and sets up signature validation.
-// If ValidateSignature is false, it only validates claims without verifying the signature.
+// If InsecureSkipSignatureValidation is true, it only validates claims without verifying the signature.
+// If InsecureSkipSignatureValidation is false, it discovers the JWKS endpoint and sets up signature validation (default behaviour).
 func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidatorInterface, error) {
 	// Use the default HTTP client if none was provided.
 	if opts.Http == nil {
@@ -80,30 +80,31 @@ func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidat
 		options: opts,
 	}
 
-	// determine whether to validate signature based on options
-	if opts.ValidateSignature {
-		// If signature validation is enabled, we need to discover the JWKS endpoint and set up the keyfunc.
-		jwksUrl, err := discoverJWKSEndpoint(ctx, opts.Issuer, opts.Http)
-		if err != nil {
-			return nil, fmt.Errorf("discover jwks endpoint: %w", err)
-		}
-
-		// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
-		// within the KeyFunc there is a background goroutine that periodically refreshes
-		// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
-		// goroutine and any in-flight requests.
-		keyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
-		if err != nil {
-			return nil, fmt.Errorf("create keyfunc: %w", err)
-		}
-
-		// store the keyfunc and set the validateFn to validate both signature and claims
-		v.keyfunc = keyFunc.Keyfunc
-		v.validateFn = v.validateSignatureAndClaims
-	} else {
+	// Check to see if signature validation should be skipped
+	if opts.InsecureSkipSignatureValidation {
 		// not validating signature, just validate claims
 		v.validateFn = v.validateClaims
+		return v, nil
 	}
+
+	// If signature validation is enabled, we need to discover the JWKS endpoint and set up the keyfunc.
+	jwksUrl, err := discoverJWKSEndpoint(ctx, opts.Issuer, opts.Http)
+	if err != nil {
+		return nil, fmt.Errorf("discover jwks endpoint: %w", err)
+	}
+
+	// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
+	// within the KeyFunc there is a background goroutine that periodically refreshes
+	// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
+	// goroutine and any in-flight requests.
+	keyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
+	if err != nil {
+		return nil, fmt.Errorf("create keyfunc: %w", err)
+	}
+
+	// store the keyfunc and set the validateFn to validate both signature and claims
+	v.keyfunc = keyFunc.Keyfunc
+	v.validateFn = v.validateSignatureAndClaims
 
 	return v, nil
 }
