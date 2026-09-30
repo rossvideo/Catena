@@ -39,7 +39,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"sync"
@@ -90,23 +89,19 @@ func buildDevice() *st2138.Device {
 func main() {
 	// Build an application logger and hand it to the SDK. The SDK logs nothing
 	// unless it is given a logger.
-	log, closeLog, err := logger.New(logger.LoggerOptions{
-		AppName:        "hello_world",
-		WriteToConsole: true,
-		WriteToFile:    false,
-		Level:          slog.LevelInfo,
-	})
+	logOptions := logger.DefaultOptions()
+	logOptions.AppName = "hello_world"
+	log, closeLog, err := logger.New(logOptions)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 	defer closeLog()
 
-	srv, err := catena.NewServer(catena.ServerOptions{
-		MaxConnections: 100,
-		AuthzEnabled:   false,
-		Logger:         log,
-	})
+	options := catena.DefaultServerOptions()
+	options.Logger = log
+	options.AuthzEnabled = false
+	srv, err := catena.NewServer(options)
 	if err != nil {
 		log.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)

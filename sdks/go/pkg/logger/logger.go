@@ -54,17 +54,18 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 )
 
-type LoggerOptions = config.LoggerOptions
+type Options = config.LoggerOptions
 
-var DefaultLoggerOptions = config.DefaultLoggerOptions
-var mu = sync.Mutex{}
+func DefaultOptions() Options {
+	return config.DefaultLoggerOptions()
+}
 
 type CloseFunc func()
 
 // New builds a slog.Logger from declarative LoggerOptions.
 // Callers own the returned logger and should
 // defer CloseFunc to release any log file handle.
-func New(opts LoggerOptions) (*slog.Logger, CloseFunc, error) {
+func New(opts Options) (*slog.Logger, CloseFunc, error) {
 	if opts.Silent {
 		return slog.New(slog.DiscardHandler), func() {}, nil
 	}
@@ -122,16 +123,17 @@ func New(opts LoggerOptions) (*slog.Logger, CloseFunc, error) {
 	}
 
 	// Setup close function
+	var once sync.Once
 	closeFn := func() {
-		mu.Lock()
-		defer mu.Unlock()
-		if file == nil {
-			return
-		}
-		if err := file.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "logger: failed to close log file: %v\n", err)
-		}
-		file = nil
+		once.Do(func() {
+			if file == nil {
+				return
+			}
+			if err := file.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "logger: failed to close log file: %v\n", err)
+			}
+			file = nil
+		})
 	}
 
 	return slog.New(handler), closeFn, nil

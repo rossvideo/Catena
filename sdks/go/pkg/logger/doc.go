@@ -37,10 +37,11 @@
 // allowing the level and related settings to be driven from defaults,
 // environment variables, or command-line flags.
 //
-// Typical usage is to build a logger from config.LoggerOptions and inject it
+// Typical usage is to build a logger configuration using logger.DefaultOptions()
+// and customizing it as needed, then build a logger using logger.New(opts) and inject it
 // into config.ServerOptions.Logger. The server distributes that logger to the
-// components it starts. The connection-props HTTP server is not one of them:
-// the application constructs it, so pass the same logger as
+// components it starts. The connection-props HTTP server is not one of them,
+// the application constructs it, so pass the logger into
 // config.DashboardOptions.Logger or that server stays silent. Consumers who
 // already have a *slog.Logger can skip this package entirely.
 package logger

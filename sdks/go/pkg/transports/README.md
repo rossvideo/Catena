@@ -209,17 +209,21 @@ The optional `pkg/logger` package is a convenience builder for the SDK's
 prebuilt console/file handlers if you do not already have a logger:
 
 ```go
-log, closeLog, err := logger.New(logger.LoggerOptions{
-    AppName:        "my-app",
-    WriteToConsole: true,
-    Level:          slog.LevelInfo,
-})
+logOptions := logger.DefaultOptions()
+logOptions.AppName = "my-app"
+logOptions.WriteToConsole = true
+logOptions.Level = logger.LevelInfo
+log, closeLog, err := logger.New(logOptions)
 if err != nil {
     panic(err)
 }
 defer closeLog()
-
-srv, err := catena.NewServer(catena.ServerOptions{Logger: log})
+options = catena.DefaultServerOptions()
+options.Logger = log
+srv, err := catena.NewServer(options)
+if err != nil {
+    panic(err)
+}
 ```
 
 Transport-level verbosity is therefore controlled by the handler and level of
