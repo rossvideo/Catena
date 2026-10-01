@@ -43,6 +43,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -50,6 +51,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MicahParks/jwkset"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 
@@ -129,7 +131,8 @@ func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, e
 	if ctx == nil {
 		return nil, fmt.Errorf("nil context provided, context is required to initialize JWT keyfunc")
 	}
-	retryCtx := ctx
+
+	discoveryCtx := ctx
 
 	if v.options.StartupRetryMaxElapsedTime == 0 {
 		// backoff treats a MaxElapsedTime of 0 as unlimited, this is mapped to a single attempt instead
@@ -137,7 +140,7 @@ func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, e
 	} else if v.options.StartupRetryMaxElapsedTime > 0 {
 		// Create a context with a timeout to prevent stalled requests
 		var cancel context.CancelFunc
-		retryCtx, cancel = context.WithTimeout(ctx, v.options.StartupRetryMaxElapsedTime)
+		discoveryCtx, cancel = context.WithTimeout(ctx, v.options.StartupRetryMaxElapsedTime)
 		defer cancel()
 
 		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(v.options.StartupRetryMaxElapsedTime))
@@ -148,8 +151,8 @@ func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, e
 
 	// discovery and keyfun creation
 	var jwksKeyFunc jwt.Keyfunc
-	jwksKeyFunc, err := backoff.Retry(retryCtx, func() (jwt.Keyfunc, error) {
-		newJwskKeyFunc, err := createJWTKeyFunc(retryCtx, v.options)
+	jwksKeyFunc, err := backoff.Retry(ctx, func() (jwt.Keyfunc, error) {
+		newJwskKeyFunc, err := v.createJWTKeyFunc(ctx, discoveryCtx)
 		if err != nil {
 			return nil, err
 		}
@@ -164,23 +167,97 @@ func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, e
 	return jwksKeyFunc, nil
 }
 
-func createJWTKeyFunc(ctx context.Context, opts JwtValidationOptions) (jwt.Keyfunc, error) {
+func (v *jwtValidator) createJWTKeyFunc(ctx context.Context, discoveryCtx context.Context) (jwt.Keyfunc, error) {
 
-	jwksUrl, err := discoverJWKSEndpoint(ctx, opts.Issuer, opts.Http)
+	jwksUrl, err := discoverJWKSEndpoint(discoveryCtx, v.options.Issuer, v.options.Http)
 	if err != nil {
 		return nil, fmt.Errorf("discover jwks endpoint: %w", err)
 	}
 
 	// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
 	// within the KeyFunc there is a background goroutine that periodically refreshes
-	// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
+	// the JWKS, the ctx passed to NewDefaultOverrideCtx is used to control the lifecycle of that
 	// goroutine and any in-flight requests.
-	jwksKeyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
+	noErrorReturnFirstHTTPReq := false // first fetch error should be returned
+	jwksKeyFunc, err := keyfunc.NewDefaultOverrideCtx(ctx, []string{jwksUrl}, keyfunc.Override{
+		NoErrorReturnFirstHTTPReq: &noErrorReturnFirstHTTPReq,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("create keyfunc: %w", err)
+		// prefix before classifying so the context survives backoff.Retry unwrapping a PermanentError
+		return nil, classifyKeyfuncError(ctx, fmt.Errorf("create keyfunc: %w", err))
 	}
 
 	return jwksKeyFunc.Keyfunc, nil
+}
+
+func classifyKeyfuncError(ctx context.Context, err error) error {
+
+	if err == nil {
+		return nil
+	}
+
+	if ctx.Err() != nil {
+		return backoff.Permanent(ctx.Err())
+	}
+
+	if strings.Contains(err.Error(), jwkset.ErrInvalidHTTPStatusCode.Error()) {
+
+		resp, ok := extractJWKSResponse(err)
+		if !ok {
+			return err
+		}
+
+		// reuse the discovery status code rules so both fetches classify the same way
+		statusErr := classifyStatusCodeError(resp)
+		if statusErr == nil {
+			return err
+		}
+
+		return statusErr
+	}
+
+	if _, ok := errors.AsType[*url.Error](err); ok {
+		return err
+	}
+
+	if errors.Is(err, io.ErrUnexpectedEOF) {
+		return err
+	}
+
+	return backoff.Permanent(err)
+}
+
+// extractJWKSResponse pulls the status code out of a jwkset.ErrInvalidHTTPStatusCode error to
+// create a response object. jwkset only exposes the code in the message ("invalid HTTP status code: 503")
+func extractJWKSResponse(err error) (*http.Response, bool) {
+	completeStatusCodeErrorMsg := err.Error()
+	errorMessage := jwkset.ErrInvalidHTTPStatusCode.Error() + ": "
+	index := strings.Index(completeStatusCodeErrorMsg, errorMessage)
+	if index < 0 {
+		return nil, false
+	}
+
+	statusCodeString := completeStatusCodeErrorMsg[index+len(errorMessage):]
+
+	// Validate the status code is an integer
+	endIndex := 0
+	for endIndex < len(statusCodeString) && statusCodeString[endIndex] >= '0' && statusCodeString[endIndex] <= '9' {
+		endIndex++
+	}
+	if endIndex == 0 {
+		return nil, false
+	}
+
+	statusCode, convErr := strconv.Atoi(statusCodeString[:endIndex])
+	if convErr != nil {
+		return nil, false
+	}
+
+	return &http.Response{
+		StatusCode: statusCode,
+		Status:     fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)),
+		Header:     http.Header{},
+	}, true
 }
 
 // discoverJWKSEndpoint resolves the JWKS URL from an OpenID Connect issuer.
@@ -219,18 +296,9 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	}
 	defer resp.Body.Close()
 
-	// check for a error response status
-	// 4xx errors are permanent, do not retry except for 408 and 429
-	// 429 honours Retry-After when present; otherwise the exponential backoff is used
-	// 1xx, 3xx, and 5xx erros are retriable
-	if resp.StatusCode == http.StatusRequestTimeout {
-		return "", fmt.Errorf("unexpected status %s", resp.Status)
-	} else if resp.StatusCode == http.StatusTooManyRequests {
-		return "", parseTooManyRequestsHeader(resp)
-	} else if (resp.StatusCode >= http.StatusBadRequest) && (resp.StatusCode < http.StatusInternalServerError) {
-		return "", backoff.Permanent(fmt.Errorf("Client error: %s", resp.Status))
-	} else if (resp.StatusCode < http.StatusOK) || (resp.StatusCode >= http.StatusMultipleChoices) {
-		return "", fmt.Errorf("unexpected status %s", resp.Status)
+	// Classify status code errors
+	if err := classifyStatusCodeError(resp); err != nil {
+		return "", err
 	}
 
 	// decode the discovery document and extract the JWKS URI
@@ -243,6 +311,30 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	}
 
 	return discoveryDoc.JwksUri, nil
+}
+
+func classifyStatusCodeError(resp *http.Response) error {
+	// check for a error response status
+	// 4xx errors are permanent, do not retry except for 408 and 429
+	// 429 honours Retry-After when present; otherwise the exponential backoff is used
+	// 1xx, 3xx, and 5xx erros are retriable
+
+	switch {
+	case resp.StatusCode == http.StatusRequestTimeout:
+		return fmt.Errorf("unexpected status %s", resp.Status)
+
+	case resp.StatusCode == http.StatusTooManyRequests:
+		return parseTooManyRequestsHeader(resp)
+
+	case resp.StatusCode >= http.StatusBadRequest && resp.StatusCode < http.StatusInternalServerError:
+		return backoff.Permanent(fmt.Errorf("Client error: %s", resp.Status))
+
+	case resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices:
+		return nil
+	default:
+		return fmt.Errorf("unexpected status %s", resp.Status)
+	}
+
 }
 
 func parseTooManyRequestsHeader(resp *http.Response) error {
