@@ -86,6 +86,12 @@ type RestOptions struct {
 	Port int `env:"REST_PORT" flag:"rest-port"`
 	// TLS configures optional TLS for the REST listener (env: REST_TLS_*).
 	TLS TLSOptions
+	// CORS is opt-in. Empty AllowedOrigins disables CORS so a gateway/proxy
+	// that already injects CORS headers is not doubled.
+	AllowedOrigins      []string      `env:"REST_ALLOWED_ORIGINS" flag:"rest-allowed-origins"`
+	ExtraAllowedHeaders []string      `env:"REST_EXTRA_ALLOWED_HEADERS" flag:"rest-extra-allowed-headers"`
+	ExtraAllowedMethods []string      `env:"REST_EXTRA_ALLOWED_METHODS" flag:"rest-extra-allowed-methods"`
+	CorsMaxAge          time.Duration `env:"REST_CORS_MAX_AGE" flag:"rest-cors-max-age"` // Defaults to seconds if no unit is specified
 }
 
 // GrpcOptions configures the gRPC transport.
@@ -225,7 +231,13 @@ func DefaultDashboardOptions() DashboardOptions {
 }
 
 func DefaultRestOptions() RestOptions {
-	return RestOptions{Port: 9080}
+	return RestOptions{
+		Port:                9080,
+		AllowedOrigins:      nil,              // CORS OFF by default (respects gateway/proxy topology)
+		ExtraAllowedHeaders: nil,              // required headers already cover the ST 2138 surface
+		ExtraAllowedMethods: nil,              // fixed REST method set; extension unlikely
+		CorsMaxAge:          10 * time.Minute, // preflight cache; only used once CORS is enabled
+	}
 }
 
 func DefaultGrpcOptions() GrpcOptions {
@@ -310,6 +322,10 @@ func (o RestOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Int("port", o.Port),
 		slog.Any("tls", o.TLS),
+		slog.Any("allowed_origins", o.AllowedOrigins),
+		slog.Any("extra_allowed_headers", o.ExtraAllowedHeaders),
+		slog.Any("extra_allowed_methods", o.ExtraAllowedMethods),
+		slog.Duration("cors_max_age", o.CorsMaxAge),
 	)
 }
 

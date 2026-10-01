@@ -46,6 +46,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var ErrHelp = flag.ErrHelp
@@ -144,6 +145,10 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractString("REST_TLS_KEY_FILE", "rest-tls-key-file", "Path to the PEM server private key for the REST transport", &opts.Rest.TLS.KeyFile).
 		extractString("REST_TLS_CLIENT_CA_FILE", "rest-tls-client-ca-file", "Path to the PEM client CA bundle for REST mutual TLS", &opts.Rest.TLS.ClientCAFile).
 		extractBool("REST_TLS_MUTUAL_AUTH", "rest-tls-mutual-auth", "Require and verify client certificates on the REST transport (mTLS)", &opts.Rest.TLS.MutualAuth).
+		extractStringSlice("REST_ALLOWED_ORIGINS", "rest-allowed-origins", "Comma-separated CORS allowed origins (* for any). Empty disables CORS", &opts.Rest.AllowedOrigins).
+		extractStringSlice("REST_EXTRA_ALLOWED_HEADERS", "rest-extra-allowed-headers", "Additional CORS allowed headers (unioned with SDK baselines)", &opts.Rest.ExtraAllowedHeaders).
+		extractStringSlice("REST_EXTRA_ALLOWED_METHODS", "rest-extra-allowed-methods", "Additional CORS allowed methods (unioned with SDK baselines)", &opts.Rest.ExtraAllowedMethods).
+		extractPositiveDuration("REST_CORS_MAX_AGE", "rest-cors-max-age", "CORS preflight Max-Age duration (e.g. 10m, 600s). Defaults to seconds if no unit is specified.", &opts.Rest.CorsMaxAge).
 		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
 		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
 		extractBool("GRPC_TLS_ENABLED", "grpc-tls-enabled", "Enable TLS on the gRPC transport listener", &opts.Grpc.TLS.Enabled).
@@ -274,6 +279,62 @@ func (l *configLoader) extractString(envName, cliName, usage string, val *string
 		return s, nil
 	})
 	return l
+}
+
+func (l *configLoader) extractStringSlice(envName, cliName, usage string, val *[]string) *configLoader {
+	loadParser(l, envName, cliName, usage, val, parseStringSlice)
+	return l
+}
+
+func (l *configLoader) extractDuration(envName, cliName, usage string, val *time.Duration) *configLoader {
+	loadParser(l, envName, cliName, usage, val, parseDuration)
+	return l
+}
+
+func (l *configLoader) extractPositiveDuration(envName, cliName, usage string, val *time.Duration) *configLoader {
+	loadParser(l, envName, cliName, usage, val, parsePositiveDuration)
+	return l
+}
+
+// parseStringSlice comma-splits, trims, and drops empty tokens so "" and
+// whitespace-only values collapse to nil (CORS off for allowed origins).
+func parseStringSlice(s string) ([]string, error) {
+	parts := strings.Split(s, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		out = append(out, p)
+	}
+	if len(out) == 0 {
+		return nil, nil
+	}
+	return out, nil
+}
+
+// parseDuration parses a duration string like "10m", "600s", "1h30m", etc.
+// Defaults to seconds if no unit is specified.
+func parseDuration(s string) (time.Duration, error) {
+	s = strings.TrimSpace(s)
+	if d, err := time.ParseDuration(s); err == nil {
+		return d, nil
+	}
+	if _, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return time.ParseDuration(s + "s")
+	}
+	return 0, fmt.Errorf("%s is not a valid duration", s)
+}
+
+// parseDuration but only returns a duration if it is non-negative
+// otherwise it errors.
+func parsePositiveDuration(s string) (time.Duration, error) {
+	s = strings.TrimSpace(s)
+	if strings.HasPrefix(s, "-") {
+		return 0, fmt.Errorf("%s is not a valid positive duration", s)
+	}
+	return parseDuration(s)
 }
 
 func (l *configLoader) extractConnectionProtocol(envName, cliName, usage string, val *ConnectionProtocol) *configLoader {

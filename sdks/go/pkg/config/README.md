@@ -220,6 +220,10 @@ All options can be configured via env and CLI.
 - `PREFIX_REST_TLS_KEY_FILE` <-> `--rest-tls-key-file`
 - `PREFIX_REST_TLS_CLIENT_CA_FILE` <-> `--rest-tls-client-ca-file`
 - `PREFIX_REST_TLS_MUTUAL_AUTH` <-> `--rest-tls-mutual-auth`
+- `PREFIX_REST_ALLOWED_ORIGINS` <-> `--rest-allowed-origins` (comma-separated; empty disables CORS)
+- `PREFIX_REST_EXTRA_ALLOWED_HEADERS` <-> `--rest-extra-allowed-headers`
+- `PREFIX_REST_EXTRA_ALLOWED_METHODS` <-> `--rest-extra-allowed-methods`
+- `PREFIX_REST_CORS_MAX_AGE` <-> `--rest-cors-max-age` (Go duration, e.g. `10m`)
 
 ### gRPC Transport
 
