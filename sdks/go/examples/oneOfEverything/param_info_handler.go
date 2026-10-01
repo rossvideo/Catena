@@ -12,7 +12,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// when an application has only a few params or does not keep a full device
 	// definition around for ParamInfo requests.
 	srv.RegisterParamInfoHandler(0, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-		log.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
+		ctx.Logger().Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 		infos, res := slotZeroParamInfos(fqoid, recursive)
 		return streamParamInfos(stream, infos, res)
 	})
@@ -21,7 +21,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// helper. This demonstrates the simplest path when your business logic can
 	// already produce device["params"].
 	srv.RegisterParamInfoHandler(1, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-		log.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
+		ctx.Logger().Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 
 		deviceInfo, ok := buildDeviceDefinition(slot, counter, state)
 		if !ok {
@@ -35,7 +35,7 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// when params are grouped by naming convention or owned by different pieces
 	// of application code.
 	srv.RegisterParamInfoHandler(2, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-		log.Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
+		ctx.Logger().Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 		infos, res := slotTwoParamInfos(fqoid, recursive, state)
 		return streamParamInfos(stream, infos, res)
 	})

@@ -160,9 +160,6 @@ func TestServer_DefaultLogger_Silent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
 	}
-	if srv.Logger() == nil {
-		t.Fatal("Logger() must be non-nil when no logger is injected")
-	}
 
 	srv.StartHeartbeat(10 * time.Millisecond)
 	srv.StopHeartbeat()
@@ -182,9 +179,6 @@ func TestServer_InjectedLogger(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)
-	}
-	if srv.Logger() != log {
-		t.Fatal("Logger() should return the injected logger")
 	}
 
 	srv.StartHeartbeat(10 * time.Millisecond)

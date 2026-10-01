@@ -498,8 +498,6 @@ type Server interface {
 	// fall through to the registered handler for that slot.
 	RegisterProductStruct(slot uint16, product ProductStruct)
 
-	Logger() *slog.Logger
-
 	SetMaxConnections(max int)
 	ConnectionCount() int
 	BroadcastUpdate(slot uint16, oid string, value any, scope string)
@@ -984,6 +982,7 @@ func (s *server) realInvokeGate(transportContext TransportContext, endpoint Endp
 	ctx, cancel := s.requestContext(transportContext.Ctx)
 	handlerContext.ctx = ctx
 	handlerContext.ctxCancel = cancel
+	handlerContext.SetLogger(s.log, endpoint)
 
 	granted := false
 	if writeAccess {

@@ -117,7 +117,7 @@ func main() {
 	})
 
 	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-		log.Info("GetDevice", "slot", slot)
+		ctx.Logger().Info("GetDevice", "slot", slot)
 		// A small device fits in a single component; large devices may stream
 		// several (see the oneOfEverything example).
 		if err := stream.Send(st2138.ComponentDevice(buildDevice())); err != nil {
@@ -127,21 +127,21 @@ func main() {
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
-		log.Info("GetValue", "slot", slot, "fqoid", fqoid)
+		ctx.Logger().Info("GetValue", "slot", slot, "fqoid", fqoid)
 		if fqoid != helloWorldOID {
 			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 		}
 
 		value, err := st2138.ToValue(helloWorld.Get())
 		if err != nil {
-			log.Error("Failed to convert hello_world value", "error", err)
+			ctx.Logger().Error("Failed to convert hello_world value", "error", err)
 			return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to convert value")
 		}
 		return catena.Reply(value)
 	})
 
 	srv.RegisterSetValueHandler(slot, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		log.Info("SetValue", "slot", slot, "count", len(entries))
+		ctx.Logger().Info("SetValue", "slot", slot, "count", len(entries))
 
 		for _, entry := range entries {
 			if entry.Fqoid != helloWorldOID {

@@ -10,7 +10,7 @@ func registerAccessHandler(srv catena.Server) {
 	// identity, or endpoint type before any endpoint-specific handler runs. Use
 	// this for cross-cutting policy; use individual handlers for per-param rules.
 	srv.RegisterAccessHandler(func(endpointType catena.EndpointType, ctx catena.HandlerContext) bool {
-		log.Info("Access request", "endpointType", endpointType)
+		ctx.Logger().Info("Access request", "endpointType", endpointType)
 
 		// Shows how to restrict getPopulatedSlots to only op and adm read scopes.
 		//if endpointType == catena.EndpointGetSlots {

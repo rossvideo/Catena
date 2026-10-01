@@ -11,9 +11,9 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 	// any command scope (mon, op, conf, or adm), however it broadcasts updates
 	// to the counter value only to specified counterScope.
 	srv.RegisterExecuteCommandHandler(0, func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.HandlerContext, stream catena.Stream[st2138.CommandResponse]) catena.StatusResult {
-		log.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
+		ctx.Logger().Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
 		if !ctx.HasWriteScope(counterScope) {
-			log.Warn("Unauthorized command execution attempt", "slot", slot, "command", commandFqoid)
+			ctx.Logger().Warn("Unauthorized command execution attempt", "slot", slot, "command", commandFqoid)
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "Caller does not have required scope for this command")
 		}
 
@@ -33,36 +33,36 @@ func registerCommandHandler(srv catena.Server, counter *CounterState, broadcastR
 		switch commandFqoid {
 		case "start":
 			if counter.IsRunning() {
-				log.Info("Start command - already running")
+				ctx.Logger().Info("Start command - already running")
 			} else {
 				counter.Start()
-				log.Info("Counter started", "value", counter.GetValue())
+				ctx.Logger().Info("Counter started", "value", counter.GetValue())
 				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			return sendCounter()
 		case "stop":
 			if !counter.IsRunning() {
-				log.Info("Stop command - already stopped")
+				ctx.Logger().Info("Stop command - already stopped")
 			} else {
 				counter.Stop()
-				log.Info("Counter stopped", "value", counter.GetValue())
+				ctx.Logger().Info("Counter stopped", "value", counter.GetValue())
 				broadcastRunning()
 			}
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			return sendCounter()
 		case "add10":
 			counter.Add(10)
-			log.Info("Added 10 to counter", "value", counter.GetValue())
+			ctx.Logger().Info("Added 10 to counter", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			return sendCounter()
 		case "reset":
 			counter.Reset()
-			log.Info("Counter reset", "value", counter.GetValue())
+			ctx.Logger().Info("Counter reset", "value", counter.GetValue())
 			srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			return sendCounter()
 		default:
-			log.Warn("Command not found", "slot", slot, "command", commandFqoid)
+			ctx.Logger().Warn("Command not found", "slot", slot, "command", commandFqoid)
 			return catena.StatusWithCode(catena.StatusCodeNotFound, "Command not found: "+commandFqoid)
 		}
 	})

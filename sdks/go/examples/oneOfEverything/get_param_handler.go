@@ -19,7 +19,7 @@ import (
 func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
 	for _, slot := range slotList {
 		srv.RegisterGetParamHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Param, catena.StatusResult) {
-			log.Info("GetParam", "slot", slot, "fqoid", fqoid)
+			ctx.Logger().Info("GetParam", "slot", slot, "fqoid", fqoid)
 
 			device, ok := buildDeviceDefinition(slot, counter, state)
 			if !ok {
