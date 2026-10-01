@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "features": "cucumber-js",
+    "features:ci": "cucumber-js --profile ci",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:all": "npm run test && npm run features",
-    "clean": "rm -rf ./coverage && rm -rf ./junit.xml && rm -rf tests/output/*"
+    "clean": "rm -rf ./coverage && rm -rf ./junit.xml && rm -rf ./junit-cucumber.xml && rm -rf tests/output/*"
   },
   "repository": {
     "type": "git",

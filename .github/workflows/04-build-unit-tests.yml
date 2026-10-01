@@ -265,19 +265,23 @@ jobs:
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}/tools/codegen"
           npm ci
-          run_js_tests() {
-            npm test -- --ci
+          retry_once() {
+            local name="$1"; shift
+            if ! "$@"; then
+              echo "${name} failed on first attempt; retrying once..."
+              "$@"
+            fi
           }
-          if ! run_js_tests; then
-            echo "JS tests failed on first attempt; retrying once..."
-            run_js_tests
-          fi
+          retry_once "Jest" npm test -- --ci
+          retry_once "Cucumber" npm run features:ci
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: (!cancelled())
         with:
-          files: ${{ github.workspace }}/tools/codegen/junit.xml
+          files: |
+            ${{ github.workspace }}/tools/codegen/junit.xml
+            ${{ github.workspace }}/tools/codegen/junit-cucumber.xml
           check_name: Codegen JS Unit Tests
 
       - uses: actions/upload-code-coverage@v1
@@ -294,5 +298,6 @@ jobs:
           name: unit-test-artifacts-js
           path: |
             ${{ github.workspace }}/tools/codegen/junit.xml
+            ${{ github.workspace }}/tools/codegen/junit-cucumber.xml
             ${{ github.workspace }}/tools/codegen/coverage/cobertura-coverage.xml
           if-no-files-found: error
