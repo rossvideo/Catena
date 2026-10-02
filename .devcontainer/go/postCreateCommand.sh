@@ -11,7 +11,9 @@ cd ${ROOT_DIR}
 # should exist cause of volume mount, but just in case
 mkdir -p ${BUILD_TARGET}
 # volume mount might belong to root
-sudo chown -R ${USER_NAME}:${USER_NAME} ${BUILD_TARGET}
+if [ "$(stat -c '%U' "${BUILD_TARGET}")" = "root" ]; then
+	sudo chown -R ${USER_NAME}:${USER_NAME} ${BUILD_TARGET}
+fi
 
 cd ${ROOT_DIR}/sdks/go
 go mod tidy

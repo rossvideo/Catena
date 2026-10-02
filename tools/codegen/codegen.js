@@ -17,10 +17,8 @@
 import { program } from 'commander';
 
 import packageJson from './package.json' with { type: "json" };
-import { QUIET_OPTION, MANDATORY_OPTION, OUTPUT_OPTION, VERSION, createLogger, sync } from './common.js';
-import { DeviceModel } from './DeviceModel.js';
-import Validator from 'smpte-validator';
-import { validateRequiredParamsAndScopes } from './mandatory.js';
+import { QUIET_OPTION, MANDATORY_OPTION, OUTPUT_OPTION, VERSION, createLogger, sync, ExitError } from './common.js';
+import { resolveDeviceModel } from './DeviceModel.js';
 import CppGen from './cpp/cppgen.js';
 
 //
@@ -66,12 +64,7 @@ async function generate(language, deviceModelPath, options) {
     // log the options being used
     logOptions(log, language, deviceModelPath, options);
 
-    // load and validate the device model
-    const validator = new Validator();
-    const deviceModel = new DeviceModel(deviceModelPath, validator);
-    log(`Validating device model ${deviceModelPath}...`);
-    await deviceModel.load(true);
-    validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
+    const deviceModel = await resolveDeviceModel(deviceModelPath, log, options);
 
     // generate code in the requested language
     switch (language) {
@@ -81,7 +74,7 @@ async function generate(language, deviceModelPath, options) {
             cppGen.generate();
             break;
         default:
-            throw new Error(`Unsupported language: ${language}`);
+            throw new ExitError(`Unsupported language: ${language}`);
     }
     log('✅ Code generation completed.');
 }

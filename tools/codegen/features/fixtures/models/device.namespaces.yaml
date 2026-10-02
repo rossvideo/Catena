@@ -1,0 +1,36 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:op
+params:
+  product:
+    import:
+      url: ./param.product.yaml
+
+  # Imported shared library. Its `st2138_namespace` hint makes `point` and
+  # `segment` generate into the shared `shared::geo` C++ namespace rather than
+  # this device's namespace, and no runtime params are emitted for them.
+  geo_lib:
+    import:
+      url: ./param.geo.yaml
+
+  # Concrete runtime param that reuses a shared type by template reference. Its
+  # value is of type shared::geo::Segment.
+  flight_path:
+    type: STRUCT
+    name: { display_strings: { en: Flight Path } }
+    template_oid: geo_lib/segment
+    value:
+      struct_value:
+        fields:
+          start:
+            struct_value:
+              fields:
+                latitude: { float32_value: 45.4215 }
+                longitude: { float32_value: -75.6972 }
+          end:
+            struct_value:
+              fields:
+                latitude: { float32_value: 43.6532 }
+                longitude: { float32_value: -79.3832 }

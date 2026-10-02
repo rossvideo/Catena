@@ -44,7 +44,7 @@ import (
 
 // TestProductParam_Golden verifies ProductParam builds exactly the expected
 // proto: a read-only STRUCT with STRING field descriptors and all field values
-// (including the SDK-managed catena_sdk / catena_sdk_version fields) carried in
+// (including the SDK-managed st2138_sdk / st2138_sdk_version fields) carried in
 // the struct's Value. This guards the invariant behind the "Product SDK fields
 // diverge" bug by pinning the full descriptor + value shape.
 func TestProductParam_Golden(t *testing.T) {

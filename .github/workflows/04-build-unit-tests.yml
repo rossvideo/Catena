@@ -61,7 +61,8 @@ jobs:
       code-quality: write
     container:
       image: ${{ inputs.cpp_image }}
-      options: --user root:root
+      # github actions run as 1001
+      options: --user 1001:1001
     env:
       BUILD_TARGET: ${{ github.workspace }}/build/cpp
       CMAKE_BUILD_TYPE: Debug
@@ -164,7 +165,8 @@ jobs:
       code-quality: write
     container:
       image: ${{ inputs.go_image }}
-      options: --user root:root
+      # github actions run as 1001
+      options: --user 1001:1001
 
     env:
       BUILD_TARGET: ${{ github.workspace }}/build/go
@@ -188,8 +190,7 @@ jobs:
 
           mkdir -p "${BUILD_TARGET}"
           cd "${GITHUB_WORKSPACE}/sdks/go"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" 1001 "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
 
           set -o pipefail
           GOTESTSUM_OPTS="--junitfile ${BUILD_TARGET}/go-tests.xml"
@@ -248,7 +249,9 @@ jobs:
         with:
           node-version: "24.17.0"
           cache: "npm"
-          cache-dependency-path: tools/codegen/package-lock.json
+          cache-dependency-path: |
+            tools/codegen/package-lock.json
+            smpte/tools/package-lock.json
 
       - name: Build SMPTE artifacts
         shell: bash
@@ -257,6 +260,7 @@ jobs:
           cd "${GITHUB_WORKSPACE}/smpte"
           ./install-tooling.sh
           ./build-openapi.sh
+          npm -C tools/ ci
       
       - name: Run codegen tests
         id: run_js_tests
@@ -265,19 +269,23 @@ jobs:
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}/tools/codegen"
           npm ci
-          run_js_tests() {
-            npm test -- --ci
+          retry_once() {
+            local name="$1"; shift
+            if ! "$@"; then
+              echo "${name} failed on first attempt; retrying once..."
+              "$@"
+            fi
           }
-          if ! run_js_tests; then
-            echo "JS tests failed on first attempt; retrying once..."
-            run_js_tests
-          fi
+          retry_once "Jest" npm test -- --ci
+          retry_once "Cucumber" npm run features:ci
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: (!cancelled())
         with:
-          files: ${{ github.workspace }}/tools/codegen/junit.xml
+          files: |
+            ${{ github.workspace }}/tools/codegen/junit.xml
+            ${{ github.workspace }}/tools/codegen/junit-cucumber.xml
           check_name: Codegen JS Unit Tests
 
       - uses: actions/upload-code-coverage@v1
@@ -294,5 +302,6 @@ jobs:
           name: unit-test-artifacts-js
           path: |
             ${{ github.workspace }}/tools/codegen/junit.xml
+            ${{ github.workspace }}/tools/codegen/junit-cucumber.xml
             ${{ github.workspace }}/tools/codegen/coverage/cobertura-coverage.xml
           if-no-files-found: error

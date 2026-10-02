@@ -1,0 +1,125 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:op
+params:
+  product:
+    import:
+      url: ./param.product.yaml
+
+  # Shared type imported under a top-level param. This defines the
+  # "Channel_template" struct (nested EQ struct + constrained gain/mute) that the
+  # params below reuse purely by template reference.
+  channel_template:
+    type: STRUCT
+    name: { display_strings: { en: Channel Strip } }
+    params:
+      label:
+        type: STRING
+        name: { display_strings: { en: Label } }
+      gain:
+        type: FLOAT32
+        name: { display_strings: { en: Gain (dB) } }
+        widget: fader
+        precision: 1
+        constraint:
+          type: FLOAT_RANGE
+          float_range:
+            min_value: -96.0
+            max_value: 12.0
+            step: 0.5
+      mute:
+        type: INT32
+        name: { display_strings: { en: Mute } }
+        widget: toggle
+        constraint:
+          type: INT_CHOICE
+          int32_choice:
+            choices:
+              - value: 0
+                name: { display_strings: { en: Unmuted } }
+              - value: 1
+                name: { display_strings: { en: Muted } }
+      eq:
+        type: STRUCT
+        name: { display_strings: { en: EQ } }
+        params:
+          low:
+            type: FLOAT32
+            name: { display_strings: { en: Low } }
+            precision: 1
+          mid:
+            type: FLOAT32
+            name: { display_strings: { en: Mid } }
+            precision: 1
+          high:
+            type: FLOAT32
+            name: { display_strings: { en: High } }
+            precision: 1
+
+
+  # Reuse the shared type (STRUCT templated on STRUCT). No params/constraints are
+  # repeated here; structure and constraints are inherited from the template.
+  channel_left:
+    type: STRUCT
+    template_oid: channel_template
+    name: { display_strings: { en: Left } }
+    value:
+      struct_value:
+        fields:
+          label: { string_value: "Left" }
+          gain: { float32_value: 0.0 }
+          mute: { int32_value: 0 }
+          eq:
+            struct_value:
+              fields:
+                low: { float32_value: 1.5 }
+                mid: { float32_value: 0.0 }
+                high: { float32_value: -2.0 }
+
+  channel_right:
+    type: STRUCT
+    template_oid: channel_template
+    name: { display_strings: { en: Right } }
+    value:
+      struct_value:
+        fields:
+          label: { string_value: "Right" }
+          gain: { float32_value: -3.5 }
+          mute: { int32_value: 1 }
+          eq:
+            struct_value:
+              fields:
+                low: { float32_value: 1.5 }
+                mid: { float32_value: 0.0 }
+                high: { float32_value: -2.0 }
+
+  # Reuse the same shared type across an array (STRUCT_ARRAY templated on STRUCT).
+  aux_sends:
+    type: STRUCT_ARRAY
+    template_oid: channel_template
+    name: { display_strings: { en: Aux Sends } }
+    value:
+      struct_array_values:
+        struct_values:
+          - fields:
+              label: { string_value: "Aux 1" }
+              gain: { float32_value: -6.0 }
+              mute: { int32_value: 0 }
+              eq:
+                struct_value:
+                  fields:
+                    low: { float32_value: 0.0 }
+                    mid: { float32_value: 0.0 }
+                    high: { float32_value: 0.0 }
+          - fields:
+              label: { string_value: "Aux 2" }
+              gain: { float32_value: -12.0 }
+              mute: { int32_value: 1 }
+              eq:
+                struct_value:
+                  fields:
+                    low: { float32_value: 0.0 }
+                    mid: { float32_value: 0.0 }
+                    high: { float32_value: 0.0 }

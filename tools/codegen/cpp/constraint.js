@@ -52,7 +52,7 @@ function minArg(desc) {
   if (this.type === "int32_t") {
     return desc.int32_range.min_value;
   } else {
-    return desc.float32_range.min_value;
+    return desc.float_range.min_value;
   }
 }
 
@@ -65,7 +65,7 @@ function maxArg(desc) {
   if (this.type === "int32_t") {
     return desc.int32_range.max_value;
   } else {
-    return desc.float32_range.max_value;
+    return desc.float_range.max_value;
   }
 }
 
@@ -80,8 +80,8 @@ function stepArg(desc) {
   let ans = 0;
   if (this.type == "int32_t" && "step" in desc.int32_range) {
     ans = desc.int32_range.step;
-  } else if (this.type == "float" && "step" in desc.float32_range) {
-    ans = desc.float32_range.step;
+  } else if (this.type == "float" && "step" in desc.float_range) {
+    ans = desc.float_range.step;
   }
   return ans;
 }
@@ -101,10 +101,10 @@ function displayMinArg(desc) {
       ans = desc.int32_range.min_value;
     }
   } else {
-    if ("display_min" in desc.float32_range) {
-      ans = desc.float32_range.display_min;
+    if ("display_min" in desc.float_range) {
+      ans = desc.float_range.display_min;
     } else {
-      ans = desc.float32_range.min_value;
+      ans = desc.float_range.min_value;
     }
   }
   return ans;
@@ -125,10 +125,10 @@ function displayMaxArg(desc) {
       ans = desc.int32_range.max_value
     }
   } else {
-    if ("display_max" in desc.float32_range) {
-      ans = desc.float32_range.display_max;
+    if ("display_max" in desc.float_range) {
+      ans = desc.float_range.display_max;
     } else {
-      ans = desc.float32_range.max_value;
+      ans = desc.float_range.max_value;
     }
   }
   return ans;
@@ -284,7 +284,9 @@ class Constraint extends CppCtor {
       return `shared_${this.oid}`;
     } else {
       let fqoid = this.parentParam.getFQOid();
-      return `${replaceSlashes(fqoid)}Constraint`;
+      // fqoid used to have leading slashes, which would prefix names with a _
+      // from the replacesSlashes call, manually prefix with _ for consistency
+      return `_${replaceSlashes(fqoid)}Constraint`;
     }
   }
 

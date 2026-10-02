@@ -130,10 +130,10 @@ The `product` parameter must be a read-only STRUCT containing all six required p
 | `vendor` | STRING | **Yes** | Manufacturer name |
 | `version` | STRING | **Yes** | Firmware/software version |
 | `serial_number` | STRING | **Yes** | Unique device serial number |
-| `catena_sdk` | STRING | No | SDK implementation name |
-| `catena_sdk_version` | STRING | No | SDK version |
+| `st2138_sdk` | STRING | No | SDK implementation name |
+| `st2138_sdk_version` | STRING | No | SDK version |
 
-**Important:** All six parameters must be **defined** in the `params` structure. However, only the four marked as "Value Required" need actual values provided. The optional parameters (`catena_sdk` and `catena_sdk_version`) can be defined without initial values—these values can be generated automatically at runtime by the SDK if not provided.
+**Important:** All six parameters must be **defined** in the `params` structure. However, only the four marked as "Value Required" need actual values provided. The optional parameters (`st2138_sdk` and `st2138_sdk_version`) can be defined without initial values—these values can be generated automatically at runtime by the SDK if not provided.
 
 All product parameters must have an access scope of `"st2138:mon"` (monitor) or inherit it from parent scopes.
 
@@ -153,8 +153,8 @@ Example from [use_constraints](../sdks/cpp/common/examples/use_constraints/devic
         "vendor": { "type": "STRING" },
         "version": { "type": "STRING" },
         "serial_number": { "type": "STRING" },
-        "catena_sdk": { "type": "STRING" },
-        "catena_sdk_version": { "type": "STRING" }
+        "st2138_sdk": { "type": "STRING" },
+        "st2138_sdk_version": { "type": "STRING" }
       },
       "value": {
         "struct_value": {
