@@ -62,7 +62,7 @@ func (h *Heartbeat) OnTick(fnTick func()) {
 
 // Start begins emitting tick events at the specified interval.
 // Returns an error if the interval is invalid (zero or negative).
-// Returns nil and logs if already running. Returns nil on success.
+// Returns nil if already running. Returns nil on success.
 func (h *Heartbeat) Start(interval time.Duration) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
