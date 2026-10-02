@@ -38,6 +38,7 @@ package catena
 
 import (
 	"context"
+	"log/slog"
 	"slices"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -77,6 +78,7 @@ type HandlerContext struct {
 	// calls release(). Do not call this field directly - use release() so the
 	// zero HandlerContext (nil cancel) stays safe.
 	ctxCancel context.CancelFunc
+	log       *slog.Logger
 }
 
 // HasReadScope reports whether the caller was granted the named read scope.
@@ -165,4 +167,23 @@ func (ctx HandlerContext) release() {
 	if ctx.ctxCancel != nil {
 		ctx.ctxCancel()
 	}
+}
+
+// Logger returns the logger for this request.
+// If the logger is not set, it returns a discard logger.
+func (ctx HandlerContext) Logger() *slog.Logger {
+	if ctx.log == nil {
+		return slog.New(slog.DiscardHandler)
+	}
+	return ctx.log
+}
+
+// SetLogger sets the logger for this request, tagged with the handler component
+// and the endpoint being served. A nil logger discards records.
+// Intended for use by the server when building the HandlerContext.
+func (ctx *HandlerContext) SetLogger(log *slog.Logger, endpoint EndpointType) {
+	if log == nil {
+		log = slog.New(slog.DiscardHandler)
+	}
+	ctx.log = log.With("component", "handler", "endpoint", endpoint.String())
 }

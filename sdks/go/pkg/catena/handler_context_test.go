@@ -37,7 +37,10 @@
 package catena
 
 import (
+	"bytes"
 	"context"
+	"log/slog"
+	"strings"
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
@@ -137,6 +140,45 @@ func TestHandlerContext(t *testing.T) {
 		}
 		if res := disabled.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 			t.Fatalf("expected OK when authz disabled, got %v", res)
+		}
+	})
+
+	t.Run("Logger", func(t *testing.T) {
+		defaultLogger := slog.Default()
+		var discarded bytes.Buffer
+		slog.SetDefault(slog.New(slog.NewJSONHandler(&discarded, &slog.HandlerOptions{Level: slog.LevelDebug})))
+		t.Cleanup(func() { slog.SetDefault(defaultLogger) })
+
+		var unset HandlerContext
+		unset.Logger().Info("unset")
+		if discarded.Len() != 0 {
+			t.Fatalf("unset Logger must discard, got %s", discarded.String())
+		}
+
+		var buf bytes.Buffer
+		log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+		var handler HandlerContext
+		handler.SetLogger(log, EndpointGetValue)
+		handler.Logger().Info("handled", "slot", 1)
+
+		out := buf.String()
+		if !strings.Contains(out, `"msg":"handled"`) {
+			t.Fatalf("expected handled log, got %s", out)
+		}
+		if !strings.Contains(out, `"component":"handler"`) {
+			t.Fatalf("expected component=handler, got %s", out)
+		}
+		if !strings.Contains(out, `"endpoint":"GetValue"`) {
+			t.Fatalf("expected endpoint=GetValue, got %s", out)
+		}
+		if !strings.Contains(out, `"slot":1`) {
+			t.Fatalf("expected slot=1, got %s", out)
+		}
+
+		handler.SetLogger(nil, EndpointGetValue)
+		handler.Logger().Info("dropped")
+		if discarded.Len() != 0 || strings.Contains(buf.String(), `"msg":"dropped"`) {
+			t.Fatalf("nil SetLogger must discard, got default %q handler %q", discarded.String(), buf.String())
 		}
 	})
 }

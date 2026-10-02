@@ -41,6 +41,7 @@ package transporttest
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"testing"
 
@@ -79,6 +80,7 @@ type StubServerRuntime struct {
 	LastDeregisterID         int
 	LastRegisterOwner        any
 	LastShutdownOwner        any
+	Log                      *slog.Logger
 }
 
 func MakeStubServerRuntime(tb testing.TB) *StubServerRuntime {
@@ -95,6 +97,13 @@ var _ catena.ServerRuntime = (*StubServerRuntime)(nil)
 
 func (s *StubServerRuntime) IsDev() bool {
 	return s.Dev
+}
+
+func (s *StubServerRuntime) Logger() *slog.Logger {
+	if s != nil && s.Log != nil {
+		return s.Log
+	}
+	return slog.New(slog.DiscardHandler)
 }
 
 func (s *StubServerRuntime) GetSlots(ctx catena.TransportContext) ([]uint16, catena.StatusResult) {
