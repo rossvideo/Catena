@@ -61,9 +61,9 @@ jobs:
       code-quality: write
     container:
       image: ${{ inputs.cpp_image }}
-      # github actions run as 1001
-      options: --user 1001:1001
+      options: --user root:root
     env:
+      IN_CONTAINER_BUILD: "1" # so build-openapi.sh is happy running as root
       BUILD_TARGET: ${{ github.workspace }}/build/cpp
       CMAKE_BUILD_TYPE: Debug
       CONNECTIONS: 'gRPC;REST'
@@ -165,10 +165,10 @@ jobs:
       code-quality: write
     container:
       image: ${{ inputs.go_image }}
-      # github actions run as 1001
-      options: --user 1001:1001
+      options: --user root:root
 
     env:
+      IN_CONTAINER_BUILD: "1" # so build-openapi.sh is happy running as root
       BUILD_TARGET: ${{ github.workspace }}/build/go
       COVERAGE_DIR: ${{ github.workspace }}/sdks/go
     steps:
@@ -190,7 +190,8 @@ jobs:
 
           mkdir -p "${BUILD_TARGET}"
           cd "${GITHUB_WORKSPACE}/sdks/go"
-          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" 1001 "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
 
           set -o pipefail
           GOTESTSUM_OPTS="--junitfile ${BUILD_TARGET}/go-tests.xml"
