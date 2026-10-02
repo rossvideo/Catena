@@ -315,21 +315,21 @@ func TestConnectionPropsLogger(t *testing.T) {
 }
 
 func TestConnectionPropsLoggerSilent(t *testing.T) {
+	var buf bytes.Buffer
+	defaultLogger := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo})))
+	defer slog.SetDefault(defaultLogger)
+
 	// Create connection props server with no logger.
 	opts := config.DefaultDashboardOptions()
 	opts.Logger = nil
 	c := NewConnectionProps(opts)
-	if err := c.Start(); err != nil {
-		t.Fatalf("Start() error: %v", err)
-	}
-
-	// Verify the server is running and using the discard logger.
-	if !c.IsRunning() {
-		t.Fatalf("expected server to be running")
-	}
 
 	if c.log.Handler() != slog.DiscardHandler {
 		t.Fatalf("expected server to use the default logger")
+	}
+	if strings.Contains(buf.String(), "Connection props server constructed") {
+		t.Fatalf("expected no log record, got:\n%s", buf.String())
 	}
 }
 
