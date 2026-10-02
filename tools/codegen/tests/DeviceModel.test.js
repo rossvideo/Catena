@@ -33,6 +33,14 @@ describe("resolveDeviceModel", () => {
         expect(dm.desc).toEqual({ some: 'tree' });
     });
 
+    test("throws ExitError on malformed descriptor", async () => {
+        descriptorIdFromUrl.mockImplementation(() => { throw new Error("malformed descriptor"); });
+        await expect(resolveDeviceModel(url, log, options)).rejects.toThrow(ExitError);
+        await expect(resolveDeviceModel(url, log, options))
+            .rejects.toThrow("malformed descriptor");
+        expect(resolve).not.toHaveBeenCalled();
+    });
+
     test("logs a resolving message", async () => {
         descriptorIdFromUrl.mockReturnValue({ kind: 'device', name: 'test' });
         resolve.mockResolvedValue({ valid: true, data: {} });

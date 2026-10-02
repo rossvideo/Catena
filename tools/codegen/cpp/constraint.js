@@ -285,7 +285,7 @@ class Constraint extends CppCtor {
     } else {
       let fqoid = this.parentParam.getFQOid();
       // fqoid used to have leading slashes, which would prefix names with a _
-      // from the replacesSlashes call, manually prefix with _ for consistancy
+      // from the replacesSlashes call, manually prefix with _ for consistency
       return `_${replaceSlashes(fqoid)}Constraint`;
     }
   }

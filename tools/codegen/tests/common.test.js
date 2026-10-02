@@ -1,14 +1,8 @@
 import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
-import packageJson from '../package.json' with { type: "json" };
 import {
     createLogger,
     ExitError,
-    MANDATORY_OPTION,
-    OUTPUT_OPTION,
-    PROTOS_OPTION,
-    QUIET_OPTION,
     sync,
-    VERSION,
 } from '../common.js';
 
 // flush the microtask queue so the async IIFE inside sync() settles

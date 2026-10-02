@@ -63,7 +63,8 @@ export function sync(program) {
     })().catch((err) => {
         if (err instanceof ExitError) {
             console.error(err.message);
-            process.exit(err.code);
+            // return so that if process.exit is mocked, it doesn't fall through
+            return process.exit(err.code);
         }
         console.error("Error:", err);
         process.exit(1);

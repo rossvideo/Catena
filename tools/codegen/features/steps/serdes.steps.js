@@ -28,9 +28,10 @@ import { resolveDeviceModel } from '../../DeviceModel.js';
 function assertSuperset(subset, superset, at = '<root>') {
   if (Array.isArray(subset)) {
     assert.ok(Array.isArray(superset), `${at}: expected an array`);
-    assert.ok(
-      superset.length >= subset.length,
-      `${at}: array has ${superset.length} entries, fewer than the input's ${subset.length}`
+    assert.equal(
+      superset.length,
+      subset.length,
+      `${at}: array has ${superset.length} entries; expected ${subset.length}`
     );
     subset.forEach((value, index) =>
       assertSuperset(value, superset[index], `${at}[${index}]`)
