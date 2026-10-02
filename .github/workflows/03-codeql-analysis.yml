@@ -162,9 +162,6 @@ jobs:
         shell: bash
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Install file utility
-        run: sudo apt-get update && sudo apt-get install -y file
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:

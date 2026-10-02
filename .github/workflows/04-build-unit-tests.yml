@@ -190,7 +190,7 @@ jobs:
 
           mkdir -p "${BUILD_TARGET}"
           cd "${GITHUB_WORKSPACE}/sdks/go"
-          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" root "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
+          "${GITHUB_WORKSPACE}/.devcontainer/go/postCreateCommand.sh" 1001 "${BUILD_TARGET}" "${GITHUB_WORKSPACE}"
 
           set -o pipefail
           GOTESTSUM_OPTS="--junitfile ${BUILD_TARGET}/go-tests.xml"
@@ -249,7 +249,9 @@ jobs:
         with:
           node-version: "24.17.0"
           cache: "npm"
-          cache-dependency-path: tools/codegen/package-lock.json
+          cache-dependency-path: |
+            tools/codegen/package-lock.json
+            smpte/tools/package-lock.json
 
       - name: Build SMPTE artifacts
         shell: bash
@@ -258,6 +260,7 @@ jobs:
           cd "${GITHUB_WORKSPACE}/smpte"
           ./install-tooling.sh
           ./build-openapi.sh
+          npm -C tools/ ci
       
       - name: Run codegen tests
         id: run_js_tests
