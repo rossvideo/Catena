@@ -44,10 +44,12 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -213,7 +215,7 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 			Issuer:                     server.URL,
 			ValidateSignature:          true,
 			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 1 * time.Second,
+			StartupRetryMaxElapsedTime: 3 * time.Second,
 		})
 
 		if err != nil {
@@ -900,6 +902,29 @@ func TestDiscoverJWKSEndpoint_StatusCodeErrors(t *testing.T) {
 		var retryAfter *backoff.RetryAfterError
 		if errors.As(err, &retryAfter) {
 			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+		}
+	})
+
+	t.Run("response status 429 with overflow retry-after stays retriable", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Retry-After", strconv.FormatInt(math.MaxInt64, 10))
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
+		}))
+		defer server.Close()
+
+		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
+			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
+		}
+
+		var retryAfter *backoff.RetryAfterError
+		if errors.As(err, &retryAfter) {
+			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+		}
+
+		var permanent *backoff.PermanentError
+		if errors.As(err, &permanent) {
+			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned PermanentError: %v", err)
 		}
 	})
 }

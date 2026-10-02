@@ -45,6 +45,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -343,7 +344,12 @@ func parseTooManyRequestsHeader(resp *http.Response) error {
 	if !ok {
 		return statusErr
 	}
-	return fmt.Errorf("%w: %w", statusErr, backoff.RetryAfter(int(delay.Seconds())))
+
+	retrySecond := int(delay / time.Second)
+	if delay%time.Second != 0 {
+		retrySecond++
+	}
+	return fmt.Errorf("%w: %w", statusErr, backoff.RetryAfter(retrySecond))
 }
 
 func extractRetryAfterDuration(retryValue string) (time.Duration, bool) {
@@ -355,6 +361,10 @@ func extractRetryAfterDuration(retryValue string) (time.Duration, bool) {
 
 	if delaySeconds, err := strconv.ParseInt(retryValue, 10, 64); err == nil {
 		if delaySeconds < 0 {
+			return 0, false
+		}
+
+		if delaySeconds > (math.MaxInt64 / int64(time.Second)) {
 			return 0, false
 		}
 
