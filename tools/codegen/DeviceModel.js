@@ -37,7 +37,14 @@ export async function resolveDeviceModel(url, log, options) {
     // resolve the device model
     log(`Resolving device model ${url}...`);
     // make sure its a device, resolve works on anything
-    const descId = descriptorIdFromUrl(url);
+    let descId;
+    try {
+        descId = descriptorIdFromUrl(url);
+    } catch (err) {
+        // if the url is malformed, it will throw an error which we catch here
+        // convert into an ExitError for nice output
+        throw new ExitError(err.message);
+    }
     if (descId.kind !== 'device') {
         throw new ExitError(`File must be a device model, not ${descId.kind}`);
     }
