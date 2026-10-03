@@ -556,7 +556,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 	var validator jwtValidatorInterface
 	if opts.AuthzEnabled {
 		var err error
-		validator, err = newJwtValidator(ctx, log.With("component", "jwt"), opts.JwtOptions)
+		validator, err = newJwtValidator(ctx, log, opts.JwtOptions)
 		if err != nil {
 			cancel()
 			return nil, fmt.Errorf("create jwt validator: %w", err)

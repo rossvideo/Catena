@@ -128,7 +128,7 @@ type JwtValidationOptions struct {
 	Leeway time.Duration
 	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
 	ValidateSignature bool `env:"JWT_VALIDATE_SIGNATURE" flag:"jwt-validate-signature"`
-	// StartupRetryMaxElapsed bounds JWT JWKS discovery retries during startup. Zero disables retrying and attempts once.
+	// StartupRetryMaxElapsed bounds JWT JWKS discovery retries during startup. Zero disables retrying and attempts once. Negative values are retried indefinitely.
 	StartupRetryMaxElapsedTime time.Duration `env:"JWT_STARTUP_RETRY_MAX_ELAPSED" flag:"jwt-startup-retry-max-elapsed"`
 	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
 	Http *http.Client

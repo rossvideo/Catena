@@ -39,6 +39,7 @@
 package catena
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -111,8 +112,28 @@ func TestNewJwtValidator(t *testing.T) {
 		if validatorTyped.options.Http != http.DefaultClient {
 			t.Fatalf("newJwtValidator() got Http = %v, want %v", validatorTyped.options.Http, http.DefaultClient)
 		}
-		if validatorTyped.log != slog.Default() {
-			t.Fatalf("newJwtValidator() got log = %v, want slog.Default()", validatorTyped.log)
+		if validatorTyped.log == nil {
+			t.Fatal("newJwtValidator() got nil log, want non-nil")
+		}
+	})
+
+	t.Run("logger with component tag", func(t *testing.T) {
+		var buf bytes.Buffer
+		log := slog.New(slog.NewTextHandler(&buf, nil))
+		validator, err := newJwtValidator(t.Context(), log, JwtValidationOptions{
+			ValidateSignature:          false,
+			StartupRetryMaxElapsedTime: 0, //single attempt
+		})
+		if err != nil {
+			t.Fatalf("newJwtValidator() error = %v", err)
+		}
+		validatorTyped, ok := validator.(*jwtValidator)
+		if !ok {
+			t.Fatalf("newJwtValidator() got type %T, want *jwtValidator", validator)
+		}
+		validatorTyped.log.Info("probe")
+		if !strings.Contains(buf.String(), "component=jwt") {
+			t.Fatalf("newJwtValidator() log output = %q, want component=jwt", buf.String())
 		}
 	})
 
@@ -162,7 +183,8 @@ func TestNewJwtValidator(t *testing.T) {
 			}
 		}))
 
-		_, err := newJwtValidator(nil, nil, JwtValidationOptions{ // nil context
+		var nilCxt context.Context
+		_, err := newJwtValidator(nilCxt, nil, JwtValidationOptions{
 			Issuer:                     server.URL,
 			ValidateSignature:          true,
 			Http:                       http.DefaultClient,
