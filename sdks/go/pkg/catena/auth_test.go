@@ -43,7 +43,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"math"
 	"net"
@@ -56,7 +55,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MicahParks/jwkset"
 	"github.com/cenkalti/backoff/v5"
 	"github.com/golang-jwt/jwt/v5"
 
@@ -1019,122 +1017,6 @@ func TestClassifyDiscoveryError(t *testing.T) {
 			t.Fatalf("unexpected error: %v, want %v", err, networkErr)
 		}
 	})
-}
-
-func TestClassifyKeyfuncError(t *testing.T) {
-	t.Run("nil error", func(t *testing.T) {
-		if err := classifyKeyfuncError(t.Context(), nil); err != nil {
-			t.Fatalf("classifyKeyfuncError(nil) = %v, want nil", err)
-		}
-	})
-
-	t.Run("context canceled is permanent", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		err := classifyKeyfuncError(ctx, context.Canceled)
-		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
-			t.Fatalf("classifyKeyfuncError() error = %v, want backoff.PermanentError", err)
-		}
-		if !errors.Is(err, context.Canceled) {
-			t.Fatalf("classifyKeyfuncError() error = %v, want context.Canceled", err)
-		}
-	})
-
-	t.Run("status code error", func(t *testing.T) {
-		statusCodeError := jwkset.ErrInvalidHTTPStatusCode.Error() + ": 500"
-		err := classifyKeyfuncError(t.Context(), errors.New(statusCodeError))
-
-		if err == nil {
-			t.Fatalf("classifyKeyfuncError() error = nil, want error")
-		}
-
-		if !strings.Contains(err.Error(), "unexpected status") {
-			t.Fatalf("unexpected error: %v, want unexpected status", err)
-		}
-
-		if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
-			t.Fatalf("unexpected backoff.PermanentError: %v", err)
-		}
-	})
-
-	t.Run("extractJWKSResponse failure", func(t *testing.T) {
-		statusCodeError := jwkset.ErrInvalidHTTPStatusCode.Error() + ": invaliderror"
-		err := classifyKeyfuncError(t.Context(), errors.New(statusCodeError))
-		if err == nil {
-			t.Fatalf("classifyKeyfuncError() error = nil, want error")
-		}
-		if !strings.Contains(err.Error(), "invaliderror") {
-			t.Fatalf("unexpected error: %v, want invaliderror", err)
-		}
-	})
-
-	t.Run("unknown error is permanent", func(t *testing.T) {
-		err := errors.New("test-error")
-		err = classifyKeyfuncError(t.Context(), err)
-		if err == nil {
-			t.Fatalf("classifyKeyfuncError() error = nil, want error")
-		}
-		if !strings.Contains(err.Error(), "test-error") {
-			t.Fatalf("unexpected error: %v, want test-error", err)
-		}
-		if _, ok := errors.AsType[*backoff.PermanentError](err); !ok {
-			t.Fatalf("classifyKeyfuncError() error = %v, want backoff.PermanentError", err)
-		}
-	})
-
-	t.Run("EOF is transient", func(t *testing.T) {
-		err := io.ErrUnexpectedEOF
-		err = classifyKeyfuncError(t.Context(), err)
-		if err == nil {
-			t.Fatalf("classifyKeyfuncError() error = nil, want error")
-		}
-		if !strings.Contains(err.Error(), io.ErrUnexpectedEOF.Error()) {
-			t.Fatalf("unexpected error: %v, want io.ErrUnexpectedEOF", err)
-		}
-		if _, ok := errors.AsType[*backoff.PermanentError](err); ok {
-			t.Fatalf("unexpected backoff.PermanentError: %v", err)
-		}
-	})
-}
-
-func TestExtractJWKSResponse(t *testing.T) {
-
-	t.Run("success", func(t *testing.T) {
-		err := jwkset.ErrInvalidHTTPStatusCode.Error() + ": 500"
-		resp, ok := extractJWKSResponse(errors.New(err))
-		if !ok {
-			t.Fatalf("extractJWKSResponse() = %v, want true", ok)
-		}
-		if resp.StatusCode != http.StatusInternalServerError {
-			t.Fatalf("unexpected status code: %v, want 500", resp.StatusCode)
-		}
-	})
-
-	t.Run("no status code in error message", func(t *testing.T) {
-		err := errors.New("test-error")
-		_, ok := extractJWKSResponse(err)
-		if ok {
-			t.Fatalf("extractJWKSResponse() = %v, want false", ok)
-		}
-	})
-
-	t.Run("invalid status code in error message", func(t *testing.T) {
-		err := jwkset.ErrInvalidHTTPStatusCode.Error() + ": invalid"
-		_, ok := extractJWKSResponse(errors.New(err))
-		if ok {
-			t.Fatalf("extractJWKSResponse() = %v, want false", ok)
-		}
-	})
-
-	t.Run("strconv.atoi error", func(t *testing.T) {
-		err := jwkset.ErrInvalidHTTPStatusCode.Error() + ": 999999999999999999999999999999999999999999999999999999" // force overflow
-		_, ok := extractJWKSResponse(errors.New(err))
-		if ok {
-			t.Fatalf("extractJWKSResponse() = %v, want false", ok)
-		}
-	})
-
 }
 
 func TestExtractTokenScopes_NonMapClaims(t *testing.T) {

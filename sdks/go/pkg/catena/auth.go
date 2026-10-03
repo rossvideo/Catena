@@ -43,7 +43,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"math"
 	"net/http"
@@ -52,7 +51,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MicahParks/jwkset"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 
@@ -177,88 +175,14 @@ func (v *jwtValidator) createJWTKeyFunc(ctx context.Context, discoveryCtx contex
 
 	// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
 	// within the KeyFunc there is a background goroutine that periodically refreshes
-	// the JWKS, the ctx passed to NewDefaultOverrideCtx is used to control the lifecycle of that
+	// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
 	// goroutine and any in-flight requests.
-	noErrorReturnFirstHTTPReq := false // first fetch error should be returned
-	jwksKeyFunc, err := keyfunc.NewDefaultOverrideCtx(ctx, []string{jwksUrl}, keyfunc.Override{
-		NoErrorReturnFirstHTTPReq: &noErrorReturnFirstHTTPReq,
-	})
+	jwksKeyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
 	if err != nil {
-		// prefix before classifying so the context survives backoff.Retry unwrapping a PermanentError
-		return nil, classifyKeyfuncError(ctx, fmt.Errorf("create keyfunc: %w", err))
+		return nil, fmt.Errorf("create keyfunc: %w", err)
 	}
 
 	return jwksKeyFunc.Keyfunc, nil
-}
-
-func classifyKeyfuncError(ctx context.Context, err error) error {
-
-	if err == nil {
-		return nil
-	}
-
-	if ctx.Err() != nil {
-		return backoff.Permanent(ctx.Err())
-	}
-
-	if strings.Contains(err.Error(), jwkset.ErrInvalidHTTPStatusCode.Error()) {
-
-		resp, ok := extractJWKSResponse(err)
-		if !ok {
-			return err
-		}
-
-		// reuse the discovery status code rules so both fetches classify the same way
-		statusErr := classifyStatusCodeError(resp)
-		if statusErr == nil {
-			return err
-		}
-
-		return statusErr
-	}
-
-	if _, ok := errors.AsType[*url.Error](err); ok {
-		return err
-	}
-
-	if errors.Is(err, io.ErrUnexpectedEOF) {
-		return err
-	}
-
-	return backoff.Permanent(err)
-}
-
-// extractJWKSResponse pulls the status code out of a jwkset.ErrInvalidHTTPStatusCode error to
-// create a response object. jwkset only exposes the code in the message ("invalid HTTP status code: 503")
-func extractJWKSResponse(err error) (*http.Response, bool) {
-	completeStatusCodeErrorMsg := err.Error()
-	errorMessage := jwkset.ErrInvalidHTTPStatusCode.Error() + ": "
-	index := strings.Index(completeStatusCodeErrorMsg, errorMessage)
-	if index < 0 {
-		return nil, false
-	}
-
-	statusCodeString := completeStatusCodeErrorMsg[index+len(errorMessage):]
-
-	// Validate the status code is an integer
-	endIndex := 0
-	for endIndex < len(statusCodeString) && statusCodeString[endIndex] >= '0' && statusCodeString[endIndex] <= '9' {
-		endIndex++
-	}
-	if endIndex == 0 {
-		return nil, false
-	}
-
-	statusCode, convErr := strconv.Atoi(statusCodeString[:endIndex])
-	if convErr != nil {
-		return nil, false
-	}
-
-	return &http.Response{
-		StatusCode: statusCode,
-		Status:     fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)),
-		Header:     http.Header{},
-	}, true
 }
 
 // discoverJWKSEndpoint resolves the JWKS URL from an OpenID Connect issuer.
