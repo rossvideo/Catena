@@ -169,7 +169,8 @@ func (ctx HandlerContext) release() {
 	}
 }
 
-// Logger returns the logger for this request.
+// Logger returns a copy of the injected server logger, tagged
+// with "component" and "endpoint".
 // If the logger is not set, it returns a discard logger.
 func (ctx HandlerContext) Logger() *slog.Logger {
 	if ctx.log == nil {
