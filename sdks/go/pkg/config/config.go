@@ -124,10 +124,11 @@ type JwtValidationOptions struct {
 	// Audience used to validate the "aud" claim. Optional.
 	Audience string `env:"JWT_AUDIENCE" flag:"jwt-audience"`
 	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if InsecureSkipSignatureValidation is false.
+	// Required when InsecureSkipSignatureValidation is false (default behavior).
 	Issuer string `env:"JWT_ISSUER" flag:"jwt-issuer"`
 	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
 	Leeway time.Duration
-	// InsecureSkipSignatureValidation disables JWT signature verifcation, validating claims only
+	// InsecureSkipSignatureValidation disables JWT signature verification, validating claims only
 	// Zero value (false) means that signatures are being validated, non-zero value (true) means validation is being skipped
 	// Do not enable outside local development
 	InsecureSkipSignatureValidation bool `env:"JWT_INSECURE_SKIP_SIGNATURE_VALIDATION" flag:"jwt-insecure-skip-signature-validation"`

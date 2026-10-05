@@ -39,9 +39,11 @@
 package catena
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -83,7 +85,9 @@ func TestNewJwtValidator(t *testing.T) {
 	})
 
 	t.Run("empty http", func(t *testing.T) {
-		validator, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
+		var logBuf bytes.Buffer
+		log := slog.New(slog.NewTextHandler(&logBuf, nil))
+		validator, err := newJwtValidator(t.Context(), log, JwtValidationOptions{
 			InsecureSkipSignatureValidation: true,
 		})
 		if err != nil {
@@ -98,6 +102,10 @@ func TestNewJwtValidator(t *testing.T) {
 		}
 		if validatorTyped.options.Http != http.DefaultClient {
 			t.Fatalf("newJwtValidator() got Http = %v, want %v", validatorTyped.options.Http, http.DefaultClient)
+		}
+		logOutput := logBuf.String()
+		if !strings.Contains(logOutput, "level=WARN") || !strings.Contains(logOutput, "signature validation disabled") {
+			t.Fatalf("newJwtValidator() did not log signature validation disabled warning, got: %q", logOutput)
 		}
 	})
 
