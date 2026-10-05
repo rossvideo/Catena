@@ -192,6 +192,31 @@ func TestNew(t *testing.T) {
 		log.Info("discarded")
 		closeFn()
 	})
+
+	t.Run("Default options are correct", func(t *testing.T) {
+		opts := DefaultOptions()
+		if opts.AppName != "catena" {
+			t.Fatalf("AppName = %q, want %q", opts.AppName, "catena")
+		}
+		if opts.LogDir != "./logs" {
+			t.Fatalf("LogDir = %q, want %q", opts.LogDir, "./logs")
+		}
+		if opts.Silent != false {
+			t.Fatalf("Silent = %t, want %t", opts.Silent, false)
+		}
+		if opts.Level != slog.LevelInfo {
+			t.Fatalf("Level = %d, want %d", opts.Level, slog.LevelInfo)
+		}
+		if opts.WriteToFile != true {
+			t.Fatalf("WriteToFile = %t, want %t", opts.WriteToFile, true)
+		}
+		if opts.WriteToConsole != true {
+			t.Fatalf("WriteToConsole = %t, want %t", opts.WriteToConsole, true)
+		}
+		if opts.UseJSON != false {
+			t.Fatalf("UseJSON = %t, want %t", opts.UseJSON, false)
+		}
+	})
 }
 
 func TestCloseFunc(t *testing.T) {
