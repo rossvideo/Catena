@@ -217,7 +217,7 @@ if err != nil {
     panic(err)
 }
 defer closeLog()
-options = catena.DefaultServerOptions()
+options := catena.DefaultServerOptions()
 options.Logger = log
 srv, err := catena.NewServer(options)
 if err != nil {
