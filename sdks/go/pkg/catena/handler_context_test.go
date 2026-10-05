@@ -158,7 +158,7 @@ func TestHandlerContext(t *testing.T) {
 		var buf bytes.Buffer
 		log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
 		var handler HandlerContext
-		handler.SetLogger(log, EndpointGetValue)
+		handler.setLogger(log, EndpointGetValue)
 		handler.Logger().Info("handled", "slot", 1)
 
 		out := buf.String()
@@ -175,7 +175,7 @@ func TestHandlerContext(t *testing.T) {
 			t.Fatalf("expected slot=1, got %s", out)
 		}
 
-		handler.SetLogger(nil, EndpointGetValue)
+		handler.setLogger(nil, EndpointGetValue)
 		handler.Logger().Info("dropped")
 		if discarded.Len() != 0 || strings.Contains(buf.String(), `"msg":"dropped"`) {
 			t.Fatalf("nil SetLogger must discard, got default %q handler %q", discarded.String(), buf.String())

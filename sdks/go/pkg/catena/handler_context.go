@@ -182,7 +182,7 @@ func (ctx HandlerContext) Logger() *slog.Logger {
 // SetLogger sets the logger for this request, tagged with the handler component
 // and the endpoint being served. A nil logger discards records.
 // Intended for use by the server when building the HandlerContext.
-func (ctx *HandlerContext) SetLogger(log *slog.Logger, endpoint EndpointType) {
+func (ctx *HandlerContext) setLogger(log *slog.Logger, endpoint EndpointType) {
 	if log == nil {
 		log = slog.New(slog.DiscardHandler)
 	}

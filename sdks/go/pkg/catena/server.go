@@ -984,7 +984,7 @@ func (s *server) realInvokeGate(transportContext TransportContext, endpoint Endp
 	ctx, cancel := s.requestContext(transportContext.Ctx)
 	handlerContext.ctx = ctx
 	handlerContext.ctxCancel = cancel
-	handlerContext.SetLogger(s.log, endpoint)
+	handlerContext.setLogger(s.log, endpoint)
 
 	granted := false
 	if writeAccess {
