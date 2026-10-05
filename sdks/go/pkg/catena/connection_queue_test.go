@@ -435,6 +435,9 @@ func TestConnectionQueue_InjectedLogger(t *testing.T) {
 
 func TestConnectionQueue_LoggerSilent(t *testing.T) {
 	var buf bytes.Buffer
+	defaultLogger := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	t.Cleanup(func() { slog.SetDefault(defaultLogger) })
 	cq := newConnectionQueue(10, nil)
 	conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
 	if res.Code != StatusCodeOk {
