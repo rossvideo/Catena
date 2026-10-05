@@ -42,6 +42,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -60,6 +61,7 @@ var catenaScopes = []string{
 
 type jwtValidator struct {
 	options    JwtValidationOptions
+	log        *slog.Logger
 	keyfunc    jwt.Keyfunc
 	validateFn func(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error)
 }
@@ -71,19 +73,20 @@ type jwtValidatorInterface interface {
 // newJwtValidator creates a JWT validator based on the provided options.
 // If InsecureSkipSignatureValidation is true, it only validates claims without verifying the signature.
 // If InsecureSkipSignatureValidation is false, it discovers the JWKS endpoint and sets up signature validation (default behaviour).
-func newJwtValidator(ctx context.Context, opts JwtValidationOptions) (jwtValidatorInterface, error) {
+func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOptions) (jwtValidatorInterface, error) {
 	// Use the default HTTP client if none was provided.
 	if opts.Http == nil {
 		opts.Http = http.DefaultClient
 	}
 	v := &jwtValidator{
 		options: opts,
+		log:     log.With("component", "jwt"),
 	}
 
 	// Check to see if signature validation should be skipped
 	if opts.InsecureSkipSignatureValidation {
-		// not validating signature, just validate claims
 		v.validateFn = v.validateClaims
+		v.log.Warn("signature validation disabled, only validating claims")
 		return v, nil
 	}
 
