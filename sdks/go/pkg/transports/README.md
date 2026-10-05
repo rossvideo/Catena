@@ -34,7 +34,7 @@ import (
 )
 
 func main() {
-    opts := config.DefaultServerOptions()
+    opts := catena.DefaultServerOptions()
     // Optional: without a logger the SDK and its transports stay silent.
     opts.Logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
     srv, err := catena.NewServer(opts)
