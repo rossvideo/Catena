@@ -85,7 +85,8 @@ func registerAuthz(srv catena.Server) {
 			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
 			WithParam("op", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Operate"))).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
-			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer")))
+			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
+			MakeParam()
 	}
 
 	makeRolesTable := func() *st2138.Param {
@@ -103,7 +104,8 @@ func registerAuthz(srv catena.Server) {
 			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
 			WithParam("op", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Operate"))).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
-			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer")))
+			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
+			MakeParam()
 	}
 
 	makeClaims := func(ctx catena.HandlerContext) *st2138.Param {
@@ -126,7 +128,8 @@ func registerAuthz(srv catena.Server) {
 			WithReadOnly(true).
 			WithName(st2138.PolyglotText{"en": "JWT Claims"}).
 			WithParam("key", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Key"))).
-			WithParam("value", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Value")))
+			WithParam("value", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Value"))).
+			MakeParam()
 	}
 
 	// Shown in place of the scope/claims params when authz is disabled: the
@@ -134,7 +137,8 @@ func registerAuthz(srv catena.Server) {
 	makeAuthzStatus := func() *st2138.Param {
 		return st2138.NewParamString("Authorization is disabled; scope information cannot be shown.").
 			WithReadOnly(true).
-			WithName(st2138.PolyglotText{"en": "Authorization"})
+			WithName(st2138.PolyglotText{"en": "Authorization"}).
+			MakeParam()
 	}
 
 	srv.RegisterProductStruct(authzSlot, catena.ProductStruct{

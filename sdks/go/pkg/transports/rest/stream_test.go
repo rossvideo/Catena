@@ -165,10 +165,10 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 		{
 			name: "childBeforeParent",
 			chunks: func() []st2138.DeviceComponent {
-				parent := st2138.NewParamEmpty()
+				parent := st2138.NewParamEmpty().MakeParam()
 				parent.Proto.Type = protos.ParamType_STRUCT
 				return []st2138.DeviceComponent{
-					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42)),
+					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42).MakeParam()),
 					st2138.ComponentParam("monitor", parent),
 				}
 			},
@@ -176,11 +176,11 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 		{
 			name: "parentBeforeChild",
 			chunks: func() []st2138.DeviceComponent {
-				parent := st2138.NewParamEmpty()
+				parent := st2138.NewParamEmpty().MakeParam()
 				parent.Proto.Type = protos.ParamType_STRUCT
 				return []st2138.DeviceComponent{
 					st2138.ComponentParam("monitor", parent),
-					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42)),
+					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42).MakeParam()),
 				}
 			},
 		},
@@ -220,9 +220,9 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 func TestDeviceAggregateStream_NestedCommandOrderIndependent(t *testing.T) {
 	// Commands nest the same way as params; parent-after-child must not wipe
 	// a nested command hung under a synthesized intermediate.
-	parent := st2138.NewParamEmpty()
+	parent := st2138.NewParamEmpty().MakeParam()
 	parent.Proto.Type = protos.ParamType_STRUCT
-	child := st2138.NewParamEmpty()
+	child := st2138.NewParamEmpty().MakeParam()
 	child.Proto.Type = protos.ParamType_INT32
 
 	stream := &deviceAggregateStream{}

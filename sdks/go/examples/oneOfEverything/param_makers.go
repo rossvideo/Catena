@@ -21,7 +21,7 @@ const dashboardUIValue = "eo://" + dashboardUIGridOid
 // device's custom panel: it reads this param's value and downloads the
 // referenced eo:// asset via ExternalObjectRequest, then renders the grid
 // instead of its auto-generated UI.
-func makeDashboardUIParam() *st2138.Param {
+func makeDashboardUIParam() *st2138.ParamBuilder {
 	return st2138.NewParamString(dashboardUIValue).
 		WithName(st2138.NewPolyglotText("en", "DashBoard UI")).
 		WithReadOnly(true).
@@ -30,7 +30,7 @@ func makeDashboardUIParam() *st2138.Param {
 }
 
 // makeCounterParam builds the slot 0 "counter" param (INT32, current value).
-func makeCounterParam(counter *CounterState) *st2138.Param {
+func makeCounterParam(counter *CounterState) *st2138.ParamBuilder {
 	return st2138.NewParamInt32(counter.GetValue()).
 		WithName(st2138.NewPolyglotText("en", "Counter").
 			With("es", "Contador").
@@ -41,7 +41,7 @@ func makeCounterParam(counter *CounterState) *st2138.Param {
 
 // makeRunningParam builds the slot 0 "running" param (INT32, read-only,
 // INT32_CHOICE constraint describing the counting state).
-func makeRunningParam(counter *CounterState) *st2138.Param {
+func makeRunningParam(counter *CounterState) *st2138.ParamBuilder {
 	return st2138.NewParamInt32(counter.RunningInt32()).
 		WithName(st2138.NewPolyglotText("en", "Counter Running Status")).
 		WithReadOnly(true).

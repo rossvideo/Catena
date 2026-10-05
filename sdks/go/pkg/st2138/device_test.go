@@ -101,7 +101,7 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 	}
 
 	cd = NewDevice(0).
-		WithParam("nothing", &Param{})
+		WithParam("nothing", &ParamBuilder{})
 	if _, ok := cd.Proto.GetParams()["nothing"]; ok {
 		t.Error("expected param with nil Proto to be ignored")
 	}
@@ -115,7 +115,7 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 	}
 
 	cd = NewDevice(0).
-		WithCommand("nothing", &Param{})
+		WithCommand("nothing", &ParamBuilder{})
 	if _, ok := cd.Proto.GetCommands()["nothing"]; ok {
 		t.Error("expected command with nil Proto to be ignored")
 	}

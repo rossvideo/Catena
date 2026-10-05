@@ -114,7 +114,8 @@ const (
 func ProductParam(p ProductStruct) *st2138.Param {
 	return st2138.NewParamStruct(ProductValues(p)).
 		WithReadOnly(true).
-		WithAccessScope(st2138.ScopeMon)
+		WithAccessScope(st2138.ScopeMon).
+		MakeParam()
 }
 
 // ProductValues returns the product field values keyed by their sub-OID,
