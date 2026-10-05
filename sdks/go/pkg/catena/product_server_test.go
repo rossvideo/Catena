@@ -148,9 +148,9 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 	srv.RegisterProductStruct(0, testProduct())
 	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
 		chunks := []st2138.DeviceComponent{
-			st2138.ComponentParam("product", st2138.NewParamString("wrong")),
-			st2138.ComponentParam("product/name", st2138.NewParamString("wrong")),
-			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
+			st2138.ComponentParam("product", st2138.NewParamString("wrong").MakeParam()),
+			st2138.ComponentParam("product/name", st2138.NewParamString("wrong").MakeParam()),
+			st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
 		}
 		for _, chunk := range chunks {
 			if err := stream.Send(chunk); err != nil {
@@ -337,7 +337,7 @@ func TestServer_GetParam_NoProductRegistered(t *testing.T) {
 	called := false
 	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
 		called = true
-		return *st2138.NewParamString("bl"), StatusWithCode(StatusCodeOk, "")
+		return *st2138.NewParamString("bl").MakeParam(), StatusWithCode(StatusCodeOk, "")
 	})
 
 	_, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})

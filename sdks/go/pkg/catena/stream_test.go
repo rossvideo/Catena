@@ -147,7 +147,10 @@ func TestProductDeviceStream(t *testing.T) {
 	})
 
 	t.Run("strips product from a device chunk without mon scope", func(t *testing.T) {
-		device := st2138.NewDevice(0).WithParam(ProductOid, ProductParam(testProduct()))
+		pb := st2138.NewParamStruct(ProductValues(testProduct())).
+			WithReadOnly(true).
+			WithAccessScope(st2138.ScopeMon)
+		device := st2138.NewDevice(0).WithParam(ProductOid, pb)
 		inner := &sliceStream[st2138.DeviceComponent]{}
 		stream := productDeviceStream{inner: inner, product: testProduct(), hasMon: false}
 

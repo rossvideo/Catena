@@ -423,8 +423,8 @@ func TestTransport_DeviceRequest_MultipleChunks(t *testing.T) {
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		return []st2138.DeviceComponent{
 			st2138.ComponentDevice(st2138.NewDevice(slot)),
-			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
-			st2138.ComponentCommand("reset", st2138.NewParamEmpty()),
+			st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
+			st2138.ComponentCommand("reset", st2138.NewParamEmpty().MakeParam()),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -707,7 +707,7 @@ func TestTransport_GetParam_Success(t *testing.T) {
 		}
 		param := st2138.NewParamInt32(21).
 			WithName(st2138.NewPolyglotText("en", "Counter")).
-			WithMinimalSet(true)
+			WithMinimalSet(true).MakeParam()
 		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 

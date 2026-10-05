@@ -81,29 +81,29 @@ func NewDevice(slot uint16) *Device {
 // WithParam inserts param into the device's params map, keyed by oid. The
 // param's proto is deep-copied so later builder mutations on the caller's Param
 // do not affect entries already added. A nil param is ignored.
-func (cd *Device) WithParam(oid string, param *Param) *Device {
-	if param == nil || param.Proto == nil {
+func (cd *Device) WithParam(oid string, param *ParamBuilder) *Device {
+	if param == nil || param.proto == nil {
 		slog.Warn("Device.WithParam called with nil param; ignoring", "oid", oid)
 		return cd
 	}
 	if cd.Proto.Params == nil {
 		cd.Proto.Params = map[string]*protos.Param{}
 	}
-	cd.Proto.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
+	cd.Proto.Params[oid] = proto.Clone(param.proto).(*protos.Param)
 	return cd
 }
 
 // WithCommand inserts command into the device's commands map, keyed by oid. The
 // command's proto is deep-copied. A nil command is ignored.
-func (cd *Device) WithCommand(oid string, command *Param) *Device {
-	if command == nil || command.Proto == nil {
+func (cd *Device) WithCommand(oid string, command *ParamBuilder) *Device {
+	if command == nil || command.proto == nil {
 		slog.Warn("Device.WithCommand called with nil command; ignoring", "oid", oid)
 		return cd
 	}
 	if cd.Proto.Commands == nil {
 		cd.Proto.Commands = map[string]*protos.Param{}
 	}
-	cd.Proto.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
+	cd.Proto.Commands[oid] = proto.Clone(command.proto).(*protos.Param)
 	return cd
 }
 

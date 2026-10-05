@@ -954,7 +954,7 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 
 func TestMarshalDeviceComponentJSON(t *testing.T) {
 	component := st2138.ComponentParam("brightness", st2138.NewParamInt32(0).
-		WithName(st2138.NewPolyglotText("en", "Brightness")))
+		WithName(st2138.NewPolyglotText("en", "Brightness")).MakeParam())
 
 	jsonData, err := MarshalDeviceComponentJSON(component.Proto)
 	if err != nil {
@@ -983,7 +983,7 @@ func TestMarshalDeviceComponentJSON_Nil(t *testing.T) {
 func TestMarshalDeviceComponentJSON_MarshalError(t *testing.T) {
 	// An invalid UTF-8 string cannot be marshalled, so the error surfaces
 	// before the cleanup step ever runs.
-	component := st2138.ComponentParam("label", st2138.NewParamString("\xff"))
+	component := st2138.ComponentParam("label", st2138.NewParamString("\xff").MakeParam())
 
 	if _, err := MarshalDeviceComponentJSON(component.Proto); err == nil {
 		t.Fatal("expected error for invalid UTF-8 string")
