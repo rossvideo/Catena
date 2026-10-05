@@ -34,11 +34,10 @@ import (
 )
 
 func main() {
-    srv, err := catena.NewServer(catena.ServerOptions{
-        MaxConnections: 100, // max concurrent push connections
-        // Optional: without a logger the SDK and its transports stay silent.
-        Logger: slog.New(slog.NewTextHandler(os.Stderr, nil)),
-    })
+    opts := config.DefaultServerOptions()
+    // Optional: without a logger the SDK and its transports stay silent.
+    opts.Logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+    srv, err := catena.NewServer(opts)
     if err != nil {
         panic(err)
     }
