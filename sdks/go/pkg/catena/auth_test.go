@@ -180,6 +180,7 @@ func TestNewJwtValidator(t *testing.T) {
 				http.Error(w, "error", http.StatusInternalServerError)
 			}
 		}))
+		defer server.Close()
 
 		var nilCxt context.Context
 		_, err := newJwtValidator(nilCxt, nil, JwtValidationOptions{
@@ -819,134 +820,139 @@ func TestDiscoverJWKSEndpoint_StatusCodeErrors(t *testing.T) {
 		}
 	})
 
-	t.Run("response status 429 with retry-after seconds", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Retry-After", "2")
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
-		}))
-		defer server.Close()
+	t.Run("response status 429 error", func(t *testing.T) {
 
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		var retryAfter *backoff.RetryAfterError
-		if !errors.As(err, &retryAfter) {
-			t.Fatalf("discoverJWKSEndpoint() error = %v, want RetryAfterError", err)
-		}
-		if retryAfter.Duration != 2*time.Second {
-			t.Fatalf("Retry-After duration = %s, want 2s", retryAfter.Duration)
-		}
+		t.Run("with retry-after seconds", func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Retry-After", "2")
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}))
+			defer server.Close()
+
+			_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+			var retryAfter *backoff.RetryAfterError
+			if !errors.As(err, &retryAfter) {
+				t.Fatalf("discoverJWKSEndpoint() error = %v, want RetryAfterError", err)
+			}
+			if retryAfter.Duration != 2*time.Second {
+				t.Fatalf("Retry-After duration = %s, want 2s", retryAfter.Duration)
+			}
+		})
+
+		t.Run("retry-after HTTP-date", func(t *testing.T) {
+			when := time.Now().Add(2 * time.Second).UTC()
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Retry-After", when.Format(http.TimeFormat))
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}))
+			defer server.Close()
+
+			_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+			var retryAfter *backoff.RetryAfterError
+			if !errors.As(err, &retryAfter) {
+				t.Fatalf("discoverJWKSEndpoint() error = %v, want RetryAfterError", err)
+			}
+			if retryAfter.Duration < time.Second || retryAfter.Duration > 2*time.Second {
+				t.Fatalf("Retry-After duration = %s, want around 2s", retryAfter.Duration)
+			}
+		})
+
+		t.Run("without retry-after stays retriable", func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}))
+			defer server.Close()
+
+			_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+			if err == nil || !strings.Contains(err.Error(), "unexpected status") {
+				t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
+			}
+			var retryAfter *backoff.RetryAfterError
+			if errors.As(err, &retryAfter) {
+				t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+			}
+			var permanent *backoff.PermanentError
+			if errors.As(err, &permanent) {
+				t.Fatalf("discoverJWKSEndpoint() unexpectedly returned PermanentError: %v", err)
+			}
+		})
+
+		t.Run("invalid retry-after stays retriable", func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Retry-After", "later")
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}))
+			defer server.Close()
+
+			_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+			var retryAfter *backoff.RetryAfterError
+			if errors.As(err, &retryAfter) {
+				t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+			}
+		})
+
+		t.Run("negative retry-after stays retriable", func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Retry-After", "-1")
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}))
+			defer server.Close()
+
+			_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+			if err == nil || !strings.Contains(err.Error(), "unexpected status") {
+				t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
+			}
+
+			var retryAfter *backoff.RetryAfterError
+			if errors.As(err, &retryAfter) {
+				t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+			}
+		})
+
+		t.Run("past retry-after HTTP-date stays retriable", func(t *testing.T) {
+			when := time.Now().Add(-time.Minute).UTC()
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Retry-After", when.Format(http.TimeFormat))
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}))
+			defer server.Close()
+
+			_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+			if err == nil || !strings.Contains(err.Error(), "unexpected status") {
+				t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
+			}
+
+			var retryAfter *backoff.RetryAfterError
+			if errors.As(err, &retryAfter) {
+				t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+			}
+		})
+
+		t.Run("overflow retry-after stays retriable", func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Retry-After", strconv.FormatInt(math.MaxInt64, 10))
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+			}))
+			defer server.Close()
+
+			_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
+			if err == nil || !strings.Contains(err.Error(), "unexpected status") {
+				t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
+			}
+
+			var retryAfter *backoff.RetryAfterError
+			if errors.As(err, &retryAfter) {
+				t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
+			}
+
+			var permanent *backoff.PermanentError
+			if errors.As(err, &permanent) {
+				t.Fatalf("discoverJWKSEndpoint() unexpectedly returned PermanentError: %v", err)
+			}
+		})
+
 	})
 
-	t.Run("response status 429 with retry-after HTTP-date", func(t *testing.T) {
-		when := time.Now().Add(2 * time.Second).UTC()
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Retry-After", when.Format(http.TimeFormat))
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
-		}))
-		defer server.Close()
-
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		var retryAfter *backoff.RetryAfterError
-		if !errors.As(err, &retryAfter) {
-			t.Fatalf("discoverJWKSEndpoint() error = %v, want RetryAfterError", err)
-		}
-		if retryAfter.Duration < time.Second || retryAfter.Duration > 2*time.Second {
-			t.Fatalf("Retry-After duration = %s, want around 2s", retryAfter.Duration)
-		}
-	})
-
-	t.Run("response status 429 without retry-after stays retriable", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
-		}))
-		defer server.Close()
-
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
-			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
-		}
-		var retryAfter *backoff.RetryAfterError
-		if errors.As(err, &retryAfter) {
-			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
-		}
-		var permanent *backoff.PermanentError
-		if errors.As(err, &permanent) {
-			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned PermanentError: %v", err)
-		}
-	})
-
-	t.Run("response status 429 with invalid retry-after stays retriable", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Retry-After", "later")
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
-		}))
-		defer server.Close()
-
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		var retryAfter *backoff.RetryAfterError
-		if errors.As(err, &retryAfter) {
-			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
-		}
-	})
-
-	t.Run("response status 429 with negative retry-after stays retriable", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Retry-After", "-1")
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
-		}))
-		defer server.Close()
-
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
-			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
-		}
-
-		var retryAfter *backoff.RetryAfterError
-		if errors.As(err, &retryAfter) {
-			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
-		}
-	})
-
-	t.Run("response status 429 with past retry-after HTTP-date stays retriable", func(t *testing.T) {
-		when := time.Now().Add(-time.Minute).UTC()
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Retry-After", when.Format(http.TimeFormat))
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
-		}))
-		defer server.Close()
-
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
-			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
-		}
-
-		var retryAfter *backoff.RetryAfterError
-		if errors.As(err, &retryAfter) {
-			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
-		}
-	})
-
-	t.Run("response status 429 with overflow retry-after stays retriable", func(t *testing.T) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Retry-After", strconv.FormatInt(math.MaxInt64, 10))
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
-		}))
-		defer server.Close()
-
-		_, err := discoverJWKSEndpoint(context.Background(), server.URL, server.Client())
-		if err == nil || !strings.Contains(err.Error(), "unexpected status") {
-			t.Fatalf("discoverJWKSEndpoint() error = %v, want unexpected status", err)
-		}
-
-		var retryAfter *backoff.RetryAfterError
-		if errors.As(err, &retryAfter) {
-			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned RetryAfterError: %v", err)
-		}
-
-		var permanent *backoff.PermanentError
-		if errors.As(err, &permanent) {
-			t.Fatalf("discoverJWKSEndpoint() unexpectedly returned PermanentError: %v", err)
-		}
-	})
 }
 
 func TestClassifyDiscoveryError(t *testing.T) {
