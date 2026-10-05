@@ -70,7 +70,7 @@ func TestNewJwtValidator(t *testing.T) {
 		}))
 		defer server.Close()
 
-		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		validator, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer: server.URL,
 			Http:   server.Client(),
 		})
@@ -83,7 +83,7 @@ func TestNewJwtValidator(t *testing.T) {
 	})
 
 	t.Run("empty http", func(t *testing.T) {
-		validator, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		validator, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			InsecureSkipSignatureValidation: true,
 		})
 		if err != nil {
@@ -102,7 +102,7 @@ func TestNewJwtValidator(t *testing.T) {
 	})
 
 	t.Run("discoverJWKSEndpoint error", func(t *testing.T) {
-		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer: "http://[::1",
 			Http:   http.DefaultClient,
 		})
@@ -123,7 +123,7 @@ func TestNewJwtValidator(t *testing.T) {
 			_, _ = fmt.Fprintf(w, `{"jwks_uri":"http://[::1/keys"}`)
 		}))
 		defer server.Close()
-		_, err := newJwtValidator(t.Context(), JwtValidationOptions{
+		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer: server.URL,
 			Http:   server.Client(),
 		})

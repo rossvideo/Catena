@@ -78,6 +78,11 @@ func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOp
 	if opts.Http == nil {
 		opts.Http = http.DefaultClient
 	}
+
+	if log == nil {
+		log = slog.Default()
+	}
+
 	v := &jwtValidator{
 		options: opts,
 		log:     log.With("component", "jwt"),
