@@ -1389,7 +1389,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(*st2138.NewParamInt32(42))
+			return Reply(*st2138.NewParamInt32(42).MakeParam())
 		}
 
 		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
@@ -1403,7 +1403,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if !proto.Equal(actual.Proto, st2138.NewParamInt32(42).Proto.GetValue()) {
+		if !proto.Equal(actual.Proto, st2138.NewParamInt32(42).MakeParam().Proto.GetValue()) {
 			t.Errorf("expected derived value 42, got %v", actual)
 		}
 	})
@@ -1426,7 +1426,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if !proto.Equal(actual.Proto, st2138.NewParamInt32(1).Proto.GetValue()) {
+		if !proto.Equal(actual.Proto, st2138.NewParamInt32(1).MakeParam().Proto.GetValue()) {
 			t.Errorf("expected value 1 from GetValue handler, got %v", actual)
 		}
 	})
@@ -2087,7 +2087,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(*st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")))
+			return Reply(*st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).MakeParam())
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}

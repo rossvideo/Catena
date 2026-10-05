@@ -179,7 +179,7 @@ func TestParamInfosFromParam(t *testing.T) {
 	t.Run("SpecificNonRecursive", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
 		res := ParamInfosFromParam("volume", st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Volume")), false, stream)
+			WithName(st2138.NewPolyglotText("en", "Volume")).MakeParam(), false, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -196,7 +196,7 @@ func TestParamInfosFromParam(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
 		res := ParamInfosFromParam("parent", st2138.NewParamStruct().
 			WithName(st2138.NewPolyglotText("en", "Parent")).
-			WithParam("child", st2138.NewParamString("")), true, stream)
+			WithParam("child", st2138.NewParamString("")).MakeParam(), true, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -209,7 +209,7 @@ func TestParamInfosFromParam(t *testing.T) {
 		// it has sub-params.
 		stream := &sliceStream[st2138.ParamInfo]{}
 		res := ParamInfosFromParam("parent", st2138.NewParamStruct().
-			WithParam("child", st2138.NewParamString("")), false, stream)
+			WithParam("child", st2138.NewParamString("")).MakeParam(), false, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -219,7 +219,7 @@ func TestParamInfosFromParam(t *testing.T) {
 
 	t.Run("ArrayLengthFromValue", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosFromParam("numbers", st2138.NewParamInt32Array([]int32{1, 2, 3}), false, stream)
+		res := ParamInfosFromParam("numbers", st2138.NewParamInt32Array([]int32{1, 2, 3}).MakeParam(), false, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -253,7 +253,7 @@ func TestParamInfosFromParam(t *testing.T) {
 	t.Run("SendError", func(t *testing.T) {
 		// FailAfter 0 fails the single descriptor Send.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 0}
-		res := ParamInfosFromParam("volume", st2138.NewParamInt32(0), false, stream)
+		res := ParamInfosFromParam("volume", st2138.NewParamInt32(0).MakeParam(), false, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed Send, got %v", res)
 		}
@@ -264,7 +264,7 @@ func TestParamInfosFromParam(t *testing.T) {
 		// into its children then fails.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 1}
 		res := ParamInfosFromParam("parent", st2138.NewParamStruct().
-			WithParam("child", st2138.NewParamString("")), true, stream)
+			WithParam("child", st2138.NewParamString("")).MakeParam(), true, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed child Send, got %v", res)
 		}

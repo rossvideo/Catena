@@ -117,8 +117,8 @@ func slotZeroMenus() map[string]*st2138.Menu {
 }
 
 // slotZeroParams returns slot 0's params keyed by oid.
-func slotZeroParams(counter *CounterState) map[string]*st2138.Param {
-	return map[string]*st2138.Param{
+func slotZeroParams(counter *CounterState) map[string]*st2138.ParamBuilder {
+	return map[string]*st2138.ParamBuilder{
 		"dashboard_UI": makeDashboardUIParam(),
 		"counter":      makeCounterParam(counter),
 		"running":      makeRunningParam(counter),
@@ -126,8 +126,8 @@ func slotZeroParams(counter *CounterState) map[string]*st2138.Param {
 }
 
 // slotZeroCommands returns slot 0's commands keyed by oid.
-func slotZeroCommands() map[string]*st2138.Param {
-	return map[string]*st2138.Param{
+func slotZeroCommands() map[string]*st2138.ParamBuilder {
+	return map[string]*st2138.ParamBuilder{
 		"start": st2138.NewParamEmpty().
 			WithName(st2138.NewPolyglotText("en", "Start Counter")),
 		"stop": st2138.NewParamEmpty().

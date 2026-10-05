@@ -66,7 +66,10 @@ func TestComponentDevice_Nil(t *testing.T) {
 }
 
 func TestComponentParam(t *testing.T) {
-	param := NewParamInt32(42)
+	param, err := NewParamInt32(42).Build()
+	if err != nil {
+		t.Fatalf("NewParamInt32(42).Build() failed: %v", err)
+	}
 	chunk := ComponentParam("brightness", param)
 
 	component := chunk.Proto.GetParam()
@@ -105,7 +108,10 @@ func TestComponentMenu(t *testing.T) {
 }
 
 func TestComponentCommand(t *testing.T) {
-	command := NewParamEmpty()
+	command, err := NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("NewParamEmpty().Build() failed: %v", err)
+	}
 	chunk := ComponentCommand("reset", command)
 
 	component := chunk.Proto.GetCommand()
