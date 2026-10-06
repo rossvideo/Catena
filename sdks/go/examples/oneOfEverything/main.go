@@ -418,6 +418,15 @@ func main() {
 		// this fallback only serves the demo UI and an asset index convenience
 		// route when no SDK route matched.
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
+
+			if r.URL.Path == "/demo-config" {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]any{
+					"authzEnabled": options.Server.AuthzEnabled,
+				})
+				return catena.Reply(st2138.Value{})
+			}
+
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {

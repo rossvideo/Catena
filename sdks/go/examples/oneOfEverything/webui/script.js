@@ -478,6 +478,21 @@ function escapeHtml(text) {
 // Authorization
 // =====================================================================
 
+let demoConfig = {
+    authzEnabled: false
+}
+
+async function loadDemoConfig() {
+    try {
+        const res = await fetch('/demo-config');
+        if (!res.ok) return;
+        const data = await res.json();
+        demoConfigs = Object.assign(demoConfig, data);
+    } catch (e) {
+        console.error('demo-config error:', e);
+    }
+}
+
 function openAuthModal() {
     const modal = document.getElementById('authModal');
     const input = document.getElementById('tokenInput');
@@ -490,20 +505,93 @@ function closeAuthModal() {
     document.getElementById('authModal').classList.remove('open');
 }
 
+function selectedScope() {
+    const read = new Set();
+    const write = new Set();
+
+    scopeCheckBoxList = Array.from(document.querySelectorAll('#authModal input[type="checkbox"][data-scope]'));
+
+    scopeCheckBoxList.forEach(box => {
+        if (!box.checked) return;
+        if (box.dataset.access === 'write') write.add(box.dataset.scope);
+        else read.add(box.dataset.scope);
+    });
+
+    write.forEach(scope => read.add(scope)); // A write scope impled a read scope aswell
+
+    // Build the scope string with the read and write scopes and the roles
+    const names = [];
+    ['st2138:mon', 'st2138:op', 'st2138:cfg', 'st2138:adm'].forEach(scope => {
+        if (read.has(scope)) names.push(scope);
+        if (write.has(scope)) names.push(scope + ':w');
+    });
+
+    return names.join(' ');
+}
+
+function bytesToBase64Url(bytes) {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+// Generate unsigned token for the demo with the selected scopes
+function buildDemoToken() {
+
+    const now = Math.floor(Date.now() / 1000);
+
+    const claims = {
+        sub: 'demo-user',
+        scope: selectedScope(),
+        iat: now - 30,
+        exp: now + 3600,
+    };
+
+    const headerJSON = JSON.stringify({ alg: 'ES256', typ: 'JWT' });
+    const payloadJSON = JSON.stringify(claims);
+
+    const headerBytes = new TextEncoder().encode(headerJSON);
+    const payloadBytes = new TextEncoder().encode(payloadJSON);
+    const signatureBytes = new TextEncoder().encode('demo');
+
+    const header = bytesToBase64Url(headerBytes);
+    const payload = bytesToBase64Url(payloadBytes);
+    const signature = bytesToBase64Url(signatureBytes);
+
+    return header + '.' + payload + '.' + signature;
+}
+
 function bindAuthUI() {
     document.getElementById('authorizeBtn').addEventListener('click', openAuthModal);
     document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
     document.getElementById('authModal').addEventListener('click', (e) => {
         if (e.target.id === 'authModal') closeAuthModal();
     });
+
+
+    document.getElementById('generateTokenBtn').addEventListener('click', () => {
+
+        console.log('generateTokenBtn clicked');
+        const token = buildDemoToken();
+        document.getElementById('tokenInput').value = token;
+        
+        // set the tokne in the state for api calls
+        
+        closeAuthModal();
+
+        // porbably want to do some referesh here
+    });
 }
 
 // =====================================================================
 // Initialization
 // =====================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     bindAuthUI();
     buildParamsUI();
+
+    await fetchDemoConfig();
+    
     poll();
     connectSSE();
     fetchDevice(0);
