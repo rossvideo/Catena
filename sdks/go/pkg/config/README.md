@@ -245,8 +245,10 @@ All options can be configured via env and CLI.
 
 - `PREFIX_JWT_ISSUER` <-> `--jwt-issuer`
 - `PREFIX_JWT_AUDIENCE` <-> `--jwt-audience`
-- `PREFIX_JWT_VALIDATE_SIGNATURE` <-> `--jwt-validate-signature`
+- `PREFIX_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION` <-> `--jwt-insecure-skip-signature-validation`
 - `PREFIX_JWT_STARTUP_RETRY_MAX_ELAPSED` <--> `jwt-startup-retry-max-elapsed`
+
+ > **Breaking change:** `ValidateSignature`, `PREFIX_JWT_VALIDATE_SIGNATURE`, and `--jwt-validate-signature` were replaced with inverted `InsecureSkipSignatureValidation` controls. Omission or `false` now validates signatures and requires a JWT issuer; use the new setting with `true` only to deliberately skip signature validation for local development.
 
 ### DashBoard Connection Props
 

@@ -577,7 +577,6 @@ type server struct {
 
 func NewServer(opts config.ServerOptions) (Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-
 	log := logger.GetNamed("server") // temporary fix to get the server logger, will remove when logger injection pr is pushed
 
 	var validator jwtValidatorInterface

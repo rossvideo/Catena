@@ -122,12 +122,15 @@ type JwtValidationOptions struct {
 	AllowedAlgs []string
 	// Audience used to validate the "aud" claim. Optional.
 	Audience string `env:"JWT_AUDIENCE" flag:"jwt-audience"`
-	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if ValidateSignature is true. Optional.
+	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if InsecureSkipSignatureValidation is false.
+	// Required when InsecureSkipSignatureValidation is false (default behavior).
 	Issuer string `env:"JWT_ISSUER" flag:"jwt-issuer"`
 	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
 	Leeway time.Duration
-	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
-	ValidateSignature bool `env:"JWT_VALIDATE_SIGNATURE" flag:"jwt-validate-signature"`
+	// InsecureSkipSignatureValidation disables JWT signature verification, validating claims only
+	// Zero value (false) means that signatures are being validated, non-zero value (true) means validation is being skipped
+	// Do not enable outside local development
+	InsecureSkipSignatureValidation bool `env:"JWT_INSECURE_SKIP_SIGNATURE_VALIDATION" flag:"jwt-insecure-skip-signature-validation"`
 	// StartupRetryMaxElapsed bounds JWT JWKS discovery retries during startup. Zero disables retrying and attempts once. Negative values are retried indefinitely.
 	StartupRetryMaxElapsedTime time.Duration `env:"JWT_STARTUP_RETRY_MAX_ELAPSED" flag:"jwt-startup-retry-max-elapsed"`
 	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
@@ -255,13 +258,13 @@ func DefaultServerOptions() ServerOptions {
 
 func DefaultJwtValidationOptions() JwtValidationOptions {
 	return JwtValidationOptions{
-		AllowedAlgs:                nil, // will default to ES256 in the code if empty
-		Audience:                   "",
-		Issuer:                     "",
-		Leeway:                     0,
-		ValidateSignature:          false,
-		StartupRetryMaxElapsedTime: 45 * time.Second,
-		Http:                       nil, // will default to http.DefaultClient in the code if nil
+		AllowedAlgs:                     nil, // will default to ES256 in the code if empty
+		Audience:                        "",
+		Issuer:                          "",
+		Leeway:                          0,
+		InsecureSkipSignatureValidation: false,
+		StartupRetryMaxElapsedTime:      45 * time.Second,
+		Http:                            nil, // will default to http.DefaultClient in the code if nil
 	}
 }
 
@@ -292,7 +295,7 @@ func (o JwtValidationOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.String("issuer", o.Issuer),
 		slog.String("audience", o.Audience),
-		slog.Bool("validate_signature", o.ValidateSignature),
+		slog.Bool("insecure_skip_signature_validation", o.InsecureSkipSignatureValidation),
 		slog.Duration("leeway", o.Leeway),
 		slog.String("allowed_algs", strings.Join(o.ResolvedAllowedAlgs(), ",")),
 	)

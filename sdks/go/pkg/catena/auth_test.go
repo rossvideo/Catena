@@ -80,7 +80,6 @@ func TestNewJwtValidator(t *testing.T) {
 
 		validator, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer:                     server.URL,
-			ValidateSignature:          true,
 			Http:                       server.Client(),
 			StartupRetryMaxElapsedTime: 0, //single attempt
 		})
@@ -93,9 +92,11 @@ func TestNewJwtValidator(t *testing.T) {
 	})
 
 	t.Run("empty http", func(t *testing.T) {
-		validator, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			ValidateSignature:          false,
-			StartupRetryMaxElapsedTime: 0, //single attempt
+		var logBuf bytes.Buffer
+		log := slog.New(slog.NewTextHandler(&logBuf, nil))
+		validator, err := newJwtValidator(t.Context(), log, JwtValidationOptions{
+			InsecureSkipSignatureValidation: true,
+			StartupRetryMaxElapsedTime:      0, //single attempt
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -110,6 +111,10 @@ func TestNewJwtValidator(t *testing.T) {
 		if validatorTyped.options.Http != http.DefaultClient {
 			t.Fatalf("newJwtValidator() got Http = %v, want %v", validatorTyped.options.Http, http.DefaultClient)
 		}
+		logOutput := logBuf.String()
+		if !strings.Contains(logOutput, "level=WARN") || !strings.Contains(logOutput, "signature validation disabled") {
+			t.Fatalf("newJwtValidator() did not log signature validation disabled warning, got: %q", logOutput)
+		}
 		if validatorTyped.log == nil {
 			t.Fatal("newJwtValidator() got nil log, want non-nil")
 		}
@@ -119,8 +124,8 @@ func TestNewJwtValidator(t *testing.T) {
 		var buf bytes.Buffer
 		log := slog.New(slog.NewTextHandler(&buf, nil))
 		validator, err := newJwtValidator(t.Context(), log, JwtValidationOptions{
-			ValidateSignature:          false,
-			StartupRetryMaxElapsedTime: 0, //single attempt
+			InsecureSkipSignatureValidation: true,
+			StartupRetryMaxElapsedTime:      0, //single attempt
 		})
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
@@ -138,7 +143,6 @@ func TestNewJwtValidator(t *testing.T) {
 	t.Run("discoverJWKSEndpoint error", func(t *testing.T) {
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer:                     "http://[::1",
-			ValidateSignature:          true,
 			Http:                       http.DefaultClient,
 			StartupRetryMaxElapsedTime: 0, //single attempt
 		})
@@ -161,7 +165,6 @@ func TestNewJwtValidator(t *testing.T) {
 		defer server.Close()
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			Issuer:                     server.URL,
-			ValidateSignature:          true,
 			Http:                       server.Client(),
 			StartupRetryMaxElapsedTime: 0, //single attempt
 		})
@@ -185,7 +188,6 @@ func TestNewJwtValidator(t *testing.T) {
 		var nilCxt context.Context
 		_, err := newJwtValidator(nilCxt, nil, JwtValidationOptions{
 			Issuer:                     server.URL,
-			ValidateSignature:          true,
 			Http:                       http.DefaultClient,
 			StartupRetryMaxElapsedTime: -1, // indefinite retry
 		})
@@ -233,12 +235,13 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 		defer server.Close()
 
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 3 * time.Second,
+			Issuer:                          server.URL,
+			InsecureSkipSignatureValidation: false,
+			Http:                            server.Client(),
+			StartupRetryMaxElapsedTime:      3 * time.Second,
 		})
 
+		fmt.Println("attempts", discoveryAttempts.Load())
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
 		}
@@ -269,10 +272,10 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 		defer server.Close()
 
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 1 * time.Second,
+			Issuer:                          server.URL,
+			InsecureSkipSignatureValidation: false,
+			Http:                            server.Client(),
+			StartupRetryMaxElapsedTime:      1 * time.Second,
 		})
 
 		if err == nil {
@@ -304,10 +307,10 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 		defer server.Close()
 
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 50 * time.Millisecond,
+			Issuer:                          server.URL,
+			InsecureSkipSignatureValidation: false,
+			Http:                            server.Client(),
+			StartupRetryMaxElapsedTime:      50 * time.Millisecond,
 		})
 
 		if err == nil {
@@ -338,10 +341,10 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 		defer server.Close()
 
 		_, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
-			Issuer:                     server.URL,
-			ValidateSignature:          true,
-			Http:                       server.Client(),
-			StartupRetryMaxElapsedTime: 0,
+			Issuer:                          server.URL,
+			InsecureSkipSignatureValidation: false,
+			Http:                            server.Client(),
+			StartupRetryMaxElapsedTime:      0,
 		})
 
 		if err == nil {
@@ -377,10 +380,10 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 		// Go routine to call newJwtValidator which will retry indefinitely until the context is cancelled
 		go func() {
 			_, err := newJwtValidator(ctx, nil, JwtValidationOptions{
-				Issuer:                     server.URL,
-				ValidateSignature:          true,
-				Http:                       server.Client(),
-				StartupRetryMaxElapsedTime: -1,
+				Issuer:                          server.URL,
+				InsecureSkipSignatureValidation: false,
+				Http:                            server.Client(),
+				StartupRetryMaxElapsedTime:      -1,
 			})
 			errCh <- err
 		}()

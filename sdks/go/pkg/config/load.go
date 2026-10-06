@@ -163,7 +163,7 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		// JWT validation options
 		extractString("JWT_ISSUER", "jwt-issuer", "Expected JWT issuer for validating incoming requests", &opts.Server.JwtOptions.Issuer).
 		extractString("JWT_AUDIENCE", "jwt-audience", "Expected JWT audience for validating incoming requests", &opts.Server.JwtOptions.Audience).
-		extractBool("JWT_VALIDATE_SIGNATURE", "jwt-validate-signature", "Whether to validate the JWT signature or just the claims", &opts.Server.JwtOptions.ValidateSignature).
+		extractBool("JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "jwt-insecure-skip-signature-validation", "Whether to skip signature validation and validate claims only (insecure).", &opts.Server.JwtOptions.InsecureSkipSignatureValidation).
 		extractDuration("JWT_STARTUP_RETRY_MAX_ELAPSED", "jwt-startup-retry-max-elapsed", "Maximum elapsed time for retrying JWT JWKS discovery during startup", &opts.Server.JwtOptions.StartupRetryMaxElapsedTime).
 		// DashBoard connection-props options
 		extractString("DASHBOARD_SERVICE_HOSTNAME", "dashboard-service-hostname", "Advertised hostname/address for DashBoard connection props", &opts.Dashboard.ServiceHostname).
