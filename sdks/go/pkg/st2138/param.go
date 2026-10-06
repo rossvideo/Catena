@@ -256,8 +256,13 @@ func NewParamFromValue(v Value) *ParamBuilder {
 
 // --- Chainable With* methods ---
 
-func (cp *ParamBuilder) WithName(name PolyglotText) *ParamBuilder {
-	cp.proto.Name = &protos.PolyglotText{DisplayStrings: name}
+func (cp *ParamBuilder) WithName(name *PolyglotTextBuilder) *ParamBuilder {
+	poly, err := name.Build()
+	if err != nil {
+		cp.err = fmt.Errorf("WithName: failed to build PolyglotText: %w", err)
+		return cp
+	}
+	cp.proto.Name = &protos.PolyglotText{DisplayStrings: poly}
 	return cp
 }
 
@@ -439,11 +444,16 @@ func (cp *ParamBuilder) WithResponse(response bool) *ParamBuilder {
 	return cp
 }
 
-func (cp *ParamBuilder) WithHelp(help PolyglotText) *ParamBuilder {
+func (cp *ParamBuilder) WithHelp(help *PolyglotTextBuilder) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	cp.proto.Help = &protos.PolyglotText{DisplayStrings: help}
+	poly, err := help.Build()
+	if err != nil {
+		cp.err = fmt.Errorf("WithHelp: failed to build PolyglotText: %w", err)
+		return cp
+	}
+	cp.proto.Help = &protos.PolyglotText{DisplayStrings: poly}
 	return cp
 }
 

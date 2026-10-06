@@ -63,8 +63,13 @@ func NewMenuGroup() *MenuGroup {
 }
 
 // WithName sets the menu group's display name, replacing any existing name.
-func (mg *MenuGroup) WithName(name PolyglotText) *MenuGroup {
-	mg.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
+func (mg *MenuGroup) WithName(name *PolyglotTextBuilder) *MenuGroup {
+	polyglot, err := name.Build()
+	if err != nil {
+		slog.Error("WithName failed to build PolyglotText", "error", err)
+		return mg
+	}
+	mg.Proto.Name = &protos.PolyglotText{DisplayStrings: polyglot}
 	return mg
 }
 
@@ -106,8 +111,13 @@ func NewMenu() *Menu {
 }
 
 // WithName sets the menu's display name, replacing any existing name.
-func (m *Menu) WithName(name PolyglotText) *Menu {
-	m.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
+func (m *Menu) WithName(name *PolyglotTextBuilder) *Menu {
+	polyglot, err := name.Build()
+	if err != nil {
+		slog.Error("WithName failed to build PolyglotText", "error", err)
+		return m
+	}
+	m.Proto.Name = &protos.PolyglotText{DisplayStrings: polyglot}
 	return m
 }
 

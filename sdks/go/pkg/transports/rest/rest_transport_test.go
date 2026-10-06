@@ -1256,11 +1256,15 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 
 	t.Run("ExceptionResponse", func(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
+		polyglot, err := st2138.NewPolyglotText("en", "Command not found").Build()
+		if err != nil {
+			t.Fatalf("expected NewPolyglotText to build without error, got %v", err)
+		}
 		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			return []st2138.CommandResponse{st2138.CommandException(
 				"InvalidCommand",
 				"Command not found: "+fqoid,
-				st2138.NewPolyglotText("en", "Command not found"),
+				polyglot,
 			)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 

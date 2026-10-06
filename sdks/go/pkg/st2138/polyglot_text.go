@@ -39,11 +39,25 @@
 package st2138
 
 import (
-	"log/slog"
+	"errors"
 )
 
 // PolyglotText maps BCP-47 language codes to display strings.
 type PolyglotText map[string]string
+
+// PolyglotTextBuilder is a builder for PolyglotText.
+type PolyglotTextBuilder struct {
+	polyglot PolyglotText
+	err      error
+}
+
+// NewPolyglotTextBuilder creates a new PolyglotTextBuilder.
+func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
+	if pb.err != nil {
+		return nil, pb.err
+	}
+	return pb.polyglot, nil
+}
 
 // NewPolyglotText creates a PolyglotText from zero or more (lang, text) pairs.
 // Calling it with no arguments yields an empty PolyglotText, which is useful
@@ -53,22 +67,25 @@ type PolyglotText map[string]string
 //	for lang := range langs {
 //		name.With(lang, translate(lang, "Hello"))
 //	}
-func NewPolyglotText(pairs ...string) PolyglotText {
-	p := PolyglotText{}
+func NewPolyglotText(pairs ...string) *PolyglotTextBuilder {
+	pb := &PolyglotTextBuilder{polyglot: PolyglotText{}}
 	for i := 0; i+1 < len(pairs); i += 2 {
-		p[pairs[i]] = pairs[i+1]
+		pb.polyglot[pairs[i]] = pairs[i+1]
 	}
 	if len(pairs)%2 != 0 {
-		slog.Warn("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text",
-			"lang", pairs[len(pairs)-1])
+		pb.err = errors.New("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text, " +
+			"lang: " + pairs[len(pairs)-1])
 	}
-	return p
+	return pb
 }
 
 // With returns the PolyglotText with an additional language entry added.
-func (p PolyglotText) With(lang, text string) PolyglotText {
-	p[lang] = text
-	return p
+func (pb *PolyglotTextBuilder) With(lang, text string) *PolyglotTextBuilder {
+	if pb.err != nil {
+		return pb
+	}
+	pb.polyglot[lang] = text
+	return pb
 }
 
 // Get returns the display string for lang, falling back to fallback if not present.
