@@ -35,7 +35,8 @@
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-05-11
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-09-22
  */
 
 package grpc
@@ -44,12 +45,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
 	"net"
 	"strings"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos/rpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
@@ -66,6 +67,7 @@ type Transport struct {
 	grpcServer    *grpc.Server
 	listener      net.Listener
 	runtime       catena.ServerRuntime
+	log           *slog.Logger
 
 	port       int
 	reflection bool
@@ -87,6 +89,7 @@ func NewTransport(cfg Options) *Transport {
 		catenaService: &catenaService{},
 		port:          cfg.Port,
 		reflection:    cfg.Reflection,
+		log:           slog.New(slog.DiscardHandler),
 	}
 	transport.catenaService.transport = transport
 
@@ -97,7 +100,6 @@ func NewTransport(cfg Options) *Transport {
 
 	tlsConfig, err := cfg.TLS.ServerTLSConfig()
 	if err != nil {
-		logger.Error("gRPC Transport TLS configuration error", "error", err)
 		transport.initErr = fmt.Errorf("gRPC transport TLS configuration error: %w", err)
 		return transport
 	}
@@ -112,38 +114,44 @@ func NewTransport(cfg Options) *Transport {
 
 	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
-		logger.Info("gRPC server created with reflection enabled", "tls", transport.tlsEnabled)
-	} else {
-		logger.Info("gRPC server created", "tls", transport.tlsEnabled)
 	}
 	return transport
 }
 
 func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) error {
+	// Setup the logger
+	t.log = runtime.Logger().With("component", "grpc-transport")
+
 	if t.initErr != nil {
+		t.log.Error("gRPC Transport TLS configuration error", "error", t.initErr)
 		return t.initErr
 	}
 
 	t.runtime = runtime
+	if t.reflection {
+		t.log.Info("gRPC server created with reflection enabled", "tls", t.tlsEnabled)
+	} else {
+		t.log.Info("gRPC server created", "tls", t.tlsEnabled)
+	}
 
 	if t.listener == nil {
 		addr := fmt.Sprintf(":%d", t.port)
 		listener, err := net.Listen("tcp", addr)
 		if err != nil {
-			logger.Error("Failed to create listener", "address", addr, "error", err)
+			t.log.Error("Failed to create listener", "address", addr, "error", err)
 			return fmt.Errorf("failed to listen on %s: %w", addr, err)
 		}
 		t.listener = listener
 	}
 
-	logger.Info("Starting gRPC transport", "address", t.listener.Addr().String())
-	logger.Info("grpc listening and ready to accept connections")
+	t.log.Info("Starting gRPC transport", "address", t.listener.Addr().String())
+	t.log.Info("grpc listening and ready to accept connections")
 
 	go func() {
 		if err := t.grpcServer.Serve(t.listener); err != nil {
 			// already closed is not an error condition worth logging as an error
 			if !errors.Is(err, net.ErrClosed) {
-				logger.Error("gRPC server error", "error", err)
+				t.log.Error("gRPC server error", "error", err)
 			}
 		}
 	}()
@@ -155,7 +163,7 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 		// construction failed (see initErr); there is nothing to shut down
 		return nil
 	}
-	logger.Info("Shutting down gRPC transport")
+	t.log.Info("Shutting down gRPC transport")
 
 	// Gracefully stop the gRPC server in a goroutine so we can also listen for context
 	// cancellation. GracefulStop will wait for existing RPCs to finish but will stop
@@ -175,9 +183,9 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	var shutdownErr error
 	select {
 	case <-done:
-		logger.Info("gRPC server stopped gracefully")
+		t.log.Info("gRPC server stopped gracefully")
 	case <-ctx.Done():
-		logger.Warning("gRPC shutdown timed out, forcing stop")
+		t.log.Warn("gRPC shutdown timed out, forcing stop")
 		shutdownErr = ctx.Err()
 		t.grpcServer.Stop()
 		<-done
@@ -187,11 +195,11 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	if t.listener != nil {
 		if err := t.listener.Close(); err != nil {
 			if !errors.Is(err, net.ErrClosed) {
-				logger.Error("Failed to close gRPC listener", "error", err)
+				t.log.Error("Failed to close gRPC listener", "error", err)
 				return fmt.Errorf("failed to close listener: %w", err)
 			}
 		} else {
-			logger.Info("gRPC listener closed")
+			t.log.Info("gRPC listener closed")
 		}
 		t.listener = nil
 	}
@@ -218,24 +226,24 @@ func (t *Transport) sanitizeGRPCError(err error) error {
 
 // unaryInterceptor logs all incoming unary RPC calls
 func (t *Transport) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	logger.Debug("gRPC unary call received", "method", info.FullMethod)
+	t.log.Debug("gRPC unary call received", "method", info.FullMethod)
 	resp, err := handler(ctx, req)
 	if err != nil {
-		logger.Error("gRPC unary call error", "method", info.FullMethod, "error", err)
+		t.log.Error("gRPC unary call error", "method", info.FullMethod, "error", err)
 	}
 	return resp, t.sanitizeGRPCError(err)
 }
 
 // streamInterceptor logs all incoming streaming RPC calls
 func (t *Transport) streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	logger.Debug("gRPC stream call received", "method", info.FullMethod, "isClientStream", info.IsClientStream, "isServerStream", info.IsServerStream)
+	t.log.Debug("gRPC stream call received", "method", info.FullMethod, "isClientStream", info.IsClientStream, "isServerStream", info.IsServerStream)
 	err := handler(srv, ss)
 	if err != nil {
 		// Context cancellation is normal when clients disconnect - log at debug level
 		if status.Code(err) == codes.Canceled || err == context.Canceled || err == context.DeadlineExceeded {
-			logger.Debug("gRPC stream ended", "method", info.FullMethod, "reason", err)
+			t.log.Debug("gRPC stream ended", "method", info.FullMethod, "reason", err)
 		} else {
-			logger.Error("gRPC stream call error", "method", info.FullMethod, "error", err)
+			t.log.Error("gRPC stream call error", "method", info.FullMethod, "error", err)
 		}
 	}
 	return t.sanitizeGRPCError(err)
@@ -249,13 +257,13 @@ func (t *Transport) retrieveMetadataFromContext(ctx context.Context) catena.Tran
 		if vals := requestMetadata.Get("authorization"); len(vals) > 0 {
 			accessToken = vals[0]
 		} else {
-			logger.Debug("No authorization metadata found in context")
+			t.log.Debug("No authorization metadata found in context")
 		}
 
 		// Convert metadata.MD map[string][]string to map[string][]string
 		metadataMap = maps.Clone(requestMetadata)
 	} else {
-		logger.Debug("No metadata found in context")
+		t.log.Debug("No metadata found in context")
 	}
 
 	transportContext := catena.TransportContext{
@@ -281,7 +289,7 @@ type catenaService struct {
 }
 
 func (s *catenaService) GetPopulatedSlots(ctx context.Context, req *protos.Empty) (*protos.SlotList, error) {
-	logger.Info("GetPopulatedSlots")
+	s.transport.log.Debug("GetPopulatedSlots")
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	slots, res := s.transport.runtime.GetSlots(transportContext)
@@ -303,14 +311,14 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	logger.Info("DeviceRequest", "slot", slot)
+	s.transport.log.Debug("DeviceRequest", "slot", slot)
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.DeviceComponent]{ss: stream}
 	res := s.transport.runtime.InvokeGetDeviceHandler(slot, adapter, transportContext)
 	if res.IsError() {
-		logger.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
+		s.transport.log.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
 	}
 
@@ -325,12 +333,12 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 	}
 
 	fqoid := normalizeFqoid(req.Oid)
-	logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
+	s.transport.log.Debug("GetValue", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid, transportContext)
 	if result.IsError() {
-		logger.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
+		s.transport.log.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
@@ -345,17 +353,17 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 	}
 
 	if req.Value == nil {
-		logger.Error("SetValue nil value payload", "slot", slot)
+		s.transport.log.Error("SetValue nil value payload", "slot", slot)
 		return nil, status.Error(codes.InvalidArgument, "value payload is nil")
 	}
 
 	fqoid := normalizeFqoid(req.Value.Oid)
-	logger.Info("SetValue", "slot", slot, "fqoid", fqoid)
+	s.transport.log.Debug("SetValue", "slot", slot, "fqoid", fqoid)
 
 	// Convert proto value to native Go type
 	nativeValue, errProto := st2138.FromProto(req.Value.Value)
 	if errProto != nil {
-		logger.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
+		s.transport.log.Error("SetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value: %v", errProto))
 	}
 
@@ -363,7 +371,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 	entries := []catena.SetValueEntry{{Fqoid: fqoid, Value: nativeValue}}
 	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
 	if result.IsError() {
-		logger.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
+		s.transport.log.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
@@ -377,7 +385,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	logger.Info("MultiSetValue", "slot", slot, "count", len(req.Values))
+	s.transport.log.Debug("MultiSetValue", "slot", slot, "count", len(req.Values))
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 
 	entries := make([]catena.SetValueEntry, 0, len(req.Values))
@@ -386,7 +394,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 
 		nativeValue, errProto := st2138.FromProto(setValue.Value)
 		if errProto != nil {
-			logger.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
+			s.transport.log.Error("MultiSetValue failed to convert proto value", "slot", slot, "fqoid", fqoid, "error", errProto)
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid value for %s: %v", fqoid, errProto))
 		}
 
@@ -395,7 +403,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 
 	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
 	if result.IsError() {
-		logger.Error("MultiSetValue handler error", "slot", slot, "error", result.Error)
+		s.transport.log.Error("MultiSetValue handler error", "slot", slot, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
@@ -410,14 +418,14 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 	}
 
 	fqoid := normalizeFqoid(req.Oid)
-	logger.Info("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
+	s.transport.log.Debug("ExternalObjectRequest", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.Asset]{ss: stream}
 	result := s.transport.runtime.InvokeReadAssetHandler(slot, fqoid, adapter, transportContext)
 	if result.IsError() {
-		logger.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
+		s.transport.log.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
@@ -432,14 +440,14 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	}
 
 	commandFqoid := normalizeFqoid(req.Oid)
-	logger.Info("ExecuteCommand", "slot", slot, "command", commandFqoid)
+	s.transport.log.Debug("ExecuteCommand", "slot", slot, "command", commandFqoid)
 
 	var payload any
 	if req.Value != nil {
 		var errProto error
 		payload, errProto = st2138.FromProto(req.Value)
 		if errProto != nil {
-			logger.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto)
+			s.transport.log.Error("ExecuteCommand failed to convert payload", "slot", slot, "command", commandFqoid, "error", errProto)
 			return status.Error(codes.InvalidArgument, fmt.Sprintf("invalid command payload: %v", errProto))
 		}
 	}
@@ -449,7 +457,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	adapter := &grpcStream[st2138.CommandResponse]{ss: stream}
 	result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, req.Respond, adapter, transportContext)
 	if result.IsError() {
-		logger.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
+		s.transport.log.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
@@ -464,16 +472,16 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 	}
 
 	fqoid := normalizeFqoid(req.Oid)
-	logger.Info("GetParam", "slot", slot, "fqoid", fqoid)
+	s.transport.log.Debug("GetParam", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	param, result := s.transport.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
 	if result.IsError() {
-		logger.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
+		s.transport.log.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 	if param.Proto == nil {
-		logger.Error("GetParam returned nil param", "slot", slot, "fqoid", fqoid)
+		s.transport.log.Error("GetParam returned nil param", "slot", slot, "fqoid", fqoid)
 		return nil, status.Error(codes.Internal, "param returned nil")
 	}
 
@@ -492,14 +500,14 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 
 	oidPrefix := normalizeFqoid(req.GetOidPrefix())
 	recursive := req.GetRecursive()
-	logger.Info("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
+	s.transport.log.Debug("ParamInfoRequest", "slot", slot, "oid_prefix", oidPrefix, "recursive", recursive)
 
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.ParamInfo]{ss: stream}
 	result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, adapter, transportContext)
 	if result.IsError() {
-		logger.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
+		s.transport.log.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 	return nil
@@ -519,26 +527,26 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 	conn, err := s.transport.runtime.RegisterTransportConnection(s.transport, transportContext)
 	if err.Code != catena.StatusCodeOk {
-		logger.Error("gRPC connection rejected", "error", err.Error)
+		s.transport.log.Error("gRPC connection rejected", "error", err.Error)
 		return status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 	defer s.transport.runtime.DeregisterConnection(conn.ID)
 
-	logger.Info("gRPC Connect started", "connID", conn.ID)
+	s.transport.log.Info("gRPC Connect started", "connID", conn.ID)
 
 	// Listen for updates and client disconnect
 	ctx := stream.Context()
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Info("gRPC client disconnected", "connID", conn.ID)
+			s.transport.log.Info("gRPC client disconnected", "connID", conn.ID)
 			return ctx.Err()
 		case <-conn.Done:
-			logger.Info("gRPC connection shut down by server", "connID", conn.ID)
+			s.transport.log.Info("gRPC connection shut down by server", "connID", conn.ID)
 			return status.Error(codes.Unavailable, "server shutting down")
 		case update := <-conn.Updates:
 			if err := stream.Send(update); err != nil {
-				logger.Error("failed to send update", "connID", conn.ID, "error", err)
+				s.transport.log.Error("failed to send update", "connID", conn.ID, "error", err)
 				return err
 			}
 		}
@@ -597,7 +605,7 @@ func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguage
 	}
 
 	language := req.Language
-	logger.Info("AddLanguage", "slot", slot, "language", language)
+	s.transport.log.Debug("AddLanguage", "slot", slot, "language", language)
 
 	// Language and pack presence are validated by the server layer so the rule
 	// lives in one place; pass the proto straight through.
@@ -606,7 +614,7 @@ func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguage
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	result := s.transport.runtime.InvokeCreateLanguagePackHandler(slot, language, pack, transportContext)
 	if result.IsError() {
-		logger.Error("AddLanguage handler error", "slot", slot, "language", language, "error", result.Error)
+		s.transport.log.Error("AddLanguage handler error", "slot", slot, "language", language, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
@@ -621,12 +629,12 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	}
 
 	language := req.Language
-	logger.Info("LanguagePackRequest", "slot", slot, "language", language)
+	s.transport.log.Debug("LanguagePackRequest", "slot", slot, "language", language)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	pack, result := s.transport.runtime.InvokeReadLanguagePackHandler(slot, language, transportContext)
 	if result.IsError() {
-		logger.Error("LanguagePackRequest handler error", "slot", slot, "language", language, "error", result.Error)
+		s.transport.log.Error("LanguagePackRequest handler error", "slot", slot, "language", language, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 
@@ -634,7 +642,7 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	// handler, not success; surface it as an internal error rather than
 	// returning an empty pack (mirrors REST GET and GetParam).
 	if pack.Proto == nil {
-		logger.Error("language pack handler returned OK with nil proto", "slot", slot, "language", language)
+		s.transport.log.Error("language pack handler returned OK with nil proto", "slot", slot, "language", language)
 		return nil, status.Error(codes.Internal, "language pack response was empty")
 	}
 
@@ -653,12 +661,12 @@ func (s *catenaService) ListLanguages(ctx context.Context, req *protos.Slot) (*p
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	logger.Info("ListLanguages", "slot", slot)
+	s.transport.log.Debug("ListLanguages", "slot", slot)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	languages, result := s.transport.runtime.InvokeListLanguagesHandler(slot, transportContext)
 	if result.IsError() {
-		logger.Error("ListLanguages handler error", "slot", slot, "error", result.Error)
+		s.transport.log.Error("ListLanguages handler error", "slot", slot, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 

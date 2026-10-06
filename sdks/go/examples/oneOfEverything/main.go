@@ -60,6 +60,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -74,6 +75,11 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
 )
+
+// log is the example's application logger, built in main from config and shared
+// by every file in this package. The SDK gets the same logger through
+// ServerOptions.Logger; it never touches slog.Default().
+var log *slog.Logger
 
 //go:embed static/*
 var StaticFS embed.FS // binary assets served via ReadAssetHandler (ExternalObjectRequest)
@@ -291,18 +297,26 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	closeLogger, err := logger.Init(options.Logger)
+	// This example uses the logger that comes with the sdk, located in the pkg/logger package.
+	// It possesses its own configuration options, but if you require something more custom, you can
+	// create and pass in your own *slog.Logger.
+	var closeLog logger.CloseFunc
+	log, closeLog, err = logger.New(options.Logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
-	defer closeLogger()
+	defer closeLog()
 
-	logger.Info("Loaded Configuration", "config", options)
+	// Inject the logger into the SDK. Without this the SDK stays silent.
+	options.Server.Logger = log
+	options.Dashboard.Logger = log
+
+	log.Info("Loaded Configuration", "config", options)
 
 	srv, err := catena.NewServer(options.Server)
 	if err != nil {
-		logger.Error("Failed to create Catena server", "error", err)
+		log.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
 	}
 
@@ -320,7 +334,7 @@ func main() {
 		for range ticker.C {
 			if counter.IsRunning() {
 				counter.Increment()
-				logger.Info("Counter tick", "value", counter.GetValue())
+				log.Info("Counter tick", "value", counter.GetValue())
 				srv.BroadcastUpdate(0, "counter", counter.GetValue(), counterScope)
 			}
 		}
@@ -364,7 +378,7 @@ func main() {
 	registerAuthz(srv)
 
 	if !options.UseGrpc && !options.UseRest {
-		logger.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
+		log.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
 		os.Exit(1)
 	}
 
@@ -375,19 +389,19 @@ func main() {
 	switch dashboardOpts.Protocol {
 	case catena.ProtocolST2138Catena, catena.ProtocolST2138Grpc:
 		if !options.UseGrpc && options.UseRest {
-			logger.Warning("Dashboard configured for gRPC but only REST transport enabled - switching to REST protocol for dashboard connection props")
+			log.Warn("Dashboard configured for gRPC but only REST transport enabled - switching to REST protocol for dashboard connection props")
 			dashboardOpts.Protocol = catena.ProtocolST2138Rest
 		}
 	case catena.ProtocolST2138Rest:
 		if options.UseGrpc && !options.UseRest {
-			logger.Warning("Dashboard configured for REST but only gRPC transport enabled - switching to gRPC protocol for dashboard connection props")
+			log.Warn("Dashboard configured for REST but only gRPC transport enabled - switching to gRPC protocol for dashboard connection props")
 			dashboardOpts.Protocol = catena.ProtocolST2138Grpc
 		}
 	}
 	connectionProps := catena.NewConnectionProps(dashboardOpts)
 	connectionPropsURL := fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint())
 	if err := connectionProps.Start(); err != nil {
-		logger.Warning("Failed to start connection props server", "port", options.Dashboard.Port, "error", err)
+		log.Warn("Failed to start connection props server", "port", options.Dashboard.Port, "error", err)
 		connectionPropsURL = ""
 	}
 
@@ -401,13 +415,13 @@ func main() {
 	if options.UseGrpc {
 		// Reflection enabled so grpcurl works without -proto (local demo only).
 		if err := srv.RegisterTransport(grpc.NewTransport(options.Grpc)); err != nil {
-			logger.Error("Failed to register gRPC transport", "error", err)
+			log.Error("Failed to register gRPC transport", "error", err)
 			os.Exit(1)
 		}
 		grpcAddr := fmt.Sprintf("localhost:%d", options.Grpc.Port)
 		logGrpcEndpointGuide(grpcAddr, sampleAsset)
 	} else {
-		logger.Info("gRPC transport disabled by config")
+		log.Info("gRPC transport disabled by config")
 	}
 
 	if options.UseRest {
@@ -457,20 +471,20 @@ func main() {
 		})
 
 		if err := srv.RegisterTransport(restTransport); err != nil {
-			logger.Error("Failed to register REST transport", "error", err)
+			log.Error("Failed to register REST transport", "error", err)
 			os.Exit(1)
 		}
 
 		logRestEndpointGuide(sampleAsset)
 		if len(assetIDs) > 0 {
-			logger.Info("")
-			logger.Info("Available assets:")
+			log.Info("")
+			log.Info("Available assets:")
 			for _, id := range assetIDs {
-				logger.Info(fmt.Sprintf("  %s", id))
+				log.Info(fmt.Sprintf("  %s", id))
 			}
 		}
 	} else {
-		logger.Info("REST transport disabled by config")
+		log.Info("REST transport disabled by config")
 	}
 
 	// Startup summary: header, then one section per transport/service with an
@@ -482,46 +496,46 @@ func main() {
 		return "DISABLED"
 	}
 
-	logger.Info("")
-	logger.Info("=======================================================")
-	logger.Info("One of Everything Example")
-	logger.Info("=======================================================")
+	log.Info("")
+	log.Info("=======================================================")
+	log.Info("One of Everything Example")
+	log.Info("=======================================================")
 
-	logger.Info("")
-	logger.Info("[ gRPC transport ]", "status", status(options.UseGrpc))
+	log.Info("")
+	log.Info("[ gRPC transport ]", "status", status(options.UseGrpc))
 	if options.UseGrpc {
 		grpcAddr := fmt.Sprintf("localhost:%d", options.Grpc.Port)
-		logger.Info("    address", "value", grpcAddr)
-		logger.Info("    query", "command", "grpcurl -plaintext "+grpcAddr+" list")
+		log.Info("    address", "value", grpcAddr)
+		log.Info("    query", "command", "grpcurl -plaintext "+grpcAddr+" list")
 	}
 
-	logger.Info("")
-	logger.Info("[ REST transport ]", "status", status(options.UseRest))
+	log.Info("")
+	log.Info("[ REST transport ]", "status", status(options.UseRest))
 	if options.UseRest {
-		logger.Info("    web ui", "url", "http://localhost:9080/")
+		log.Info("    web ui", "url", "http://localhost:9080/")
 	}
 
-	logger.Info("")
-	logger.Info("[ DashBoard connection props ]", "status", status(connectionPropsURL != ""))
+	log.Info("")
+	log.Info("[ DashBoard connection props ]", "status", status(connectionPropsURL != ""))
 	if connectionPropsURL != "" {
-		logger.Info("    endpoint", "url", connectionPropsURL)
+		log.Info("    endpoint", "url", connectionPropsURL)
 	}
 
-	logger.Info("")
-	logger.Info("=======================================================")
+	log.Info("")
+	log.Info("=======================================================")
 
 	// Block until Ctrl+C, then shut down transports and streaming connections.
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
 	<-ctx.Done()
-	logger.Info("Shutting down server...")
+	log.Info("Shutting down server...")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second)
 	defer shutdownCancel()
 	if err := connectionProps.Stop(shutdownCtx); err != nil {
-		logger.Warning("Error stopping connection props server", "error", err)
+		log.Warn("Error stopping connection props server", "error", err)
 	}
 	srv.Shutdown(shutdownCtx)
-	logger.Info("Server shutdown complete")
+	log.Info("Server shutdown complete")
 }
