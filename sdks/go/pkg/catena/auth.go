@@ -41,14 +41,20 @@ package catena
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -78,11 +84,9 @@ func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOp
 	if opts.Http == nil {
 		opts.Http = http.DefaultClient
 	}
-
 	if log == nil {
-		log = slog.Default()
+		log = slog.New(slog.DiscardHandler)
 	}
-
 	v := &jwtValidator{
 		options: opts,
 		log:     log.With("component", "jwt"),
@@ -95,8 +99,78 @@ func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOp
 		return v, nil
 	}
 
-	// If signature validation is enabled, we need to discover the JWKS endpoint and set up the keyfunc.
-	jwksUrl, err := discoverJWKSEndpoint(ctx, opts.Issuer, opts.Http)
+	jwksKeyFunc, err := v.initializeJWTKeyFunc(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize JWT keyfunc: %w", err)
+	}
+	v.keyfunc = jwksKeyFunc
+
+	v.validateFn = v.validateSignatureAndClaims
+
+	return v, nil
+}
+func (v *jwtValidator) signingMethods() []string {
+	return v.options.ResolvedAllowedAlgs()
+}
+
+func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, error) {
+
+	backoffPolicy := backoff.NewExponentialBackOff()
+	backoffPolicy.InitialInterval = 250 * time.Millisecond
+	backoffPolicy.RandomizationFactor = 0.5
+	backoffPolicy.Multiplier = 2
+	backoffPolicy.MaxInterval = 5 * time.Second
+
+	// Define the retry options
+	retryOpts := []backoff.RetryOption{
+		backoff.WithBackOff(backoffPolicy),
+		backoff.WithNotify(func(err error, d time.Duration) {
+			v.log.Warn("Failed to initialize JWT keyfunc, retrying... %s, next retry in %s\n", err.Error(), d.String())
+		}),
+	}
+
+	if ctx == nil {
+		return nil, fmt.Errorf("nil context provided, context is required to initialize JWT keyfunc")
+	}
+
+	discoveryCtx := ctx
+
+	if v.options.StartupRetryMaxElapsedTime == 0 {
+		// backoff treats a MaxElapsedTime of 0 as unlimited, this is mapped to a single attempt instead
+		retryOpts = append(retryOpts, backoff.WithMaxTries(1))
+	} else if v.options.StartupRetryMaxElapsedTime > 0 {
+		// Create a context with a timeout to prevent stalled requests
+		var cancel context.CancelFunc
+		discoveryCtx, cancel = context.WithTimeout(ctx, v.options.StartupRetryMaxElapsedTime)
+		defer cancel()
+
+		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(v.options.StartupRetryMaxElapsedTime))
+	} else {
+		// Negative values are retired indefinitely, until max elapsedtime
+		retryOpts = append(retryOpts, backoff.WithMaxElapsedTime(0))
+	}
+
+	// discovery and keyfun creation
+	var jwksKeyFunc jwt.Keyfunc
+	jwksKeyFunc, err := backoff.Retry(ctx, func() (jwt.Keyfunc, error) {
+		newJwskKeyFunc, err := v.createJWTKeyFunc(ctx, discoveryCtx)
+		if err != nil {
+			return nil, err
+		}
+
+		return newJwskKeyFunc, nil
+	}, retryOpts...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return jwksKeyFunc, nil
+}
+
+func (v *jwtValidator) createJWTKeyFunc(ctx context.Context, discoveryCtx context.Context) (jwt.Keyfunc, error) {
+
+	jwksUrl, err := discoverJWKSEndpoint(discoveryCtx, v.options.Issuer, v.options.Http)
 	if err != nil {
 		return nil, fmt.Errorf("discover jwks endpoint: %w", err)
 	}
@@ -105,19 +179,12 @@ func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOp
 	// within the KeyFunc there is a background goroutine that periodically refreshes
 	// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
 	// goroutine and any in-flight requests.
-	keyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
+	jwksKeyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
 	if err != nil {
 		return nil, fmt.Errorf("create keyfunc: %w", err)
 	}
 
-	// store the keyfunc and set the validateFn to validate both signature and claims
-	v.keyfunc = keyFunc.Keyfunc
-	v.validateFn = v.validateSignatureAndClaims
-
-	return v, nil
-}
-func (v *jwtValidator) signingMethods() []string {
-	return v.options.ResolvedAllowedAlgs()
+	return jwksKeyFunc.Keyfunc, nil
 }
 
 // discoverJWKSEndpoint resolves the JWKS URL from an OpenID Connect issuer.
@@ -130,7 +197,7 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	// process issuer URL: trim whitespace and trailing slashes, and validate it's not empty
 	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
 	if issuer == "" {
-		return "", fmt.Errorf("issuer is required")
+		return "", backoff.Permanent(fmt.Errorf("issuer is required"))
 	}
 
 	// construct the discovery URL and fetch the OpenID Connect discovery document
@@ -146,31 +213,122 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	// make a request using the client and ctx to allow for cancellation and timeouts
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryURL, nil)
 	if err != nil {
-		return "", fmt.Errorf("build request: %w", err)
+		return "", backoff.Permanent(fmt.Errorf("build request: %w", err))
 	}
 
 	// do it
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("perform request: %w", err)
+		fmt.Println("error", err)
+		return "", classifyDiscoveryError(ctx, err)
 	}
 	defer resp.Body.Close()
 
-	// check for a successful response
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return "", fmt.Errorf("unexpected status %s", resp.Status)
+	// Classify status code errors
+	if err := classifyStatusCodeError(resp); err != nil {
+		return "", err
 	}
 
 	// decode the discovery document and extract the JWKS URI
 	if err := json.NewDecoder(resp.Body).Decode(&discoveryDoc); err != nil {
-		return "", fmt.Errorf("decode response: %w", err)
+		return "", backoff.Permanent(fmt.Errorf("decode response: %w", err))
 	}
 	// if the discovery document doesn't contain a jwks_uri, we can't validate signatures
 	if discoveryDoc.JwksUri == "" {
-		return "", fmt.Errorf("jwks_uri not found in discovery document")
+		return "", backoff.Permanent(fmt.Errorf("jwks_uri not found in discovery document"))
 	}
 
 	return discoveryDoc.JwksUri, nil
+}
+
+func classifyStatusCodeError(resp *http.Response) error {
+	// check for a error response status
+	// 4xx errors are permanent, do not retry except for 408 and 429
+	// 429 honours Retry-After when present; otherwise the exponential backoff is used
+	// 1xx, 3xx, and 5xx erros are retriable
+
+	switch {
+	case resp.StatusCode == http.StatusRequestTimeout:
+		return fmt.Errorf("unexpected status %s", resp.Status)
+
+	case resp.StatusCode == http.StatusTooManyRequests:
+		return parseTooManyRequestsHeader(resp)
+
+	case resp.StatusCode >= http.StatusBadRequest && resp.StatusCode < http.StatusInternalServerError:
+		return backoff.Permanent(fmt.Errorf("Client error: %s", resp.Status))
+
+	case resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices:
+		return nil
+	default:
+		return fmt.Errorf("unexpected status %s", resp.Status)
+	}
+
+}
+
+func parseTooManyRequestsHeader(resp *http.Response) error {
+	statusErr := fmt.Errorf("unexpected status %s", resp.Status)
+	delay, ok := extractRetryAfterDuration(resp.Header.Get("Retry-After"))
+	if !ok {
+		return statusErr
+	}
+
+	retrySecond := int(delay / time.Second)
+	if delay%time.Second != 0 {
+		retrySecond++
+	}
+	return fmt.Errorf("%w: %w", statusErr, backoff.RetryAfter(retrySecond))
+}
+
+func extractRetryAfterDuration(retryValue string) (time.Duration, bool) {
+
+	retryValue = strings.TrimSpace(retryValue)
+	if retryValue == "" {
+		return 0, false
+	}
+
+	if delaySeconds, err := strconv.ParseInt(retryValue, 10, 64); err == nil {
+		if delaySeconds < 0 {
+			return 0, false
+		}
+
+		if delaySeconds > (math.MaxInt64 / int64(time.Second)) {
+			return 0, false
+		}
+
+		return time.Duration(delaySeconds) * time.Second, true
+	}
+
+	if parsedTime, err := time.Parse(http.TimeFormat, retryValue); err == nil {
+		delaySeconds := time.Until(parsedTime)
+		if delaySeconds < 0 {
+			return 0, false
+		}
+
+		return delaySeconds, true
+	}
+
+	return 0, false
+}
+
+func classifyDiscoveryError(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	doErr := fmt.Errorf("perform request: %w", err)
+
+	if ctx.Err() != nil {
+		return backoff.Permanent(ctx.Err())
+	}
+
+	// http.client.Do wraps transport errors in url.Error
+	// those are treated as retriable
+	if _, ok := errors.AsType[*url.Error](doErr); ok {
+		return doErr
+	}
+
+	fmt.Println("doErr", doErr)
+	return backoff.Permanent(doErr)
 }
 
 // ValidateJWT verifies a JWT signature against the provided JWKS URL.

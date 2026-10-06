@@ -69,6 +69,7 @@ func TestDefaultOptions(t *testing.T) {
 				Issuer:                          "",
 				InsecureSkipSignatureValidation: false,
 				Http:                            nil,
+				StartupRetryMaxElapsedTime:      45 * time.Second,
 			},
 		},
 		Logger: LoggerOptions{
