@@ -44,69 +44,89 @@ import (
 
 func TestNewPolyglotText(t *testing.T) {
 	pt := NewPolyglotText("en", "Hello")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
+	if pt.polyglot["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", pt.polyglot["en"])
 	}
 }
 
 func TestPolyglotText_With(t *testing.T) {
 	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
+	if pt.polyglot["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", pt.polyglot["en"])
 	}
-	if pt["fr"] != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
+	if pt.polyglot["fr"] != "Bonjour" {
+		t.Errorf("expected 'Bonjour', got %s", pt.polyglot["fr"])
 	}
 }
 
 func TestNewPolyglotText_Empty(t *testing.T) {
 	pt := NewPolyglotText()
-	if pt == nil {
+	if pt.polyglot == nil {
 		t.Fatal("expected non-nil PolyglotText")
 	}
-	if len(pt) != 0 {
-		t.Errorf("expected empty PolyglotText, got %d entries", len(pt))
+	if len(pt.polyglot) != 0 {
+		t.Errorf("expected empty PolyglotText, got %d entries", len(pt.polyglot))
 	}
 
 	pt.With("en", "Hello").With("fr", "Bonjour")
-	if pt["en"] != "Hello" || pt["fr"] != "Bonjour" {
-		t.Errorf("expected entries to be added, got %v", pt)
+	if pt.polyglot["en"] != "Hello" || pt.polyglot["fr"] != "Bonjour" {
+		t.Errorf("expected entries to be added, got %v", pt.polyglot)
 	}
 }
 
 func TestNewPolyglotText_MultiplePairs(t *testing.T) {
 	pt := NewPolyglotText("en", "Hello", "fr", "Bonjour")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
+	if pt.polyglot["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", pt.polyglot["en"])
 	}
-	if pt["fr"] != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
+	if pt.polyglot["fr"] != "Bonjour" {
+		t.Errorf("expected 'Bonjour', got %s", pt.polyglot["fr"])
 	}
 }
 
 func TestNewPolyglotText_OddArgs(t *testing.T) {
 	pt := NewPolyglotText("en", "Hello", "fr")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
+	if pt.polyglot["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", pt.polyglot["en"])
 	}
-	if _, ok := pt["fr"]; ok {
+	if _, ok := pt.polyglot["fr"]; ok {
 		t.Errorf("expected unpaired trailing lang to be ignored, got %v", pt)
 	}
 }
 
 func TestPolyglotText_Get(t *testing.T) {
 	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
-	if pt.Get("fr", "en") != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt.Get("fr", "en"))
+	if pt.polyglot.Get("fr", "en") != "Bonjour" {
+		t.Errorf("expected 'Bonjour', got %s", pt.polyglot.Get("fr", "en"))
 	}
-	if pt.Get("de", "en") != "Hello" {
-		t.Errorf("expected fallback 'Hello', got %s", pt.Get("de", "en"))
+	if pt.polyglot.Get("de", "en") != "Hello" {
+		t.Errorf("expected fallback 'Hello', got %s", pt.polyglot.Get("de", "en"))
 	}
 }
 
 func TestPolyglotText_Get_MissingFallback(t *testing.T) {
 	pt := NewPolyglotText("en", "Hello")
-	if pt.Get("de", "fr") != "" {
-		t.Errorf("expected empty string for missing fallback, got %s", pt.Get("de", "fr"))
+	if pt.polyglot.Get("de", "fr") != "" {
+		t.Errorf("expected empty string for missing fallback, got %s", pt.polyglot.Get("de", "fr"))
+	}
+}
+
+func TestPolyglotText_Build(t *testing.T) {
+	polyglot, err := NewPolyglotText("en", "Hello").Build()
+	if err != nil {
+		t.Fatalf("expected NewPolyglotText to build without error, got %v", err)
+	}
+	if polyglot["en"] != "Hello" {
+		t.Errorf("expected 'Hello', got %s", polyglot["en"])
+	}
+}
+
+func TestPolyglotText_BuildSurfacesErrors(t *testing.T) {
+	polyglot, err := NewPolyglotText("en").With("fr", "Bonjour").Build()
+	if err == nil {
+		t.Fatalf("expected NewPolyglotText to return an error, got nil")
+	}
+	if polyglot != nil {
+		t.Errorf("expected empty PolyglotText, got %v", polyglot)
 	}
 }
