@@ -113,8 +113,10 @@
             <div class="asset-modal-body auth-modal-body">
                 <p id="authStatus" class="auth-status"></p>
 
-                <label class="auth-label" for="tokenInput">Bearer token</label>
-                <textarea id="tokenInput" class="token-input" rows="5" spellcheck="false" autocomplete="off" placeholder="Paste a JWT access token"></textarea>
+                <div class="auth-field">
+                    <label class="auth-label" for="tokenInput">Bearer token</label>
+                    <textarea id="tokenInput" class="token-input" rows="4" spellcheck="false" autocomplete="off" placeholder="Paste a JWT access token"></textarea>
+                </div>
                 <div class="auth-actions">
                     <button type="button" class="btn start" id="applyTokenBtn">Apply</button>
                     <button type="button" class="btn" id="clearTokenBtn">Clear</button>
@@ -122,32 +124,31 @@
                 </div>
 
                 <div class="auth-divider"></div>
-                <div class="card-title">Demo token</div>
-                <p class="auth-help">Pick a role, then either build a local unsigned JWT (signature validation must be off) or ask Keycloak for a real signed access token through this example server.</p>
-                <label class="auth-label" for="rolePreset">Role preset</label>
-                <select id="rolePreset" class="auth-select">
-                    <option value="commissioner">commissioner</option>
-                    <option value="it-admin">it-admin</option>
-                    <option value="journalist">journalist</option>
-                    <option value="runner">runner</option>
-                    <option value="producer">producer</option>
-                    <option value="tech-director">tech-director</option>
-                    <option value="custom">custom</option>
-                </select>
-                <div class="scope-grid">
-                    <span></span><span>Read</span><span>Write</span>
-                    <span>Monitor</span>
-                    <input type="checkbox" data-scope="st2138:mon" data-access="read" checked>
-                    <input type="checkbox" data-scope="st2138:mon" data-access="write" checked>
-                    <span>Operate</span>
-                    <input type="checkbox" data-scope="st2138:op" data-access="read" checked>
-                    <input type="checkbox" data-scope="st2138:op" data-access="write" checked>
-                    <span>Configure</span>
-                    <input type="checkbox" data-scope="st2138:cfg" data-access="read" checked>
-                    <input type="checkbox" data-scope="st2138:cfg" data-access="write" checked>
-                    <span>Administer</span>
-                    <input type="checkbox" data-scope="st2138:adm" data-access="read" checked>
-                    <input type="checkbox" data-scope="st2138:adm" data-access="write" checked>
+
+                <div class="auth-field">
+                    <p class="auth-help">Manually generate a JWT with the selected scopes</p>
+                    <label class="auth-label">Scope Selection</label>
+                    <div class="scope-grid">
+                        <span class="scope-corner"></span>
+                        <span class="scope-col">Read</span>
+                        <span class="scope-col">Write</span>
+
+                        <span class="scope-row">Monitor</span>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:mon" data-access="read" checked></label>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:mon" data-access="write" checked></label>
+
+                        <span class="scope-row">Operate</span>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:op" data-access="read" checked></label>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:op" data-access="write" checked></label>
+
+                        <span class="scope-row">Configure</span>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:cfg" data-access="read" checked></label>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:cfg" data-access="write" checked></label>
+
+                        <span class="scope-row">Administer</span>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:adm" data-access="read" checked></label>
+                        <label class="scope-check"><input type="checkbox" data-scope="st2138:adm" data-access="write" checked></label>
+                    </div>
                 </div>
                 <div class="auth-actions token-actions">
                     <button type="button" class="btn add" id="generateTokenBtn">Generate unsigned</button>

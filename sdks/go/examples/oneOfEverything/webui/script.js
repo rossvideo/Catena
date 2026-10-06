@@ -123,7 +123,7 @@ async function apiFetch(url, options) {
     opts.headers = Object.assign({}, opts.headers, { 'Authorization': 'Bearer ' + getToken() });
     const res = await fetch(url, opts);
     if (res.status === 401) {
-        alert('The server rejected this request. Use Authorize to paste a token or sign in.');
+        console.error('The server rejected this request. Use Authorize to paste a token or sign in.');
     }
     return res;
 }
