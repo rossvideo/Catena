@@ -283,6 +283,7 @@ func main() {
 	// customize the dashboard defaults
 	defaultOptions.Dashboard.NodeID = "one-of-everything-a4:bb:6d:6a:6f:a3"
 	defaultOptions.Dashboard.NodeName = "One of Everything Demo"
+	defaultOptions.Server.AuthzEnabled = false
 
 	options, err := config.InitOptions("oneofeverything", os.Args[1:], config.WithDefaults(defaultOptions))
 	if err != nil {

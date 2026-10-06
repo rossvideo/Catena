@@ -1,0 +1,26 @@
+# Local Keycloak for the oneOfEverything authorization demo.
+# Tokens are signed with ES256, which is what the Go SDK accepts by default.
+#
+#   docker compose up -d
+#   go run . --use-rest --authz --jwt-validate-signature \
+#       --jwt-issuer=http://localhost:8180/realms/catena
+#
+# Admin console: http://localhost:8180  (admin / admin)
+# Demo user: commissioner / demo
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.0
+    command: ["start-dev", "--import-realm", "--http-port=8180"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Full URL so the token "iss" claim matches --jwt-issuer. Override with
+      # KEYCLOAK_URL when the example cannot reach Keycloak on localhost.
+      KC_HOSTNAME: ${KEYCLOAK_URL:-http://localhost:8180}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "8180:8180"
+    volumes:
+      - ./realm-catena.json:/opt/keycloak/data/import/realm-catena.json:ro

@@ -645,6 +645,11 @@ function bindAuthUI() {
         if (e.target.id === 'authModal') closeAuthModal();
     });
 
+    document.getElementById('applyTokenBtn').addEventListener('click', () => {
+        setToken(document.getElementById('tokenInput').value);
+        closeAuthModal();
+        refreshAfterAuthChange();
+    });
 
     document.getElementById('generateTokenBtn').addEventListener('click', () => {
 

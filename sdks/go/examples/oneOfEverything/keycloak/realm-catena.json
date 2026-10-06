@@ -1,0 +1,159 @@
+{
+    "realm": "catena",
+    "displayName": "Catena demo",
+    "enabled": true,
+    "sslRequired": "none",
+    "registrationAllowed": false,
+    "loginWithEmailAllowed": true,
+    "duplicateEmailsAllowed": false,
+    "resetPasswordAllowed": false,
+    "editUsernameAllowed": false,
+    "bruteForceProtected": false,
+    "defaultSignatureAlgorithm": "ES256",
+    "accessTokenLifespan": 3600,
+    "ssoSessionIdleTimeout": 36000,
+    "ssoSessionMaxLifespan": 36000,
+    "accessCodeLifespan": 60,
+    "accessCodeLifespanUserAction": 300,
+    "accessCodeLifespanLogin": 1800,
+    "clients": [
+      {
+        "clientId": "oneofeverything",
+        "name": "One of Everything",
+        "enabled": true,
+        "publicClient": true,
+        "protocol": "openid-connect",
+        "standardFlowEnabled": true,
+        "implicitFlowEnabled": false,
+        "directAccessGrantsEnabled": true,
+        "serviceAccountsEnabled": false,
+        "frontchannelLogout": true,
+        "fullScopeAllowed": true,
+        "redirectUris": ["http://localhost:9080/*"],
+        "webOrigins": ["http://localhost:9080"],
+        "attributes": {
+          "pkce.code.challenge.method": "S256",
+          "post.logout.redirect.uris": "http://localhost:9080/*",
+          "access.token.signed.response.alg": "ES256",
+          "id.token.signed.response.alg": "ES256"
+        },
+        "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email"],
+        "optionalClientScopes": [
+          "st2138:mon",
+          "st2138:mon:w",
+          "st2138:op",
+          "st2138:op:w",
+          "st2138:cfg",
+          "st2138:cfg:w",
+          "st2138:adm",
+          "st2138:adm:w"
+        ]
+      }
+    ],
+    "clientScopes": [
+      {
+        "name": "st2138:mon",
+        "description": "Catena monitor read",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      },
+      {
+        "name": "st2138:mon:w",
+        "description": "Catena monitor write",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      },
+      {
+        "name": "st2138:op",
+        "description": "Catena operate read",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      },
+      {
+        "name": "st2138:op:w",
+        "description": "Catena operate write",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      },
+      {
+        "name": "st2138:cfg",
+        "description": "Catena configure read",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      },
+      {
+        "name": "st2138:cfg:w",
+        "description": "Catena configure write",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      },
+      {
+        "name": "st2138:adm",
+        "description": "Catena administer read",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      },
+      {
+        "name": "st2138:adm:w",
+        "description": "Catena administer write",
+        "protocol": "openid-connect",
+        "attributes": {
+          "include.in.token.scope": "true",
+          "display.on.consent.screen": "false"
+        }
+      }
+    ],
+    "users": [
+      {
+        "username": "commissioner",
+        "enabled": true,
+        "emailVerified": true,
+        "firstName": "Demo",
+        "lastName": "Commissioner",
+        "email": "commissioner@example.com",
+        "credentials": [
+          {
+            "type": "password",
+            "value": "demo",
+            "temporary": false
+          }
+        ]
+      }
+    ],
+    "components": {
+      "org.keycloak.keys.KeyProvider": [
+        {
+          "name": "ecdsa-generated",
+          "providerId": "ecdsa-generated",
+          "subComponents": {},
+          "config": {
+            "ecdsaEllipticCurveKey": ["P-256"],
+            "priority": ["1000"],
+            "enabled": ["true"],
+            "active": ["true"]
+          }
+        }
+      ]
+    }
+  }
