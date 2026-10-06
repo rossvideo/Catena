@@ -582,21 +582,21 @@ type server struct {
 func NewServer(opts config.ServerOptions) (Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	var validator jwtValidatorInterface
-	if opts.AuthzEnabled {
-		var err error
-		validator, err = newJwtValidator(ctx, opts.JwtOptions)
-		if err != nil {
-			cancel()
-			return nil, fmt.Errorf("create jwt validator: %w", err)
-		}
-	}
-
 	var log *slog.Logger
 	if opts.Logger == nil {
 		log = slog.New(slog.DiscardHandler)
 	} else {
 		log = opts.Logger
+	}
+
+	var validator jwtValidatorInterface
+	if opts.AuthzEnabled {
+		var err error
+		validator, err = newJwtValidator(ctx, log, opts.JwtOptions)
+		if err != nil {
+			cancel()
+			return nil, fmt.Errorf("create jwt validator: %w", err)
+		}
 	}
 
 	s := &server{

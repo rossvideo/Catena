@@ -290,6 +290,7 @@ All options can be configured via env and CLI.
 - `PREFIX_JWT_ISSUER` <-> `--jwt-issuer`
 - `PREFIX_JWT_AUDIENCE` <-> `--jwt-audience`
 - `PREFIX_JWT_VALIDATE_SIGNATURE` <-> `--jwt-validate-signature`
+- `PREFIX_JWT_STARTUP_RETRY_MAX_ELAPSED` <--> `jwt-startup-retry-max-elapsed`
 
 ### DashBoard Connection Props
 
