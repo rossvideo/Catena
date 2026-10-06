@@ -52,7 +52,7 @@ var File_service_proto protoreflect.FileDescriptor
 
 const file_service_proto_rawDesc = "" +
 	"\n" +
-	"\rservice.proto\x12\x06st2138\x1a\fdevice.proto\x1a\vparam.proto\x1a\x0elanguage.proto\x1a\x14externalobject.proto2\x8e\t\n" +
+	"\rservice.proto\x12\x06st2138\x1a\fdevice.proto\x1a\vparam.proto\x1a\x0elanguage.proto\x1a\x14externalobject.proto2\xd6\t\n" +
 	"\rCatenaService\x12H\n" +
 	"\rDeviceRequest\x12\x1c.st2138.DeviceRequestPayload\x1a\x17.st2138.DeviceComponent0\x01\x124\n" +
 	"\x11GetPopulatedSlots\x12\r.st2138.Empty\x1a\x10.st2138.SlotList\x12J\n" +
@@ -63,15 +63,16 @@ const file_service_proto_rawDesc = "" +
 	"\bGetValue\x12\x17.st2138.GetValuePayload\x1a\r.st2138.Value\x12<\n" +
 	"\rMultiSetValue\x12\x1c.st2138.MultiSetValuePayload\x1a\r.st2138.Empty\x12c\n" +
 	"\x13UpdateSubscriptions\x12\".st2138.UpdateSubscriptionsPayload\x1a&.st2138.DeviceComponent.ComponentParam0\x01\x12K\n" +
-	"\bGetParam\x12\x17.st2138.GetParamPayload\x1a&.st2138.DeviceComponent.ComponentParam\x128\n" +
+	"\bGetParam\x12\x17.st2138.GetParamPayload\x1a&.st2138.DeviceComponent.ComponentParam\x12F\n" +
+	"\fGetComponent\x12\x1b.st2138.GetComponentPayload\x1a\x19.st2138.ComponentResponse\x128\n" +
 	"\aConnect\x12\x16.st2138.ConnectPayload\x1a\x13.st2138.PushUpdates0\x01\x128\n" +
 	"\vAddLanguage\x12\x1a.st2138.AddLanguagePayload\x1a\r.st2138.Empty\x12h\n" +
 	"\x13LanguagePackRequest\x12\".st2138.LanguagePackRequestPayload\x1a-.st2138.DeviceComponent.ComponentLanguagePack\x123\n" +
 	"\rListLanguages\x12\f.st2138.Slot\x1a\x14.st2138.LanguageList\x12E\n" +
 	"\fRefreshToken\x12\x1b.st2138.RefreshTokenPayload\x1a\x18.st2138.ConnectionStatus\x12G\n" +
 	"\fRevokeAccess\x12\x1b.st2138.RevokeAccessPayload\x1a\x1a.st2138.RevocationResponseB%\n" +
-	"\x13catena.core.serviceB\n" +
-	"CatenaCoreH\x01P\x01b\x06proto3"
+	"\x13st2138.core.serviceB\n" +
+	"St2138CoreH\x01P\x01b\x06proto3"
 
 var file_service_proto_goTypes = []any{
 	(*DeviceRequestPayload)(nil),                  // 0: st2138.DeviceRequestPayload
@@ -84,24 +85,26 @@ var file_service_proto_goTypes = []any{
 	(*MultiSetValuePayload)(nil),                  // 7: st2138.MultiSetValuePayload
 	(*UpdateSubscriptionsPayload)(nil),            // 8: st2138.UpdateSubscriptionsPayload
 	(*GetParamPayload)(nil),                       // 9: st2138.GetParamPayload
-	(*ConnectPayload)(nil),                        // 10: st2138.ConnectPayload
-	(*AddLanguagePayload)(nil),                    // 11: st2138.AddLanguagePayload
-	(*LanguagePackRequestPayload)(nil),            // 12: st2138.LanguagePackRequestPayload
-	(*Slot)(nil),                                  // 13: st2138.Slot
-	(*RefreshTokenPayload)(nil),                   // 14: st2138.RefreshTokenPayload
-	(*RevokeAccessPayload)(nil),                   // 15: st2138.RevokeAccessPayload
-	(*DeviceComponent)(nil),                       // 16: st2138.DeviceComponent
-	(*SlotList)(nil),                              // 17: st2138.SlotList
-	(*CommandResponse)(nil),                       // 18: st2138.CommandResponse
-	(*ExternalObjectPayload)(nil),                 // 19: st2138.ExternalObjectPayload
-	(*ParamInfoResponse)(nil),                     // 20: st2138.ParamInfoResponse
-	(*Value)(nil),                                 // 21: st2138.Value
-	(*DeviceComponent_ComponentParam)(nil),        // 22: st2138.DeviceComponent.ComponentParam
-	(*PushUpdates)(nil),                           // 23: st2138.PushUpdates
-	(*DeviceComponent_ComponentLanguagePack)(nil), // 24: st2138.DeviceComponent.ComponentLanguagePack
-	(*LanguageList)(nil),                          // 25: st2138.LanguageList
-	(*ConnectionStatus)(nil),                      // 26: st2138.ConnectionStatus
-	(*RevocationResponse)(nil),                    // 27: st2138.RevocationResponse
+	(*GetComponentPayload)(nil),                   // 10: st2138.GetComponentPayload
+	(*ConnectPayload)(nil),                        // 11: st2138.ConnectPayload
+	(*AddLanguagePayload)(nil),                    // 12: st2138.AddLanguagePayload
+	(*LanguagePackRequestPayload)(nil),            // 13: st2138.LanguagePackRequestPayload
+	(*Slot)(nil),                                  // 14: st2138.Slot
+	(*RefreshTokenPayload)(nil),                   // 15: st2138.RefreshTokenPayload
+	(*RevokeAccessPayload)(nil),                   // 16: st2138.RevokeAccessPayload
+	(*DeviceComponent)(nil),                       // 17: st2138.DeviceComponent
+	(*SlotList)(nil),                              // 18: st2138.SlotList
+	(*CommandResponse)(nil),                       // 19: st2138.CommandResponse
+	(*ExternalObjectPayload)(nil),                 // 20: st2138.ExternalObjectPayload
+	(*ParamInfoResponse)(nil),                     // 21: st2138.ParamInfoResponse
+	(*Value)(nil),                                 // 22: st2138.Value
+	(*DeviceComponent_ComponentParam)(nil),        // 23: st2138.DeviceComponent.ComponentParam
+	(*ComponentResponse)(nil),                     // 24: st2138.ComponentResponse
+	(*PushUpdates)(nil),                           // 25: st2138.PushUpdates
+	(*DeviceComponent_ComponentLanguagePack)(nil), // 26: st2138.DeviceComponent.ComponentLanguagePack
+	(*LanguageList)(nil),                          // 27: st2138.LanguageList
+	(*ConnectionStatus)(nil),                      // 28: st2138.ConnectionStatus
+	(*RevocationResponse)(nil),                    // 29: st2138.RevocationResponse
 }
 var file_service_proto_depIdxs = []int32{
 	0,  // 0: st2138.CatenaService.DeviceRequest:input_type -> st2138.DeviceRequestPayload
@@ -114,30 +117,32 @@ var file_service_proto_depIdxs = []int32{
 	7,  // 7: st2138.CatenaService.MultiSetValue:input_type -> st2138.MultiSetValuePayload
 	8,  // 8: st2138.CatenaService.UpdateSubscriptions:input_type -> st2138.UpdateSubscriptionsPayload
 	9,  // 9: st2138.CatenaService.GetParam:input_type -> st2138.GetParamPayload
-	10, // 10: st2138.CatenaService.Connect:input_type -> st2138.ConnectPayload
-	11, // 11: st2138.CatenaService.AddLanguage:input_type -> st2138.AddLanguagePayload
-	12, // 12: st2138.CatenaService.LanguagePackRequest:input_type -> st2138.LanguagePackRequestPayload
-	13, // 13: st2138.CatenaService.ListLanguages:input_type -> st2138.Slot
-	14, // 14: st2138.CatenaService.RefreshToken:input_type -> st2138.RefreshTokenPayload
-	15, // 15: st2138.CatenaService.RevokeAccess:input_type -> st2138.RevokeAccessPayload
-	16, // 16: st2138.CatenaService.DeviceRequest:output_type -> st2138.DeviceComponent
-	17, // 17: st2138.CatenaService.GetPopulatedSlots:output_type -> st2138.SlotList
-	18, // 18: st2138.CatenaService.ExecuteCommand:output_type -> st2138.CommandResponse
-	19, // 19: st2138.CatenaService.ExternalObjectRequest:output_type -> st2138.ExternalObjectPayload
-	20, // 20: st2138.CatenaService.ParamInfoRequest:output_type -> st2138.ParamInfoResponse
-	1,  // 21: st2138.CatenaService.SetValue:output_type -> st2138.Empty
-	21, // 22: st2138.CatenaService.GetValue:output_type -> st2138.Value
-	1,  // 23: st2138.CatenaService.MultiSetValue:output_type -> st2138.Empty
-	22, // 24: st2138.CatenaService.UpdateSubscriptions:output_type -> st2138.DeviceComponent.ComponentParam
-	22, // 25: st2138.CatenaService.GetParam:output_type -> st2138.DeviceComponent.ComponentParam
-	23, // 26: st2138.CatenaService.Connect:output_type -> st2138.PushUpdates
-	1,  // 27: st2138.CatenaService.AddLanguage:output_type -> st2138.Empty
-	24, // 28: st2138.CatenaService.LanguagePackRequest:output_type -> st2138.DeviceComponent.ComponentLanguagePack
-	25, // 29: st2138.CatenaService.ListLanguages:output_type -> st2138.LanguageList
-	26, // 30: st2138.CatenaService.RefreshToken:output_type -> st2138.ConnectionStatus
-	27, // 31: st2138.CatenaService.RevokeAccess:output_type -> st2138.RevocationResponse
-	16, // [16:32] is the sub-list for method output_type
-	0,  // [0:16] is the sub-list for method input_type
+	10, // 10: st2138.CatenaService.GetComponent:input_type -> st2138.GetComponentPayload
+	11, // 11: st2138.CatenaService.Connect:input_type -> st2138.ConnectPayload
+	12, // 12: st2138.CatenaService.AddLanguage:input_type -> st2138.AddLanguagePayload
+	13, // 13: st2138.CatenaService.LanguagePackRequest:input_type -> st2138.LanguagePackRequestPayload
+	14, // 14: st2138.CatenaService.ListLanguages:input_type -> st2138.Slot
+	15, // 15: st2138.CatenaService.RefreshToken:input_type -> st2138.RefreshTokenPayload
+	16, // 16: st2138.CatenaService.RevokeAccess:input_type -> st2138.RevokeAccessPayload
+	17, // 17: st2138.CatenaService.DeviceRequest:output_type -> st2138.DeviceComponent
+	18, // 18: st2138.CatenaService.GetPopulatedSlots:output_type -> st2138.SlotList
+	19, // 19: st2138.CatenaService.ExecuteCommand:output_type -> st2138.CommandResponse
+	20, // 20: st2138.CatenaService.ExternalObjectRequest:output_type -> st2138.ExternalObjectPayload
+	21, // 21: st2138.CatenaService.ParamInfoRequest:output_type -> st2138.ParamInfoResponse
+	1,  // 22: st2138.CatenaService.SetValue:output_type -> st2138.Empty
+	22, // 23: st2138.CatenaService.GetValue:output_type -> st2138.Value
+	1,  // 24: st2138.CatenaService.MultiSetValue:output_type -> st2138.Empty
+	23, // 25: st2138.CatenaService.UpdateSubscriptions:output_type -> st2138.DeviceComponent.ComponentParam
+	23, // 26: st2138.CatenaService.GetParam:output_type -> st2138.DeviceComponent.ComponentParam
+	24, // 27: st2138.CatenaService.GetComponent:output_type -> st2138.ComponentResponse
+	25, // 28: st2138.CatenaService.Connect:output_type -> st2138.PushUpdates
+	1,  // 29: st2138.CatenaService.AddLanguage:output_type -> st2138.Empty
+	26, // 30: st2138.CatenaService.LanguagePackRequest:output_type -> st2138.DeviceComponent.ComponentLanguagePack
+	27, // 31: st2138.CatenaService.ListLanguages:output_type -> st2138.LanguageList
+	28, // 32: st2138.CatenaService.RefreshToken:output_type -> st2138.ConnectionStatus
+	29, // 33: st2138.CatenaService.RevokeAccess:output_type -> st2138.RevocationResponse
+	17, // [17:34] is the sub-list for method output_type
+	0,  // [0:17] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

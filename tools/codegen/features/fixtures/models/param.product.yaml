@@ -1,0 +1,27 @@
+type: STRUCT
+access_scope: st2138:mon
+read_only: true
+params:
+  name:
+    type: STRING
+  vendor:
+    type: STRING
+  version:
+    type: STRING
+  st2138_sdk:
+    type: STRING
+  st2138_sdk_version:
+    type: STRING
+  serial_number:
+    type: STRING
+value:
+  struct_value:
+    fields:
+      name:
+        string_value: Cucumber Fixture
+      vendor:
+        string_value: Ross Video
+      version:
+        string_value: 1.0.0
+      serial_number:
+        string_value: SN-7K9M-2024-XR485-BLU

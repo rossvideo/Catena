@@ -84,7 +84,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ inputs.cpp_image || 'ghcr.io/rossvideo/catena-cpp-toolchain:develop' }}
-      options: --user root:root
+      # github actions run as 1001
+      options: --user 1001:1001
     permissions:
       security-events: write
       actions: read
@@ -144,7 +145,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ inputs.go_image || 'ghcr.io/rossvideo/catena-go-toolchain:develop' }}
-      options: --user root:root
+      # github actions run as 1001
+      options: --user 1001:1001
     permissions:
       security-events: write
       actions: read
@@ -159,9 +161,6 @@ jobs:
       - name: Configure git safe directory
         shell: bash
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-      - name: Install file utility
-        run: sudo apt-get update && sudo apt-get install -y file
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4

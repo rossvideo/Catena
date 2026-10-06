@@ -58,6 +58,7 @@ const (
 	CatenaService_MultiSetValue_FullMethodName         = "/st2138.CatenaService/MultiSetValue"
 	CatenaService_UpdateSubscriptions_FullMethodName   = "/st2138.CatenaService/UpdateSubscriptions"
 	CatenaService_GetParam_FullMethodName              = "/st2138.CatenaService/GetParam"
+	CatenaService_GetComponent_FullMethodName          = "/st2138.CatenaService/GetComponent"
 	CatenaService_Connect_FullMethodName               = "/st2138.CatenaService/Connect"
 	CatenaService_AddLanguage_FullMethodName           = "/st2138.CatenaService/AddLanguage"
 	CatenaService_LanguagePackRequest_FullMethodName   = "/st2138.CatenaService/LanguagePackRequest"
@@ -70,7 +71,12 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// Catena's API
+// Legacy name retained intentionally. Although the "Catena" name has been
+// removed elsewhere in favor of "st2138", the `CatenaService` service name
+// (and its generated RPC/stub symbols) is deliberately preserved. Renaming it
+// would change the gRPC service path and generated client/server bindings,
+// forcing every existing client and server to be recompiled and redeployed in
+// lockstep. That blast radius is too large to justify a cosmetic rename.
 type CatenaServiceClient interface {
 	DeviceRequest(ctx context.Context, in *protos.DeviceRequestPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.DeviceComponent], error)
 	GetPopulatedSlots(ctx context.Context, in *protos.Empty, opts ...grpc.CallOption) (*protos.SlotList, error)
@@ -82,6 +88,7 @@ type CatenaServiceClient interface {
 	MultiSetValue(ctx context.Context, in *protos.MultiSetValuePayload, opts ...grpc.CallOption) (*protos.Empty, error)
 	UpdateSubscriptions(ctx context.Context, in *protos.UpdateSubscriptionsPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.DeviceComponent_ComponentParam], error)
 	GetParam(ctx context.Context, in *protos.GetParamPayload, opts ...grpc.CallOption) (*protos.DeviceComponent_ComponentParam, error)
+	GetComponent(ctx context.Context, in *protos.GetComponentPayload, opts ...grpc.CallOption) (*protos.ComponentResponse, error)
 	// The stream of PushUpdates is open-ended, terminating only when the
 	// logical connection with the client is terminated.
 	// Connected clients should use the RefreshToken RPC to prevent the
@@ -249,6 +256,16 @@ func (c *catenaServiceClient) GetParam(ctx context.Context, in *protos.GetParamP
 	return out, nil
 }
 
+func (c *catenaServiceClient) GetComponent(ctx context.Context, in *protos.GetComponentPayload, opts ...grpc.CallOption) (*protos.ComponentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(protos.ComponentResponse)
+	err := c.cc.Invoke(ctx, CatenaService_GetComponent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *catenaServiceClient) Connect(ctx context.Context, in *protos.ConnectPayload, opts ...grpc.CallOption) (grpc.ServerStreamingClient[protos.PushUpdates], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &CatenaService_ServiceDesc.Streams[5], CatenaService_Connect_FullMethodName, cOpts...)
@@ -322,7 +339,12 @@ func (c *catenaServiceClient) RevokeAccess(ctx context.Context, in *protos.Revok
 // All implementations must embed UnimplementedCatenaServiceServer
 // for forward compatibility.
 //
-// Catena's API
+// Legacy name retained intentionally. Although the "Catena" name has been
+// removed elsewhere in favor of "st2138", the `CatenaService` service name
+// (and its generated RPC/stub symbols) is deliberately preserved. Renaming it
+// would change the gRPC service path and generated client/server bindings,
+// forcing every existing client and server to be recompiled and redeployed in
+// lockstep. That blast radius is too large to justify a cosmetic rename.
 type CatenaServiceServer interface {
 	DeviceRequest(*protos.DeviceRequestPayload, grpc.ServerStreamingServer[protos.DeviceComponent]) error
 	GetPopulatedSlots(context.Context, *protos.Empty) (*protos.SlotList, error)
@@ -334,6 +356,7 @@ type CatenaServiceServer interface {
 	MultiSetValue(context.Context, *protos.MultiSetValuePayload) (*protos.Empty, error)
 	UpdateSubscriptions(*protos.UpdateSubscriptionsPayload, grpc.ServerStreamingServer[protos.DeviceComponent_ComponentParam]) error
 	GetParam(context.Context, *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error)
+	GetComponent(context.Context, *protos.GetComponentPayload) (*protos.ComponentResponse, error)
 	// The stream of PushUpdates is open-ended, terminating only when the
 	// logical connection with the client is terminated.
 	// Connected clients should use the RefreshToken RPC to prevent the
@@ -385,6 +408,9 @@ func (UnimplementedCatenaServiceServer) UpdateSubscriptions(*protos.UpdateSubscr
 }
 func (UnimplementedCatenaServiceServer) GetParam(context.Context, *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetParam not implemented")
+}
+func (UnimplementedCatenaServiceServer) GetComponent(context.Context, *protos.GetComponentPayload) (*protos.ComponentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetComponent not implemented")
 }
 func (UnimplementedCatenaServiceServer) Connect(*protos.ConnectPayload, grpc.ServerStreamingServer[protos.PushUpdates]) error {
 	return status.Error(codes.Unimplemented, "method Connect not implemented")
@@ -570,6 +596,24 @@ func _CatenaService_GetParam_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CatenaService_GetComponent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(protos.GetComponentPayload)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatenaServiceServer).GetComponent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatenaService_GetComponent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatenaServiceServer).GetComponent(ctx, req.(*protos.GetComponentPayload))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CatenaService_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(protos.ConnectPayload)
 	if err := stream.RecvMsg(m); err != nil {
@@ -697,6 +741,10 @@ var CatenaService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetParam",
 			Handler:    _CatenaService_GetParam_Handler,
+		},
+		{
+			MethodName: "GetComponent",
+			Handler:    _CatenaService_GetComponent_Handler,
 		},
 		{
 			MethodName: "AddLanguage",

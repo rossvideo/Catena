@@ -41,7 +41,7 @@ const MINIMAL_DESCRIPTOR_WITH_KEYWORDS = {
     item_list: {
       type: 'STRUCT_ARRAY',
       name: { display_strings: { en: 'Item List' } },
-      template_oid: '/item'
+      template_oid: 'item'
     },
     product: {
       type: 'STRUCT',
@@ -53,8 +53,8 @@ const MINIMAL_DESCRIPTOR_WITH_KEYWORDS = {
             name: { string_value: 'Keyword Test' },
             vendor: { string_value: 'Test' },
             version: { string_value: '1.0.0' },
-            catena_sdk: { string_value: 'https://github.com/rossvideo/Catena' },
-            catena_sdk_version: { string_value: '1.2.3' },
+            st2138_sdk: { string_value: 'https://github.com/rossvideo/Catena' },
+            st2138_sdk_version: { string_value: '1.2.3' },
             serial_number: { string_value: 'SN-001' }
           }
         }
@@ -63,8 +63,8 @@ const MINIMAL_DESCRIPTOR_WITH_KEYWORDS = {
         name: { type: 'STRING' },
         vendor: { type: 'STRING' },
         version: { type: 'STRING' },
-        catena_sdk: { type: 'STRING' },
-        catena_sdk_version: { type: 'STRING' },
+        st2138_sdk: { type: 'STRING' },
+        st2138_sdk_version: { type: 'STRING' },
         serial_number: { type: 'STRING' },
         struct: { type: 'STRUCT', params: { nested: { type: 'STRING' } } },
         arr: { type: 'STRING_ARRAY' }
@@ -143,7 +143,7 @@ describe('getCppIdentifier', () => {
 describe('mock device getParam/getConstraint during Param tree build', () => {
   test('template_oid resolution calls device.getParam with fqoid', () => {
     const { device } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
-    expect(device.getParam).toHaveBeenCalledWith('/item');
+    expect(device.getParam).toHaveBeenCalledWith('item');
   });
 
   test('constraint ref_oid resolution calls device.getConstraint', () => {
@@ -157,9 +157,9 @@ describe('Param class', () => {
   const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
 
   test('getFQOid returns correct path', () => {
-    expect(params.product.getFQOid()).toBe('/product');
-    expect(params.auto.getFQOid()).toBe('/auto');
-    expect(params.product.getParam(['name']).getFQOid()).toBe('/product/name');
+    expect(params.product.getFQOid()).toBe('product');
+    expect(params.auto.getFQOid()).toBe('auto');
+    expect(params.product.getParam(['name']).getFQOid()).toBe('product/name');
   });
 
   test('getParam returns correct param', () => {
@@ -297,16 +297,12 @@ describe('Param class', () => {
                   struct_variant_array_values: {
                     struct_variants: [
                       {
-                        struct_variant_value: {
-                          struct_variant_type: 'a',
-                          value: { string_value: 'first' }
-                        }
+                        struct_variant_type: 'a',
+                        value: { string_value: 'first' }
                       },
                       {
-                        struct_variant_value: {
-                          struct_variant_type: 'b',
-                          value: { int32_value: 42 }
-                        }
+                        struct_variant_type: 'b',
+                        value: { int32_value: 42 }
                       }
                     ]
                   }
@@ -626,7 +622,7 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
       row_list: {
         type: 'STRUCT_ARRAY',
         name: { display_strings: { en: 'Row List' } },
-        template_oid: '/row'
+        template_oid: 'row'
       }
     }
   };
@@ -666,7 +662,7 @@ describe('objectType, objectNamespaceType, elementType, elementNamespaceType', (
       row2_list: {
         type: 'STRUCT_ARRAY',
         name: { display_strings: { en: 'Row2 List' } },
-        template_oid: '/row2'
+        template_oid: 'row2'
       }
     }
   };
@@ -891,16 +887,12 @@ describe('valueInitializer struct and variant', () => {
             struct_variant_array_values: {
               struct_variants: [
                 {
-                  struct_variant_value: {
-                    struct_variant_type: 'a',
-                    value: { string_value: 'first' }
-                  }
+                  struct_variant_type: 'a',
+                  value: { string_value: 'first' }
                 },
                 {
-                  struct_variant_value: {
-                    struct_variant_type: 'b',
-                    value: { int32_value: 10 }
-                  }
+                  struct_variant_type: 'b',
+                  value: { int32_value: 10 }
                 }
               ]
             }
@@ -1001,5 +993,92 @@ describe('C++ codegen keyword safeguarding', () => {
     expect(body).toMatch(/"auto"/);
     expect(body).toMatch(/"class"/);
     expect(body).toMatch(/"switch"/);
+  });
+});
+
+describe('reserved client_hints: st2138_namespace and st2138_definition_only', () => {
+  const NAMESPACE_DESC = {
+    slot: 1,
+    detail_level: 'FULL',
+    access_scopes: ['st2138:op'],
+    default_scope: 'st2138:op',
+    params: {
+      geo_lib: {
+        type: 'STRUCT',
+        client_hints: { st2138_namespace: 'shared.geo' },
+        params: {
+          point: {
+            type: 'STRUCT',
+            client_hints: { st2138_definition_only: 'true' },
+            params: {
+              latitude: { type: 'FLOAT32' },
+              longitude: { type: 'FLOAT32' }
+            }
+          },
+          segment: {
+            type: 'STRUCT',
+            client_hints: { st2138_definition_only: 'true' },
+            params: {
+              start: { type: 'STRUCT', template_oid: 'geo_lib/point' },
+              end: { type: 'STRUCT', template_oid: 'geo_lib/point' }
+            }
+          }
+        }
+      },
+      flight_path: {
+        type: 'STRUCT',
+        name: { display_strings: { en: 'Flight Path' } },
+        template_oid: 'geo_lib/segment'
+      }
+    }
+  };
+
+  const { params } = createMockDeviceWithParams(NAMESPACE_DESC, 'DevNs');
+  const geoLib = params.geo_lib;
+  const point = geoLib.subParams.point;
+  const segment = geoLib.subParams.segment;
+
+  test('namespace root is detected and translated to C++ form', () => {
+    expect(geoLib.isNamespaceRoot()).toBe(true);
+    expect(geoLib.getNamespaceHint()).toBe('shared.geo');
+    expect(geoLib.getCppNamespace()).toBe('shared::geo');
+  });
+
+  test('namespace root is implicitly definition-only', () => {
+    expect(geoLib.isDefinitionOnly()).toBe(true);
+  });
+
+  test('explicit definition-only members are flagged but are not namespace roots', () => {
+    expect(point.isDefinitionOnly()).toBe(true);
+    expect(point.isNamespaceRoot()).toBe(false);
+  });
+
+  test('members of a namespace root live in the shared namespace', () => {
+    expect(point.namespace).toBe('shared::geo');
+    expect(point.objectNamespaceType()).toBe('shared::geo::Point');
+    expect(segment.objectNamespaceType()).toBe('shared::geo::Segment');
+  });
+
+  test('inStNamespace propagates to descendants but not to the root or peers', () => {
+    expect(geoLib.inStNamespace).toBe(false);
+    expect(point.inStNamespace).toBe(true);
+    expect(point.subParams.latitude.inStNamespace).toBe(true);
+    expect(params.flight_path.inStNamespace).toBe(false);
+  });
+
+  test('internal template_oid resolves against the ancestor chain during construction', () => {
+    expect(segment.subParams.start.isTemplated()).toBe(true);
+    expect(segment.subParams.start.template_param).toBe(point);
+  });
+
+  test('a param templated on a namespaced type declares the fully qualified type', () => {
+    expect(params.flight_path.declaredType()).toBe('shared::geo::Segment');
+  });
+});
+
+describe('declaredType for device-local templates stays unqualified', () => {
+  test('STRUCT_ARRAY templated on a device-local STRUCT uses the local alias', () => {
+    const { params } = createMockDeviceWithParams(MINIMAL_DESCRIPTOR_WITH_KEYWORDS, 'keywords');
+    expect(params.item_list.declaredType()).toBe('Item_list');
   });
 });

@@ -1,0 +1,39 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:op
+params:
+  product:
+    import:
+      url: ./param.product.yaml
+  counter:
+    type: INT32
+    name: { display_strings: { en: Counter } }
+    value: { int32_value: 0 }
+  label:
+    type: STRING
+    name: { display_strings: { en: Label } }
+    value: { string_value: "hello" }
+menu_groups:
+  status:
+    name: { display_strings: { en: Status, fr: Statut } }
+    order: 0
+    menus:
+      product:
+        name: { display_strings: { en: Product, fr: Produit } }
+        param_oids:
+          - product/name
+          - product/vendor
+          - product/version
+  config:
+    name: { display_strings: { en: Config, fr: Configuration } }
+    order: 1
+    menus:
+      general:
+        name: { display_strings: { en: General, fr: Général } }
+        param_oids:
+          - counter
+          - label
+        client_hints:
+          oglml: "eo://menus.grid"

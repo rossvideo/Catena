@@ -1,0 +1,47 @@
+# A shared, namespaced geometry library imported by the device model. Its `segment`
+# type references the sibling `point` type internally through template_oid, so both
+# endpoints inherit the coordinate fields and range constraints without repeating
+# them. The st2138_namespace hint makes these types generate into a shared C++
+# namespace (shared::geo) rather than the device's own namespace.
+type: STRUCT
+client_hints:
+  st2138_namespace: shared.geo
+
+params:
+  point:
+    type: STRUCT
+    client_hints:
+      st2138_definition_only: "true"
+    name:
+      display_strings:
+        en: Point
+    params:
+      latitude:
+        type: FLOAT32
+        constraint:
+          type: FLOAT_RANGE
+          float_range:
+            min_value: -90.0
+            max_value: 90.0
+      longitude:
+        type: FLOAT32
+        constraint:
+          type: FLOAT_RANGE
+          float_range:
+            min_value: -180.0
+            max_value: 180.0
+
+  segment:
+    type: STRUCT
+    client_hints:
+      st2138_definition_only: "true"
+    name:
+      display_strings:
+        en: Segment
+    params:
+      start:
+        type: STRUCT
+        template_oid: point
+      end:
+        type: STRUCT
+        template_oid: point

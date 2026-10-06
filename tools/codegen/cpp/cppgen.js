@@ -19,7 +19,7 @@
 import fs from "fs";
 import path from "path";
 import Device from "./device.js";
-import Param from "./param.js";
+import Param, { ST2138_NAMESPACE_KEY } from "./param.js";
 import LanguagePacks from "../language.js";
 import Constraint from "./constraint.js";
 
@@ -102,6 +102,8 @@ class CppGen {
     cloc = Cloc.write.bind(Cloc);
     coda = Cloc.deliver.bind(Cloc);
 
+    this.outputDir = outputDir;
+    this.sharedHeaders = [];
     this.device = new Device(deviceModel);
   }
 
@@ -109,7 +111,9 @@ class CppGen {
    * generate header and body files to represent the device model
    */
   generate() {
+    this.prepareNamespaces();
     this.init();
+    this.openDeviceNamespace();
     this.deviceInit();
     this.languagePacks();
     this.menu();
@@ -128,8 +132,10 @@ class CppGen {
     hloc(warning);
     hloc(`#include <Device.h>`);
     hloc(`#include <StructInfo.h>`);
+    for (let sharedHeader of this.sharedHeaders) {
+      hloc(`#include "${sharedHeader}"`);
+    }
     hloc(`extern catena::common::Device dm;`);
-    hloc(`namespace ${this.device.namespace} {`);
 
     bloc(warning);
     bloc(`#include "${this.headerFilename}"`);
@@ -163,6 +169,123 @@ class CppGen {
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);
     bloc(`using ParamAdder = catena::common::AddItem<ParamTag>;`);
+  }
+
+  /**
+   * open the device namespace in the header file
+   */
+  openDeviceNamespace() {
+    hloc(`namespace ${this.device.namespace} {`);
+  }
+
+  /**
+   * build the namespace-root params and emit each shared namespace into its
+   * own include-guarded header so the types can be shared across device models
+   */
+  prepareNamespaces() {
+    if (!("params" in this.device.desc)) {
+      return;
+    }
+    // group namespace-root params by their C++ namespace so params sharing a
+    // namespace land in one guarded header
+    const groups = new Map();
+    for (let oid in this.device.desc.params) {
+      let desc = this.device.desc.params[oid];
+      if (!(desc.client_hints && desc.client_hints[ST2138_NAMESPACE_KEY])) {
+        continue;
+      }
+      let param = this.device.params[oid] = new Param(oid, desc, this.device.namespace, this.device);
+      const cppNs = param.getCppNamespace();
+      if (!groups.has(cppNs)) {
+        groups.set(cppNs, []);
+      }
+      groups.get(cppNs).push(param);
+    }
+    for (let [cppNs, params] of groups) {
+      this.writeSharedNamespaceHeader(cppNs, params);
+    }
+  }
+
+  /**
+   * write a shared namespace (its member types and StructInfo specializations)
+   * to its own include-guarded header in the output directory
+   * @param {string} cppNs the C++ namespace (e.g. "shared::geo")
+   * @param {Param[]} params the namespace-root params contributing to it
+   */
+  writeSharedNamespaceHeader(cppNs, params) {
+    const fileBase = cppNs.split("::").join("_");
+    const filename = `${fileBase}.h`;
+    const guard = `ST2138_${fileBase.toUpperCase()}_H`;
+    this.sharedHeaders.push(filename);
+
+    const fd = fs.openSync(path.join(this.outputDir, filename), "w");
+    const Sloc = new loc(fd);
+    const Sploc = new bufloc(fd);
+
+    // redirect the header/postscript writers at this shared file while emitting
+    const savedHloc = hloc, savedPloc = ploc;
+    const savedHindent = hindent, savedPindent = pindent;
+    hloc = Sloc.write.bind(Sloc);
+    ploc = Sploc.write.bind(Sploc);
+    hindent = 0;
+    pindent = 0;
+
+    hloc(`#ifndef ${guard}`);
+    hloc(`#define ${guard}`);
+    hloc(`// This file was auto-generated. Do not modify by hand.`);
+    hloc(`#include <StructInfo.h>`);
+    hloc(`namespace ${cppNs} {`, hindent++);
+    for (let param of params) {
+      for (let subParam of param.getSubParams()) {
+        if (subParam.hasTypeInfo()) {
+          this.writeTypeInfo(subParam);
+        }
+      }
+    }
+    hloc(`} // namespace ${cppNs}`, --hindent);
+    Sploc.deliver();
+    hloc(`#endif // ${guard}`);
+    fs.closeSync(fd);
+
+    hloc = savedHloc;
+    ploc = savedPloc;
+    hindent = savedHindent;
+    pindent = savedPindent;
+  }
+
+  /**
+   * @returns the set of top-level oids targeted by any template_oid in the model
+   */
+  referencedRoots() {
+    if (this._referencedRoots == undefined) {
+      this._referencedRoots = new Set();
+      const walk = (params) => {
+        for (let oid in params) {
+          let d = params[oid];
+          if (d.template_oid) {
+            this._referencedRoots.add(d.template_oid.split("/")[0]);
+          }
+          if (d.params) {
+            walk(d.params);
+          }
+        }
+      };
+      if ("params" in this.device.desc) {
+        walk(this.device.desc.params);
+      }
+      if ("commands" in this.device.desc) {
+        walk(this.device.desc.commands);
+      }
+    }
+    return this._referencedRoots;
+  }
+
+  /**
+   * @param {Param} param
+   * @returns true if some template_oid in the model targets this param
+   */
+  isReferenced(param) {
+    return this.referencedRoots().has(param.oid);
   }
 
   /**
@@ -258,16 +381,21 @@ class CppGen {
       return;
     }
     for (let oid in this.device.desc.params) {
+      // namespace roots were already emitted as shared namespaces
+      if (this.device.params[oid] != undefined) {
+        continue;
+      }
+
       // handle special case for product param
       if (oid == "product") {
-        // we need to add code to overwrite the value of catena_sdk_version with
-        // whatever's up-to-date in the SDK.
+        // we need to add code to overwrite the value of st2138_sdk and
+        // st2138_sdk_version with whatever's up-to-date in the SDK.
         // this is done by adding some code to the coda
-        cloc(`#define STRINGIFY(x) #x`);
-        cloc(`#define TO_STRING(x) STRINGIFY(x)`);
-        cloc(`constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);`);
+        cloc(`constexpr const char* real_sdk_version = CATENA_CPP_VERSION;`);
+        cloc(`constexpr const char* real_sdk_url = CATENA_CPP_SDK;`);
         cloc(`${this.device.namespace}::Product& initialize_sdk_version(${this.device.namespace}::Product& p) {`);
-        cloc(`p.catena_sdk_version = real_sdk_version;`,1);
+        cloc(`p.st2138_sdk = real_sdk_url;`,1);
+        cloc(`p.st2138_sdk_version = real_sdk_version;`,1);
         cloc(`return p;`,1);
         cloc(`}`);
         cloc(`${this.device.namespace}::Product dummy = initialize_sdk_version(product);`);
@@ -275,6 +403,14 @@ class CppGen {
 
       // add the param to the device
       let param = this.device.params[oid] = new Param(oid, this.device.desc.params[oid], this.device.namespace, this.device);
+
+      // definition-only params contribute types (when referenced) but no runtime param
+      if (param.isDefinitionOnly()) {
+        if (param.hasTypeInfo() && this.isReferenced(param)) {
+          this.writeTypeInfo(param);
+        }
+        continue;
+      }
 
       // define the param in the header file
       if (param.hasTypeInfo()) {
@@ -374,6 +510,14 @@ class CppGen {
     for (let oid in this.device.desc.commands) {
       // add the command to the device
       let command = this.device.commands[oid] = new Param(oid, this.device.desc.commands[oid], this.device.namespace, this.device, undefined, true);
+
+      // definition-only commands contribute types (when referenced) but no runtime param
+      if (command.isDefinitionOnly()) {
+        if (command.hasTypeInfo() && this.isReferenced(command)) {
+          this.writeTypeInfo(command);
+        }
+        continue;
+      }
 
       // define the command in the header file
       if (command.hasTypeInfo()) {
