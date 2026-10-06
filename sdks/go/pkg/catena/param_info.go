@@ -86,12 +86,16 @@ func ParamInfosForRequest(fqoid string, device *st2138.Device, recursive bool, s
 	return StatusResult{Code: StatusCodeOk}
 }
 
-func paramDisplayName(param *protos.Param) st2138.PolyglotText {
+func paramDisplayName(param *protos.Param) *st2138.PolyglotTextBuilder {
 	displayStrings := param.GetName().GetDisplayStrings()
 	if len(displayStrings) == 0 {
 		return nil
 	}
-	return st2138.PolyglotText(displayStrings)
+	pairs := make([]string, 0, len(displayStrings))
+	for lang, text := range displayStrings {
+		pairs = append(pairs, lang, text)
+	}
+	return st2138.NewPolyglotText(pairs...)
 }
 
 func paramArrayLength(param *protos.Param) uint32 {

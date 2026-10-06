@@ -463,7 +463,7 @@ func TestWithTemplateOid(t *testing.T) {
 
 func TestWithConstraint_ValidInt32Choice(t *testing.T) {
 	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 1, Name: NewPolyglotText("en", "one")},
+		{Value: 1, Name: NewPolyglotText("en", "one").polyglot},
 	})
 	p := NewParamInt32(0).WithConstraint(c).proto
 	if p.GetConstraint() == nil {
@@ -500,7 +500,7 @@ func TestWithConstraint_ValidStringChoice(t *testing.T) {
 
 func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
 	c := NewConstraintStringStringChoice(false, []StringStringChoice{
-		{Value: "v", Name: NewPolyglotText("en", "V")},
+		{Value: "v", Name: NewPolyglotText("en", "V").polyglot},
 	})
 	p := NewParamString("v").WithConstraint(c).proto
 	if p.GetConstraint() == nil {
@@ -577,8 +577,8 @@ func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
 
 func TestWithConstraint_ValidInt32ChoiceOnInt32Array(t *testing.T) {
 	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 0, Name: NewPolyglotText("en", "Off")},
-		{Value: 1, Name: NewPolyglotText("en", "On")},
+		{Value: 0, Name: NewPolyglotText("en", "Off").polyglot},
+		{Value: 1, Name: NewPolyglotText("en", "On").polyglot},
 	})
 	p := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).proto
 	if p.GetConstraint() == nil {
@@ -614,7 +614,7 @@ func TestWithConstraint_ValidStringChoiceOnStringArray(t *testing.T) {
 
 func TestWithConstraint_ValidStringStringChoiceOnStringArray(t *testing.T) {
 	c := NewConstraintStringStringChoice(true, []StringStringChoice{
-		{Value: "<#FF0000>", Name: NewPolyglotText("en", "Red")},
+		{Value: "<#FF0000>", Name: NewPolyglotText("en", "Red").polyglot},
 	})
 	p := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).proto
 	if p.GetConstraint() == nil {
