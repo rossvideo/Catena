@@ -51,7 +51,8 @@ type PolyglotTextBuilder struct {
 	err      error
 }
 
-// NewPolyglotTextBuilder creates a new PolyglotTextBuilder.
+// Build returns a usable PolyglotText from the builder. If the builder has an error, it
+// returns nil and the error. Must be called after all builder methods have been called.
 func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
 	if pb.err != nil {
 		return nil, pb.err
@@ -59,14 +60,15 @@ func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
 	return pb.polyglot, nil
 }
 
-// NewPolyglotText creates a PolyglotText from zero or more (lang, text) pairs.
-// Calling it with no arguments yields an empty PolyglotText, which is useful
+// NewPolyglotText creates a PolyglotTextBuilder from zero or more (lang, text) pairs.
+// Calling it with no arguments yields an empty PolyglotTextBuilder, which is useful
 // for building entries up in a loop before passing the result to a builder:
 //
-//	name := NewPolyglotText()
+//	nameBuilder := NewPolyglotText()
 //	for lang := range langs {
-//		name.With(lang, translate(lang, "Hello"))
+//		nameBuilder.With(lang, translate(lang, "Hello"))
 //	}
+//	name, err := nameBuilder.Build()
 func NewPolyglotText(pairs ...string) *PolyglotTextBuilder {
 	pb := &PolyglotTextBuilder{polyglot: PolyglotText{}}
 	for i := 0; i+1 < len(pairs); i += 2 {
