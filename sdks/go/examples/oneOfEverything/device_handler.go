@@ -87,7 +87,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 // order only). The GetDevice handler sends it as the leading ComponentDevice
 // chunk; the menus themselves are streamed as ComponentMenu chunks (see
 // slotZeroMenus) and the params and commands as their own chunks.
-func slotZeroSkeleton() *st2138.Device {
+func slotZeroSkeleton() *st2138.DeviceBuilder {
 	return st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithMultiSetEnabled(true).
@@ -163,7 +163,8 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
 		// Composed from the same slotZero* helpers the GetDevice handler
 		// streams chunk-by-chunk, so the two views stay in sync.
-		device := slotZeroSkeleton()
+		deviceBuilder := slotZeroSkeleton()
+		device := deviceBuilder.MakeDevice()
 		for oid, menu := range slotZeroMenus() {
 			group, name, _ := strings.Cut(oid, "/")
 			if groupProto := device.Proto.GetMenuGroups()[group]; groupProto != nil {
@@ -171,10 +172,10 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			}
 		}
 		for oid, param := range slotZeroParams(counter) {
-			device.WithParam(oid, param)
+			deviceBuilder.WithParam(oid, param)
 		}
 		for oid, command := range slotZeroCommands() {
-			device.WithCommand(oid, command)
+			deviceBuilder.WithCommand(oid, command)
 		}
 		return device, true
 	case 1:
@@ -234,7 +235,8 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithOrder(1).
 				WithMenu("picture", st2138.NewMenu().
 					WithName(st2138.NewPolyglotText("en", "Picture")).
-					WithParamOids("brightness", "contrast", "saturation")))
+					WithParamOids("brightness", "contrast", "saturation"))).
+			MakeDevice()
 		return device, true
 	case 2:
 		// Slot 2: prefix-dispatched identity/audio params plus FLOAT32, arrays,
@@ -328,7 +330,8 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithOrder(1).
 				WithMenu("audio", st2138.NewMenu().
 					WithName(st2138.NewPolyglotText("en", "Audio")).
-					WithParamOids("volume", "muted")))
+					WithParamOids("volume", "muted"))).
+			MakeDevice()
 		return device, true
 	default:
 		return nil, false

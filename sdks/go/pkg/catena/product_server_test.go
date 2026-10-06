@@ -111,9 +111,12 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 	srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 		// Business logic sends a device with a bogus product that must be
 		// overwritten, plus its own param that must be preserved.
-		device := st2138.NewDevice(0).
+		device, err := st2138.NewDevice(0).
 			WithParam("product", st2138.NewParamString("wrong")).
-			WithParam("brightness", st2138.NewParamInt32(50))
+			WithParam("brightness", st2138.NewParamInt32(50)).Build()
+		if err != nil {
+			t.Fatalf("NewDevice(0).WithParam('product', NewParamString('wrong')).WithParam('brightness', NewParamInt32(50)).Build() failed: %v", err)
+		}
 		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
 			return StatusWithCode(StatusCodeInternal, err.Error())
 		}
@@ -451,9 +454,12 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 		called := false
 		srv.RegisterGetDeviceHandler(0, func(hctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 			called = true
-			device := st2138.NewDevice(0).
+			device, err := st2138.NewDevice(0).
 				WithParam("product", st2138.NewParamString("wrong")).
-				WithParam("brightness", st2138.NewParamInt32(50))
+				WithParam("brightness", st2138.NewParamInt32(50)).Build()
+			if err != nil {
+				t.Fatalf("NewDevice(0).WithParam('product', NewParamString('wrong')).WithParam('brightness', NewParamInt32(50)).Build() failed: %v", err)
+			}
 			if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
 				return StatusWithCode(StatusCodeInternal, err.Error())
 			}

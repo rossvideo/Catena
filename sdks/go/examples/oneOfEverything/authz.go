@@ -155,7 +155,8 @@ func registerAuthz(srv catena.Server) {
 				WithMultiSetEnabled(false).
 				WithAccessScopes(st2138.ScopeMon, st2138.ScopeOp, st2138.ScopeCfg, st2138.ScopeAdm).
 				WithMenuGroup("status", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Status"))).
-				WithMenuGroup("config", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Config")))),
+				WithMenuGroup("config", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Config"))).
+				MakeDevice()),
 		); err != nil {
 			return catena.StatusError(err)
 		}

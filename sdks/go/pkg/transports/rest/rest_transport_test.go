@@ -283,7 +283,7 @@ func TestTransport_GetDevice_Route(t *testing.T) {
 
 	handlerCalled := false
 	device := st2138.NewDevice(0).
-		WithDetailLevel(st2138.DetailLevelFull)
+		WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
 
 	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
@@ -1827,9 +1827,9 @@ func TestTransport_Connect_TooManyConnections(t *testing.T) {
 
 func TestWriteResults_ValidData(t *testing.T) {
 	tr := NewTransport(config.RestOptions{})
-	device := *st2138.NewDevice(0)
+	device := st2138.NewDevice(0).MakeDevice()
 	rec := httptest.NewRecorder()
-	tr.writeDeviceResult(rec, device, http.StatusOK)
+	tr.writeDeviceResult(rec, *device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
 	assertContentType(t, rec, "application/json")
 
@@ -2232,11 +2232,11 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 }
 
 func TestWriteDeviceResult_WriteError(t *testing.T) {
-	device := *st2138.NewDevice(0)
+	device := st2138.NewDevice(0).MakeDevice()
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
-	NewTransport(config.RestOptions{}).writeDeviceResult(w, device, http.StatusOK)
+	NewTransport(config.RestOptions{}).writeDeviceResult(w, *device, http.StatusOK)
 
 	assertStatus(t, rec, http.StatusOK)
 }
