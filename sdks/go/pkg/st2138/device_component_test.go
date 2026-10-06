@@ -43,7 +43,10 @@ import (
 )
 
 func TestComponentDevice(t *testing.T) {
-	device := NewDevice(3)
+	device, err := NewDevice(3).Build()
+	if err != nil {
+		t.Fatalf("NewDevice(3).Build() failed: %v", err)
+	}
 	chunk := ComponentDevice(device)
 
 	got := chunk.Proto.GetDevice()
@@ -143,7 +146,11 @@ func TestComponentLanguagePack(t *testing.T) {
 }
 
 func TestDeviceComponent_Wire(t *testing.T) {
-	chunk := ComponentDevice(NewDevice(1))
+	device, err := NewDevice(1).Build()
+	if err != nil {
+		t.Fatalf("NewDevice(1).Build() failed: %v", err)
+	}
+	chunk := ComponentDevice(device)
 	wire := chunk.Wire()
 	if wire != chunk.Proto {
 		t.Errorf("expected Wire() to return the underlying proto, got %v", wire)

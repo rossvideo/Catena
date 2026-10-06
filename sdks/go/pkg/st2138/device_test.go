@@ -39,6 +39,7 @@
 package st2138
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -46,7 +47,7 @@ import (
 
 func TestNewDevice_Basic(t *testing.T) {
 	cd := NewDevice(3)
-	proto := cd.Proto
+	proto := cd.proto
 	if proto == nil {
 		t.Fatal("expected non-nil proto device")
 	}
@@ -67,7 +68,7 @@ func TestNewDevice_WithParams(t *testing.T) {
 			WithName(NewPolyglotText("en", "Brightness")).
 			WithWidget("SLIDER"))
 
-	brightness, ok := cd.Proto.GetParams()["brightness"]
+	brightness, ok := cd.proto.GetParams()["brightness"]
 	if !ok {
 		t.Fatal("expected 'brightness' param")
 	}
@@ -87,7 +88,7 @@ func TestDevice_WithParam_DeepCopies(t *testing.T) {
 	// Mutating the original param after WithParam must not affect the device.
 	param.WithValue(Value{Proto: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 999}}})
 
-	stored := cd.Proto.GetParams()["counter"]
+	stored := cd.proto.GetParams()["counter"]
 	if stored.GetValue().GetInt32Value() != 1 {
 		t.Errorf("expected stored value to remain 1, got %v", stored.GetValue().GetInt32Value())
 	}
@@ -96,13 +97,13 @@ func TestDevice_WithParam_DeepCopies(t *testing.T) {
 func TestDevice_WithParam_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithParam("nothing", nil)
-	if _, ok := cd.Proto.GetParams()["nothing"]; ok {
+	if _, ok := cd.proto.GetParams()["nothing"]; ok {
 		t.Error("expected nil param to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithParam("nothing", &ParamBuilder{})
-	if _, ok := cd.Proto.GetParams()["nothing"]; ok {
+	if _, ok := cd.proto.GetParams()["nothing"]; ok {
 		t.Error("expected param with nil Proto to be ignored")
 	}
 }
@@ -110,13 +111,13 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 func TestDevice_WithCommand_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithCommand("nothing", nil)
-	if _, ok := cd.Proto.GetCommands()["nothing"]; ok {
+	if _, ok := cd.proto.GetCommands()["nothing"]; ok {
 		t.Error("expected nil command to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithCommand("nothing", &ParamBuilder{})
-	if _, ok := cd.Proto.GetCommands()["nothing"]; ok {
+	if _, ok := cd.proto.GetCommands()["nothing"]; ok {
 		t.Error("expected command with nil Proto to be ignored")
 	}
 }
@@ -124,13 +125,13 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 func TestDevice_WithConstraint_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithConstraint("nothing", nil)
-	if _, ok := cd.Proto.GetConstraints()["nothing"]; ok {
+	if _, ok := cd.proto.GetConstraints()["nothing"]; ok {
 		t.Error("expected nil constraint to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithConstraint("nothing", &Constraint{})
-	if _, ok := cd.Proto.GetConstraints()["nothing"]; ok {
+	if _, ok := cd.proto.GetConstraints()["nothing"]; ok {
 		t.Error("expected constraint with nil Proto to be ignored")
 	}
 }
@@ -138,13 +139,13 @@ func TestDevice_WithConstraint_Nil(t *testing.T) {
 func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithMenuGroup("nothing", nil)
-	if _, ok := cd.Proto.GetMenuGroups()["nothing"]; ok {
+	if _, ok := cd.proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected nil menu group to be ignored")
 	}
 
 	cd = NewDevice(0).
 		WithMenuGroup("nothing", &MenuGroupBuilder{})
-	if _, ok := cd.Proto.GetMenuGroups()["nothing"]; ok {
+	if _, ok := cd.proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected menu group with nil Proto to be ignored")
 	}
 }
@@ -154,7 +155,7 @@ func TestDevice_WithConstraints(t *testing.T) {
 		WithConstraint("brightness_range", NewConstraintInt32Range(0, 100, 1)).
 		WithConstraint("input_source_choice", NewConstraintStringChoice(false, "SDI", "HDMI", "IP"))
 
-	constraints := cd.Proto.GetConstraints()
+	constraints := cd.proto.GetConstraints()
 	if constraints == nil {
 		t.Fatal("expected constraints to be set")
 	}
@@ -185,7 +186,7 @@ func TestDevice_WithLanguagePacks(t *testing.T) {
 		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"}).
 		WithLanguagePack("fr", "Français", map[string]string{"brightness": "Luminosité"})
 
-	packs := cd.Proto.GetLanguagePacks().GetPacks()
+	packs := cd.proto.GetLanguagePacks().GetPacks()
 	if len(packs) != 2 {
 		t.Errorf("expected 2 language packs, got %d", len(packs))
 	}
@@ -209,7 +210,7 @@ func TestDevice_WithMenuGroups(t *testing.T) {
 				WithName(NewPolyglotText("en", "Basic")).
 				WithParamOids("brightness", "contrast")))
 
-	videoGroup, ok := cd.Proto.GetMenuGroups()["video"]
+	videoGroup, ok := cd.proto.GetMenuGroups()["video"]
 	if !ok {
 		t.Fatal("expected 'video' menu group")
 	}
@@ -227,7 +228,7 @@ func TestDevice_WithCommands(t *testing.T) {
 		WithCommand("reboot", NewParamEmpty().
 			WithName(NewPolyglotText("en", "Reboot Device")))
 
-	reboot, ok := cd.Proto.GetCommands()["reboot"]
+	reboot, ok := cd.proto.GetCommands()["reboot"]
 	if !ok {
 		t.Fatal("expected 'reboot' command")
 	}
@@ -244,7 +245,7 @@ func TestDevice_ScalarFields(t *testing.T) {
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op")
 
-	proto := cd.Proto
+	proto := cd.proto
 	if !proto.GetMultiSetEnabled() {
 		t.Error("expected multi_set_enabled to be true")
 	}
@@ -311,7 +312,7 @@ func TestNewDevice_CompleteDevice(t *testing.T) {
 			WithName(NewPolyglotText("en", "Reboot Device"))).
 		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"})
 
-	proto := cd.Proto
+	proto := cd.proto
 	if proto == nil {
 		t.Fatal("expected non-nil proto device")
 	}
@@ -345,7 +346,7 @@ func TestDevice_WithFloatRangeConstraint(t *testing.T) {
 	cd := NewDevice(0).
 		WithConstraint("gain_range", NewConstraintFloatRange(-60.0, 12.0, 0.5))
 
-	gainRange, ok := cd.Proto.GetConstraints()["gain_range"]
+	gainRange, ok := cd.proto.GetConstraints()["gain_range"]
 	if !ok {
 		t.Fatal("expected 'gain_range' constraint")
 	}
@@ -367,7 +368,7 @@ func TestDevice_WithSharedConstraint(t *testing.T) {
 	device := NewDevice(0).
 		WithConstraint("input_source", constraint)
 
-	stringChoice := device.Proto.GetConstraints()["input_source"].GetStringChoice()
+	stringChoice := device.proto.GetConstraints()["input_source"].GetStringChoice()
 	if stringChoice == nil {
 		t.Fatal("expected string_choice constraint")
 	}
@@ -377,4 +378,52 @@ func TestDevice_WithSharedConstraint(t *testing.T) {
 	if got := len(stringChoice.GetChoices()); got != 3 {
 		t.Fatalf("expected 3 choices, got %d", got)
 	}
+}
+
+func TestDevice_Build(t *testing.T) {
+	cd, err := NewDevice(0).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if cd.Proto == nil {
+		t.Fatal("expected non-nil proto device")
+	}
+	if cd.Proto.GetSlot() != 0 {
+		t.Errorf("expected slot 0, got %v", cd.Proto.GetSlot())
+	}
+}
+
+func TestDevice_BuildSurfacesErrors(t *testing.T) {
+	cd := NewDevice(0)
+	cd.err = errors.New("test error")
+	if _, err := cd.Build(); err == nil {
+		t.Fatal("expected error for builder with error:", err)
+	}
+}
+
+func TestDevice_MakeDevice(t *testing.T) {
+	cd := NewDevice(0).MakeDevice()
+
+	proto := cd.Proto
+	if proto == nil {
+		t.Fatal("expected non-nil proto device")
+	}
+	if cd.Proto.GetSlot() != 0 {
+		t.Errorf("expected slot 0, got %v", cd.Proto.GetSlot())
+	}
+}
+
+func TestDevice_MakeDevicePanicsOnError(t *testing.T) {
+	cd := NewDevice(0)
+	cd.err = errors.New("test error")
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("expected panic for builder with error")
+		}
+		if r.(error).Error() != "test error" {
+			t.Fatal("expected error message 'test error', got", r)
+		}
+	}()
+	cd.MakeDevice()
 }

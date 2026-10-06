@@ -131,7 +131,11 @@ func TestProductDeviceStream(t *testing.T) {
 		inner := &sliceStream[st2138.DeviceComponent]{}
 		stream := productDeviceStream{inner: inner, product: testProduct(), hasMon: true}
 
-		if err := stream.Send(st2138.ComponentDevice(st2138.NewDevice(0))); err != nil {
+		device0, err := st2138.NewDevice(0).Build()
+		if err != nil {
+			t.Fatalf("NewDevice(0).Build() failed: %v", err)
+		}
+		if err := stream.Send(st2138.ComponentDevice(device0)); err != nil {
 			t.Fatalf("Send returned error: %v", err)
 		}
 		if len(inner.Items) != 1 {
@@ -150,7 +154,10 @@ func TestProductDeviceStream(t *testing.T) {
 		pb := st2138.NewParamStruct(ProductValues(testProduct())).
 			WithReadOnly(true).
 			WithAccessScope(st2138.ScopeMon)
-		device := st2138.NewDevice(0).WithParam(ProductOid, pb)
+		device, err := st2138.NewDevice(0).WithParam(ProductOid, pb).Build()
+		if err != nil {
+			t.Fatalf("NewDevice(0).WithParam(ProductOid, pb).Build() failed: %v", err)
+		}
 		inner := &sliceStream[st2138.DeviceComponent]{}
 		stream := productDeviceStream{inner: inner, product: testProduct(), hasMon: false}
 
