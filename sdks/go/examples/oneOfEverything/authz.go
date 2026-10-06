@@ -168,7 +168,7 @@ func registerAuthz(srv catena.Server) {
 		if err := stream.Send(
 			st2138.ComponentMenu("status/login", st2138.NewMenu().
 				WithName(st2138.NewPolyglotText("en", "Login")).
-				WithParamOids(loginOids...),
+				WithParamOids(loginOids...).MakeMenu(),
 			),
 		); err != nil {
 			return catena.StatusError(err)
@@ -180,7 +180,7 @@ func registerAuthz(srv catena.Server) {
 				// hardcode so we're not at the mercy of map iteration order
 				WithParamOids(
 					rolesTable,
-				),
+				).MakeMenu(),
 			),
 		); err != nil {
 			return catena.StatusError(err)

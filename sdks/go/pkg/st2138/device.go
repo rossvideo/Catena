@@ -124,7 +124,16 @@ func (cd *Device) WithConstraint(oid string, constraint *Constraint) *Device {
 
 // WithMenuGroup inserts a menu group into the device's menu_groups map, keyed
 // by oid. The group's proto is deep-copied. A nil group is ignored.
-func (cd *Device) WithMenuGroup(oid string, group *MenuGroup) *Device {
+func (cd *Device) WithMenuGroup(oid string, groupBuilder *MenuGroupBuilder) *Device {
+	if groupBuilder == nil {
+		slog.Warn("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
+		return cd
+	}
+	group, err := groupBuilder.Build()
+	if err != nil {
+		slog.Error("Device.WithMenuGroup failed to build menu group", "error", err)
+		return cd
+	}
 	if group == nil || group.Proto == nil {
 		slog.Warn("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
 		return cd

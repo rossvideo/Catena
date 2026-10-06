@@ -95,7 +95,10 @@ func TestComponentConstraint(t *testing.T) {
 }
 
 func TestComponentMenu(t *testing.T) {
-	menu := NewMenu().WithParamOids("brightness")
+	menu, err := NewMenu().WithParamOids("brightness").Build()
+	if err != nil {
+		t.Fatalf("NewMenu().WithParamOids('brightness').Build() failed: %v", err)
+	}
 	chunk := ComponentMenu("status/main", menu)
 
 	component := chunk.Proto.GetMenu()
