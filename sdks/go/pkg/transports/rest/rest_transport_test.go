@@ -313,7 +313,7 @@ func TestTransport_GetDevice_AggregatesComponents(t *testing.T) {
 			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
 			st2138.ComponentCommand("reset", st2138.NewParamEmpty()),
 			st2138.ComponentConstraint("range", st2138.NewConstraintInt32Range(0, 100, 1)),
-			st2138.ComponentMenu("status/main", st2138.NewMenu().WithParamOids("brightness")),
+			st2138.ComponentMenu("status/main", st2138.NewMenu().WithParamOids("brightness").MakeMenu()),
 			st2138.ComponentLanguagePack("en", "English", map[string]string{"greeting": "Hello"}),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
