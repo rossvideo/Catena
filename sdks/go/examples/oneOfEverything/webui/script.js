@@ -475,9 +475,34 @@ function escapeHtml(text) {
 }
 
 // =====================================================================
+// Authorization
+// =====================================================================
+
+function openAuthModal() {
+    const modal = document.getElementById('authModal');
+    const input = document.getElementById('tokenInput');
+    
+    modal.classList.add('open');
+    input.focus();
+}
+
+function closeAuthModal() {
+    document.getElementById('authModal').classList.remove('open');
+}
+
+function bindAuthUI() {
+    document.getElementById('authorizeBtn').addEventListener('click', openAuthModal);
+    document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
+    document.getElementById('authModal').addEventListener('click', (e) => {
+        if (e.target.id === 'authModal') closeAuthModal();
+    });
+}
+
+// =====================================================================
 // Initialization
 // =====================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    bindAuthUI();
     buildParamsUI();
     poll();
     connectSSE();

@@ -12,9 +12,14 @@
 <body>
     <div class="container">
         <header>
-            <h1>One of Everything</h1>
-            <p class="subtitle">Catena GO SDK</p>
+            <div class="header-titles">
+                <h1>One of Everything</h1>
+                <p class="subtitle">Catena GO SDK</p>
+            </div>
+            <button type="button" class="authorize-btn" id="authorizeBtn">Authorize</button>
         </header>
+
+        <div id="authBanner" class="auth-banner"></div>
 
         <div class="sections-grid">
             <!-- DEVICE SECTION -->
@@ -97,6 +102,61 @@
             <a href="https://github.com/rossvideo/Catena">Catena</a>
         </footer>
     </div>
+
+
+    <div id="authModal" class="asset-modal auth-modal" role="dialog" aria-labelledby="authModalTitle" aria-modal="true">
+        <div class="asset-modal-content auth-modal-content">
+            <div class="asset-modal-header">
+                <span class="asset-modal-title" id="authModalTitle">Authorize</span>
+                <button class="asset-modal-close" id="authModalClose" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="asset-modal-body auth-modal-body">
+                <p id="authStatus" class="auth-status"></p>
+
+                <label class="auth-label" for="tokenInput">Bearer token</label>
+                <textarea id="tokenInput" class="token-input" rows="5" spellcheck="false" autocomplete="off" placeholder="Paste a JWT access token"></textarea>
+                <div class="auth-actions">
+                    <button type="button" class="btn start" id="applyTokenBtn">Apply</button>
+                    <button type="button" class="btn" id="clearTokenBtn">Clear</button>
+                    <button type="button" class="btn" id="loginBtn">Sign in</button>
+                </div>
+
+                <div class="auth-divider"></div>
+                <div class="card-title">Demo token</div>
+                <p class="auth-help">Pick a role, then either build a local unsigned JWT (signature validation must be off) or ask Keycloak for a real signed access token through this example server.</p>
+                <label class="auth-label" for="rolePreset">Role preset</label>
+                <select id="rolePreset" class="auth-select">
+                    <option value="commissioner">commissioner</option>
+                    <option value="it-admin">it-admin</option>
+                    <option value="journalist">journalist</option>
+                    <option value="runner">runner</option>
+                    <option value="producer">producer</option>
+                    <option value="tech-director">tech-director</option>
+                    <option value="custom">custom</option>
+                </select>
+                <div class="scope-grid">
+                    <span></span><span>Read</span><span>Write</span>
+                    <span>Monitor</span>
+                    <input type="checkbox" data-scope="st2138:mon" data-access="read" checked>
+                    <input type="checkbox" data-scope="st2138:mon" data-access="write" checked>
+                    <span>Operate</span>
+                    <input type="checkbox" data-scope="st2138:op" data-access="read" checked>
+                    <input type="checkbox" data-scope="st2138:op" data-access="write" checked>
+                    <span>Configure</span>
+                    <input type="checkbox" data-scope="st2138:cfg" data-access="read" checked>
+                    <input type="checkbox" data-scope="st2138:cfg" data-access="write" checked>
+                    <span>Administer</span>
+                    <input type="checkbox" data-scope="st2138:adm" data-access="read" checked>
+                    <input type="checkbox" data-scope="st2138:adm" data-access="write" checked>
+                </div>
+                <div class="auth-actions token-actions">
+                    <button type="button" class="btn add" id="generateTokenBtn">Generate unsigned</button>
+                    <button type="button" class="btn start" id="keycloakTokenBtn">Get Keycloak token</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script src="/script.js"></script>
 </body>
