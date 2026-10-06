@@ -266,7 +266,7 @@ func TestDeviceAggregateStream_IgnoresChunksWithNothingToMerge(t *testing.T) {
 		st2138.ComponentConstraint("range", nil),
 		st2138.ComponentMenu("status/main", nil),
 		// A menu oid must be "menu-group-name/menu-name".
-		st2138.ComponentMenu("groupless", st2138.NewMenu()),
+		st2138.ComponentMenu("groupless", st2138.NewMenu().MakeMenu()),
 		st2138.ComponentCommand("reset", nil),
 		// ComponentLanguagePack always builds a pack, so the empty-pack chunk is
 		// assembled by hand.

@@ -46,7 +46,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
 		}
 		for oid, menu := range slotZeroMenus() {
-			if err := stream.Send(st2138.ComponentMenu(oid, menu)); err != nil {
+			if err := stream.Send(st2138.ComponentMenu(oid, menu.MakeMenu())); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send menu: "+err.Error())
 			}
@@ -105,8 +105,8 @@ func slotZeroSkeleton() *st2138.Device {
 // slotZeroMenus returns slot 0's menus keyed by "group/menu", the oid form a
 // ComponentMenu chunk carries; clients merge each menu back into its group
 // shell on the skeleton. buildDeviceDefinition attaches them the same way.
-func slotZeroMenus() map[string]*st2138.Menu {
-	return map[string]*st2138.Menu{
+func slotZeroMenus() map[string]*st2138.MenuBuilder {
+	return map[string]*st2138.MenuBuilder{
 		"status/status": st2138.NewMenu().
 			WithName(st2138.NewPolyglotText("en", "Status")).
 			WithParamOids("product", "counter", "running"),
@@ -167,7 +167,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		for oid, menu := range slotZeroMenus() {
 			group, name, _ := strings.Cut(oid, "/")
 			if groupProto := device.Proto.GetMenuGroups()[group]; groupProto != nil {
-				(&st2138.MenuGroup{Proto: groupProto}).WithMenu(name, menu)
+				st2138.WrapMenuGroup(groupProto).WithMenu(name, menu)
 			}
 		}
 		for oid, param := range slotZeroParams(counter) {

@@ -143,7 +143,7 @@ func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 	}
 
 	cd = NewDevice(0).
-		WithMenuGroup("nothing", &MenuGroup{})
+		WithMenuGroup("nothing", &MenuGroupBuilder{})
 	if _, ok := cd.Proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected menu group with nil Proto to be ignored")
 	}
