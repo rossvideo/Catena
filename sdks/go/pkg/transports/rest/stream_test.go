@@ -293,11 +293,17 @@ func TestDeviceAggregateStream_MergesSecondDeviceChunk(t *testing.T) {
 	// A handler may split the device itself across two Device chunks; the second
 	// is merged into the first rather than replacing it.
 	stream := &deviceAggregateStream{}
+	device1, err := st2138.NewDevice(1).WithDetailLevel(st2138.DetailLevelMinimal).Build()
+	if err != nil {
+		t.Fatalf("NewDevice(1).WithDetailLevel(st2138.DetailLevelMinimal).Build() failed: %v", err)
+	}
+	device2, err := st2138.NewDevice(1).WithMultiSetEnabled(true).WithParam("brightness", st2138.NewParamInt32(50)).Build()
+	if err != nil {
+		t.Fatalf("NewDevice(1).WithMultiSetEnabled(true).WithParam('brightness', NewParamInt32(50)).Build() failed: %v", err)
+	}
 	for _, chunk := range []st2138.DeviceComponent{
-		st2138.ComponentDevice(st2138.NewDevice(1).WithDetailLevel(st2138.DetailLevelMinimal)),
-		st2138.ComponentDevice(st2138.NewDevice(1).
-			WithMultiSetEnabled(true).
-			WithParam("brightness", st2138.NewParamInt32(50))),
+		st2138.ComponentDevice(device1),
+		st2138.ComponentDevice(device2),
 	} {
 		if err := stream.Send(chunk); err != nil {
 			t.Fatalf("Send returned error: %v", err)

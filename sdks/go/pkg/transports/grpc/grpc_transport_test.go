@@ -260,7 +260,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice())}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
@@ -388,7 +388,7 @@ func TestTransport_DeviceRequest_Success(t *testing.T) {
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
 		device := st2138.NewDevice(slot).
-			WithDetailLevel(st2138.DetailLevelFull)
+			WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
 		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -422,7 +422,7 @@ func TestTransport_DeviceRequest_MultipleChunks(t *testing.T) {
 	// followed by a param and a command component.
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		return []st2138.DeviceComponent{
-			st2138.ComponentDevice(st2138.NewDevice(slot)),
+			st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice()),
 			st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
 			st2138.ComponentCommand("reset", st2138.NewParamEmpty().MakeParam()),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -2322,7 +2322,7 @@ func TestTransport_Start_EndpointsReachable(t *testing.T) {
 
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		device := st2138.NewDevice(slot).
-			WithDetailLevel(st2138.DetailLevelFull)
+			WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
 		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 

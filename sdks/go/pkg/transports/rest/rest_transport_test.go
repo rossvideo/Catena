@@ -125,7 +125,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice())}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -283,7 +283,7 @@ func TestTransport_GetDevice_Route(t *testing.T) {
 
 	handlerCalled := false
 	device := st2138.NewDevice(0).
-		WithDetailLevel(st2138.DetailLevelFull)
+		WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
 
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
@@ -309,7 +309,7 @@ func TestTransport_GetDevice_AggregatesComponents(t *testing.T) {
 
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		return []st2138.DeviceComponent{
-			st2138.ComponentDevice(st2138.NewDevice(slot).WithDetailLevel(st2138.DetailLevelFull)),
+			st2138.ComponentDevice(st2138.NewDevice(slot).WithDetailLevel(st2138.DetailLevelFull).MakeDevice()),
 			st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
 			st2138.ComponentCommand("reset", st2138.NewParamEmpty().MakeParam()),
 			st2138.ComponentConstraint("range", st2138.NewConstraintInt32Range(0, 100, 1)),
@@ -369,7 +369,7 @@ func TestTransport_DeviceStream(t *testing.T) {
 
 		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 			return []st2138.DeviceComponent{
-				st2138.ComponentDevice(st2138.NewDevice(slot)),
+				st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice()),
 				st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
 			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
@@ -413,7 +413,7 @@ func TestTransport_DeviceStream(t *testing.T) {
 
 		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 			return []st2138.DeviceComponent{
-				st2138.ComponentDevice(st2138.NewDevice(slot)),
+				st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice()),
 			}, catena.StatusWithCode(catena.StatusCodeInternal, "internal error")
 		}
 
@@ -1831,9 +1831,9 @@ func TestTransport_Connect_TooManyConnections(t *testing.T) {
 
 func TestWriteResults_ValidData(t *testing.T) {
 	tr := NewTransport(config.RestOptions{})
-	device := *st2138.NewDevice(0)
+	device := st2138.NewDevice(0).MakeDevice()
 	rec := httptest.NewRecorder()
-	tr.writeDeviceResult(rec, device, http.StatusOK)
+	tr.writeDeviceResult(rec, *device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
 	assertContentType(t, rec, "application/json")
 
@@ -2236,11 +2236,11 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 }
 
 func TestWriteDeviceResult_WriteError(t *testing.T) {
-	device := *st2138.NewDevice(0)
+	device := st2138.NewDevice(0).MakeDevice()
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
-	NewTransport(config.RestOptions{}).writeDeviceResult(w, device, http.StatusOK)
+	NewTransport(config.RestOptions{}).writeDeviceResult(w, *device, http.StatusOK)
 
 	assertStatus(t, rec, http.StatusOK)
 }
