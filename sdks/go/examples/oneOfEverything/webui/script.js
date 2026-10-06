@@ -33,7 +33,7 @@ async function selectSlot(slot) {
 async function fetchDevice(slot) {
     const details = document.getElementById('deviceDetails');
     try {
-        const res = await fetch(`/st2138-api/v1/${slot}`);
+        const res = await apiFetch(`/st2138-api/v1/${slot}`);
         if (!res.ok) {
             details.innerHTML = `<div class="device-loading">Error: ${res.status}</div>`;
             return;
@@ -117,12 +117,23 @@ function renderDevice(device) {
     details.innerHTML = `<pre class="json-display">${highlighted}</pre>`;
 }
 
+// Helper function to fetch with the auth header and handle 401 errors
+async function apiFetch(url, options) {
+    const opts = Object.assign({}, options);
+    opts.headers = Object.assign({}, opts.headers, { 'Authorization': 'Bearer ' + getToken() });
+    const res = await fetch(url, opts);
+    if (res.status === 401) {
+        alert('The server rejected this request. Use Authorize to paste a token or sign in.');
+    }
+    return res;
+}
+
 // =====================================================================
 // Commands Section
 // =====================================================================
 async function cmd(name) {
     try {
-        const res = await fetch(`/st2138-api/v1/0/command/${name}`, {
+        const res = await apiFetch(`/st2138-api/v1/0/command/${name}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -238,7 +249,7 @@ async function setParam(name, value, type) {
                    : type === 'string' ? { string_value: value } 
                    : value;
         const slot = paramConfig.find(p => p.name === name)?.slot ?? 0;
-        const res = await fetch(`/st2138-api/v1/${slot}/value/${name}`, {
+        const res = await apiFetch(`/st2138-api/v1/${slot}/value/${name}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -259,7 +270,7 @@ async function poll() {
 
     // Fetch counter and running flag from slot 0. Both are plain int32 params.
     fetches.push(
-        fetch('/st2138-api/v1/0/value/counter')
+        apiFetch('/st2138-api/v1/0/value/counter')
             .then(r => r.json())
             .then(data => {
                 const value = extractValue(data);
@@ -268,7 +279,7 @@ async function poll() {
             .catch(e => console.error('poll counter error:', e))
     );
     fetches.push(
-        fetch('/st2138-api/v1/0/value/running')
+        apiFetch('/st2138-api/v1/0/value/running')
             .then(r => r.json())
             .then(data => {
                 const value = extractValue(data);
@@ -280,7 +291,7 @@ async function poll() {
     // Fetch each param from its proper slot
     for (const p of paramConfig) {
         fetches.push(
-            fetch(`/st2138-api/v1/${p.slot}/value/${p.name}`)
+            apiFetch(`/st2138-api/v1/${p.slot}/value/${p.name}`)
                 .then(r => r.json())
                 .then(data => {
                     const val = extractValue(data);
@@ -296,39 +307,74 @@ async function poll() {
 // =====================================================================
 // SSE Connection (replaces polling)
 // =====================================================================
-function connectSSE() {
-    const es = new EventSource('/st2138-api/v1/connect');
+function updateStream(data) {
+    if (!data.value) return;
 
-    es.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            if (data.value) {
-                const oid = data.value.oid;
-                const protoVal = data.value.value;
-                const val = extractValue(protoVal);
-                if (val === null) return;
-                if (oid === 'counter') {
-                    updateCounter(val);
-                } else if (oid === 'running') {
-                    updateRunning(val);
-                } else {
-                    updateParamInput(oid, val);
-                }
-            }
-        } catch (e) {
-            console.error('SSE parse error:', e);
+    const oid = data.value.oid;
+    const val = extractValue(data.value.value);
+
+    if (val == null) return;
+
+    if (oid == 'counter')
+    {
+        updateCounter(val);
+    }
+    else if (oid == 'running')
+    {
+        updateRunning(val);
+    }
+    else
+    {
+        updateParamInput(oid, val);
+    }
+}
+
+function handleSSEFrame(frame) {
+    const data = frame.split('\n')
+        .filter(line => line.startsWith('data:'))
+        .map(line => line.slice(5).trimStart())
+        .join('\n');
+    if (!data) return;
+    try {
+        updateStream(JSON.parse(data));
+    } catch (e) {
+        console.error('SSE parse error:', e);
+    }
+}
+
+async function connectSSE() {
+
+
+    try {
+        const res = await apiFetch('/st2138-api/v1/connect', {
+            headers: { Accept: 'text/event-stream' },
+        });
+
+        if (!res.ok || !res.body) {
+            setTimeout(() => connectSSE(), 2000);
+            return;
         }
-    };
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+            const { value, done } = await reader.read();
 
-    es.onerror = () => {
-        console.warn('SSE connection lost, will auto-reconnect');
-    };
+            if (done) break;
 
-    es.addEventListener('open', () => {
-        poll();
-    });
+            buffer += decoder.decode(value, {stream: true});
 
-    return es;
+            // SSE frame
+            let splitAt;
+            while ((splitAt = buffer.indexOf('\n\n')) !== -1) {
+                handleSSEFrame(buffer.slice(0, splitAt));
+                buffer = buffer.slice(splitAt + 2);
+            }
+        }
+    } catch (e) {
+        console.warn('SSE connection lost, will retry');
+        setTimeout(() => connectSSE(), 2000);
+    }
 }
 
 // =====================================================================
@@ -337,7 +383,7 @@ function connectSSE() {
 async function fetchAssets() {
     const container = document.getElementById('assetsContainer');
     try {
-        const res = await fetch('/assets-list');
+        const res = await apiFetch('/assets-list');
         if (!res.ok) {
             container.innerHTML = '<div class="asset-error">Failed to load assets</div>';
             return;
@@ -386,7 +432,7 @@ function decodeAssetPayload(base64) {
 
 // Fetch and decode asset from API
 async function fetchAssetData(assetId) {
-    const res = await fetch(`/st2138-api/v1/0/asset/${assetId}`);
+    const res = await apiFetch(`/st2138-api/v1/0/asset/${assetId}`);
     if (!res.ok) throw new Error(`Failed to fetch asset: ${res.status}`);
     const data = await res.json();
     
@@ -484,13 +530,37 @@ let demoConfig = {
 
 async function loadDemoConfig() {
     try {
-        const res = await fetch('/demo-config');
+        const res = await apiFetch('/demo-config');
         if (!res.ok) return;
         const data = await res.json();
         demoConfigs = Object.assign(demoConfig, data);
     } catch (e) {
         console.error('demo-config error:', e);
     }
+}
+
+// Session storage for the token
+TOKEN_STORAGE_KEY = 'st2138-token';
+
+function getRawToken(token) {
+    token = (token || '').trim();
+
+    // Remove the Bearer prefix if it exists
+    if (token.toLowerCase().startsWith('bearer ')) {
+        token = token.replace('bearer ', '').trim();
+    }
+    return token;
+}
+
+function getToken() {
+    return sessionStorage.getItem(TOKEN_STORAGE_KEY) || '';
+}
+
+function setToken(token) {
+    token = getRawToken(token);
+    if (token) sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    return token;
 }
 
 function openAuthModal() {
@@ -535,6 +605,13 @@ function bytesToBase64Url(bytes) {
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
+function refreshAfterAuthChange() {
+    poll();
+    connectSSE();
+    fetchDevice(lastDeviceSlot ?? 0);
+    fetchAssets();
+}
+
 // Generate unsigned token for the demo with the selected scopes
 function buildDemoToken() {
 
@@ -575,11 +652,11 @@ function bindAuthUI() {
         const token = buildDemoToken();
         document.getElementById('tokenInput').value = token;
         
-        // set the tokne in the state for api calls
+        setToken(token);
         
         closeAuthModal();
 
-        // porbably want to do some referesh here
+        refreshAfterAuthChange();
     });
 }
 
@@ -590,7 +667,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     bindAuthUI();
     buildParamsUI();
 
-    await fetchDemoConfig();
+    await loadDemoConfig();
     
     poll();
     connectSSE();
