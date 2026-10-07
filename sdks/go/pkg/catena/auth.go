@@ -86,7 +86,7 @@ func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOp
 		opts.Http = http.DefaultClient
 	}
 	if log == nil {
-		log = slog.Default()
+		log = slog.New(slog.DiscardHandler)
 	}
 	v := &jwtValidator{
 		options: opts,
@@ -123,7 +123,7 @@ func (v *jwtValidator) initializeJWTKeyFunc(ctx context.Context) (jwt.Keyfunc, e
 	retryOpts := []backoff.RetryOption{
 		backoff.WithBackOff(backoffPolicy),
 		backoff.WithNotify(func(err error, d time.Duration) {
-			v.log.Warn("Failed to initialize JWT keyfunc, retrying...", slog.String("error", err.Error()), slog.Duration("next_retry_in", d))
+			v.log.Warn("Failed to initialize JWT keyfunc, retrying... %s, next retry in %s\n", err.Error(), d.String())
 		}),
 	}
 
