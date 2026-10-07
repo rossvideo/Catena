@@ -512,6 +512,11 @@ func (cp *ParamBuilder) Build() (*Param, error) {
 	return &Param{Proto: cp.proto}, nil
 }
 
+// Err returns the stored error of the builder.
+func (cp *ParamBuilder) Err() error {
+	return cp.err
+}
+
 // Wrapper around Build that panics if the builder has an error.
 func (cp *ParamBuilder) MakeParam() *Param {
 	p, err := cp.Build()

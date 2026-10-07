@@ -133,6 +133,11 @@ func (mg *MenuGroupBuilder) Build() (*MenuGroup, error) {
 	return &MenuGroup{Proto: mg.proto}, nil
 }
 
+// Err returns the stored error of the builder.
+func (mg *MenuGroupBuilder) Err() error {
+	return mg.err
+}
+
 // Menu wraps a protos.Menu and exposes a fluent builder API.
 // The menu's oid is supplied by its parent when the menu is attached, so it is
 // not stored here.
@@ -237,6 +242,11 @@ func (m *MenuBuilder) Build() (*Menu, error) {
 		return nil, m.err
 	}
 	return &Menu{Proto: m.proto}, nil
+}
+
+// Err returns the stored error of the builder.
+func (m *MenuBuilder) Err() error {
+	return m.err
 }
 
 // Wrapper around Build that panics if the builder has an error.

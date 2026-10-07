@@ -60,6 +60,11 @@ func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
 	return pb.polyglot, nil
 }
 
+// Err returns the stored error of the builder.
+func (pb *PolyglotTextBuilder) Err() error {
+	return pb.err
+}
+
 // NewPolyglotText creates a PolyglotTextBuilder from zero or more (lang, text) pairs.
 // Calling it with no arguments yields an empty PolyglotTextBuilder, which is useful
 // for building entries up in a loop before passing the result to a builder:
