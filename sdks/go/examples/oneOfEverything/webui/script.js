@@ -313,13 +313,13 @@ function updateStream(data) {
     const oid = data.value.oid;
     const val = extractValue(data.value.value);
 
-    if (val == null) return;
+    if (val === null) return;
 
-    if (oid == 'counter')
+    if (oid === 'counter')
     {
         updateCounter(val);
     }
-    else if (oid == 'running')
+    else if (oid === 'running')
     {
         updateRunning(val);
     }
@@ -372,7 +372,11 @@ async function connectSSE() {
         while (true) {
             const { value, done } = await reader.read();
 
-            if (done) break;
+            if (done || controller.signal.aborted) {
+                console.warn('SSE connection closed, will retry');
+                retry();
+                return;
+            }
 
             buffer += decoder.decode(value, {stream: true});
 
@@ -559,7 +563,8 @@ function getRawToken(token) {
 
     // Remove the Bearer prefix if it exists
     if (token.toLowerCase().startsWith('bearer ')) {
-        token = token.replace('bearer ', '').trim();
+        // remove first 7 characters (length of "bearer ")
+        token = token.slice(7).trim();
     }
     return token;
 }
@@ -598,7 +603,7 @@ function selectedScope() {
     const read = new Set();
     const write = new Set();
 
-    scopeCheckBoxList = Array.from(document.querySelectorAll('#authModal input[type="checkbox"][data-scope]'));
+    const scopeCheckBoxList = Array.from(document.querySelectorAll('#authModal input[type="checkbox"][data-scope]'));
 
     scopeCheckBoxList.forEach(box => {
         if (!box.checked) return;
@@ -700,7 +705,19 @@ function bindAuthUI() {
     });
 
     document.getElementById('applyTokenBtn').addEventListener('click', () => {
-        setToken(document.getElementById('tokenInput').value);
+        const token = getRawToken(document.getElementById('tokenInput').value);
+        if (!token) {
+            setAuthStatus('Paste a token before applying.', true);
+            return;
+        }
+        setToken(token);
+        closeAuthModal();
+        refreshAfterAuthChange();
+    });
+
+    document.getElementById('clearTokenBtn').addEventListener('click', () => {
+        document.getElementById('tokenInput').value = '';
+        setToken('');
         closeAuthModal();
         refreshAfterAuthChange();
     });
