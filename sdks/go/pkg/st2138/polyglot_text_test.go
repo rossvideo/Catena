@@ -147,3 +147,14 @@ func TestPolyglotTextBuilder_WithShortCircuitErrors(t *testing.T) {
 		t.Fatal("expected With to leave the polyglot text unchanged after an error")
 	}
 }
+
+func TestPolyglotTextBuilder_Err(t *testing.T) {
+	pb := NewPolyglotText("en", "Hello")
+	pb.err = errors.New("test error")
+	if pb.Err() == nil {
+		t.Fatal("expected error for builder with error")
+	}
+	if pb.Err().Error() != "test error" {
+		t.Fatal("expected error message 'test error', got", pb.Err())
+	}
+}

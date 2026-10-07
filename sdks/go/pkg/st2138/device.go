@@ -86,11 +86,18 @@ func NewDevice(slot uint16) *DeviceBuilder {
 	}
 }
 
+// Build returns a usable Device from the builder. If the builder has an error, it
+// returns nil and the error. Must be called after all builder methods have been called.
 func (db *DeviceBuilder) Build() (*Device, error) {
 	if db.err != nil {
 		return nil, db.err
 	}
 	return &Device{Proto: db.proto}, nil
+}
+
+// Err returns the stored error of the builder.
+func (db *DeviceBuilder) Err() error {
+	return db.err
 }
 
 func (db *DeviceBuilder) MakeDevice() *Device {

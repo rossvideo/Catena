@@ -403,6 +403,17 @@ func TestDevice_BuildSurfacesErrors(t *testing.T) {
 	}
 }
 
+func TestDeviceBuilder_Err(t *testing.T) {
+	cd := NewDevice(0)
+	cd.err = errors.New("test error")
+	if cd.Err() == nil {
+		t.Fatal("expected error for builder with error")
+	}
+	if cd.Err().Error() != "test error" {
+		t.Fatal("expected error message 'test error', got", cd.Err())
+	}
+}
+
 func TestDeviceBuilder_WithShortCircuitErrors(t *testing.T) {
 	cd := NewDevice(0)
 	cd.err = errors.New("test error")
