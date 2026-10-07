@@ -39,7 +39,10 @@
 package st2138
 
 import (
+	"errors"
 	"testing"
+
+	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -217,6 +220,27 @@ func TestMenuGroup_BuildSurfacesError(t *testing.T) {
 	}
 }
 
+func TestMenuGroupBuilder_WithShortCircuitErrors(t *testing.T) {
+	mg := NewMenuGroup()
+	mg.err = errors.New("test error")
+	before := proto.Clone(mg.proto)
+
+	group, err := mg.
+		WithName(NewPolyglotText("en", "Status")).
+		WithMenu("overview", NewMenu().WithParamOids("alpha")).
+		WithOrder(2).
+		Build()
+	if err == nil || err.Error() != "test error" {
+		t.Fatalf("expected 'test error', got %v", err)
+	}
+	if group != nil {
+		t.Fatal("expected nil menu group for builder with error")
+	}
+	if !proto.Equal(before, mg.proto) {
+		t.Fatal("expected With* to leave the menu group unchanged after an error")
+	}
+}
+
 func TestMenuGroup_WrapMenuGroup(t *testing.T) {
 	proto := &protos.MenuGroup{
 		Name: &protos.PolyglotText{
@@ -322,6 +346,31 @@ func TestMenu_BuildSurfacesError(t *testing.T) {
 	}
 	if m != nil {
 		t.Fatal("expected nil menu")
+	}
+}
+
+func TestMenuBuilder_WithShortCircuitErrors(t *testing.T) {
+	m := NewMenu()
+	m.err = errors.New("test error")
+	before := proto.Clone(m.proto)
+
+	menu, err := m.
+		WithName(NewPolyglotText("en", "Video")).
+		WithHidden(true).
+		WithDisabled(true).
+		WithParamOids("brightness").
+		WithCommandOids("reboot").
+		WithClientHint("ui-url", "https://example.com").
+		WithOrder(2).
+		Build()
+	if err == nil || err.Error() != "test error" {
+		t.Fatalf("expected 'test error', got %v", err)
+	}
+	if menu != nil {
+		t.Fatal("expected nil menu for builder with error")
+	}
+	if !proto.Equal(before, m.proto) {
+		t.Fatal("expected With* to leave the menu unchanged after an error")
 	}
 }
 
