@@ -398,9 +398,11 @@ func TestWithParam_WrongType(t *testing.T) {
 
 func TestWithParam_Nil(t *testing.T) {
 	// Passing a nil sub-param must not panic and must not add an entry,
-	// preserving the contract that method chaining is never interrupted
-	// by error handling.
+	// subsequent method calls must short-circuit without panicking.
 	cp := NewParamStruct().WithParam("x", nil)
+	if cp.Err() == nil {
+		t.Error("expected error for builder with nil sub-param")
+	}
 	p := cp.proto
 	if len(p.GetParams()) != 0 {
 		t.Error("expected nil sub-param to be a no-op")
@@ -408,11 +410,11 @@ func TestWithParam_Nil(t *testing.T) {
 	// Chaining must continue to work after the no-op.
 	child := NewParamInt32(7)
 	p = cp.WithParam("y", child).proto
-	if p.GetParams()["y"] == nil {
-		t.Fatal("expected chaining to continue working after nil sub-param")
+	if p.GetParams()["y"] != nil {
+		t.Fatal("expected chaining to short-circuit after nil sub-param")
 	}
-	if p.GetValue().GetStructValue().GetFields()["y"].GetInt32Value() != 7 {
-		t.Error("expected sub-param value to land in parent struct value after nil no-op")
+	if p.GetValue().GetStructValue().GetFields()["y"].GetInt32Value() == 7 {
+		t.Error("expected sub-param value to be ignored after nil sub-param")
 	}
 }
 
