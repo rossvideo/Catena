@@ -342,16 +342,28 @@ function handleSSEFrame(frame) {
     }
 }
 
-async function connectSSE() {
+let sseController = null;
+let sseRetryTimer = null;
 
+async function connectSSE() {
+    if (sseController) sseController.abort();
+    clearTimeout(sseRetryTimer);
+    const controller = new AbortController();
+    sseController = controller;
+
+    const retry = () => {
+        if (sseController !== controller) return;
+        sseRetryTimer = setTimeout(() => connectSSE(), 2000);
+    };
 
     try {
         const res = await apiFetch('/st2138-api/v1/connect', {
             headers: { Accept: 'text/event-stream' },
+            signal: controller.signal,
         });
 
         if (!res.ok || !res.body) {
-            setTimeout(() => connectSSE(), 2000);
+            retry();
             return;
         }
         const reader = res.body.getReader();
@@ -372,8 +384,9 @@ async function connectSSE() {
             }
         }
     } catch (e) {
+        if (controller.signal.aborted) return;
         console.warn('SSE connection lost, will retry');
-        setTimeout(() => connectSSE(), 2000);
+        retry();
     }
 }
 
