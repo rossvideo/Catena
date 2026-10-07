@@ -1381,6 +1381,44 @@ func TestParamBuilder_BuildSurfacesErrors(t *testing.T) {
 	}
 }
 
+func TestParamBuilder_WithShortCircuitErrors(t *testing.T) {
+	cp := NewParamInt32()
+	cp.err = errors.New("test error")
+	before := proto.Clone(cp.proto)
+	value, convErr := ToValue(int32(7))
+	if convErr != nil {
+		t.Fatal(convErr)
+	}
+
+	p, err := cp.
+		WithName(NewPolyglotText("en", "Test")).
+		WithValue(value).
+		WithConstraint(NewConstraintInt32Range(0, 10, 1)).
+		WithReadOnly(true).
+		WithWidget("slider").
+		WithPrecision(2).
+		WithMaxLength(8).
+		WithAccessScope("st2138:mon").
+		WithClientHint("ui", "slider").
+		WithParam("child", NewParamInt32(1)).
+		WithResponse(true).
+		WithHelp(NewPolyglotText("en", "Help")).
+		WithOidAliases("alias").
+		WithMinimalSet(true).
+		WithStateless(true).
+		WithTemplateOid("tpl").
+		Build()
+	if err == nil || err.Error() != "test error" {
+		t.Fatalf("expected 'test error', got %v", err)
+	}
+	if p != nil {
+		t.Fatal("expected nil param for builder with error")
+	}
+	if !proto.Equal(before, cp.proto) {
+		t.Fatal("expected With* to leave the param unchanged after an error")
+	}
+}
+
 func TestParamBuilder_MakeParamBuildsValidParam(t *testing.T) {
 	cp := NewParamInt32(42)
 	p := cp.MakeParam()

@@ -42,6 +42,8 @@ import (
 	"errors"
 	"testing"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -398,6 +400,34 @@ func TestDevice_BuildSurfacesErrors(t *testing.T) {
 	cd.err = errors.New("test error")
 	if _, err := cd.Build(); err == nil {
 		t.Fatal("expected error for builder with error:", err)
+	}
+}
+
+func TestDeviceBuilder_WithShortCircuitErrors(t *testing.T) {
+	cd := NewDevice(0)
+	cd.err = errors.New("test error")
+	before := proto.Clone(cd.proto)
+
+	device, err := cd.
+		WithParam("brightness", NewParamInt32(1)).
+		WithCommand("reboot", NewParamEmpty()).
+		WithConstraint("range", NewConstraintInt32Range(0, 10, 1)).
+		WithMenuGroup("status", NewMenuGroup().WithName(NewPolyglotText("en", "Status"))).
+		WithLanguagePack("en", "English", map[string]string{"greeting": "Hello"}).
+		WithDetailLevel(DetailLevelFull).
+		WithMultiSetEnabled(true).
+		WithSubscriptions(true).
+		WithAccessScopes("st2138:mon").
+		WithDefaultScope("st2138:mon").
+		Build()
+	if err == nil || err.Error() != "test error" {
+		t.Fatalf("expected 'test error', got %v", err)
+	}
+	if device != nil {
+		t.Fatal("expected nil device for builder with error")
+	}
+	if !proto.Equal(before, cd.proto) {
+		t.Fatal("expected With* to leave the device unchanged after an error")
 	}
 }
 
