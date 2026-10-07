@@ -109,7 +109,7 @@ func (db *DeviceBuilder) MakeDevice() *Device {
 
 // WithParam inserts param into the device's params map, keyed by oid. The
 // param's proto is deep-copied so later builder mutations on the caller's Param
-// do not affect entries already added. A nil param is ignored.
+// do not affect entries already added. A nil param errors and short-circuits further method calls.
 func (db *DeviceBuilder) WithParam(oid string, paramBuilder *ParamBuilder) *DeviceBuilder {
 	if db.err != nil {
 		return db
@@ -135,7 +135,7 @@ func (db *DeviceBuilder) WithParam(oid string, paramBuilder *ParamBuilder) *Devi
 }
 
 // WithCommand inserts command into the device's commands map, keyed by oid. The
-// command's proto is deep-copied. A nil command is ignored.
+// command's proto is deep-copied. A nil command errors and short-circuits further method calls.
 func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *DeviceBuilder {
 	if db.err != nil {
 		return db
@@ -162,7 +162,7 @@ func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *
 
 // WithConstraint inserts a shared constraint into the device's constraints map,
 // keyed by oid. The constraint's proto is deep-copied. A nil constraint is
-// ignored. Params can reference shared constraints via NewConstraintRefOid.
+// errors and short-circuits further method calls. Params can reference shared constraints via NewConstraintRefOid.
 func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *DeviceBuilder {
 	if db.err != nil {
 		return db
@@ -179,7 +179,7 @@ func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *Dev
 }
 
 // WithMenuGroup inserts a menu group into the device's menu_groups map, keyed
-// by oid. The group's proto is deep-copied. A nil group is ignored.
+// by oid. The group's proto is deep-copied. A nil group errors and short-circuits further method calls.
 func (db *DeviceBuilder) WithMenuGroup(oid string, groupBuilder *MenuGroupBuilder) *DeviceBuilder {
 	if db.err != nil {
 		return db

@@ -100,13 +100,19 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithParam("nothing", nil)
 	if _, ok := cd.proto.GetParams()["nothing"]; ok {
-		t.Error("expected nil param to be ignored")
+		t.Error("expected nil param to short-circuit")
+	}
+	if cd.Err() == nil {
+		t.Error("expected error for builder with nil param")
 	}
 
 	cd = NewDevice(0).
 		WithParam("nothing", &ParamBuilder{})
 	if _, ok := cd.proto.GetParams()["nothing"]; ok {
-		t.Error("expected param with nil Proto to be ignored")
+		t.Error("expected param with nil Proto to short-circuit")
+	}
+	if cd.Err() == nil {
+		t.Error("expected error for builder with param with nil Proto")
 	}
 }
 

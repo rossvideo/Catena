@@ -86,17 +86,22 @@ func (mg *MenuGroupBuilder) WithName(name *PolyglotTextBuilder) *MenuGroupBuilde
 		mg.err = errors.New("name cannot be nil")
 		return mg
 	}
-	polyglot, err := name.Build()
+
+	p, err := name.Build()
 	if err != nil {
 		mg.err = err
 		return mg
 	}
-	mg.proto.Name = &protos.PolyglotText{DisplayStrings: polyglot}
+	if p == nil {
+		mg.err = errors.New("polyglot text builder returned nil polyglot")
+		return mg
+	}
+	mg.proto.Name = &protos.PolyglotText{DisplayStrings: p}
 	return mg
 }
 
 // WithMenu inserts menu into the menu group's menus map, keyed by oid.
-// Replaces any existing menu at that oid. A nil menu is ignored.
+// Replaces any existing menu at that oid. A nil menu errors and short-circuits further method calls.
 // The menu's proto is deep-copied so that later builder mutations on the
 // caller's Menu (or reusing it under another oid) do not affect entries that
 // were already added.
@@ -108,10 +113,19 @@ func (mg *MenuGroupBuilder) WithMenu(oid string, menu *MenuBuilder) *MenuGroupBu
 		mg.err = errors.New("menu cannot be nil")
 		return mg
 	}
+	m, err := menu.Build()
+	if err != nil {
+		mg.err = err
+		return mg
+	}
+	if m == nil || m.Proto == nil {
+		mg.err = errors.New("menu builder returned nil menu")
+		return mg
+	}
 	if mg.proto.Menus == nil {
 		mg.proto.Menus = map[string]*protos.Menu{}
 	}
-	mg.proto.Menus[oid] = proto.Clone(menu.proto).(*protos.Menu)
+	mg.proto.Menus[oid] = proto.Clone(m.Proto).(*protos.Menu)
 	return mg
 }
 
@@ -167,12 +181,17 @@ func (m *MenuBuilder) WithName(name *PolyglotTextBuilder) *MenuBuilder {
 		m.err = errors.New("name is required")
 		return m
 	}
-	polyglot, err := name.Build()
+
+	p, err := name.Build()
 	if err != nil {
 		m.err = err
 		return m
 	}
-	m.proto.Name = &protos.PolyglotText{DisplayStrings: polyglot}
+	if p == nil {
+		m.err = errors.New("polyglot text builder returned nil polyglot text")
+		return m
+	}
+	m.proto.Name = &protos.PolyglotText{DisplayStrings: p}
 	return m
 }
 
