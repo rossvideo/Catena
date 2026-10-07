@@ -655,6 +655,12 @@ h1 {
 }
 
 .auth-status:empty { display: none; }
+.auth-status.error { color: var(--danger); }
+
+.auth-actions .btn:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
 
 .auth-field {
     display: flex;

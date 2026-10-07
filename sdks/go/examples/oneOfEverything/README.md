@@ -60,7 +60,7 @@ Currently nothing will work due to not having a valid token. There are two ways 
   -d client_id=oneofeverything \
   -d username=commissioner \
   -d password=demo \
-  -d 'scope=openid st2138:op st2138:op:w'
+  -d 'scope=openid st2138:mon st2138:mon:w st2138:op st2138:op:w st2138:cfg st2138:cfg:w st2138:adm st2138:adm:w'
 ```
 
 This will make a request to the keycloak for a token with a read and write scope. The reponse will include a `access_token` entry.
@@ -71,6 +71,8 @@ This will apply the signed token and refresh the window.
 
 ### 2. Auto generate the token from the keycloak
 
+Open **Authorize**, pick the scopes, and click **Get Keycloak token**.
 
+The example server asks Keycloak for a signed access token for the demo user and the page applies it. The request goes to `{--jwt-issuer}/protocol/openid-connect/token` with the same scopes as **Generate unsigned**, plus `openid`. Keycloak must be reachable from the example process at the issuer address.
 
 Stop Keycloak with `docker compose -f keycloak/docker-compose.yml down`.

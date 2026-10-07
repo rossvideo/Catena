@@ -60,10 +60,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -278,6 +281,91 @@ func sortedAssetIDs(assets *sync.Map) []string {
 	return ids
 }
 
+// requestKeycloakToken performs the password grant documented in the example
+// README and writes the access token as JSON. issuer is the realm URL passed
+// to --jwt-issuer, for example http://10.255.255.254:8180/realms/catena.
+func requestKeycloakToken(w http.ResponseWriter, r *http.Request, issuer string) {
+	w.Header().Set("Content-Type", "application/json")
+	writeErr := func(status int, msg string) {
+		w.WriteHeader(status)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	}
+
+	if r.Method != http.MethodPost {
+		writeErr(http.StatusMethodNotAllowed, "only POST allowed")
+		return
+	}
+
+	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
+	if issuer == "" {
+		writeErr(http.StatusBadRequest, "Keycloak issuer is not configured. Start the example with --jwt-issuer set to the realm URL.")
+		return
+	}
+
+	var body struct {
+		Scope string `json:"scope"`
+	}
+	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&body); err != nil && !errors.Is(err, io.EOF) {
+		writeErr(http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	scope := strings.TrimSpace(body.Scope)
+	if scope == "" {
+		scope = "openid"
+	} else if !strings.Contains(" "+scope+" ", " openid ") {
+		scope = "openid " + scope
+	}
+
+	form := url.Values{}
+	form.Set("grant_type", "password")
+	form.Set("client_id", "oneofeverything")
+	form.Set("username", "commissioner")
+	form.Set("password", "demo")
+	form.Set("scope", scope)
+
+	tokenURL := issuer + "/protocol/openid-connect/token"
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		writeErr(http.StatusInternalServerError, "failed to build Keycloak request")
+		return
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		writeErr(http.StatusBadGateway, "could not reach Keycloak at "+tokenURL)
+		return
+	}
+	defer resp.Body.Close()
+
+	var tokenResp struct {
+		AccessToken string `json:"access_token"`
+		Error       string `json:"error"`
+		ErrorDesc   string `json:"error_description"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		writeErr(http.StatusBadGateway, "Keycloak returned an unreadable response")
+		return
+	}
+	if resp.StatusCode != http.StatusOK || tokenResp.AccessToken == "" {
+		msg := tokenResp.ErrorDesc
+		if msg == "" {
+			msg = tokenResp.Error
+		}
+		if msg == "" {
+			msg = "Keycloak rejected the token request"
+		}
+		writeErr(http.StatusBadGateway, msg)
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]string{"access_token": tokenResp.AccessToken})
+}
+
 func main() {
 	defaultOptions := catena.DefaultRuntimeOptions()
 	// customize the dashboard defaults
@@ -423,8 +511,15 @@ func main() {
 			if r.URL.Path == "/demo-config" {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(map[string]any{
-					"authzEnabled": options.Server.AuthzEnabled,
+					"jwtIssuer": strings.TrimSpace(options.Server.JwtOptions.Issuer),
 				})
+				return catena.Reply(st2138.Value{})
+			}
+
+			// Demo-only: trade the selected scopes for a Keycloak-signed access
+			// token (password grant, public client). Not part of the Catena API.
+			if r.URL.Path == "/keycloak-token" {
+				requestKeycloakToken(w, r, options.Server.JwtOptions.Issuer)
 				return catena.Reply(st2138.Value{})
 			}
 

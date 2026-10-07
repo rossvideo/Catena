@@ -525,15 +525,14 @@ function escapeHtml(text) {
 // =====================================================================
 
 let demoConfig = {
-    authzEnabled: false
-}
+    jwtIssuer: ''
+};
 
 async function loadDemoConfig() {
     try {
-        const res = await apiFetch('/demo-config');
+        const res = await fetch('/demo-config');
         if (!res.ok) return;
-        const data = await res.json();
-        demoConfigs = Object.assign(demoConfig, data);
+        Object.assign(demoConfig, await res.json());
     } catch (e) {
         console.error('demo-config error:', e);
     }
@@ -563,10 +562,17 @@ function setToken(token) {
     return token;
 }
 
+function setAuthStatus(message, isError) {
+    const status = document.getElementById('authStatus');
+    status.textContent = message || '';
+    status.classList.toggle('error', !!isError);
+}
+
 function openAuthModal() {
     const modal = document.getElementById('authModal');
     const input = document.getElementById('tokenInput');
-    
+
+    setAuthStatus('');
     modal.classList.add('open');
     input.focus();
 }
@@ -623,6 +629,8 @@ function buildDemoToken() {
         iat: now - 30,
         exp: now + 3600,
     };
+    // --jwt-issuer makes the iss claim mandatory, even when the signature is not checked.
+    if (demoConfig.jwtIssuer) claims.iss = demoConfig.jwtIssuer;
 
     const headerJSON = JSON.stringify({ alg: 'ES256', typ: 'JWT' });
     const payloadJSON = JSON.stringify(claims);
@@ -636,6 +644,39 @@ function buildDemoToken() {
     const signature = bytesToBase64Url(signatureBytes);
 
     return header + '.' + payload + '.' + signature;
+}
+
+// Ask the example server to fetch a signed access token from Keycloak.
+async function requestKeycloakToken() {
+    const btn = document.getElementById('keycloakTokenBtn');
+    btn.disabled = true;
+    setAuthStatus('Requesting a signed token from Keycloak…');
+
+    try {
+        const scope = ['openid', selectedScope()].filter(Boolean).join(' ');
+        const res = await fetch('/keycloak-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scope }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.access_token) {
+            setAuthStatus(data.error || 'Keycloak did not return an access token.', true);
+            return;
+        }
+
+        document.getElementById('tokenInput').value = data.access_token;
+        setToken(data.access_token);
+
+        closeAuthModal();
+        refreshAfterAuthChange();
+    } catch (e) {
+        console.error('keycloak token error:', e);
+        setAuthStatus('Could not reach the example server to request a Keycloak token.', true);
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 function bindAuthUI() {
@@ -652,17 +693,15 @@ function bindAuthUI() {
     });
 
     document.getElementById('generateTokenBtn').addEventListener('click', () => {
-
-        console.log('generateTokenBtn clicked');
         const token = buildDemoToken();
         document.getElementById('tokenInput').value = token;
-        
         setToken(token);
-        
+    
         closeAuthModal();
-
         refreshAfterAuthChange();
     });
+
+    document.getElementById('keycloakTokenBtn').addEventListener('click', requestKeycloakToken);
 }
 
 // =====================================================================
@@ -673,7 +712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildParamsUI();
 
     await loadDemoConfig();
-    
+
     poll();
     connectSSE();
     fetchDevice(0);

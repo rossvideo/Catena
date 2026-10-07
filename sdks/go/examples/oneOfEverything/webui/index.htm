@@ -119,14 +119,12 @@
                 </div>
                 <div class="auth-actions">
                     <button type="button" class="btn start" id="applyTokenBtn">Apply</button>
-                    <button type="button" class="btn" id="clearTokenBtn">Clear</button>
-                    <button type="button" class="btn" id="loginBtn">Sign in</button>
                 </div>
 
                 <div class="auth-divider"></div>
 
                 <div class="auth-field">
-                    <p class="auth-help">Manually generate a JWT with the selected scopes</p>
+                    <p class="auth-help">Generate a JWT with the selected scopes. Unsigned tokens work when signature checks are off. Get Keycloak token asks the local realm for a signed token.</p>
                     <label class="auth-label">Scope Selection</label>
                     <div class="scope-grid">
                         <span class="scope-corner"></span>
