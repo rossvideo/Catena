@@ -257,6 +257,9 @@ func NewParamFromValue(v Value) *ParamBuilder {
 // --- Chainable With* methods ---
 
 func (cp *ParamBuilder) WithName(name *PolyglotTextBuilder) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
 	poly, err := name.Build()
 	if err != nil {
 		cp.err = fmt.Errorf("WithName: failed to build PolyglotText: %w", err)
@@ -267,6 +270,9 @@ func (cp *ParamBuilder) WithName(name *PolyglotTextBuilder) *ParamBuilder {
 }
 
 func (cp *ParamBuilder) WithValue(v Value) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
 	if !isValueValidForParamType(v.Proto, cp.proto.Type) {
 		slog.Warn("WithValue: value kind incompatible with param type; ignoring",
 			"param_type", cp.proto.Type.String())
@@ -277,6 +283,9 @@ func (cp *ParamBuilder) WithValue(v Value) *ParamBuilder {
 }
 
 func (cp *ParamBuilder) WithConstraint(c *Constraint) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
 	if c == nil || c.Proto == nil {
 		cp.err = fmt.Errorf("constraint is nil")
 		return cp

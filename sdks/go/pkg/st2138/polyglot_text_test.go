@@ -39,6 +39,7 @@
 package st2138
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -128,5 +129,21 @@ func TestPolyglotText_BuildSurfacesErrors(t *testing.T) {
 	}
 	if polyglot != nil {
 		t.Errorf("expected empty PolyglotText, got %v", polyglot)
+	}
+}
+
+func TestPolyglotTextBuilder_WithShortCircuitErrors(t *testing.T) {
+	pb := NewPolyglotText("en", "Hello")
+	pb.err = errors.New("test error")
+
+	text, err := pb.With("fr", "Bonjour").Build()
+	if err == nil || err.Error() != "test error" {
+		t.Fatalf("expected 'test error', got %v", err)
+	}
+	if text != nil {
+		t.Fatal("expected nil polyglot text for builder with error")
+	}
+	if _, ok := pb.polyglot["fr"]; ok {
+		t.Fatal("expected With to leave the polyglot text unchanged after an error")
 	}
 }
