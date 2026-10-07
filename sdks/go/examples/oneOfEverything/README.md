@@ -39,13 +39,15 @@ In the page, open **Authorize**, pick a scope to create a token wiht, and choose
 
 `keycloak/` runs a local realm that signs access tokens with ES256 (the SDK default).
 
-In another terminal on the currently devcontainer do:
+In another terminal in this devcontainer:
 ```bash
 KEYCLOAK_URL=http://10.255.255.254:8180 \
   docker compose -f keycloak/docker-compose.yml up -d
 ```
 
-Start the example: 
+`KEYCLOAK_URL` sets the address Keycloak writes into each token as the issuer (`iss`). The example server checks that issuer and downloads Keycloak's signing keys from it, so `--jwt-issuer` must use the same URL. Docker publishes Keycloak on the host, so from inside the devcontainer `localhost:8180` does not reach it; `10.255.255.254` is the host address the devcontainer can use. Your browser on your own computer still opens Keycloak at `http://localhost:8180`.
+
+Start the example:
 ``` bash
 go run . --use-rest --authz --jwt-validate-signature --jwt-issuer=http://10.255.255.254:8180/realms/catena
 ```
