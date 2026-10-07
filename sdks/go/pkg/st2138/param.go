@@ -260,12 +260,20 @@ func (cp *ParamBuilder) WithName(name *PolyglotTextBuilder) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	poly, err := name.Build()
-	if err != nil {
-		cp.err = fmt.Errorf("WithName: failed to build PolyglotText: %w", err)
+	if name == nil {
+		cp.err = fmt.Errorf("WithName: name cannot be nil")
 		return cp
 	}
-	cp.proto.Name = &protos.PolyglotText{DisplayStrings: poly}
+	p, err := name.Build()
+	if err != nil {
+		cp.err = err
+		return cp
+	}
+	if p == nil {
+		cp.err = fmt.Errorf("WithName: failed to build PolyglotText: returned nil PolyglotText")
+		return cp
+	}
+	cp.proto.Name = &protos.PolyglotText{DisplayStrings: p}
 	return cp
 }
 
@@ -274,8 +282,9 @@ func (cp *ParamBuilder) WithValue(v Value) *ParamBuilder {
 		return cp
 	}
 	if !isValueValidForParamType(v.Proto, cp.proto.Type) {
-		slog.Warn("WithValue: value kind incompatible with param type; ignoring",
-			"param_type", cp.proto.Type.String())
+		cp.err = fmt.Errorf("WithValue: value kind incompatible with param type: param_type=%s",
+			cp.proto.Type.String(),
+		)
 		return cp
 	}
 	cp.proto.Value = v.Proto
@@ -403,9 +412,18 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 	if param == nil {
+		cp.err = fmt.Errorf("param cannot be nil")
 		return cp
 	}
-
+	p, err := param.Build()
+	if err != nil {
+		cp.err = err
+		return cp
+	}
+	if p == nil || p.Proto == nil {
+		cp.err = fmt.Errorf("param builder returned nil param")
+		return cp
+	}
 	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
 		cp.err = fmt.Errorf("WithParam called on param type that does not support sub-params: param_type=%s",
 			cp.proto.Type.String(),
@@ -457,12 +475,20 @@ func (cp *ParamBuilder) WithHelp(help *PolyglotTextBuilder) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	poly, err := help.Build()
-	if err != nil {
-		cp.err = fmt.Errorf("WithHelp: failed to build PolyglotText: %w", err)
+	if help == nil {
+		cp.err = fmt.Errorf("WithHelp: help cannot be nil")
 		return cp
 	}
-	cp.proto.Help = &protos.PolyglotText{DisplayStrings: poly}
+	p, err := help.Build()
+	if err != nil {
+		cp.err = err
+		return cp
+	}
+	if p == nil {
+		cp.err = fmt.Errorf("WithHelp: failed to build PolyglotText: returned nil PolyglotText")
+		return cp
+	}
+	cp.proto.Help = &protos.PolyglotText{DisplayStrings: p}
 	return cp
 }
 
