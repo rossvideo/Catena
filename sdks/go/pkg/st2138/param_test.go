@@ -1419,6 +1419,17 @@ func TestParamBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 }
 
+func TestParamBuilder_Err(t *testing.T) {
+	cp := NewParamInt32()
+	cp.err = errors.New("test error")
+	if cp.Err() == nil {
+		t.Fatal("expected error for builder with error")
+	}
+	if cp.Err().Error() != "test error" {
+		t.Fatal("expected error message 'test error', got", cp.Err())
+	}
+}
+
 func TestParamBuilder_MakeParamBuildsValidParam(t *testing.T) {
 	cp := NewParamInt32(42)
 	p := cp.MakeParam()

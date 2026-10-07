@@ -241,6 +241,17 @@ func TestMenuGroupBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 }
 
+func TestMenuGroupBuilder_Err(t *testing.T) {
+	mg := NewMenuGroup()
+	mg.err = errors.New("test error")
+	if mg.Err() == nil {
+		t.Fatal("expected error for builder with error")
+	}
+	if mg.Err().Error() != "test error" {
+		t.Fatal("expected error message 'test error', got", mg.Err())
+	}
+}
+
 func TestMenuGroup_WrapMenuGroup(t *testing.T) {
 	proto := &protos.MenuGroup{
 		Name: &protos.PolyglotText{
@@ -371,6 +382,17 @@ func TestMenuBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 	if !proto.Equal(before, m.proto) {
 		t.Fatal("expected With* to leave the menu unchanged after an error")
+	}
+}
+
+func TestMenuBuilder_Err(t *testing.T) {
+	m := NewMenu()
+	m.err = errors.New("test error")
+	if m.Err() == nil {
+		t.Fatal("expected error for builder with error")
+	}
+	if m.Err().Error() != "test error" {
+		t.Fatal("expected error message 'test error', got", m.Err())
 	}
 }
 
