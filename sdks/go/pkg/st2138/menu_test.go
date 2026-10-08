@@ -202,7 +202,7 @@ func TestMenuGroup_Build(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewMenuGroup().WithName(NewPolyglotText('en', 'Video')).Build() failed: %v", err)
 	}
-	if m == nil {
+	if m == (MenuGroup{}) {
 		t.Fatal("expected non-nil menu group")
 	}
 	if m.Proto == nil {
@@ -215,7 +215,7 @@ func TestMenuGroup_BuildSurfacesError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if m != nil {
+	if m != (MenuGroup{}) {
 		t.Fatal("expected nil menu group")
 	}
 }
@@ -233,7 +233,7 @@ func TestMenuGroupBuilder_WithShortCircuitErrors(t *testing.T) {
 	if err == nil || err.Error() != "test error" {
 		t.Fatalf("expected 'test error', got %v", err)
 	}
-	if group != nil {
+	if group != (MenuGroup{}) {
 		t.Fatal("expected nil menu group for builder with error")
 	}
 	if !proto.Equal(before, mg.proto) {
@@ -342,7 +342,7 @@ func TestMenu_Build(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewMenu().WithName(NewPolyglotText('en', 'Video')).Build() failed: %v", err)
 	}
-	if m == nil {
+	if m == (Menu{}) {
 		t.Fatal("expected non-nil menu")
 	}
 	if m.Proto == nil {
@@ -355,7 +355,7 @@ func TestMenu_BuildSurfacesError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if m != nil {
+	if m != (Menu{}) {
 		t.Fatal("expected nil menu")
 	}
 }
@@ -377,7 +377,7 @@ func TestMenuBuilder_WithShortCircuitErrors(t *testing.T) {
 	if err == nil || err.Error() != "test error" {
 		t.Fatalf("expected 'test error', got %v", err)
 	}
-	if menu != nil {
+	if menu != (Menu{}) {
 		t.Fatal("expected nil menu for builder with error")
 	}
 	if !proto.Equal(before, m.proto) {
@@ -398,7 +398,7 @@ func TestMenuBuilder_Err(t *testing.T) {
 
 func TestMenu_MakeMenu(t *testing.T) {
 	m := NewMenu().WithName(NewPolyglotText("en", "Video")).MakeMenu()
-	if m == nil {
+	if m == (Menu{}) {
 		t.Fatal("expected non-nil menu")
 	}
 	if m.Proto == nil {

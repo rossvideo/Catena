@@ -88,11 +88,11 @@ func NewDevice(slot uint16) *DeviceBuilder {
 
 // Build returns a usable Device from the builder. If the builder has an error, it
 // returns nil and the error. Must be called after all builder methods have been called.
-func (db *DeviceBuilder) Build() (*Device, error) {
+func (db *DeviceBuilder) Build() (Device, error) {
 	if db.err != nil {
-		return nil, db.err
+		return Device{}, db.err
 	}
-	return &Device{Proto: db.proto}, nil
+	return Device{Proto: db.proto}, nil
 }
 
 // Err returns the stored error of the builder.
@@ -100,11 +100,11 @@ func (db *DeviceBuilder) Err() error {
 	return db.err
 }
 
-func (db *DeviceBuilder) MakeDevice() *Device {
+func (db *DeviceBuilder) MakeDevice() Device {
 	if db.err != nil {
 		panic(db.err)
 	}
-	return &Device{Proto: db.proto}
+	return Device{Proto: db.proto}
 }
 
 // WithParam inserts param into the device's params map, keyed by oid. The
@@ -115,7 +115,7 @@ func (db *DeviceBuilder) WithParam(oid string, paramBuilder *ParamBuilder) *Devi
 		return db
 	}
 	if paramBuilder == nil {
-		db.err = errors.New("param builder cannot be nil")
+		db.err = errors.New("WithParam: param builder cannot be nil")
 		return db
 	}
 	param, err := paramBuilder.Build()
@@ -123,8 +123,8 @@ func (db *DeviceBuilder) WithParam(oid string, paramBuilder *ParamBuilder) *Devi
 		db.err = err
 		return db
 	}
-	if param == nil || param.Proto == nil {
-		db.err = errors.New("param builder returned nil param")
+	if param == (Param{}) {
+		db.err = errors.New("WithParam: param builder returned empty param")
 		return db
 	}
 	if db.proto.Params == nil {
@@ -141,7 +141,7 @@ func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *
 		return db
 	}
 	if commandBuilder == nil {
-		db.err = errors.New("command builder cannot be nil")
+		db.err = errors.New("WithCommand: command builder cannot be nil")
 		return db
 	}
 	command, err := commandBuilder.Build()
@@ -149,8 +149,8 @@ func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *
 		db.err = err
 		return db
 	}
-	if command == nil || command.Proto == nil {
-		db.err = errors.New("command builder returned nil command")
+	if command == (Param{}) {
+		db.err = errors.New("WithCommand: command builder returned empty command")
 		return db
 	}
 	if db.proto.Commands == nil {
@@ -167,8 +167,8 @@ func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *Dev
 	if db.err != nil {
 		return db
 	}
-	if constraint == nil || constraint.Proto == nil {
-		db.err = errors.New("constraint cannot be nil")
+	if constraint == nil {
+		db.err = errors.New("WithConstraint: constraint cannot be nil")
 		return db
 	}
 	if db.proto.Constraints == nil {
@@ -185,7 +185,7 @@ func (db *DeviceBuilder) WithMenuGroup(oid string, groupBuilder *MenuGroupBuilde
 		return db
 	}
 	if groupBuilder == nil {
-		db.err = errors.New("menu group builder cannot be nil")
+		db.err = errors.New("WithMenuGroup: menu group builder cannot be nil")
 		return db
 	}
 	group, err := groupBuilder.Build()
@@ -193,8 +193,8 @@ func (db *DeviceBuilder) WithMenuGroup(oid string, groupBuilder *MenuGroupBuilde
 		db.err = err
 		return db
 	}
-	if group == nil || group.Proto == nil {
-		db.err = errors.New("menu group builder returned nil menu group")
+	if group == (MenuGroup{}) {
+		db.err = errors.New("WithMenuGroup: menu group builder returned empty menu group")
 		return db
 	}
 	if db.proto.MenuGroups == nil {

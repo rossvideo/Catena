@@ -73,7 +73,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 		if err != nil {
 			t.Fatalf("componentTestDevice failed: %v", err)
 		}
-		return device
+		return &device
 	}
 
 	// Skeleton first, then each component kind in a fixed sequence; chunks
@@ -147,7 +147,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 		if err != nil {
 			t.Fatalf("NewDevice(1).Build() failed: %v", err)
 		}
-		res := DeviceComponentsForRequest(device, stream)
+		res := DeviceComponentsForRequest(&device, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -185,7 +185,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.DeviceComponent]{}
-		res := DeviceComponentsForRequest(device, stream)
+		res := DeviceComponentsForRequest(&device, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}

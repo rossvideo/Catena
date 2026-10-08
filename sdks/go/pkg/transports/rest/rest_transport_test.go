@@ -125,7 +125,8 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice())}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					device := st2138.NewDevice(slot).MakeDevice()
+					return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -152,7 +153,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
 					assertContext(t, ctx)
-					return *st2138.NewParamInt32(42).MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
+					return st2138.NewParamInt32(42).MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -290,7 +291,7 @@ func TestTransport_GetDevice_Route(t *testing.T) {
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
 		}
-		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0", "")
@@ -308,12 +309,16 @@ func TestTransport_GetDevice_AggregatesComponents(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+		brightness := st2138.NewParamInt32(50).MakeParam()
+		reset := st2138.NewParamEmpty().MakeParam()
+		menu := st2138.NewMenu().WithParamOids("brightness").MakeMenu()
+		device := st2138.NewDevice(slot).WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
 		return []st2138.DeviceComponent{
-			st2138.ComponentDevice(st2138.NewDevice(slot).WithDetailLevel(st2138.DetailLevelFull).MakeDevice()),
-			st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
-			st2138.ComponentCommand("reset", st2138.NewParamEmpty().MakeParam()),
+			st2138.ComponentDevice(&device),
+			st2138.ComponentParam("brightness", &brightness),
+			st2138.ComponentCommand("reset", &reset),
 			st2138.ComponentConstraint("range", st2138.NewConstraintInt32Range(0, 100, 1)),
-			st2138.ComponentMenu("status/main", st2138.NewMenu().WithParamOids("brightness").MakeMenu()),
+			st2138.ComponentMenu("status/main", &menu),
 			st2138.ComponentLanguagePack("en", "English", map[string]string{"greeting": "Hello"}),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -368,9 +373,11 @@ func TestTransport_DeviceStream(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
 
 		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			brightness := st2138.NewParamInt32(50).MakeParam()
+			device := st2138.NewDevice(slot).MakeDevice()
 			return []st2138.DeviceComponent{
-				st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice()),
-				st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
+				st2138.ComponentDevice(&device),
+				st2138.ComponentParam("brightness", &brightness),
 			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -412,8 +419,9 @@ func TestTransport_DeviceStream(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
 
 		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			device := st2138.NewDevice(slot).MakeDevice()
 			return []st2138.DeviceComponent{
-				st2138.ComponentDevice(st2138.NewDevice(slot).MakeDevice()),
+				st2138.ComponentDevice(&device),
 			}, catena.StatusWithCode(catena.StatusCodeInternal, "internal error")
 		}
 
@@ -523,7 +531,7 @@ func TestTransport_GetParam_Route(t *testing.T) {
 		}
 		param := st2138.NewParamString("Hello, World!").
 			WithName(st2138.NewPolyglotText("en", "Text Box").With("es", "Caja de Texto"))
-		return *param.MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return param.MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/text_box", "")
@@ -544,7 +552,8 @@ func TestTransport_GetParam_NestedFqoid(t *testing.T) {
 		if fqoid != "parent/child" {
 			t.Errorf("expected fqoid 'parent/child', got %s", fqoid)
 		}
-		return *st2138.NewParamInt32(7).MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
+
+		return st2138.NewParamInt32(7).MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/parent/child", "")
@@ -585,7 +594,7 @@ func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 		param := st2138.NewParamInt32(0).
 			WithName(st2138.NewPolyglotText("en", "Zero")).
 			WithConstraint(st2138.NewConstraintInt32Range(0, 100, 1))
-		return *param.MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return param.MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/zero", "")
@@ -604,7 +613,7 @@ func TestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
 	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
 		param := st2138.NewParamString("").
 			WithName(st2138.NewPolyglotText("en", "Empty"))
-		return *param.MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return param.MakeParam(), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/empty", "")
@@ -1825,7 +1834,7 @@ func TestWriteResults_ValidData(t *testing.T) {
 	tr := NewTransport(config.RestOptions{})
 	device := st2138.NewDevice(0).MakeDevice()
 	rec := httptest.NewRecorder()
-	tr.writeDeviceResult(rec, *device, http.StatusOK)
+	tr.writeDeviceResult(rec, device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
 	assertContentType(t, rec, "application/json")
 
@@ -2232,7 +2241,7 @@ func TestWriteDeviceResult_WriteError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
-	NewTransport(config.RestOptions{}).writeDeviceResult(w, *device, http.StatusOK)
+	NewTransport(config.RestOptions{}).writeDeviceResult(w, device, http.StatusOK)
 
 	assertStatus(t, rec, http.StatusOK)
 }

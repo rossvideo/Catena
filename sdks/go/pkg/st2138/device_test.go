@@ -132,15 +132,21 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 
 func TestDevice_WithConstraint_Nil(t *testing.T) {
 	cd := NewDevice(0).
-		WithConstraint("nothing", nil)
-	if _, ok := cd.proto.GetConstraints()["nothing"]; ok {
-		t.Error("expected nil constraint to be ignored")
+		WithCommand("nothing", nil)
+	if _, ok := cd.proto.GetCommands()["nothing"]; ok {
+		t.Error("expected nil command to short-circuit")
+	}
+	if cd.Err() == nil {
+		t.Error("expected error for builder with nil command")
 	}
 
 	cd = NewDevice(0).
-		WithConstraint("nothing", &Constraint{})
-	if _, ok := cd.proto.GetConstraints()["nothing"]; ok {
-		t.Error("expected constraint with nil Proto to be ignored")
+		WithCommand("nothing", &ParamBuilder{})
+	if _, ok := cd.proto.GetCommands()["nothing"]; ok {
+		t.Error("expected command with nil Proto to short-circuit")
+	}
+	if cd.Err() == nil {
+		t.Error("expected error for builder with command with nil Proto")
 	}
 }
 
@@ -148,13 +154,19 @@ func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 	cd := NewDevice(0).
 		WithMenuGroup("nothing", nil)
 	if _, ok := cd.proto.GetMenuGroups()["nothing"]; ok {
-		t.Error("expected nil menu group to be ignored")
+		t.Error("expected nil menu group to short-circuit")
+	}
+	if cd.Err() == nil {
+		t.Error("expected error for builder with nil menu group")
 	}
 
 	cd = NewDevice(0).
 		WithMenuGroup("nothing", &MenuGroupBuilder{})
 	if _, ok := cd.proto.GetMenuGroups()["nothing"]; ok {
-		t.Error("expected menu group with nil Proto to be ignored")
+		t.Error("expected menu group with nil Proto to short-circuit")
+	}
+	if cd.Err() == nil {
+		t.Error("expected error for builder with menu group with nil Proto")
 	}
 }
 
@@ -440,7 +452,7 @@ func TestDeviceBuilder_WithShortCircuitErrors(t *testing.T) {
 	if err == nil || err.Error() != "test error" {
 		t.Fatalf("expected 'test error', got %v", err)
 	}
-	if device != nil {
+	if device != (Device{}) {
 		t.Fatal("expected nil device for builder with error")
 	}
 	if !proto.Equal(before, cd.proto) {
