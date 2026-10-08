@@ -150,9 +150,18 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
-		wrong := st2138.NewParamString("wrong").MakeParam()
-		wrongName := st2138.NewParamString("wrong").MakeParam()
-		brightness := st2138.NewParamInt32(50).MakeParam()
+		wrong, err := st2138.NewParamString("wrong").Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		wrongName, err := st2138.NewParamString("wrong").Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		brightness, err := st2138.NewParamInt32(50).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		chunks := []st2138.DeviceComponent{
 			st2138.ComponentParam("product", &wrong),
 			st2138.ComponentParam("product/name", &wrongName),
@@ -346,7 +355,11 @@ func TestServer_GetParam_NoProductRegistered(t *testing.T) {
 	called := false
 	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
 		called = true
-		return st2138.NewParamString("bl").MakeParam(), StatusWithCode(StatusCodeOk, "")
+		p, err := st2138.NewParamString("bl").Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return p, StatusWithCode(StatusCodeOk, "")
 	})
 
 	_, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})

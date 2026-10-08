@@ -112,10 +112,13 @@ const (
 // STRING field descriptors from the values map. The SDK uses this to seed the
 // product param into the device on GetDevice.
 func ProductParam(p ProductStruct) *st2138.Param {
-	param := st2138.NewParamStruct(ProductValues(p)).
+	param, err := st2138.NewParamStruct(ProductValues(p)).
 		WithReadOnly(true).
 		WithAccessScope(st2138.ScopeMon).
-		MakeParam()
+		Build()
+	if err != nil {
+		panic(err)
+	}
 	return &param
 }
 

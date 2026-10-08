@@ -663,11 +663,14 @@ func TestInjectJSONField_PushUpdatesSlotZero(t *testing.T) {
 // --- MarshalDeviceJSON tests (migrated from catena/device_test.go) ---
 
 func TestMarshalDeviceJSON(t *testing.T) {
-	cd := st2138.NewDevice(0).
+	cd, err := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithParam("brightness", st2138.NewParamInt32(0).
 			WithName(st2138.NewPolyglotText("en", "Brightness"))).
-		MakeDevice()
+		Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON error: %v", err2)
@@ -686,9 +689,12 @@ func TestMarshalDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
-	cd := st2138.NewDevice(0).
+	cd, err := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
-		WithParam("volume", st2138.NewParamInt32(0)).MakeDevice()
+		WithParam("volume", st2138.NewParamInt32(0)).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -708,9 +714,12 @@ func TestMarshalDeviceJSON_SlotZeroPresent(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyStringValuePreserved(t *testing.T) {
-	cd := st2138.NewDevice(0).
+	cd, err := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
-		WithParam("label", st2138.NewParamString("")).MakeDevice()
+		WithParam("label", st2138.NewParamString("")).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -734,7 +743,10 @@ func TestMarshalDeviceJSON_Nil(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
-	cd := st2138.NewDevice(5).MakeDevice()
+	cd, err := st2138.NewDevice(5).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
@@ -746,8 +758,11 @@ func TestMarshalDeviceJSON_SlotNonZero(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
-	cd := st2138.NewDevice(0).
-		WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
+	cd, err := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
@@ -765,9 +780,12 @@ func TestMarshalDeviceJSON_EmptyMapsStripped(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
-	cd := st2138.NewDevice(0).
+	cd, err := st2138.NewDevice(0).
 		WithParam("brightness", st2138.NewParamInt32(0)).
-		WithCommand("reboot", st2138.NewParamEmpty()).MakeDevice()
+		WithCommand("reboot", st2138.NewParamEmpty()).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
 		t.Fatalf("MarshalDeviceJSON: %v", err2)
@@ -783,7 +801,7 @@ func TestMarshalDeviceJSON_PopulatedMapsKept(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_EmptyMenuMetadataStringsStripped(t *testing.T) {
-	cd := st2138.NewDevice(0).
+	cd, err := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithParam("brightness", st2138.NewParamInt32(0)).
 		WithMenuGroup("config", st2138.NewMenuGroup().
@@ -791,7 +809,10 @@ func TestMarshalDeviceJSON_EmptyMenuMetadataStringsStripped(t *testing.T) {
 			WithMenu("main", st2138.NewMenu().
 				WithName(st2138.NewPolyglotText("en", "Main")).
 				WithParamOids("/brightness").
-				WithClientHint("ui-url", ""))).MakeDevice()
+				WithClientHint("ui-url", ""))).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 
 	b, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -927,7 +948,7 @@ func TestCleanDeviceJSON(t *testing.T) {
 }
 
 func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
-	cd := st2138.NewDevice(0).
+	cd, err := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
@@ -939,7 +960,10 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 			WithWidget("SLIDER")).
 		WithConstraint("brightness_range", st2138.NewConstraintInt32Range(0, 100, 1)).
 		WithCommand("reboot", st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Reboot Device"))).MakeDevice()
+			WithName(st2138.NewPolyglotText("en", "Reboot Device"))).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 
 	jsonData, err2 := MarshalDeviceJSON(cd.Proto)
 	if err2 != nil {
@@ -953,8 +977,12 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 // --- MarshalDeviceComponentJSON tests ---
 
 func TestMarshalDeviceComponentJSON(t *testing.T) {
-	brightness := st2138.NewParamInt32(0).
-		WithName(st2138.NewPolyglotText("en", "Brightness")).MakeParam()
+	brightness, err := st2138.NewParamInt32(0).
+		WithName(st2138.NewPolyglotText("en", "Brightness")).
+		Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	component := st2138.ComponentParam("brightness", &brightness)
 
 	jsonData, err := MarshalDeviceComponentJSON(component.Proto)
@@ -984,7 +1012,10 @@ func TestMarshalDeviceComponentJSON_Nil(t *testing.T) {
 func TestMarshalDeviceComponentJSON_MarshalError(t *testing.T) {
 	// An invalid UTF-8 string cannot be marshalled, so the error surfaces
 	// before the cleanup step ever runs.
-	label := st2138.NewParamString("\xff").MakeParam()
+	label, err := st2138.NewParamString("\xff").Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	component := st2138.ComponentParam("label", &label)
 
 	if _, err := MarshalDeviceComponentJSON(component.Proto); err == nil {

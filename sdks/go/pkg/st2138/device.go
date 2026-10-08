@@ -100,13 +100,6 @@ func (db *DeviceBuilder) Err() error {
 	return db.err
 }
 
-func (db *DeviceBuilder) MakeDevice() Device {
-	if db.err != nil {
-		panic(db.err)
-	}
-	return Device{Proto: db.proto}
-}
-
 // WithParam inserts param into the device's params map, keyed by oid. The
 // param's proto is deep-copied so later builder mutations on the caller's Param
 // do not affect entries already added. A nil param errors and short-circuits further method calls.

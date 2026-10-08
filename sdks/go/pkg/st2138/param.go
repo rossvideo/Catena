@@ -543,15 +543,6 @@ func (cp *ParamBuilder) Err() error {
 	return cp.err
 }
 
-// Wrapper around Build that panics if the builder has an error.
-func (cp *ParamBuilder) MakeParam() Param {
-	p, err := cp.Build()
-	if err != nil {
-		panic(err)
-	}
-	return p
-}
-
 // SetValue converts v to a proto value via ToProto, validates it against the
 // param type, and sets it.
 func (cp *ParamBuilder) SetValue(v any) error {
