@@ -189,15 +189,15 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		// Composed from the same slotZero* helpers the GetDevice handler
 		// streams chunk-by-chunk, so the two views stay in sync.
 		deviceBuilder := slotZeroSkeleton()
-		device, err := deviceBuilder.Build()
-		if err != nil {
-			return nil, false
-		}
 		for oid, param := range slotZeroParams(counter) {
 			deviceBuilder.WithParam(oid, param)
 		}
 		for oid, command := range slotZeroCommands() {
 			deviceBuilder.WithCommand(oid, command)
+		}
+		device, err := deviceBuilder.Build()
+		if err != nil {
+			return nil, false
 		}
 		return &device, true
 	case 1:
