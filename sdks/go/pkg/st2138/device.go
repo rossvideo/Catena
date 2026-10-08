@@ -87,7 +87,7 @@ func NewDevice(slot uint16) *DeviceBuilder {
 }
 
 // Build returns a usable Device from the builder. If the builder has an error, it
-// returns nil and the error. Must be called after all builder methods have been called.
+// returns an empty Device and the error. Must be called after all builder methods have been called.
 func (db *DeviceBuilder) Build() (Device, error) {
 	if db.err != nil {
 		return Device{}, db.err
@@ -162,6 +162,10 @@ func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *Dev
 	}
 	if constraint == nil {
 		db.err = errors.New("WithConstraint: constraint cannot be nil")
+		return db
+	}
+	if constraint.Proto == nil {
+		db.err = errors.New("WithConstraint: constraint proto cannot be nil")
 		return db
 	}
 	if db.proto.Constraints == nil {
