@@ -89,6 +89,7 @@ func registerAuthz(srv catena.Server) {
 			Build()
 		if err != nil {
 			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+			return nil
 		}
 		return &userAccess
 	}
@@ -112,6 +113,7 @@ func registerAuthz(srv catena.Server) {
 			Build()
 		if err != nil {
 			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+			return nil
 		}
 		return &rolesTable
 	}
@@ -140,6 +142,7 @@ func registerAuthz(srv catena.Server) {
 			Build()
 		if err != nil {
 			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+			return nil
 		}
 		return &claims
 	}
@@ -153,6 +156,7 @@ func registerAuthz(srv catena.Server) {
 			Build()
 		if err != nil {
 			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+			return nil
 		}
 		return &authzStatus
 	}

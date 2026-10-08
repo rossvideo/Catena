@@ -117,7 +117,7 @@ func ProductParam(p ProductStruct) *st2138.Param {
 		WithAccessScope(st2138.ScopeMon).
 		Build()
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return &param
 }
