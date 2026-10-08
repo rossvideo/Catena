@@ -118,7 +118,7 @@ func (mg *MenuGroupBuilder) WithMenu(oid string, menu *MenuBuilder) *MenuGroupBu
 		mg.err = err
 		return mg
 	}
-	if m == nil || m.Proto == nil {
+	if m == (Menu{}) || m.Proto == nil {
 		mg.err = errors.New("menu builder returned nil menu")
 		return mg
 	}
@@ -140,11 +140,11 @@ func (mg *MenuGroupBuilder) WithOrder(order uint32) *MenuGroupBuilder {
 
 // Build returns a usable MenuGroup from the builder. If the builder has an error, it
 // returns nil and the error. Must be called after all builder methods have been called.
-func (mg *MenuGroupBuilder) Build() (*MenuGroup, error) {
+func (mg *MenuGroupBuilder) Build() (MenuGroup, error) {
 	if mg.err != nil {
-		return nil, mg.err
+		return MenuGroup{}, mg.err
 	}
-	return &MenuGroup{Proto: mg.proto}, nil
+	return MenuGroup{Proto: mg.proto}, nil
 }
 
 // Err returns the stored error of the builder.
@@ -256,11 +256,11 @@ func (m *MenuBuilder) WithOrder(order uint32) *MenuBuilder {
 
 // Build returns a usable Menu from the builder. If the builder has an error, it
 // returns nil and the error. Must be called after all builder methods have been called.
-func (m *MenuBuilder) Build() (*Menu, error) {
+func (m *MenuBuilder) Build() (Menu, error) {
 	if m.err != nil {
-		return nil, m.err
+		return Menu{}, m.err
 	}
-	return &Menu{Proto: m.proto}, nil
+	return Menu{Proto: m.proto}, nil
 }
 
 // Err returns the stored error of the builder.
@@ -269,7 +269,7 @@ func (m *MenuBuilder) Err() error {
 }
 
 // Wrapper around Build that panics if the builder has an error.
-func (m *MenuBuilder) MakeMenu() *Menu {
+func (m *MenuBuilder) MakeMenu() Menu {
 	p, err := m.Build()
 	if err != nil {
 		panic(err)

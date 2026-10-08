@@ -77,7 +77,7 @@ func (s *helloWorldState) Set(value string) {
 }
 
 func buildDevice() *st2138.Device {
-	return st2138.NewDevice(slot).
+	device := st2138.NewDevice(slot).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
@@ -86,6 +86,7 @@ func buildDevice() *st2138.Device {
 		WithParam(helloWorldOID, st2138.NewParamString(helloWorld.Get()).
 			WithName(st2138.NewPolyglotText("en", "Hello World"))).
 		MakeDevice()
+	return &device
 }
 
 func main() {

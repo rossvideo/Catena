@@ -177,7 +177,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		for oid, command := range slotZeroCommands() {
 			deviceBuilder.WithCommand(oid, command)
 		}
-		return device, true
+		return &device, true
 	case 1:
 		// Slot 1 intentionally stores its business data in a sync.Map to show
 		// adopters they can back handlers with any application data structure,
@@ -237,7 +237,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 					WithName(st2138.NewPolyglotText("en", "Picture")).
 					WithParamOids("brightness", "contrast", "saturation"))).
 			MakeDevice()
-		return device, true
+		return &device, true
 	case 2:
 		// Slot 2: prefix-dispatched identity/audio params plus FLOAT32, arrays,
 		// BINARY, STRUCT_VARIANT, STRUCT_ARRAY, STRUCT_VARIANT_ARRAY examples.
@@ -332,7 +332,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 					WithName(st2138.NewPolyglotText("en", "Audio")).
 					WithParamOids("volume", "muted"))).
 			MakeDevice()
-		return device, true
+		return &device, true
 	default:
 		return nil, false
 	}

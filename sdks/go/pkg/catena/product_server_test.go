@@ -117,7 +117,7 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 		if err != nil {
 			t.Fatalf("NewDevice(0).WithParam('product', NewParamString('wrong')).WithParam('brightness', NewParamInt32(50)).Build() failed: %v", err)
 		}
-		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+		if err := stream.Send(st2138.ComponentDevice(&device)); err != nil {
 			return StatusWithCode(StatusCodeInternal, err.Error())
 		}
 		return StatusWithCode(StatusCodeOk, "")
@@ -151,9 +151,9 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 	srv.RegisterProductStruct(0, testProduct())
 	srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 		chunks := []st2138.DeviceComponent{
-			st2138.ComponentParam("product", st2138.NewParamString("wrong").MakeParam()),
-			st2138.ComponentParam("product/name", st2138.NewParamString("wrong").MakeParam()),
-			st2138.ComponentParam("brightness", st2138.NewParamInt32(50).MakeParam()),
+			st2138.ComponentParam("product", &wrong),
+			st2138.ComponentParam("product/name", &wrongName),
+			st2138.ComponentParam("brightness", &brightness),
 		}
 		for _, chunk := range chunks {
 			if err := stream.Send(chunk); err != nil {
@@ -340,7 +340,7 @@ func TestServer_GetParam_NoProductRegistered(t *testing.T) {
 	called := false
 	srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 		called = true
-		return *st2138.NewParamString("bl").MakeParam(), StatusWithCode(StatusCodeOk, "")
+		return st2138.NewParamString("bl").MakeParam(), StatusWithCode(StatusCodeOk, "")
 	})
 
 	_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})
@@ -460,7 +460,7 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewDevice(0).WithParam('product', NewParamString('wrong')).WithParam('brightness', NewParamInt32(50)).Build() failed: %v", err)
 			}
-			if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+			if err := stream.Send(st2138.ComponentDevice(&device)); err != nil {
 				return StatusWithCode(StatusCodeInternal, err.Error())
 			}
 			return StatusWithCode(StatusCodeOk, "")

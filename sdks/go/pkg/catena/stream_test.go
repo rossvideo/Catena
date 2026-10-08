@@ -135,7 +135,7 @@ func TestProductDeviceStream(t *testing.T) {
 		if err != nil {
 			t.Fatalf("NewDevice(0).Build() failed: %v", err)
 		}
-		if err := stream.Send(st2138.ComponentDevice(device0)); err != nil {
+		if err := stream.Send(st2138.ComponentDevice(&device0)); err != nil {
 			t.Fatalf("Send returned error: %v", err)
 		}
 		if len(inner.Items) != 1 {
@@ -161,7 +161,7 @@ func TestProductDeviceStream(t *testing.T) {
 		inner := &sliceStream[st2138.DeviceComponent]{}
 		stream := productDeviceStream{inner: inner, product: testProduct(), hasMon: false}
 
-		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+		if err := stream.Send(st2138.ComponentDevice(&device)); err != nil {
 			t.Fatalf("Send returned error: %v", err)
 		}
 		if len(inner.Items) != 1 {

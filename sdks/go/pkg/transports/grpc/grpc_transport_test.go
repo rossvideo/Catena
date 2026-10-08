@@ -708,7 +708,7 @@ func TestTransport_GetParam_Success(t *testing.T) {
 		param := st2138.NewParamInt32(21).
 			WithName(st2138.NewPolyglotText("en", "Counter")).
 			WithMinimalSet(true).MakeParam()
-		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)

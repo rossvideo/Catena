@@ -1389,7 +1389,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(*st2138.NewParamInt32(42).MakeParam())
+			return Reply(st2138.NewParamInt32(42).MakeParam())
 		}
 
 		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
@@ -2087,7 +2087,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(*st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).MakeParam())
+			return Reply(st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).MakeParam())
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
