@@ -260,7 +260,10 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					device := st2138.NewDevice(slot).MakeDevice()
+					device, err := st2138.NewDevice(slot).Build()
+					if err != nil {
+						t.Fatalf("expected no error for builder with valid value, got %v", err)
+					}
 					return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
@@ -388,8 +391,11 @@ func TestTransport_DeviceRequest_Success(t *testing.T) {
 	handlerCalled := false
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
-		device := st2138.NewDevice(slot).
-			WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
+		device, err := st2138.NewDevice(slot).
+			WithDetailLevel(st2138.DetailLevelFull).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -422,9 +428,18 @@ func TestTransport_DeviceRequest_MultipleChunks(t *testing.T) {
 	// The handler streams the device in pieces: a skeleton Device chunk
 	// followed by a param and a command component.
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
-		brightness := st2138.NewParamInt32(50).MakeParam()
-		reset := st2138.NewParamEmpty().MakeParam()
-		device := st2138.NewDevice(slot).MakeDevice()
+		brightness, err := st2138.NewParamInt32(50).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		reset, err := st2138.NewParamEmpty().Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		device, err := st2138.NewDevice(slot).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		return []st2138.DeviceComponent{
 			st2138.ComponentDevice(&device),
 			st2138.ComponentParam("brightness", &brightness),
@@ -709,9 +724,13 @@ func TestTransport_GetParam_Success(t *testing.T) {
 		if fqoid != "counter" {
 			t.Errorf("expected fqoid 'counter', got %s", fqoid)
 		}
-		param := st2138.NewParamInt32(21).
+		param, err := st2138.NewParamInt32(21).
 			WithName(st2138.NewPolyglotText("en", "Counter")).
-			WithMinimalSet(true).MakeParam()
+			WithMinimalSet(true).
+			Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -2325,8 +2344,11 @@ func TestTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
-		device := st2138.NewDevice(slot).
-			WithDetailLevel(st2138.DetailLevelFull).MakeDevice()
+		device, err := st2138.NewDevice(slot).
+			WithDetailLevel(st2138.DetailLevelFull).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 

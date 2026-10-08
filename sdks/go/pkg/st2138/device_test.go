@@ -459,30 +459,3 @@ func TestDeviceBuilder_WithShortCircuitErrors(t *testing.T) {
 		t.Fatal("expected With* to leave the device unchanged after an error")
 	}
 }
-
-func TestDevice_MakeDevice(t *testing.T) {
-	cd := NewDevice(0).MakeDevice()
-
-	proto := cd.Proto
-	if proto == nil {
-		t.Fatal("expected non-nil proto device")
-	}
-	if cd.Proto.GetSlot() != 0 {
-		t.Errorf("expected slot 0, got %v", cd.Proto.GetSlot())
-	}
-}
-
-func TestDevice_MakeDevicePanicsOnError(t *testing.T) {
-	cd := NewDevice(0)
-	cd.err = errors.New("test error")
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatal("expected panic for builder with error")
-		}
-		if r.(error).Error() != "test error" {
-			t.Fatal("expected error message 'test error', got", r)
-		}
-	}()
-	cd.MakeDevice()
-}

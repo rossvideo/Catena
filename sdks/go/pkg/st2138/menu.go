@@ -68,15 +68,6 @@ func NewMenuGroup() *MenuGroupBuilder {
 	}
 }
 
-// Wraps a protos.MenuGroup in a MenuGroupBuilder,
-// giving access to the .With* builders.
-func WrapMenuGroup(proto *protos.MenuGroup) *MenuGroupBuilder {
-	return &MenuGroupBuilder{
-		proto: proto,
-		err:   nil,
-	}
-}
-
 // WithName sets the menu group's display name, replacing any existing name.
 func (mg *MenuGroupBuilder) WithName(name *PolyglotTextBuilder) *MenuGroupBuilder {
 	if mg.err != nil {
@@ -266,13 +257,4 @@ func (m *MenuBuilder) Build() (Menu, error) {
 // Err returns the stored error of the builder.
 func (m *MenuBuilder) Err() error {
 	return m.err
-}
-
-// Wrapper around Build that panics if the builder has an error.
-func (m *MenuBuilder) MakeMenu() Menu {
-	p, err := m.Build()
-	if err != nil {
-		panic(err)
-	}
-	return p
 }

@@ -165,8 +165,14 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 		{
 			name: "childBeforeParent",
 			chunks: func() []st2138.DeviceComponent {
-				parent := st2138.NewParamEmpty().MakeParam()
-				num := st2138.NewParamInt32(42).MakeParam()
+				parent, err := st2138.NewParamEmpty().Build()
+				if err != nil {
+					t.Fatalf("expected no error for builder with valid value, got %v", err)
+				}
+				num, err := st2138.NewParamInt32(42).Build()
+				if err != nil {
+					t.Fatalf("expected no error for builder with valid value, got %v", err)
+				}
 				parent.Proto.Type = protos.ParamType_STRUCT
 				return []st2138.DeviceComponent{
 					st2138.ComponentParam("monitor/eq", &num),
@@ -177,8 +183,14 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 		{
 			name: "parentBeforeChild",
 			chunks: func() []st2138.DeviceComponent {
-				parent := st2138.NewParamEmpty().MakeParam()
-				num := st2138.NewParamInt32(42).MakeParam()
+				parent, err := st2138.NewParamEmpty().Build()
+				if err != nil {
+					t.Fatalf("expected no error for builder with valid value, got %v", err)
+				}
+				num, err := st2138.NewParamInt32(42).Build()
+				if err != nil {
+					t.Fatalf("expected no error for builder with valid value, got %v", err)
+				}
 				parent.Proto.Type = protos.ParamType_STRUCT
 				return []st2138.DeviceComponent{
 					st2138.ComponentParam("monitor", &parent),
@@ -222,9 +234,15 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 func TestDeviceAggregateStream_NestedCommandOrderIndependent(t *testing.T) {
 	// Commands nest the same way as params; parent-after-child must not wipe
 	// a nested command hung under a synthesized intermediate.
-	parent := st2138.NewParamEmpty().MakeParam()
+	parent, err := st2138.NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	parent.Proto.Type = protos.ParamType_STRUCT
-	child := st2138.NewParamEmpty().MakeParam()
+	child, err := st2138.NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	child.Proto.Type = protos.ParamType_INT32
 
 	stream := &deviceAggregateStream{}
@@ -261,7 +279,10 @@ func TestDeviceAggregateStream_IgnoresChunksWithNothingToMerge(t *testing.T) {
 	// Every component kind guards against a missing body, and a menu oid that
 	// does not name its group cannot be placed. None of these chunks contribute
 	// anything, so no device is assembled at all.
-	menu := st2138.NewMenu().MakeMenu()
+	menu, err := st2138.NewMenu().Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	chunks := []st2138.DeviceComponent{
 		{}, // no proto at all
 		st2138.ComponentDevice(nil),

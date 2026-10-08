@@ -258,7 +258,7 @@ func TestMenuGroup_WrapMenuGroup(t *testing.T) {
 			DisplayStrings: map[string]string{"en": "Video"},
 		},
 	}
-	mg := WrapMenuGroup(proto)
+	mg := &MenuGroupBuilder{proto: proto}
 	if mg.proto == nil {
 		t.Fatal("expected non-nil proto")
 	}
@@ -394,23 +394,4 @@ func TestMenuBuilder_Err(t *testing.T) {
 	if m.Err().Error() != "test error" {
 		t.Fatal("expected error message 'test error', got", m.Err())
 	}
-}
-
-func TestMenu_MakeMenu(t *testing.T) {
-	m := NewMenu().WithName(NewPolyglotText("en", "Video")).MakeMenu()
-	if m == (Menu{}) {
-		t.Fatal("expected non-nil menu")
-	}
-	if m.Proto == nil {
-		t.Fatal("expected non-nil proto")
-	}
-}
-
-func TestMenu_MakeMenuPanicsOnError(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic, got none")
-		}
-	}()
-	NewMenu().WithName(nil).MakeMenu()
 }

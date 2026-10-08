@@ -1431,26 +1431,3 @@ func TestParamBuilder_Err(t *testing.T) {
 		t.Fatal("expected error message 'test error', got", cp.Err())
 	}
 }
-
-func TestParamBuilder_MakeParamBuildsValidParam(t *testing.T) {
-	cp := NewParamInt32(42)
-	p := cp.MakeParam()
-	if p.Proto.GetValue().GetInt32Value() != 42 {
-		t.Fatal("expected value 42, got", p.Proto.GetValue().GetInt32Value())
-	}
-}
-
-func TestParamBuilder_MakeParamPanicsOnError(t *testing.T) {
-	cp := NewParamInt32()
-	cp.err = errors.New("test error")
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatal("expected panic for builder with error")
-		}
-		if r.(error).Error() != "test error" {
-			t.Fatal("expected error message 'test error', got", r)
-		}
-	}()
-	cp.MakeParam()
-}

@@ -1389,7 +1389,11 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(st2138.NewParamInt32(42).MakeParam())
+			p, err := st2138.NewParamInt32(42).Build()
+			if err != nil {
+				t.Fatalf("expected no error for builder with valid value, got %v", err)
+			}
+			return Reply(p)
 		}
 
 		actual, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
@@ -1403,7 +1407,11 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if !proto.Equal(actual.Proto, st2138.NewParamInt32(42).MakeParam().Proto.GetValue()) {
+		p, err := st2138.NewParamInt32(42).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		if !proto.Equal(actual.Proto, p.Proto.GetValue()) {
 			t.Errorf("expected derived value 42, got %v", actual)
 		}
 	})
@@ -1415,7 +1423,11 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
 		srv.getValueHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
-			return Reply(st2138.Value{Proto: st2138.NewParamInt32(1).MakeParam().Proto.GetValue()})
+			p, err := st2138.NewParamInt32(1).Build()
+			if err != nil {
+				t.Fatalf("expected no error for builder with valid value, got %v", err)
+			}
+			return Reply(st2138.Value{Proto: p.Proto.GetValue()})
 		}
 		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
 			t.Error("GetParam handler must not be called when a GetValue handler is registered")
@@ -1426,7 +1438,11 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
-		if !proto.Equal(actual.Proto, st2138.NewParamInt32(1).MakeParam().Proto.GetValue()) {
+		p, err := st2138.NewParamInt32(1).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		if !proto.Equal(actual.Proto, p.Proto.GetValue()) {
 			t.Errorf("expected value 1 from GetValue handler, got %v", actual)
 		}
 	})
@@ -2087,7 +2103,11 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).MakeParam())
+			volume, err := st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).Build()
+			if err != nil {
+				t.Fatalf("expected no error for builder with valid value, got %v", err)
+			}
+			return Reply(volume)
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2121,7 +2141,11 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
 		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
-			return Reply(st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).MakeParam())
+			p, err := st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).Build()
+			if err != nil {
+				t.Fatalf("expected no error for builder with valid value, got %v", err)
+			}
+			return Reply(p)
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
