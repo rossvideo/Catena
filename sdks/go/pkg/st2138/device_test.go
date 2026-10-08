@@ -132,21 +132,21 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 
 func TestDevice_WithConstraint_Nil(t *testing.T) {
 	cd := NewDevice(0).
-		WithCommand("nothing", nil)
-	if _, ok := cd.proto.GetCommands()["nothing"]; ok {
-		t.Error("expected nil command to short-circuit")
+		WithConstraint("nothing", nil)
+	if _, ok := cd.proto.GetConstraints()["nothing"]; ok {
+		t.Error("expected nil constraint to short-circuit")
 	}
 	if cd.Err() == nil {
-		t.Error("expected error for builder with nil command")
+		t.Error("expected error for builder with nil constraint")
 	}
 
 	cd = NewDevice(0).
-		WithCommand("nothing", &ParamBuilder{})
-	if _, ok := cd.proto.GetCommands()["nothing"]; ok {
-		t.Error("expected command with nil Proto to short-circuit")
+		WithConstraint("nothing", &Constraint{})
+	if _, ok := cd.proto.GetConstraints()["nothing"]; ok {
+		t.Error("expected constraint with nil Proto to short-circuit")
 	}
 	if cd.Err() == nil {
-		t.Error("expected error for builder with command with nil Proto")
+		t.Error("expected error for builder with constraint with nil Proto")
 	}
 }
 
