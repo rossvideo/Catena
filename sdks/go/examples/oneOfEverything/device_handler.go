@@ -53,6 +53,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 			menu, err := menu.Build()
 			if err != nil {
 				ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build menu: "+err.Error())
 			}
 			if err := stream.Send(st2138.ComponentMenu(oid, &menu)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
@@ -63,6 +64,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 			param, err := param.Build()
 			if err != nil {
 				ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build param: "+err.Error())
 			}
 			if err := stream.Send(st2138.ComponentParam(oid, &param)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
@@ -73,6 +75,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 			command, err := command.Build()
 			if err != nil {
 				ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build command: "+err.Error())
 			}
 			if err := stream.Send(st2138.ComponentCommand(oid, &command)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)

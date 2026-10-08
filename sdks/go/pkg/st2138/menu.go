@@ -130,7 +130,7 @@ func (mg *MenuGroupBuilder) WithOrder(order uint32) *MenuGroupBuilder {
 }
 
 // Build returns a usable MenuGroup from the builder. If the builder has an error, it
-// returns nil and the error. Must be called after all builder methods have been called.
+// returns an empty MenuGroup and the error. Must be called after all builder methods have been called.
 func (mg *MenuGroupBuilder) Build() (MenuGroup, error) {
 	if mg.err != nil {
 		return MenuGroup{}, mg.err

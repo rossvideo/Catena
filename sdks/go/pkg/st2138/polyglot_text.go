@@ -52,10 +52,10 @@ type PolyglotTextBuilder struct {
 }
 
 // Build returns a usable PolyglotText from the builder. If the builder has an error, it
-// returns nil and the error. Must be called after all builder methods have been called.
+// returns an empty PolyglotText and the error. Must be called after all builder methods have been called.
 func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
 	if pb.err != nil {
-		return nil, pb.err
+		return PolyglotText{}, pb.err
 	}
 	return pb.polyglot, nil
 }
