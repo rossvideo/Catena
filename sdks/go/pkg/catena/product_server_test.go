@@ -150,6 +150,18 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 	srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
+		wrong, err := st2138.NewParamString("wrong").Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		wrongName, err := st2138.NewParamString("wrong").Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		brightness, err := st2138.NewParamInt32(50).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		chunks := []st2138.DeviceComponent{
 			st2138.ComponentParam("product", &wrong),
 			st2138.ComponentParam("product/name", &wrongName),
@@ -183,8 +195,11 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 func TestServer_GetDevice_NoProductRegistered(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
-		device := st2138.NewDevice(0).WithParam("brightness", st2138.NewParamInt32(50))
-		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
+		device, err := st2138.NewDevice(0).WithParam("brightness", st2138.NewParamInt32(50)).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		if err := stream.Send(st2138.ComponentDevice(&device)); err != nil {
 			return StatusWithCode(StatusCodeInternal, err.Error())
 		}
 		return StatusWithCode(StatusCodeOk, "")
@@ -340,7 +355,11 @@ func TestServer_GetParam_NoProductRegistered(t *testing.T) {
 	called := false
 	srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 		called = true
-		return st2138.NewParamString("bl").MakeParam(), StatusWithCode(StatusCodeOk, "")
+		p, err := st2138.NewParamString("bl").Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return p, StatusWithCode(StatusCodeOk, "")
 	})
 
 	_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})

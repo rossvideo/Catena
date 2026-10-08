@@ -79,18 +79,21 @@ func registerAuthz(srv catena.Server) {
 		} else {
 			accessMap["adm"] = "---\n---"
 		}
-		userAccess := st2138.NewParamStruct(accessMap).
+		userAccess, err := st2138.NewParamStruct(accessMap).
 			WithReadOnly(true).
 			WithName(st2138.NewPolyglotText("en", "Scopes")).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
 			WithParam("op", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Operate"))).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
-			MakeParam()
+			Build()
+		if err != nil {
+			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+		}
 		return &userAccess
 	}
 
-	makeRolesTable := func() *st2138.Param {
+	makeRolesTable := func(ctx catena.HandlerContext) *st2138.Param {
 		roles := []map[string]any{
 			{"role": "commissioner", "mon": "Read\nWrite", "op": "Read\nWrite", "cfg": "Read\nWrite", "adm": "Read\nWrite"},
 			{"role": "it-admin", "mon": "Read\nWrite", "op": "Read\n---", "cfg": "Read\nWrite", "adm": "---\n---"},
@@ -99,14 +102,17 @@ func registerAuthz(srv catena.Server) {
 			{"role": "producer", "mon": "Read\nWrite", "op": "Read\n---", "cfg": "Read\n---", "adm": "---\n---"},
 			{"role": "tech-director", "mon": "Read\nWrite", "op": "Read\nWrite", "cfg": "Read\nWrite", "adm": "Read\n---"},
 		}
-		rolesTable := st2138.NewParamStructArray(roles).
+		rolesTable, err := st2138.NewParamStructArray(roles).
 			WithReadOnly(true).
 			WithParam("role", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Role"))).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
 			WithParam("op", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Operate"))).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
-			MakeParam()
+			Build()
+		if err != nil {
+			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+		}
 		return &rolesTable
 	}
 
@@ -126,22 +132,28 @@ func registerAuthz(srv catena.Server) {
 				}
 			}
 		}
-		claims := st2138.NewParamStructArray(valMap).
+		claims, err := st2138.NewParamStructArray(valMap).
 			WithReadOnly(true).
 			WithName(st2138.NewPolyglotText("en", "JWT Claims")).
 			WithParam("key", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Key"))).
 			WithParam("value", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Value"))).
-			MakeParam()
+			Build()
+		if err != nil {
+			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+		}
 		return &claims
 	}
 
 	// Shown in place of the scope/claims params when authz is disabled: the
 	// scope helpers grant everything, so per-user access can't be reported.
-	makeAuthzStatus := func() *st2138.Param {
-		authzStatus := st2138.NewParamString("Authorization is disabled; scope information cannot be shown.").
+	makeAuthzStatus := func(ctx catena.HandlerContext) *st2138.Param {
+		authzStatus, err := st2138.NewParamString("Authorization is disabled; scope information cannot be shown.").
 			WithReadOnly(true).
 			WithName(st2138.NewPolyglotText("en", "Authorization")).
-			MakeParam()
+			Build()
+		if err != nil {
+			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+		}
 		return &authzStatus
 	}
 
@@ -153,14 +165,18 @@ func registerAuthz(srv catena.Server) {
 	})
 
 	srv.RegisterGetDeviceHandler(authzSlot, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+		device, err := st2138.NewDevice(authzSlot).
+			WithDefaultScope(st2138.ScopeMon).
+			WithMultiSetEnabled(false).
+			WithAccessScopes(st2138.ScopeMon, st2138.ScopeOp, st2138.ScopeCfg, st2138.ScopeAdm).
+			WithMenuGroup("status", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Status"))).
+			WithMenuGroup("config", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Config"))).
+			Build()
+		if err != nil {
+			return catena.StatusError(err)
+		}
 		if err := stream.Send(
-			st2138.ComponentDevice(st2138.NewDevice(authzSlot).
-				WithDefaultScope(st2138.ScopeMon).
-				WithMultiSetEnabled(false).
-				WithAccessScopes(st2138.ScopeMon, st2138.ScopeOp, st2138.ScopeCfg, st2138.ScopeAdm).
-				WithMenuGroup("status", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Status"))).
-				WithMenuGroup("config", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Config"))).
-				MakeDevice()),
+			st2138.ComponentDevice(&device),
 		); err != nil {
 			return catena.StatusError(err)
 		}
@@ -170,14 +186,20 @@ func registerAuthz(srv catena.Server) {
 		if !ctx.AuthzEnabled() {
 			loginOids = []string{authzStatus}
 		}
-		loginMenu := st2138.NewMenu().WithName(st2138.NewPolyglotText("en", "Login")).WithParamOids(loginOids...).MakeMenu()
+		loginMenu, err := st2138.NewMenu().WithName(st2138.NewPolyglotText("en", "Login")).WithParamOids(loginOids...).Build()
+		if err != nil {
+			return catena.StatusError(err)
+		}
 		if err := stream.Send(
 			st2138.ComponentMenu("status/login", &loginMenu),
 		); err != nil {
 			return catena.StatusError(err)
 		}
 		// hardcode so we're not at the mercy of map iteration order
-		rolesMenu := st2138.NewMenu().WithName(st2138.NewPolyglotText("en", "Roles")).WithParamOids(rolesTable).MakeMenu()
+		rolesMenu, err := st2138.NewMenu().WithName(st2138.NewPolyglotText("en", "Roles")).WithParamOids(rolesTable).Build()
+		if err != nil {
+			return catena.StatusError(err)
+		}
 		if err := stream.Send(
 			st2138.ComponentMenu("config/roles", &rolesMenu),
 		); err != nil {
@@ -192,10 +214,10 @@ func registerAuthz(srv catena.Server) {
 				if err := stream.Send(st2138.ComponentParam(claims, makeClaims(ctx))); err != nil {
 					return catena.StatusError(err)
 				}
-			} else if err := stream.Send(st2138.ComponentParam(authzStatus, makeAuthzStatus())); err != nil {
+			} else if err := stream.Send(st2138.ComponentParam(authzStatus, makeAuthzStatus(ctx))); err != nil {
 				return catena.StatusError(err)
 			}
-			if err := stream.Send(st2138.ComponentParam(rolesTable, makeRolesTable())); err != nil {
+			if err := stream.Send(st2138.ComponentParam(rolesTable, makeRolesTable(ctx))); err != nil {
 				return catena.StatusError(err)
 			}
 		}
@@ -215,10 +237,10 @@ func registerAuthz(srv catena.Server) {
 				}
 			case authzStatus:
 				if !ctx.AuthzEnabled() {
-					return catena.Reply(*makeAuthzStatus())
+					return catena.Reply(*makeAuthzStatus(ctx))
 				}
 			case rolesTable:
-				return catena.Reply(*makeRolesTable())
+				return catena.Reply(*makeRolesTable(ctx))
 			}
 		}
 		return catena.ReplyError[st2138.Param](catena.StatusCodeNotFound, "param not found")
@@ -237,10 +259,10 @@ func registerAuthz(srv catena.Server) {
 				}
 			case authzStatus:
 				if !ctx.AuthzEnabled() {
-					return catena.Reply(st2138.Value{Proto: makeAuthzStatus().Proto.Value})
+					return catena.Reply(st2138.Value{Proto: makeAuthzStatus(ctx).Proto.Value})
 				}
 			case rolesTable:
-				return catena.Reply(st2138.Value{Proto: makeRolesTable().Proto.Value})
+				return catena.Reply(st2138.Value{Proto: makeRolesTable(ctx).Proto.Value})
 			}
 		}
 		return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "value not found")
