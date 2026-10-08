@@ -412,7 +412,7 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 	if param == nil {
-		cp.err = fmt.Errorf("param cannot be nil")
+		cp.err = fmt.Errorf("WithParam: param cannot be nil")
 		return cp
 	}
 	p, err := param.Build()
@@ -420,8 +420,8 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		cp.err = err
 		return cp
 	}
-	if p == nil || p.Proto == nil {
-		cp.err = fmt.Errorf("param builder returned nil param")
+	if p == (Param{}) || p.Proto == nil {
+		cp.err = fmt.Errorf("WithParam: param builder returned nil param")
 		return cp
 	}
 	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
@@ -530,12 +530,12 @@ func (cp *ParamBuilder) WithTemplateOid(oid string) *ParamBuilder {
 }
 
 // Build returns a usable Param from the builder. If the builder has an error, it
-// returns nil and the error. Must be called after all builder methods have been called.
-func (cp *ParamBuilder) Build() (*Param, error) {
+// returns an empty Param and the error. Must be called after all builder methods have been called.
+func (cp *ParamBuilder) Build() (Param, error) {
 	if cp.err != nil {
-		return nil, cp.err
+		return Param{}, cp.err
 	}
-	return &Param{Proto: cp.proto}, nil
+	return Param{Proto: cp.proto}, nil
 }
 
 // Err returns the stored error of the builder.
@@ -544,7 +544,7 @@ func (cp *ParamBuilder) Err() error {
 }
 
 // Wrapper around Build that panics if the builder has an error.
-func (cp *ParamBuilder) MakeParam() *Param {
+func (cp *ParamBuilder) MakeParam() Param {
 	p, err := cp.Build()
 	if err != nil {
 		panic(err)

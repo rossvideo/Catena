@@ -1413,8 +1413,8 @@ func TestParamBuilder_WithShortCircuitErrors(t *testing.T) {
 	if err == nil || err.Error() != "test error" {
 		t.Fatalf("expected 'test error', got %v", err)
 	}
-	if p != nil {
-		t.Fatal("expected nil param for builder with error")
+	if p != (Param{}) {
+		t.Fatal("expected empty param for builder with error")
 	}
 	if !proto.Equal(before, cp.proto) {
 		t.Fatal("expected With* to leave the param unchanged after an error")

@@ -66,7 +66,7 @@ func TestReply_Device(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewDevice(0).WithDetailLevel(st2138.DetailLevelFull).Build() failed: %v", err)
 	}
-	result, status := Reply(*device)
+	result, status := Reply(device)
 
 	if status.Code != StatusCodeOk {
 		t.Errorf("Reply status code = %d, want %d", status.Code, StatusCodeOk)

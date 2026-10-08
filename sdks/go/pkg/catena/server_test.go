@@ -1389,7 +1389,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(*st2138.NewParamInt32(42).MakeParam())
+			return Reply(st2138.NewParamInt32(42).MakeParam())
 		}
 
 		actual, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
@@ -2087,7 +2087,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			return Reply(*st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).MakeParam())
+			return Reply(st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).MakeParam())
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2121,7 +2121,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
 		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
-			return Reply(*st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).MakeParam())
+			return Reply(st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).MakeParam())
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}

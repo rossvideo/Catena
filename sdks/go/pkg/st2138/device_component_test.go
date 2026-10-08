@@ -47,7 +47,7 @@ func TestComponentDevice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewDevice(3).Build() failed: %v", err)
 	}
-	chunk := ComponentDevice(device)
+	chunk := ComponentDevice(&device)
 
 	got := chunk.Proto.GetDevice()
 	if got != device.Proto {
@@ -73,7 +73,7 @@ func TestComponentParam(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewParamInt32(42).Build() failed: %v", err)
 	}
-	chunk := ComponentParam("brightness", param)
+	chunk := ComponentParam("brightness", &param)
 
 	component := chunk.Proto.GetParam()
 	if component.GetOid() != "brightness" {
@@ -102,7 +102,7 @@ func TestComponentMenu(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewMenu().WithParamOids('brightness').Build() failed: %v", err)
 	}
-	chunk := ComponentMenu("status/main", menu)
+	chunk := ComponentMenu("status/main", &menu)
 
 	component := chunk.Proto.GetMenu()
 	if component.GetOid() != "status/main" {
@@ -118,7 +118,7 @@ func TestComponentCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewParamEmpty().Build() failed: %v", err)
 	}
-	chunk := ComponentCommand("reset", command)
+	chunk := ComponentCommand("reset", &command)
 
 	component := chunk.Proto.GetCommand()
 	if component.GetOid() != "reset" {
@@ -150,7 +150,7 @@ func TestDeviceComponent_Wire(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewDevice(1).Build() failed: %v", err)
 	}
-	chunk := ComponentDevice(device)
+	chunk := ComponentDevice(&device)
 	wire := chunk.Wire()
 	if wire != chunk.Proto {
 		t.Errorf("expected Wire() to return the underlying proto, got %v", wire)

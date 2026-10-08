@@ -166,10 +166,11 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 			name: "childBeforeParent",
 			chunks: func() []st2138.DeviceComponent {
 				parent := st2138.NewParamEmpty().MakeParam()
+				num := st2138.NewParamInt32(42).MakeParam()
 				parent.Proto.Type = protos.ParamType_STRUCT
 				return []st2138.DeviceComponent{
-					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42).MakeParam()),
-					st2138.ComponentParam("monitor", parent),
+					st2138.ComponentParam("monitor/eq", &num),
+					st2138.ComponentParam("monitor", &parent),
 				}
 			},
 		},
@@ -177,10 +178,11 @@ func TestDeviceAggregateStream_NestedParamOrderIndependent(t *testing.T) {
 			name: "parentBeforeChild",
 			chunks: func() []st2138.DeviceComponent {
 				parent := st2138.NewParamEmpty().MakeParam()
+				num := st2138.NewParamInt32(42).MakeParam()
 				parent.Proto.Type = protos.ParamType_STRUCT
 				return []st2138.DeviceComponent{
-					st2138.ComponentParam("monitor", parent),
-					st2138.ComponentParam("monitor/eq", st2138.NewParamInt32(42).MakeParam()),
+					st2138.ComponentParam("monitor", &parent),
+					st2138.ComponentParam("monitor/eq", &num),
 				}
 			},
 		},
@@ -227,8 +229,8 @@ func TestDeviceAggregateStream_NestedCommandOrderIndependent(t *testing.T) {
 
 	stream := &deviceAggregateStream{}
 	for _, chunk := range []st2138.DeviceComponent{
-		st2138.ComponentCommand("group/action", child),
-		st2138.ComponentCommand("group", parent),
+		st2138.ComponentCommand("group/action", &child),
+		st2138.ComponentCommand("group", &parent),
 	} {
 		if err := stream.Send(chunk); err != nil {
 			t.Fatalf("Send returned error: %v", err)
@@ -259,6 +261,7 @@ func TestDeviceAggregateStream_IgnoresChunksWithNothingToMerge(t *testing.T) {
 	// Every component kind guards against a missing body, and a menu oid that
 	// does not name its group cannot be placed. None of these chunks contribute
 	// anything, so no device is assembled at all.
+	menu := st2138.NewMenu().MakeMenu()
 	chunks := []st2138.DeviceComponent{
 		{}, // no proto at all
 		st2138.ComponentDevice(nil),
@@ -266,7 +269,7 @@ func TestDeviceAggregateStream_IgnoresChunksWithNothingToMerge(t *testing.T) {
 		st2138.ComponentConstraint("range", nil),
 		st2138.ComponentMenu("status/main", nil),
 		// A menu oid must be "menu-group-name/menu-name".
-		st2138.ComponentMenu("groupless", st2138.NewMenu().MakeMenu()),
+		st2138.ComponentMenu("groupless", &menu),
 		st2138.ComponentCommand("reset", nil),
 		// ComponentLanguagePack always builds a pack, so the empty-pack chunk is
 		// assembled by hand.
@@ -302,8 +305,8 @@ func TestDeviceAggregateStream_MergesSecondDeviceChunk(t *testing.T) {
 		t.Fatalf("NewDevice(1).WithMultiSetEnabled(true).WithParam('brightness', NewParamInt32(50)).Build() failed: %v", err)
 	}
 	for _, chunk := range []st2138.DeviceComponent{
-		st2138.ComponentDevice(device1),
-		st2138.ComponentDevice(device2),
+		st2138.ComponentDevice(&device1),
+		st2138.ComponentDevice(&device2),
 	} {
 		if err := stream.Send(chunk); err != nil {
 			t.Fatalf("Send returned error: %v", err)

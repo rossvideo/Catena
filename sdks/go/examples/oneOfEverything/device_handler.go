@@ -41,24 +41,28 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	// kinds.
 	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 		ctx.Logger().Info("GetDevice", "slot", slot)
-		if err := stream.Send(st2138.ComponentDevice(slotZeroSkeleton().MakeDevice())); err != nil {
+		device := slotZeroSkeleton().MakeDevice()
+		if err := stream.Send(st2138.ComponentDevice(&device)); err != nil {
 			ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "error", err)
 			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
 		}
 		for oid, menu := range slotZeroMenus() {
-			if err := stream.Send(st2138.ComponentMenu(oid, menu.MakeMenu())); err != nil {
+			menu := menu.MakeMenu()
+			if err := stream.Send(st2138.ComponentMenu(oid, &menu)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send menu: "+err.Error())
 			}
 		}
 		for oid, param := range slotZeroParams(counter) {
-			if err := stream.Send(st2138.ComponentParam(oid, param.MakeParam())); err != nil {
+			param := param.MakeParam()
+			if err := stream.Send(st2138.ComponentParam(oid, &param)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send param: "+err.Error())
 			}
 		}
 		for oid, command := range slotZeroCommands() {
-			if err := stream.Send(st2138.ComponentCommand(oid, command.MakeParam())); err != nil {
+			command := command.MakeParam()
+			if err := stream.Send(st2138.ComponentCommand(oid, &command)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send command: "+err.Error())
 			}
@@ -177,7 +181,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		for oid, command := range slotZeroCommands() {
 			deviceBuilder.WithCommand(oid, command)
 		}
-		return device, true
+		return &device, true
 	case 1:
 		// Slot 1 intentionally stores its business data in a sync.Map to show
 		// adopters they can back handlers with any application data structure,
@@ -237,7 +241,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 					WithName(st2138.NewPolyglotText("en", "Picture")).
 					WithParamOids("brightness", "contrast", "saturation"))).
 			MakeDevice()
-		return device, true
+		return &device, true
 	case 2:
 		// Slot 2: prefix-dispatched identity/audio params plus FLOAT32, arrays,
 		// BINARY, STRUCT_VARIANT, STRUCT_ARRAY, STRUCT_VARIANT_ARRAY examples.
@@ -332,7 +336,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 					WithName(st2138.NewPolyglotText("en", "Audio")).
 					WithParamOids("volume", "muted"))).
 			MakeDevice()
-		return device, true
+		return &device, true
 	default:
 		return nil, false
 	}
