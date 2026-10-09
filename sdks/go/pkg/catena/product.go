@@ -110,8 +110,8 @@ const (
 // including the SDK-managed st2138_sdk and st2138_sdk_version fields. The field
 // values live in the struct's Value; NewParamStruct auto-creates the valueless
 // STRING field descriptors from the values map. The SDK uses this to seed the
-// product param into the device on GetDevice. Returns nil if the param cannot
-// be built.
+// product param into the device on GetDevice. Returns nil and an error
+// if the param cannot be built.
 func ProductParam(p ProductStruct) (*st2138.Param, error) {
 	param, err := st2138.NewParamStruct(ProductValues(p)).
 		WithReadOnly(true).
