@@ -86,12 +86,12 @@ func TestNewPolyglotText_MultiplePairs(t *testing.T) {
 }
 
 func TestNewPolyglotText_OddArgs(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello", "fr")
-	if pt.polyglot["en"] == "Hello" {
-		t.Errorf("expected no entry for 'en', got %s", pt.polyglot["en"])
+	pt, err := NewPolyglotText("en", "Hello", "fr").Build()
+	if err == nil {
+		t.Fatalf("expected error, got nil")
 	}
-	if _, ok := pt.polyglot["fr"]; ok {
-		t.Errorf("expected no entry for 'fr', got %s", pt.polyglot["fr"])
+	if len(pt) != 0 {
+		t.Fatal("expected empty polyglot text")
 	}
 }
 
