@@ -1228,10 +1228,13 @@ func TestNewParamX_DefaultValueIsSet(t *testing.T) {
 	}
 }
 
-func TestNewParamX_ExtraValuesIgnored(t *testing.T) {
-	p := NewParamInt32(1, 2, 3)
-	if p.proto.GetValue().GetInt32Value() != 1 {
-		t.Errorf("expected first value 1 to win, got %d", p.proto.GetValue().GetInt32Value())
+func TestNewParamX_ExtraValuesErrors(t *testing.T) {
+	p, err := NewParamInt32(1, 2, 3).Build()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if p != (Param{}) {
+		t.Fatal("expected empty param for builder with error")
 	}
 }
 
