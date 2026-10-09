@@ -31,6 +31,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -212,16 +213,34 @@ func registerAuthz(srv catena.Server) {
 
 		if ctx.HasReadScope(st2138.ScopeMon) {
 			if ctx.AuthzEnabled() {
-				if err := stream.Send(st2138.ComponentParam(userAccess, makeUserAccess(ctx))); err != nil {
+				userAccessParam := makeUserAccess(ctx)
+				if userAccessParam == nil {
+					return catena.StatusError(errors.New("failed to make user access param"))
+				}
+				if err := stream.Send(st2138.ComponentParam(userAccess, userAccessParam)); err != nil {
 					return catena.StatusError(err)
 				}
-				if err := stream.Send(st2138.ComponentParam(claims, makeClaims(ctx))); err != nil {
+				claimsParam := makeClaims(ctx)
+				if claimsParam == nil {
+					return catena.StatusError(errors.New("failed to make claims param"))
+				}
+				if err := stream.Send(st2138.ComponentParam(claims, claimsParam)); err != nil {
 					return catena.StatusError(err)
 				}
-			} else if err := stream.Send(st2138.ComponentParam(authzStatus, makeAuthzStatus(ctx))); err != nil {
-				return catena.StatusError(err)
+			} else {
+				authzStatusParam := makeAuthzStatus(ctx)
+				if authzStatusParam == nil {
+					return catena.StatusError(errors.New("failed to make authz status param"))
+				}
+				if err := stream.Send(st2138.ComponentParam(authzStatus, authzStatusParam)); err != nil {
+					return catena.StatusError(err)
+				}
 			}
-			if err := stream.Send(st2138.ComponentParam(rolesTable, makeRolesTable(ctx))); err != nil {
+			rolesTableParam := makeRolesTable(ctx)
+			if rolesTableParam == nil {
+				return catena.StatusError(errors.New("failed to make roles table param"))
+			}
+			if err := stream.Send(st2138.ComponentParam(rolesTable, rolesTableParam)); err != nil {
 				return catena.StatusError(err)
 			}
 		}
@@ -233,18 +252,34 @@ func registerAuthz(srv catena.Server) {
 			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
-					return catena.Reply(*makeUserAccess(ctx))
+					userAccessParam := makeUserAccess(ctx)
+					if userAccessParam == nil {
+						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make user access param")
+					}
+					return catena.Reply(*userAccessParam)
 				}
 			case claims:
 				if ctx.AuthzEnabled() {
-					return catena.Reply(*makeClaims(ctx))
+					claimsParam := makeClaims(ctx)
+					if claimsParam == nil {
+						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make claims param")
+					}
+					return catena.Reply(*claimsParam)
 				}
 			case authzStatus:
 				if !ctx.AuthzEnabled() {
-					return catena.Reply(*makeAuthzStatus(ctx))
+					authzStatusParam := makeAuthzStatus(ctx)
+					if authzStatusParam == nil {
+						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make authz status param")
+					}
+					return catena.Reply(*authzStatusParam)
 				}
 			case rolesTable:
-				return catena.Reply(*makeRolesTable(ctx))
+				rolesTableParam := makeRolesTable(ctx)
+				if rolesTableParam == nil {
+					return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make roles table param")
+				}
+				return catena.Reply(*rolesTableParam)
 			}
 		}
 		return catena.ReplyError[st2138.Param](catena.StatusCodeNotFound, "param not found")
@@ -255,18 +290,34 @@ func registerAuthz(srv catena.Server) {
 			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
-					return catena.Reply(st2138.Value{Proto: makeUserAccess(ctx).Proto.Value})
+					userAccessParam := makeUserAccess(ctx)
+					if userAccessParam == nil {
+						return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to make user access param")
+					}
+					return catena.Reply(st2138.Value{Proto: userAccessParam.Proto.Value})
 				}
 			case claims:
 				if ctx.AuthzEnabled() {
-					return catena.Reply(st2138.Value{Proto: makeClaims(ctx).Proto.Value})
+					claimsParam := makeClaims(ctx)
+					if claimsParam == nil {
+						return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to make claims param")
+					}
+					return catena.Reply(st2138.Value{Proto: claimsParam.Proto.Value})
 				}
 			case authzStatus:
 				if !ctx.AuthzEnabled() {
-					return catena.Reply(st2138.Value{Proto: makeAuthzStatus(ctx).Proto.Value})
+					authzStatusParam := makeAuthzStatus(ctx)
+					if authzStatusParam == nil {
+						return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to make authz status param")
+					}
+					return catena.Reply(st2138.Value{Proto: authzStatusParam.Proto.Value})
 				}
 			case rolesTable:
-				return catena.Reply(st2138.Value{Proto: makeRolesTable(ctx).Proto.Value})
+				rolesTableParam := makeRolesTable(ctx)
+				if rolesTableParam == nil {
+					return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to make roles table param")
+				}
+				return catena.Reply(st2138.Value{Proto: rolesTableParam.Proto.Value})
 			}
 		}
 		return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "value not found")

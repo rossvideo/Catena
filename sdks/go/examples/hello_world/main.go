@@ -134,7 +134,11 @@ func main() {
 		ctx.Logger().Info("GetDevice", "slot", req.Slot)
 		// A small device fits in a single component; large devices may stream
 		// several (see the oneOfEverything example).
-		if err := stream.Send(st2138.ComponentDevice(buildDevice(log))); err != nil {
+		device := buildDevice(log)
+		if device == nil {
+			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build device")
+		}
+		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
 			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
