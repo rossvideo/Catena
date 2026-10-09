@@ -92,7 +92,7 @@ func (db *DeviceBuilder) Build() (Device, error) {
 	if db.err != nil {
 		return Device{}, db.err
 	}
-	return Device{Proto: db.proto}, nil
+	return Device{Proto: proto.Clone(db.proto).(*protos.Device)}, nil
 }
 
 // Err returns the stored error of the builder.

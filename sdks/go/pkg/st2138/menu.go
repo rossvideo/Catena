@@ -135,7 +135,7 @@ func (mg *MenuGroupBuilder) Build() (MenuGroup, error) {
 	if mg.err != nil {
 		return MenuGroup{}, mg.err
 	}
-	return MenuGroup{Proto: mg.proto}, nil
+	return MenuGroup{Proto: proto.Clone(mg.proto).(*protos.MenuGroup)}, nil
 }
 
 // Err returns the stored error of the builder.
@@ -251,7 +251,7 @@ func (m *MenuBuilder) Build() (Menu, error) {
 	if m.err != nil {
 		return Menu{}, m.err
 	}
-	return Menu{Proto: m.proto}, nil
+	return Menu{Proto: proto.Clone(m.proto).(*protos.Menu)}, nil
 }
 
 // Err returns the stored error of the builder.

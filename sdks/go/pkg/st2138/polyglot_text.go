@@ -40,6 +40,7 @@ package st2138
 
 import (
 	"errors"
+	"maps"
 )
 
 // PolyglotText maps BCP-47 language codes to display strings.
@@ -57,7 +58,7 @@ func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
 	if pb.err != nil {
 		return PolyglotText{}, pb.err
 	}
-	return pb.polyglot, nil
+	return maps.Clone(pb.polyglot), nil
 }
 
 // Err returns the stored error of the builder.
