@@ -577,7 +577,7 @@ func (cp *ParamBuilder) Build() (Param, error) {
 	if cp.err != nil {
 		return Param{}, cp.err
 	}
-	return Param{Proto: cp.proto}, nil
+	return Param{Proto: proto.Clone(cp.proto).(*protos.Param)}, nil
 }
 
 // Err returns the stored error of the builder.
