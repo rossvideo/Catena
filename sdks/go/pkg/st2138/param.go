@@ -61,7 +61,7 @@ type ParamBuilder struct {
 // Each factory accepts an optional value. With no arguments the param is
 // created without a value, which is useful for valueless sub-param
 // descriptors. If more than one value is passed, the first is used and the
-// rest are ignored with a warning.
+// rest are ignored.
 
 // pickValue returns the first element of values, ignoring extras beyond
 // the first. values must be non-empty.
