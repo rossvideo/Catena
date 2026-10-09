@@ -62,12 +62,6 @@ type ParamBuilder struct {
 // created without a value, which is useful for valueless sub-param
 // descriptors. If more than one value is passed, the builder returns an error.
 
-// pickValue returns the first element of values, ignoring extras beyond
-// the first. values must be non-empty.
-func pickValue[T any](values []T) T {
-	return values[0]
-}
-
 func NewParamInt32(value ...int32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_INT32}}
 	if len(value) > 1 {
@@ -75,7 +69,7 @@ func NewParamInt32(value ...int32) *ParamBuilder {
 		return cp
 	}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: pickValue(value)}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: value[0]}}
 	}
 	return cp
 }
@@ -87,7 +81,7 @@ func NewParamFloat32(value ...float32) *ParamBuilder {
 		return cp
 	}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: pickValue(value)}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: value[0]}}
 	}
 	return cp
 }
@@ -99,7 +93,7 @@ func NewParamString(value ...string) *ParamBuilder {
 		return cp
 	}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringValue{StringValue: pickValue(value)}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringValue{StringValue: value[0]}}
 	}
 	return cp
 }
@@ -117,7 +111,7 @@ func NewParamStruct(value ...map[string]any) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue(value))
+	pv, err := ToProto(value[0])
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStruct: failed to convert value: %w", err)
 		return cp
@@ -156,7 +150,7 @@ func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue(value))
+	pv, err := ToProto(value[0])
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStructVariant: failed to convert value: %w", err)
 		return cp
@@ -172,7 +166,7 @@ func NewParamInt32Array(value ...[]int32) *ParamBuilder {
 		return cp
 	}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: pickValue(value)}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: value[0]}}}
 	}
 	return cp
 }
@@ -184,7 +178,7 @@ func NewParamFloat32Array(value ...[]float32) *ParamBuilder {
 		return cp
 	}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: pickValue(value)}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: value[0]}}}
 	}
 	return cp
 }
@@ -196,7 +190,7 @@ func NewParamStringArray(value ...[]string) *ParamBuilder {
 		return cp
 	}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: pickValue(value)}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: value[0]}}}
 	}
 	return cp
 }
@@ -208,7 +202,7 @@ func NewParamBinary(value ...[]byte) *ParamBuilder {
 		return cp
 	}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: pickValue(value)}}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: value[0]}}}}
 	}
 	return cp
 }
@@ -222,7 +216,7 @@ func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue(value))
+	pv, err := ToProto(value[0])
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStructArray: failed to convert value: %w", err)
 		return cp
@@ -240,7 +234,7 @@ func NewParamStructVariantArray(value ...[]StructVariantValue) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue(value))
+	pv, err := ToProto(value[0])
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStructVariantArray: failed to convert value: %w", err)
 		return cp
@@ -267,7 +261,7 @@ func NewParamData(payload ...DataPayload) *ParamBuilder {
 	if len(payload) == 0 {
 		return cp
 	}
-	pdp, err := dataPayloadToProto(pickValue(payload))
+	pdp, err := dataPayloadToProto(payload[0])
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamData: failed to convert DataPayload: %w", err)
 
