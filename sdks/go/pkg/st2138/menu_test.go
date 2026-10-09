@@ -141,10 +141,13 @@ func TestMenuGroup_WithMenu_NilMapInitialized(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_WithMenu_NilIgnored(t *testing.T) {
-	mg := NewMenuGroup().WithMenu("video", nil)
-	if len(mg.proto.Menus) != 0 {
-		t.Errorf("expected nil menu to be ignored, got %d entries", len(mg.proto.Menus))
+func TestMenuGroup_WithMenu_Nil(t *testing.T) {
+	mg, err := NewMenuGroup().WithMenu("video", nil).Build()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if mg != (MenuGroup{}) {
+		t.Fatal("expected nil menu group")
 	}
 }
 
