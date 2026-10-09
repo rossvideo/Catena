@@ -87,11 +87,11 @@ func TestNewPolyglotText_MultiplePairs(t *testing.T) {
 
 func TestNewPolyglotText_OddArgs(t *testing.T) {
 	pt := NewPolyglotText("en", "Hello", "fr")
-	if pt.polyglot["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt.polyglot["en"])
+	if pt.polyglot["en"] == "Hello" {
+		t.Errorf("expected no entry for 'en', got %s", pt.polyglot["en"])
 	}
 	if _, ok := pt.polyglot["fr"]; ok {
-		t.Errorf("expected unpaired trailing lang to be ignored, got %v", pt)
+		t.Errorf("expected no entry for 'fr', got %s", pt.polyglot["fr"])
 	}
 }
 
@@ -127,7 +127,7 @@ func TestPolyglotText_BuildSurfacesErrors(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected NewPolyglotText to return an error, got nil")
 	}
-	if polyglot != nil {
+	if len(polyglot) != 0 {
 		t.Errorf("expected empty PolyglotText, got %v", polyglot)
 	}
 }
@@ -140,8 +140,8 @@ func TestPolyglotTextBuilder_WithShortCircuitErrors(t *testing.T) {
 	if err == nil || err.Error() != "test error" {
 		t.Fatalf("expected 'test error', got %v", err)
 	}
-	if text != nil {
-		t.Fatal("expected nil polyglot text for builder with error")
+	if len(text) != 0 {
+		t.Fatal("expected empty polyglot text for builder with error")
 	}
 	if _, ok := pb.polyglot["fr"]; ok {
 		t.Fatal("expected With to leave the polyglot text unchanged after an error")
