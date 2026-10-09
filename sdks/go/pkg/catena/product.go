@@ -110,16 +110,17 @@ const (
 // including the SDK-managed st2138_sdk and st2138_sdk_version fields. The field
 // values live in the struct's Value; NewParamStruct auto-creates the valueless
 // STRING field descriptors from the values map. The SDK uses this to seed the
-// product param into the device on GetDevice.
-func ProductParam(p ProductStruct) *st2138.Param {
+// product param into the device on GetDevice. Returns nil if the param cannot
+// be built.
+func ProductParam(p ProductStruct) (*st2138.Param, error) {
 	param, err := st2138.NewParamStruct(ProductValues(p)).
 		WithReadOnly(true).
 		WithAccessScope(st2138.ScopeMon).
 		Build()
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &param
+	return &param, nil
 }
 
 // ProductValues returns the product field values keyed by their sub-OID,
@@ -171,7 +172,11 @@ func productValueForOid(p ProductStruct, fqoid string) (st2138.Value, StatusResu
 // "product/<field>".
 func productParamForOid(p ProductStruct, fqoid string) (st2138.Param, StatusResult) {
 	if fqoid == ProductOid {
-		return *ProductParam(p), StatusWithCode(StatusCodeOk, "")
+		param, err := ProductParam(p)
+		if err != nil {
+			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "failed to build product param")
+		}
+		return *param, StatusWithCode(StatusCodeOk, "")
 	}
 
 	field := strings.TrimPrefix(fqoid, ProductOid+"/")
@@ -190,8 +195,12 @@ func productParamForOid(p ProductStruct, fqoid string) (st2138.Param, StatusResu
 // productParamInfosForOid builds ParamInfo responses for a product FQOID by
 // reusing the standard params-subtree walker over the SDK-built product param.
 func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo]) StatusResult {
+	param, err := ProductParam(p)
+	if err != nil {
+		return StatusWithCode(StatusCodeInternal, "failed to build product param")
+	}
 	device := &st2138.Device{Proto: &protos.Device{
-		Params: map[string]*protos.Param{ProductOid: ProductParam(p).Proto},
+		Params: map[string]*protos.Param{ProductOid: param.Proto},
 	}}
 	return ParamInfosForRequest(oidPrefix, device, recursive, stream)
 }

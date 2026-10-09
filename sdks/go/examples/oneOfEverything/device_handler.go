@@ -52,7 +52,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 		for oid, menu := range slotZeroMenus() {
 			menu, err := menu.Build()
 			if err != nil {
-				ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+				ctx.Logger().Error("expected no error for builder with valid value", "error", err.Error())
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build menu: "+err.Error())
 			}
 			if err := stream.Send(st2138.ComponentMenu(oid, &menu)); err != nil {
@@ -63,7 +63,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 		for oid, param := range slotZeroParams(counter) {
 			param, err := param.Build()
 			if err != nil {
-				ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+				ctx.Logger().Error("expected no error for builder with valid value", "error", err.Error())
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build param: "+err.Error())
 			}
 			if err := stream.Send(st2138.ComponentParam(oid, &param)); err != nil {
@@ -74,7 +74,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 		for oid, command := range slotZeroCommands() {
 			command, err := command.Build()
 			if err != nil {
-				ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
+				ctx.Logger().Error("expected no error for builder with valid value", "error", err.Error())
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build command: "+err.Error())
 			}
 			if err := stream.Send(st2138.ComponentCommand(oid, &command)); err != nil {
