@@ -48,7 +48,11 @@ import (
 // the struct's Value. This guards the invariant behind the "Product SDK fields
 // diverge" bug by pinning the full descriptor + value shape.
 func TestProductParam_Golden(t *testing.T) {
-	got := ProductParam(testProduct()).Proto
+	param, err := ProductParam(testProduct())
+	if err != nil {
+		t.Errorf("failed to build product param: %v", err)
+	}
+	got := param.Proto
 	if !proto.Equal(got, expectedProductParam()) {
 		t.Errorf("ProductParam does not match expected golden proto, got %v", got)
 	}
