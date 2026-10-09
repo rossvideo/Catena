@@ -154,7 +154,7 @@ func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *
 }
 
 // WithConstraint inserts a shared constraint into the device's constraints map,
-// keyed by oid. The constraint's proto is deep-copied. A nil constraint is
+// keyed by oid. The constraint's proto is deep-copied. A nil constraint
 // errors and short-circuits further method calls. Params can reference shared constraints via NewConstraintRefOid.
 func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *DeviceBuilder {
 	if db.err != nil {

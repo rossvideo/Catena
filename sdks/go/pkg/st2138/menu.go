@@ -246,7 +246,7 @@ func (m *MenuBuilder) WithOrder(order uint32) *MenuBuilder {
 }
 
 // Build returns a usable Menu from the builder. If the builder has an error, it
-// returns nil and the error. Must be called after all builder methods have been called.
+// returns an empty Menu and the error. Must be called after all builder methods have been called.
 func (m *MenuBuilder) Build() (Menu, error) {
 	if m.err != nil {
 		return Menu{}, m.err
