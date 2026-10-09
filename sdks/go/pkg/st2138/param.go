@@ -60,8 +60,7 @@ type ParamBuilder struct {
 //
 // Each factory accepts an optional value. With no arguments the param is
 // created without a value, which is useful for valueless sub-param
-// descriptors. If more than one value is passed, the first is used and the
-// rest are ignored.
+// descriptors. If more than one value is passed, the builder returns an error.
 
 // pickValue returns the first element of values, ignoring extras beyond
 // the first. values must be non-empty.
@@ -71,6 +70,10 @@ func pickValue[T any](values []T) T {
 
 func NewParamInt32(value ...int32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_INT32}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamInt32: more than one value provided")
+		return cp
+	}
 	if len(value) > 0 {
 		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: pickValue(value)}}
 	}
@@ -79,6 +82,10 @@ func NewParamInt32(value ...int32) *ParamBuilder {
 
 func NewParamFloat32(value ...float32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_FLOAT32}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamFloat32: more than one value provided")
+		return cp
+	}
 	if len(value) > 0 {
 		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: pickValue(value)}}
 	}
@@ -87,6 +94,10 @@ func NewParamFloat32(value ...float32) *ParamBuilder {
 
 func NewParamString(value ...string) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRING}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamString: more than one value provided")
+		return cp
+	}
 	if len(value) > 0 {
 		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringValue{StringValue: pickValue(value)}}
 	}
@@ -99,6 +110,10 @@ func NewParamString(value ...string) *ParamBuilder {
 // fields need no explicit WithParam calls.
 func NewParamStruct(value ...map[string]any) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamStruct: more than one value provided")
+		return cp
+	}
 	if len(value) == 0 {
 		return cp
 	}
@@ -134,6 +149,10 @@ func structFieldDescriptors(sv *protos.StructValue) map[string]*protos.Param {
 
 func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamStructVariant: more than one value provided")
+		return cp
+	}
 	if len(value) == 0 {
 		return cp
 	}
@@ -148,6 +167,10 @@ func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
 
 func NewParamInt32Array(value ...[]int32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_INT32_ARRAY}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamInt32Array: more than one value provided")
+		return cp
+	}
 	if len(value) > 0 {
 		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: pickValue(value)}}}
 	}
@@ -156,6 +179,10 @@ func NewParamInt32Array(value ...[]int32) *ParamBuilder {
 
 func NewParamFloat32Array(value ...[]float32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_FLOAT32_ARRAY}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamFloat32Array: more than one value provided")
+		return cp
+	}
 	if len(value) > 0 {
 		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: pickValue(value)}}}
 	}
@@ -164,6 +191,10 @@ func NewParamFloat32Array(value ...[]float32) *ParamBuilder {
 
 func NewParamStringArray(value ...[]string) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRING_ARRAY}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamStringArray: more than one value provided")
+		return cp
+	}
 	if len(value) > 0 {
 		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: pickValue(value)}}}
 	}
@@ -172,6 +203,10 @@ func NewParamStringArray(value ...[]string) *ParamBuilder {
 
 func NewParamBinary(value ...[]byte) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_BINARY}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamBinary: more than one value provided")
+		return cp
+	}
 	if len(value) > 0 {
 		cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: pickValue(value)}}}}
 	}
@@ -180,6 +215,10 @@ func NewParamBinary(value ...[]byte) *ParamBuilder {
 
 func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamStructArray: more than one value provided")
+		return cp
+	}
 	if len(value) == 0 {
 		return cp
 	}
@@ -194,6 +233,10 @@ func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
 
 func NewParamStructVariantArray(value ...[]StructVariantValue) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
+	if len(value) > 1 {
+		cp.err = fmt.Errorf("NewParamStructVariantArray: more than one value provided")
+		return cp
+	}
 	if len(value) == 0 {
 		return cp
 	}
@@ -217,6 +260,10 @@ func NewParamEmpty() *ParamBuilder {
 
 func NewParamData(payload ...DataPayload) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_DATA}}
+	if len(payload) > 1 {
+		cp.err = fmt.Errorf("NewParamData: more than one value provided")
+		return cp
+	}
 	if len(payload) == 0 {
 		return cp
 	}
