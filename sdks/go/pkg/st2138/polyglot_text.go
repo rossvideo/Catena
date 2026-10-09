@@ -76,12 +76,12 @@ func (pb *PolyglotTextBuilder) Err() error {
 //	name, err := nameBuilder.Build()
 func NewPolyglotText(pairs ...string) *PolyglotTextBuilder {
 	pb := &PolyglotTextBuilder{polyglot: PolyglotText{}}
+	if len(pairs)%2 != 0 {
+		pb.err = errors.New("NewPolyglotText: odd number of arguments")
+		return pb
+	}
 	for i := 0; i+1 < len(pairs); i += 2 {
 		pb.polyglot[pairs[i]] = pairs[i+1]
-	}
-	if len(pairs)%2 != 0 {
-		pb.err = errors.New("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text, " +
-			"lang: " + pairs[len(pairs)-1])
 	}
 	return pb
 }
