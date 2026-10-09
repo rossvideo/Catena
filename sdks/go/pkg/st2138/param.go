@@ -40,7 +40,6 @@ package st2138
 
 import (
 	"fmt"
-	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 
@@ -64,20 +63,16 @@ type ParamBuilder struct {
 // descriptors. If more than one value is passed, the first is used and the
 // rest are ignored with a warning.
 
-// pickValue returns the first element of values, warning when extras beyond
-// the first were supplied. values must be non-empty.
-func pickValue[T any](fn string, values []T) T {
-	if len(values) > 1 {
-		slog.Warn(fn+": more than one value provided; using the first and ignoring the rest",
-			"ignored", len(values)-1) // TODO: Remove slog.Warn
-	}
+// pickValue returns the first element of values, ignoring extras beyond
+// the first. values must be non-empty.
+func pickValue[T any](values []T) T {
 	return values[0]
 }
 
 func NewParamInt32(value ...int32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_INT32}}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: pickValue("NewParamInt32", value)}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: pickValue(value)}}
 	}
 	return cp
 }
@@ -85,7 +80,7 @@ func NewParamInt32(value ...int32) *ParamBuilder {
 func NewParamFloat32(value ...float32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_FLOAT32}}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: pickValue("NewParamFloat32", value)}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: pickValue(value)}}
 	}
 	return cp
 }
@@ -93,7 +88,7 @@ func NewParamFloat32(value ...float32) *ParamBuilder {
 func NewParamString(value ...string) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRING}}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringValue{StringValue: pickValue("NewParamString", value)}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringValue{StringValue: pickValue(value)}}
 	}
 	return cp
 }
@@ -107,7 +102,7 @@ func NewParamStruct(value ...map[string]any) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStruct", value))
+	pv, err := ToProto(pickValue(value))
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStruct: failed to convert value: %w", err)
 		return cp
@@ -142,7 +137,7 @@ func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStructVariant", value))
+	pv, err := ToProto(pickValue(value))
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStructVariant: failed to convert value: %w", err)
 		return cp
@@ -154,7 +149,7 @@ func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
 func NewParamInt32Array(value ...[]int32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_INT32_ARRAY}}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: pickValue("NewParamInt32Array", value)}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: pickValue(value)}}}
 	}
 	return cp
 }
@@ -162,7 +157,7 @@ func NewParamInt32Array(value ...[]int32) *ParamBuilder {
 func NewParamFloat32Array(value ...[]float32) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_FLOAT32_ARRAY}}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: pickValue("NewParamFloat32Array", value)}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: pickValue(value)}}}
 	}
 	return cp
 }
@@ -170,7 +165,7 @@ func NewParamFloat32Array(value ...[]float32) *ParamBuilder {
 func NewParamStringArray(value ...[]string) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRING_ARRAY}}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: pickValue("NewParamStringArray", value)}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: pickValue(value)}}}
 	}
 	return cp
 }
@@ -178,7 +173,7 @@ func NewParamStringArray(value ...[]string) *ParamBuilder {
 func NewParamBinary(value ...[]byte) *ParamBuilder {
 	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_BINARY}}
 	if len(value) > 0 {
-		cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: pickValue("NewParamBinary", value)}}}}
+		cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: pickValue(value)}}}}
 	}
 	return cp
 }
@@ -188,7 +183,7 @@ func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStructArray", value))
+	pv, err := ToProto(pickValue(value))
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStructArray: failed to convert value: %w", err)
 		return cp
@@ -202,7 +197,7 @@ func NewParamStructVariantArray(value ...[]StructVariantValue) *ParamBuilder {
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStructVariantArray", value))
+	pv, err := ToProto(pickValue(value))
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamStructVariantArray: failed to convert value: %w", err)
 		return cp
@@ -225,7 +220,7 @@ func NewParamData(payload ...DataPayload) *ParamBuilder {
 	if len(payload) == 0 {
 		return cp
 	}
-	pdp, err := dataPayloadToProto(pickValue("NewParamData", payload))
+	pdp, err := dataPayloadToProto(pickValue(payload))
 	if err != nil {
 		cp.err = fmt.Errorf("NewParamData: failed to convert DataPayload: %w", err)
 
