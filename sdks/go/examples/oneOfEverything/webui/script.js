@@ -555,8 +555,12 @@ async function loadDemoConfig() {
     }
 }
 
-// Session storage for the token
+// Session storage for the token and the in-progress Keycloak login.
 TOKEN_STORAGE_KEY = 'st2138-token';
+const KEYCLOAK_CLIENT_ID = 'oneofeverything';
+const PKCE_VERIFIER_KEY = 'st2138-pkce-verifier';
+const OAUTH_STATE_KEY = 'st2138-oauth-state';
+const OAUTH_REDIRECT_KEY = 'st2138-oauth-redirect';
 
 function getRawToken(token) {
     token = (token || '').trim();
@@ -664,36 +668,121 @@ function buildDemoToken() {
     return header + '.' + payload + '.' + signature;
 }
 
-// Ask the example server to fetch a signed access token from Keycloak.
-async function requestKeycloakToken() {
-    const btn = document.getElementById('keycloakTokenBtn');
-    btn.disabled = true;
-    setAuthStatus('Requesting a signed token from Keycloak…');
+function keycloakBrowserIssuer() {
+    const issuer = (demoConfig.jwtIssuer || '').replace(/\/$/, '');
+    if (!issuer) return '';
+    try {
+        const url = new URL(issuer);
+        if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
+            url.hostname = 'localhost';
+        }
+        return url.toString().replace(/\/$/, '');
+    } catch (e) {
+        return issuer;
+    }
+}
+
+async function sha256Base64Url(value) {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+    return bytesToBase64Url(new Uint8Array(digest));
+}
+
+function cleanAuthQuery() {
+    const url = new URL(location.href);
+    ['code', 'state', 'session_state', 'iss', 'error', 'error_description'].forEach(name => {
+        url.searchParams.delete(name);
+    });
+    const query = url.searchParams.toString();
+    history.replaceState({}, '', url.pathname + (query ? '?' + query : '') + url.hash);
+}
+
+// Send the browser to Keycloak's login page.
+async function signInWithKeycloak() {
+    const issuer = keycloakBrowserIssuer();
+    if (!issuer) {
+        setAuthStatus('Keycloak issuer is not configured. Start the example with --jwt-issuer set to the realm URL.', true);
+        return;
+    }
+
+    const verifier = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+    const challenge = await sha256Base64Url(verifier);
+    const state = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)));
+    const redirectUri = location.origin + '/';
+    const scope = ['openid', selectedScope()].filter(Boolean).join(' ');
+
+    sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+    sessionStorage.setItem(OAUTH_STATE_KEY, state);
+    sessionStorage.setItem(OAUTH_REDIRECT_KEY, redirectUri);
+
+    const auth = new URL(issuer + '/protocol/openid-connect/auth');
+    auth.searchParams.set('client_id', KEYCLOAK_CLIENT_ID);
+    auth.searchParams.set('response_type', 'code');
+    auth.searchParams.set('redirect_uri', redirectUri);
+    auth.searchParams.set('scope', scope);
+    auth.searchParams.set('state', state);
+    auth.searchParams.set('code_challenge', challenge);
+    auth.searchParams.set('code_challenge_method', 'S256');
+    auth.searchParams.set('prompt', 'login');
+
+    setAuthStatus('Redirecting to the Keycloak login page…');
+    location.assign(auth.toString());
+}
+
+// Finish the login after Keycloak redirects back with an authorization code.
+async function completeKeycloakLogin() {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const code = params.get('code');
+    if (!error && !code) return;
+
+    const returnedState = params.get('state');
+    const description = params.get('error_description');
+    cleanAuthQuery();
+
+    if (error) {
+        openAuthModal();
+        setAuthStatus(description || error, true);
+        return;
+    }
+
+    const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
+    const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+    const redirectUri = sessionStorage.getItem(OAUTH_REDIRECT_KEY);
+    sessionStorage.removeItem(OAUTH_STATE_KEY);
+    sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+    sessionStorage.removeItem(OAUTH_REDIRECT_KEY);
+
+    if (!expectedState || returnedState !== expectedState || !verifier || !redirectUri) {
+        openAuthModal();
+        setAuthStatus('Keycloak login could not be completed. Start sign-in again from Authorize.', true);
+        return;
+    }
 
     try {
-        const scope = ['openid', selectedScope()].filter(Boolean).join(' ');
-        const res = await fetch('/keycloak-token', {
+        const body = new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: KEYCLOAK_CLIENT_ID,
+            code,
+            redirect_uri: redirectUri,
+            code_verifier: verifier,
+        });
+        const res = await fetch(keycloakBrowserIssuer() + '/protocol/openid-connect/token', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scope }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body,
         });
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.access_token) {
-            setAuthStatus(data.error || 'Keycloak did not return an access token.', true);
+            openAuthModal();
+            setAuthStatus(data.error_description || data.error || 'Keycloak did not return an access token.', true);
             return;
         }
-
-        document.getElementById('tokenInput').value = data.access_token;
         setToken(data.access_token);
-
-        closeAuthModal();
-        refreshAfterAuthChange();
     } catch (e) {
         console.error('keycloak token error:', e);
-        setAuthStatus('Could not reach the example server to request a Keycloak token.', true);
-    } finally {
-        btn.disabled = false;
+        openAuthModal();
+        setAuthStatus('Could not reach Keycloak to finish sign-in.', true);
     }
 }
 
@@ -731,7 +820,7 @@ function bindAuthUI() {
         refreshAfterAuthChange();
     });
 
-    document.getElementById('keycloakTokenBtn').addEventListener('click', requestKeycloakToken);
+    document.getElementById('keycloakTokenBtn').addEventListener('click', signInWithKeycloak);
 }
 
 // =====================================================================
@@ -742,6 +831,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildParamsUI();
 
     await loadDemoConfig();
+    await completeKeycloakLogin();
 
     poll();
     connectSSE();

@@ -41,21 +41,26 @@ In the page, open **Authorize**, pick a scope to create a token wiht, and choose
 
 In another terminal in this devcontainer:
 ```bash
-KEYCLOAK_URL=http://10.255.255.254:8180 \
-  docker compose -f keycloak/docker-compose.yml up -d
+docker compose -f keycloak/docker-compose.yml up -d
 ```
 
-`KEYCLOAK_URL` sets the address Keycloak writes into each token as the issuer (`iss`). The example server checks that issuer and downloads Keycloak's signing keys from it, so `--jwt-issuer` must use the same URL. Docker publishes Keycloak on the host, so from inside the devcontainer `localhost:8180` does not reach it; `10.255.255.254` is the host address the devcontainer can use. Your browser on your own computer still opens Keycloak at `http://localhost:8180`.
+Leave Keycloak's hostname at `http://localhost:8180`. That is the address your browser opens, and it is the issuer (`iss`) written into each token. `--jwt-issuer` must be that same URL.
+
+Docker publishes Keycloak on the host, so from inside the devcontainer `localhost:8180` does not reach it. `10.255.255.254` is the host address the devcontainer can use. `KEYCLOAK_INTERNAL_URL` tells the example to download signing keys from there while it still checks that tokens were issued by `localhost`.
 
 Start the example:
 ``` bash
-go run . --use-rest --authz --jwt-validate-signature --jwt-issuer=http://10.255.255.254:8180/realms/catena
+KEYCLOAK_INTERNAL_URL=http://10.255.255.254:8180 \
+  go run . --use-rest --authz --jwt-validate-signature --jwt-issuer=http://localhost:8180/realms/catena
 ```
 
-Currently nothing will work due to not having a valid token. There are two ways the keycloak can be used to create a signed token.
+Currently nothing will work due to not having a valid token. Sign in through the browser to get one for a real user.
 
-### 1. Manually make a request to the keycloak
+Open http://localhost:9080/, choose **Authorize**, pick the scopes, and click **Sign in with Keycloak**.
 
+The browser is sent to Keycloak's login page (authorization code flow with PKCE). Sign in as `commissioner` with the password: `demo`. Keycloak sends the browser back to the demo, and the page exchanges that login code for a signed access token belonging to the account you used. The requested scopes are the ones checked in **Authorize**, plus `openid`.
+
+Optionally you can also generate a signed token and paste it in. The following command can be used in the terminal:
 ```bash
  curl -s -X POST http://10.255.255.254:8180/realms/catena/protocol/openid-connect/token \
   -d grant_type=password \
@@ -64,17 +69,5 @@ Currently nothing will work due to not having a valid token. There are two ways 
   -d password=demo \
   -d 'scope=openid st2138:mon st2138:mon:w st2138:op st2138:op:w st2138:cfg st2138:cfg:w st2138:adm st2138:adm:w'
 ```
-
-This will make a request to the keycloak for a token with a read and write scope. The reponse will include a `access_token` entry.
-
-Open **Authorize** and in the text field paste in the received `access_token` and click **Apply**. 
-
-This will apply the signed token and refresh the window.
-
-### 2. Auto generate the token from the keycloak
-
-Open **Authorize**, pick the scopes, and click **Get Keycloak token**.
-
-The example server asks Keycloak for a signed access token for the demo user and the page applies it. The request goes to `{--jwt-issuer}/protocol/openid-connect/token` with the same scopes as **Generate unsigned**, plus `openid`. Keycloak must be reachable from the example process at the issuer address.
 
 Stop Keycloak with `docker compose -f keycloak/docker-compose.yml down`.

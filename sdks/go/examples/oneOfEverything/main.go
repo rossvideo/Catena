@@ -60,7 +60,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -281,89 +280,53 @@ func sortedAssetIDs(assets *sync.Map) []string {
 	return ids
 }
 
-// requestKeycloakToken performs the password grant documented in the example
-// README and writes the access token as JSON. issuer is the realm URL passed
-// to --jwt-issuer, for example http://10.255.255.254:8180/realms/catena.
-func requestKeycloakToken(w http.ResponseWriter, r *http.Request, issuer string) {
-	w.Header().Set("Content-Type", "application/json")
-	writeErr := func(status int, msg string) {
-		w.WriteHeader(status)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
-	}
+type rewriteHostTransport struct {
+	base http.RoundTripper
+	from string
+	to   *url.URL
+}
 
-	if r.Method != http.MethodPost {
-		writeErr(http.StatusMethodNotAllowed, "only POST allowed")
-		return
+func (t *rewriteHostTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.URL.Host != t.from {
+		return t.base.RoundTrip(req)
 	}
+	clone := req.Clone(req.Context())
+	clone.URL.Scheme = t.to.Scheme
+	clone.URL.Host = t.to.Host
+	clone.Host = t.to.Host
+	return t.base.RoundTrip(clone)
+}
 
-	issuer = strings.TrimRight(strings.TrimSpace(issuer), "/")
-	if issuer == "" {
-		writeErr(http.StatusBadRequest, "Keycloak issuer is not configured. Start the example with --jwt-issuer set to the realm URL.")
-		return
+// keycloakHTTPClient sends issuer requests to KEYCLOAK_INTERNAL_URL.
+// The browser signs in at the issuer host (localhost). From this devcontainer
+// that host is not Keycloak; the internal URL is the host gateway Docker publishes.
+func keycloakHTTPClient(issuer string) *http.Client {
+	internal := strings.TrimRight(strings.TrimSpace(os.Getenv("KEYCLOAK_INTERNAL_URL")), "/")
+	if internal == "" {
+		return nil
 	}
-
-	var body struct {
-		Scope string `json:"scope"`
+	internalURL, err := url.Parse(internal)
+	if err != nil || internalURL.Host == "" {
+		return nil
 	}
-	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&body); err != nil && !errors.Is(err, io.EOF) {
-		writeErr(http.StatusBadRequest, "invalid request body")
-		return
+	if internalURL.Scheme == "" {
+		internalURL.Scheme = "http"
 	}
-
-	scope := strings.TrimSpace(body.Scope)
-	if scope == "" {
-		scope = "openid"
-	} else if !strings.Contains(" "+scope+" ", " openid ") {
-		scope = "openid " + scope
+	issuerURL, err := url.Parse(strings.TrimRight(strings.TrimSpace(issuer), "/"))
+	if err != nil || issuerURL.Host == "" || issuerURL.Host == internalURL.Host {
+		return nil
 	}
-
-	form := url.Values{}
-	form.Set("grant_type", "password")
-	form.Set("client_id", "oneofeverything")
-	form.Set("username", "commissioner")
-	form.Set("password", "demo")
-	form.Set("scope", scope)
-
-	tokenURL := issuer + "/protocol/openid-connect/token"
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(form.Encode()))
-	if err != nil {
-		writeErr(http.StatusInternalServerError, "failed to build Keycloak request")
-		return
+	base, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		writeErr(http.StatusBadGateway, "could not reach Keycloak at "+tokenURL)
-		return
+	return &http.Client{
+		Transport: &rewriteHostTransport{
+			base: base.Clone(),
+			from: issuerURL.Host,
+			to:   internalURL,
+		},
 	}
-	defer resp.Body.Close()
-
-	var tokenResp struct {
-		AccessToken string `json:"access_token"`
-		Error       string `json:"error"`
-		ErrorDesc   string `json:"error_description"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		writeErr(http.StatusBadGateway, "Keycloak returned an unreadable response")
-		return
-	}
-	if resp.StatusCode != http.StatusOK || tokenResp.AccessToken == "" {
-		msg := tokenResp.ErrorDesc
-		if msg == "" {
-			msg = tokenResp.Error
-		}
-		if msg == "" {
-			msg = "Keycloak rejected the token request"
-		}
-		writeErr(http.StatusBadGateway, msg)
-		return
-	}
-
-	_ = json.NewEncoder(w).Encode(map[string]string{"access_token": tokenResp.AccessToken})
 }
 
 func main() {
@@ -388,6 +351,13 @@ func main() {
 	defer closeLogger()
 
 	logger.Info("Loaded Configuration", "config", options)
+
+	if client := keycloakHTTPClient(options.Server.JwtOptions.Issuer); client != nil {
+		options.Server.JwtOptions.Http = client
+		logger.Info("Downloading Keycloak signing keys from KEYCLOAK_INTERNAL_URL",
+			"issuer", options.Server.JwtOptions.Issuer,
+			"internal", os.Getenv("KEYCLOAK_INTERNAL_URL"))
+	}
 
 	srv, err := catena.NewServer(options.Server)
 	if err != nil {
@@ -513,13 +483,6 @@ func main() {
 				json.NewEncoder(w).Encode(map[string]any{
 					"jwtIssuer": strings.TrimSpace(options.Server.JwtOptions.Issuer),
 				})
-				return catena.Reply(st2138.Value{})
-			}
-
-			// Demo-only: trade the selected scopes for a Keycloak-signed access
-			// token (password grant, public client). Not part of the Catena API.
-			if r.URL.Path == "/keycloak-token" {
-				requestKeycloakToken(w, r, options.Server.JwtOptions.Issuer)
 				return catena.Reply(st2138.Value{})
 			}
 

@@ -175,9 +175,12 @@ func (v *jwtValidator) createJWTKeyFunc(ctx context.Context, discoveryCtx contex
 
 	// Create a keyfunc that fetches and caches the JWKS from the discovered URL.
 	// within the KeyFunc there is a background goroutine that periodically refreshes
-	// the JWKS, the ctx passed to NewDefaultCtx is used to control the lifecycle of that
-	// goroutine and any in-flight requests.
-	jwksKeyFunc, err := keyfunc.NewDefaultCtx(ctx, []string{jwksUrl})
+	// the JWKS, the ctx passed to NewDefaultOverrideCtx is used to control the lifecycle of that
+	// goroutine and any in-flight requests. The same HTTP client used for discovery
+	// fetches the keys, so a client that rewrites the issuer host applies to both.
+	jwksKeyFunc, err := keyfunc.NewDefaultOverrideCtx(ctx, []string{jwksUrl}, keyfunc.Override{
+		Client: v.options.Http,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("create keyfunc: %w", err)
 	}
