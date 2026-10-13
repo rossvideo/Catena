@@ -64,11 +64,12 @@ func TestDefaultOptions(t *testing.T) {
 			MaxConnections: 100,
 			AuthzEnabled:   true,
 			JwtOptions: JwtValidationOptions{
-				AllowedAlgs:       nil,
-				Audience:          "",
-				Issuer:            "",
-				ValidateSignature: false,
-				Http:              nil,
+				AllowedAlgs:                nil,
+				Audience:                   "",
+				Issuer:                     "",
+				ValidateSignature:          false,
+				Http:                       nil,
+				StartupRetryMaxElapsedTime: 45 * time.Second,
 			},
 		},
 		Logger: LoggerOptions{

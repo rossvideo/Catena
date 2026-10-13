@@ -108,7 +108,6 @@ type GrpcOptions struct {
 type ServerOptions struct {
 	// true for development mode, false for production mode
 	IsDev bool `env:"DEV_MODE" flag:"dev"`
-
 	// maximum number of concurrent connections (default: 100)
 	MaxConnections int `env:"MAX_CONNECTIONS" flag:"max-connections"`
 	// AuthzEnabled enables authorization checks for all endpoints. If false, all requests are allowed.
@@ -129,7 +128,8 @@ type JwtValidationOptions struct {
 	Leeway time.Duration
 	// ValidateSignature controls whether the JWT signature should be validated against the JWKS. If false, only claims are validated.
 	ValidateSignature bool `env:"JWT_VALIDATE_SIGNATURE" flag:"jwt-validate-signature"`
-
+	// StartupRetryMaxElapsed bounds JWT JWKS discovery retries during startup. Zero disables retrying and attempts once. Negative values are retried indefinitely.
+	StartupRetryMaxElapsedTime time.Duration `env:"JWT_STARTUP_RETRY_MAX_ELAPSED" flag:"jwt-startup-retry-max-elapsed"`
 	// Http allows users to provide a custom HTTP client for discovering the JWKS. Optional.
 	Http *http.Client
 }
@@ -255,12 +255,13 @@ func DefaultServerOptions() ServerOptions {
 
 func DefaultJwtValidationOptions() JwtValidationOptions {
 	return JwtValidationOptions{
-		AllowedAlgs:       nil, // will default to ES256 in the code if empty
-		Audience:          "",
-		Issuer:            "",
-		Leeway:            0,
-		ValidateSignature: false,
-		Http:              nil, // will default to http.DefaultClient in the code if nil
+		AllowedAlgs:                nil, // will default to ES256 in the code if empty
+		Audience:                   "",
+		Issuer:                     "",
+		Leeway:                     0,
+		ValidateSignature:          false,
+		StartupRetryMaxElapsedTime: 45 * time.Second,
+		Http:                       nil, // will default to http.DefaultClient in the code if nil
 	}
 }
 
