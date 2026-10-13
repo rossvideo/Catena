@@ -132,7 +132,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: (!cancelled())
         with:
-          files: ${{ github.workspace }}/build/cpp/ctest.xml
+          files: build/cpp/ctest.xml
           check_name: C++ Unit Tests
 
       - uses: actions/upload-code-coverage@v1
@@ -208,7 +208,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: (!cancelled())
         with:
-          files: ${{ github.workspace }}/build/go/go-tests.xml
+          files: build/go/go-tests.xml
           check_name: Go Unit Tests
 
       - uses: actions/upload-code-coverage@v1
@@ -285,8 +285,8 @@ jobs:
         if: (!cancelled())
         with:
           files: |
-            ${{ github.workspace }}/tools/codegen/junit.xml
-            ${{ github.workspace }}/tools/codegen/junit-cucumber.xml
+            tools/codegen/junit.xml
+            tools/codegen/junit-cucumber.xml
           check_name: Codegen JS Unit Tests
 
       - uses: actions/upload-code-coverage@v1
