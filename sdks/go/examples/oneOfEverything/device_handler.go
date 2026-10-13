@@ -119,8 +119,8 @@ func slotZeroSkeleton() *st2138.DeviceBuilder {
 		"config": "Configuration",
 	}
 
+	var i uint32 = 0
 	for oid, menu := range slotZeroMenus() {
-		var i uint32 = 0
 		group, name, _ := strings.Cut(oid, "/")
 		deviceBuilder.WithMenuGroup(group, st2138.NewMenuGroup().
 			WithName(st2138.NewPolyglotText("en", menuGroupNames[group])).
