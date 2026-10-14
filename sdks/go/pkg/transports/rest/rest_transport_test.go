@@ -2524,8 +2524,13 @@ func TestTransport_ParamInfo(t *testing.T) {
 			if recursive {
 				t.Error("expected recursive=false for unary call")
 			}
+			box := st2138.NewPolyglotText("en", "Text Box")
+			boxText, err := box.Build()
+			if err != nil {
+				t.Fatalf("failed to build polyglot text: %v", err)
+			}
 			return []st2138.ParamInfo{
-				st2138.NewParamInfo("text_box", st2138.NewPolyglotText("en", "Text Box"), st2138.ParamTypeString, "", 0),
+				st2138.NewParamInfo("text_box", boxText, st2138.ParamTypeString, "", 0),
 			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 

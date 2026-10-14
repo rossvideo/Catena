@@ -1134,8 +1134,13 @@ func TestTransport_ParamInfoRequest_Success(t *testing.T) {
 		if !recursive {
 			t.Error("expected recursive=true")
 		}
+		parent := st2138.NewPolyglotText("en", "Parent")
+		parentText, err := parent.Build()
+		if err != nil {
+			t.Fatalf("failed to build polyglot text: %v", err)
+		}
 		return []st2138.ParamInfo{
-			st2138.NewParamInfo("parent", st2138.NewPolyglotText("en", "Parent"), st2138.ParamTypeStruct, "", 0),
+			st2138.NewParamInfo("parent", parentText, st2138.ParamTypeStruct, "", 0),
 			st2138.NewParamInfo("parent/child", nil, st2138.ParamTypeInt32, "", 0),
 			st2138.NewParamInfo("parent/arr", nil, st2138.ParamTypeStringArray, "", 5),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
