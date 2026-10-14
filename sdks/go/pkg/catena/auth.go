@@ -77,9 +77,8 @@ type jwtValidatorInterface interface {
 }
 
 // newJwtValidator creates a JWT validator based on the provided options.
-// If ValidateSignature is true, it discovers the JWKS endpoint and sets up signature validation.
-// If ValidateSignature is false, it only validates claims without verifying the signature.
-// The logger is stored on the validator so it is available to every method
+// If InsecureSkipSignatureValidation is true, it only validates claims without verifying the signature.
+// If InsecureSkipSignatureValidation is false, it discovers the JWKS endpoint and sets up signature validation (default behaviour).
 func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOptions) (jwtValidatorInterface, error) {
 	// Use the default HTTP client if none was provided.
 	if opts.Http == nil {
@@ -93,17 +92,20 @@ func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOp
 		log:     log.With("component", "jwt-validator"),
 	}
 
-	if opts.ValidateSignature {
-		jwksKeyFunc, err := v.initializeJWTKeyFunc(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize JWT keyfunc: %w", err)
-		}
-		v.keyfunc = jwksKeyFunc
-
-		v.validateFn = v.validateSignatureAndClaims
-	} else {
+	// Check to see if signature validation should be skipped
+	if opts.InsecureSkipSignatureValidation {
 		v.validateFn = v.validateClaims
+		v.log.Warn("signature validation disabled, only validating claims")
+		return v, nil
 	}
+
+	jwksKeyFunc, err := v.initializeJWTKeyFunc(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize JWT keyfunc: %w", err)
+	}
+	v.keyfunc = jwksKeyFunc
+
+	v.validateFn = v.validateSignatureAndClaims
 
 	return v, nil
 }
