@@ -40,10 +40,10 @@ package st2138
 
 import (
 	"fmt"
+	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -63,7 +63,7 @@ type Param struct {
 // the first were supplied. values must be non-empty.
 func pickValue[T any](fn string, values []T) T {
 	if len(values) > 1 {
-		logger.Warning(fn+": more than one value provided; using the first and ignoring the rest",
+		slog.Warn(fn+": more than one value provided; using the first and ignoring the rest",
 			"ignored", len(values)-1)
 	}
 	return values[0]
@@ -104,7 +104,7 @@ func NewParamStruct(value ...map[string]any) *Param {
 	}
 	pv, err := ToProto(pickValue("NewParamStruct", value))
 	if err != nil {
-		logger.Warning("NewParamStruct: failed to convert value; value left nil",
+		slog.Warn("NewParamStruct: failed to convert value; value left nil",
 			"error", err)
 		return cp
 	}
@@ -140,7 +140,7 @@ func NewParamStructVariant(value ...StructVariantValue) *Param {
 	}
 	pv, err := ToProto(pickValue("NewParamStructVariant", value))
 	if err != nil {
-		logger.Warning("NewParamStructVariant: failed to convert value; value left nil",
+		slog.Warn("NewParamStructVariant: failed to convert value; value left nil",
 			"error", err)
 		return cp
 	}
@@ -187,7 +187,7 @@ func NewParamStructArray(value ...[]map[string]any) *Param {
 	}
 	pv, err := ToProto(pickValue("NewParamStructArray", value))
 	if err != nil {
-		logger.Warning("NewParamStructArray: failed to convert value; value left nil",
+		slog.Warn("NewParamStructArray: failed to convert value; value left nil",
 			"error", err)
 		return cp
 	}
@@ -202,7 +202,7 @@ func NewParamStructVariantArray(value ...[]StructVariantValue) *Param {
 	}
 	pv, err := ToProto(pickValue("NewParamStructVariantArray", value))
 	if err != nil {
-		logger.Warning("NewParamStructVariantArray: failed to convert value; value left nil",
+		slog.Warn("NewParamStructVariantArray: failed to convert value; value left nil",
 			"error", err)
 		return cp
 	}
@@ -226,7 +226,7 @@ func NewParamData(payload ...DataPayload) *Param {
 	}
 	pdp, err := dataPayloadToProto(pickValue("NewParamData", payload))
 	if err != nil {
-		logger.Warning("NewParamData: failed to convert DataPayload; value left nil",
+		slog.Warn("NewParamData: failed to convert DataPayload; value left nil",
 			"error", err)
 		return cp
 	}
@@ -241,7 +241,7 @@ func NewParamData(payload ...DataPayload) *Param {
 func NewParamFromValue(v Value) *Param {
 	pt := paramTypeFromValueKind(v.Proto)
 	if pt == protos.ParamType_UNDEFINED {
-		logger.Warning("NewParamFromValue: could not infer param type from value; using UNDEFINED")
+		slog.Warn("NewParamFromValue: could not infer param type from value; using UNDEFINED")
 	}
 	return &Param{
 		Proto: &protos.Param{
@@ -260,7 +260,7 @@ func (cp *Param) WithName(name PolyglotText) *Param {
 
 func (cp *Param) WithValue(v Value) *Param {
 	if !isValueValidForParamType(v.Proto, cp.Proto.Type) {
-		logger.Warning("WithValue: value kind incompatible with param type; ignoring",
+		slog.Warn("WithValue: value kind incompatible with param type; ignoring",
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
@@ -273,7 +273,7 @@ func (cp *Param) WithConstraint(c *Constraint) *Param {
 		return cp
 	}
 	if !isConstraintValidForParam(c, cp.Proto.Type) {
-		logger.Warning("WithConstraint: constraint type incompatible with param type; ignoring",
+		slog.Warn("WithConstraint: constraint type incompatible with param type; ignoring",
 			"constraint_type", c.Proto.GetType().String(),
 			"param_type", cp.Proto.Type.String())
 		return cp
@@ -314,7 +314,7 @@ func (cp *Param) WithWidget(widget string) *Param {
 
 func (cp *Param) WithPrecision(precision uint32) *Param {
 	if cp.Proto.Type != protos.ParamType_FLOAT32 && cp.Proto.Type != protos.ParamType_FLOAT32_ARRAY {
-		logger.Warning("WithPrecision called on non-float param; ignoring",
+		slog.Warn("WithPrecision called on non-float param; ignoring",
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
@@ -324,7 +324,7 @@ func (cp *Param) WithPrecision(precision uint32) *Param {
 
 func (cp *Param) WithMaxLength(maxLength uint32) *Param {
 	if cp.Proto.Type != protos.ParamType_STRING && cp.Proto.Type != protos.ParamType_STRING_ARRAY {
-		logger.Warning("WithMaxLength called on param type that does not support max_length; ignoring",
+		slog.Warn("WithMaxLength called on param type that does not support max_length; ignoring",
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}
@@ -361,13 +361,13 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 // from the NewParamStruct map.
 func (cp *Param) WithParam(oid string, param *Param) *Param {
 	if param == nil {
-		logger.Warning("WithParam called with nil sub-param; ignoring",
+		slog.Warn("WithParam called with nil sub-param; ignoring",
 			"oid", oid)
 		return cp
 	}
 
 	if _, ok := paramTypesWithSubParams[cp.Proto.Type]; !ok {
-		logger.Warning("WithParam called on param type that does not support sub-params; ignoring",
+		slog.Warn("WithParam called on param type that does not support sub-params; ignoring",
 			"param_type", cp.Proto.Type.String())
 		return cp
 	}

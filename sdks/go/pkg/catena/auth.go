@@ -89,7 +89,7 @@ func newJwtValidator(ctx context.Context, log *slog.Logger, opts JwtValidationOp
 	}
 	v := &jwtValidator{
 		options: opts,
-		log:     log.With("component", "jwt"),
+		log:     log.With("component", "jwt-validator"),
 	}
 
 	// Check to see if signature validation should be skipped

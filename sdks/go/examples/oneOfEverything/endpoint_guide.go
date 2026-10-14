@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 )
 
 const endpointNameWidth = 26
 
 func logEndpointLine(name, example string) {
-	logger.Info(fmt.Sprintf("  %-*s %s", endpointNameWidth, name+":", example))
+	log.Info(fmt.Sprintf("  %-*s %s", endpointNameWidth, name+":", example))
 }
 
 func logGrpcEndpointGuide(host, sampleAsset string) {
@@ -18,10 +16,10 @@ func logGrpcEndpointGuide(host, sampleAsset string) {
 		assetOID = "{oid}"
 	}
 
-	logger.Info("Use grpcurl or a gRPC client to interact with the server (reflection enabled):")
+	log.Info("Use grpcurl or a gRPC client to interact with the server (reflection enabled):")
 	logEndpointLine("List services", fmt.Sprintf("grpcurl -plaintext %s list", host))
-	logger.Info("")
-	logger.Info("Catena API:")
+	log.Info("")
+	log.Info("Catena API:")
 	logEndpointLine("GetPopulatedSlots", fmt.Sprintf("grpcurl -plaintext -d '{}' %s st2138.CatenaService/GetPopulatedSlots", host))
 	logEndpointLine("DeviceRequest", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0}' %s st2138.CatenaService/DeviceRequest", host))
 	logEndpointLine("GetValue", fmt.Sprintf("grpcurl -plaintext -d '{\"slot\":0,\"oid\":\"counter\"}' %s st2138.CatenaService/GetValue", host))
@@ -41,7 +39,7 @@ func logRestEndpointGuide(sampleAsset string) {
 		assetOID = "{oid}"
 	}
 
-	logger.Info("Catena API:")
+	log.Info("Catena API:")
 	logEndpointLine("GetPopulatedSlots", "GET  /st2138-api/v1/devices")
 	logEndpointLine("Health", "GET  /st2138-api/v1/health")
 	logEndpointLine("DeviceRequest", "GET  /st2138-api/v1/{slot}")
@@ -56,8 +54,8 @@ func logRestEndpointGuide(sampleAsset string) {
 	logEndpointLine("ParamInfoRequest (all)", "GET  /st2138-api/v1/{slot}/param-info/stream")
 	logEndpointLine("ParamInfoRequest (recursive)", "GET  /st2138-api/v1/{slot}/param-info/{oid}/stream?recursive")
 	logEndpointLine("Connect", "GET  /st2138-api/v1/connect")
-	logger.Info("")
-	logger.Info("Demo (non-Catena):")
+	log.Info("")
+	log.Info("Demo (non-Catena):")
 	logEndpointLine("Web UI", "GET  /")
 	logEndpointLine("Web UI styles", "GET  /styles.css")
 	logEndpointLine("Web UI script", "GET  /script.js")

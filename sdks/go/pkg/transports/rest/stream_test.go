@@ -39,6 +39,7 @@ package rest
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -117,7 +118,7 @@ func TestStreamSSE(t *testing.T) {
 		w := &unflushableResponseWriter{}
 		invoked := false
 
-		streamSSE(&Transport{}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
+		streamSSE(&Transport{log: slog.New(slog.DiscardHandler)}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
 			func(catena.Stream[stubMessage]) catena.StatusResult {
 				invoked = true
 				return catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -137,7 +138,7 @@ func TestStreamSSE(t *testing.T) {
 		// do but log it.
 		w := &failingResponseWriter{failAfter: 1}
 
-		streamSSE(&Transport{}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
+		streamSSE(&Transport{log: slog.New(slog.DiscardHandler)}, w, httptest.NewRequest(http.MethodGet, "/", nil), MarshalProtoJSON,
 			func(stream catena.Stream[stubMessage]) catena.StatusResult {
 				if err := stream.Send(stubMessage{value: "a"}); err != nil {
 					t.Fatalf("first Send returned error: %v", err)
