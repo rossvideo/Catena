@@ -114,6 +114,8 @@ type ServerOptions struct {
 	AuthzEnabled bool `env:"AUTHZ" flag:"authz"`
 	// JwtOptions configures JWT validation for incoming requests when AuthzEnabled is true
 	JwtOptions JwtValidationOptions
+	// Logger is the slog logger the SDK uses. Optional; nil means silent (discard).
+	Logger *slog.Logger `env:"-"`
 }
 
 // JwtValidationOptions controls optional claim validation and HTTP behavior.
@@ -184,6 +186,10 @@ type DashboardOptions struct {
 	ServiceName string `env:"DASHBOARD_SERVICE_NAME" flag:"dashboard-service-name"`
 	// Endpoint is the path served (default "/connect/connection-props.xml").
 	Endpoint string `env:"DASHBOARD_ENDPOINT" flag:"dashboard-endpoint"`
+	// Logger is the slog logger used by the connection-props server. This server
+	// is constructed separately from the regular Catena server, so it does not receive
+	// ServerOptions.Logger. Nil means silent (discard).
+	Logger *slog.Logger `env:"-"`
 }
 
 type LoggerOptions struct {

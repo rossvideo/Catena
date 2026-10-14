@@ -21,6 +21,7 @@ package main
 
 import (
     "context"
+    "log/slog"
     "net/http"
     "os"
     "os/signal"
@@ -33,7 +34,13 @@ import (
 )
 
 func main() {
-    srv := catena.NewServer(100) // max concurrent push connections
+    opts := catena.DefaultServerOptions()
+    // Optional: without a logger the SDK and its transports stay silent.
+    opts.Logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+    srv, err := catena.NewServer(opts)
+    if err != nil {
+        panic(err)
+    }
 
     // The SDK manages the mandatory product struct; register it once per slot.
     srv.RegisterProductStruct(0, catena.ProductStruct{
@@ -184,6 +191,42 @@ restTransport := rest.NewTransport(restOpts)
 - `MutualAuth` requires clients to present a certificate signed by the CA bundle in `ClientCAFile`.
 - The minimum accepted protocol version is TLS 1.2.
 - When loading options from env/CLI via `config.InitOptions`, the corresponding inputs are `{PREFIX}_REST_TLS_*` / `--rest-tls-*` and `{PREFIX}_GRPC_TLS_*` / `--grpc-tls-*` (see `pkg/config/README.md`).
+## Logging
+
+Transports log through the logger you give the server; they never create one of
+their own and the SDK never calls `slog.SetDefault`.
+
+- Set `catena.ServerOptions.Logger` to any `*slog.Logger` you already have.
+- Leave it `nil` and the SDK is silent: transports discard their log records
+  instead of writing to `slog.Default()` or stderr.
+
+This covers transports only. The connection-props HTTP server is started by
+the application, not by the Catena server, and reads `DashboardOptions.Logger`
+instead. Setting only `ServerOptions.Logger` leaves connection-props silent.
+
+The optional `pkg/logger` package is a convenience builder for the SDK's
+prebuilt console/file handlers if you do not already have a logger:
+
+```go
+logOptions := logger.DefaultOptions()
+logOptions.AppName = "my-app"
+logOptions.WriteToConsole = true
+logOptions.Level = logger.LevelInfo
+log, closeLog, err := logger.New(logOptions)
+if err != nil {
+    panic(err)
+}
+defer closeLog()
+options := catena.DefaultServerOptions()
+options.Logger = log
+srv, err := catena.NewServer(options)
+if err != nil {
+    panic(err)
+}
+```
+
+Transport-level verbosity is therefore controlled by the handler and level of
+the logger you inject, not by any SDK-global setting.
 
 ## Related Docs
 

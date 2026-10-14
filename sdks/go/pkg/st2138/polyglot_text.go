@@ -39,7 +39,7 @@
 package st2138
 
 import (
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
+	"log/slog"
 )
 
 // PolyglotText maps BCP-47 language codes to display strings.
@@ -59,7 +59,7 @@ func NewPolyglotText(pairs ...string) PolyglotText {
 		p[pairs[i]] = pairs[i+1]
 	}
 	if len(pairs)%2 != 0 {
-		logger.Warning("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text",
+		slog.Warn("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text",
 			"lang", pairs[len(pairs)-1])
 	}
 	return p
