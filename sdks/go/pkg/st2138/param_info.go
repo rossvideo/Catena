@@ -54,20 +54,14 @@ type ParamInfo struct {
 // NewParamInfo creates a ParamInfo with the specified fields.
 // name may be nil if no display name is required.
 // arrayLength should be 0 for non-array parameters.
-func NewParamInfo(oid string, name *PolyglotTextBuilder, paramType ParamType, templateOid string, arrayLength uint32) ParamInfo {
+func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOid string, arrayLength uint32) ParamInfo {
 	info := &protos.ParamInfo{
 		Oid:         oid,
 		Type:        paramType,
 		TemplateOid: templateOid,
 	}
 	if name != nil {
-		polyglot, err := name.Build()
-		if err != nil {
-			info.Name = nil
-		}
-		if polyglot != nil {
-			info.Name = &protos.PolyglotText{DisplayStrings: polyglot}
-		}
+		info.Name = &protos.PolyglotText{DisplayStrings: name}
 	}
 	return ParamInfo{
 		Proto: &protos.ParamInfoResponse{
