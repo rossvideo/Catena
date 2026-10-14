@@ -1308,6 +1308,13 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 }
 
 func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo], transportContext TransportContext) StatusResult {
+
+	if oidPrefix != "" {
+		if result := ValidateFqoid(oidPrefix); result.IsError() {
+			return result
+		}
+	}
+
 	// Wrap the transport's stream so Send also fails on server shutdown, not just
 	// client disconnect. Cancellation is then transparent to the handler: it just
 	// gets an error from the next Send once the server is shutting down.
@@ -1371,6 +1378,11 @@ func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext Transp
 }
 
 func (s *server) InvokeReadLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
+
+	if result := ValidateLanguageCode(language); result.IsError() {
+		return LanguagePack{}, result
+	}
+
 	return invokeHandler(s, transportContext, EndpointReadLanguagePack, false, s.readLanguagePackHandlers, slot,
 		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ReadLanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
@@ -1384,6 +1396,11 @@ func (s *server) InvokeReadLanguagePackHandler(slot uint16, language string, tra
 }
 
 func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+
+	if result := ValidateLanguageCode(language); result.IsError() {
+		return result
+	}
+
 	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.createLanguagePackHandlers, slot,
 		"CreateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler CreateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -1406,6 +1423,11 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 }
 
 func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
+
+	if result := ValidateLanguageCode(language); result.IsError() {
+		return result
+	}
+
 	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguagePackHandlers, slot,
 		"UpdateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -1425,6 +1447,11 @@ func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, l
 }
 
 func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
+
+	if result := ValidateLanguageCode(language); result.IsError() {
+		return result
+	}
+
 	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguagePackHandlers, slot,
 		"DeleteLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
