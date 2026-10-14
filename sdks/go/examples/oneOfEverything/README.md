@@ -18,19 +18,17 @@ Add `--use-grpc` to also listen for gRPC. At least one transport must be enabled
 
 ## Authorize in the web UI
 
-The **Authorize** button works like Swagger's:
+The **Authorize** button works one of two ways:
 
-- Paste an access token. A leading `Bearer ` is stripped. The token is kept for this browser tab and sent on every Catena request, including the live update stream.
-- **Generate demo token** builds an unsigned JWT for the role you pick (the same roles as the Auth slot's table). Use this when signature validation is off.
-
-The **Auth** slot (slot 3) shows the caller's scopes and JWT claims while authorization is on. While authorization is off it explains that those details are hidden, because every caller is treated as fully authorized.
+1. Paste an access token. A leading `Bearer ` is stripped. The token is kept for this browser tab and sent on every Catena request, including the live update stream.
+2. **Generate demo token** builds an unsigned JWT for the role you pick (the same roles as the Auth slot's table). Use this when signature validation is off.
 
 ## Exercise authorization without Keycloak
 
-Signature validation stays off unless you pass `--jwt-validate-signature`, so a demo token is enough:
+Signature validation stays on unless you pass `--jwt-insecure-skip-signature-validation` so to run the example without a keyclock/signature validation you must pass in that flag:
 
 ```bash
-go run . --use-rest --authz
+go run . --use-rest --authz --jwt-insecure-skip-signature-validation
 ```
 
 In the page, open **Authorize**, pick a scope to create a token wiht, and choose **Generate unsigned**. This will automatically generate and apply a token for your current session.
@@ -39,7 +37,7 @@ In the page, open **Authorize**, pick a scope to create a token wiht, and choose
 
 `keycloak/` runs a local realm that signs access tokens with ES256 (the SDK default).
 
-In another terminal in this devcontainer:
+In another terminal in this devcontainer run:
 ```bash
 docker compose -f keycloak/docker-compose.yml up -d
 ```
@@ -51,7 +49,7 @@ Docker publishes Keycloak on the host, so from inside the devcontainer `localhos
 Start the example:
 ``` bash
 KEYCLOAK_INTERNAL_URL=http://10.255.255.254:8180 \
-  go run . --use-rest --authz --jwt-validate-signature --jwt-issuer=http://localhost:8180/realms/catena
+  go run . --use-rest --authz --jwt-issuer=http://localhost:8180/realms/catena
 ```
 
 Currently nothing will work due to not having a valid token. Sign in through the browser to get one for a real user.

@@ -368,9 +368,6 @@ func main() {
 
 	if client := keycloakHTTPClient(options.Server.JwtOptions.Issuer); client != nil {
 		options.Server.JwtOptions.Http = client
-		logger.Info("Downloading Keycloak signing keys from KEYCLOAK_INTERNAL_URL",
-			"issuer", options.Server.JwtOptions.Issuer,
-			"internal", os.Getenv("KEYCLOAK_INTERNAL_URL"))
 	}
 
 	srv, err := catena.NewServer(options.Server)
