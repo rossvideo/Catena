@@ -21,6 +21,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
     ports:
-      - "8180:8180"
+    - "127.0.0.1:8180:8180"
+    - "10.255.255.254:8180:8180"
     volumes:
       - ./realm-catena.json:/opt/keycloak/data/import/realm-catena.json:ro

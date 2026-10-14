@@ -380,6 +380,9 @@ async function connectSSE() {
 
             buffer += decoder.decode(value, {stream: true});
 
+            // Normalize CRLF & CR line ending to LF
+            buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
             // SSE frame
             let splitAt;
             while ((splitAt = buffer.indexOf('\n\n')) !== -1) {
