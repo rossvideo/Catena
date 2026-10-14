@@ -1058,7 +1058,7 @@ describe('reserved client_hints: st2138_namespace and st2138_definition_only', (
       }
     }, "AutoNs");
     expect(params.auto_lib.getCppNamespace()).toBe("shared::auto_")
-  })
+  });
 
   test('namespace root is implicitly definition-only', () => {
     expect(geoLib.isDefinitionOnly()).toBe(true);
