@@ -219,7 +219,6 @@ func discoverJWKSEndpoint(ctx context.Context, issuer string, client *http.Clien
 	// do it
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("error", err)
 		return "", classifyDiscoveryError(ctx, err)
 	}
 	defer resp.Body.Close()
@@ -327,7 +326,6 @@ func classifyDiscoveryError(ctx context.Context, err error) error {
 		return doErr
 	}
 
-	fmt.Println("doErr", doErr)
 	return backoff.Permanent(doErr)
 }
 

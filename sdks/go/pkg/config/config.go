@@ -129,7 +129,6 @@ type JwtValidationOptions struct {
 	Leeway time.Duration
 	// InsecureSkipSignatureValidation disables JWT signature verification, validating claims only
 	// Zero value (false) means that signatures are being validated, non-zero value (true) means validation is being skipped
-	// Do not enable outside local development
 	InsecureSkipSignatureValidation bool `env:"JWT_INSECURE_SKIP_SIGNATURE_VALIDATION" flag:"jwt-insecure-skip-signature-validation"`
 	// StartupRetryMaxElapsed bounds JWT JWKS discovery retries during startup. Zero disables retrying and attempts once. Negative values are retried indefinitely.
 	StartupRetryMaxElapsedTime time.Duration `env:"JWT_STARTUP_RETRY_MAX_ELAPSED" flag:"jwt-startup-retry-max-elapsed"`

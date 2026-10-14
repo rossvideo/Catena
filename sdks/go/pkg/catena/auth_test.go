@@ -92,9 +92,7 @@ func TestNewJwtValidator(t *testing.T) {
 	})
 
 	t.Run("empty http", func(t *testing.T) {
-		var logBuf bytes.Buffer
-		log := slog.New(slog.NewTextHandler(&logBuf, nil))
-		validator, err := newJwtValidator(t.Context(), log, JwtValidationOptions{
+		validator, err := newJwtValidator(t.Context(), nil, JwtValidationOptions{
 			InsecureSkipSignatureValidation: true,
 			StartupRetryMaxElapsedTime:      0, //single attempt
 		})
@@ -111,12 +109,21 @@ func TestNewJwtValidator(t *testing.T) {
 		if validatorTyped.options.Http != http.DefaultClient {
 			t.Fatalf("newJwtValidator() got Http = %v, want %v", validatorTyped.options.Http, http.DefaultClient)
 		}
+	})
+
+	t.Run("insecure signature validation warning", func(t *testing.T) {
+		var logBuf bytes.Buffer
+		log := slog.New(slog.NewTextHandler(&logBuf, nil))
+		_, err := newJwtValidator(t.Context(), log, JwtValidationOptions{
+			InsecureSkipSignatureValidation: true,
+			StartupRetryMaxElapsedTime:      0, //single attempt
+		})
+		if err != nil {
+			t.Fatalf("newJwtValidator() error = %v", err)
+		}
 		logOutput := logBuf.String()
 		if !strings.Contains(logOutput, "level=WARN") || !strings.Contains(logOutput, "signature validation disabled") {
 			t.Fatalf("newJwtValidator() did not log signature validation disabled warning, got: %q", logOutput)
-		}
-		if validatorTyped.log == nil {
-			t.Fatal("newJwtValidator() got nil log, want non-nil")
 		}
 	})
 
@@ -241,7 +248,6 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 			StartupRetryMaxElapsedTime:      3 * time.Second,
 		})
 
-		fmt.Println("attempts", discoveryAttempts.Load())
 		if err != nil {
 			t.Fatalf("newJwtValidator() error = %v", err)
 		}
