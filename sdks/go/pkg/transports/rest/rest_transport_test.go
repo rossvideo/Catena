@@ -1728,14 +1728,15 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 }
 
 func TestWriteFunctions_NilValues(t *testing.T) {
+	tr := NewTransport(config.RestOptions{})
 	tests := []struct {
 		name           string
 		fn             func(http.ResponseWriter)
 		expectedStatus int
 	}{
-		{"nil value", func(w http.ResponseWriter) { writeValueResult(w, st2138.Value{}, http.StatusOK) }, http.StatusOK},
-		{"nil device", func(w http.ResponseWriter) { writeDeviceResult(w, st2138.Device{}, http.StatusOK) }, http.StatusOK},
-		{"nil asset", func(w http.ResponseWriter) { writeAssetResult(w, st2138.Asset{}, http.StatusOK) }, http.StatusInternalServerError},
+		{"nil value", func(w http.ResponseWriter) { tr.writeValueResult(w, st2138.Value{}, http.StatusOK) }, http.StatusOK},
+		{"nil device", func(w http.ResponseWriter) { tr.writeDeviceResult(w, st2138.Device{}, http.StatusOK) }, http.StatusOK},
+		{"nil asset", func(w http.ResponseWriter) { tr.writeAssetResult(w, st2138.Asset{}, http.StatusOK) }, http.StatusInternalServerError},
 	}
 
 	for _, tt := range tests {
@@ -1817,15 +1818,16 @@ func TestTransport_Connect_TooManyConnections(t *testing.T) {
 }
 
 func TestWriteResults_ValidData(t *testing.T) {
+	tr := NewTransport(config.RestOptions{})
 	device := *st2138.NewDevice(0)
 	rec := httptest.NewRecorder()
-	writeDeviceResult(rec, device, http.StatusOK)
+	tr.writeDeviceResult(rec, device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
 	assertContentType(t, rec, "application/json")
 
 	asset, _ := st2138.ToAsset(st2138.DataPayload{Payload: []byte("data")}, false)
 	rec = httptest.NewRecorder()
-	writeAssetResult(rec, asset, http.StatusOK)
+	tr.writeAssetResult(rec, asset, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
 }
 
@@ -2214,7 +2216,7 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
-	writeValueResult(w, value, http.StatusOK)
+	NewTransport(config.RestOptions{}).writeValueResult(w, value, http.StatusOK)
 
 	if rec.Code != http.StatusInternalServerError && rec.Code != http.StatusOK {
 		t.Errorf("expected status 500 or 200 (if header already sent), got %d", rec.Code)
@@ -2226,7 +2228,7 @@ func TestWriteDeviceResult_WriteError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
-	writeDeviceResult(w, device, http.StatusOK)
+	NewTransport(config.RestOptions{}).writeDeviceResult(w, device, http.StatusOK)
 
 	assertStatus(t, rec, http.StatusOK)
 }
@@ -2236,7 +2238,7 @@ func TestWriteAssetResult_WriteError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
-	writeAssetResult(w, asset, http.StatusOK)
+	NewTransport(config.RestOptions{}).writeAssetResult(w, asset, http.StatusOK)
 
 	assertStatus(t, rec, http.StatusOK)
 }

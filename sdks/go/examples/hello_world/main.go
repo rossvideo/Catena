@@ -38,6 +38,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -86,12 +87,23 @@ func buildDevice() *st2138.Device {
 }
 
 func main() {
-	srv, err := catena.NewServer(catena.ServerOptions{
-		MaxConnections: 100,
-		AuthzEnabled:   false,
-	})
+	// Build an application logger and hand it to the SDK. The SDK logs nothing
+	// unless it is given a logger.
+	logOptions := logger.DefaultOptions()
+	logOptions.AppName = "hello_world"
+	log, closeLog, err := logger.New(logOptions)
 	if err != nil {
-		logger.Error("Failed to create Catena server", "error", err)
+		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+	defer closeLog()
+
+	options := catena.DefaultServerOptions()
+	options.Logger = log
+	options.AuthzEnabled = false
+	srv, err := catena.NewServer(options)
+	if err != nil {
+		log.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
 	}
 
@@ -105,7 +117,7 @@ func main() {
 	})
 
 	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-		logger.Info("GetDevice", "slot", slot)
+		ctx.Logger().Info("GetDevice", "slot", slot)
 		// A small device fits in a single component; large devices may stream
 		// several (see the oneOfEverything example).
 		if err := stream.Send(st2138.ComponentDevice(buildDevice())); err != nil {
@@ -115,21 +127,21 @@ func main() {
 	})
 
 	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
-		logger.Info("GetValue", "slot", slot, "fqoid", fqoid)
+		ctx.Logger().Info("GetValue", "slot", slot, "fqoid", fqoid)
 		if fqoid != helloWorldOID {
 			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
 		}
 
 		value, err := st2138.ToValue(helloWorld.Get())
 		if err != nil {
-			logger.Error("Failed to convert hello_world value", "error", err)
+			ctx.Logger().Error("Failed to convert hello_world value", "error", err)
 			return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to convert value")
 		}
 		return catena.Reply(value)
 	})
 
 	srv.RegisterSetValueHandler(slot, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		logger.Info("SetValue", "slot", slot, "count", len(entries))
+		ctx.Logger().Info("SetValue", "slot", slot, "count", len(entries))
 
 		for _, entry := range entries {
 			if entry.Fqoid != helloWorldOID {
@@ -152,32 +164,32 @@ func main() {
 	})
 
 	if err := srv.RegisterTransport(rest.NewTransport(rest.DefaultOptions())); err != nil {
-		logger.Error("Failed to register REST transport", "error", err)
+		log.Error("Failed to register REST transport", "error", err)
 		os.Exit(1)
 	}
 	if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {
-		logger.Error("Failed to register gRPC transport", "error", err)
+		log.Error("Failed to register gRPC transport", "error", err)
 		os.Exit(1)
 	}
 
-	logger.Info("=======================================================")
-	logger.Info("Hello World Example")
-	logger.Info("=======================================================")
-	logger.Info("REST transport listening on default port 9080")
-	logger.Info("gRPC transport listening on default port 6254")
-	logger.Info("Try REST:")
-	logger.Info("  GET  http://localhost:9080/st2138-api/v1/0/value/hello_world")
-	logger.Info("Try gRPC:")
-	logger.Info("  grpcurl -plaintext -import-path ~/Catena/smpte/interface/proto -proto service.proto -d '{\"slot\":0,\"oid\":\"hello_world\"}' localhost:6254 st2138.CatenaService/GetValue")
+	log.Info("=======================================================")
+	log.Info("Hello World Example")
+	log.Info("=======================================================")
+	log.Info("REST transport listening on default port 9080")
+	log.Info("gRPC transport listening on default port 6254")
+	log.Info("Try REST:")
+	log.Info("  GET  http://localhost:9080/st2138-api/v1/0/value/hello_world")
+	log.Info("Try gRPC:")
+	log.Info("  grpcurl -plaintext -import-path ~/Catena/smpte/interface/proto -proto service.proto -d '{\"slot\":0,\"oid\":\"hello_world\"}' localhost:6254 st2138.CatenaService/GetValue")
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
 	<-ctx.Done()
-	logger.Info("Shutting down server...")
+	log.Info("Shutting down server...")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second)
 	defer shutdownCancel()
 	srv.Shutdown(shutdownCtx)
-	logger.Info("Server shutdown complete")
+	log.Info("Server shutdown complete")
 }

@@ -189,6 +189,50 @@ Defaults are defined in:
 - `DefaultLoggerOptions`
 - `DefaultDashboardOptions`
 
+## Logging
+
+`LoggerOptions` only *describes* a logger; it does not install one. Build a
+`*slog.Logger` from it with `logger.New` and inject that logger into the SDK
+through `ServerOptions.Logger` and `DashboardOptions.Logger`:
+
+```go
+opts, err := config.InitOptions("my-app", os.Args[1:])
+if err != nil {
+	panic(err)
+}
+log, closeLog, err := logger.New(opts.Logger)
+if err != nil {
+	panic(err)
+}
+defer closeLog()
+
+opts.Server.Logger = log
+opts.Dashboard.Logger = log
+
+srv, err := catena.NewServer(opts.Server)
+if err != nil {
+	panic(err)
+}
+```
+
+Key points:
+
+- The SDK never calls `slog.SetDefault`. Your application's global logger is
+  left untouched, and `pkg/logger` is optional: if you already have a
+  `*slog.Logger`, assign it directly and skip `logger.New`.
+- `ServerOptions.Logger` is the hand-off for the server and everything the
+  server starts: heartbeat, the connection queue, and the transports. The
+  server tags each of those with its own component.
+- The DashBoard connection-props server is the exception. Set `DashboardOptions.Logger` 
+  as well, or that server stays silent.
+- `Logger` field is excluded from env/CLI loading (`env:"-"`). Log *behavior*
+  is configured declaratively through `LoggerOptions` (level, console/file
+  output, JSON, silent) and the supplied convenience logger.
+- A nil `Logger` on either options struct means silent: that server
+  discards its log records rather than falling back to `slog.Default()`.
+- `closeLog` releases the log file handle when `WriteToFile` is enabled; defer
+  it for the lifetime of the process.
+
 ## Structured Logging
 
 `RuntimeOptions` implements `slog.LogValuer` via `LogValue()`.
@@ -196,7 +240,7 @@ Defaults are defined in:
 That means you can safely log config in structured form:
 
 ```go
-logger.Info("startup config", "options", opts)
+log.Info("startup config", "options", opts)
 ```
 
 The logged payload is an explicit allow-list of fields from `RuntimeOptions`.
