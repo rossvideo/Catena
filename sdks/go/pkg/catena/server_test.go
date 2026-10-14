@@ -1235,6 +1235,16 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		_, status := srv.InvokeGetValueHandler(7, "/invalid/fqoid", validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+	})
+
 	// With no GetValue handler registered, the value is derived from the
 	// registered GetParam handler by projecting out the param's value. The gate
 	// is still evaluated as a GetValue request.
@@ -1373,6 +1383,16 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointSetValue, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		status := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "/invalid/fqoid", Value: int32(1)}}, validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+	})
+
 	t.Run("MultipleEntries", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointSetValue, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
@@ -1451,6 +1471,16 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 			t.Errorf("expected value %v, got %v", expected, actual)
 		}
 	})
+
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetParam, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		_, status := srv.InvokeGetParamHandler(22, "/invalid/fqoid", validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+	})
 }
 
 func TestServer_InvokeReadAssetHandler(t *testing.T) {
@@ -1497,6 +1527,16 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		}
 		if !proto.Equal(stream.Items[0].Proto, expected.Proto) {
 			t.Errorf("expected asset %v, got %v", expected, stream.Items[0])
+		}
+	})
+
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointReadAsset, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		status := srv.InvokeReadAssetHandler(5, "/invalid/fqoid", &sliceStream[st2138.Asset]{}, validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
 		}
 	})
 
@@ -1562,6 +1602,16 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointCreateAsset, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		status := srv.InvokeCreateAssetHandler(5, "/invalid/fqoid", st2138.Asset{}, validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+	})
+
 	t.Run("NoHandler", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
@@ -1610,6 +1660,16 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointUpdateAsset, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		status := srv.InvokeUpdateAssetHandler(5, "/invalid/fqoid", st2138.Asset{}, validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+	})
+
 	t.Run("NoHandler", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
@@ -1649,6 +1709,16 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 		}
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
+		}
+	})
+
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointDeleteAsset, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		status := srv.InvokeDeleteAssetHandler(5, "/invalid/fqoid", validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
 		}
 	})
 
@@ -1809,6 +1879,16 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointExecuteCommand, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		status := srv.InvokeExecuteCommandHandler(9, "/invalid/fqoid", "payload", true, &sliceStream[st2138.CommandResponse]{}, validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+	})
+
 	// respond=false must gobble: the server swaps in a nullStream so anything the
 	// handler sends is discarded before it reaches the caller's stream. The
 	// handler still runs, still sees respond=false, and its status is preserved.
@@ -1930,6 +2010,16 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		}
 		if got := stream.Items[0].Proto.GetInfo().GetOid(); got != "test/param" {
 			t.Errorf("streamed param info oid = %q, want %q", got, "test/param")
+		}
+	})
+
+	t.Run("InvalidFqoid", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		status := srv.InvokeParamInfoHandler(4, "/invalid/fqoid", true, &sliceStream[st2138.ParamInfo]{}, validTestTransportContext(nil))
+		if !status.IsError() {
+			t.Errorf("expected InvalidArgument status, got %v", status)
 		}
 	})
 

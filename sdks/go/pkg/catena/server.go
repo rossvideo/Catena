@@ -1386,11 +1386,6 @@ func (s *server) InvokeReadLanguagePackHandler(slot uint16, language string, tra
 	return invokeHandler(s, transportContext, EndpointReadLanguagePack, false, s.readLanguagePackHandlers, slot,
 		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ReadLanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
-			// Argument validation runs after the auth gate so an unauthorized
-			// caller only ever sees a security error, never a validation hint.
-			if language == "" {
-				return LanguagePack{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
-			}
 			return handler(slot, language, ctx)
 		})
 }
@@ -1411,9 +1406,6 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 			}
 			// Argument validation runs after the scope check so an unauthorized
 			// caller only ever sees a security error, never a validation hint.
-			if language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
-			}
 			if languagePack.Proto == nil {
 				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
 			}
@@ -1435,9 +1427,6 @@ func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, l
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
 			}
-			if language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
-			}
 			if languagePack.Proto == nil {
 				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
 			}
@@ -1458,9 +1447,6 @@ func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, t
 			// Mutations require the adm scope specifically, not merely any write scope.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
-			}
-			if language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
 			}
 			return struct{}{}, handler(slot, language, ctx)
 		})
