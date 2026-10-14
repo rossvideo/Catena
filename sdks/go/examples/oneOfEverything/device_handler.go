@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -41,7 +39,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	// kinds.
 	srv.RegisterGetDeviceHandler(0, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 		ctx.Logger().Info("GetDevice", "slot", req.Slot)
-		device, err := slotZeroSkeleton().Build()
+		device, err := applySlotZeroMenuGroups(slotZeroSkeleton(), false).Build()
 		if err != nil {
 			return catena.StatusError(err)
 		}
@@ -102,7 +100,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 }
 
 // slotZeroSkeleton returns slot 0's device minus its params, commands, and
-// menus: slot metadata, access scopes, and menu-group shells (display name and
+// menus/menuGroups: slot metadata, access scopes, and menu-group shells (display name and
 // order only). The GetDevice handler sends it as the leading ComponentDevice
 // chunk; the menus themselves are streamed as ComponentMenu chunks (see
 // slotZeroMenus) and the params and commands as their own chunks.
@@ -114,19 +112,6 @@ func slotZeroSkeleton() *st2138.DeviceBuilder {
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:cfg")
 
-	var menuGroupNames = map[string]string{
-		"status": "Status",
-		"config": "Configuration",
-	}
-
-	var i uint32 = 0
-	for oid, menu := range slotZeroMenus() {
-		group, name, _ := strings.Cut(oid, "/")
-		deviceBuilder.WithMenuGroup(group, st2138.NewMenuGroup().
-			WithName(st2138.NewPolyglotText("en", menuGroupNames[group])).
-			WithOrder(i).WithMenu(name, menu))
-		i++
-	}
 	return deviceBuilder
 }
 
@@ -142,6 +127,23 @@ func slotZeroMenus() map[string]*st2138.MenuBuilder {
 			WithName(st2138.NewPolyglotText("en", "Control")).
 			WithCommandOids("start", "stop", "add10", "reset"),
 	}
+}
+
+// applySlotZeroMenuGroups applies the slot 0 menu groups to the device builder.
+// If withMenus is true, the menus will be added to the device builder as well.
+func applySlotZeroMenuGroups(device *st2138.DeviceBuilder, withMenus bool) *st2138.DeviceBuilder {
+	status := st2138.NewMenuGroup().
+		WithName(st2138.NewPolyglotText("en", "Status")).
+		WithOrder(0)
+	config := st2138.NewMenuGroup().
+		WithName(st2138.NewPolyglotText("en", "Configuration")).
+		WithOrder(1)
+	if withMenus {
+		menus := slotZeroMenus()
+		status.WithMenu("status", menus["status/status"])
+		config.WithMenu("control", menus["config/control"])
+	}
+	return device.WithMenuGroup("status", status).WithMenuGroup("config", config)
 }
 
 // slotZeroParams returns slot 0's params keyed by oid.
@@ -191,7 +193,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
 		// Composed from the same slotZero* helpers the GetDevice handler
 		// streams chunk-by-chunk, so the two views stay in sync.
-		deviceBuilder := slotZeroSkeleton()
+		deviceBuilder := applySlotZeroMenuGroups(slotZeroSkeleton(), true)
 		for oid, param := range slotZeroParams(counter) {
 			deviceBuilder.WithParam(oid, param)
 		}
