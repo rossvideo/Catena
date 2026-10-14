@@ -366,6 +366,8 @@ async function connectSSE() {
             retry();
             return;
         }
+
+        await poll();
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -672,17 +674,7 @@ function buildDemoToken() {
 }
 
 function keycloakBrowserIssuer() {
-    const issuer = (demoConfig.jwtIssuer || '').replace(/\/$/, '');
-    if (!issuer) return '';
-    try {
-        const url = new URL(issuer);
-        if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
-            url.hostname = 'localhost';
-        }
-        return url.toString().replace(/\/$/, '');
-    } catch (e) {
-        return issuer;
-    }
+   return (demoConfig.jwtIssuer || '').replace(/\/$/, '');
 }
 
 async function sha256Base64Url(value) {
