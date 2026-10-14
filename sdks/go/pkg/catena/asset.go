@@ -39,7 +39,6 @@
 package catena
 
 import (
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
@@ -66,7 +65,6 @@ func SendAssetChunksWithSize(slot uint16, fqoid string, stream Stream[st2138.Ass
 func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload st2138.DataPayload, cachable bool, assetChunkSize int) StatusResult {
 
 	if assetChunkSize <= 0 {
-		logger.Error("Invalid asset chunk size", "slot", slot, "fqoid", fqoid, "assetChunkSize", assetChunkSize)
 		return StatusWithCode(StatusCodeInternal, "invalid asset chunk size")
 	}
 
@@ -84,17 +82,14 @@ func sendChunks(slot uint16, fqoid string, stream Stream[st2138.Asset], payload 
 
 		chunk, err := st2138.ToAsset(dp, cachable && offset == 0)
 		if err != nil {
-			logger.Error("Failed to convert payload to asset", "slot", slot, "fqoid", fqoid, "error", err)
 			return StatusWithCode(StatusCodeInternal, "failed to convert asset: "+err.Error())
 		}
 
 		if err := stream.Send(chunk); err != nil {
-			logger.Warning("Asset download stream closed", "slot", slot, "fqoid", fqoid, "error", err)
 			return StatusWithCode(StatusCodeInternal, "failed to send asset: "+err.Error())
 		}
 	}
 
-	logger.Info("Asset download complete", "slot", slot, "fqoid", fqoid, "size", len(data))
 	return StatusWithCode(StatusCodeOk, "")
 
 }

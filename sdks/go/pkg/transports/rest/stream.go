@@ -46,7 +46,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -183,7 +182,7 @@ func streamSSE[T catena.Message](
 		if stream.sent == 0 {
 			t.writeHTTPStatusResult(w, result)
 		} else if err := stream.sendError(result); err != nil {
-			logger.Error("failed to send SSE error event", append([]any{"error", err}, logContext...)...)
+			t.log.Error("failed to send SSE error event", append([]any{"error", err}, logContext...)...)
 		}
 		return
 	}

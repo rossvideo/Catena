@@ -39,9 +39,10 @@
 package st2138
 
 import (
+	"log/slog"
+
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -74,7 +75,7 @@ func (mg *MenuGroup) WithName(name PolyglotText) *MenuGroup {
 // were already added.
 func (mg *MenuGroup) WithMenu(oid string, menu *Menu) *MenuGroup {
 	if menu == nil {
-		logger.Warning("WithMenu called with nil menu; ignoring", "oid", oid)
+		slog.Warn("WithMenu called with nil menu; ignoring", "oid", oid)
 		return mg
 	}
 	if mg.Proto.Menus == nil {
