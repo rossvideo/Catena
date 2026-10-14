@@ -19,10 +19,11 @@ import { ST2138_NAMESPACE_KEY, ST2138_DEFINITION_ONLY_KEY } from "smpte-validato
 
 /**
  * @param {string} dotted a language-neutral dotted namespace (e.g. "a.b.c")
- * @returns the C++ form (e.g. "a::b::c")
+ * @returns the C++ form (e.g. "a::b::c") with cpp identifiers made safe
  */
 function translateNs(dotted) {
-  return dotted.split(".").join("::");
+  return dotted.split(".").map(getCppIdentifier).join("::");
+  
 }
 
 /**
