@@ -1,31 +1,20 @@
 Feature: Codegen error handling
 
-  Scenario: Invalid device model fails validation
-    Given the device model "device.invalid.yaml"
-    When I run codegen for "cpp"
+  Scenario Outline: Codegen rejects <reason>
+    Given the device model "<model>"
+    When I run codegen for "<language>"
     Then the command exits with a non-zero status
     And no output files are written
 
-  Scenario: Unsupported language is rejected
-    Given the device model "device.hello_world.yaml"
-    When I run codegen for "asdf"
-    Then the command exits with a non-zero status
-    And no output files are written
-
-  Scenario: Malformed YAML is rejected
-    Given the device model "device.malformed.yaml"
-    When I run codegen for "cpp"
-    Then the command exits with a non-zero status
-    And no output files are written
+    Examples:
+      | model                   | language | reason              |
+      | device.invalid.yaml     | cpp      | fails validation    |
+      | device.hello_world.yaml | asdf     | unsupported language|
+      | device.malformed.yaml   | cpp      | malformed YAML      |
+      | param.product.yaml      | cpp      | not a device model  |
 
   Scenario: A non-existent model path is rejected
     Given a nonexistent device model "device.does_not_exist.yaml"
-    When I run codegen for "cpp"
-    Then the command exits with a non-zero status
-    And no output files are written
-
-  Scenario: A non-device model file is rejected
-    Given the device model "param.product.yaml"
     When I run codegen for "cpp"
     Then the command exits with a non-zero status
     And no output files are written
