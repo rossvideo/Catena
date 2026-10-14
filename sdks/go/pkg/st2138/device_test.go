@@ -118,6 +118,16 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 	}
 }
 
+func TestDevice_WithParam_NestedErrors(t *testing.T) {
+	cd, err := NewDevice(0).WithParam("nothing", NewParamInt32(1, 2)).Build()
+	if cd != (Device{}) {
+		t.Errorf("expected nil device, got %v", cd)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
+	}
+}
+
 func TestDevice_WithCommand_Nil(t *testing.T) {
 	cd, err := NewDevice(0).
 		WithCommand("nothing", nil).Build()
@@ -135,6 +145,26 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 	}
 	if cd.Proto.GetCommands()["nothing"] == nil {
 		t.Fatal("expected command to be set")
+	}
+}
+
+func TestDevice_WithCommand_NestedErrors(t *testing.T) {
+	cd, err := NewDevice(0).WithCommand("nothing", NewParamInt32(1, 2)).Build()
+	if cd != (Device{}) {
+		t.Errorf("expected nil device, got %v", cd)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
+	}
+}
+
+func TestDevice_WithCommand_EmptyParam(t *testing.T) {
+	cd, err := NewDevice(0).WithCommand("nothing", &ParamBuilder{}).Build()
+	if cd != (Device{}) {
+		t.Errorf("expected nil device, got %v", cd)
+	}
+	if err == nil {
+		t.Error("expected error for builder with empty param")
 	}
 }
 
@@ -179,6 +209,16 @@ func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 	}
 	if err == nil {
 		t.Error("expected error for builder with menu group with nil Proto")
+	}
+}
+
+func TestDevice_WithMenuGroup_NestedErrors(t *testing.T) {
+	cd, err := NewDevice(0).WithMenuGroup("nothing", NewMenuGroup().WithName(NewPolyglotText("en", "test", "fail"))).Build()
+	if cd != (Device{}) {
+		t.Errorf("expected nil device, got %v", cd)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
 	}
 }
 

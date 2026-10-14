@@ -305,8 +305,8 @@ func (cp *ParamBuilder) WithName(name *PolyglotTextBuilder) *ParamBuilder {
 		cp.err = err
 		return cp
 	}
-	if p == nil {
-		cp.err = fmt.Errorf("WithName: failed to build PolyglotText: returned nil PolyglotText")
+	if len(p) == 0 {
+		cp.err = fmt.Errorf("WithName: failed to build PolyglotText: returned empty PolyglotText")
 		return cp
 	}
 	cp.proto.Name = &protos.PolyglotText{DisplayStrings: p}
@@ -467,7 +467,7 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 
-	cloned := proto.Clone(param.proto).(*protos.Param)
+	cloned := proto.Clone(p.Proto).(*protos.Param)
 
 	if cp.proto.Type == protos.ParamType_STRUCT && cloned.Value != nil {
 		sv := cp.proto.Value.GetStructValue()
@@ -520,7 +520,7 @@ func (cp *ParamBuilder) WithHelp(help *PolyglotTextBuilder) *ParamBuilder {
 		cp.err = err
 		return cp
 	}
-	if p == nil {
+	if len(p) == 0 {
 		cp.err = fmt.Errorf("WithHelp: failed to build PolyglotText: returned nil PolyglotText")
 		return cp
 	}
