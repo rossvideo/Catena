@@ -248,6 +248,53 @@ func TestInitOptions(t *testing.T) {
 	})
 }
 
+func TestInitOptions_JwtValidation(t *testing.T) {
+
+	t.Run("jwt insecure skip signature validation from env", func(t *testing.T) {
+		t.Setenv("CATENA_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "true")
+		opts, err := InitOptions("test_app", []string{})
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if !opts.Server.JwtOptions.InsecureSkipSignatureValidation {
+			t.Errorf("Expected InsecureSkipSignatureValidation to be true")
+		}
+	})
+
+	t.Run("jwt insecure skip signature validation from cli", func(t *testing.T) {
+		opts, err := InitOptions("test_app", []string{"--jwt-insecure-skip-signature-validation=true"})
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if !opts.Server.JwtOptions.InsecureSkipSignatureValidation {
+			t.Errorf("Expected InsecureSkipSignatureValidation to be true")
+		}
+	})
+
+	t.Run("jwt insecure skip signature validation false stays off", func(t *testing.T) {
+		t.Setenv("CATENA_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "false")
+		opts, err := InitOptions("test_app", []string{"--jwt-insecure-skip-signature-validation=false"})
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.JwtOptions.InsecureSkipSignatureValidation {
+			t.Errorf("Expected InsecureSkipSignatureValidation to be false")
+		}
+	})
+
+	t.Run("jwt insecure skip signature validation cli overrides env", func(t *testing.T) {
+		t.Setenv("CATENA_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "true")
+		opts, err := InitOptions("test_app", []string{"--jwt-insecure-skip-signature-validation=false"})
+		if err != nil {
+			t.Errorf("Expected no error got: %v", err)
+		}
+		if opts.Server.JwtOptions.InsecureSkipSignatureValidation {
+			t.Errorf("Expected CLI false to override env true")
+		}
+	})
+
+}
+
 // TestInitOptions_Transport groups the transport-related option resolution
 // (REST/gRPC ports, gRPC reflection, and the UseRest/UseGrpc toggles) into a
 // single collapsible test so the env-var, default, and CLI-override behaviour
