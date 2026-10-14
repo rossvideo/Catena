@@ -38,7 +38,13 @@
 
 package catena
 
-import "github.com/dlclark/regexp2"
+import (
+	"fmt"
+	"math"
+	"strconv"
+
+	"github.com/dlclark/regexp2"
+)
 
 // Schema patterns copied from smpte/interface/schemata/device.yaml.
 // The schema file lives outside this Go module, so the running server cannot
@@ -57,6 +63,22 @@ var (
 	fqoidRegexp        = regexp2.MustCompile(fqoidPattern, regexp2.ECMAScript)
 	languageCodeRegexp = regexp2.MustCompile(languageCodePattern, regexp2.ECMAScript)
 )
+
+func ValidateSlot(slot uint32) (uint16, StatusResult) {
+	if slot > uint32(math.MaxUint16) {
+		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
+
+	}
+	return uint16(slot), StatusWithCode(StatusCodeOk, "")
+}
+
+func ValidateSlotString(slot string) (uint16, StatusResult) {
+	slotInt, err := strconv.ParseUint(slot, 10, 32)
+	if err != nil {
+		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
+	}
+	return ValidateSlot(uint32(slotInt))
+}
 
 // ValidateFqoid reports whether fqoid matches fqoidPattern. An empty string is
 // reported separately: proto3 delivers an omitted oid as "", and the spec

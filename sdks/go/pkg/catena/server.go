@@ -44,7 +44,6 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -278,22 +277,6 @@ var ErrServerStopped = errors.New("server is stopped")
 // defaultServerMaxShutdownWait is a fallback safety cap for shutdown paths when
 // callers pass an unbounded context. Caller-provided earlier deadlines still win.
 const defaultServerMaxShutdownWait = 10 * time.Second
-
-func ValidateSlot(slot uint32) (uint16, StatusResult) {
-	if slot > uint32(math.MaxUint16) {
-		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
-
-	}
-	return uint16(slot), StatusWithCode(StatusCodeOk, "")
-}
-
-func ValidateSlotString(slot string) (uint16, StatusResult) {
-	slotInt, err := strconv.ParseUint(slot, 10, 32)
-	if err != nil {
-		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
-	}
-	return ValidateSlot(uint32(slotInt))
-}
 
 type Transport interface {
 	// Start begins transport operation with the given context.
@@ -1101,6 +1084,11 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, stream Stream[st2138.Device
 }
 
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Value, StatusResult) {
+
+	if result := ValidateFqoid(fqoid); result.IsError() {
+		return st2138.Value{}, result
+	}
+
 	return withGate(s, transportContext, EndpointGetValue, false,
 		func(ctx HandlerContext) (st2138.Value, StatusResult) {
 			// The SDK owns product/* only when a product struct is registered for the
@@ -1151,6 +1139,11 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 }
 
 func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Param, StatusResult) {
+
+	if result := ValidateFqoid(fqoid); result.IsError() {
+		return st2138.Param{}, result
+	}
+
 	return withGate(s, transportContext, EndpointGetParam, false,
 		func(ctx HandlerContext) (st2138.Param, StatusResult) {
 			// The SDK owns product/* only when a product struct is registered for the
@@ -1186,6 +1179,12 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 // them atomically; single-value endpoints pass a one-element slice. Access
 // checks run once for the whole batch.
 func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult {
+	for _, entry := range entries {
+		if result := ValidateFqoid(entry.Fqoid); result.IsError() {
+			return result
+		}
+	}
+
 	_, res := invokeHandler(s, transportContext, EndpointSetValue, true, s.setValueHandlers, slot,
 		"no SetValue handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler SetValueHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -1202,6 +1201,11 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 }
 
 func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, stream Stream[st2138.Asset], transportContext TransportContext) StatusResult {
+
+	if result := ValidateFqoid(fqoid); result.IsError() {
+		return result
+	}
+
 	// Wrap the transport's stream so Send also fails on server shutdown, not just
 	// client disconnect. Cancellation is then transparent to the handler: it just
 	// gets an error from the next Send once the server is shutting down.
@@ -1229,6 +1233,11 @@ func enforceAssetWriteScope(ctx HandlerContext) StatusResult {
 }
 
 func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult {
+
+	if result := ValidateFqoid(fqoid); result.IsError() {
+		return result
+	}
+
 	_, res := invokeHandler(s, transportContext, EndpointCreateAsset, true, s.createAssetHandlers, slot,
 		"no CreateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler CreateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -1241,6 +1250,11 @@ func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st213
 }
 
 func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult {
+
+	if result := ValidateFqoid(fqoid); result.IsError() {
+		return result
+	}
+
 	_, res := invokeHandler(s, transportContext, EndpointUpdateAsset, true, s.updateAssetHandlers, slot,
 		"no UpdateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -1253,6 +1267,11 @@ func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st213
 }
 
 func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult {
+
+	if result := ValidateFqoid(fqoid); result.IsError() {
+		return result
+	}
+
 	_, res := invokeHandler(s, transportContext, EndpointDeleteAsset, true, s.deleteAssetHandlers, slot,
 		"no DeleteAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
@@ -1265,6 +1284,11 @@ func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportCo
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[st2138.CommandResponse], transportContext TransportContext) StatusResult {
+
+	if result := ValidateFqoid(commandFqoid); result.IsError() {
+		return result
+	}
+
 	// When the caller opts out of responses, swap in a nullStream so any chunks
 	// the handler sends are discarded here rather than each transport having to
 	// gobble them itself. The handler still receives respond and may skip sending.
