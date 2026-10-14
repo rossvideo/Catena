@@ -101,6 +101,26 @@ func TestMenuGroup_WithName_LoopBuiltName(t *testing.T) {
 	}
 }
 
+func TestMenuGroup_WithName_NestedErrors(t *testing.T) {
+	mg, err := NewMenuGroup().WithName(NewPolyglotText("en", "test", "fail")).Build()
+	if mg != (MenuGroup{}) {
+		t.Errorf("expected nil menu group, got %v", mg)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
+	}
+}
+
+func TestMenuGroup_WithName_EmptyPolyglotText(t *testing.T) {
+	mg, err := NewMenuGroup().WithName(NewPolyglotText()).Build()
+	if mg != (MenuGroup{}) {
+		t.Errorf("expected nil menu group, got %v", mg)
+	}
+	if err == nil {
+		t.Error("expected error for builder with empty polyglot text")
+	}
+}
+
 func TestMenuGroup_WithMenu(t *testing.T) {
 	mg := NewMenuGroup().WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video")))
 
@@ -148,6 +168,26 @@ func TestMenuGroup_WithMenu_Nil(t *testing.T) {
 	}
 	if mg != (MenuGroup{}) {
 		t.Fatal("expected nil menu group")
+	}
+}
+
+func TestMenuGroup_WithMenu_NestedErrors(t *testing.T) {
+	mg, err := NewMenuGroup().WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "test", "fail"))).Build()
+	if mg != (MenuGroup{}) {
+		t.Errorf("expected nil menu group, got %v", mg)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
+	}
+}
+
+func TestMenuGroup_WithMenu_EmptyMenu(t *testing.T) {
+	mg, err := NewMenuGroup().WithMenu("video", &MenuBuilder{}).Build()
+	if mg != (MenuGroup{}) {
+		t.Errorf("expected nil menu group, got %v", mg)
+	}
+	if err == nil {
+		t.Error("expected error for builder with empty menu")
 	}
 }
 
@@ -296,6 +336,25 @@ func TestMenu_WithName_Replaces(t *testing.T) {
 	}
 	if _, ok := ds["fr"]; ok {
 		t.Errorf("expected fr to be absent after replacement, got %s", ds["fr"])
+	}
+}
+
+func TestMenu_WithName_NestedErrors(t *testing.T) {
+	m, err := NewMenu().WithName(NewPolyglotText("en", "test", "fail")).Build()
+	if m != (Menu{}) {
+		t.Errorf("expected nil menu, got %v", m)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
+	}
+}
+func TestMenu_WithName_EmptyPolyglotText(t *testing.T) {
+	m, err := NewMenu().WithName(NewPolyglotText()).Build()
+	if m != (Menu{}) {
+		t.Errorf("expected nil menu, got %v", m)
+	}
+	if err == nil {
+		t.Error("expected error for builder with empty polyglot text")
 	}
 }
 

@@ -181,6 +181,36 @@ func TestWithName(t *testing.T) {
 	}
 }
 
+func TestWithName_Nil(t *testing.T) {
+	p, err := NewParamInt32(0).WithName(nil).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nil name")
+	}
+}
+
+func TestWithName_NestedErrors(t *testing.T) {
+	p, err := NewParamInt32(0).WithName(NewPolyglotText("en", "test", "fail")).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with empty name")
+	}
+}
+
+func TestWithName_EmptyPolyglotText(t *testing.T) {
+	p, err := NewParamInt32(0).WithName(NewPolyglotText()).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nil PolyglotText")
+	}
+}
+
 func TestWithReadOnly(t *testing.T) {
 	p := NewParamInt32(0).WithReadOnly(true).proto
 	if !p.GetReadOnly() {
@@ -418,6 +448,27 @@ func TestWithParam_Nil(t *testing.T) {
 	}
 }
 
+func TestWithParam_NestedErrors(t *testing.T) {
+	child := NewParamInt32(0).WithName(NewPolyglotText("en", "test", "fail"))
+	p, err := NewParamStruct().WithParam("x", child).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
+	}
+}
+
+func TestWithParam_EmptyParam(t *testing.T) {
+	p, err := NewParamStruct().WithParam("x", &ParamBuilder{}).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with empty param")
+	}
+}
+
 func TestWithResponse(t *testing.T) {
 	p := NewParamEmpty().WithResponse(true).proto
 	if !p.GetResponse() {
@@ -429,6 +480,36 @@ func TestWithHelp(t *testing.T) {
 	p := NewParamInt32(0).WithHelp(NewPolyglotText("en", "Adjusts volume")).proto
 	if p.GetHelp().GetDisplayStrings()["en"] != "Adjusts volume" {
 		t.Errorf("unexpected help text: %q", p.GetHelp().GetDisplayStrings()["en"])
+	}
+}
+
+func TestWithHelp_Nil(t *testing.T) {
+	p, err := NewParamInt32(0).WithHelp(nil).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nil help")
+	}
+}
+
+func TestWithHelp_NestedErrors(t *testing.T) {
+	p, err := NewParamInt32(0).WithHelp(NewPolyglotText("en", "test", "fail")).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with nested errors")
+	}
+}
+
+func TestWithHelp_EmptyPolyglotText(t *testing.T) {
+	p, err := NewParamInt32(0).WithHelp(NewPolyglotText()).Build()
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
+	}
+	if err == nil {
+		t.Error("expected error for builder with empty help")
 	}
 }
 
@@ -969,6 +1050,39 @@ func TestIsValueValidForParamType_DataPayload_Binary(t *testing.T) {
 	}
 }
 
+func TestIsValueValidForParamType_AllKinds(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    any
+		wantType protos.ParamType
+	}{
+		{"int32", int32(1), protos.ParamType_INT32},
+		{"float32", float32(1.5), protos.ParamType_FLOAT32},
+		{"string", "hello", protos.ParamType_STRING},
+		{"struct", map[string]any{"a": int32(1)}, protos.ParamType_STRUCT},
+		{"struct_variant", StructVariantValue{StructVariantType: "a", Value: int32(1)}, protos.ParamType_STRUCT_VARIANT},
+		{"int32_array", []int32{1, 2}, protos.ParamType_INT32_ARRAY},
+		{"float32_array", []float32{1.0}, protos.ParamType_FLOAT32_ARRAY},
+		{"string_array", []string{"a"}, protos.ParamType_STRING_ARRAY},
+		{"data", DataPayload{Payload: []byte("hello")}, protos.ParamType_DATA},
+		{"struct_array", []map[string]any{{"a": int32(1)}}, protos.ParamType_STRUCT_ARRAY},
+		{"struct_variant_array", []StructVariantValue{{StructVariantType: "a", Value: int32(1)}}, protos.ParamType_STRUCT_VARIANT_ARRAY},
+		{"empty", EmptyValue{}, protos.ParamType_EMPTY},
+		{"undefined", UndefinedValue(0), protos.ParamType_UNDEFINED},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, res := ToValue(tt.input)
+			if res != nil {
+				t.Fatalf("ToValue failed: %s", res)
+			}
+			if !isValueValidForParamType(v.Proto, tt.wantType) {
+				t.Errorf("expected %v to be valid for %v", tt.input, tt.wantType)
+			}
+		})
+	}
+}
+
 func TestParamTypeFromValueKind_Nil(t *testing.T) {
 	if paramTypeFromValueKind(nil) != protos.ParamType_UNDEFINED {
 		t.Error("expected UNDEFINED for nil value")
@@ -1229,13 +1343,123 @@ func TestNewParamX_DefaultValueIsSet(t *testing.T) {
 }
 
 func TestNewParamX_ExtraValuesErrors(t *testing.T) {
-	p, err := NewParamInt32(1, 2, 3).Build()
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
-	if p != (Param{}) {
-		t.Fatal("expected empty param for builder with error")
-	}
+	t.Run("INT32", func(t *testing.T) {
+		p, err := NewParamInt32(1, 2).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("FLOAT32", func(t *testing.T) {
+		p, err := NewParamFloat32(1.1, 2.2).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("STRING", func(t *testing.T) {
+		p, err := NewParamString("a", "b").Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("STRUCT", func(t *testing.T) {
+		p, err := NewParamStruct(map[string]any{"a": 1}, map[string]any{"b": 2}).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("STRUCT_VARIANT", func(t *testing.T) {
+		p, err := NewParamStructVariant(
+			StructVariantValue{StructVariantType: "a", Value: NewParamInt32(1)},
+			StructVariantValue{StructVariantType: "b", Value: NewParamInt32(2)}).
+			Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("INT32_ARRAY", func(t *testing.T) {
+		p, err := NewParamInt32Array([]int32{1, 2, 3}, []int32{4, 5, 6}).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("FLOAT32_ARRAY", func(t *testing.T) {
+		p, err := NewParamFloat32Array([]float32{1.1, 2.2}, []float32{3.3, 4.4}).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("STRING_ARRAY", func(t *testing.T) {
+		p, err := NewParamStringArray([]string{"a", "b"}, []string{"c", "d"}).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("BINARY", func(t *testing.T) {
+		p, err := NewParamBinary([]byte{0xDE, 0xAD}, []byte{0xBE, 0xEF}).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("STRUCT_ARRAY", func(t *testing.T) {
+		p, err := NewParamStructArray([]map[string]any{{"a": 1, "b": 2}}, []map[string]any{{"c": 3, "d": 4}}).Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("STRUCT_VARIANT_ARRAY", func(t *testing.T) {
+		p, err := NewParamStructVariantArray(
+			[]StructVariantValue{{StructVariantType: "a", Value: NewParamInt32(1)}},
+			[]StructVariantValue{{StructVariantType: "b", Value: NewParamInt32(2)}}).
+			Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
+	t.Run("DATA", func(t *testing.T) {
+		p, err := NewParamData(
+			ToPayload([]byte("content"), "text/plain", "test.txt"),
+			ToPayload([]byte("content2"), "text/plain", "test2.txt")).
+			Build()
+		if p != (Param{}) {
+			t.Errorf("expected empty Param, got %v", p)
+		}
+		if err == nil {
+			t.Error("expected error for builder with extra values")
+		}
+	})
 }
 
 func TestSetValue_FailureLeavesValueNil(t *testing.T) {
@@ -1364,8 +1588,6 @@ func TestWithParam_CleanBuilderEquivalence(t *testing.T) {
 		t.Error("expected nested struct descriptor to be valueless")
 	}
 }
-
-// Add test for error handling
 
 func TestParamBuilder_BuildsValidParam(t *testing.T) {
 	cp := NewParamInt32(42)

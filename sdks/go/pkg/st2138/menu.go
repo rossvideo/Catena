@@ -83,8 +83,8 @@ func (mg *MenuGroupBuilder) WithName(name *PolyglotTextBuilder) *MenuGroupBuilde
 		mg.err = err
 		return mg
 	}
-	if p == nil {
-		mg.err = errors.New("polyglot text builder returned nil polyglot")
+	if len(p) == 0 {
+		mg.err = errors.New("polyglot text builder returned empty polyglot text")
 		return mg
 	}
 	mg.proto.Name = &protos.PolyglotText{DisplayStrings: p}
@@ -178,7 +178,7 @@ func (m *MenuBuilder) WithName(name *PolyglotTextBuilder) *MenuBuilder {
 		m.err = err
 		return m
 	}
-	if p == nil {
+	if len(p) == 0 {
 		m.err = errors.New("polyglot text builder returned nil polyglot text")
 		return m
 	}
