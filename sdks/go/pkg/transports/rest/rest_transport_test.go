@@ -1606,18 +1606,26 @@ func TestTransport_GetPopulatedSlots_RuntimeError(t *testing.T) {
 }
 
 func TestTransport_Fallback_Route(t *testing.T) {
-	transport, _ := makeTestTransport(t)
-
 	handlerCalled := false
-	transport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
-		handlerCalled = true
-		return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "custom not found")
+	transport := NewTransport(config.RestOptions{
+		Port: 8080,
+		Fallback: func(w http.ResponseWriter, r *http.Request) {
+			handlerCalled = true
+			w.WriteHeader(http.StatusTeapot)
+			_, _ = w.Write([]byte("custom body"))
+		},
 	})
+	stubRuntime := transporttest.MakeStubServerRuntime(t)
+	stubRuntime.Dev = true
+	transport.runtime = stubRuntime
 
 	rec := makeRequest(t, transport, http.MethodGet, "/unknown/path", "")
-	assertStatus(t, rec, http.StatusNotFound)
+	assertStatus(t, rec, http.StatusTeapot)
 	if !handlerCalled {
 		t.Error("registered handler should have been called, but was not")
+	}
+	if body := rec.Body.String(); body != "custom body" {
+		t.Errorf("expected fallback body %q, got %q", "custom body", body)
 	}
 }
 
