@@ -244,7 +244,12 @@ class CodegenWorld extends World {
 
   /** Absolute path to a golden file for the current model/language. */
   goldenPath(language, ext) {
-    return path.join(GOLDEN_DIR, language, `${outputBase(this.model)}.${ext}`);
+    return path.join(
+      GOLDEN_DIR,
+      language,
+      outputBase(this.model),
+      `${outputBase(this.model)}.${ext}`
+    );
   }
 }
 

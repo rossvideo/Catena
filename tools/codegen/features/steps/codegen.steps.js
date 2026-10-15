@@ -122,35 +122,51 @@ Then('the output matches a semantic version', function () {
 
 Then('the generated files match the golden {string} output', function (language) {
   const run = this.lastRun();
-  const extensions = LANGUAGE_EXTENSIONS[language] ?? [];
-  assert.ok(extensions.length > 0, `Unknown language: ${language}`);
+  assert.ok(
+    (LANGUAGE_EXTENSIONS[language] ?? []).length > 0,
+    `Unknown language: ${language}`
+  );
 
-  // the model-named files must always be emitted
-  for (const ext of extensions) {
-    const name = `${this.model}.${ext}`;
-    assert.ok(run.files[name] !== undefined, `codegen did not emit ${name}`);
+  // Goldens for a scenario live in their own directory, named after the model,
+  // so the directory listing is the authoritative set of expected files. This
+  // lets us catch both missing emissions (golden present, not emitted) and
+  // unexpected ones (emitted, no golden), including shared namespace headers
+  // such as shared_geo.h that a flat golden dir could not attribute to a model.
+  const goldenDir = path.join(GOLDEN_DIR, language, this.model);
+
+  if (UPDATE_GOLDENS) {
+    // Rewrite from scratch so goldens that are no longer emitted are pruned.
+    fs.rmSync(goldenDir, { recursive: true, force: true });
+    fs.mkdirSync(goldenDir, { recursive: true });
+    for (const [name, actual] of Object.entries(run.files)) {
+      fs.writeFileSync(path.join(goldenDir, name), actual);
+    }
+    return;
   }
 
-  // verify every emitted file (model-named plus any shared namespace headers)
-  // against a golden of the same name
-  for (const name of Object.keys(run.files)) {
-    const actual = run.files[name];
-    const goldenFile = path.join(GOLDEN_DIR, language, name);
-    if (UPDATE_GOLDENS) {
-      fs.mkdirSync(path.dirname(goldenFile), { recursive: true });
-      fs.writeFileSync(goldenFile, actual);
-      continue;
-    }
+  assert.ok(
+    fs.existsSync(goldenDir),
+    `Missing golden directory: ${path.relative(GOLDEN_DIR, goldenDir)} ` +
+      `(run with UPDATE_GOLDENS=1 to create it)`
+  );
 
-    assert.ok(
-      fs.existsSync(goldenFile),
-      `Missing golden file: ${path.relative(GOLDEN_DIR, goldenFile)} ` +
-        `(run with UPDATE_GOLDENS=1 to create it)`
-    );
-    const expected = fs.readFileSync(goldenFile, 'utf8');
+  const emitted = new Set(Object.keys(run.files));
+  const expected = new Set(fs.readdirSync(goldenDir));
+  assert.deepEqual(
+    emitted,
+    expected,
+    `Emitted files do not match the golden set for ${this.model}\n` +
+      `  missing (golden not emitted): ${[...expected].filter((n) => !emitted.has(n)).join(', ') || '(none)'}\n` +
+      `  unexpected (emitted, no golden): ${[...emitted].filter((n) => !expected.has(n)).join(', ') || '(none)'}`
+  );
+
+  for (const name of expected) {
+    const goldenFile = path.join(goldenDir, name);
+    const actual = run.files[name];
+    const golden = fs.readFileSync(goldenFile, 'utf8');
     assert.equal(
       actual,
-      expected,
+      golden,
       `Generated ${name} differs from golden ${path.relative(GOLDEN_DIR, goldenFile)}`
     );
   }

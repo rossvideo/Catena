@@ -9,7 +9,7 @@
 # regardless of checkout location. Override any discovered value via the
 # environment: CXX, SDK_INCLUDE, GRPC_INCLUDE, PROTOBUF_INCLUDE.
 #
-# Usage: ./test_compile.sh            # compile every *.cpp beside this script
+# Usage: ./test_compile.sh            # compile every *.cpp under this directory
 #        CXX=clang++ ./test_compile.sh
 set -uo pipefail
 
@@ -54,7 +54,8 @@ fail=0
 # (add_compile_definitions) as quoted string literals. Inject dummy values here
 # so the goldens syntax-check.
 rc=0
-for f in "$DIR"/*.cpp; do
+shopt -s nullglob
+for f in "$DIR"/*/*.cpp; do
   if "$CXX" -std=gnu++20 -fsyntax-only \
       -DCATENA_CPP_VERSION='"v0.0.0"' \
       -DCATENA_CPP_SDK='"https://github.com/rossvideo/Catena"' \
