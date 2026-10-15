@@ -73,6 +73,11 @@ func ValidateSlot(slot uint32) (uint16, StatusResult) {
 }
 
 func ValidateSlotString(slot string) (uint16, StatusResult) {
+
+	if slot == "" {
+		return 0, StatusWithCode(StatusCodeInvalidArgument, "slot is required")
+	}
+
 	slotInt, err := strconv.ParseUint(slot, 10, 32)
 	if err != nil {
 		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
