@@ -23,15 +23,15 @@
         "type": "STRUCT_ARRAY",
         "name": { "display_strings": { "en": "Audio Deck" } },
         "params": {
-          "gain": { "name": { "display_strings": { "ai": "Preamp gain in dB (-10.0 to 10.0). Adjust to match source level." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.1 } } },
-          "input": { "name": { "display_strings": { "ai": "Realtime input level meter in dB (stateless). Agents read only." } }, "type": "FLOAT32", "precision": 2, "stateless": true, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.01 } } },
+          "gain": { "name": { "display_strings": { "ai": "Preamp gain in dB (-10.0 to 10.0). Adjust to match source level." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.1 } } },
+          "input": { "name": { "display_strings": { "ai": "Realtime input level meter in dB (stateless). Agents read only." } }, "type": "FLOAT32", "precision": 2, "stateless": true, "constraint": { "type": "FLOAT_RANGE", "float_range": { "min_value": -10.0, "max_value": 10.0, "display_min": -10.0, "display_max": 10.0, "step": 0.01 } } },
           "inputLabel": { "name": { "display_strings": { "ai": "Editable input label shown to operators. Provide a human-friendly source name." } }, "type": "STRING" },
           "invert": { "name": { "display_strings": { "ai": "Polarity toggle. 'Inverted' = flipped polarity; 'Invert' = normal." } }, "type": "STRING", "widget": "toggle", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Inverted","Invert"] } } },
-          "roll_off": { "name": { "display_strings": { "ai": "Filter slope in dB/oct. Typical 6-24; higher = steeper." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
-          "frequency": { "name": { "display_strings": { "ai": "Filter cutoff/center frequency in Hz (0-500)." } }, "type": "FLOAT32", "precision": 0, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 500.0, "display_min": 0.0, "display_max": 500.0, "step": 1.0 } } },
-          "ripple": { "name": { "display_strings": { "ai": "Chebyshev ripple in dB. Small positive values (e.g., 0-3 dB) typical." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
+          "roll_off": { "name": { "display_strings": { "ai": "Filter slope in dB/oct. Typical 6-24; higher = steeper." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
+          "frequency": { "name": { "display_strings": { "ai": "Filter cutoff/center frequency in Hz (0-500)." } }, "type": "FLOAT32", "precision": 0, "constraint": { "type": "FLOAT_RANGE", "float_range": { "min_value": 0.0, "max_value": 500.0, "display_min": 0.0, "display_max": 500.0, "step": 1.0 } } },
+          "ripple": { "name": { "display_strings": { "ai": "Chebyshev ripple in dB. Small positive values (e.g., 0-3 dB) typical." } }, "type": "FLOAT32", "precision": 1, "constraint": { "type": "FLOAT_RANGE", "float_range": { "min_value": -30.0, "max_value": 30.0, "display_min": -30.0, "display_max": 30.0, "step": 1.0 } } },
           "resp": { "name": { "display_strings": { "ai": "Filter response type. Choose Butterworth, Cheb II, or Legendre." } }, "type": "STRING", "constraint": { "type": "STRING_CHOICE", "string_choice": { "choices": ["Butterworth", "Cheb II", "Legendre"] } } },
-          "volume": { "name": { "display_strings": { "ai": "Output volume level in percent (0-100%)." } }, "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float32_range": { "min_value": 0.0, "max_value": 100.0, "display_min": 0.0, "display_max": 100.0, "step": 1.0 } } },
+          "volume": { "name": { "display_strings": { "ai": "Output volume level in percent (0-100%)." } }, "type": "FLOAT32", "constraint": { "type": "FLOAT_RANGE", "float_range": { "min_value": 0.0, "max_value": 100.0, "display_min": 0.0, "display_max": 100.0, "step": 1.0 } } },
           "pan": { "name": { "display_strings": { "ai": "Stereo pan position (-100 = left, 0 = center, 100 = right)." } }, "type": "INT32", "constraint": { "type": "INT_RANGE", "int32_range": { "min_value": -100, "max_value": 100, "display_min": -100, "display_max": 100, "step": 1 } } }
         },
         "value": {
@@ -162,7 +162,6 @@
               "name": { "string_value": "Audio Deck" },
               "vendor": { "string_value": "Ross Video" },
               "version": { "string_value": "1.0.0" },
-              "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
               "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
             }
           }
@@ -177,10 +176,10 @@
           "version": {
             "type": "STRING"
           },
-          "catena_sdk": {
+          "st2138_sdk": {
             "type": "STRING"
           },
-          "catena_sdk_version": {
+          "st2138_sdk_version": {
             "type": "STRING"
           },
           "serial_number": {

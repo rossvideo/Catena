@@ -1,0 +1,32 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:op
+params:
+  product:
+    import:
+      url: ./param.product.yaml
+commands:
+  # EMPTY command with no response
+  start:
+    type: EMPTY
+    name: { display_strings: { en: Start } }
+    widget: button
+    response: false
+  # EMPTY command that returns a response
+  status:
+    type: EMPTY
+    name: { display_strings: { en: Status } }
+    response: true
+  # INT32 command
+  seek:
+    type: INT32
+    name: { display_strings: { en: Seek } }
+    response: false
+  # STRING command
+  load:
+    type: STRING
+    name: { display_strings: { en: Load } }
+    widget: button
+    response: true

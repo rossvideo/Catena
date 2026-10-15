@@ -85,6 +85,8 @@ jobs:
     container:
       image: ${{ inputs.cpp_image || 'ghcr.io/rossvideo/catena-cpp-toolchain:develop' }}
       options: --user root:root
+      env:
+        IN_CONTAINER_BUILD: "1" # so build-openapi.sh is happy running as root
     permissions:
       security-events: write
       actions: read
@@ -145,6 +147,8 @@ jobs:
     container:
       image: ${{ inputs.go_image || 'ghcr.io/rossvideo/catena-go-toolchain:develop' }}
       options: --user root:root
+      env:
+        IN_CONTAINER_BUILD: "1" # so build-openapi.sh is happy running as root
     permissions:
       security-events: write
       actions: read

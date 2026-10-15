@@ -49,6 +49,7 @@ function(setup_version_info CATENA_CPP_ROOT_DIR)
         message(FATAL_ERROR "Invalid VERSION.txt format: '${VERSION_STRING}'. Expected format: v<major>.<minor>.<patch>")
     endif()
     set(CATENA_CPP_VERSION ${VERSION_STRING})
+    set(CATENA_CPP_SDK "https://github.com/rossvideo/Catena")
 
     # Timestamp comes from the last commit that changed VERSION.txt.
     execute_process(
@@ -64,13 +65,18 @@ function(setup_version_info CATENA_CPP_ROOT_DIR)
     endif()
     
     # Set compile definitions and display info
-    add_compile_definitions(CATENA_CPP_VERSION=${CATENA_CPP_VERSION})
+    # Need to quote the version and SDK URL so that they are treated as string
+    # literals in C++ code.
+    add_compile_definitions(CATENA_CPP_VERSION="${CATENA_CPP_VERSION}")
+    add_compile_definitions(CATENA_CPP_SDK="${CATENA_CPP_SDK}")
     message(STATUS "Catena C++ SDK version: ${CATENA_CPP_VERSION}")
     message(STATUS "Catena C++ SDK timestamp: ${CATENA_CPP_TIMESTAMP}")
+    message(STATUS "Catena C++ SDK URL: ${CATENA_CPP_SDK}")
     
     # Make available to parent scope
     set(CATENA_CPP_VERSION ${CATENA_CPP_VERSION} PARENT_SCOPE)
     set(CATENA_CPP_TIMESTAMP ${CATENA_CPP_TIMESTAMP} PARENT_SCOPE)
+    set(CATENA_CPP_SDK ${CATENA_CPP_SDK} PARENT_SCOPE)
 endfunction()
 
 # Setup testing configuration

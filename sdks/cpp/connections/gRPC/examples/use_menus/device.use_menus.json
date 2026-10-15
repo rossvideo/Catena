@@ -35,11 +35,11 @@
       "menus": {
         "page_1": {
           "name": { "display_strings": { "en": "Product", "es": "Producto", "fr": "Produit" } },
-          "param_oids": ["/product/name", "/product/vendor", "/product/version", "/product/serial_number", "/product/catena_sdk", "/product/catena_sdk_version"]
+          "param_oids": ["product/name", "product/vendor", "product/version", "product/serial_number", "product/st2138_sdk", "product/st2138_sdk_version"]
         },
         "page_2": {
           "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" } },
-          "param_oids": ["/offset", "/button", "/counter"]
+          "param_oids": ["offset", "button", "counter"]
         }
       },
       "order": 0
@@ -49,11 +49,11 @@
       "menus": {
         "page_1": {
           "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
-          "param_oids": ["/counter", "/hello"]
+          "param_oids": ["counter", "hello"]
         },
         "page_2": {
           "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" }},
-          "param_oids": ["/offset", "/button", "/inline_button", "/counter"]
+          "param_oids": ["offset", "button", "inline_button", "counter"]
         }
       },
       "order": 1
@@ -70,7 +70,6 @@
             "name": { "string_value": "Use Menus" },
             "vendor": { "string_value": "Ross Video" },
             "version": { "string_value": "1.0.0" },
-            "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
             "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
           }
         }
@@ -85,10 +84,10 @@
         "version": {
           "type": "STRING"
         },
-        "catena_sdk": {
+        "st2138_sdk": {
           "type": "STRING"
         },
-        "catena_sdk_version": {
+        "st2138_sdk_version": {
           "type": "STRING"
         },
         "serial_number": {

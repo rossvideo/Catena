@@ -482,7 +482,7 @@ const file_language_proto_rawDesc = "" +
 	"\tlanguages\x18\x01 \x03(\tR\tlanguages\"\x1a\n" +
 	"\x04Slot\x12\x12\n" +
 	"\x04slot\x18\x01 \x01(\rR\x04slotB*\n" +
-	"\x14catena.core.languageB\x0eLanguageProtosH\x01P\x01b\x06proto3"
+	"\x14st2138.core.languageB\x0eLanguageProtosH\x01P\x01b\x06proto3"
 
 var (
 	file_language_proto_rawDescOnce sync.Once
