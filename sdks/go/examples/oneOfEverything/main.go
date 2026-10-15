@@ -73,8 +73,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
 // log is the example's application logger, built in main from config and shared
@@ -378,58 +377,13 @@ func main() {
 
 	registerAuthz(srv)
 
-	if !options.UseGrpc && !options.UseRest {
-		log.Error("No transports enabled", "error", "at least one of gRPC or REST transport must be enabled in config")
-		os.Exit(1)
-	}
-
-	// DashBoard "Detect Frame Information" connection-props HTTP server.
-	// Advertises this device so DashBoard can resolve and populate the
-	// connection dialog. Works for both REST and gRPC devices.
-	dashboardOpts := options.Dashboard
-	switch dashboardOpts.Protocol {
-	case catena.ProtocolST2138Catena, catena.ProtocolST2138Grpc:
-		if !options.UseGrpc && options.UseRest {
-			log.Warn("Dashboard configured for gRPC but only REST transport enabled - switching to REST protocol for dashboard connection props")
-			dashboardOpts.Protocol = catena.ProtocolST2138Rest
-		}
-	case catena.ProtocolST2138Rest:
-		if options.UseGrpc && !options.UseRest {
-			log.Warn("Dashboard configured for REST but only gRPC transport enabled - switching to gRPC protocol for dashboard connection props")
-			dashboardOpts.Protocol = catena.ProtocolST2138Grpc
-		}
-	}
-	connectionProps := catena.NewConnectionProps(dashboardOpts)
-	connectionPropsURL := fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint())
-	if err := connectionProps.Start(); err != nil {
-		log.Warn("Failed to start connection props server", "port", options.Dashboard.Port, "error", err)
-		connectionPropsURL = ""
-	}
-
-	sampleAsset := ""
-	if len(assetIDs) > 0 {
-		sampleAsset = assetIDs[0]
-	}
-
 	// --- Transports ---
 	// Register one or both; the same handlers serve REST and gRPC on their configured ports.
-	if options.UseGrpc {
-		// Reflection enabled so grpcurl works without -proto (local demo only).
-		if err := srv.RegisterTransport(grpc.NewTransport(options.Grpc)); err != nil {
-			log.Error("Failed to register gRPC transport", "error", err)
-			os.Exit(1)
-		}
-		grpcAddr := fmt.Sprintf("localhost:%d", options.Grpc.Port)
-		logGrpcEndpointGuide(grpcAddr, sampleAsset)
-	} else {
-		log.Info("gRPC transport disabled by config")
-	}
-
 	if options.UseRest {
 		// Fallback is for custom HTTP routes that are not part of the Catena API.
 		// SDK endpoints are still handled by the REST transport; this handler only
 		// serves the demo UI and an asset index convenience route when no SDK
-		// route matched. It must be set before NewTransport.
+		// route matched. It must be set before transports.RegisterFrom.
 		options.Rest.Fallback = func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/demo-config" {
 				w.Header().Set("Content-Type", "application/json")
@@ -477,12 +431,50 @@ func main() {
 			}
 			http.Error(w, "endpoint not found: "+r.URL.Path, http.StatusNotFound)
 		}
+	}
 
-		if err := srv.RegisterTransport(rest.NewTransport(options.Rest)); err != nil {
-			log.Error("Failed to register REST transport", "error", err)
-			os.Exit(1)
+	if err := transports.RegisterFrom(srv, options); err != nil {
+		log.Error("Failed to register transports", "error", err)
+		os.Exit(1)
+	}
+
+	// DashBoard "Detect Frame Information" connection-props HTTP server.
+	// Advertises this device so DashBoard can resolve and populate the
+	// connection dialog. Works for both REST and gRPC devices.
+	dashboardOpts := options.Dashboard
+	switch dashboardOpts.Protocol {
+	case catena.ProtocolST2138Catena, catena.ProtocolST2138Grpc:
+		if !options.UseGrpc && options.UseRest {
+			log.Warn("Dashboard configured for gRPC but only REST transport enabled - switching to REST protocol for dashboard connection props")
+			dashboardOpts.Protocol = catena.ProtocolST2138Rest
 		}
+	case catena.ProtocolST2138Rest:
+		if options.UseGrpc && !options.UseRest {
+			log.Warn("Dashboard configured for REST but only gRPC transport enabled - switching to gRPC protocol for dashboard connection props")
+			dashboardOpts.Protocol = catena.ProtocolST2138Grpc
+		}
+	}
+	connectionProps := catena.NewConnectionProps(dashboardOpts)
+	connectionPropsURL := fmt.Sprintf("http://localhost:%d%s", options.Dashboard.Port, connectionProps.Endpoint())
+	if err := connectionProps.Start(); err != nil {
+		log.Warn("Failed to start connection props server", "port", options.Dashboard.Port, "error", err)
+		connectionPropsURL = ""
+	}
 
+	sampleAsset := ""
+	if len(assetIDs) > 0 {
+		sampleAsset = assetIDs[0]
+	}
+
+	if options.UseGrpc {
+		// Reflection enabled so grpcurl works without -proto (local demo only).
+		grpcAddr := fmt.Sprintf("localhost:%d", options.Grpc.Port)
+		logGrpcEndpointGuide(grpcAddr, sampleAsset)
+	} else {
+		log.Info("gRPC transport disabled by config")
+	}
+
+	if options.UseRest {
 		logRestEndpointGuide(sampleAsset)
 		if len(assetIDs) > 0 {
 			log.Info("")
