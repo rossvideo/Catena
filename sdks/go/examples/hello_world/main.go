@@ -47,8 +47,7 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
 const (
@@ -98,10 +97,12 @@ func main() {
 	}
 	defer closeLog()
 
-	options := catena.DefaultServerOptions()
-	options.Logger = log
-	options.AuthzEnabled = false
-	srv, err := catena.NewServer(options)
+	runtimeOpts := catena.DefaultRuntimeOptions()
+	runtimeOpts.UseRest = true
+	runtimeOpts.UseGrpc = true
+	runtimeOpts.Server.Logger = log
+	runtimeOpts.Server.AuthzEnabled = false
+	srv, err := catena.NewServer(runtimeOpts.Server)
 	if err != nil {
 		log.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
@@ -163,12 +164,8 @@ func main() {
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
-	if err := srv.RegisterTransport(rest.NewTransport(rest.DefaultOptions())); err != nil {
-		log.Error("Failed to register REST transport", "error", err)
-		os.Exit(1)
-	}
-	if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {
-		log.Error("Failed to register gRPC transport", "error", err)
+	if err := transports.RegisterFrom(srv, runtimeOpts); err != nil {
+		log.Error("Failed to register transports", "error", err)
 		os.Exit(1)
 	}
 
