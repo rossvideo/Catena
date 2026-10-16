@@ -32,6 +32,7 @@ package transports_test
 
 import (
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -91,8 +92,18 @@ func TestRegisterFrom(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := &recordingServer{}
-			opts := config.RuntimeOptions{UseGrpc: tt.useGrpc, UseRest: tt.useRest}
+			opts := config.RuntimeOptions{
+				UseGrpc: tt.useGrpc,
+				UseRest: tt.useRest,
+				Grpc: config.GrpcOptions{
+					Port: 70000,
+				},
+				Rest: config.RestOptions{
+					Port: 70001,
+				},
+			}
 
+			// Test server registration
 			err := transports.RegisterFrom(srv, opts)
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("RegisterFrom() error = %v, want %v", err, tt.wantErr)
@@ -103,6 +114,30 @@ func TestRegisterFrom(t *testing.T) {
 			for i, want := range tt.wantTypes {
 				if got := srv.registered[i]; !sameTransportType(got, want) {
 					t.Fatalf("transport %d type = %T, want %T", i, got, want)
+				}
+			}
+
+			// Test transport configuration
+			if tt.name == "grpc only" {
+				grpcCfg := reflect.ValueOf(srv.registered[0]).Elem().FieldByName("port").Int()
+				if grpcCfg != int64(opts.Grpc.Port) {
+					t.Fatalf("grpc transport port = %d, want %d", grpcCfg, opts.Grpc.Port)
+				}
+			}
+			if tt.name == "rest only" {
+				restCfg := reflect.ValueOf(srv.registered[0]).Elem().FieldByName("port").Int()
+				if restCfg != int64(opts.Rest.Port) {
+					t.Fatalf("rest transport port = %d, want %d", restCfg, opts.Rest.Port)
+				}
+			}
+			if tt.name == "both" {
+				grpcCfg := reflect.ValueOf(srv.registered[0]).Elem().FieldByName("port").Int()
+				if grpcCfg != int64(opts.Grpc.Port) {
+					t.Fatalf("grpc transport port = %d, want %d", grpcCfg, opts.Grpc.Port)
+				}
+				restCfg := reflect.ValueOf(srv.registered[1]).Elem().FieldByName("port").Int()
+				if restCfg != int64(opts.Rest.Port) {
+					t.Fatalf("rest transport port = %d, want %d", restCfg, opts.Rest.Port)
 				}
 			}
 		})
