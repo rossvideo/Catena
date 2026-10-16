@@ -62,9 +62,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -284,11 +286,61 @@ func sortedAssetIDs(assets *sync.Map) []string {
 	return ids
 }
 
+type rewriteHostTransport struct {
+	base http.RoundTripper
+	from string
+	to   *url.URL
+}
+
+func (t *rewriteHostTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.URL.Host != t.from {
+		return t.base.RoundTrip(req)
+	}
+	clone := req.Clone(req.Context())
+	clone.URL.Scheme = t.to.Scheme
+	clone.URL.Host = t.to.Host
+	clone.Host = t.to.Host
+	return t.base.RoundTrip(clone)
+}
+
+// keycloakHTTPClient sends issuer requests to KEYCLOAK_INTERNAL_URL.
+// The browser signs in at the issuer host (localhost). From this devcontainer
+// that host is not Keycloak; the internal URL is the host gateway Docker publishes.
+func keycloakHTTPClient(issuer string) *http.Client {
+	internal := strings.TrimRight(strings.TrimSpace(os.Getenv("KEYCLOAK_INTERNAL_URL")), "/")
+	if internal == "" {
+		return nil
+	}
+	internalURL, err := url.Parse(internal)
+	if err != nil || internalURL.Host == "" {
+		return nil
+	}
+	if internalURL.Scheme == "" {
+		internalURL.Scheme = "http"
+	}
+	issuerURL, err := url.Parse(strings.TrimRight(strings.TrimSpace(issuer), "/"))
+	if err != nil || issuerURL.Host == "" || issuerURL.Host == internalURL.Host {
+		return nil
+	}
+	base, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil
+	}
+	return &http.Client{
+		Transport: &rewriteHostTransport{
+			base: base.Clone(),
+			from: issuerURL.Host,
+			to:   internalURL,
+		},
+	}
+}
+
 func main() {
 	defaultOptions := catena.DefaultRuntimeOptions()
 	// customize the dashboard defaults
 	defaultOptions.Dashboard.NodeID = "one-of-everything-a4:bb:6d:6a:6f:a3"
 	defaultOptions.Dashboard.NodeName = "One of Everything Demo"
+	defaultOptions.Server.AuthzEnabled = false
 
 	options, err := config.InitOptions("oneofeverything", os.Args[1:], config.WithDefaults(defaultOptions))
 	if err != nil {
@@ -313,6 +365,10 @@ func main() {
 	options.Dashboard.Logger = log
 
 	log.Info("Loaded Configuration", "config", options)
+
+	if client := keycloakHTTPClient(options.Server.JwtOptions.Issuer); client != nil {
+		options.Server.JwtOptions.Http = client
+	}
 
 	srv, err := catena.NewServer(options.Server)
 	if err != nil {
@@ -432,6 +488,15 @@ func main() {
 		// this fallback only serves the demo UI and an asset index convenience
 		// route when no SDK route matched.
 		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
+
+			if r.URL.Path == "/demo-config" {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]any{
+					"jwtIssuer": strings.TrimSpace(options.Server.JwtOptions.Issuer),
+				})
+				return catena.Reply(st2138.Value{})
+			}
+
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {
