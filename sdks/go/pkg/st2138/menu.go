@@ -39,7 +39,7 @@
 package st2138
 
 import (
-	"log/slog"
+	"errors"
 
 	"google.golang.org/protobuf/proto"
 
@@ -53,42 +53,94 @@ type MenuGroup struct {
 	Proto *protos.MenuGroup
 }
 
+type MenuGroupBuilder struct {
+	proto *protos.MenuGroup
+	err   error
+}
+
 // NewMenuGroup creates a MenuGroup with an initialized proto.
-func NewMenuGroup() *MenuGroup {
-	return &MenuGroup{
-		Proto: &protos.MenuGroup{
+func NewMenuGroup() *MenuGroupBuilder {
+	return &MenuGroupBuilder{
+		proto: &protos.MenuGroup{
 			Menus: make(map[string]*protos.Menu),
 		},
+		err: nil,
 	}
 }
 
 // WithName sets the menu group's display name, replacing any existing name.
-func (mg *MenuGroup) WithName(name PolyglotText) *MenuGroup {
-	mg.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
+func (mg *MenuGroupBuilder) WithName(name *PolyglotTextBuilder) *MenuGroupBuilder {
+	if mg.err != nil {
+		return mg
+	}
+	if name == nil {
+		mg.err = errors.New("name cannot be nil")
+		return mg
+	}
+
+	p, err := name.Build()
+	if err != nil {
+		mg.err = err
+		return mg
+	}
+	if len(p) == 0 {
+		mg.err = errors.New("polyglot text builder returned empty polyglot text")
+		return mg
+	}
+	mg.proto.Name = &protos.PolyglotText{DisplayStrings: p}
 	return mg
 }
 
 // WithMenu inserts menu into the menu group's menus map, keyed by oid.
-// Replaces any existing menu at that oid. A nil menu is ignored.
+// Replaces any existing menu at that oid. A nil menu errors and short-circuits further method calls.
 // The menu's proto is deep-copied so that later builder mutations on the
 // caller's Menu (or reusing it under another oid) do not affect entries that
 // were already added.
-func (mg *MenuGroup) WithMenu(oid string, menu *Menu) *MenuGroup {
-	if menu == nil {
-		slog.Warn("WithMenu called with nil menu; ignoring", "oid", oid)
+func (mg *MenuGroupBuilder) WithMenu(oid string, menu *MenuBuilder) *MenuGroupBuilder {
+	if mg.err != nil {
 		return mg
 	}
-	if mg.Proto.Menus == nil {
-		mg.Proto.Menus = map[string]*protos.Menu{}
+	if menu == nil {
+		mg.err = errors.New("menu cannot be nil")
+		return mg
 	}
-	mg.Proto.Menus[oid] = proto.Clone(menu.Proto).(*protos.Menu)
+	m, err := menu.Build()
+	if err != nil {
+		mg.err = err
+		return mg
+	}
+	if m == (Menu{}) || m.Proto == nil {
+		mg.err = errors.New("menu builder returned nil menu")
+		return mg
+	}
+	if mg.proto.Menus == nil {
+		mg.proto.Menus = map[string]*protos.Menu{}
+	}
+	mg.proto.Menus[oid] = proto.Clone(m.Proto).(*protos.Menu)
 	return mg
 }
 
 // WithOrder sets the menu group's display order.
-func (mg *MenuGroup) WithOrder(order uint32) *MenuGroup {
-	mg.Proto.Order = order
+func (mg *MenuGroupBuilder) WithOrder(order uint32) *MenuGroupBuilder {
+	if mg.err != nil {
+		return mg
+	}
+	mg.proto.Order = order
 	return mg
+}
+
+// Build returns a usable MenuGroup from the builder. If the builder has an error, it
+// returns an empty MenuGroup and the error. Must be called after all builder methods have been called.
+func (mg *MenuGroupBuilder) Build() (MenuGroup, error) {
+	if mg.err != nil {
+		return MenuGroup{}, mg.err
+	}
+	return MenuGroup{Proto: proto.Clone(mg.proto).(*protos.MenuGroup)}, nil
+}
+
+// Err returns the stored error of the builder.
+func (mg *MenuGroupBuilder) Err() error {
+	return mg.err
 }
 
 // Menu wraps a protos.Menu and exposes a fluent builder API.
@@ -98,56 +150,111 @@ type Menu struct {
 	Proto *protos.Menu
 }
 
+type MenuBuilder struct {
+	proto *protos.Menu
+	err   error
+}
+
 // NewMenu creates a Menu with an initialized proto.
-func NewMenu() *Menu {
-	return &Menu{
-		Proto: &protos.Menu{},
+func NewMenu() *MenuBuilder {
+	return &MenuBuilder{
+		proto: &protos.Menu{},
+		err:   nil,
 	}
 }
 
 // WithName sets the menu's display name, replacing any existing name.
-func (m *Menu) WithName(name PolyglotText) *Menu {
-	m.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
+func (m *MenuBuilder) WithName(name *PolyglotTextBuilder) *MenuBuilder {
+	if m.err != nil {
+		return m
+	}
+	if name == nil {
+		m.err = errors.New("name is required")
+		return m
+	}
+
+	p, err := name.Build()
+	if err != nil {
+		m.err = err
+		return m
+	}
+	if len(p) == 0 {
+		m.err = errors.New("polyglot text builder returned nil polyglot text")
+		return m
+	}
+	m.proto.Name = &protos.PolyglotText{DisplayStrings: p}
 	return m
 }
 
 // WithHidden sets whether the menu should be hidden in the client GUI.
-func (m *Menu) WithHidden(hidden bool) *Menu {
-	m.Proto.Hidden = hidden
+func (m *MenuBuilder) WithHidden(hidden bool) *MenuBuilder {
+	if m.err != nil {
+		return m
+	}
+	m.proto.Hidden = hidden
 	return m
 }
 
 // WithDisabled sets whether the menu should be disabled (shown as read-only)
 // in the client GUI.
-func (m *Menu) WithDisabled(disabled bool) *Menu {
-	m.Proto.Disabled = disabled
+func (m *MenuBuilder) WithDisabled(disabled bool) *MenuBuilder {
+	if m.err != nil {
+		return m
+	}
+	m.proto.Disabled = disabled
 	return m
 }
 
 // WithParamOids sets the menu's parameter members, replacing any existing oids.
-func (m *Menu) WithParamOids(oids ...string) *Menu {
-	m.Proto.ParamOids = oids
+func (m *MenuBuilder) WithParamOids(oids ...string) *MenuBuilder {
+	if m.err != nil {
+		return m
+	}
+	m.proto.ParamOids = oids
 	return m
 }
 
 // WithCommandOids sets the menu's command members, replacing any existing oids.
-func (m *Menu) WithCommandOids(oids ...string) *Menu {
-	m.Proto.CommandOids = oids
+func (m *MenuBuilder) WithCommandOids(oids ...string) *MenuBuilder {
+	if m.err != nil {
+		return m
+	}
+	m.proto.CommandOids = oids
 	return m
 }
 
 // WithClientHint sets a single client hint key/value pair, creating the map if
 // it does not yet exist.
-func (m *Menu) WithClientHint(key, value string) *Menu {
-	if m.Proto.ClientHints == nil {
-		m.Proto.ClientHints = map[string]string{}
+func (m *MenuBuilder) WithClientHint(key, value string) *MenuBuilder {
+	if m.err != nil {
+		return m
 	}
-	m.Proto.ClientHints[key] = value
+	if m.proto.ClientHints == nil {
+		m.proto.ClientHints = map[string]string{}
+	}
+	m.proto.ClientHints[key] = value
 	return m
 }
 
 // WithOrder sets the menu's display order.
-func (m *Menu) WithOrder(order uint32) *Menu {
-	m.Proto.Order = order
+func (m *MenuBuilder) WithOrder(order uint32) *MenuBuilder {
+	if m.err != nil {
+		return m
+	}
+	m.proto.Order = order
 	return m
+}
+
+// Build returns a usable Menu from the builder. If the builder has an error, it
+// returns an empty Menu and the error. Must be called after all builder methods have been called.
+func (m *MenuBuilder) Build() (Menu, error) {
+	if m.err != nil {
+		return Menu{}, m.err
+	}
+	return Menu{Proto: proto.Clone(m.proto).(*protos.Menu)}, nil
+}
+
+// Err returns the stored error of the builder.
+func (m *MenuBuilder) Err() error {
+	return m.err
 }

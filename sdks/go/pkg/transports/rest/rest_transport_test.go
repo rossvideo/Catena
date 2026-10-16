@@ -125,7 +125,11 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					device, err := st2138.NewDevice(slot).Build()
+					if err != nil {
+						t.Fatalf("expected no error for builder with valid value, got %v", err)
+					}
+					return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -152,7 +156,11 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
 					assertContext(t, ctx)
-					return *st2138.NewParamInt32(42), catena.StatusWithCode(catena.StatusCodeOk, "")
+					param, err := st2138.NewParamInt32(42).Build()
+					if err != nil {
+						t.Fatalf("expected no error for builder with valid value, got %v", err)
+					}
+					return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -282,15 +290,18 @@ func TestTransport_GetDevice_Route(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	device := st2138.NewDevice(0).
-		WithDetailLevel(st2138.DetailLevelFull)
+	device, err := st2138.NewDevice(0).
+		WithDetailLevel(st2138.DetailLevelFull).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
 		if slot != 0 {
 			t.Errorf("expected slot 0, got %d", slot)
 		}
-		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0", "")
@@ -308,12 +319,28 @@ func TestTransport_GetDevice_AggregatesComponents(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+		brightness, err := st2138.NewParamInt32(50).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		reset, err := st2138.NewParamEmpty().Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		menu, err := st2138.NewMenu().WithParamOids("brightness").Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		device, err := st2138.NewDevice(slot).WithDetailLevel(st2138.DetailLevelFull).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		return []st2138.DeviceComponent{
-			st2138.ComponentDevice(st2138.NewDevice(slot).WithDetailLevel(st2138.DetailLevelFull)),
-			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
-			st2138.ComponentCommand("reset", st2138.NewParamEmpty()),
+			st2138.ComponentDevice(&device),
+			st2138.ComponentParam("brightness", &brightness),
+			st2138.ComponentCommand("reset", &reset),
 			st2138.ComponentConstraint("range", st2138.NewConstraintInt32Range(0, 100, 1)),
-			st2138.ComponentMenu("status/main", st2138.NewMenu().WithParamOids("brightness")),
+			st2138.ComponentMenu("status/main", &menu),
 			st2138.ComponentLanguagePack("en", "English", map[string]string{"greeting": "Hello"}),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -368,9 +395,17 @@ func TestTransport_DeviceStream(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
 
 		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			brightness, err := st2138.NewParamInt32(50).Build()
+			if err != nil {
+				t.Fatalf("expected no error for builder with valid value, got %v", err)
+			}
+			device, err := st2138.NewDevice(slot).Build()
+			if err != nil {
+				t.Fatalf("expected no error for builder with valid value, got %v", err)
+			}
 			return []st2138.DeviceComponent{
-				st2138.ComponentDevice(st2138.NewDevice(slot)),
-				st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
+				st2138.ComponentDevice(&device),
+				st2138.ComponentParam("brightness", &brightness),
 			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -412,8 +447,12 @@ func TestTransport_DeviceStream(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
 
 		runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+			device, err := st2138.NewDevice(slot).Build()
+			if err != nil {
+				t.Fatalf("expected no error for builder with valid value, got %v", err)
+			}
 			return []st2138.DeviceComponent{
-				st2138.ComponentDevice(st2138.NewDevice(slot)),
+				st2138.ComponentDevice(&device),
 			}, catena.StatusWithCode(catena.StatusCodeInternal, "internal error")
 		}
 
@@ -521,9 +560,13 @@ func TestTransport_GetParam_Route(t *testing.T) {
 		if fqoid != "text_box" {
 			t.Errorf("expected fqoid 'text_box', got %s", fqoid)
 		}
-		param := st2138.NewParamString("Hello, World!").
-			WithName(st2138.NewPolyglotText("en", "Text Box").With("es", "Caja de Texto"))
-		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		param, err := st2138.NewParamString("Hello, World!").
+			WithName(st2138.NewPolyglotText("en", "Text Box").With("es", "Caja de Texto")).
+			Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/text_box", "")
@@ -544,7 +587,12 @@ func TestTransport_GetParam_NestedFqoid(t *testing.T) {
 		if fqoid != "parent/child" {
 			t.Errorf("expected fqoid 'parent/child', got %s", fqoid)
 		}
-		return *st2138.NewParamInt32(7), catena.StatusWithCode(catena.StatusCodeOk, "")
+
+		param, err := st2138.NewParamInt32(7).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/parent/child", "")
@@ -582,10 +630,13 @@ func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
-		param := st2138.NewParamInt32(0).
+		param, err := st2138.NewParamInt32(0).
 			WithName(st2138.NewPolyglotText("en", "Zero")).
-			WithConstraint(st2138.NewConstraintInt32Range(0, 100, 1))
-		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+			WithConstraint(st2138.NewConstraintInt32Range(0, 100, 1)).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/zero", "")
@@ -602,9 +653,12 @@ func TestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
-		param := st2138.NewParamString("").
-			WithName(st2138.NewPolyglotText("en", "Empty"))
-		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		param, err := st2138.NewParamString("").
+			WithName(st2138.NewPolyglotText("en", "Empty")).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/empty", "")
@@ -1256,11 +1310,15 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 
 	t.Run("ExceptionResponse", func(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
+		polyglot, err := st2138.NewPolyglotText("en", "Command not found").Build()
+		if err != nil {
+			t.Fatalf("expected NewPolyglotText to build without error, got %v", err)
+		}
 		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			return []st2138.CommandResponse{st2138.CommandException(
 				"InvalidCommand",
 				"Command not found: "+fqoid,
-				st2138.NewPolyglotText("en", "Command not found"),
+				polyglot,
 			)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -1819,7 +1877,10 @@ func TestTransport_Connect_TooManyConnections(t *testing.T) {
 
 func TestWriteResults_ValidData(t *testing.T) {
 	tr := NewTransport(config.RestOptions{})
-	device := *st2138.NewDevice(0)
+	device, err := st2138.NewDevice(0).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	rec := httptest.NewRecorder()
 	tr.writeDeviceResult(rec, device, http.StatusOK)
 	assertStatus(t, rec, http.StatusOK)
@@ -2224,7 +2285,10 @@ func TestWriteValueResult_WriteError(t *testing.T) {
 }
 
 func TestWriteDeviceResult_WriteError(t *testing.T) {
-	device := *st2138.NewDevice(0)
+	device, err := st2138.NewDevice(0).Build()
+	if err != nil {
+		t.Fatalf("expected no error for builder with valid value, got %v", err)
+	}
 	rec := httptest.NewRecorder()
 	w := &failWriter{ResponseWriter: rec, failOnWrite: true}
 
@@ -2460,8 +2524,13 @@ func TestTransport_ParamInfo(t *testing.T) {
 			if recursive {
 				t.Error("expected recursive=false for unary call")
 			}
+			box := st2138.NewPolyglotText("en", "Text Box")
+			boxText, err := box.Build()
+			if err != nil {
+				t.Fatalf("failed to build polyglot text: %v", err)
+			}
 			return []st2138.ParamInfo{
-				st2138.NewParamInfo("text_box", st2138.NewPolyglotText("en", "Text Box"), st2138.ParamTypeString, "", 0),
+				st2138.NewParamInfo("text_box", boxText, st2138.ParamTypeString, "", 0),
 			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 

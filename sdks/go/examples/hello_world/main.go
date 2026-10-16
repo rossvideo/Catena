@@ -39,6 +39,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"sync"
@@ -75,15 +76,21 @@ func (s *helloWorldState) Set(value string) {
 	s.value = value
 }
 
-func buildDevice() *st2138.Device {
-	return st2138.NewDevice(slot).
+func buildDevice(log *slog.Logger) *st2138.Device {
+	device, err := st2138.NewDevice(slot).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op").
 		WithParam(helloWorldOID, st2138.NewParamString(helloWorld.Get()).
-			WithName(st2138.NewPolyglotText("en", "Hello World")))
+			WithName(st2138.NewPolyglotText("en", "Hello World"))).
+		Build()
+	if err != nil {
+		log.Error("Failed to build device", "error", err)
+		return nil
+	}
+	return &device
 }
 
 func main() {
@@ -120,7 +127,11 @@ func main() {
 		ctx.Logger().Info("GetDevice", "slot", slot)
 		// A small device fits in a single component; large devices may stream
 		// several (see the oneOfEverything example).
-		if err := stream.Send(st2138.ComponentDevice(buildDevice())); err != nil {
+		device := buildDevice(log)
+		if device == nil {
+			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build device")
+		}
+		if err := stream.Send(st2138.ComponentDevice(device)); err != nil {
 			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")

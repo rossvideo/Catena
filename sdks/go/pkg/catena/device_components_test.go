@@ -54,7 +54,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 	// two params, a command, a shared constraint, a menu group with two
 	// menus, and a language pack.
 	componentTestDevice := func() *st2138.Device {
-		return st2138.NewDevice(3).
+		device, err := st2138.NewDevice(3).
 			WithDetailLevel(st2138.DetailLevelFull).
 			WithMultiSetEnabled(true).
 			WithAccessScopes("st2138:mon", "st2138:cfg").
@@ -69,7 +69,11 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 				WithOrder(2).
 				WithMenu("advanced", st2138.NewMenu().WithParamOids("parent")).
 				WithMenu("overview", st2138.NewMenu().WithParamOids("alpha"))).
-			WithLanguagePack("es", "Global Spanish", map[string]string{"greeting": "Hola"})
+			WithLanguagePack("es", "Global Spanish", map[string]string{"greeting": "Hola"}).Build()
+		if err != nil {
+			t.Fatalf("componentTestDevice failed: %v", err)
+		}
+		return &device
 	}
 
 	// Skeleton first, then each component kind in a fixed sequence; chunks
@@ -139,7 +143,11 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 	t.Run("SkeletonOnly", func(t *testing.T) {
 		// A device with nothing to chunk still yields its skeleton.
 		stream := &sliceStream[st2138.DeviceComponent]{}
-		res := DeviceComponentsForRequest(st2138.NewDevice(1), stream)
+		device, err := st2138.NewDevice(1).Build()
+		if err != nil {
+			t.Fatalf("NewDevice(1).Build() failed: %v", err)
+		}
+		res := DeviceComponentsForRequest(&device, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -161,7 +169,10 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 
 	t.Run("NilEntriesSkipped", func(t *testing.T) {
 		// Nil map values must be skipped, not sent or dereferenced.
-		device := st2138.NewDevice(0)
+		device, err := st2138.NewDevice(0).Build()
+		if err != nil {
+			t.Fatalf("NewDevice(0).Build() failed: %v", err)
+		}
 		device.Proto.Params = map[string]*protos.Param{"ghost": nil}
 		device.Proto.Commands = map[string]*protos.Param{"ghost": nil}
 		device.Proto.Constraints = map[string]*protos.Constraint{"ghost": nil}
@@ -174,7 +185,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.DeviceComponent]{}
-		res := DeviceComponentsForRequest(device, stream)
+		res := DeviceComponentsForRequest(&device, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}

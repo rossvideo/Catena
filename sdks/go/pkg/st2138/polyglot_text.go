@@ -39,36 +39,61 @@
 package st2138
 
 import (
-	"log/slog"
+	"errors"
+	"maps"
 )
 
 // PolyglotText maps BCP-47 language codes to display strings.
 type PolyglotText map[string]string
 
-// NewPolyglotText creates a PolyglotText from zero or more (lang, text) pairs.
-// Calling it with no arguments yields an empty PolyglotText, which is useful
+// PolyglotTextBuilder is a builder for PolyglotText.
+type PolyglotTextBuilder struct {
+	polyglot PolyglotText
+	err      error
+}
+
+// Build returns a usable PolyglotText from the builder. If the builder has an error, it
+// returns an empty PolyglotText and the error. Must be called after all builder methods have been called.
+func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
+	if pb.err != nil {
+		return PolyglotText{}, pb.err
+	}
+	return maps.Clone(pb.polyglot), nil
+}
+
+// Err returns the stored error of the builder.
+func (pb *PolyglotTextBuilder) Err() error {
+	return pb.err
+}
+
+// NewPolyglotText creates a PolyglotTextBuilder from zero or more (lang, text) pairs.
+// Calling it with no arguments yields an empty PolyglotTextBuilder, which is useful
 // for building entries up in a loop before passing the result to a builder:
 //
-//	name := NewPolyglotText()
+//	nameBuilder := NewPolyglotText()
 //	for lang := range langs {
-//		name.With(lang, translate(lang, "Hello"))
+//		nameBuilder.With(lang, translate(lang, "Hello"))
 //	}
-func NewPolyglotText(pairs ...string) PolyglotText {
-	p := PolyglotText{}
-	for i := 0; i+1 < len(pairs); i += 2 {
-		p[pairs[i]] = pairs[i+1]
-	}
+//	name, err := nameBuilder.Build()
+func NewPolyglotText(pairs ...string) *PolyglotTextBuilder {
+	pb := &PolyglotTextBuilder{polyglot: PolyglotText{}}
 	if len(pairs)%2 != 0 {
-		slog.Warn("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text",
-			"lang", pairs[len(pairs)-1])
+		pb.err = errors.New("NewPolyglotText: odd number of arguments")
+		return pb
 	}
-	return p
+	for i := 0; i+1 < len(pairs); i += 2 {
+		pb.polyglot[pairs[i]] = pairs[i+1]
+	}
+	return pb
 }
 
 // With returns the PolyglotText with an additional language entry added.
-func (p PolyglotText) With(lang, text string) PolyglotText {
-	p[lang] = text
-	return p
+func (pb *PolyglotTextBuilder) With(lang, text string) *PolyglotTextBuilder {
+	if pb.err != nil {
+		return pb
+	}
+	pb.polyglot[lang] = text
+	return pb
 }
 
 // Get returns the display string for lang, falling back to fallback if not present.
