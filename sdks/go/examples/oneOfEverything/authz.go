@@ -50,7 +50,7 @@ func registerAuthz(srv catena.Server) {
 		authzStatus = "authz_status"
 	)
 
-	makeUserAccess := func(ctx catena.HandlerContext) *st2138.Param {
+	makeUserAccess := func(ctx catena.HandlerContext) (st2138.Param, error) {
 		accessMap := map[string]any{}
 		if ctx.HasWriteScope(st2138.ScopeMon) {
 			accessMap["mon"] = "Read\nWrite"
@@ -80,7 +80,7 @@ func registerAuthz(srv catena.Server) {
 		} else {
 			accessMap["adm"] = "---\n---"
 		}
-		userAccess, err := st2138.NewParamStruct(accessMap).
+		return st2138.NewParamStruct(accessMap).
 			WithReadOnly(true).
 			WithName(st2138.NewPolyglotText("en", "Scopes")).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
@@ -88,14 +88,9 @@ func registerAuthz(srv catena.Server) {
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
 			Build()
-		if err != nil {
-			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
-			return nil
-		}
-		return &userAccess
 	}
 
-	makeRolesTable := func(ctx catena.HandlerContext) *st2138.Param {
+	makeRolesTable := func() (st2138.Param, error) {
 		roles := []map[string]any{
 			{"role": "commissioner", "mon": "Read\nWrite", "op": "Read\nWrite", "cfg": "Read\nWrite", "adm": "Read\nWrite"},
 			{"role": "it-admin", "mon": "Read\nWrite", "op": "Read\n---", "cfg": "Read\nWrite", "adm": "---\n---"},
@@ -104,7 +99,7 @@ func registerAuthz(srv catena.Server) {
 			{"role": "producer", "mon": "Read\nWrite", "op": "Read\n---", "cfg": "Read\n---", "adm": "---\n---"},
 			{"role": "tech-director", "mon": "Read\nWrite", "op": "Read\nWrite", "cfg": "Read\nWrite", "adm": "Read\n---"},
 		}
-		rolesTable, err := st2138.NewParamStructArray(roles).
+		return st2138.NewParamStructArray(roles).
 			WithReadOnly(true).
 			WithParam("role", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Role"))).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
@@ -112,14 +107,9 @@ func registerAuthz(srv catena.Server) {
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
 			Build()
-		if err != nil {
-			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
-			return nil
-		}
-		return &rolesTable
 	}
 
-	makeClaims := func(ctx catena.HandlerContext) *st2138.Param {
+	makeClaims := func(ctx catena.HandlerContext) (st2138.Param, error) {
 		valMap := make([]map[string]any, 0)
 		if ctx.Token != nil {
 			claims, ok := ctx.Token.Claims.(jwt.MapClaims)
@@ -135,17 +125,12 @@ func registerAuthz(srv catena.Server) {
 				}
 			}
 		}
-		claims, err := st2138.NewParamStructArray(valMap).
+		return st2138.NewParamStructArray(valMap).
 			WithReadOnly(true).
 			WithName(st2138.NewPolyglotText("en", "JWT Claims")).
 			WithParam("key", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Key"))).
 			WithParam("value", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Value"))).
 			Build()
-		if err != nil {
-			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
-			return nil
-		}
-		return &claims
 	}
 
 	// Shown in place of the scope/claims params when authz is disabled: the
@@ -213,18 +198,18 @@ func registerAuthz(srv catena.Server) {
 
 		if ctx.HasReadScope(st2138.ScopeMon) {
 			if ctx.AuthzEnabled() {
-				userAccessParam := makeUserAccess(ctx)
-				if userAccessParam == nil {
-					return catena.StatusError(errors.New("failed to make user access param"))
-				}
-				if err := stream.Send(st2138.ComponentParam(userAccess, userAccessParam)); err != nil {
+				userAccessParam, err := makeUserAccess(ctx)
+				if err != nil {
 					return catena.StatusError(err)
 				}
-				claimsParam := makeClaims(ctx)
-				if claimsParam == nil {
-					return catena.StatusError(errors.New("failed to make claims param"))
+				if err := stream.Send(st2138.ComponentParam(userAccess, &userAccessParam)); err != nil {
+					return catena.StatusError(err)
 				}
-				if err := stream.Send(st2138.ComponentParam(claims, claimsParam)); err != nil {
+				claimsParam, err := makeClaims(ctx)
+				if err != nil {
+					return catena.StatusError(err)
+				}
+				if err := stream.Send(st2138.ComponentParam(claims, &claimsParam)); err != nil {
 					return catena.StatusError(err)
 				}
 			} else {
@@ -236,11 +221,11 @@ func registerAuthz(srv catena.Server) {
 					return catena.StatusError(err)
 				}
 			}
-			rolesTableParam := makeRolesTable(ctx)
-			if rolesTableParam == nil {
-				return catena.StatusError(errors.New("failed to make roles table param"))
+			rolesTableParam, err := makeRolesTable()
+			if err != nil {
+				return catena.StatusError(err)
 			}
-			if err := stream.Send(st2138.ComponentParam(rolesTable, rolesTableParam)); err != nil {
+			if err := stream.Send(st2138.ComponentParam(rolesTable, &rolesTableParam)); err != nil {
 				return catena.StatusError(err)
 			}
 		}
@@ -252,19 +237,19 @@ func registerAuthz(srv catena.Server) {
 			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
-					userAccessParam := makeUserAccess(ctx)
-					if userAccessParam == nil {
+					userAccessParam, err := makeUserAccess(ctx)
+					if err != nil {
 						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make user access param")
 					}
-					return catena.Reply(*userAccessParam)
+					return catena.Reply(userAccessParam)
 				}
 			case claims:
 				if ctx.AuthzEnabled() {
-					claimsParam := makeClaims(ctx)
-					if claimsParam == nil {
+					claimsParam, err := makeClaims(ctx)
+					if err != nil {
 						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make claims param")
 					}
-					return catena.Reply(*claimsParam)
+					return catena.Reply(claimsParam)
 				}
 			case authzStatus:
 				if !ctx.AuthzEnabled() {
@@ -275,11 +260,11 @@ func registerAuthz(srv catena.Server) {
 					return catena.Reply(*authzStatusParam)
 				}
 			case rolesTable:
-				rolesTableParam := makeRolesTable(ctx)
-				if rolesTableParam == nil {
+				rolesTableParam, err := makeRolesTable()
+				if err != nil {
 					return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make roles table param")
 				}
-				return catena.Reply(*rolesTableParam)
+				return catena.Reply(rolesTableParam)
 			}
 		}
 		return catena.ReplyError[st2138.Param](catena.StatusCodeNotFound, "param not found")
@@ -290,16 +275,16 @@ func registerAuthz(srv catena.Server) {
 			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
-					userAccessParam := makeUserAccess(ctx)
-					if userAccessParam == nil {
+					userAccessParam, err := makeUserAccess(ctx)
+					if err != nil {
 						return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to make user access param")
 					}
 					return catena.Reply(st2138.Value{Proto: userAccessParam.Proto.Value})
 				}
 			case claims:
 				if ctx.AuthzEnabled() {
-					claimsParam := makeClaims(ctx)
-					if claimsParam == nil {
+					claimsParam, err := makeClaims(ctx)
+					if err != nil {
 						return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to make claims param")
 					}
 					return catena.Reply(st2138.Value{Proto: claimsParam.Proto.Value})
@@ -313,8 +298,8 @@ func registerAuthz(srv catena.Server) {
 					return catena.Reply(st2138.Value{Proto: authzStatusParam.Proto.Value})
 				}
 			case rolesTable:
-				rolesTableParam := makeRolesTable(ctx)
-				if rolesTableParam == nil {
+				rolesTableParam, err := makeRolesTable()
+				if err != nil {
 					return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "failed to make roles table param")
 				}
 				return catena.Reply(st2138.Value{Proto: rolesTableParam.Proto.Value})
