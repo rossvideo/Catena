@@ -412,7 +412,11 @@ func TestWithParam_DeepClone(t *testing.T) {
 	parent := NewParamStruct().WithParam("x", child)
 	p := parent.proto
 
-	child.SetValue(int32(999))
+	childParam, err := child.Build()
+	if err != nil {
+		t.Fatalf("failed to build child param: %v", err)
+	}
+	childParam.SetValue(int32(999))
 	if p.GetValue().GetStructValue().GetFields()["x"].GetInt32Value() != 1 {
 		t.Error("expected sub-param value to be a deep clone, not affected by later mutation")
 	}
@@ -815,30 +819,39 @@ func TestWithValue_MismatchedType(t *testing.T) {
 // --- SetValue / GetValue tests ---
 
 func TestSetValue_OK(t *testing.T) {
-	cp := NewParamInt32(0)
+	cp, err := NewParamInt32(0).Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	res := cp.SetValue(int32(99))
 	if res != nil {
 		t.Fatalf("expected OK, got %v", res)
 	}
-	p := cp.proto
+	p := cp.Proto
 	if p.GetValue().GetInt32Value() != 99 {
 		t.Errorf("expected 99, got %d", p.GetValue().GetInt32Value())
 	}
 }
 
 func TestSetValue_TypeMismatch(t *testing.T) {
-	cp := NewParamInt32(0)
+	cp, err := NewParamInt32(0).Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	res := cp.SetValue("not an int")
 	if !errors.Is(res, ErrInvalid) {
 		t.Errorf("expected ErrInvalid, got %v", res)
 	}
-	if cp.proto.GetValue().GetInt32Value() != 0 {
+	if cp.Proto.GetValue().GetInt32Value() != 0 {
 		t.Error("expected value to remain unchanged after type mismatch")
 	}
 }
 
 func TestSetValue_ConversionError(t *testing.T) {
-	cp := NewParamInt32(0)
+	cp, err := NewParamInt32(0).Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	res := cp.SetValue(struct{}{})
 	if res == nil {
 		t.Error("expected conversion error for unsupported type")
@@ -846,7 +859,10 @@ func TestSetValue_ConversionError(t *testing.T) {
 }
 
 func TestGetValue_OK(t *testing.T) {
-	cp := NewParamString("hello")
+	cp, err := NewParamString("hello").Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	v, res := cp.GetValue()
 	if res != nil {
 		t.Fatalf("expected OK, got %v", res)
@@ -858,7 +874,10 @@ func TestGetValue_OK(t *testing.T) {
 }
 
 func TestGetValue_Nil(t *testing.T) {
-	cp := NewParamStruct()
+	cp, err := NewParamStruct().Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	v, res := cp.GetValue()
 	if res != nil {
 		t.Fatalf("expected OK for nil value, got %v", res)
@@ -869,7 +888,10 @@ func TestGetValue_Nil(t *testing.T) {
 }
 
 func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
-	cp := NewParamStruct()
+	cp, err := NewParamStruct().Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	input := map[string]any{"x": int32(1), "y": int32(2)}
 	res := cp.SetValue(input)
 	if res != nil {
@@ -1250,20 +1272,23 @@ func TestIsConstraintValidForParam_NilKind(t *testing.T) {
 }
 
 func TestSetValue_InvalidThenValid(t *testing.T) {
-	cp := NewParamInt32(10)
+	cp, err := NewParamInt32(10).Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	res := cp.SetValue("wrong type")
 	if !errors.Is(res, ErrInvalid) {
 		t.Errorf("expected ErrInvalid, got %v", res)
 	}
-	if cp.proto.GetValue().GetInt32Value() != 10 {
+	if cp.Proto.GetValue().GetInt32Value() != 10 {
 		t.Error("expected original value to be preserved after failed SetValue")
 	}
 	res = cp.SetValue(int32(20))
 	if res != nil {
 		t.Fatalf("expected OK, got %v", res)
 	}
-	if cp.proto.GetValue().GetInt32Value() != 20 {
-		t.Errorf("expected 20, got %d", cp.proto.GetValue().GetInt32Value())
+	if cp.Proto.GetValue().GetInt32Value() != 20 {
+		t.Errorf("expected 20, got %d", cp.Proto.GetValue().GetInt32Value())
 	}
 }
 
@@ -1463,11 +1488,14 @@ func TestNewParamX_ExtraValuesErrors(t *testing.T) {
 }
 
 func TestSetValue_FailureLeavesValueNil(t *testing.T) {
-	cp := NewParamInt32()
+	cp, err := NewParamInt32().Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
 	if err := cp.SetValue("wrong type"); err == nil {
 		t.Fatal("expected SetValue to fail")
 	}
-	if cp.proto.GetValue() != nil {
+	if cp.Proto.GetValue() != nil {
 		t.Error("expected value to remain nil after failed SetValue")
 	}
 }

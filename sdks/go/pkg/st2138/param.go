@@ -581,25 +581,25 @@ func (cp *ParamBuilder) Err() error {
 
 // SetValue converts v to a proto value via ToProto, validates it against the
 // param type, and sets it.
-func (cp *ParamBuilder) SetValue(v any) error {
+func (cp *Param) SetValue(v any) error {
 	pv, err := ToProto(v)
 	if err != nil {
 		return err
 	}
-	if !isValueValidForParamType(pv, cp.proto.Type) {
-		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.proto.Type.String(), ErrInvalid)
+	if !isValueValidForParamType(pv, cp.Proto.Type) {
+		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.Proto.Type.String(), ErrInvalid)
 	}
-	cp.proto.Value = pv
+	cp.Proto.Value = pv
 	return nil
 }
 
 // GetValue reads the current value and converts it to a native Go type via
 // FromProto. Returns (nil, nil) if no value is set.
-func (cp *ParamBuilder) GetValue() (any, error) {
-	if cp.proto.Value == nil {
+func (cp *Param) GetValue() (any, error) {
+	if cp.Proto.Value == nil {
 		return nil, nil
 	}
-	return FromProto(cp.proto.Value)
+	return FromProto(cp.Proto.Value)
 }
 
 // --- Validation helpers ---
