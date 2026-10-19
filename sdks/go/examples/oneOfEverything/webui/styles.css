@@ -245,6 +245,16 @@ h1 {
 
 .btn.add { background: var(--warning); border-color: var(--warning); color: #000; }
 
+#keycloakTokenBtn {
+    background: #2878D0;
+    border-color: #2878D0;
+    color: #fff;
+}
+
+#keycloakTokenBtn:hover {
+    background: #1f68b8;
+    border-color: #1f68b8;
+}
 .param-row {
     display: flex;
     justify-content: space-between;
@@ -657,6 +667,59 @@ h1 {
 .auth-status:empty { display: none; }
 .auth-status.error { color: var(--danger); }
 
+.auth-help-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.2rem;
+    padding: 0;
+    border: 1px solid var(--text-muted);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.7rem;
+    line-height: 1;
+    vertical-align: 0.05rem;
+    cursor: help;
+}
+
+.auth-help-tip:hover,
+.auth-help-tip:focus {
+    border-color: var(--text-dim);
+    color: var(--text);
+    outline: none;
+}
+
+.auth-help-tip-text {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    z-index: 2;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.auth-help-tip:hover .auth-help-tip-text,
+.auth-help-tip:focus .auth-help-tip-text {
+    display: block;
+}
+
 .auth-actions .btn:disabled {
     opacity: 0.55;
     cursor: wait;
@@ -712,11 +775,10 @@ h1 {
     background: var(--border);
     margin: 0.15rem 0;
 }
-
 .scope-grid {
     display: grid;
     grid-template-columns: 1fr 4.75rem 4.75rem;
-    row-gap: 0.15rem;
+    row-gap: 0.1rem;
     align-items: center;
 }
 
@@ -740,7 +802,7 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 1.75rem;
+    height: 1.5rem;
     margin: 0;
     cursor: pointer;
 }
@@ -755,8 +817,7 @@ h1 {
 
 @media (max-width: 700px) {
     header { grid-template-columns: 1fr; gap: 0.75rem; }
-    .header-titles, .authorize-btn { grid-column: 1; justify-self: center; }
-}
+    .header-titles, .authorize-btn { grid-column: 1; justify-self: center; }}
 
 /* Footer */
 footer {

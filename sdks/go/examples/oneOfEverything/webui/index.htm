@@ -125,8 +125,20 @@
                 <div class="auth-divider"></div>
 
                 <div class="auth-field">
-                    <p class="auth-help">Generate a JWT with the selected scopes. Unsigned tokens work when signature checks are off. Sign in with Keycloak opens the realm login page and applies a signed token for the account you use (demo user <code>username:commissioner</code> / <code>password:demo</code>).</p>
-                    <label class="auth-label">Scope Selection</label>
+                    <p class="auth-help">Signed token with the account's own scopes.
+                        <button type="button" class="auth-help-tip" aria-label="Keycloak setup">?
+                            <span class="auth-help-tip-text" role="tooltip">Requires a Keycloak realm configured for OpenID Connect (OIDC). Pass the realm's issuer URL using --jwt-issuer (or the JWT_ISSUER environment variable). The server uses the issuer's OpenID Connect discovery endpoint to retrieve the keys needed to verify tokens.</span>
+                        </button>
+                    </p>
+                    <div class="auth-actions">
+                        <button type="button" class="btn" id="keycloakTokenBtn">Sign in with Keycloak</button>
+                    </div>
+                </div>
+
+                <div class="auth-divider"></div>
+
+                <div class="auth-field">
+                    <p class="auth-help">Unsigned token with the selected scopes. Only works when signature validation is off.</p>
                     <div class="scope-grid">
                         <span class="scope-corner"></span>
                         <span class="scope-col">Read</span>
@@ -149,9 +161,8 @@
                         <label class="scope-check"><input type="checkbox" data-scope="st2138:adm" data-access="write" checked></label>
                     </div>
                 </div>
-                <div class="auth-actions token-actions">
+                <div class="auth-actions">
                     <button type="button" class="btn add" id="generateTokenBtn">Generate unsigned</button>
-                    <button type="button" class="btn start" id="keycloakTokenBtn">Sign in with Keycloak</button>
                 </div>
             </div>
         </div>

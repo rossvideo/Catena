@@ -561,7 +561,7 @@ async function loadDemoConfig() {
 }
 
 // Session storage for the token and the in-progress Keycloak login.
-TOKEN_STORAGE_KEY = 'st2138-token';
+const TOKEN_STORAGE_KEY = 'st2138-token';
 const KEYCLOAK_CLIENT_ID = 'oneofeverything';
 const PKCE_VERIFIER_KEY = 'st2138-pkce-verifier';
 const OAUTH_STATE_KEY = 'st2138-oauth-state';
@@ -659,18 +659,13 @@ function buildDemoToken() {
     // --jwt-issuer makes the iss claim mandatory, even when the signature is not checked.
     if (demoConfig.jwtIssuer) claims.iss = demoConfig.jwtIssuer;
 
-    const headerJSON = JSON.stringify({ alg: 'ES256', typ: 'JWT' });
+    const headerJSON = JSON.stringify({ alg: 'none', typ: 'JWT' });
     const payloadJSON = JSON.stringify(claims);
 
-    const headerBytes = new TextEncoder().encode(headerJSON);
-    const payloadBytes = new TextEncoder().encode(payloadJSON);
-    const signatureBytes = new TextEncoder().encode('demo');
+    const header = bytesToBase64Url(new TextEncoder().encode(headerJSON));
+    const payload = bytesToBase64Url(new TextEncoder().encode(payloadJSON));
 
-    const header = bytesToBase64Url(headerBytes);
-    const payload = bytesToBase64Url(payloadBytes);
-    const signature = bytesToBase64Url(signatureBytes);
-
-    return header + '.' + payload + '.' + signature;
+    return header + '.' + payload + '.';
 }
 
 function keycloakBrowserIssuer() {
@@ -703,7 +698,6 @@ async function signInWithKeycloak() {
     const challenge = await sha256Base64Url(verifier);
     const state = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)));
     const redirectUri = location.origin + '/';
-    const scope = ['openid', selectedScope()].filter(Boolean).join(' ');
 
     sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
     sessionStorage.setItem(OAUTH_STATE_KEY, state);
@@ -713,7 +707,6 @@ async function signInWithKeycloak() {
     auth.searchParams.set('client_id', KEYCLOAK_CLIENT_ID);
     auth.searchParams.set('response_type', 'code');
     auth.searchParams.set('redirect_uri', redirectUri);
-    auth.searchParams.set('scope', scope);
     auth.searchParams.set('state', state);
     auth.searchParams.set('code_challenge', challenge);
     auth.searchParams.set('code_challenge_method', 'S256');
