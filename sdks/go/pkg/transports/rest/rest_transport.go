@@ -51,7 +51,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
@@ -61,16 +60,13 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type FallbackHandler func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult)
-
 type Transport struct {
-	mu              sync.Mutex
-	listener        net.Listener // kept so tests can read the actual bound addr after Start (needed when Port is 0)
-	server          *http.Server
-	mux             *http.ServeMux
-	runtime         catena.ServerRuntime
-	fallbackHandler FallbackHandler
-	log             *slog.Logger
+	listener net.Listener // kept so tests can read the actual bound addr after Start (needed when Port is 0)
+	server   *http.Server
+	mux      *http.ServeMux
+	runtime  catena.ServerRuntime
+	fallback http.HandlerFunc
+	log      *slog.Logger
 
 	port                int
 	tls                 config.TLSOptions
@@ -88,6 +84,7 @@ func NewTransport(cfg Options) *Transport {
 		port:                cfg.Port,
 		tls:                 cfg.TLS,
 		mux:                 http.NewServeMux(),
+		fallback:            cfg.Fallback,
 		log:                 slog.New(slog.DiscardHandler),
 		allowedOrigins:      cfg.AllowedOrigins,
 		extraAllowedHeaders: cfg.ExtraAllowedHeaders,
@@ -191,12 +188,6 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	// a timely manner.
 	err := <-errCh
 	return err
-}
-
-func (t *Transport) RegisterFallbackHandler(handler FallbackHandler) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.fallbackHandler = handler
 }
 
 func (t *Transport) retrieveMetadataFromRequest(r *http.Request) catena.TransportContext {
@@ -514,9 +505,8 @@ func (t *Transport) registerRoutes() {
 	// Catch-all for 404 - must be registered last
 	t.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		t.log.Debug("Fallback handler", "path", r.URL.Path, "method", r.Method)
-		if t.fallbackHandler != nil {
-			val, res := t.fallbackHandler(w, r)
-			t.writeHTTPResult(w, res, val)
+		if t.fallback != nil {
+			t.fallback(w, r)
 			return
 		}
 		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found")

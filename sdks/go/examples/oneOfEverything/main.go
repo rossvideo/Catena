@@ -425,13 +425,11 @@ func main() {
 	}
 
 	if options.UseRest {
-		restTransport := rest.NewTransport(options.Rest)
-
-		// RegisterFallbackHandler is for custom HTTP routes that are not part of
-		// the Catena API. SDK endpoints are still handled by the REST transport;
-		// this fallback only serves the demo UI and an asset index convenience
-		// route when no SDK route matched.
-		restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
+		// Fallback is for custom HTTP routes that are not part of the Catena API.
+		// SDK endpoints are still handled by the REST transport; this handler only
+		// serves the demo UI and an asset index convenience route when no SDK
+		// route matched. It must be set before NewTransport.
+		options.Rest.Fallback = func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {
@@ -446,7 +444,7 @@ func main() {
 				})
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(assetList)
-				return catena.Reply(st2138.Value{})
+				return
 			}
 
 			fileMap := map[string]struct {
@@ -461,16 +459,17 @@ func main() {
 			if file, ok := fileMap[r.URL.Path]; ok {
 				data, err := webFS.ReadFile(file.path)
 				if err != nil {
-					return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "file not found: "+r.URL.Path)
+					http.Error(w, "file not found: "+r.URL.Path, http.StatusNotFound)
+					return
 				}
 				w.Header().Set("Content-Type", file.contentType)
 				w.Write(data)
-				return catena.Reply(st2138.Value{})
+				return
 			}
-			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found: "+r.URL.Path)
-		})
+			http.Error(w, "endpoint not found: "+r.URL.Path, http.StatusNotFound)
+		}
 
-		if err := srv.RegisterTransport(restTransport); err != nil {
+		if err := srv.RegisterTransport(rest.NewTransport(options.Rest)); err != nil {
 			log.Error("Failed to register REST transport", "error", err)
 			os.Exit(1)
 		}

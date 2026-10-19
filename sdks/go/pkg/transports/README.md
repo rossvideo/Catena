@@ -62,15 +62,15 @@ func main() {
         panic(err)
     }
 
-    restTransport := rest.NewTransport(rest.DefaultOptions())
-    if err := srv.RegisterTransport(restTransport); err != nil {
+    restOpts := rest.DefaultOptions()
+    // Optional custom HTTP routes that match no ST 2138 route.
+    // Set before NewTransport; routes are registered during construction.
+    restOpts.Fallback = func(w http.ResponseWriter, r *http.Request) {
+        http.Error(w, "endpoint not found", http.StatusNotFound)
+    }
+    if err := srv.RegisterTransport(rest.NewTransport(restOpts)); err != nil {
         panic(err)
     }
-
-    // Optional custom fallback endpoints on REST.
-    restTransport.RegisterFallbackHandler(func(w http.ResponseWriter, r *http.Request) (st2138.Value, catena.StatusResult) {
-        return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "endpoint not found")
-    })
 
     ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
     defer stop()

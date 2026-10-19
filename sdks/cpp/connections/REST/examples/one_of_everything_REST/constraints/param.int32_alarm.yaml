@@ -6,17 +6,37 @@ constraint:
   alarm_table:
     alarms:
       - bit_value: 0
-        severity: INFO
-        description: { display_strings: { en: "Info" } }
+        severity: 6 # Info
+        description: { display_strings: { 
+          en: "Info", 
+          fr: "Information", 
+          es: "Información", 
+          ja: "情報" } }
       - bit_value: 1
-        severity: WARNING
-        description: { display_strings: { en: "Warning" } }
+        severity: 4 # Warning
+        description: { display_strings: { 
+          en: "Warning", 
+          fr: "Avertissement", 
+          es: "Advertencia", 
+          ja: "警告" } }
       - bit_value: 2
-        severity: SEVERE
-        description: { display_strings: { en: "Severe" } }
+        severity: 2 # Critical
+        description: { display_strings: { 
+          en: "Critical", 
+          fr: "Grave", 
+          es: "Grave", 
+          ja: "重大" } }
       - bit_value: 3
-        severity: UNKNOWN
-        description: { display_strings: { en: "Unknown" } }
+        severity: 3 # Error
+        description: { display_strings: { 
+          en: "Error", 
+          fr: "Erreur", 
+          es: "Error", 
+          ja: "エラー" } }
       - bit_value: 4
-        severity: REFUSED
-        description: { display_strings: { en: "Refused" } }
+        severity: 0 # Emergency
+        description: { display_strings: { 
+          en: "Emergency", 
+          fr: "Urgence", 
+          es: "Emergencia", 
+          ja: "緊急" } }

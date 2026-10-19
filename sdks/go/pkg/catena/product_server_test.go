@@ -68,8 +68,8 @@ func expectedProductParam() *protos.Param {
 			ProductOidVendor:           {Type: protos.ParamType_STRING, ReadOnly: true},
 			ProductOidVersion:          {Type: protos.ParamType_STRING, ReadOnly: true},
 			ProductOidSerialNumber:     {Type: protos.ParamType_STRING, ReadOnly: true},
-			ProductOidCatenaSDKVersion: {Type: protos.ParamType_STRING, ReadOnly: true},
-			ProductOidCatenaSDK:        {Type: protos.ParamType_STRING, ReadOnly: true},
+			ProductOidST2138SDKVersion: {Type: protos.ParamType_STRING, ReadOnly: true},
+			ProductOidST2138SDK:        {Type: protos.ParamType_STRING, ReadOnly: true},
 		},
 		Value: &protos.Value{
 			Kind: &protos.Value_StructValue{
@@ -79,8 +79,8 @@ func expectedProductParam() *protos.Param {
 						ProductOidVendor:           {Kind: &protos.Value_StringValue{StringValue: "Ross Video"}},
 						ProductOidVersion:          {Kind: &protos.Value_StringValue{StringValue: "1.0"}},
 						ProductOidSerialNumber:     {Kind: &protos.Value_StringValue{StringValue: "SN-12345"}},
-						ProductOidCatenaSDKVersion: {Kind: &protos.Value_StringValue{StringValue: SDKVersion}},
-						ProductOidCatenaSDK:        {Kind: &protos.Value_StringValue{StringValue: CatenaSDKURL}},
+						ProductOidST2138SDKVersion: {Kind: &protos.Value_StringValue{StringValue: SDKVersion}},
+						ProductOidST2138SDK:        {Kind: &protos.Value_StringValue{StringValue: ST2138SDKURL}},
 					},
 				},
 			},
@@ -210,8 +210,8 @@ func TestServer_GetValue_Product(t *testing.T) {
 	cases := map[string]string{
 		"product/name":               "Camera",
 		"product/serial_number":      "SN-12345",
-		"product/catena_sdk":         CatenaSDKURL,
-		"product/catena_sdk_version": SDKVersion,
+		"product/st2138_sdk":         ST2138SDKURL,
+		"product/st2138_sdk_version": SDKVersion,
 	}
 	for fqoid, want := range cases {
 		value, res := srv.InvokeGetValueHandler(0, fqoid, TransportContext{})

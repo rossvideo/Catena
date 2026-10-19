@@ -1,0 +1,8 @@
+# Intentionally invalid: `bad` uses a param type that is not in the schema.
+slot: 0
+detail_level: FULL
+access_scopes: ["st2138:op"]
+default_scope: st2138:op
+params:
+  bad:
+    type: NOT_A_TYPE
