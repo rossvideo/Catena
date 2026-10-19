@@ -31,8 +31,10 @@
 package catena
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
@@ -287,6 +289,47 @@ func TestConnectionPropsStopWhenNotRunning(t *testing.T) {
 	c := NewConnectionProps(config.DefaultDashboardOptions())
 	if err := c.Stop(context.Background()); err != nil {
 		t.Errorf("Stop() on idle server error: %v", err)
+	}
+}
+
+func TestConnectionPropsLogger(t *testing.T) {
+	// Create test logger.
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
+	// Create connection props server with the test logger.
+	opts := config.DefaultDashboardOptions()
+	opts.Logger = log
+	NewConnectionProps(opts) // Logs during creation
+
+	// Verify the logger received the log record.
+	out := buf.String()
+	if !strings.Contains(out, "Connection props server constructed") {
+		t.Fatalf("expected log record, got:\n%s", out)
+	}
+	// Verify the log record contains the component attribute.
+	if !strings.Contains(out, `"component":"connection-props"`) {
+		t.Fatalf("expected component=connection-props, got %s", out)
+	}
+
+}
+
+func TestConnectionPropsLoggerSilent(t *testing.T) {
+	var buf bytes.Buffer
+	defaultLogger := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo})))
+	defer slog.SetDefault(defaultLogger)
+
+	// Create connection props server with no logger.
+	opts := config.DefaultDashboardOptions()
+	opts.Logger = nil
+	c := NewConnectionProps(opts)
+
+	if c.log.Handler() != slog.DiscardHandler {
+		t.Fatalf("expected server to use the default logger")
+	}
+	if strings.Contains(buf.String(), "Connection props server constructed") {
+		t.Fatalf("expected no log record, got:\n%s", buf.String())
 	}
 }
 

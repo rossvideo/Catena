@@ -34,16 +34,17 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Christian Twarog (christian.twarog@rossvideo.com)
  * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-05-14
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-09-23
  */
 
 package catena
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -68,6 +69,7 @@ type connectionQueue struct {
 	maxConnections int
 	shuttingDown   bool
 	cond           *sync.Cond
+	log            *slog.Logger
 }
 
 type connectionQueueInterface interface {
@@ -85,10 +87,15 @@ var _ connectionQueueInterface = (*connectionQueue)(nil)
 
 // newConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
-func newConnectionQueue(maxConnections int) connectionQueueInterface {
+func newConnectionQueue(maxConnections int, log *slog.Logger) connectionQueueInterface {
 	cq := &connectionQueue{
 		connections:    make(map[int]*Connection),
 		maxConnections: maxConnections,
+	}
+	if log == nil {
+		cq.log = slog.New(slog.DiscardHandler)
+	} else {
+		cq.log = log.With("component", "connection-queue")
 	}
 	cq.cond = sync.NewCond(&cq.mu)
 	return cq
@@ -130,10 +137,10 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		select {
 		case conn.Updates <- initialUpdate:
 		default:
-			logger.Warning("Streaming channel full, dropping initial update", "connID", cq.nextConnID)
+			cq.log.Warn("Streaming channel full, dropping initial update", "connID", cq.nextConnID)
 		}
 	}
-	logger.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
+	cq.log.Info("Streaming connection registered", "connID", cq.nextConnID, "total", len(cq.connections))
 	return conn, StatusWithCode(StatusCodeOk, "Connection registered successfully")
 }
 
@@ -147,7 +154,7 @@ func (cq *connectionQueue) deregisterConnection(connID int) {
 		delete(cq.connections, connID)
 		conn.HandlerContext.release()
 		cq.cond.Broadcast()
-		logger.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
+		cq.log.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
 	}
 }
 
@@ -165,7 +172,7 @@ func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scope string
 		select {
 		case conn.Updates <- update:
 		default:
-			logger.Warning("Streaming channel full, dropping update", "connID", connID)
+			cq.log.Warn("Streaming channel full, dropping update", "connID", connID)
 		}
 	}
 }
@@ -200,7 +207,7 @@ func (cq *connectionQueue) shutdown(ctx context.Context) {
 	}
 	wg.Wait()
 
-	logger.Info("All streaming connections shut down")
+	cq.log.Info("All streaming connections shut down")
 }
 
 // shutdownOwner signals all connections owned by the specified owner to stop and waits for them to deregister.
@@ -243,7 +250,7 @@ func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *C
 		case <-ctx.Done():
 			cq.mu.Lock()
 			defer cq.mu.Unlock()
-			logger.Warning("Connection did not shut down gracefully, forcing close", "connID", connection.ID)
+			cq.log.Warn("Connection did not shut down gracefully, forcing close", "connID", connection.ID)
 			delete(cq.connections, connection.ID)
 			connection.HandlerContext.release()
 			cq.cond.Broadcast()

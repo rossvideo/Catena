@@ -34,7 +34,8 @@
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
  * @author Andrew Brown (andrew.brown@rossvideo.com)
- * @date 2026-05-14
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @date 2026-09-23
  */
 
 package catena
@@ -43,6 +44,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
 	"strconv"
 	"strings"
@@ -50,7 +52,6 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
-	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -512,6 +513,7 @@ type ServerRuntime interface {
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
+	Logger() *slog.Logger
 }
 
 var _ Server = (*server)(nil)
@@ -519,6 +521,8 @@ var _ ServerRuntime = (*server)(nil)
 
 type server struct {
 	options                    ServerOptions
+	log                        *slog.Logger // To be distributed to other components
+	serverLogger               *slog.Logger // To be used for server-specific logging
 	mu                         sync.Mutex
 	ctx                        context.Context
 	ctxCancel                  context.CancelFunc
@@ -561,7 +565,12 @@ type server struct {
 func NewServer(opts config.ServerOptions) (Server, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	log := logger.GetNamed("server") // temporary fix to get the server logger, will remove when logger injection pr is pushed
+	var log *slog.Logger
+	if opts.Logger == nil {
+		log = slog.New(slog.DiscardHandler)
+	} else {
+		log = opts.Logger
+	}
 
 	var validator jwtValidatorInterface
 	if opts.AuthzEnabled {
@@ -575,6 +584,8 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 
 	s := &server{
 		options:                    opts,
+		log:                        log,
+		serverLogger:               log.With("component", "server"),
 		ctx:                        ctx,
 		ctxCancel:                  cancel,
 		authzEnabled:               opts.AuthzEnabled,
@@ -601,7 +612,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		heartbeatHandlers:          make(map[uint16]HeartbeatHandler),
 		productStructs:             make(map[uint16]ProductStruct),
 		accessHandler:              allowAllAccessHandler,
-		connectionQueue:            newConnectionQueue(opts.MaxConnections),
+		connectionQueue:            newConnectionQueue(opts.MaxConnections, log),
 		transports:                 []Transport{},
 	}
 
@@ -675,7 +686,7 @@ func (s *server) DeregisterTransport(ctx context.Context, transport Transport) e
 	// Shutdown may block while draining work; call it outside the server lock.
 	err := transport.Shutdown(shutdownCtx)
 	if err != nil {
-		logger.Error("Error shutting down transport", "error", err)
+		s.serverLogger.Error("Error shutting down transport", "error", err)
 	}
 
 	// drain any remaining connections owned by this transport
@@ -714,7 +725,7 @@ func (s *server) Shutdown(ctx context.Context) {
 	for _, t := range transports {
 		err := t.Shutdown(shutdownCtx)
 		if err != nil {
-			logger.Error("Error shutting down transport", "error", err)
+			s.serverLogger.Error("Error shutting down transport", "error", err)
 		}
 	}
 
@@ -726,6 +737,10 @@ func (s *server) Shutdown(ctx context.Context) {
 
 func (s *server) IsDev() bool {
 	return s.options.IsDev
+}
+
+func (s *server) Logger() *slog.Logger {
+	return s.log
 }
 
 // parseTransportContext parses the transport context and returns a HandlerContext.
@@ -744,7 +759,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 
 	token, err := s.jwtValidator.validateJwt(accessToken)
 	if err != nil {
-		logger.Warning("Failed to validate access token", "error", err)
+		s.serverLogger.Warn("Failed to validate access token", "error", err)
 		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
 	}
 
@@ -899,7 +914,7 @@ func invokeHandler[H, T any](
 
 			//TODO: add default handler lookup when custom default handlers are supported
 			if !ok {
-				logger.Warning("no handler registered for slot", "endpoint", endpoint, "slot", slot)
+				s.serverLogger.Warn("no handler registered for slot", "endpoint", endpoint, "slot", slot)
 				return zero, StatusWithCode(StatusCodeNotFound, notFound)
 			}
 
@@ -952,6 +967,7 @@ func (s *server) realInvokeGate(transportContext TransportContext, endpoint Endp
 	ctx, cancel := s.requestContext(transportContext.Ctx)
 	handlerContext.ctx = ctx
 	handlerContext.ctxCancel = cancel
+	handlerContext.setLogger(s.log, endpoint)
 
 	granted := false
 	if writeAccess {
@@ -1122,7 +1138,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 			// without a GetValue handler this is the normal path on every request,
 			// so it must not spam Info.
 			if hasParam {
-				logger.Debug("GetValue not registered; deriving from GetParam handler", "slot", slot, "fqoid", fqoid)
+				s.serverLogger.Debug("GetValue not registered; deriving from GetParam handler", "slot", slot, "fqoid", fqoid)
 				param, res := paramHandler(slot, fqoid, ctx)
 				if res.IsError() {
 					return st2138.Value{}, res
@@ -1133,7 +1149,7 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 				return Reply(st2138.Value{Proto: param.Proto.GetValue()})
 			}
 
-			logger.Warning("no handler registered for slot", "endpoint", EndpointGetValue, "slot", slot)
+			s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointGetValue, "slot", slot)
 			return st2138.Value{}, StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 		})
 }
@@ -1167,7 +1183,7 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 			s.mu.Unlock()
 
 			if !ok {
-				logger.Warning("no handler registered for slot", "endpoint", EndpointGetParam, "slot", slot)
+				s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointGetParam, "slot", slot)
 				return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)))
 			}
 			return handler(slot, fqoid, ctx)
@@ -1355,7 +1371,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 			// slots without a ParamInfo handler this is the normal path on every
 			// request, so it must not spam Info.
 			if hasParam && oidPrefix != "" {
-				logger.Debug("ParamInfo not registered; deriving from GetParam handler", "slot", slot, "oidPrefix", oidPrefix)
+				s.serverLogger.Debug("ParamInfo not registered; deriving from GetParam handler", "slot", slot, "oidPrefix", oidPrefix)
 				param, res := paramHandler(slot, oidPrefix, ctx)
 				if res.IsError() {
 					return struct{}{}, res
@@ -1363,7 +1379,7 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 				return struct{}{}, ParamInfosFromParam(oidPrefix, &param, recursive, stream)
 			}
 
-			logger.Warning("no handler registered for slot", "endpoint", EndpointParamInfo, "slot", slot)
+			s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointParamInfo, "slot", slot)
 			return struct{}{}, StatusWithCode(StatusCodeNotFound, "ParamInfo "+oidPrefix+" not found at slot "+strconv.Itoa(int(slot)))
 		})
 	return res
@@ -1521,7 +1537,7 @@ func (s *server) ConnectionCount() int {
 func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope string) {
 	protoValue, err := st2138.ToProto(value)
 	if err != nil {
-		logger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
+		s.serverLogger.Error("BroadcastUpdate: failed to convert value to proto", "error", err)
 		return
 	}
 	update := &protos.PushUpdates{
@@ -1544,7 +1560,7 @@ func (s *server) BroadcastUpdate(slot uint16, oid string, value any, scope strin
 // If the interval is invalid (zero or negative), the existing heartbeat is preserved.
 func (s *server) StartHeartbeat(interval time.Duration) {
 	if interval <= 0 {
-		logger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
+		s.serverLogger.Error("StartHeartbeat: invalid interval, heartbeat not changed", "interval", interval)
 		return
 	}
 
@@ -1558,7 +1574,7 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						logger.Error("panic in heartbeat handler", "slot", slot, "error", r)
+						s.serverLogger.Error("panic in heartbeat handler", "slot", slot, "error", r)
 					}
 				}()
 				handler(slot)
@@ -1585,9 +1601,9 @@ func (s *server) StartHeartbeat(interval time.Duration) {
 	s.mu.Unlock()
 
 	if err != nil {
-		logger.Error("Heartbeat failed to start", "interval", interval, "error", err)
+		s.serverLogger.Error("Heartbeat failed to start", "interval", interval, "error", err)
 	} else {
-		logger.Info("Heartbeat started", "interval", interval)
+		s.serverLogger.Info("Heartbeat started", "interval", interval)
 	}
 }
 
@@ -1600,6 +1616,6 @@ func (s *server) StopHeartbeat() {
 
 	if hb != nil {
 		hb.Stop()
-		logger.Info("Heartbeat stopped")
+		s.serverLogger.Info("Heartbeat stopped")
 	}
 }
