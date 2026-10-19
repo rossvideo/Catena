@@ -82,11 +82,11 @@ func registerAuthz(srv catena.Server) {
 		}
 		return st2138.NewParamStruct(accessMap).
 			WithReadOnly(true).
-			WithName(st2138.NewPolyglotText("en", "Scopes")).
-			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
-			WithParam("op", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Operate"))).
-			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
-			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
+			WithName(st2138.PolyglotText{"en": "Scopes"}).
+			WithParam("mon", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Monitor"})).
+			WithParam("op", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Operate"})).
+			WithParam("cfg", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Configure"})).
+			WithParam("adm", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Administer"})).
 			Build()
 	}
 
@@ -101,11 +101,11 @@ func registerAuthz(srv catena.Server) {
 		}
 		return st2138.NewParamStructArray(roles).
 			WithReadOnly(true).
-			WithParam("role", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Role"))).
-			WithParam("mon", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Monitor"))).
-			WithParam("op", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Operate"))).
-			WithParam("cfg", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Configure"))).
-			WithParam("adm", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Administer"))).
+			WithParam("role", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Role"})).
+			WithParam("mon", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Monitor"})).
+			WithParam("op", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Operate"})).
+			WithParam("cfg", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Configure"})).
+			WithParam("adm", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Administer"})).
 			Build()
 	}
 
@@ -127,9 +127,9 @@ func registerAuthz(srv catena.Server) {
 		}
 		return st2138.NewParamStructArray(valMap).
 			WithReadOnly(true).
-			WithName(st2138.NewPolyglotText("en", "JWT Claims")).
-			WithParam("key", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Key"))).
-			WithParam("value", st2138.NewParamString().WithName(st2138.NewPolyglotText("en", "Value"))).
+			WithName(st2138.PolyglotText{"en": "JWT Claims"}).
+			WithParam("key", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Key"})).
+			WithParam("value", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Value"})).
 			Build()
 	}
 
@@ -138,7 +138,7 @@ func registerAuthz(srv catena.Server) {
 	makeAuthzStatus := func(ctx catena.HandlerContext) *st2138.Param {
 		authzStatus, err := st2138.NewParamString("Authorization is disabled; scope information cannot be shown.").
 			WithReadOnly(true).
-			WithName(st2138.NewPolyglotText("en", "Authorization")).
+			WithName(st2138.PolyglotText{"en": "Authorization"}).
 			Build()
 		if err != nil {
 			ctx.Logger().Warn("expected no error for builder with valid value", "error", err.Error())
@@ -159,8 +159,8 @@ func registerAuthz(srv catena.Server) {
 			WithDefaultScope(st2138.ScopeMon).
 			WithMultiSetEnabled(false).
 			WithAccessScopes(st2138.ScopeMon, st2138.ScopeOp, st2138.ScopeCfg, st2138.ScopeAdm).
-			WithMenuGroup("status", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Status"))).
-			WithMenuGroup("config", st2138.NewMenuGroup().WithName(st2138.NewPolyglotText("en", "Config"))).
+			WithMenuGroup("status", st2138.NewMenuGroup().WithName(st2138.PolyglotText{"en": "Status"})).
+			WithMenuGroup("config", st2138.NewMenuGroup().WithName(st2138.PolyglotText{"en": "Config"})).
 			Build()
 		if err != nil {
 			return catena.StatusError(err)
@@ -176,7 +176,7 @@ func registerAuthz(srv catena.Server) {
 		if !ctx.AuthzEnabled() {
 			loginOids = []string{authzStatus}
 		}
-		loginMenu, err := st2138.NewMenu().WithName(st2138.NewPolyglotText("en", "Login")).WithParamOids(loginOids...).Build()
+		loginMenu, err := st2138.NewMenu().WithName(st2138.PolyglotText{"en": "Login"}).WithParamOids(loginOids...).Build()
 		if err != nil {
 			return catena.StatusError(err)
 		}
@@ -186,7 +186,7 @@ func registerAuthz(srv catena.Server) {
 			return catena.StatusError(err)
 		}
 		// hardcode so we're not at the mercy of map iteration order
-		rolesMenu, err := st2138.NewMenu().WithName(st2138.NewPolyglotText("en", "Roles")).WithParamOids(rolesTable).Build()
+		rolesMenu, err := st2138.NewMenu().WithName(st2138.PolyglotText{"en": "Roles"}).WithParamOids(rolesTable).Build()
 		if err != nil {
 			return catena.StatusError(err)
 		}

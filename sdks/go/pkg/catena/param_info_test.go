@@ -179,7 +179,7 @@ func TestParamInfosFromParam(t *testing.T) {
 	t.Run("SpecificNonRecursive", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
 		volume, err := st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Volume")).Build()
+			WithName(st2138.PolyglotText{"en": "Volume"}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
@@ -199,7 +199,7 @@ func TestParamInfosFromParam(t *testing.T) {
 		// fully-qualified oids, mirroring ParamInfosForRequest's NestedRecursive.
 		stream := &sliceStream[st2138.ParamInfo]{}
 		parent, err := st2138.NewParamStruct().
-			WithName(st2138.NewPolyglotText("en", "Parent")).
+			WithName(st2138.PolyglotText{"en": "Parent"}).
 			WithParam("child", st2138.NewParamString("")).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
@@ -320,10 +320,10 @@ func TestFindParamDescriptor_EmptyOid(t *testing.T) {
 func testDeviceDefinition(t *testing.T) *st2138.Device {
 	device, err := st2138.NewDevice(0).
 		WithParam("parent", st2138.NewParamStruct().
-			WithName(st2138.NewPolyglotText("en", "Parent")).
+			WithName(st2138.PolyglotText{"en": "Parent"}).
 			WithParam("child", st2138.NewParamString(""))).
 		WithParam("alpha", st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Alpha"))).
+			WithName(st2138.PolyglotText{"en": "Alpha"})).
 		WithParam("numbers", st2138.NewParamInt32Array([]int32{1, 2, 3})).
 		WithParam("floats", st2138.NewParamFloat32Array([]float32{1.5, 2.5})).
 		WithParam("strings", st2138.NewParamStringArray([]string{"a", "b", "c", "d"})).

@@ -65,7 +65,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 			WithCommand("go", st2138.NewParamEmpty()).
 			WithConstraint("percent", st2138.NewConstraintInt32Range(0, 100, 1)).
 			WithMenuGroup("status", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Status")).
+				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(2).
 				WithMenu("advanced", st2138.NewMenu().WithParamOids("parent")).
 				WithMenu("overview", st2138.NewMenu().WithParamOids("alpha"))).

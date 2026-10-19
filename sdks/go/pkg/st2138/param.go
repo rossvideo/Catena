@@ -292,24 +292,15 @@ func NewParamFromValue(v Value) *ParamBuilder {
 
 // --- Chainable With* methods ---
 
-func (cp *ParamBuilder) WithName(name *PolyglotTextBuilder) *ParamBuilder {
+func (cp *ParamBuilder) WithName(name PolyglotText) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	if name == nil {
+	if len(name) == 0 {
 		cp.err = fmt.Errorf("WithName: name cannot be nil")
 		return cp
 	}
-	p, err := name.Build()
-	if err != nil {
-		cp.err = err
-		return cp
-	}
-	if len(p) == 0 {
-		cp.err = fmt.Errorf("WithName: failed to build PolyglotText: returned empty PolyglotText")
-		return cp
-	}
-	cp.proto.Name = &protos.PolyglotText{DisplayStrings: p}
+	cp.proto.Name = name.Proto()
 	return cp
 }
 
@@ -507,24 +498,15 @@ func (cp *ParamBuilder) WithResponse(response bool) *ParamBuilder {
 	return cp
 }
 
-func (cp *ParamBuilder) WithHelp(help *PolyglotTextBuilder) *ParamBuilder {
+func (cp *ParamBuilder) WithHelp(help PolyglotText) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	if help == nil {
+	if len(help) == 0 {
 		cp.err = fmt.Errorf("WithHelp: help cannot be nil")
 		return cp
 	}
-	p, err := help.Build()
-	if err != nil {
-		cp.err = err
-		return cp
-	}
-	if len(p) == 0 {
-		cp.err = fmt.Errorf("WithHelp: failed to build PolyglotText: returned nil PolyglotText")
-		return cp
-	}
-	cp.proto.Help = &protos.PolyglotText{DisplayStrings: p}
+	cp.proto.Help = help.Proto()
 	return cp
 }
 

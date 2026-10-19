@@ -121,10 +121,10 @@ func slotZeroSkeleton() *st2138.DeviceBuilder {
 func slotZeroMenus() map[string]*st2138.MenuBuilder {
 	return map[string]*st2138.MenuBuilder{
 		"status/status": st2138.NewMenu().
-			WithName(st2138.NewPolyglotText("en", "Status")).
+			WithName(st2138.PolyglotText{"en": "Status"}).
 			WithParamOids("product", "counter", "running"),
 		"config/control": st2138.NewMenu().
-			WithName(st2138.NewPolyglotText("en", "Control")).
+			WithName(st2138.PolyglotText{"en": "Control"}).
 			WithCommandOids("start", "stop", "add10", "reset"),
 	}
 }
@@ -133,10 +133,10 @@ func slotZeroMenus() map[string]*st2138.MenuBuilder {
 // If withMenus is true, the menus will be added to the device builder as well.
 func applySlotZeroMenuGroups(device *st2138.DeviceBuilder, withMenus bool) *st2138.DeviceBuilder {
 	status := st2138.NewMenuGroup().
-		WithName(st2138.NewPolyglotText("en", "Status")).
+		WithName(st2138.PolyglotText{"en": "Status"}).
 		WithOrder(0)
 	config := st2138.NewMenuGroup().
-		WithName(st2138.NewPolyglotText("en", "Configuration")).
+		WithName(st2138.PolyglotText{"en": "Configuration"}).
 		WithOrder(1)
 	if withMenus {
 		menus := slotZeroMenus()
@@ -159,13 +159,13 @@ func slotZeroParams(counter *CounterState) map[string]*st2138.ParamBuilder {
 func slotZeroCommands() map[string]*st2138.ParamBuilder {
 	return map[string]*st2138.ParamBuilder{
 		"start": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Start Counter")),
+			WithName(st2138.PolyglotText{"en": "Start Counter"}),
 		"stop": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Stop Counter")),
+			WithName(st2138.PolyglotText{"en": "Stop Counter"}),
 		"add10": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Add 10 to Counter")),
+			WithName(st2138.PolyglotText{"en": "Add 10 to Counter"}),
 		"reset": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Reset Counter")),
+			WithName(st2138.PolyglotText{"en": "Reset Counter"}),
 	}
 }
 
@@ -244,24 +244,24 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 			WithDefaultScope("st2138:mon").
 			WithParam("resolution", st2138.NewParamString(resolution).
-				WithName(st2138.NewPolyglotText("en", "Resolution"))).
+				WithName(st2138.PolyglotText{"en": "Resolution"})).
 			WithParam("brightness", st2138.NewParamInt32(brightness).
-				WithName(st2138.NewPolyglotText("en", "Brightness"))).
+				WithName(st2138.PolyglotText{"en": "Brightness"})).
 			WithParam("contrast", st2138.NewParamInt32(contrast).
-				WithName(st2138.NewPolyglotText("en", "Contrast"))).
+				WithName(st2138.PolyglotText{"en": "Contrast"})).
 			WithParam("saturation", st2138.NewParamInt32(saturation).
-				WithName(st2138.NewPolyglotText("en", "Saturation"))).
+				WithName(st2138.PolyglotText{"en": "Saturation"})).
 			WithMenuGroup("status", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Status")).
+				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).
 				WithMenu("status", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Status")).
+					WithName(st2138.PolyglotText{"en": "Status"}).
 					WithParamOids("resolution"))).
 			WithMenuGroup("config", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Configuration")).
+				WithName(st2138.PolyglotText{"en": "Configuration"}).
 				WithOrder(1).
 				WithMenu("picture", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Picture")).
+					WithName(st2138.PolyglotText{"en": "Picture"}).
 					WithParamOids("brightness", "contrast", "saturation"))).
 			Build()
 		if err != nil {
@@ -301,50 +301,50 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 			WithDefaultScope("st2138:op").
 			WithParam("volume", st2138.NewParamInt32(volume).
-				WithName(st2138.NewPolyglotText("en", "Volume"))).
+				WithName(st2138.PolyglotText{"en": "Volume"})).
 			WithParam("muted", st2138.NewParamInt32(muted).
-				WithName(st2138.NewPolyglotText("en", "Muted"))).
+				WithName(st2138.PolyglotText{"en": "Muted"})).
 			WithParam("device_name", st2138.NewParamString(deviceName).
-				WithName(st2138.NewPolyglotText("en", "Device Name"))).
+				WithName(st2138.PolyglotText{"en": "Device Name"})).
 			// NewParamStruct auto-creates the valueless "number" and "text"
 			// field descriptors from the values map.
 			WithParam("struct_example", st2138.NewParamStruct(map[string]any{
 				"number": structNumber,
 				"text":   structText,
 			}).
-				WithName(st2138.NewPolyglotText("en", "Struct Example"))).
+				WithName(st2138.PolyglotText{"en": "Struct Example"})).
 			WithParam("sample_float", st2138.NewParamFloat32(sampleFloat).
-				WithName(st2138.NewPolyglotText("en", "Sample Float"))).
+				WithName(st2138.PolyglotText{"en": "Sample Float"})).
 			WithParam("sample_int_array", st2138.NewParamInt32Array(sampleIntArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Int Array"))).
+				WithName(st2138.PolyglotText{"en": "Sample Int Array"})).
 			WithParam("sample_float_array", st2138.NewParamFloat32Array(sampleFloatArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Float Array"))).
+				WithName(st2138.PolyglotText{"en": "Sample Float Array"})).
 			WithParam("sample_string_array", st2138.NewParamStringArray(sampleStringArray).
-				WithName(st2138.NewPolyglotText("en", "Sample String Array"))).
+				WithName(st2138.PolyglotText{"en": "Sample String Array"})).
 			WithParam("sample_binary", st2138.NewParamBinary(sampleBinary).
-				WithName(st2138.NewPolyglotText("en", "Sample Binary"))).
+				WithName(st2138.PolyglotText{"en": "Sample Binary"})).
 			// Valueless NewParamX() calls build sub-param descriptors without
 			// dummy values; the actual values live in the parent param's value.
 			WithParam("sample_struct_variant", st2138.NewParamStructVariant(sampleStructVariant).
-				WithName(st2138.NewPolyglotText("en", "Sample Struct Variant")).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Variant"}).
 				WithParam("int_kind", st2138.NewParamInt32()).
 				WithParam("string_kind", st2138.NewParamString())).
 			WithParam("sample_struct_array", st2138.NewParamStructArray(sampleStructArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Struct Array")).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Array"}).
 				WithParam("label", st2138.NewParamString()).
 				WithParam("count", st2138.NewParamInt32())).
 			WithParam("sample_struct_variant_array", st2138.NewParamStructVariantArray(sampleStructVariantArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Struct Variant Array")).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Variant Array"}).
 				WithParam("int_kind", st2138.NewParamInt32()).
 				WithParam("string_kind", st2138.NewParamString())).
 			WithMenuGroup("status", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Status")).
+				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).
 				WithMenu("identity", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Identity")).
+					WithName(st2138.PolyglotText{"en": "Identity"}).
 					WithParamOids("product", "device_name", "struct_example")).
 				WithMenu("types", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Catena Types")).
+					WithName(st2138.PolyglotText{"en": "Catena Types"}).
 					WithParamOids(
 						"sample_float",
 						"sample_int_array",
@@ -356,10 +356,10 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 						"sample_struct_variant_array",
 					))).
 			WithMenuGroup("config", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Configuration")).
+				WithName(st2138.PolyglotText{"en": "Configuration"}).
 				WithOrder(1).
 				WithMenu("audio", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Audio")).
+					WithName(st2138.PolyglotText{"en": "Audio"}).
 					WithParamOids("volume", "muted"))).
 			Build()
 		if err != nil {

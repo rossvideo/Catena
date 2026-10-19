@@ -43,12 +43,8 @@ import (
 )
 
 func TestNewParamInfo_Basic(t *testing.T) {
-	box := NewPolyglotText("en", "Text Box")
-	boxText, err := box.Build()
-	if err != nil {
-		t.Fatalf("failed to build polyglot text: %v", err)
-	}
-	pi := NewParamInfo("text_box", boxText, ParamTypeString, "tpl-1", 0)
+	box := PolyglotText{"en": "Text Box"}
+	pi := NewParamInfo("text_box", box, ParamTypeString, "tpl-1", 0)
 
 	if pi.GetOid() != "text_box" {
 		t.Errorf("expected oid 'text_box', got %s", pi.GetOid())

@@ -39,61 +39,29 @@
 package st2138
 
 import (
-	"errors"
 	"maps"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // PolyglotText maps BCP-47 language codes to display strings.
 type PolyglotText map[string]string
 
-// PolyglotTextBuilder is a builder for PolyglotText.
-type PolyglotTextBuilder struct {
-	polyglot PolyglotText
-	err      error
-}
-
-// Build returns a usable PolyglotText from the builder. If the builder has an error, it
-// returns an empty PolyglotText and the error. Must be called after all builder methods have been called.
-func (pb *PolyglotTextBuilder) Build() (PolyglotText, error) {
-	if pb.err != nil {
-		return PolyglotText{}, pb.err
+// Proto creates a protobuf PolyglotText from the PolyglotText map.
+// Returns nil if the PolyglotText is empty.
+func (p PolyglotText) Proto() *protos.PolyglotText {
+	if len(p) == 0 {
+		return nil
 	}
-	return maps.Clone(pb.polyglot), nil
-}
-
-// Err returns the stored error of the builder.
-func (pb *PolyglotTextBuilder) Err() error {
-	return pb.err
-}
-
-// NewPolyglotText creates a PolyglotTextBuilder from zero or more (lang, text) pairs.
-// Calling it with no arguments yields an empty PolyglotTextBuilder, which is useful
-// for building entries up in a loop before passing the result to a builder:
-//
-//	nameBuilder := NewPolyglotText()
-//	for lang := range langs {
-//		nameBuilder.With(lang, translate(lang, "Hello"))
-//	}
-//	name, err := nameBuilder.Build()
-func NewPolyglotText(pairs ...string) *PolyglotTextBuilder {
-	pb := &PolyglotTextBuilder{polyglot: PolyglotText{}}
-	if len(pairs)%2 != 0 {
-		pb.err = errors.New("NewPolyglotText: odd number of arguments")
-		return pb
+	return &protos.PolyglotText{
+		DisplayStrings: maps.Clone(p),
 	}
-	for i := 0; i+1 < len(pairs); i += 2 {
-		pb.polyglot[pairs[i]] = pairs[i+1]
-	}
-	return pb
 }
 
 // With returns the PolyglotText with an additional language entry added.
-func (pb *PolyglotTextBuilder) With(lang, text string) *PolyglotTextBuilder {
-	if pb.err != nil {
-		return pb
-	}
-	pb.polyglot[lang] = text
-	return pb
+func (p PolyglotText) With(lang, text string) PolyglotText {
+	p[lang] = text
+	return p
 }
 
 // Get returns the display string for lang, falling back to fallback if not present.
@@ -102,4 +70,14 @@ func (p PolyglotText) Get(lang, fallback string) string {
 		return s
 	}
 	return p[fallback]
+}
+
+// FromProto creates a PolyglotText map from a protobuf PolyglotText.
+func PolyglotTextFromProto(proto *protos.PolyglotText) PolyglotText {
+	pt := PolyglotText{}
+	if proto == nil || len(proto.DisplayStrings) == 0 {
+		return nil
+	}
+	maps.Copy(pt, proto.DisplayStrings)
+	return pt
 }

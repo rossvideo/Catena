@@ -87,11 +87,7 @@ func ParamInfosForRequest(fqoid string, device *st2138.Device, recursive bool, s
 }
 
 func paramDisplayName(param *protos.Param) st2138.PolyglotText {
-	displayStrings := param.GetName().GetDisplayStrings()
-	if len(displayStrings) == 0 {
-		return nil
-	}
-	return st2138.PolyglotText(displayStrings)
+	return st2138.PolyglotTextFromProto(param.GetName())
 }
 
 func paramArrayLength(param *protos.Param) uint32 {

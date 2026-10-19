@@ -725,7 +725,7 @@ func TestTransport_GetParam_Success(t *testing.T) {
 			t.Errorf("expected fqoid 'counter', got %s", req.Fqoid)
 		}
 		param, err := st2138.NewParamInt32(21).
-			WithName(st2138.NewPolyglotText("en", "Counter")).
+			WithName(st2138.PolyglotText{"en": "Counter"}).
 			WithMinimalSet(true).
 			Build()
 		if err != nil {
@@ -1134,13 +1134,9 @@ func TestTransport_ParamInfoRequest_Success(t *testing.T) {
 		if !req.Recursive {
 			t.Error("expected recursive=true")
 		}
-		parent := st2138.NewPolyglotText("en", "Parent")
-		parentText, err := parent.Build()
-		if err != nil {
-			t.Fatalf("failed to build polyglot text: %v", err)
-		}
+		parent := st2138.PolyglotText{"en": "Parent"}
 		return []st2138.ParamInfo{
-			st2138.NewParamInfo("parent", parentText, st2138.ParamTypeStruct, "", 0),
+			st2138.NewParamInfo("parent", parent, st2138.ParamTypeStruct, "", 0),
 			st2138.NewParamInfo("parent/child", nil, st2138.ParamTypeInt32, "", 0),
 			st2138.NewParamInfo("parent/arr", nil, st2138.ParamTypeStringArray, "", 5),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
