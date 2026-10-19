@@ -55,7 +55,7 @@ RUN . /root/toolchain.env \
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 COPY smpte/scripts/common.sh /root/smpte/scripts/common.sh
 WORKDIR /root/smpte
-RUN ./install-tooling.sh
+RUN IN_CONTAINER_BUILD=1 ./install-tooling.sh
 
 # Install protobuf compiler and Go tools
 RUN . /root/toolchain.env \

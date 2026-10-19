@@ -108,7 +108,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y python3-pip \
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 COPY smpte/scripts/common.sh /root/smpte/scripts/common.sh
 WORKDIR /root/smpte
-RUN ./install-tooling.sh
+RUN IN_CONTAINER_BUILD=1 ./install-tooling.sh
 
 # this is the dir our builder stage CMAKE_INSTALL_PREFIX is set to
 COPY --from=builder /usr/local/.local /usr/local/.local
