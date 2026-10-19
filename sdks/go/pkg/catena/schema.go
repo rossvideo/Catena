@@ -32,7 +32,7 @@
  * @brief Copies of regular expressions from the ST 2138 device schema.
  * @file schema.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Omar Shah (@omar.shah@rossvideo.com)
+ * @author Omar Shah (omar.shah@rossvideo.com)
  * @date 2026-10-09
  */
 

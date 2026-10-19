@@ -32,7 +32,7 @@
  * @brief Tests that schema.go matches the ST 2138 device schema.
  * @file schema_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
- * @author Omar Shah (@omar.shah@rossvideo.com)
+ * @author Omar Shah (omar.shah@rossvideo.com)
  * @date 2026-10-09
  */
 
@@ -120,6 +120,7 @@ func TestValidateSlotString_Invalid(t *testing.T) {
 		name string
 		in   string
 	}{
+		{name: "empty", in: ""},
 		{name: "negative", in: "-1"},
 		{name: "too large", in: "65536"},
 		{name: "non-numeric", in: "abc"},
