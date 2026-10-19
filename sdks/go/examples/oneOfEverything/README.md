@@ -18,54 +18,48 @@ Add `--use-grpc` to also listen for gRPC. At least one transport must be enabled
 
 ## Authorize in the web UI
 
-The **Authorize** button works one of two ways:
+The **Authorize** button offers three ways to send a bearer token. A leading `Bearer ` is stripped. The token is kept for this browser tab and sent on every Catena request, including the live update stream.
 
-1. Paste an access token. A leading `Bearer ` is stripped. The token is kept for this browser tab and sent on every Catena request, including the live update stream.
-2. **Generate demo token** builds an unsigned JWT for the role you pick (the same roles as the Auth slot's table). Use this when signature validation is off.
+1. Paste an access token and choose **Apply**.
+2. **Generate Unsigned Token** builds an unsigned JWT for the scope you pick. Use this when signature validation is off.
+3. **Sign in with Keycloak** opens the keycloak realm's login page and applies the signed access token for the account you use. The scope checkboxes do not apply to this token.
 
-## Exercise authorization without Keycloak
+## Authorization without Keycloak
 
-Signature validation stays on unless you pass `--jwt-insecure-skip-signature-validation` so to run the example without a keyclock/signature validation you must pass in that flag:
+Signature validation stays on unless you pass `--jwt-insecure-skip-signature-validation`. To run the example without Keycloak, pass that flag:
 
 ```bash
 go run . --use-rest --authz --jwt-insecure-skip-signature-validation
 ```
 
-In the page, open **Authorize**, pick a scope to create a token wiht, and choose **Generate unsigned**. This will automatically generate and apply a token for your current session.
+In the page, open **Authorize**, check the scopes you want, and choose **Generate unsigned**. The token is applied for this browser tab.
 
-## Keycloak and signature checks
+## Sign in with Keycloak
 
-`keycloak/` runs a local realm that signs access tokens with ES256 (the SDK default).
+Use a Keycloak realm that is already running. Pass its issuer URL, the realm URL Keycloak publishes (for example `--jwt-issuer=https://keycloak.catena.dev2.rossvideo.com/realms/catena`). That URL is the `iss` claim the server expects, and the address the browser opens for login.
 
-In another terminal in this devcontainer run:
-```bash
-docker compose -f keycloak/docker-compose.yml up -d
-```
-
-Leave Keycloak's hostname at `http://localhost:8180`. That is the address your browser opens, and it is the issuer (`iss`) written into each token. `--jwt-issuer` must be that same URL.
-
-Docker publishes Keycloak on the host, so from inside the devcontainer `localhost:8180` does not reach it. `10.255.255.254` is the host address the devcontainer can use. `KEYCLOAK_INTERNAL_URL` tells the example to download signing keys from there while it still checks that tokens were issued by `localhost`.
+The realm needs a public client named `oneofeverything` and a redirect URI of `http://localhost:9080/*`. Tokens should be signed with ES256, which is what the SDK accepts by default. The server loads the signing keys from the issuer's OpenID Connect discovery document (`/.well-known/openid-configuration`).
 
 Start the example:
-``` bash
-KEYCLOAK_INTERNAL_URL=http://10.255.255.254:8180 \
-  go run . --use-rest --authz --jwt-issuer=http://localhost:8180/realms/catena
-```
 
-Currently nothing will work due to not having a valid token. Sign in through the browser to get one for a real user.
-
-Open http://localhost:9080/, choose **Authorize**, pick the scopes, and click **Sign in with Keycloak**.
-
-The browser is sent to Keycloak's login page (authorization code flow with PKCE). Sign in as `commissioner` with the password: `demo`. Keycloak sends the browser back to the demo, and the page exchanges that login code for a signed access token belonging to the account you used. The requested scopes are the ones checked in **Authorize**, plus `openid`.
-
-Optionally you can also generate a signed token and paste it in. The following command can be used in the terminal:
 ```bash
- curl -s -X POST http://10.255.255.254:8180/realms/catena/protocol/openid-connect/token \
-  -d grant_type=password \
-  -d client_id=oneofeverything \
-  -d username=commissioner \
-  -d password=demo \
-  -d 'scope=openid st2138:mon st2138:mon:w st2138:op st2138:op:w st2138:cfg st2138:cfg:w st2138:adm st2138:adm:w'
+go run . --use-rest --authz --jwt-issuer=https://keycloak.catena.dev2.rossvideo.com/realms/catena
 ```
 
-Stop Keycloak with `docker compose -f keycloak/docker-compose.yml down`.
+Open http://localhost:9080/. Requests fail until you have a valid token.
+
+Choose **Authorize**, then **Sign in with Keycloak**. The browser goes to Keycloak's login page. After you sign in, Keycloak sends the browser back to the demo, and the page exchanges the login code for a signed access token. That token is stored for this browser tab and sent on later requests. Its scopes are based on the account you used to sign in within the keycloak.
+
+### Demo Users
+
+The password for every user is `1234`
+
+Users:
+| Username | Role |
+|---|---|
+| apatel | commissioner |
+| jrichter | it-admin |
+| svoss | journalist |
+| vnavarro | producer |
+| egrayson | runner |
+| ncaldwell | tech-director |
