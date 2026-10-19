@@ -1,8 +1,4 @@
 FROM library/ubuntu:24.04 AS base
-LABEL org.opencontainers.image.title=$IMAGE_TITLE
-LABEL org.opencontainers.image.description=$IMAGE_DESCRIPTION
-LABEL org.opencontainers.image.version=$IMAGE_VERSION
-LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
