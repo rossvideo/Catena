@@ -56,7 +56,7 @@ COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
 COPY smpte/.nvmrc /root/smpte/.nvmrc
 COPY smpte/scripts/common.sh /root/smpte/scripts/common.sh
 WORKDIR /root/smpte
-RUN IN_CONTAINER_BUILD=1 ./install-tooling.sh
+RUN IN_CONTAINER_BUILD=1 YQ_INSTALL_DIR=/usr/local/bin ./install-tooling.sh
 
 # Install protobuf compiler and Go tools
 RUN . /root/toolchain.env \
