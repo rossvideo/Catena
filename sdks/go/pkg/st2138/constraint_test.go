@@ -38,8 +38,8 @@ import (
 
 func TestNewConstraintInt32Choice(t *testing.T) {
 	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 1, Name: NewPolyglotText("en", "one").polyglot},
-		{Value: 2, Name: NewPolyglotText("en", "two").polyglot},
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+		{Value: 2, Name: PolyglotText{"en": "two"}},
 	})
 	if c.Proto.GetType() != protos.Constraint_INT_CHOICE {
 		t.Errorf("expected INT_CHOICE, got %v", c.Proto.GetType())
@@ -157,8 +157,8 @@ func TestNewConstraintStringChoice_NotStrict(t *testing.T) {
 
 func TestNewConstraintStringStringChoice(t *testing.T) {
 	c := NewConstraintStringStringChoice(true, []StringStringChoice{
-		{Value: "r", Name: NewPolyglotText("en", "Red").polyglot},
-		{Value: "g", Name: NewPolyglotText("en", "Green").polyglot},
+		{Value: "r", Name: PolyglotText{"en": "Red"}},
+		{Value: "g", Name: PolyglotText{"en": "Green"}},
 	})
 	if c.Proto.GetType() != protos.Constraint_STRING_STRING_CHOICE {
 		t.Errorf("expected STRING_STRING_CHOICE, got %v", c.Proto.GetType())
@@ -181,8 +181,8 @@ func TestNewConstraintStringStringChoice(t *testing.T) {
 
 func TestNewConstraintAlarmTable(t *testing.T) {
 	c := NewConstraintAlarmTable([]AlarmEntry{
-		{BitValue: 0, Severity: AlarmSeverityInfo, Description: NewPolyglotText("en", "All clear").polyglot},
-		{BitValue: 1, Severity: AlarmSeverityWarning, Description: NewPolyglotText("en", "Caution").polyglot},
+		{BitValue: 0, Severity: AlarmSeverityInfo, Description: PolyglotText{"en": "All clear"}},
+		{BitValue: 1, Severity: AlarmSeverityWarning, Description: PolyglotText{"en": "Caution"}},
 		{BitValue: 2, Severity: AlarmSeveritySevere},
 	})
 	if c.Proto.GetType() != protos.Constraint_ALARM_TABLE {
@@ -228,7 +228,7 @@ func TestNewConstraintRefOid(t *testing.T) {
 
 func TestNewConstraintInt32Choice_MultiLanguage(t *testing.T) {
 	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 1, Name: NewPolyglotText("en", "one").With("fr", "un").polyglot},
+		{Value: 1, Name: PolyglotText{"en": "one", "fr": "un"}},
 	})
 	name := c.Proto.GetInt32Choice().GetChoices()[0].GetName().GetDisplayStrings()
 	if name["en"] != "one" {

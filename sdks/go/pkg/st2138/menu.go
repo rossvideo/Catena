@@ -69,25 +69,16 @@ func NewMenuGroup() *MenuGroupBuilder {
 }
 
 // WithName sets the menu group's display name, replacing any existing name.
-func (mg *MenuGroupBuilder) WithName(name *PolyglotTextBuilder) *MenuGroupBuilder {
+func (mg *MenuGroupBuilder) WithName(name PolyglotText) *MenuGroupBuilder {
 	if mg.err != nil {
 		return mg
 	}
-	if name == nil {
+	if len(name) == 0 {
 		mg.err = errors.New("name cannot be nil")
 		return mg
 	}
 
-	p, err := name.Build()
-	if err != nil {
-		mg.err = err
-		return mg
-	}
-	if len(p) == 0 {
-		mg.err = errors.New("polyglot text builder returned empty polyglot text")
-		return mg
-	}
-	mg.proto.Name = &protos.PolyglotText{DisplayStrings: p}
+	mg.proto.Name = name.Proto()
 	return mg
 }
 
@@ -164,25 +155,16 @@ func NewMenu() *MenuBuilder {
 }
 
 // WithName sets the menu's display name, replacing any existing name.
-func (m *MenuBuilder) WithName(name *PolyglotTextBuilder) *MenuBuilder {
+func (m *MenuBuilder) WithName(name PolyglotText) *MenuBuilder {
 	if m.err != nil {
 		return m
 	}
-	if name == nil {
+	if len(name) == 0 {
 		m.err = errors.New("name is required")
 		return m
 	}
 
-	p, err := name.Build()
-	if err != nil {
-		m.err = err
-		return m
-	}
-	if len(p) == 0 {
-		m.err = errors.New("polyglot text builder returned nil polyglot text")
-		return m
-	}
-	m.proto.Name = &protos.PolyglotText{DisplayStrings: p}
+	m.proto.Name = name.Proto()
 	return m
 }
 

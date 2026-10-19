@@ -83,7 +83,7 @@ func buildDevice() (*st2138.Device, error) {
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op").
 		WithParam(helloWorldOID, st2138.NewParamString(helloWorld.Get()).
-			WithName(st2138.NewPolyglotText("en", "Hello World"))).
+			WithName(st2138.PolyglotText{"en": "Hello World"})).
 		Build()
 	return &device, err
 }

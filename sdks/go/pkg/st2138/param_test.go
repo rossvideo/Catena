@@ -175,7 +175,7 @@ func TestNewParamData(t *testing.T) {
 // --- With* method tests ---
 
 func TestWithName(t *testing.T) {
-	p := NewParamInt32(0).WithName(NewPolyglotText("en", "Temperature")).proto
+	p := NewParamInt32(0).WithName(PolyglotText{"en": "Temperature"}).proto
 	if p.GetName().GetDisplayStrings()["en"] != "Temperature" {
 		t.Errorf("expected 'Temperature', got %q", p.GetName().GetDisplayStrings()["en"])
 	}
@@ -191,18 +191,8 @@ func TestWithName_Nil(t *testing.T) {
 	}
 }
 
-func TestWithName_NestedErrors(t *testing.T) {
-	p, err := NewParamInt32(0).WithName(NewPolyglotText("en", "test", "fail")).Build()
-	if p != (Param{}) {
-		t.Errorf("expected empty Param, got %v", p)
-	}
-	if err == nil {
-		t.Error("expected error for builder with empty name")
-	}
-}
-
 func TestWithName_EmptyPolyglotText(t *testing.T) {
-	p, err := NewParamInt32(0).WithName(NewPolyglotText()).Build()
+	p, err := NewParamInt32(0).WithName(PolyglotText{}).Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -387,7 +377,7 @@ func TestWithClientHint(t *testing.T) {
 }
 
 func TestWithParam_Struct(t *testing.T) {
-	child := NewParamInt32(10).WithName(NewPolyglotText("en", "child"))
+	child := NewParamInt32(10).WithName(PolyglotText{"en": "child"})
 	p := NewParamStruct().WithParam("brightness", child).proto
 	sub := p.GetParams()["brightness"]
 	if sub == nil {
@@ -453,7 +443,7 @@ func TestWithParam_Nil(t *testing.T) {
 }
 
 func TestWithParam_NestedErrors(t *testing.T) {
-	child := NewParamInt32(0).WithName(NewPolyglotText("en", "test", "fail"))
+	child := NewParamInt32(0, 1)
 	p, err := NewParamStruct().WithParam("x", child).Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
@@ -481,7 +471,7 @@ func TestWithResponse(t *testing.T) {
 }
 
 func TestWithHelp(t *testing.T) {
-	p := NewParamInt32(0).WithHelp(NewPolyglotText("en", "Adjusts volume")).proto
+	p := NewParamInt32(0).WithHelp(PolyglotText{"en": "Adjusts volume"}).proto
 	if p.GetHelp().GetDisplayStrings()["en"] != "Adjusts volume" {
 		t.Errorf("unexpected help text: %q", p.GetHelp().GetDisplayStrings()["en"])
 	}
@@ -497,18 +487,8 @@ func TestWithHelp_Nil(t *testing.T) {
 	}
 }
 
-func TestWithHelp_NestedErrors(t *testing.T) {
-	p, err := NewParamInt32(0).WithHelp(NewPolyglotText("en", "test", "fail")).Build()
-	if p != (Param{}) {
-		t.Errorf("expected empty Param, got %v", p)
-	}
-	if err == nil {
-		t.Error("expected error for builder with nested errors")
-	}
-}
-
 func TestWithHelp_EmptyPolyglotText(t *testing.T) {
-	p, err := NewParamInt32(0).WithHelp(NewPolyglotText()).Build()
+	p, err := NewParamInt32(0).WithHelp(PolyglotText{}).Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -550,7 +530,7 @@ func TestWithTemplateOid(t *testing.T) {
 
 func TestWithConstraint_ValidInt32Choice(t *testing.T) {
 	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 1, Name: NewPolyglotText("en", "one").polyglot},
+		{Value: 1, Name: PolyglotText{"en": "one"}},
 	})
 	p := NewParamInt32(0).WithConstraint(c).proto
 	if p.GetConstraint() == nil {
@@ -587,7 +567,7 @@ func TestWithConstraint_ValidStringChoice(t *testing.T) {
 
 func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
 	c := NewConstraintStringStringChoice(false, []StringStringChoice{
-		{Value: "v", Name: NewPolyglotText("en", "V").polyglot},
+		{Value: "v", Name: PolyglotText{"en": "V"}},
 	})
 	p := NewParamString("v").WithConstraint(c).proto
 	if p.GetConstraint() == nil {
@@ -664,8 +644,8 @@ func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
 
 func TestWithConstraint_ValidInt32ChoiceOnInt32Array(t *testing.T) {
 	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 0, Name: NewPolyglotText("en", "Off").polyglot},
-		{Value: 1, Name: NewPolyglotText("en", "On").polyglot},
+		{Value: 0, Name: PolyglotText{"en": "Off"}},
+		{Value: 1, Name: PolyglotText{"en": "On"}},
 	})
 	p := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).proto
 	if p.GetConstraint() == nil {
@@ -701,7 +681,7 @@ func TestWithConstraint_ValidStringChoiceOnStringArray(t *testing.T) {
 
 func TestWithConstraint_ValidStringStringChoiceOnStringArray(t *testing.T) {
 	c := NewConstraintStringStringChoice(true, []StringStringChoice{
-		{Value: "<#FF0000>", Name: NewPolyglotText("en", "Red").polyglot},
+		{Value: "<#FF0000>", Name: PolyglotText{"en": "Red"}},
 	})
 	p := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).proto
 	if p.GetConstraint() == nil {
@@ -722,13 +702,13 @@ func TestWithConstraint_InvalidIntOnStringArray(t *testing.T) {
 func TestFullChaining(t *testing.T) {
 	c := NewConstraintInt32RangeWithDisplay(0, 100, 1, 0, 100)
 	p := NewParamInt32(0).
-		WithName(NewPolyglotText("en", "Volume")).
+		WithName(PolyglotText{"en": "Volume"}).
 		WithConstraint(c).
 		WithReadOnly(false).
 		WithWidget("slider").
 		WithAccessScope("operator").
 		WithClientHint("unit", "dB").
-		WithHelp(NewPolyglotText("en", "Audio volume")).
+		WithHelp(PolyglotText{"en": "Audio volume"}).
 		WithOidAliases("/old/volume").
 		WithMinimalSet(true).
 		WithStateless(false).
@@ -1294,7 +1274,7 @@ func TestSetValue_InvalidThenValid(t *testing.T) {
 
 func TestWithParam_StructValuesFromSubParams(t *testing.T) {
 	param := NewParamStruct().
-		WithName(NewPolyglotText("en", "Struct Example")).
+		WithName(PolyglotText{"en": "Struct Example"}).
 		WithParam("number", NewParamInt32(7).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
 		WithParam("text", NewParamString("hello"))
 
@@ -1558,7 +1538,7 @@ func TestStructFieldDescriptors_NoFields(t *testing.T) {
 // constraint, ...) without overriding the value that came from the map.
 func TestWithParam_ValuelessDoesNotOverrideMapValue(t *testing.T) {
 	p := NewParamStruct(map[string]any{"field2": int32(42)}).
-		WithParam("field2", NewParamInt32().WithName(NewPolyglotText("en", "Field 2"))).
+		WithParam("field2", NewParamInt32().WithName(PolyglotText{"en": "Field 2"})).
 		proto
 
 	if p.GetValue().GetStructValue().GetFields()["field2"].GetInt32Value() != 42 {
@@ -1646,7 +1626,7 @@ func TestParamBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 
 	p, err := cp.
-		WithName(NewPolyglotText("en", "Test")).
+		WithName(PolyglotText{"en": "Test"}).
 		WithValue(value).
 		WithConstraint(NewConstraintInt32Range(0, 10, 1)).
 		WithReadOnly(true).
@@ -1657,7 +1637,7 @@ func TestParamBuilder_WithShortCircuitErrors(t *testing.T) {
 		WithClientHint("ui", "slider").
 		WithParam("child", NewParamInt32(1)).
 		WithResponse(true).
-		WithHelp(NewPolyglotText("en", "Help")).
+		WithHelp(PolyglotText{"en": "Help"}).
 		WithOidAliases("alias").
 		WithMinimalSet(true).
 		WithStateless(true).

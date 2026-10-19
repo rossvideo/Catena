@@ -67,7 +67,7 @@ func TestNewDevice_Basic(t *testing.T) {
 func TestNewDevice_WithParams(t *testing.T) {
 	cd := NewDevice(0).
 		WithParam("brightness", NewParamInt32(50).
-			WithName(NewPolyglotText("en", "Brightness")).
+			WithName(PolyglotText{"en": "Brightness"}).
 			WithWidget("SLIDER"))
 
 	brightness, ok := cd.proto.GetParams()["brightness"]
@@ -213,7 +213,7 @@ func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 }
 
 func TestDevice_WithMenuGroup_NestedErrors(t *testing.T) {
-	cd, err := NewDevice(0).WithMenuGroup("nothing", NewMenuGroup().WithName(NewPolyglotText("en", "test", "fail"))).Build()
+	cd, err := NewDevice(0).WithMenuGroup("nothing", NewMenuGroup().WithName(nil)).Build()
 	if cd != (Device{}) {
 		t.Errorf("expected nil device, got %v", cd)
 	}
@@ -277,9 +277,9 @@ func TestDevice_WithLanguagePacks(t *testing.T) {
 func TestDevice_WithMenuGroups(t *testing.T) {
 	cd := NewDevice(0).
 		WithMenuGroup("video", NewMenuGroup().
-			WithName(NewPolyglotText("en", "Video Settings")).
+			WithName(PolyglotText{"en": "Video Settings"}).
 			WithMenu("basic", NewMenu().
-				WithName(NewPolyglotText("en", "Basic")).
+				WithName(PolyglotText{"en": "Basic"}).
 				WithParamOids("brightness", "contrast")))
 
 	videoGroup, ok := cd.proto.GetMenuGroups()["video"]
@@ -298,7 +298,7 @@ func TestDevice_WithMenuGroups(t *testing.T) {
 func TestDevice_WithCommands(t *testing.T) {
 	cd := NewDevice(0).
 		WithCommand("reboot", NewParamEmpty().
-			WithName(NewPolyglotText("en", "Reboot Device")))
+			WithName(PolyglotText{"en": "Reboot Device"}))
 
 	reboot, ok := cd.proto.GetCommands()["reboot"]
 	if !ok {
@@ -371,17 +371,17 @@ func TestNewDevice_CompleteDevice(t *testing.T) {
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op").
 		WithParam("brightness", NewParamInt32(50).
-			WithName(NewPolyglotText("en", "Brightness")).
+			WithName(PolyglotText{"en": "Brightness"}).
 			WithConstraint(NewConstraintRefOid("brightness_range")).
 			WithWidget("SLIDER")).
 		WithConstraint("brightness_range", NewConstraintInt32Range(0, 100, 1)).
 		WithMenuGroup("video", NewMenuGroup().
-			WithName(NewPolyglotText("en", "Video Settings")).
+			WithName(PolyglotText{"en": "Video Settings"}).
 			WithMenu("basic", NewMenu().
-				WithName(NewPolyglotText("en", "Basic")).
+				WithName(PolyglotText{"en": "Basic"}).
 				WithParamOids("brightness"))).
 		WithCommand("reboot", NewParamEmpty().
-			WithName(NewPolyglotText("en", "Reboot Device"))).
+			WithName(PolyglotText{"en": "Reboot Device"})).
 		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"})
 
 	proto := cd.proto
@@ -493,7 +493,7 @@ func TestDeviceBuilder_WithShortCircuitErrors(t *testing.T) {
 		WithParam("brightness", NewParamInt32(1)).
 		WithCommand("reboot", NewParamEmpty()).
 		WithConstraint("range", NewConstraintInt32Range(0, 10, 1)).
-		WithMenuGroup("status", NewMenuGroup().WithName(NewPolyglotText("en", "Status"))).
+		WithMenuGroup("status", NewMenuGroup().WithName(PolyglotText{"en": "Status"})).
 		WithLanguagePack("en", "English", map[string]string{"greeting": "Hello"}).
 		WithDetailLevel(DetailLevelFull).
 		WithMultiSetEnabled(true).

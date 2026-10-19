@@ -2103,7 +2103,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
 			}
-			volume, err := st2138.NewParamInt32(42).WithName(st2138.NewPolyglotText("en", "Volume")).Build()
+			volume, err := st2138.NewParamInt32(42).WithName(st2138.PolyglotText{"en": "Volume"}).Build()
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}

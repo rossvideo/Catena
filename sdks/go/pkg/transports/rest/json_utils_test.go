@@ -666,7 +666,7 @@ func TestMarshalDeviceJSON(t *testing.T) {
 	cd, err := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithParam("brightness", st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Brightness"))).
+			WithName(st2138.PolyglotText{"en": "Brightness"})).
 		Build()
 	if err != nil {
 		t.Fatalf("expected no error for builder with valid value, got %v", err)
@@ -805,9 +805,9 @@ func TestMarshalDeviceJSON_EmptyMenuMetadataStringsStripped(t *testing.T) {
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithParam("brightness", st2138.NewParamInt32(0)).
 		WithMenuGroup("config", st2138.NewMenuGroup().
-			WithName(st2138.NewPolyglotText("en", "Config").With("fr", "")).
+			WithName(st2138.PolyglotText{"en": "Config", "fr": ""}).
 			WithMenu("main", st2138.NewMenu().
-				WithName(st2138.NewPolyglotText("en", "Main")).
+				WithName(st2138.PolyglotText{"en": "Main"}).
 				WithParamOids("/brightness").
 				WithClientHint("ui-url", ""))).Build()
 	if err != nil {
@@ -955,12 +955,12 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 		WithDefaultScope("st2138:op").
 		WithParam("brightness", st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Brightness")).
+			WithName(st2138.PolyglotText{"en": "Brightness"}).
 			WithConstraint(st2138.NewConstraintRefOid("brightness_range")).
 			WithWidget("SLIDER")).
 		WithConstraint("brightness_range", st2138.NewConstraintInt32Range(0, 100, 1)).
 		WithCommand("reboot", st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Reboot Device"))).Build()
+			WithName(st2138.PolyglotText{"en": "Reboot Device"})).Build()
 	if err != nil {
 		t.Fatalf("expected no error for builder with valid value, got %v", err)
 	}
@@ -978,7 +978,7 @@ func TestMarshalDeviceJSON_CompleteDevice(t *testing.T) {
 
 func TestMarshalDeviceComponentJSON(t *testing.T) {
 	brightness, err := st2138.NewParamInt32(0).
-		WithName(st2138.NewPolyglotText("en", "Brightness")).
+		WithName(st2138.PolyglotText{"en": "Brightness"}).
 		Build()
 	if err != nil {
 		t.Fatalf("expected no error for builder with valid value, got %v", err)

@@ -561,7 +561,7 @@ func TestTransport_GetParam_Route(t *testing.T) {
 			t.Errorf("expected fqoid 'text_box', got %s", fqoid)
 		}
 		param, err := st2138.NewParamString("Hello, World!").
-			WithName(st2138.NewPolyglotText("en", "Text Box").With("es", "Caja de Texto")).
+			WithName(st2138.PolyglotText{"en": "Text Box", "es": "Caja de Texto"}).
 			Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
@@ -631,7 +631,7 @@ func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 
 	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
 		param, err := st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Zero")).
+			WithName(st2138.PolyglotText{"en": "Zero"}).
 			WithConstraint(st2138.NewConstraintInt32Range(0, 100, 1)).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
@@ -654,7 +654,7 @@ func TestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
 
 	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
 		param, err := st2138.NewParamString("").
-			WithName(st2138.NewPolyglotText("en", "Empty")).Build()
+			WithName(st2138.PolyglotText{"en": "Empty"}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
@@ -1310,16 +1310,12 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 
 	t.Run("ExceptionResponse", func(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
-		polyglot, err := st2138.NewPolyglotText("en", "Command not found").Build()
-		if err != nil {
-			t.Fatalf("expected NewPolyglotText to build without error, got %v", err)
-		}
 		runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
 			return []st2138.CommandResponse{st2138.CommandException(
 				"InvalidCommand",
 				"Command not found: "+fqoid,
-				polyglot,
-			)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+				st2138.PolyglotText{"en": "Command not found"}),
+			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/bad_cmd", "")
@@ -2532,13 +2528,9 @@ func TestTransport_ParamInfo(t *testing.T) {
 			if recursive {
 				t.Error("expected recursive=false for unary call")
 			}
-			box := st2138.NewPolyglotText("en", "Text Box")
-			boxText, err := box.Build()
-			if err != nil {
-				t.Fatalf("failed to build polyglot text: %v", err)
-			}
+			box := st2138.PolyglotText{"en": "Text Box"}
 			return []st2138.ParamInfo{
-				st2138.NewParamInfo("text_box", boxText, st2138.ParamTypeString, "", 0),
+				st2138.NewParamInfo("text_box", box, st2138.ParamTypeString, "", 0),
 			}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 

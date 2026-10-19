@@ -61,7 +61,7 @@ func TestNewMenuGroup(t *testing.T) {
 }
 
 func TestMenuGroup_WithName(t *testing.T) {
-	mg := NewMenuGroup().WithName(NewPolyglotText("en", "Settings"))
+	mg := NewMenuGroup().WithName(PolyglotText{"en": "Settings"})
 	ds := mg.proto.Name.GetDisplayStrings()
 	if ds["en"] != "Settings" {
 		t.Errorf("expected 'Settings', got %s", ds["en"])
@@ -70,8 +70,8 @@ func TestMenuGroup_WithName(t *testing.T) {
 
 func TestMenuGroup_WithName_Replaces(t *testing.T) {
 	mg := NewMenuGroup().
-		WithName(NewPolyglotText("en", "Old").With("fr", "Ancien")).
-		WithName(NewPolyglotText("en", "New"))
+		WithName(PolyglotText{"en": "Old", "fr": "Ancien"}).
+		WithName(PolyglotText{"en": "New"})
 
 	ds := mg.proto.Name.GetDisplayStrings()
 	if ds["en"] != "New" {
@@ -86,7 +86,7 @@ func TestMenuGroup_WithName_Replaces(t *testing.T) {
 // loop via an empty PolyglotText and passing it in, replacing the old
 // AddMenuGroupName merge helper.
 func TestMenuGroup_WithName_LoopBuiltName(t *testing.T) {
-	name := NewPolyglotText()
+	name := PolyglotText{}
 	for lang, text := range map[string]string{"en": "Settings", "fr": "Paramètres"} {
 		name.With(lang, text)
 	}
@@ -101,18 +101,8 @@ func TestMenuGroup_WithName_LoopBuiltName(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_WithName_NestedErrors(t *testing.T) {
-	mg, err := NewMenuGroup().WithName(NewPolyglotText("en", "test", "fail")).Build()
-	if mg != (MenuGroup{}) {
-		t.Errorf("expected nil menu group, got %v", mg)
-	}
-	if err == nil {
-		t.Error("expected error for builder with nested errors")
-	}
-}
-
 func TestMenuGroup_WithName_EmptyPolyglotText(t *testing.T) {
-	mg, err := NewMenuGroup().WithName(NewPolyglotText()).Build()
+	mg, err := NewMenuGroup().WithName(PolyglotText{}).Build()
 	if mg != (MenuGroup{}) {
 		t.Errorf("expected nil menu group, got %v", mg)
 	}
@@ -122,7 +112,7 @@ func TestMenuGroup_WithName_EmptyPolyglotText(t *testing.T) {
 }
 
 func TestMenuGroup_WithMenu(t *testing.T) {
-	mg := NewMenuGroup().WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video")))
+	mg := NewMenuGroup().WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Video"}))
 
 	menu, ok := mg.proto.Menus["video"]
 	if !ok {
@@ -136,8 +126,8 @@ func TestMenuGroup_WithMenu(t *testing.T) {
 
 func TestMenuGroup_WithMenu_Replaces(t *testing.T) {
 	mg := NewMenuGroup().
-		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Old Video"))).
-		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "New Video")))
+		WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Old Video"})).
+		WithMenu("video", NewMenu().WithName(PolyglotText{"en": "New Video"}))
 
 	ds := mg.proto.Menus["video"].Name.GetDisplayStrings()
 	if ds["en"] != "New Video" {
@@ -151,7 +141,7 @@ func TestMenuGroup_WithMenu_NilMapInitialized(t *testing.T) {
 		t.Fatal("expected nil menus map before WithMenu")
 	}
 
-	mg.WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video")))
+	mg.WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Video"}))
 
 	if mg.proto.Menus == nil {
 		t.Fatal("expected menus map to be initialized by WithMenu")
@@ -172,7 +162,7 @@ func TestMenuGroup_WithMenu_Nil(t *testing.T) {
 }
 
 func TestMenuGroup_WithMenu_NestedErrors(t *testing.T) {
-	mg, err := NewMenuGroup().WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "test", "fail"))).Build()
+	mg, err := NewMenuGroup().WithMenu("video", NewMenu().WithName(nil)).Build()
 	if mg != (MenuGroup{}) {
 		t.Errorf("expected nil menu group, got %v", mg)
 	}
@@ -193,8 +183,8 @@ func TestMenuGroup_WithMenu_EmptyMenu(t *testing.T) {
 
 func TestMenuGroup_MultipleMenus(t *testing.T) {
 	mg := NewMenuGroup().
-		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video"))).
-		WithMenu("audio", NewMenu().WithName(NewPolyglotText("en", "Audio")))
+		WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Video"})).
+		WithMenu("audio", NewMenu().WithName(PolyglotText{"en": "Audio"}))
 
 	if len(mg.proto.Menus) != 2 {
 		t.Errorf("expected 2 menus, got %d", len(mg.proto.Menus))
@@ -216,10 +206,10 @@ func TestMenuGroup_WithOrder(t *testing.T) {
 
 func TestMenuGroup_FullChaining(t *testing.T) {
 	mg := NewMenuGroup().
-		WithName(NewPolyglotText("en", "Main Group").With("fr", "Groupe Principal")).
+		WithName(PolyglotText{"en": "Main Group", "fr": "Groupe Principal"}).
 		WithOrder(1).
-		WithMenu("video", NewMenu().WithName(NewPolyglotText("en", "Video"))).
-		WithMenu("audio", NewMenu().WithName(NewPolyglotText("en", "Audio").With("fr", "Son")))
+		WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Video"})).
+		WithMenu("audio", NewMenu().WithName(PolyglotText{"en": "Audio", "fr": "Son"}))
 
 	ds := mg.proto.Name.GetDisplayStrings()
 	if ds["en"] != "Main Group" {
@@ -241,9 +231,9 @@ func TestMenuGroup_FullChaining(t *testing.T) {
 }
 
 func TestMenuGroup_Build(t *testing.T) {
-	m, err := NewMenuGroup().WithName(NewPolyglotText("en", "Video")).Build()
+	m, err := NewMenuGroup().WithName(PolyglotText{"en": "Video"}).Build()
 	if err != nil {
-		t.Fatalf("NewMenuGroup().WithName(NewPolyglotText('en', 'Video')).Build() failed: %v", err)
+		t.Fatalf("NewMenuGroup().WithName(PolyglotText('en', 'Video')).Build() failed: %v", err)
 	}
 	if m == (MenuGroup{}) {
 		t.Fatal("expected non-nil menu group")
@@ -269,7 +259,7 @@ func TestMenuGroupBuilder_WithShortCircuitErrors(t *testing.T) {
 	before := proto.Clone(mg.proto)
 
 	group, err := mg.
-		WithName(NewPolyglotText("en", "Status")).
+		WithName(PolyglotText{"en": "Status"}).
 		WithMenu("overview", NewMenu().WithParamOids("alpha")).
 		WithOrder(2).
 		Build()
@@ -318,7 +308,7 @@ func TestNewMenu(t *testing.T) {
 }
 
 func TestMenu_WithName(t *testing.T) {
-	m := NewMenu().WithName(NewPolyglotText("en", "Video Settings"))
+	m := NewMenu().WithName(PolyglotText{"en": "Video Settings"})
 	ds := m.proto.Name.GetDisplayStrings()
 	if ds["en"] != "Video Settings" {
 		t.Errorf("expected 'Video Settings', got %s", ds["en"])
@@ -327,8 +317,8 @@ func TestMenu_WithName(t *testing.T) {
 
 func TestMenu_WithName_Replaces(t *testing.T) {
 	m := NewMenu().
-		WithName(NewPolyglotText("en", "Old").With("fr", "Ancien")).
-		WithName(NewPolyglotText("en", "New"))
+		WithName(PolyglotText{"en": "Old", "fr": "Ancien"}).
+		WithName(PolyglotText{"en": "New"})
 
 	ds := m.proto.Name.GetDisplayStrings()
 	if ds["en"] != "New" {
@@ -339,17 +329,8 @@ func TestMenu_WithName_Replaces(t *testing.T) {
 	}
 }
 
-func TestMenu_WithName_NestedErrors(t *testing.T) {
-	m, err := NewMenu().WithName(NewPolyglotText("en", "test", "fail")).Build()
-	if m != (Menu{}) {
-		t.Errorf("expected nil menu, got %v", m)
-	}
-	if err == nil {
-		t.Error("expected error for builder with nested errors")
-	}
-}
 func TestMenu_WithName_EmptyPolyglotText(t *testing.T) {
-	m, err := NewMenu().WithName(NewPolyglotText()).Build()
+	m, err := NewMenu().WithName(PolyglotText{}).Build()
 	if m != (Menu{}) {
 		t.Errorf("expected nil menu, got %v", m)
 	}
@@ -360,7 +341,7 @@ func TestMenu_WithName_EmptyPolyglotText(t *testing.T) {
 
 func TestMenu_WithFields(t *testing.T) {
 	m := NewMenu().
-		WithName(NewPolyglotText("en", "Video")).
+		WithName(PolyglotText{"en": "Video"}).
 		WithHidden(true).
 		WithDisabled(true).
 		WithParamOids("brightness", "contrast").
@@ -400,9 +381,9 @@ func TestMenu_WithClientHint_Multiple(t *testing.T) {
 }
 
 func TestMenu_Build(t *testing.T) {
-	m, err := NewMenu().WithName(NewPolyglotText("en", "Video")).Build()
+	m, err := NewMenu().WithName(PolyglotText{"en": "Video"}).Build()
 	if err != nil {
-		t.Fatalf("NewMenu().WithName(NewPolyglotText('en', 'Video')).Build() failed: %v", err)
+		t.Fatalf("NewMenu().WithName(PolyglotText('en', 'Video')).Build() failed: %v", err)
 	}
 	if m == (Menu{}) {
 		t.Fatal("expected non-nil menu")
@@ -428,7 +409,7 @@ func TestMenuBuilder_WithShortCircuitErrors(t *testing.T) {
 	before := proto.Clone(m.proto)
 
 	menu, err := m.
-		WithName(NewPolyglotText("en", "Video")).
+		WithName(PolyglotText{"en": "Video"}).
 		WithHidden(true).
 		WithDisabled(true).
 		WithParamOids("brightness").
