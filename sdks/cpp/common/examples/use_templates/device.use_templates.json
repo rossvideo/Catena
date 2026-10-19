@@ -16,7 +16,6 @@
             "name": { "string_value": "External Object Request" },
             "vendor": { "string_value": "Ross Video" },
             "version": { "string_value": "1.0.0" },
-            "catena_sdk": { "string_value": "https://github.com/rossvideo/Catena.git" },
             "serial_number": { "string_value": "SN-7K9M-2024-XR485-BLU" }
           }
         }
@@ -31,10 +30,10 @@
         "version": {
           "type": "STRING"
         },
-        "catena_sdk": {
+        "st2138_sdk": {
           "type": "STRING"
         },
-        "catena_sdk_version": {
+        "st2138_sdk_version": {
           "type": "STRING"
         },
         "serial_number": {
@@ -86,7 +85,7 @@
     },
     "ottawa": {
       "type": "STRUCT",
-      "template_oid": "/city",
+      "template_oid": "city",
       "name": {
         "display_strings": {
           "en": "Ottawa"
@@ -105,7 +104,7 @@
     },
     "toronto": {
       "type": "STRUCT",
-      "template_oid": "/city",
+      "template_oid": "city",
       "name": {
         "display_strings": {
           "en": "Toronto"

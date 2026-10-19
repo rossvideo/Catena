@@ -111,17 +111,17 @@ describe('Device argsToString', () => {
 describe('Device getParam', () => {
   test('returns top-level param for single segment fqoid', () => {
     const device = buildDeviceWithParams(MINIMAL_DESC, 'Test');
-    expect(device.getParam('/leaf').oid).toBe('leaf');
+    expect(device.getParam('leaf').oid).toBe('leaf');
   });
 
   test('returns nested param for multi-segment fqoid', () => {
     const device = buildDeviceWithParams(MINIMAL_DESC, 'Test');
-    expect(device.getParam('/product/name').oid).toBe('name');
+    expect(device.getParam('product/name').oid).toBe('name');
   });
 
   test('throws when top-level oid is missing', () => {
     const device = buildDeviceWithParams(MINIMAL_DESC, 'Test');
-    expect(() => device.getParam('/missing')).toThrow(/Invalid template parameter/);
+    expect(() => device.getParam('missing')).toThrow(/Invalid template parameter/);
   });
 });
 

@@ -441,7 +441,7 @@ type Param struct {
 	// Import directive
 	Import *Import `protobuf:"bytes,16,opt,name=import,proto3" json:"import,omitempty"`
 	// Additional OIDs represented by this parameter - used to allow a client to locate a parameter that may have been moved or renamed.
-	// The aliases must be fully-qualified.
+	// An alias must be unique and must not conflict with any other alias or fully qualified OID (FQOID)
 	OidAliases []string `protobuf:"bytes,17,rep,name=oid_aliases,json=oidAliases,proto3" json:"oid_aliases,omitempty"`
 	// When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device
 	MinimalSet bool `protobuf:"varint,18,opt,name=minimal_set,json=minimalSet,proto3" json:"minimal_set,omitempty"`
@@ -2133,7 +2133,7 @@ const file_param_proto_rawDesc = "" +
 	"\x04DATA\x102*%\n" +
 	"\x0eUndefinedValue\x12\x13\n" +
 	"\x0fUNDEFINED_VALUE\x10\x00B(\n" +
-	"\x15catena.core.parameterB\vParamProtosH\x01P\x01b\x06proto3"
+	"\x15st2138.core.parameterB\vParamProtosH\x01P\x01b\x06proto3"
 
 var (
 	file_param_proto_rawDescOnce sync.Once

@@ -17,9 +17,7 @@
 import { program } from 'commander';
 
 import { createLogger, MANDATORY_OPTION, OUTPUT_OPTION, PROTOS_OPTION, QUIET_OPTION, sync, VERSION } from './common.js';
-import { DeviceModel } from './DeviceModel.js';
-import Validator from 'smpte-validator';
-import { validateRequiredParamsAndScopes } from './mandatory.js';
+import { resolveDeviceModel } from './DeviceModel.js';
 import { serialize } from './serdes/serdes.js';
 
 // load the command line parser
@@ -63,11 +61,7 @@ async function run(deviceModelPath, options) {
     logOptions(log, deviceModelPath, options);
 
     // load and validate the device model
-    const validator = new Validator();
-    const deviceModel = new DeviceModel(deviceModelPath, validator);
-    log(`Validating device model ${deviceModelPath}...`);
-    await deviceModel.load(true);
-    validateRequiredParamsAndScopes(deviceModel.desc, options.disableMandatoryEnforcement);
+    const deviceModel = await resolveDeviceModel(deviceModelPath, log, options);
 
     // prepare metadata
     const metadata = {

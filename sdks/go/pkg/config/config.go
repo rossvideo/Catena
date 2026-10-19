@@ -92,6 +92,10 @@ type RestOptions struct {
 	ExtraAllowedHeaders []string      `env:"REST_EXTRA_ALLOWED_HEADERS" flag:"rest-extra-allowed-headers"`
 	ExtraAllowedMethods []string      `env:"REST_EXTRA_ALLOWED_METHODS" flag:"rest-extra-allowed-methods"`
 	CorsMaxAge          time.Duration `env:"REST_CORS_MAX_AGE" flag:"rest-cors-max-age"` // Defaults to seconds if no unit is specified
+	// Fallback serves HTTP requests that match no ST 2138 route.
+	// Assigned in code only; not loaded from the environment or flags.
+	// Nil leaves the transport's default 404.
+	Fallback http.HandlerFunc `env:"-" flag:"-"`
 }
 
 // GrpcOptions configures the gRPC transport.
@@ -245,6 +249,7 @@ func DefaultRestOptions() RestOptions {
 		ExtraAllowedHeaders: nil,              // required headers already cover the ST 2138 surface
 		ExtraAllowedMethods: nil,              // fixed REST method set; extension unlikely
 		CorsMaxAge:          10 * time.Minute, // preflight cache; only used once CORS is enabled
+		Fallback:            nil,
 	}
 }
 

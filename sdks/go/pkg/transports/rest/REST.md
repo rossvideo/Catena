@@ -101,8 +101,8 @@ Core routes:
 
 Fallback and root behavior:
 
-- `RegisterFallbackHandler(...)` supports custom routes outside ST2138 routes
-- Unknown routes return `NOT_FOUND` when no fallback is registered
+- `RestOptions.Fallback` supports custom routes outside ST2138 routes. It is assigned in code, not loaded from the environment or flags, and must be set before `NewTransport`. The handler writes its own response.
+- Unknown routes return `NOT_FOUND` when `Fallback` is nil
 
 ## Handler Mapping
 

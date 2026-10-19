@@ -1,0 +1,35 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:op
+language_packs:
+  packs:
+    en:
+      name: English
+      words:
+        greeting: Hello
+        parting: Goodbye
+    es:
+      name: Spanish
+      words:
+        greeting: Hola
+        parting: Adiós
+    fr:
+      name: French
+      words:
+        greeting: Bonjour
+        parting: Adieu
+    de:
+      name: German
+      words:
+        greeting: Hallo
+        parting: Auf Wiedersehen
+params:
+  product:
+    import:
+      url: ./param.product.yaml
+  greeting:
+    type: STRING
+    name: { display_strings: { $key: greeting } }
+    value: { string_value: "Hello, World!" }

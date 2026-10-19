@@ -50,7 +50,7 @@ import (
 const sdkModulePath = "github.com/rossvideo/catena/sdks/go"
 
 // SDKVersion is the Catena Go SDK version reported in the SDK-managed product
-// struct (the "catena_sdk_version" field). It is resolved at startup from the
+// struct (the "st2138_sdk_version" field). It is resolved at startup from the
 // binary's build info (the git tag or pseudo-version Go recorded for the SDK
 // module), so it stays accurate without a hand-maintained constant.
 var SDKVersion = sdkVersion()
@@ -78,13 +78,13 @@ func sdkVersion() string {
 	return "(devel)"
 }
 
-// CatenaSDKURL identifies the Catena SDK in the SDK-managed product struct (the
-// "catena_sdk" field).
-const CatenaSDKURL = "https://github.com/rossvideo/Catena"
+// ST2138SDKURL identifies the ST 2138 SDK in the SDK-managed product struct (the
+// "st2138_sdk" field).
+const ST2138SDKURL = "https://github.com/rossvideo/Catena"
 
 // ProductStruct carries the mandatory device product identity fields. The
-// catena_sdk and catena_sdk_version fields are managed by the SDK
-// (SDKVersion / CatenaSDKURL), so callers do not supply them. Register one per
+// st2138_sdk and st2138_sdk_version fields are managed by the SDK
+// (SDKVersion / ST2138SDKURL), so callers do not supply them. Register one per
 // slot with Server.RegisterProductStruct and the SDK serves it on GetDevice,
 // GetValue, and ParamInfo, and rejects writes to it on SetValue.
 type ProductStruct struct {
@@ -102,12 +102,12 @@ const (
 	ProductOidVendor           = "vendor"
 	ProductOidVersion          = "version"
 	ProductOidSerialNumber     = "serial_number"
-	ProductOidCatenaSDKVersion = "catena_sdk_version"
-	ProductOidCatenaSDK        = "catena_sdk"
+	ProductOidST2138SDKVersion = "st2138_sdk_version"
+	ProductOidST2138SDK        = "st2138_sdk"
 )
 
 // ProductParam builds the mandatory read-only "product" STRUCT param from p,
-// including the SDK-managed catena_sdk and catena_sdk_version fields. The field
+// including the SDK-managed st2138_sdk and st2138_sdk_version fields. The field
 // values live in the struct's Value; NewParamStruct auto-creates the valueless
 // STRING field descriptors from the values map. The SDK uses this to seed the
 // product param into the device on GetDevice.
@@ -119,15 +119,15 @@ func ProductParam(p ProductStruct) *st2138.Param {
 
 // ProductValues returns the product field values keyed by their sub-OID,
 // matching the sub-params built by ProductParam (including the SDK-managed
-// catena_sdk and catena_sdk_version fields).
+// st2138_sdk and st2138_sdk_version fields).
 func ProductValues(p ProductStruct) map[string]any {
 	return map[string]any{
 		ProductOidName:             p.Name,
 		ProductOidVendor:           p.Vendor,
 		ProductOidVersion:          p.Version,
 		ProductOidSerialNumber:     p.SerialNumber,
-		ProductOidCatenaSDKVersion: SDKVersion,
-		ProductOidCatenaSDK:        CatenaSDKURL,
+		ProductOidST2138SDKVersion: SDKVersion,
+		ProductOidST2138SDK:        ST2138SDKURL,
 	}
 }
 

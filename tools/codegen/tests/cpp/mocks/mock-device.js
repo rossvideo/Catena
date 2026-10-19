@@ -29,7 +29,6 @@ export function createMockDeviceWithParams(desc, deviceName = 'Test') {
 
   device.getParam.mockImplementation((fqoid) => {
     const path = fqoid.split('/');
-    path.shift();
     const front = path.shift();
     if (!(front in device.params)) {
       throw new Error(`Invalid template parameter ${fqoid}`);

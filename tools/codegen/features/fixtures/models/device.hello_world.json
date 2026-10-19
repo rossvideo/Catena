@@ -1,0 +1,64 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+  "default_scope": "st2138:op",
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  },
+  "params": {
+    "product": {
+      "import": {
+        "url": "./param.product.yaml"
+      }
+    },
+    "hello": {
+      "type": "STRING",
+      "name": { "display_strings": { "$key": "greeting" } },
+      "value": { "string_value": "Hello, World!" }
+    },
+    "count": {
+      "type": "INT32",
+      "name": { "display_strings": { "en": "Counter" } },
+      "value": { "int32_value": 1234 }
+    },
+    "gain": {
+      "type": "FLOAT32",
+      "name": { "display_strings": { "en": "Audio Gain" } },
+      "widget": "fader",
+      "value": { "float32_value": 0.707 }
+    },
+    "primes": {
+      "type": "INT32_ARRAY",
+      "name": { "display_strings": { "en": "The First Few Primes" } },
+      "value": {
+        "int32_array_values": {
+          "ints": [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+        }
+      }
+    }
+  }
+}

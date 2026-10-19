@@ -57,6 +57,7 @@ func TestDefaultOptions(t *testing.T) {
 			ExtraAllowedHeaders: nil,
 			ExtraAllowedMethods: nil,
 			CorsMaxAge:          600 * time.Second,
+			Fallback:            nil,
 		},
 		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
