@@ -46,11 +46,6 @@ import (
 	"github.com/dlclark/regexp2"
 )
 
-// Schema patterns copied from smpte/interface/schemata/device.yaml.
-// The schema file lives outside this Go module, so the running server cannot
-// read it. TestSchemaPatternsMatchDeviceYAML fails if a copy diverges.
-// JSON Schema regular expressions are ECMAScript. fqoid uses lookaheads, which
-// Go's regexp package cannot compile, so these are compiled with regexp2.
 const (
 	// fqoidPattern is $defs/fqoid.pattern.
 	fqoidPattern = `^(?!.*\.)(?!stream(?:$|/))[A-Za-z][A-Za-z0-9_]{0,30}(?:/(?:(?!stream(?:$|/))[A-Za-z][A-Za-z0-9_]{0,30}|(?:0|[1-9]\d{0,14}|[1-8]\d{15}))){0,29}(?:/(?:(?!stream$)[A-Za-z][A-Za-z0-9_]{0,30}|(?:0|[1-9]\d{0,14}|[1-8]\d{15})|-))?$`
