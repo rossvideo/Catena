@@ -23,9 +23,9 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	srv.RegisterParamInfoHandler(1, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
 		ctx.Logger().Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
 
-		deviceInfo, ok := buildDeviceDefinition(slot, counter, state)
-		if !ok {
-			return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+		deviceInfo, status := buildDeviceDefinition(slot, counter, state)
+		if status.IsError() {
+			return status
 		}
 
 		return catena.ParamInfosForRequest(fqoid, deviceInfo, recursive, stream)

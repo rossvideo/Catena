@@ -21,9 +21,9 @@ func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *E
 		srv.RegisterGetParamHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Param, catena.StatusResult) {
 			ctx.Logger().Info("GetParam", "slot", slot, "fqoid", fqoid)
 
-			device, ok := buildDeviceDefinition(slot, counter, state)
-			if !ok {
-				return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+			device, status := buildDeviceDefinition(slot, counter, state)
+			if status.IsError() {
+				return st2138.Param{}, status
 			}
 
 			param, found := lookupParam(device.Proto, fqoid)
