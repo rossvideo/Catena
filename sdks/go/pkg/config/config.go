@@ -96,6 +96,18 @@ type RestOptions struct {
 	// Assigned in code only; not loaded from the environment or flags.
 	// Nil leaves the transport's default 404.
 	Fallback http.HandlerFunc `env:"-" flag:"-"`
+	// ReadTimeout is the maximum duration for reading the entire request, including the body.
+	ReadTimeout time.Duration `env:"REST_READ_TIMEOUT" flag:"rest-read-timeout"`
+	// ReadHeaderTimeout is the maximum duration for reading the request headers only.
+	ReadHeaderTimeout time.Duration `env:"REST_READ_HEADER_TIMEOUT" flag:"rest-read-header-timeout"`
+	// WriteTimeout is the maximum duration before timing out writes of the response.
+	WriteTimeout time.Duration `env:"REST_WRITE_TIMEOUT" flag:"rest-write-timeout"`
+	// IdleTimeout is the maximum amount of time to wait for the next request when keep-alives are enabled.
+	IdleTimeout time.Duration `env:"REST_IDLE_TIMEOUT" flag:"rest-idle-timeout"`
+	// MaxHeaderBytes is the maximum number of bytes in the HTTP header.
+	MaxHeaderBytes int `env:"REST_MAX_HEADER_BYTES" flag:"rest-max-header-bytes"`
+	// MaxBodyBytes is the maximum number of bytes in the HTTP body.
+	MaxBodyBytes int `env:"REST_MAX_BODY_BYTES" flag:"rest-max-body-bytes"`
 }
 
 // GrpcOptions configures the gRPC transport.
@@ -250,6 +262,12 @@ func DefaultRestOptions() RestOptions {
 		ExtraAllowedMethods: nil,              // fixed REST method set; extension unlikely
 		CorsMaxAge:          10 * time.Minute, // preflight cache; only used once CORS is enabled
 		Fallback:            nil,
+		ReadTimeout:         10 * time.Second, // all fo these values for hardening
+		ReadHeaderTimeout:   10 * time.Second, // are PLACEHOLDERS
+		WriteTimeout:        10 * time.Second, // actual values TBD
+		IdleTimeout:         10 * time.Second,
+		MaxHeaderBytes:      1 << 20, // 1MB
+		MaxBodyBytes:        1 << 20, // 1MB
 	}
 }
 
@@ -340,6 +358,12 @@ func (o RestOptions) LogValue() slog.Value {
 		slog.Any("extra_allowed_headers", o.ExtraAllowedHeaders),
 		slog.Any("extra_allowed_methods", o.ExtraAllowedMethods),
 		slog.Duration("cors_max_age", o.CorsMaxAge),
+		slog.Duration("read_timeout", o.ReadTimeout),
+		slog.Duration("read_header_timeout", o.ReadHeaderTimeout),
+		slog.Duration("write_timeout", o.WriteTimeout),
+		slog.Duration("idle_timeout", o.IdleTimeout),
+		slog.Int("max_header_bytes", o.MaxHeaderBytes),
+		slog.Int("max_body_bytes", o.MaxBodyBytes),
 	)
 }
 
