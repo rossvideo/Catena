@@ -38,6 +38,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -45,6 +46,7 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 	"github.com/rossvideo/catena/sdks/go/pkg/transports"
@@ -97,12 +99,17 @@ func main() {
 	}
 	defer closeLog()
 
-	runtimeOpts := catena.DefaultRuntimeOptions()
-	runtimeOpts.UseRest = true
-	runtimeOpts.UseGrpc = true
-	runtimeOpts.Server.Logger = log
-	runtimeOpts.Server.AuthzEnabled = false
-	srv, err := catena.NewServer(runtimeOpts.Server)
+	options, err := config.InitOptions("hello_world", os.Args[1:], config.WithDefaults(catena.DefaultRuntimeOptions()))
+	if err != nil {
+		if errors.Is(err, config.ErrHelp) {
+			os.Exit(0)
+		}
+		os.Exit(1)
+	}
+
+	options.Server.Logger = log
+	options.Server.AuthzEnabled = false
+	srv, err := catena.NewServer(options.Server)
 	if err != nil {
 		log.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
@@ -164,7 +171,7 @@ func main() {
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
-	if err := transports.RegisterFrom(srv, runtimeOpts); err != nil {
+	if err := transports.RegisterFrom(srv, options); err != nil {
 		log.Error("Failed to register transports", "error", err)
 		os.Exit(1)
 	}
@@ -172,12 +179,20 @@ func main() {
 	log.Info("=======================================================")
 	log.Info("Hello World Example")
 	log.Info("=======================================================")
-	log.Info("REST transport listening on default port 9080")
-	log.Info("gRPC transport listening on default port 6254")
-	log.Info("Try REST:")
-	log.Info("  GET  http://localhost:9080/st2138-api/v1/0/value/hello_world")
-	log.Info("Try gRPC:")
-	log.Info("  grpcurl -plaintext -import-path ~/Catena/smpte/interface/proto -proto service.proto -d '{\"slot\":0,\"oid\":\"hello_world\"}' localhost:6254 st2138.CatenaService/GetValue")
+	if options.UseRest {
+		log.Info("REST transport listening on default port 9080")
+	}
+	if options.UseGrpc {
+		log.Info("gRPC transport listening on default port 6254")
+	}
+	if options.UseRest {
+		log.Info("Try REST:")
+		log.Info("  GET  http://localhost:9080/st2138-api/v1/0/value/hello_world")
+	}
+	if options.UseGrpc {
+		log.Info("Try gRPC:")
+		log.Info("  grpcurl -plaintext -import-path ~/Catena/smpte/interface/proto -proto service.proto -d '{\"slot\":0,\"oid\":\"hello_world\"}' localhost:6254 st2138.CatenaService/GetValue")
+	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
