@@ -92,12 +92,20 @@ func (db *DeviceBuilder) Build() (Device, error) {
 	if db.err != nil {
 		return Device{}, db.err
 	}
-	return Device{Proto: proto.Clone(db.proto).(*protos.Device)}, nil
+	db.err = ErrAlreadyBuilt
+	return Device{Proto: db.proto}, nil
 }
 
-// Err returns the stored error of the builder.
-func (db *DeviceBuilder) Err() error {
-	return db.err
+// Clone returns a deep copy of the DeviceBuilder.
+// Inherits the builder's error state, excluding ErrAlreadyBuilt.
+func (db *DeviceBuilder) Clone() DeviceBuilder {
+	var clonedErr error
+	if errors.Is(db.err, ErrAlreadyBuilt) {
+		clonedErr = nil
+	} else {
+		clonedErr = db.err
+	}
+	return DeviceBuilder{proto: proto.Clone(db.proto).(*protos.Device), err: clonedErr}
 }
 
 // WithParam inserts param into the device's params map, keyed by oid. The

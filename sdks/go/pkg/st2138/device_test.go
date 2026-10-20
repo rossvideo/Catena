@@ -43,8 +43,6 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/proto"
-
-	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestNewDevice_Basic(t *testing.T) {
@@ -87,12 +85,15 @@ func TestDevice_WithParam_DeepCopies(t *testing.T) {
 	cd := NewDevice(0).
 		WithParam("counter", param)
 
-	// Mutating the original param after WithParam must not affect the device.
-	param.WithValue(Value{Proto: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: 999}}})
-
 	stored := cd.proto.GetParams()["counter"]
-	if stored.GetValue().GetInt32Value() != 1 {
-		t.Errorf("expected stored value to remain 1, got %v", stored.GetValue().GetInt32Value())
+	if stored == param.proto {
+		t.Error("expected stored param to be cloned")
+	}
+	if stored.GetValue() == param.proto.GetValue() {
+		t.Error("expected stored param value to be cloned")
+	}
+	if !proto.Equal(stored, param.proto) {
+		t.Error("expected stored param to be equal to original")
 	}
 }
 
@@ -473,17 +474,6 @@ func TestDevice_BuildSurfacesErrors(t *testing.T) {
 	}
 }
 
-func TestDeviceBuilder_Err(t *testing.T) {
-	cd := NewDevice(0)
-	cd.err = errors.New("test error")
-	if cd.Err() == nil {
-		t.Fatal("expected error for builder with error")
-	}
-	if cd.Err().Error() != "test error" {
-		t.Fatal("expected error message 'test error', got", cd.Err())
-	}
-}
-
 func TestDeviceBuilder_WithShortCircuitErrors(t *testing.T) {
 	cd := NewDevice(0)
 	cd.err = errors.New("test error")
@@ -509,5 +499,67 @@ func TestDeviceBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 	if !proto.Equal(before, cd.proto) {
 		t.Fatal("expected With* to leave the device unchanged after an error")
+	}
+}
+
+func TestDevice_Clone(t *testing.T) {
+	cd := NewDevice(0)
+	clone := cd.Clone()
+	if !proto.Equal(cd.proto, clone.proto) {
+		t.Fatal("expected clone to be equal to original")
+	}
+	clone.WithDetailLevel(DetailLevelSubscriptions)
+	if proto.Equal(cd.proto, clone.proto) {
+		t.Fatal("expected original device to be unchanged")
+	}
+}
+
+func TestDeviceBuilder_CloneInheritsError(t *testing.T) {
+	cd := NewDevice(0)
+	cd.err = errors.New("test error")
+	clone := cd.Clone()
+	if clone.err == nil || clone.err.Error() != "test error" {
+		t.Fatal("expected clone to inherit error")
+	}
+}
+
+func TestDeviceBuilder_CloneAlreadyBuilt(t *testing.T) {
+	cd := NewDevice(0)
+	p, err := cd.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetSlot() != 0 {
+		t.Errorf("expected slot 0, got %v", p.Proto.GetSlot())
+	}
+
+	clone := cd.Clone()
+	c, err := clone.WithDetailLevel(DetailLevelSubscriptions).Build()
+	if err != nil {
+		t.Fatal("expected no error for clone with valid value", err)
+	}
+	if c.Proto.GetDetailLevel() != DetailLevelSubscriptions {
+		t.Fatal("expected detail level Subscriptions, got", c.Proto.GetDetailLevel())
+	}
+	if c.Proto.GetSlot() != 0 {
+		t.Errorf("expected slot 0, got %v", c.Proto.GetSlot())
+	}
+}
+
+func TestDevice_AlreadyBuilt(t *testing.T) {
+	cd := NewDevice(0)
+	p, err := cd.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetSlot() != 0 {
+		t.Errorf("expected slot 0, got %v", p.Proto.GetSlot())
+	}
+	p, err = cd.WithDetailLevel(DetailLevelFull).Build()
+	if err == nil || !errors.Is(err, ErrAlreadyBuilt) {
+		t.Fatal("expected error for builder after Build(), got", err)
+	}
+	if p != (Device{}) {
+		t.Fatal("expected empty device for building already built device, got", p)
 	}
 }

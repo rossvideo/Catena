@@ -399,16 +399,19 @@ func TestWithParam_Struct(t *testing.T) {
 
 func TestWithParam_DeepClone(t *testing.T) {
 	child := NewParamInt32(1)
+	childValue := child.proto.GetValue()
 	parent := NewParamStruct().WithParam("x", child)
-	p := parent.proto
-
-	childParam, err := child.Build()
-	if err != nil {
-		t.Fatalf("failed to build child param: %v", err)
+	parentValue := parent.proto.GetValue().
+		GetStructValue().
+		GetFields()["x"]
+	if parent.proto.GetParams()["x"] == child.proto {
+		t.Error("expected sub-param descriptor to be cloned")
 	}
-	childParam.SetValue(int32(999))
-	if p.GetValue().GetStructValue().GetFields()["x"].GetInt32Value() != 1 {
-		t.Error("expected sub-param value to be a deep clone, not affected by later mutation")
+	if parentValue == childValue {
+		t.Error("expected sub-param value to be cloned")
+	}
+	if !proto.Equal(parentValue, childValue) {
+		t.Error("expected cloned value to equal the original")
 	}
 }
 
@@ -424,7 +427,7 @@ func TestWithParam_Nil(t *testing.T) {
 	// Passing a nil sub-param must not panic and must not add an entry,
 	// subsequent method calls must short-circuit without panicking.
 	cp := NewParamStruct().WithParam("x", nil)
-	if cp.Err() == nil {
+	if cp.err == nil {
 		t.Error("expected error for builder with nil sub-param")
 	}
 	p := cp.proto
@@ -1654,13 +1657,64 @@ func TestParamBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 }
 
-func TestParamBuilder_Err(t *testing.T) {
+func TestParam_Clone(t *testing.T) {
+	cp := NewParamInt32(42)
+	clone := cp.Clone()
+	if !proto.Equal(cp.proto, clone.proto) {
+		t.Fatal("expected clone to be equal to original")
+	}
+	clone.WithName(PolyglotText{"en": "Test"})
+	if proto.Equal(cp.proto, clone.proto) {
+		t.Fatal("expected original param to be unchanged")
+	}
+}
+
+func TestParamBuilder_CloneInheritsError(t *testing.T) {
 	cp := NewParamInt32()
 	cp.err = errors.New("test error")
-	if cp.Err() == nil {
-		t.Fatal("expected error for builder with error")
+	clone := cp.Clone()
+	if clone.err == nil || clone.err.Error() != "test error" {
+		t.Fatal("expected clone to inherit error")
 	}
-	if cp.Err().Error() != "test error" {
-		t.Fatal("expected error message 'test error', got", cp.Err())
+}
+
+func TestParamBuilder_CloneAlreadyBuilt(t *testing.T) {
+	cp := NewParamInt32(42)
+	p, err := cp.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue().GetInt32Value() != 42 {
+		t.Fatal("expected value 42, got", p.Proto.GetValue().GetInt32Value())
+	}
+
+	clone := cp.Clone()
+	c, err := clone.WithName(PolyglotText{"en": "Test"}).Build()
+	if err != nil {
+		t.Fatal("expected no error for clone with valid value", err)
+	}
+	if c.Proto.GetValue().GetInt32Value() != 42 {
+		t.Fatal("expected value 42, got", c.Proto.GetValue().GetInt32Value())
+	}
+	if c.Proto.GetName().GetDisplayStrings()["en"] != "Test" {
+		t.Fatal("expected name 'Test', got", c.Proto.GetName().GetDisplayStrings()["en"])
+	}
+}
+
+func TestParam_AlreadyBuilt(t *testing.T) {
+	cp := NewParamInt32(42)
+	p, err := cp.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue().GetInt32Value() != 42 {
+		t.Fatal("expected value 42, got", p.Proto.GetValue().GetInt32Value())
+	}
+	p, err = cp.WithName(PolyglotText{"en": "Test"}).Build()
+	if err == nil || !errors.Is(err, ErrAlreadyBuilt) {
+		t.Fatal("expected error for builder after Build(), got", err)
+	}
+	if p != (Param{}) {
+		t.Fatal("expected empty param for building already built param, got", p)
 	}
 }
