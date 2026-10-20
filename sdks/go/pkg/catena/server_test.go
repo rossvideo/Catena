@@ -1429,9 +1429,20 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointSetValue, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
+		// Validation runs inside the handler callback, after lookup, so a handler
+		// must be registered for the invalid fqoid to be rejected.
+		handlerCalled := false
+		srv.setValueHandlers[0] = func(uint16, []SetValueEntry, HandlerContext) StatusResult {
+			handlerCalled = true
+			return StatusWithCode(StatusCodeOk, "")
+		}
+
 		status := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "/invalid/fqoid", Value: int32(1)}}, validTestTransportContext(nil))
 		if !status.IsError() {
 			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+		if handlerCalled {
+			t.Error("handler should not run when fqoid validation fails")
 		}
 	})
 
@@ -1576,9 +1587,18 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointReadAsset, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
+		handlerCalled := false
+		srv.readAssetHandlers[5] = func(uint16, string, HandlerContext, Stream[st2138.Asset]) StatusResult {
+			handlerCalled = true
+			return StatusWithCode(StatusCodeOk, "")
+		}
+
 		status := srv.InvokeReadAssetHandler(5, "/invalid/fqoid", &sliceStream[st2138.Asset]{}, validTestTransportContext(nil))
 		if !status.IsError() {
 			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+		if handlerCalled {
+			t.Error("handler should not run when fqoid validation fails")
 		}
 	})
 
@@ -1648,9 +1668,18 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointCreateAsset, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
+		handlerCalled := false
+		srv.createAssetHandlers[5] = func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+			handlerCalled = true
+			return StatusWithCode(StatusCodeOk, "")
+		}
+
 		status := srv.InvokeCreateAssetHandler(5, "/invalid/fqoid", st2138.Asset{}, validTestTransportContext(nil))
 		if !status.IsError() {
 			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+		if handlerCalled {
+			t.Error("handler should not run when fqoid validation fails")
 		}
 	})
 
@@ -1706,9 +1735,18 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointUpdateAsset, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
+		handlerCalled := false
+		srv.updateAssetHandlers[5] = func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+			handlerCalled = true
+			return StatusWithCode(StatusCodeOk, "")
+		}
+
 		status := srv.InvokeUpdateAssetHandler(5, "/invalid/fqoid", st2138.Asset{}, validTestTransportContext(nil))
 		if !status.IsError() {
 			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+		if handlerCalled {
+			t.Error("handler should not run when fqoid validation fails")
 		}
 	})
 
@@ -1758,9 +1796,18 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointDeleteAsset, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
+		handlerCalled := false
+		srv.deleteAssetHandlers[5] = func(uint16, string, HandlerContext) StatusResult {
+			handlerCalled = true
+			return StatusWithCode(StatusCodeOk, "")
+		}
+
 		status := srv.InvokeDeleteAssetHandler(5, "/invalid/fqoid", validTestTransportContext(nil))
 		if !status.IsError() {
 			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+		if handlerCalled {
+			t.Error("handler should not run when fqoid validation fails")
 		}
 	})
 
@@ -1925,9 +1972,18 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointExecuteCommand, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
+		handlerCalled := false
+		srv.executeCommandHandlers[9] = func(uint16, string, any, bool, HandlerContext, Stream[st2138.CommandResponse]) StatusResult {
+			handlerCalled = true
+			return StatusWithCode(StatusCodeOk, "")
+		}
+
 		status := srv.InvokeExecuteCommandHandler(9, "/invalid/fqoid", "payload", true, &sliceStream[st2138.CommandResponse]{}, validTestTransportContext(nil))
 		if !status.IsError() {
 			t.Errorf("expected InvalidArgument status, got %v", status)
+		}
+		if handlerCalled {
+			t.Error("handler should not run when fqoid validation fails")
 		}
 	})
 

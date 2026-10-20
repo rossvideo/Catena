@@ -1100,13 +1100,13 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, stream Stream[st2138.Device
 }
 
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Value, StatusResult) {
-
-	if result := ValidateFqoid(fqoid); result.IsError() {
-		return st2138.Value{}, result
-	}
-
 	return withGate(s, transportContext, EndpointGetValue, false,
 		func(ctx HandlerContext) (st2138.Value, StatusResult) {
+
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return st2138.Value{}, result
+			}
+
 			// The SDK owns product/* only when a product struct is registered for the
 			// slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed read on mon. When
@@ -1155,13 +1155,12 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 }
 
 func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Param, StatusResult) {
-
-	if result := ValidateFqoid(fqoid); result.IsError() {
-		return st2138.Param{}, result
-	}
-
 	return withGate(s, transportContext, EndpointGetParam, false,
 		func(ctx HandlerContext) (st2138.Param, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return st2138.Param{}, result
+			}
+
 			// The SDK owns product/* only when a product struct is registered for the
 			// slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed read on mon. This
@@ -1195,18 +1194,16 @@ func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportConte
 // them atomically; single-value endpoints pass a one-element slice. Access
 // checks run once for the whole batch.
 func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, transportContext TransportContext) StatusResult {
-	for _, entry := range entries {
-		if result := ValidateFqoid(entry.Fqoid); result.IsError() {
-			return result
-		}
-	}
-
 	_, res := invokeHandler(s, transportContext, EndpointSetValue, true, s.setValueHandlers, slot,
 		"no SetValue handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler SetValueHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			// The product struct is always read-only; reject any write targeting
 			// product/* regardless of whether the SDK or business logic manages it.
 			for _, entry := range entries {
+				if result := ValidateFqoid(entry.Fqoid); result.IsError() {
+					return struct{}{}, result
+				}
+
 				if isProductOid(entry.Fqoid) {
 					return struct{}{}, StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
 				}
@@ -1217,11 +1214,6 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 }
 
 func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, stream Stream[st2138.Asset], transportContext TransportContext) StatusResult {
-
-	if result := ValidateFqoid(fqoid); result.IsError() {
-		return result
-	}
-
 	// Wrap the transport's stream so Send also fails on server shutdown, not just
 	// client disconnect. Cancellation is then transparent to the handler: it just
 	// gets an error from the next Send once the server is shutting down.
@@ -1229,6 +1221,9 @@ func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, stream Stream
 	_, res := invokeHandler(s, transportContext, EndpointReadAsset, false, s.readAssetHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ReadAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(slot, fqoid, ctx, stream)
 		})
 	return res
@@ -1249,14 +1244,12 @@ func enforceAssetWriteScope(ctx HandlerContext) StatusResult {
 }
 
 func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult {
-
-	if result := ValidateFqoid(fqoid); result.IsError() {
-		return result
-	}
-
 	_, res := invokeHandler(s, transportContext, EndpointCreateAsset, true, s.createAssetHandlers, slot,
 		"no CreateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler CreateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
@@ -1266,14 +1259,12 @@ func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st213
 }
 
 func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, transportContext TransportContext) StatusResult {
-
-	if result := ValidateFqoid(fqoid); result.IsError() {
-		return result
-	}
-
 	_, res := invokeHandler(s, transportContext, EndpointUpdateAsset, true, s.updateAssetHandlers, slot,
 		"no UpdateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
@@ -1283,14 +1274,12 @@ func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st213
 }
 
 func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportContext TransportContext) StatusResult {
-
-	if result := ValidateFqoid(fqoid); result.IsError() {
-		return result
-	}
-
 	_, res := invokeHandler(s, transportContext, EndpointDeleteAsset, true, s.deleteAssetHandlers, slot,
 		"no DeleteAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
@@ -1300,11 +1289,6 @@ func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportCo
 }
 
 func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream Stream[st2138.CommandResponse], transportContext TransportContext) StatusResult {
-
-	if result := ValidateFqoid(commandFqoid); result.IsError() {
-		return result
-	}
-
 	// When the caller opts out of responses, swap in a nullStream so any chunks
 	// the handler sends are discarded here rather than each transport having to
 	// gobble them itself. The handler still receives respond and may skip sending.
@@ -1318,25 +1302,27 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	_, res := invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, slot,
 		"ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ExecuteCommandHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(commandFqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(slot, commandFqoid, payload, respond, ctx, stream)
 		})
 	return res
 }
 
 func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo], transportContext TransportContext) StatusResult {
-
-	if oidPrefix != "" {
-		if result := ValidateFqoid(oidPrefix); result.IsError() {
-			return result
-		}
-	}
-
 	// Wrap the transport's stream so Send also fails on server shutdown, not just
 	// client disconnect. Cancellation is then transparent to the handler: it just
 	// gets an error from the next Send once the server is shutting down.
 	stream = shutdownStream[st2138.ParamInfo]{inner: stream, shutdown: s.ctx}
 	_, res := withGate(s, transportContext, EndpointParamInfo, false,
 		func(ctx HandlerContext) (struct{}, StatusResult) {
+			if oidPrefix != "" {
+				if result := ValidateFqoid(oidPrefix); result.IsError() {
+					return struct{}{}, result
+				}
+			}
+
 			// The SDK owns product/* ParamInfo only when a product struct is registered
 			// for the slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed request on mon. When
@@ -1394,27 +1380,24 @@ func (s *server) InvokeListLanguagesHandler(slot uint16, transportContext Transp
 }
 
 func (s *server) InvokeReadLanguagePackHandler(slot uint16, language string, transportContext TransportContext) (LanguagePack, StatusResult) {
-
-	if result := ValidateLanguageCode(language); result.IsError() {
-		return LanguagePack{}, result
-	}
-
 	return invokeHandler(s, transportContext, EndpointReadLanguagePack, false, s.readLanguagePackHandlers, slot,
 		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ReadLanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return LanguagePack{}, result
+			}
+
 			return handler(slot, language, ctx)
 		})
 }
 
 func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
-
-	if result := ValidateLanguageCode(language); result.IsError() {
-		return result
-	}
-
 	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.createLanguagePackHandlers, slot,
 		"CreateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler CreateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
+			}
 			// Mutations require the adm scope specifically, not merely any write
 			// scope, so narrow the coarse write gate now that we have the context.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
@@ -1431,14 +1414,12 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 }
 
 func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, languagePack LanguagePack, transportContext TransportContext) StatusResult {
-
-	if result := ValidateLanguageCode(language); result.IsError() {
-		return result
-	}
-
 	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguagePackHandlers, slot,
 		"UpdateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
+			}
 			// Mutations require the adm scope specifically, not merely any write scope.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
@@ -1452,14 +1433,12 @@ func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, l
 }
 
 func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, transportContext TransportContext) StatusResult {
-
-	if result := ValidateLanguageCode(language); result.IsError() {
-		return result
-	}
-
 	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguagePackHandlers, slot,
 		"DeleteLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
+			}
 			// Mutations require the adm scope specifically, not merely any write scope.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
