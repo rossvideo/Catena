@@ -65,6 +65,7 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -430,6 +431,14 @@ func main() {
 		// serves the demo UI and an asset index convenience route when no SDK
 		// route matched. It must be set before NewTransport.
 		options.Rest.Fallback = func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/demo-config" {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]any{
+					"jwtIssuer": strings.TrimSpace(options.Server.JwtOptions.Issuer),
+				})
+				return
+			}
+
 			if r.URL.Path == "/assets-list" {
 				var assetList []map[string]any
 				assets.Range(func(key, value any) bool {
