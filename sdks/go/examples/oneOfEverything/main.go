@@ -62,7 +62,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"sort"
@@ -286,28 +285,13 @@ func sortedAssetIDs(assets *sync.Map) []string {
 	return ids
 }
 
-type rewriteHostTransport struct {
-	base http.RoundTripper
-	from string
-	to   *url.URL
-}
-
-func (t *rewriteHostTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if req.URL.Host != t.from {
-		return t.base.RoundTrip(req)
-	}
-	clone := req.Clone(req.Context())
-	clone.URL.Scheme = t.to.Scheme
-	clone.URL.Host = t.to.Host
-	clone.Host = t.to.Host
-	return t.base.RoundTrip(clone)
-}
-
 func main() {
 	defaultOptions := catena.DefaultRuntimeOptions()
 	// customize the dashboard defaults
 	defaultOptions.Dashboard.NodeID = "one-of-everything-a4:bb:6d:6a:6f:a3"
 	defaultOptions.Dashboard.NodeName = "One of Everything Demo"
+
+	// Authz is disabled by default for demo
 	defaultOptions.Server.AuthzEnabled = false
 
 	options, err := config.InitOptions("oneofeverything", os.Args[1:], config.WithDefaults(defaultOptions))
