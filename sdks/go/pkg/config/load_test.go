@@ -248,324 +248,120 @@ func TestInitOptions(t *testing.T) {
 	})
 }
 
-func TestInitOptions_JwtValidation(t *testing.T) {
-
-	t.Run("jwt insecure skip signature validation from env", func(t *testing.T) {
-		t.Setenv("CATENA_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "true")
-		opts, err := InitOptions("test_app", []string{})
-		if err != nil {
-			t.Errorf("Expected no error got: %v", err)
-		}
-		if !opts.Server.JwtOptions.InsecureSkipSignatureValidation {
-			t.Errorf("Expected InsecureSkipSignatureValidation to be true")
-		}
-	})
-
-	t.Run("jwt insecure skip signature validation from cli", func(t *testing.T) {
-		opts, err := InitOptions("test_app", []string{"--jwt-insecure-skip-signature-validation=true"})
-		if err != nil {
-			t.Errorf("Expected no error got: %v", err)
-		}
-		if !opts.Server.JwtOptions.InsecureSkipSignatureValidation {
-			t.Errorf("Expected InsecureSkipSignatureValidation to be true")
-		}
-	})
-
-	t.Run("jwt insecure skip signature validation false stays off", func(t *testing.T) {
-		t.Setenv("CATENA_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "false")
-		opts, err := InitOptions("test_app", []string{"--jwt-insecure-skip-signature-validation=false"})
-		if err != nil {
-			t.Errorf("Expected no error got: %v", err)
-		}
-		if opts.Server.JwtOptions.InsecureSkipSignatureValidation {
-			t.Errorf("Expected InsecureSkipSignatureValidation to be false")
-		}
-	})
-
-	t.Run("jwt insecure skip signature validation cli overrides env", func(t *testing.T) {
-		t.Setenv("CATENA_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "true")
-		opts, err := InitOptions("test_app", []string{"--jwt-insecure-skip-signature-validation=false"})
-		if err != nil {
-			t.Errorf("Expected no error got: %v", err)
-		}
-		if opts.Server.JwtOptions.InsecureSkipSignatureValidation {
-			t.Errorf("Expected CLI false to override env true")
-		}
-	})
-
-}
-
-// TestInitOptions_Transport groups the transport-related option resolution
-// (REST/gRPC ports, gRPC reflection, and the UseRest/UseGrpc toggles) into a
-// single collapsible test so the env-var, default, and CLI-override behaviour
-// can be browsed together.
-func TestInitOptions_Transport(t *testing.T) {
-	// init runs InitOptionsPrefix with the shared test app/prefix, failing the
-	// test if loading errors.
-	init := func(t *testing.T, args ...string) RuntimeOptions {
-		t.Helper()
-		opts, err := InitOptions("test_app", args, WithPrefix("TESTCFG"))
-		if err != nil {
-			t.Fatalf("InitOptions() failed: %v", err)
-		}
-		return opts
+// TestOptionMappings locks the env-var/flag -> options-field contract. The
+// generic loader tests already prove a loader deposits a parsed value into the
+// pointer it was given; this table instead pins WHICH pointer each input is
+// wired to. Adding a config field means adding one line here.
+func TestOptionMappings(t *testing.T) {
+	// mapping pins one env/flag -> field relationship. set is a NON-DEFAULT
+	// value encoded as a string: if a loader is wired to the wrong field (or
+	// not at all) got(opts) won't match want. The non-default requirement is
+	// load-bearing: a bool that defaults true must be set "false" here, or an
+	// unwired field would still pass.
+	type mapping struct {
+		env  string                   // env suffix (the loader adds the prefix)
+		flag string                   // cli flag name
+		set  string                   // string encoding of a non-default value
+		want any                      // expected resolved value
+		got  func(RuntimeOptions) any // reads the target field
 	}
 
-	t.Run("rest port from env", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_PORT", "9090")
-		if opts := init(t); opts.Rest.Port != 9090 {
-			t.Errorf("expected Rest.Port 9090 from env var, got %d", opts.Rest.Port)
-		}
-	})
+	mappings := []mapping{
+		// runtime
+		{"USE_GRPC", "use-grpc", "true", true, func(o RuntimeOptions) any { return o.UseGrpc }},
+		{"USE_REST", "use-rest", "true", true, func(o RuntimeOptions) any { return o.UseRest }},
+		// REST transport
+		{"REST_PORT", "rest-port", "9090", 9090, func(o RuntimeOptions) any { return o.Rest.Port }},
+		{"REST_TLS_ENABLED", "rest-tls-enabled", "true", true, func(o RuntimeOptions) any { return o.Rest.TLS.Enabled }},
+		{"REST_TLS_CERT_FILE", "rest-tls-cert-file", "/certs/rest.crt", "/certs/rest.crt", func(o RuntimeOptions) any { return o.Rest.TLS.CertFile }},
+		{"REST_TLS_KEY_FILE", "rest-tls-key-file", "/certs/rest.key", "/certs/rest.key", func(o RuntimeOptions) any { return o.Rest.TLS.KeyFile }},
+		{"REST_TLS_CLIENT_CA_FILE", "rest-tls-client-ca-file", "/certs/rest-ca.crt", "/certs/rest-ca.crt", func(o RuntimeOptions) any { return o.Rest.TLS.ClientCAFile }},
+		{"REST_TLS_MUTUAL_AUTH", "rest-tls-mutual-auth", "true", true, func(o RuntimeOptions) any { return o.Rest.TLS.MutualAuth }},
+		{"REST_ALLOWED_ORIGINS", "rest-allowed-origins", "https://a.example,https://b.example", []string{"https://a.example", "https://b.example"}, func(o RuntimeOptions) any { return o.Rest.AllowedOrigins }},
+		{"REST_EXTRA_ALLOWED_HEADERS", "rest-extra-allowed-headers", "X-A,X-B", []string{"X-A", "X-B"}, func(o RuntimeOptions) any { return o.Rest.ExtraAllowedHeaders }},
+		{"REST_EXTRA_ALLOWED_METHODS", "rest-extra-allowed-methods", "PATCH", []string{"PATCH"}, func(o RuntimeOptions) any { return o.Rest.ExtraAllowedMethods }},
+		{"REST_CORS_MAX_AGE", "rest-cors-max-age", "5m", 5 * time.Minute, func(o RuntimeOptions) any { return o.Rest.CorsMaxAge }},
+		// gRPC transport
+		{"GRPC_PORT", "grpc-port", "7000", 7000, func(o RuntimeOptions) any { return o.Grpc.Port }},
+		{"GRPC_REFLECTION", "grpc-reflection", "true", true, func(o RuntimeOptions) any { return o.Grpc.Reflection }},
+		{"GRPC_TLS_ENABLED", "grpc-tls-enabled", "true", true, func(o RuntimeOptions) any { return o.Grpc.TLS.Enabled }},
+		{"GRPC_TLS_CERT_FILE", "grpc-tls-cert-file", "/certs/grpc.crt", "/certs/grpc.crt", func(o RuntimeOptions) any { return o.Grpc.TLS.CertFile }},
+		{"GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "/certs/grpc.key", "/certs/grpc.key", func(o RuntimeOptions) any { return o.Grpc.TLS.KeyFile }},
+		{"GRPC_TLS_CLIENT_CA_FILE", "grpc-tls-client-ca-file", "/certs/grpc-ca.crt", "/certs/grpc-ca.crt", func(o RuntimeOptions) any { return o.Grpc.TLS.ClientCAFile }},
+		{"GRPC_TLS_MUTUAL_AUTH", "grpc-tls-mutual-auth", "true", true, func(o RuntimeOptions) any { return o.Grpc.TLS.MutualAuth }},
+		// server
+		{"MAX_CONNECTIONS", "max-connections", "250", 250, func(o RuntimeOptions) any { return o.Server.MaxConnections }},
+		{"DEV_MODE", "dev", "true", true, func(o RuntimeOptions) any { return o.Server.IsDev }},
+		{"AUTHZ", "authz", "false", false, func(o RuntimeOptions) any { return o.Server.AuthzEnabled }}, // defaults true
+		// JWT validation
+		{"JWT_ISSUER", "jwt-issuer", "https://issuer.example", "https://issuer.example", func(o RuntimeOptions) any { return o.Server.JwtOptions.Issuer }},
+		{"JWT_AUDIENCE", "jwt-audience", "catena-aud", "catena-aud", func(o RuntimeOptions) any { return o.Server.JwtOptions.Audience }},
+		{"JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "jwt-insecure-skip-signature-validation", "true", true, func(o RuntimeOptions) any { return o.Server.JwtOptions.InsecureSkipSignatureValidation }},
+		{"JWT_STARTUP_RETRY_MAX_ELAPSED", "jwt-startup-retry-max-elapsed", "90s", 90 * time.Second, func(o RuntimeOptions) any { return o.Server.JwtOptions.StartupRetryMaxElapsedTime }},
+		// DashBoard connection props
+		{"DASHBOARD_SERVICE_HOSTNAME", "dashboard-service-hostname", "example.host", "example.host", func(o RuntimeOptions) any { return o.Dashboard.ServiceHostname }},
+		{"DASHBOARD_PORT", "dashboard-port", "8090", 8090, func(o RuntimeOptions) any { return o.Dashboard.Port }},
+		{"DASHBOARD_SERVICE_PORT", "dashboard-service-port", "7001", 7001, func(o RuntimeOptions) any { return o.Dashboard.ServicePort }},
+		{"DASHBOARD_SERVICE_TLS_ENABLED", "dashboard-service-tls-enabled", "true", true, func(o RuntimeOptions) any { return o.Dashboard.ServiceTLS }},
+		{"DASHBOARD_PROTOCOL", "dashboard-protocol", "st2138-rest", ProtocolST2138Rest, func(o RuntimeOptions) any { return o.Dashboard.Protocol }}, // defaults grpc
+		{"DASHBOARD_SERVICE_NAME", "dashboard-service-name", "service:other", "service:other", func(o RuntimeOptions) any { return o.Dashboard.ServiceName }},
+		{"DASHBOARD_NODE_NAME", "dashboard-node-name", "node-name", "node-name", func(o RuntimeOptions) any { return o.Dashboard.NodeName }},
+		{"DASHBOARD_NODE_ID", "dashboard-node-id", "node-id", "node-id", func(o RuntimeOptions) any { return o.Dashboard.NodeID }},
+		{"DASHBOARD_ENDPOINT", "dashboard-endpoint", "/other/endpoint", "/other/endpoint", func(o RuntimeOptions) any { return o.Dashboard.Endpoint }},
+		// logging
+		{"SILENT", "silent", "true", true, func(o RuntimeOptions) any { return o.Logger.Silent }},
+		{"LOG_DIR", "log-dir", "/var/log/catena", "/var/log/catena", func(o RuntimeOptions) any { return o.Logger.LogDir }},
+		{"LOG_LEVEL", "log-level", "error", slog.LevelError, func(o RuntimeOptions) any { return o.Logger.Level }},
+		{"LOG_TO_FILE", "log-to-file", "false", false, func(o RuntimeOptions) any { return o.Logger.WriteToFile }},          // defaults true
+		{"LOG_TO_CONSOLE", "log-to-console", "false", false, func(o RuntimeOptions) any { return o.Logger.WriteToConsole }}, // defaults true
+		{"LOG_USE_JSON", "log-use-json", "true", true, func(o RuntimeOptions) any { return o.Logger.UseJSON }},
+	}
 
-	t.Run("grpc port from env", func(t *testing.T) {
-		t.Setenv("TESTCFG_GRPC_PORT", "7000")
-		if opts := init(t); opts.Grpc.Port != 7000 {
-			t.Errorf("expected Grpc.Port 7000 from env var, got %d", opts.Grpc.Port)
-		}
-	})
-
-	// GrpcReflection uses the package's lenient bool parsing, so "1" and "yes"
-	// resolve to true (unlike the legacy strict v == "true" behaviour).
-	t.Run("grpc reflection from env", func(t *testing.T) {
-		tests := []struct {
-			value    string
-			expected bool
-		}{
-			{"true", true},
-			{"false", false},
-			{"1", true},
-			{"yes", true},
-		}
-		for _, tt := range tests {
-			t.Run(tt.value, func(t *testing.T) {
-				t.Setenv("TESTCFG_GRPC_REFLECTION", tt.value)
-				if opts := init(t); opts.Grpc.Reflection != tt.expected {
-					t.Errorf("expected Grpc.Reflection=%v for %q, got %v", tt.expected, tt.value, opts.Grpc.Reflection)
+	// env in isolation: each env suffix must land in its own field.
+	t.Run("env isolation", func(t *testing.T) {
+		for _, m := range mappings {
+			t.Run(m.env, func(t *testing.T) {
+				t.Setenv("TESTCFG_"+m.env, m.set)
+				opts, err := InitOptions("test_app", nil, WithPrefix("TESTCFG"))
+				if err != nil {
+					t.Fatalf("InitOptions: %v", err)
+				}
+				if got := m.got(opts); !reflect.DeepEqual(got, m.want) {
+					t.Errorf("env TESTCFG_%s: got %v (%T), want %v (%T)", m.env, got, got, m.want, m.want)
 				}
 			})
 		}
 	})
 
-	t.Run("use grpc from env", func(t *testing.T) {
-		tests := []struct {
-			value    string
-			expected bool
-		}{
-			{"true", true},
-			{"false", false},
-			{"1", true},
-		}
-		for _, tt := range tests {
-			t.Run(tt.value, func(t *testing.T) {
-				t.Setenv("TESTCFG_USE_GRPC", tt.value)
-				if opts := init(t); opts.UseGrpc != tt.expected {
-					t.Errorf("expected UseGrpc=%v for %q, got %v", tt.expected, tt.value, opts.UseGrpc)
+	// flag in isolation: each cli flag must land in its own field.
+	t.Run("flag isolation", func(t *testing.T) {
+		for _, m := range mappings {
+			t.Run(m.flag, func(t *testing.T) {
+				opts, err := InitOptions("test_app", []string{"--" + m.flag + "=" + m.set}, WithPrefix("TESTCFG"))
+				if err != nil {
+					t.Fatalf("InitOptions: %v", err)
+				}
+				if got := m.got(opts); !reflect.DeepEqual(got, m.want) {
+					t.Errorf("flag --%s: got %v (%T), want %v (%T)", m.flag, got, got, m.want, m.want)
 				}
 			})
 		}
 	})
 
-	t.Run("use rest from env", func(t *testing.T) {
-		tests := []struct {
-			value    string
-			expected bool
-		}{
-			{"true", true},
-			{"false", false},
+	// every env set at once: guards against cross-wired or duplicated field
+	// pointers that isolation can miss (one loader overwriting another's field).
+	t.Run("all together", func(t *testing.T) {
+		for _, m := range mappings {
+			t.Setenv("TESTCFG_"+m.env, m.set)
 		}
-		for _, tt := range tests {
-			t.Run(tt.value, func(t *testing.T) {
-				t.Setenv("TESTCFG_USE_REST", tt.value)
-				if opts := init(t); opts.UseRest != tt.expected {
-					t.Errorf("expected UseRest=%v for %q, got %v", tt.expected, tt.value, opts.UseRest)
-				}
-			})
+		opts, err := InitOptions("test_app", nil, WithPrefix("TESTCFG"))
+		if err != nil {
+			t.Fatalf("InitOptions: %v", err)
 		}
-	})
-
-	t.Run("rest port defaults when unset", func(t *testing.T) {
-		if opts := init(t); opts.Rest.Port != 9080 {
-			t.Errorf("expected default Rest.Port 9080 when env var unset, got %d", opts.Rest.Port)
-		}
-	})
-
-	t.Run("grpc port defaults when unset", func(t *testing.T) {
-		if opts := init(t); opts.Grpc.Port != 6254 {
-			t.Errorf("expected default Grpc.Port 6254 when env var unset, got %d", opts.Grpc.Port)
-		}
-	})
-
-	t.Run("transport ports are independent", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_PORT", "5001")
-		t.Setenv("TESTCFG_GRPC_PORT", "5002")
-		opts := init(t)
-		if opts.Rest.Port != 5001 {
-			t.Errorf("expected Rest.Port=5001, got %d", opts.Rest.Port)
-		}
-		if opts.Grpc.Port != 5002 {
-			t.Errorf("expected Grpc.Port=5002, got %d", opts.Grpc.Port)
-		}
-	})
-
-	t.Run("boolean fields combined", func(t *testing.T) {
-		t.Setenv("TESTCFG_USE_GRPC", "true")
-		t.Setenv("TESTCFG_USE_REST", "true")
-		t.Setenv("TESTCFG_GRPC_REFLECTION", "true")
-		opts := init(t)
-		if !opts.UseGrpc {
-			t.Error("expected UseGrpc=true")
-		}
-		if !opts.UseRest {
-			t.Error("expected UseRest=true")
-		}
-		if !opts.Grpc.Reflection {
-			t.Error("expected GrpcReflection=true")
-		}
-	})
-
-	t.Run("port boundary values", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_PORT", "1")
-		t.Setenv("TESTCFG_GRPC_PORT", "65535")
-		opts := init(t)
-		if opts.Rest.Port != 1 {
-			t.Errorf("expected Rest.Port=1 (min valid), got %d", opts.Rest.Port)
-		}
-		if opts.Grpc.Port != 65535 {
-			t.Errorf("expected Grpc.Port=65535 (max valid), got %d", opts.Grpc.Port)
-		}
-	})
-
-	t.Run("cli overrides transport port env", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_PORT", "9090")
-		if opts := init(t, "--rest-port=4444"); opts.Rest.Port != 4444 {
-			t.Errorf("expected CLI flag to override env (Rest.Port=4444), got %d", opts.Rest.Port)
-		}
-	})
-
-	t.Run("rest tls from env", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_TLS_ENABLED", "true")
-		t.Setenv("TESTCFG_REST_TLS_CERT_FILE", "/certs/rest.crt")
-		t.Setenv("TESTCFG_REST_TLS_KEY_FILE", "/certs/rest.key")
-		t.Setenv("TESTCFG_REST_TLS_CLIENT_CA_FILE", "/certs/rest-ca.crt")
-		t.Setenv("TESTCFG_REST_TLS_MUTUAL_AUTH", "true")
-		opts := init(t)
-		want := TLSOptions{
-			Enabled:      true,
-			CertFile:     "/certs/rest.crt",
-			KeyFile:      "/certs/rest.key",
-			ClientCAFile: "/certs/rest-ca.crt",
-			MutualAuth:   true,
-		}
-		if !reflect.DeepEqual(opts.Rest.TLS, want) {
-			t.Errorf("expected Rest.TLS %+v, got %+v", want, opts.Rest.TLS)
-		}
-	})
-
-	t.Run("grpc tls from env", func(t *testing.T) {
-		t.Setenv("TESTCFG_GRPC_TLS_ENABLED", "true")
-		t.Setenv("TESTCFG_GRPC_TLS_CERT_FILE", "/certs/grpc.crt")
-		t.Setenv("TESTCFG_GRPC_TLS_KEY_FILE", "/certs/grpc.key")
-		t.Setenv("TESTCFG_GRPC_TLS_CLIENT_CA_FILE", "/certs/grpc-ca.crt")
-		t.Setenv("TESTCFG_GRPC_TLS_MUTUAL_AUTH", "true")
-		opts := init(t)
-		want := TLSOptions{
-			Enabled:      true,
-			CertFile:     "/certs/grpc.crt",
-			KeyFile:      "/certs/grpc.key",
-			ClientCAFile: "/certs/grpc-ca.crt",
-			MutualAuth:   true,
-		}
-		if !reflect.DeepEqual(opts.Grpc.TLS, want) {
-			t.Errorf("expected Grpc.TLS %+v, got %+v", want, opts.Grpc.TLS)
-		}
-	})
-
-	// the rest and grpc TLS env vars must not bleed into each other
-	t.Run("rest and grpc tls are independent", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_TLS_ENABLED", "true")
-		t.Setenv("TESTCFG_REST_TLS_CERT_FILE", "/certs/rest.crt")
-		opts := init(t)
-		if !opts.Rest.TLS.Enabled || opts.Rest.TLS.CertFile != "/certs/rest.crt" {
-			t.Errorf("expected Rest.TLS to be set from env, got %+v", opts.Rest.TLS)
-		}
-		if opts.Grpc.TLS.Enabled || opts.Grpc.TLS.CertFile != "" {
-			t.Errorf("expected Grpc.TLS to stay at defaults, got %+v", opts.Grpc.TLS)
-		}
-	})
-
-	t.Run("tls defaults to disabled when unset", func(t *testing.T) {
-		opts := init(t)
-		if !reflect.DeepEqual(opts.Rest.TLS, TLSOptions{}) {
-			t.Errorf("expected default Rest.TLS to be zero, got %+v", opts.Rest.TLS)
-		}
-		if !reflect.DeepEqual(opts.Grpc.TLS, TLSOptions{}) {
-			t.Errorf("expected default Grpc.TLS to be zero, got %+v", opts.Grpc.TLS)
-		}
-	})
-
-	t.Run("cli overrides tls env", func(t *testing.T) {
-		t.Setenv("TESTCFG_GRPC_TLS_CERT_FILE", "/env/grpc.crt")
-		opts := init(t, "--grpc-tls-cert-file=/cli/grpc.crt", "--rest-tls-enabled", "--rest-tls-mutual-auth")
-		if opts.Grpc.TLS.CertFile != "/cli/grpc.crt" {
-			t.Errorf("expected CLI flag to override env (Grpc.TLS.CertFile=/cli/grpc.crt), got %q", opts.Grpc.TLS.CertFile)
-		}
-		if !opts.Rest.TLS.Enabled {
-			t.Error("expected --rest-tls-enabled to set Rest.TLS.Enabled")
-		}
-		if !opts.Rest.TLS.MutualAuth {
-			t.Error("expected --rest-tls-mutual-auth to set Rest.TLS.MutualAuth")
-		}
-	})
-
-	t.Run("cors origins from env", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_ALLOWED_ORIGINS", "https://a.example, https://b.example")
-		opts := init(t)
-		want := []string{"https://a.example", "https://b.example"}
-		if !reflect.DeepEqual(opts.Rest.AllowedOrigins, want) {
-			t.Errorf("expected AllowedOrigins %v, got %v", want, opts.Rest.AllowedOrigins)
-		}
-	})
-
-	t.Run("cors extra headers and methods from env", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_EXTRA_ALLOWED_HEADERS", "X-Tenant-Id, X-Request-Id")
-		t.Setenv("TESTCFG_REST_EXTRA_ALLOWED_METHODS", "PATCH")
-		t.Setenv("TESTCFG_REST_CORS_MAX_AGE", "10m")
-		opts := init(t)
-		if !reflect.DeepEqual(opts.Rest.ExtraAllowedHeaders, []string{"X-Tenant-Id", "X-Request-Id"}) {
-			t.Errorf("unexpected ExtraAllowedHeaders: %v", opts.Rest.ExtraAllowedHeaders)
-		}
-		if !reflect.DeepEqual(opts.Rest.ExtraAllowedMethods, []string{"PATCH"}) {
-			t.Errorf("unexpected ExtraAllowedMethods: %v", opts.Rest.ExtraAllowedMethods)
-		}
-		if opts.Rest.CorsMaxAge != 10*time.Minute {
-			t.Errorf("expected CorsMaxAge 10m, got %v", opts.Rest.CorsMaxAge)
-		}
-	})
-
-	t.Run("empty cors origins flag is nil", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_ALLOWED_ORIGINS", "https://example.com")
-		opts := init(t, "--rest-allowed-origins=")
-		if opts.Rest.AllowedOrigins != nil {
-			t.Errorf("expected empty flag to disable CORS (nil origins), got %v", opts.Rest.AllowedOrigins)
-		}
-	})
-
-	t.Run("cors defaults when unset", func(t *testing.T) {
-		opts := init(t)
-		if opts.Rest.AllowedOrigins != nil {
-			t.Errorf("expected default AllowedOrigins nil, got %v", opts.Rest.AllowedOrigins)
-		}
-		if opts.Rest.CorsMaxAge != 600*time.Second {
-			t.Errorf("expected default CorsMaxAge 600s, got %v", opts.Rest.CorsMaxAge)
-		}
-	})
-
-	t.Run("invalid tls bool env errors", func(t *testing.T) {
-		t.Setenv("TESTCFG_REST_TLS_ENABLED", "notabool")
-		_, err := InitOptions("test_app", []string{}, WithPrefix("TESTCFG"))
-		if err == nil {
-			t.Error("expected error for invalid TESTCFG_REST_TLS_ENABLED, got nil")
+		for _, m := range mappings {
+			if got := m.got(opts); !reflect.DeepEqual(got, m.want) {
+				t.Errorf("combined TESTCFG_%s: got %v (%T), want %v (%T)", m.env, got, got, m.want, m.want)
+			}
 		}
 	})
 }
