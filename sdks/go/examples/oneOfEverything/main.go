@@ -291,9 +291,6 @@ func main() {
 	defaultOptions.Dashboard.NodeID = "one-of-everything-a4:bb:6d:6a:6f:a3"
 	defaultOptions.Dashboard.NodeName = "One of Everything Demo"
 
-	// Authz is disabled by default for demo
-	defaultOptions.Server.AuthzEnabled = false
-
 	options, err := config.InitOptions("oneofeverything", os.Args[1:], config.WithDefaults(defaultOptions))
 	if err != nil {
 		if errors.Is(err, config.ErrHelp) {
