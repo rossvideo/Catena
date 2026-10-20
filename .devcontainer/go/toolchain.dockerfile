@@ -1,8 +1,4 @@
 FROM library/ubuntu:24.04 AS base
-LABEL org.opencontainers.image.title=$IMAGE_TITLE
-LABEL org.opencontainers.image.description=$IMAGE_DESCRIPTION
-LABEL org.opencontainers.image.version=$IMAGE_VERSION
-LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -53,8 +49,10 @@ RUN . /root/toolchain.env \
 
 # Build OpenAPI
 COPY smpte/install-tooling.sh /root/smpte/install-tooling.sh
+COPY smpte/.nvmrc /root/smpte/.nvmrc
+COPY smpte/scripts/common.sh /root/smpte/scripts/common.sh
 WORKDIR /root/smpte
-RUN ./install-tooling.sh
+RUN IN_CONTAINER_BUILD=1 YQ_INSTALL_DIR=/usr/local/bin ./install-tooling.sh
 
 # Install protobuf compiler and Go tools
 RUN . /root/toolchain.env \

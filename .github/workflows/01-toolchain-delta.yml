@@ -43,6 +43,8 @@ jobs:
       pr_tag: ${{ steps.detect.outputs.pr_tag }}
       cpp_tag: ${{ steps.detect.outputs.cpp_tag }}
       go_tag: ${{ steps.detect.outputs.go_tag }}
+      cpp_hash: ${{ steps.detect.outputs.cpp_hash }}
+      go_hash: ${{ steps.detect.outputs.go_hash }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -82,6 +84,8 @@ jobs:
             .devcontainer/go/go.mod \
             .devcontainer/go/go.sum \
             smpte/install-tooling.sh)
+          echo "cpp_hash=${CPP_HASH}" >> "$GITHUB_OUTPUT"
+          echo "go_hash=${GO_HASH}" >> "$GITHUB_OUTPUT"
 
           if [[ "${{ inputs.run_mode }}" == "pr" || "${{ inputs.run_mode }}" == "closed" ]]; then
             echo "cpp_tag=pr-${PR_NUMBER}-${CPP_HASH}" >> "$GITHUB_OUTPUT"
@@ -269,12 +273,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Docker Metadata
+        uses: docker/metadata-action@v6
+        id: meta
+        with:
+          labels: |
+            org.opencontainers.image.title=Catena C++ toolchain
+            org.opencontainers.image.description=Build toolchain for Catena C++ development and CI: Ubuntu 24.04 with GCC/CMake/Ninja, gRPC, jwt-cpp, GoogleTest, lcov/gcovr, Docker CLI and the SMPTE tooling.
+            org.opencontainers.image.vendor=Ross Video
+            org.opencontainers.image.version=${{ needs.detect.outputs.cpp_hash }}
+
       - name: Build C++ toolchain image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: .devcontainer/cpp/toolchain.dockerfile
           push: true
+          labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ needs.resolve.outputs.cpp_publish_tag }}
 
       - name: Remove superseded C++ PR tags
@@ -329,12 +344,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Docker Metadata
+        uses: docker/metadata-action@v6
+        id: meta
+        with:
+          labels: |
+            org.opencontainers.image.title=Catena Go toolchain
+            org.opencontainers.image.description=Build toolchain for Catena Go development and CI: Ubuntu 24.04 with Go, Node.js, Docker CLI and the SMPTE tooling.
+            org.opencontainers.image.vendor=Ross Video
+            org.opencontainers.image.version=${{ needs.detect.outputs.go_hash }}
+
       - name: Build Go toolchain image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: .devcontainer/go/toolchain.dockerfile
           push: true
+          labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ needs.resolve.outputs.go_publish_tag }}
 
       - name: Remove superseded Go PR tags
