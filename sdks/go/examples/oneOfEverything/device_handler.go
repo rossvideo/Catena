@@ -90,9 +90,9 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 		}
 		srv.RegisterGetDeviceHandler(slot, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 			ctx.Logger().Info("GetDevice", "slot", req.Slot)
-			device, ok := buildDeviceDefinition(req.Slot, counter, state)
-			if !ok {
-				return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+			device, status := buildDeviceDefinition(req.Slot, counter, state)
+			if status.IsError() {
+				return status
 			}
 			return catena.DeviceComponentsForRequest(device, stream)
 		})
@@ -187,7 +187,7 @@ func slotZeroCommands() map[string]*st2138.ParamBuilder {
 //   - 0: counter, commands, constraints, subscriptions, cfg-scope reads
 //   - 1: sync.Map-backed picture controls; ParamInfo delegates here via ParamInfosForRequest
 //   - 2: prefix-dispatched params plus sample_* types (including INT32_ARRAY)
-func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleState) (*st2138.Device, bool) {
+func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleState) (*st2138.Device, catena.StatusResult) {
 	switch slot {
 	case 0:
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
@@ -202,9 +202,9 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		}
 		device, err := deviceBuilder.Build()
 		if err != nil {
-			return nil, false
+			return nil, catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
 		}
-		return &device, true
+		return &device, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case 1:
 		// Slot 1 intentionally stores its business data in a sync.Map to show
 		// adopters they can back handlers with any application data structure,
@@ -245,7 +245,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			WithDefaultScope("st2138:mon").
 			WithParam("resolution", st2138.NewParamString(resolution).
 				WithName(st2138.PolyglotText{"en": "Resolution"})).
-			WithParam("brightness", st2138.NewParamInt32(brightness).
+			WithParam("brightness", st2138.NewParamInt32(brightness, 10).
 				WithName(st2138.PolyglotText{"en": "Brightness"})).
 			WithParam("contrast", st2138.NewParamInt32(contrast).
 				WithName(st2138.PolyglotText{"en": "Contrast"})).
@@ -265,9 +265,9 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 					WithParamOids("brightness", "contrast", "saturation"))).
 			Build()
 		if err != nil {
-			return nil, false
+			return nil, catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
 		}
-		return &device, true
+		return &device, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case 2:
 		// Slot 2: prefix-dispatched identity/audio params plus FLOAT32, arrays,
 		// BINARY, STRUCT_VARIANT, STRUCT_ARRAY, STRUCT_VARIANT_ARRAY examples.
@@ -363,10 +363,10 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 					WithParamOids("volume", "muted"))).
 			Build()
 		if err != nil {
-			return nil, false
+			return nil, catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
 		}
-		return &device, true
+		return &device, catena.StatusWithCode(catena.StatusCodeOk, "")
 	default:
-		return nil, false
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 	}
 }
