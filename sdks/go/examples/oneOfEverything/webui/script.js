@@ -669,7 +669,7 @@ function buildDemoToken() {
 }
 
 function keycloakBrowserIssuer() {
-   return (demoConfig.jwtIssuer || '').replace(/\/$/, '');
+    return (demoConfig.jwtIssuer || '').replace(/\/$/, '');
 }
 
 async function sha256Base64Url(value) {
@@ -767,6 +767,7 @@ async function completeKeycloakLogin() {
             return;
         }
         setToken(data.access_token);
+        document.getElementById('tokenInput').value = data.access_token;
     } catch (e) {
         console.error('keycloak token error:', e);
         openAuthModal();
