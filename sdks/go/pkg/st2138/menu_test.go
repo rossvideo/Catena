@@ -277,11 +277,73 @@ func TestMenuGroupBuilder_WithShortCircuitErrors(t *testing.T) {
 func TestMenuGroupBuilder_Err(t *testing.T) {
 	mg := NewMenuGroup()
 	mg.err = errors.New("test error")
-	if mg.Err() == nil {
+	if mg.err == nil {
 		t.Fatal("expected error for builder with error")
 	}
-	if mg.Err().Error() != "test error" {
-		t.Fatal("expected error message 'test error', got", mg.Err())
+	if mg.err.Error() != "test error" {
+		t.Fatal("expected error message 'test error', got", mg.err.Error())
+	}
+}
+
+func TestMenuGroup_Clone(t *testing.T) {
+	mg := NewMenuGroup().WithOrder(0)
+	clone := mg.Clone()
+	if !proto.Equal(mg.proto, clone.proto) {
+		t.Fatal("expected clone to be equal to original")
+	}
+	clone.WithName(PolyglotText{"en": "Test"})
+	if proto.Equal(mg.proto, clone.proto) {
+		t.Fatal("expected original menu group to be unchanged")
+	}
+}
+
+func TestMenuGroupBuilder_CloneInheritsError(t *testing.T) {
+	mg := NewMenuGroup()
+	mg.err = errors.New("test error")
+	clone := mg.Clone()
+	if clone.err == nil || clone.err.Error() != "test error" {
+		t.Fatal("expected clone to inherit error")
+	}
+}
+
+func TestMenuGroupBuilder_CloneAlreadyBuilt(t *testing.T) {
+	mg := NewMenuGroup().WithName(PolyglotText{"en": "Video"})
+	p, err := mg.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.Name.GetDisplayStrings()["en"] != "Video" {
+		t.Fatal("expected name 'Video', got", p.Proto.Name.GetDisplayStrings()["en"])
+	}
+
+	clone := mg.Clone()
+	c, err := clone.WithOrder(1).Build()
+	if err != nil {
+		t.Fatal("expected no error for clone with valid value", err)
+	}
+	if c.Proto.GetOrder() != 1 {
+		t.Fatal("expected order 1, got", c.Proto.GetOrder())
+	}
+	if c.Proto.GetName().GetDisplayStrings()["en"] != "Video" {
+		t.Fatal("expected name 'Video', got", c.Proto.GetName().GetDisplayStrings()["en"])
+	}
+}
+
+func TestMenuGroup_AlreadyBuilt(t *testing.T) {
+	mg := NewMenuGroup().WithName(PolyglotText{"en": "Video"})
+	p, err := mg.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.Name.GetDisplayStrings()["en"] != "Video" {
+		t.Fatal("expected name 'Video', got", p.Proto.Name.GetDisplayStrings()["en"])
+	}
+	p, err = mg.WithName(PolyglotText{"en": "Audio"}).Build()
+	if err == nil || !errors.Is(err, ErrAlreadyBuilt) {
+		t.Fatal("expected error for builder after Build(), got", err)
+	}
+	if p != (MenuGroup{}) {
+		t.Fatal("expected empty menu group for building already built menu group, got", p)
 	}
 }
 
@@ -428,13 +490,64 @@ func TestMenuBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 }
 
-func TestMenuBuilder_Err(t *testing.T) {
+func TestMenuBuilder_Clone(t *testing.T) {
+	m := NewMenu().WithOrder(0)
+	clone := m.Clone()
+	if !proto.Equal(m.proto, clone.proto) {
+		t.Fatal("expected clone to be equal to original")
+	}
+	clone.WithName(PolyglotText{"en": "Test"})
+	if proto.Equal(m.proto, clone.proto) {
+		t.Fatal("expected original menu to be unchanged")
+	}
+}
+
+func TestMenuBuilder_CloneInheritsError(t *testing.T) {
 	m := NewMenu()
 	m.err = errors.New("test error")
-	if m.Err() == nil {
-		t.Fatal("expected error for builder with error")
+	clone := m.Clone()
+	if clone.err == nil || clone.err.Error() != "test error" {
+		t.Fatal("expected clone to inherit error")
 	}
-	if m.Err().Error() != "test error" {
-		t.Fatal("expected error message 'test error', got", m.Err())
+}
+
+func TestMenuBuilder_CloneAlreadyBuilt(t *testing.T) {
+	m := NewMenu().WithName(PolyglotText{"en": "Video"})
+	p, err := m.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetName().GetDisplayStrings()["en"] != "Video" {
+		t.Fatal("expected name 'Video', got", p.Proto.GetName().GetDisplayStrings()["en"])
+	}
+
+	clone := m.Clone()
+	c, err := clone.WithOrder(1).Build()
+	if err != nil {
+		t.Fatal("expected no error for clone with valid value", err)
+	}
+	if c.Proto.GetOrder() != 1 {
+		t.Fatal("expected order 1, got", c.Proto.GetOrder())
+	}
+	if c.Proto.GetName().GetDisplayStrings()["en"] != "Video" {
+		t.Fatal("expected name 'Video', got", c.Proto.GetName().GetDisplayStrings()["en"])
+	}
+}
+
+func TestMenu_AlreadyBuilt(t *testing.T) {
+	m := NewMenu().WithName(PolyglotText{"en": "Video"})
+	p, err := m.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetName().GetDisplayStrings()["en"] != "Video" {
+		t.Fatal("expected name 'Video', got", p.Proto.GetName().GetDisplayStrings()["en"])
+	}
+	p, err = m.WithName(PolyglotText{"en": "Audio"}).Build()
+	if err == nil || !errors.Is(err, ErrAlreadyBuilt) {
+		t.Fatal("expected error for builder after Build(), got", err)
+	}
+	if p != (Menu{}) {
+		t.Fatal("expected empty menu for building already built menu, got", p)
 	}
 }
