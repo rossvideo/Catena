@@ -131,15 +131,9 @@ func (mg *MenuGroupBuilder) Build() (MenuGroup, error) {
 }
 
 // Clone returns a deep copy of the MenuGroupBuilder.
-// Inherits the builder's error state, excluding ErrAlreadyBuilt.
+// Inherits the builder's error state, including ErrAlreadyBuilt.
 func (mg *MenuGroupBuilder) Clone() MenuGroupBuilder {
-	var clonedErr error
-	if errors.Is(mg.err, ErrAlreadyBuilt) {
-		clonedErr = nil
-	} else {
-		clonedErr = mg.err
-	}
-	return MenuGroupBuilder{proto: proto.Clone(mg.proto).(*protos.MenuGroup), err: clonedErr}
+	return MenuGroupBuilder{proto: proto.Clone(mg.proto).(*protos.MenuGroup), err: mg.err}
 }
 
 // Menu wraps a protos.Menu and exposes a fluent builder API.
@@ -246,13 +240,7 @@ func (m *MenuBuilder) Build() (Menu, error) {
 }
 
 // Clone returns a deep copy of the MenuBuilder.
-// Inherits the builder's error state, excluding ErrAlreadyBuilt.
+// Inherits the builder's error state, including ErrAlreadyBuilt.
 func (m *MenuBuilder) Clone() MenuBuilder {
-	var clonedErr error
-	if m.err != nil && m.err.Error() == ErrAlreadyBuilt.Error() {
-		clonedErr = nil
-	} else {
-		clonedErr = m.err
-	}
-	return MenuBuilder{proto: proto.Clone(m.proto).(*protos.Menu), err: clonedErr}
+	return MenuBuilder{proto: proto.Clone(m.proto).(*protos.Menu), err: m.err}
 }

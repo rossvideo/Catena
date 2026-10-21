@@ -39,7 +39,6 @@
 package st2138
 
 import (
-	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
@@ -559,15 +558,9 @@ func (cp *ParamBuilder) Build() (Param, error) {
 }
 
 // Clone returns a deep copy of the ParamBuilder.
-// Inherits the builder's error state, excluding ErrAlreadyBuilt.
+// Inherits the builder's error state, including ErrAlreadyBuilt.
 func (cp *ParamBuilder) Clone() ParamBuilder {
-	var clonedErr error
-	if errors.Is(cp.err, ErrAlreadyBuilt) {
-		clonedErr = nil
-	} else {
-		clonedErr = cp.err
-	}
-	return ParamBuilder{proto: proto.Clone(cp.proto).(*protos.Param), err: clonedErr}
+	return ParamBuilder{proto: proto.Clone(cp.proto).(*protos.Param), err: cp.err}
 }
 
 // SetValue converts v to a proto value via ToProto, validates it against the
