@@ -245,7 +245,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			WithDefaultScope("st2138:mon").
 			WithParam("resolution", st2138.NewParamString(resolution).
 				WithName(st2138.PolyglotText{"en": "Resolution"})).
-			WithParam("brightness", st2138.NewParamInt32(brightness, 10).
+			WithParam("brightness", st2138.NewParamInt32(brightness).
 				WithName(st2138.PolyglotText{"en": "Brightness"})).
 			WithParam("contrast", st2138.NewParamInt32(contrast).
 				WithName(st2138.PolyglotText{"en": "Contrast"})).
