@@ -274,17 +274,6 @@ func TestMenuGroupBuilder_WithShortCircuitErrors(t *testing.T) {
 	}
 }
 
-func TestMenuGroupBuilder_Err(t *testing.T) {
-	mg := NewMenuGroup()
-	mg.err = errors.New("test error")
-	if mg.err == nil {
-		t.Fatal("expected error for builder with error")
-	}
-	if mg.err.Error() != "test error" {
-		t.Fatal("expected error message 'test error', got", mg.err.Error())
-	}
-}
-
 func TestMenuGroup_Clone(t *testing.T) {
 	mg := NewMenuGroup().WithOrder(0)
 	clone := mg.Clone()
