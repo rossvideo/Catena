@@ -58,6 +58,8 @@ var ErrNoTransportEnabled = errors.New("at least one of gRPC or REST transport m
 // rest.NewTransport(opts.Rest), including any REST fallback set on opts.Rest.
 // When both are enabled, gRPC is registered first. A registration error names
 // the transport that failed and wraps the error from Server.RegisterTransport.
+// Does not return transport references, register manually if you must
+// explicitly deregister or require dynamic transports.
 func RegisterFrom(srv catena.Server, opts config.RuntimeOptions) error {
 	if !opts.UseGrpc && !opts.UseRest {
 		return ErrNoTransportEnabled

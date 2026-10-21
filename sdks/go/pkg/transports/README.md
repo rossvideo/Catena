@@ -16,7 +16,9 @@ The server architecture is now transport-agnostic:
 
 ## Quick Start
 
-`transports.RegisterFrom` is the recommended setup path. It reads `UseGrpc` and `UseRest` on a `RuntimeOptions` value and registers `grpc.NewTransport(opts.Grpc)` and `rest.NewTransport(opts.Rest)` for each enabled transport. When both are enabled, gRPC is registered first. If neither toggle is set, it returns `ErrNoTransportEnabled`. If registration fails, the error names the transport (`register gRPC transport` or `register REST transport`) and wraps the error from `RegisterTransport`. A transport that already started is left registered.
+`transports.RegisterFrom` is the recommended setup path for simple implementations. It reads `UseGrpc` and `UseRest` on a `RuntimeOptions` value and registers `grpc.NewTransport(opts.Grpc)` and `rest.NewTransport(opts.Rest)` for each enabled transport. When both are enabled, gRPC is registered first. If neither toggle is set, it returns `ErrNoTransportEnabled`. If registration fails, the error names the transport (`register gRPC transport` or `register REST transport`) and wraps the error from `RegisterTransport`. A transport that already started is left registered.
+
+If dynamic transports or explicit deregistering is required, then transports should be manually registered individually as `transports.RegisterFrom` does not return the transport references.
 
 Set any REST fallback on `opts.Rest` before calling `RegisterFrom`. The helper passes that options struct through, so the fallback does not need a transport reference after construction.
 
