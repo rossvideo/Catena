@@ -523,29 +523,6 @@ func TestDeviceBuilder_CloneInheritsError(t *testing.T) {
 	}
 }
 
-func TestDeviceBuilder_CloneAlreadyBuilt(t *testing.T) {
-	cd := NewDevice(0)
-	p, err := cd.Build()
-	if err != nil {
-		t.Fatal("expected no error for builder with valid value", err)
-	}
-	if p.Proto.GetSlot() != 0 {
-		t.Errorf("expected slot 0, got %v", p.Proto.GetSlot())
-	}
-
-	clone := cd.Clone()
-	c, err := clone.WithDetailLevel(DetailLevelSubscriptions).Build()
-	if err != nil {
-		t.Fatal("expected no error for clone with valid value", err)
-	}
-	if c.Proto.GetDetailLevel() != DetailLevelSubscriptions {
-		t.Fatal("expected detail level Subscriptions, got", c.Proto.GetDetailLevel())
-	}
-	if c.Proto.GetSlot() != 0 {
-		t.Errorf("expected slot 0, got %v", c.Proto.GetSlot())
-	}
-}
-
 func TestDevice_AlreadyBuilt(t *testing.T) {
 	cd := NewDevice(0)
 	p, err := cd.Build()
@@ -561,5 +538,25 @@ func TestDevice_AlreadyBuilt(t *testing.T) {
 	}
 	if p != (Device{}) {
 		t.Fatal("expected empty device for building already built device, got", p)
+	}
+}
+
+func TestDeviceBuilder_CloneAlreadyBuilt(t *testing.T) {
+	cd := NewDevice(0)
+	p, err := cd.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetSlot() != 0 {
+		t.Errorf("expected slot 0, got %v", p.Proto.GetSlot())
+	}
+
+	clone := cd.Clone()
+	c, err := clone.Build()
+	if err == nil || !errors.Is(err, ErrAlreadyBuilt) {
+		t.Fatal("expected error for clone after Build(), got", err)
+	}
+	if c != (Device{}) {
+		t.Fatal("expected empty device for clone after Build(), got", c)
 	}
 }
