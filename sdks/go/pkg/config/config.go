@@ -100,7 +100,7 @@ type RestOptions struct {
 	ReadTimeout time.Duration `env:"REST_READ_TIMEOUT" flag:"rest-read-timeout"`
 	// ReadHeaderTimeout is the maximum duration for reading the request headers only.
 	ReadHeaderTimeout time.Duration `env:"REST_READ_HEADER_TIMEOUT" flag:"rest-read-header-timeout"`
-	// WriteTimeout is the maximum duration before timing out writes of the response.
+	// WriteTimeout is the maximum duration before timing out writes of the response. Zero means no timeout.
 	WriteTimeout time.Duration `env:"REST_WRITE_TIMEOUT" flag:"rest-write-timeout"`
 	// IdleTimeout is the maximum amount of time to wait for the next request when keep-alives are enabled.
 	IdleTimeout time.Duration `env:"REST_IDLE_TIMEOUT" flag:"rest-idle-timeout"`
@@ -262,12 +262,12 @@ func DefaultRestOptions() RestOptions {
 		ExtraAllowedMethods: nil,              // fixed REST method set; extension unlikely
 		CorsMaxAge:          10 * time.Minute, // preflight cache; only used once CORS is enabled
 		Fallback:            nil,
-		ReadTimeout:         10 * time.Second, // all fo these values for hardening
-		ReadHeaderTimeout:   10 * time.Second, // are PLACEHOLDERS
-		WriteTimeout:        10 * time.Second, // actual values TBD
-		IdleTimeout:         10 * time.Second,
-		MaxHeaderBytes:      1 << 20, // 1MB
-		MaxBodyBytes:        1 << 20, // 1MB
+		ReadTimeout:         15 * time.Second,
+		ReadHeaderTimeout:   10 * time.Second,
+		WriteTimeout:        0,
+		IdleTimeout:         120 * time.Second,
+		MaxHeaderBytes:      1 << 20,
+		MaxBodyBytes:        1 << 20,
 	}
 }
 
