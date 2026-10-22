@@ -27,6 +27,10 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return replyValue(fqoid, counter.RunningInt32(), true)
 		case "dashboard_UI":
 			return replyValue(fqoid, dashboardUIValue, true)
+		case "contact_email":
+			return replyValue(fqoid, contactEmailValue, true)
+		case "counter_model":
+			return replyValue(fqoid, counterModelValue, true)
 		default:
 			return replyValue(fqoid, nil, false)
 		}
@@ -118,6 +122,12 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			case "dashboard_UI":
 				ctx.Logger().Warn("SetValue rejected for dashboard_UI param", "slot", slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "DashBoard UI reference is read-only")
+			case "contact_email":
+				ctx.Logger().Warn("SetValue rejected for contact_email param", "slot", slot, "fqoid", entry.Fqoid)
+				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "Contact email is read-only")
+			case "counter_model":
+				ctx.Logger().Warn("SetValue rejected for counter_model param", "slot", slot, "fqoid", entry.Fqoid)
+				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "Counter model is read-only")
 			case "counter":
 				if _, ok := entry.Value.(int32); !ok {
 					ctx.Logger().Error("SetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid, "expected", "int32", "got", entry.Value)
