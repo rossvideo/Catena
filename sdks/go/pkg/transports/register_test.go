@@ -49,11 +49,12 @@ type recordingServer struct {
 	catena.Server
 	registered []catena.Transport
 	fail       bool
+	failError  error
 }
 
 func (s *recordingServer) RegisterTransport(t catena.Transport) error {
 	if s.fail {
-		return errors.New("Test error")
+		return s.failError
 	}
 	s.registered = append(s.registered, t)
 	return nil
@@ -130,11 +131,12 @@ func TestRegisterFrom_GRPCError(t *testing.T) {
 	}
 
 	srv.fail = true
+	srv.failError = errors.New("Test error")
 	err := transports.RegisterFrom(srv, opts)
 	if err == nil {
 		t.Fatal("RegisterFrom() error = nil, want registration failure")
 	}
-	if err.Error() != "register gRPC transport: Test error" {
+	if err.Error() != "register gRPC transport: Test error" || !errors.Is(err, srv.failError) {
 		t.Fatalf("RegisterFrom() error = %v, want %v", err, "register gRPC transport: Test error")
 	}
 	if len(srv.registered) != 0 {
@@ -150,11 +152,12 @@ func TestRegisterFrom_RESTError(t *testing.T) {
 	}
 
 	srv.fail = true
+	srv.failError = errors.New("Test error")
 	err := transports.RegisterFrom(srv, opts)
 	if err == nil {
 		t.Fatal("RegisterFrom() error = nil, want registration failure")
 	}
-	if err.Error() != "register REST transport: Test error" {
+	if err.Error() != "register REST transport: Test error" || !errors.Is(err, srv.failError) {
 		t.Fatalf("RegisterFrom() error = %v, want %v", err, "register REST transport: Test error")
 	}
 	if len(srv.registered) != 0 {
