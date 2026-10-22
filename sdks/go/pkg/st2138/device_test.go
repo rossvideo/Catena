@@ -46,29 +46,35 @@ import (
 )
 
 func TestNewDevice_Basic(t *testing.T) {
-	cd := NewDevice(3)
-	proto := cd.proto
-	if proto == nil {
+	cd, err := NewDevice(3).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if cd.Proto == nil {
 		t.Fatal("expected non-nil proto device")
 	}
-	if proto.GetSlot() != 3 {
-		t.Errorf("expected slot 3, got %v", proto.GetSlot())
+	if cd.Proto.GetSlot() != 3 {
+		t.Errorf("expected slot 3, got %v", cd.Proto.GetSlot())
 	}
 
 	// The product struct is managed by the SDK (RegisterProductStruct), not by
 	// NewDevice, so a freshly built device has no product param.
-	if _, ok := proto.GetParams()["product"]; ok {
+	if _, ok := cd.Proto.GetParams()["product"]; ok {
 		t.Error("did not expect NewDevice to create a 'product' param")
 	}
 }
 
 func TestNewDevice_WithParams(t *testing.T) {
-	cd := NewDevice(0).
+	cd, err := NewDevice(0).
 		WithParam("brightness", NewParamInt32(50).
 			WithName(PolyglotText{"en": "Brightness"}).
-			WithWidget("SLIDER"))
+			WithWidget("SLIDER")).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	brightness, ok := cd.proto.GetParams()["brightness"]
+	brightness, ok := cd.Proto.GetParams()["brightness"]
 	if !ok {
 		t.Fatal("expected 'brightness' param")
 	}
@@ -82,10 +88,10 @@ func TestNewDevice_WithParams(t *testing.T) {
 
 func TestDevice_WithParam_DeepCopies(t *testing.T) {
 	param := NewParamInt32(1)
-	cd := NewDevice(0).
+	builder := NewDevice(0).
 		WithParam("counter", param)
 
-	stored := cd.proto.GetParams()["counter"]
+	stored := builder.proto.GetParams()["counter"]
 	if stored == param.proto {
 		t.Error("expected stored param to be cloned")
 	}
@@ -95,32 +101,47 @@ func TestDevice_WithParam_DeepCopies(t *testing.T) {
 	if !proto.Equal(stored, param.proto) {
 		t.Error("expected stored param to be equal to original")
 	}
+	cd, err := builder.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if cd.Proto.GetParams()["counter"] == nil {
+		t.Fatal("expected built device to contain counter param")
+	}
 }
 
 func TestDevice_WithParam_Nil(t *testing.T) {
-	cd, err := NewDevice(0).
-		WithParam("nothing", nil).
-		Build()
-	if _, ok := cd.Proto.GetParams()["nothing"]; ok {
+	builder := NewDevice(0).WithParam("nothing", nil)
+	if _, ok := builder.proto.GetParams()["nothing"]; ok {
 		t.Error("expected nil param to short-circuit")
 	}
+	cd, err := builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with nil param")
 	}
+	if cd != (Device{}) {
+		t.Errorf("expected empty Device, got %v", cd)
+	}
 
-	cd, err = NewDevice(0).
-		WithParam("nothing", &ParamBuilder{}).
-		Build()
-	if _, ok := cd.Proto.GetParams()["nothing"]; ok {
+	builder = NewDevice(0).WithParam("nothing", &ParamBuilder{})
+	if _, ok := builder.proto.GetParams()["nothing"]; ok {
 		t.Error("expected param with nil Proto to short-circuit")
 	}
+	cd, err = builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with param with nil Proto")
+	}
+	if cd != (Device{}) {
+		t.Errorf("expected empty Device, got %v", cd)
 	}
 }
 
 func TestDevice_WithParam_NestedErrors(t *testing.T) {
-	cd, err := NewDevice(0).WithParam("nothing", NewParamInt32(1, 2)).Build()
+	builder := NewDevice(0).WithParam("nothing", NewParamInt32(1, 2))
+	if _, ok := builder.proto.GetParams()["nothing"]; ok {
+		t.Error("expected nested builder error to leave params unchanged")
+	}
+	cd, err := builder.Build()
 	if cd != (Device{}) {
 		t.Errorf("expected nil device, got %v", cd)
 	}
@@ -130,8 +151,11 @@ func TestDevice_WithParam_NestedErrors(t *testing.T) {
 }
 
 func TestDevice_WithCommand_Nil(t *testing.T) {
-	cd, err := NewDevice(0).
-		WithCommand("nothing", nil).Build()
+	builder := NewDevice(0).WithCommand("nothing", nil)
+	if _, ok := builder.proto.GetCommands()["nothing"]; ok {
+		t.Error("expected nil command to leave commands unchanged")
+	}
+	cd, err := builder.Build()
 	if err == nil {
 		t.Fatal("expected error for builder with nil command")
 	}
@@ -139,8 +163,7 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 		t.Fatal("expected empty device for builder with nil command")
 	}
 
-	cd, err = NewDevice(0).
-		WithCommand("nothing", NewParamEmpty()).Build()
+	cd, err = NewDevice(0).WithCommand("nothing", NewParamEmpty()).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -150,7 +173,11 @@ func TestDevice_WithCommand_Nil(t *testing.T) {
 }
 
 func TestDevice_WithCommand_NestedErrors(t *testing.T) {
-	cd, err := NewDevice(0).WithCommand("nothing", NewParamInt32(1, 2)).Build()
+	builder := NewDevice(0).WithCommand("nothing", NewParamInt32(1, 2))
+	if _, ok := builder.proto.GetCommands()["nothing"]; ok {
+		t.Error("expected nested builder error to leave commands unchanged")
+	}
+	cd, err := builder.Build()
 	if cd != (Device{}) {
 		t.Errorf("expected nil device, got %v", cd)
 	}
@@ -160,7 +187,11 @@ func TestDevice_WithCommand_NestedErrors(t *testing.T) {
 }
 
 func TestDevice_WithCommand_EmptyParam(t *testing.T) {
-	cd, err := NewDevice(0).WithCommand("nothing", &ParamBuilder{}).Build()
+	builder := NewDevice(0).WithCommand("nothing", &ParamBuilder{})
+	if _, ok := builder.proto.GetCommands()["nothing"]; ok {
+		t.Error("expected empty param builder to leave commands unchanged")
+	}
+	cd, err := builder.Build()
 	if cd != (Device{}) {
 		t.Errorf("expected nil device, got %v", cd)
 	}
@@ -170,51 +201,63 @@ func TestDevice_WithCommand_EmptyParam(t *testing.T) {
 }
 
 func TestDevice_WithConstraint_Nil(t *testing.T) {
-	cd, err := NewDevice(0).
-		WithConstraint("nothing", nil).
-		Build()
-	if _, ok := cd.Proto.GetConstraints()["nothing"]; ok {
+	builder := NewDevice(0).WithConstraint("nothing", nil)
+	if _, ok := builder.proto.GetConstraints()["nothing"]; ok {
 		t.Error("expected nil constraint to short-circuit")
 	}
+	cd, err := builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with nil constraint")
 	}
+	if cd != (Device{}) {
+		t.Errorf("expected empty Device, got %v", cd)
+	}
 
-	cd, err = NewDevice(0).
-		WithConstraint("nothing", &Constraint{}).
-		Build()
-	if _, ok := cd.Proto.GetConstraints()["nothing"]; ok {
+	builder = NewDevice(0).WithConstraint("nothing", &Constraint{})
+	if _, ok := builder.proto.GetConstraints()["nothing"]; ok {
 		t.Error("expected constraint with nil Proto to short-circuit")
 	}
+	cd, err = builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with constraint with nil Proto")
+	}
+	if cd != (Device{}) {
+		t.Errorf("expected empty Device, got %v", cd)
 	}
 }
 
 func TestDevice_WithMenuGroup_Nil(t *testing.T) {
-	cd, err := NewDevice(0).
-		WithMenuGroup("nothing", nil).
-		Build()
-	if _, ok := cd.Proto.GetMenuGroups()["nothing"]; ok {
+	builder := NewDevice(0).WithMenuGroup("nothing", nil)
+	if _, ok := builder.proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected nil menu group to short-circuit")
 	}
+	cd, err := builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with nil menu group")
 	}
+	if cd != (Device{}) {
+		t.Errorf("expected empty Device, got %v", cd)
+	}
 
-	cd, err = NewDevice(0).
-		WithMenuGroup("nothing", &MenuGroupBuilder{}).
-		Build()
-	if _, ok := cd.Proto.GetMenuGroups()["nothing"]; ok {
+	builder = NewDevice(0).WithMenuGroup("nothing", &MenuGroupBuilder{})
+	if _, ok := builder.proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected menu group with nil Proto to short-circuit")
 	}
+	cd, err = builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with menu group with nil Proto")
+	}
+	if cd != (Device{}) {
+		t.Errorf("expected empty Device, got %v", cd)
 	}
 }
 
 func TestDevice_WithMenuGroup_NestedErrors(t *testing.T) {
-	cd, err := NewDevice(0).WithMenuGroup("nothing", NewMenuGroup().WithName(nil)).Build()
+	builder := NewDevice(0).WithMenuGroup("nothing", NewMenuGroup().WithName(nil))
+	if _, ok := builder.proto.GetMenuGroups()["nothing"]; ok {
+		t.Error("expected nested builder error to leave menu groups unchanged")
+	}
+	cd, err := builder.Build()
 	if cd != (Device{}) {
 		t.Errorf("expected nil device, got %v", cd)
 	}
@@ -224,11 +267,15 @@ func TestDevice_WithMenuGroup_NestedErrors(t *testing.T) {
 }
 
 func TestDevice_WithConstraints(t *testing.T) {
-	cd := NewDevice(0).
+	cd, err := NewDevice(0).
 		WithConstraint("brightness_range", NewConstraintInt32Range(0, 100, 1)).
-		WithConstraint("input_source_choice", NewConstraintStringChoice(false, "SDI", "HDMI", "IP"))
+		WithConstraint("input_source_choice", NewConstraintStringChoice(false, "SDI", "HDMI", "IP")).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	constraints := cd.proto.GetConstraints()
+	constraints := cd.Proto.GetConstraints()
 	if constraints == nil {
 		t.Fatal("expected constraints to be set")
 	}
@@ -255,11 +302,15 @@ func TestDevice_WithConstraints(t *testing.T) {
 }
 
 func TestDevice_WithLanguagePacks(t *testing.T) {
-	cd := NewDevice(0).
+	cd, err := NewDevice(0).
 		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"}).
-		WithLanguagePack("fr", "Français", map[string]string{"brightness": "Luminosité"})
+		WithLanguagePack("fr", "Français", map[string]string{"brightness": "Luminosité"}).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	packs := cd.proto.GetLanguagePacks().GetPacks()
+	packs := cd.Proto.GetLanguagePacks().GetPacks()
 	if len(packs) != 2 {
 		t.Errorf("expected 2 language packs, got %d", len(packs))
 	}
@@ -276,14 +327,18 @@ func TestDevice_WithLanguagePacks(t *testing.T) {
 }
 
 func TestDevice_WithMenuGroups(t *testing.T) {
-	cd := NewDevice(0).
+	cd, err := NewDevice(0).
 		WithMenuGroup("video", NewMenuGroup().
 			WithName(PolyglotText{"en": "Video Settings"}).
 			WithMenu("basic", NewMenu().
 				WithName(PolyglotText{"en": "Basic"}).
-				WithParamOids("brightness", "contrast")))
+				WithParamOids("brightness", "contrast"))).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	videoGroup, ok := cd.proto.GetMenuGroups()["video"]
+	videoGroup, ok := cd.Proto.GetMenuGroups()["video"]
 	if !ok {
 		t.Fatal("expected 'video' menu group")
 	}
@@ -297,11 +352,15 @@ func TestDevice_WithMenuGroups(t *testing.T) {
 }
 
 func TestDevice_WithCommands(t *testing.T) {
-	cd := NewDevice(0).
+	cd, err := NewDevice(0).
 		WithCommand("reboot", NewParamEmpty().
-			WithName(PolyglotText{"en": "Reboot Device"}))
+			WithName(PolyglotText{"en": "Reboot Device"})).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	reboot, ok := cd.proto.GetCommands()["reboot"]
+	reboot, ok := cd.Proto.GetCommands()["reboot"]
 	if !ok {
 		t.Fatal("expected 'reboot' command")
 	}
@@ -311,25 +370,28 @@ func TestDevice_WithCommands(t *testing.T) {
 }
 
 func TestDevice_ScalarFields(t *testing.T) {
-	cd := NewDevice(0).
+	cd, err := NewDevice(0).
 		WithDetailLevel(DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
-		WithDefaultScope("st2138:op")
+		WithDefaultScope("st2138:op").
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	proto := cd.proto
-	if !proto.GetMultiSetEnabled() {
+	if !cd.Proto.GetMultiSetEnabled() {
 		t.Error("expected multi_set_enabled to be true")
 	}
-	if !proto.GetSubscriptions() {
+	if !cd.Proto.GetSubscriptions() {
 		t.Error("expected subscriptions to be true")
 	}
-	if proto.GetDefaultScope() != "st2138:op" {
-		t.Errorf("expected default_scope 'st2138:op', got %v", proto.GetDefaultScope())
+	if cd.Proto.GetDefaultScope() != "st2138:op" {
+		t.Errorf("expected default_scope 'st2138:op', got %v", cd.Proto.GetDefaultScope())
 	}
-	if len(proto.GetAccessScopes()) != 4 {
-		t.Errorf("expected 4 access_scopes, got %d", len(proto.GetAccessScopes()))
+	if len(cd.Proto.GetAccessScopes()) != 4 {
+		t.Errorf("expected 4 access_scopes, got %d", len(cd.Proto.GetAccessScopes()))
 	}
 }
 
@@ -365,7 +427,7 @@ func TestDetailLevelConstants(t *testing.T) {
 
 func TestNewDevice_CompleteDevice(t *testing.T) {
 	// This test verifies a complete device configuration like the example.
-	cd := NewDevice(0).
+	cd, err := NewDevice(0).
 		WithDetailLevel(DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
@@ -383,43 +445,50 @@ func TestNewDevice_CompleteDevice(t *testing.T) {
 				WithParamOids("brightness"))).
 		WithCommand("reboot", NewParamEmpty().
 			WithName(PolyglotText{"en": "Reboot Device"})).
-		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"})
+		WithLanguagePack("en", "English", map[string]string{"brightness": "Brightness"}).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	proto := cd.proto
-	if proto == nil {
+	if cd.Proto == nil {
 		t.Fatal("expected non-nil proto device")
 	}
-	if proto.GetSlot() != 0 {
-		t.Errorf("expected slot 0, got %v", proto.GetSlot())
+	if cd.Proto.GetSlot() != 0 {
+		t.Errorf("expected slot 0, got %v", cd.Proto.GetSlot())
 	}
-	if !proto.GetMultiSetEnabled() {
+	if !cd.Proto.GetMultiSetEnabled() {
 		t.Error("expected multi_set_enabled to be true")
 	}
-	if !proto.GetSubscriptions() {
+	if !cd.Proto.GetSubscriptions() {
 		t.Error("expected subscriptions to be true")
 	}
-	if proto.GetDefaultScope() != "st2138:op" {
-		t.Errorf("expected default_scope 'st2138:op', got %v", proto.GetDefaultScope())
+	if cd.Proto.GetDefaultScope() != "st2138:op" {
+		t.Errorf("expected default_scope 'st2138:op', got %v", cd.Proto.GetDefaultScope())
 	}
-	if len(proto.GetAccessScopes()) != 4 {
-		t.Errorf("expected 4 access_scopes, got %d", len(proto.GetAccessScopes()))
+	if len(cd.Proto.GetAccessScopes()) != 4 {
+		t.Errorf("expected 4 access_scopes, got %d", len(cd.Proto.GetAccessScopes()))
 	}
-	if proto.GetParams()["brightness"].GetConstraint().GetRefOid() != "brightness_range" {
+	if cd.Proto.GetParams()["brightness"].GetConstraint().GetRefOid() != "brightness_range" {
 		t.Error("expected brightness to reference shared constraint 'brightness_range'")
 	}
-	if proto.GetConstraints()["brightness_range"].GetInt32Range().GetMaxValue() != 100 {
+	if cd.Proto.GetConstraints()["brightness_range"].GetInt32Range().GetMaxValue() != 100 {
 		t.Error("expected shared brightness_range constraint max 100")
 	}
-	if _, ok := proto.GetCommands()["reboot"]; !ok {
+	if _, ok := cd.Proto.GetCommands()["reboot"]; !ok {
 		t.Error("expected 'reboot' command")
 	}
 }
 
 func TestDevice_WithFloatRangeConstraint(t *testing.T) {
-	cd := NewDevice(0).
-		WithConstraint("gain_range", NewConstraintFloatRange(-60.0, 12.0, 0.5))
+	cd, err := NewDevice(0).
+		WithConstraint("gain_range", NewConstraintFloatRange(-60.0, 12.0, 0.5)).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	gainRange, ok := cd.proto.GetConstraints()["gain_range"]
+	gainRange, ok := cd.Proto.GetConstraints()["gain_range"]
 	if !ok {
 		t.Fatal("expected 'gain_range' constraint")
 	}
@@ -438,10 +507,14 @@ func TestDevice_WithFloatRangeConstraint(t *testing.T) {
 func TestDevice_WithSharedConstraint(t *testing.T) {
 	constraint := NewConstraintStringChoice(true, "SDI", "HDMI", "IP")
 
-	device := NewDevice(0).
-		WithConstraint("input_source", constraint)
+	device, err := NewDevice(0).
+		WithConstraint("input_source", constraint).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	stringChoice := device.proto.GetConstraints()["input_source"].GetStringChoice()
+	stringChoice := device.Proto.GetConstraints()["input_source"].GetStringChoice()
 	if stringChoice == nil {
 		t.Fatal("expected string_choice constraint")
 	}
