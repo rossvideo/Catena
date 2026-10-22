@@ -27,6 +27,10 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			return replyValue(req.Fqoid, counter.RunningInt32(), true)
 		case "dashboard_UI":
 			return replyValue(req.Fqoid, dashboardUIValue, true)
+		case "contact_email":
+			return replyValue(req.Fqoid, contactEmailValue, true)
+		case "counter_model":
+			return replyValue(req.Fqoid, counterModelValue, true)
 		default:
 			return replyValue(req.Fqoid, nil, false)
 		}
