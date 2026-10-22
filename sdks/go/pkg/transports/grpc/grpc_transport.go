@@ -316,7 +316,7 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.DeviceComponent]{ss: stream}
-	res := s.transport.runtime.InvokeGetDeviceHandler(slot, adapter, transportContext)
+	res := s.transport.runtime.InvokeGetDeviceHandler(transportContext, catena.GetDeviceRequest{Slot: slot}, adapter)
 	if res.IsError() {
 		s.transport.log.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
@@ -336,7 +336,7 @@ func (s *catenaService) GetValue(ctx context.Context, req *protos.GetValuePayloa
 	s.transport.log.Debug("GetValue", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	value, result := s.transport.runtime.InvokeGetValueHandler(slot, fqoid, transportContext)
+	value, result := s.transport.runtime.InvokeGetValueHandler(transportContext, catena.GetValueRequest{Slot: slot, Fqoid: fqoid})
 	if result.IsError() {
 		s.transport.log.Error("GetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -369,7 +369,7 @@ func (s *catenaService) SetValue(ctx context.Context, req *protos.SingleSetValue
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	entries := []catena.SetValueEntry{{Fqoid: fqoid, Value: nativeValue}}
-	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
+	result := s.transport.runtime.InvokeSetValueHandler(transportContext, catena.SetValueRequest{Slot: slot, Entries: entries})
 	if result.IsError() {
 		s.transport.log.Error("SetValue handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -401,7 +401,7 @@ func (s *catenaService) MultiSetValue(ctx context.Context, req *protos.MultiSetV
 		entries = append(entries, catena.SetValueEntry{Fqoid: fqoid, Value: nativeValue})
 	}
 
-	result := s.transport.runtime.InvokeSetValueHandler(slot, entries, transportContext)
+	result := s.transport.runtime.InvokeSetValueHandler(transportContext, catena.SetValueRequest{Slot: slot, Entries: entries})
 	if result.IsError() {
 		s.transport.log.Error("MultiSetValue handler error", "slot", slot, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -423,7 +423,7 @@ func (s *catenaService) ExternalObjectRequest(req *protos.ExternalObjectRequestP
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.Asset]{ss: stream}
-	result := s.transport.runtime.InvokeReadAssetHandler(slot, fqoid, adapter, transportContext)
+	result := s.transport.runtime.InvokeReadAssetHandler(transportContext, catena.ReadAssetRequest{Slot: slot, Fqoid: fqoid}, adapter)
 	if result.IsError() {
 		s.transport.log.Error("ExternalObjectRequest handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -455,7 +455,7 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.CommandResponse]{ss: stream}
-	result := s.transport.runtime.InvokeExecuteCommandHandler(slot, commandFqoid, payload, req.Respond, adapter, transportContext)
+	result := s.transport.runtime.InvokeExecuteCommandHandler(transportContext, catena.ExecuteCommandRequest{Slot: slot, CommandFqoid: commandFqoid, Payload: payload, Respond: req.Respond}, adapter)
 	if result.IsError() {
 		s.transport.log.Error("ExecuteCommand handler error", "slot", slot, "command", commandFqoid, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -475,7 +475,7 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 	s.transport.log.Debug("GetParam", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	param, result := s.transport.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
+	param, result := s.transport.runtime.InvokeGetParamHandler(transportContext, catena.GetParamRequest{Slot: slot, Fqoid: fqoid})
 	if result.IsError() {
 		s.transport.log.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -505,7 +505,7 @@ func (s *catenaService) ParamInfoRequest(req *protos.ParamInfoRequestPayload, st
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.ParamInfo]{ss: stream}
-	result := s.transport.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, adapter, transportContext)
+	result := s.transport.runtime.InvokeParamInfoHandler(transportContext, catena.ParamInfoRequest{Slot: slot, OidPrefix: oidPrefix, Recursive: recursive}, adapter)
 	if result.IsError() {
 		s.transport.log.Error("ParamInfoRequest handler error", "slot", slot, "oid_prefix", oidPrefix, "error", result.Error)
 		return status.Error(ToGRPCCode(result.Code), result.Error)
@@ -612,7 +612,7 @@ func (s *catenaService) AddLanguage(ctx context.Context, req *protos.AddLanguage
 	pack := catena.LanguagePack{Proto: req.LanguagePack}
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	result := s.transport.runtime.InvokeCreateLanguagePackHandler(slot, language, pack, transportContext)
+	result := s.transport.runtime.InvokeCreateLanguagePackHandler(transportContext, catena.CreateLanguagePackRequest{Slot: slot, Language: language, LanguagePack: pack})
 	if result.IsError() {
 		s.transport.log.Error("AddLanguage handler error", "slot", slot, "language", language, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -632,7 +632,7 @@ func (s *catenaService) LanguagePackRequest(ctx context.Context, req *protos.Lan
 	s.transport.log.Debug("LanguagePackRequest", "slot", slot, "language", language)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	pack, result := s.transport.runtime.InvokeReadLanguagePackHandler(slot, language, transportContext)
+	pack, result := s.transport.runtime.InvokeReadLanguagePackHandler(transportContext, catena.ReadLanguagePackRequest{Slot: slot, Language: language})
 	if result.IsError() {
 		s.transport.log.Error("LanguagePackRequest handler error", "slot", slot, "language", language, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
@@ -664,7 +664,7 @@ func (s *catenaService) ListLanguages(ctx context.Context, req *protos.Slot) (*p
 	s.transport.log.Debug("ListLanguages", "slot", slot)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	languages, result := s.transport.runtime.InvokeListLanguagesHandler(slot, transportContext)
+	languages, result := s.transport.runtime.InvokeListLanguagesHandler(transportContext, catena.ListLanguagesRequest{Slot: slot})
 	if result.IsError() {
 		s.transport.log.Error("ListLanguages handler error", "slot", slot, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)

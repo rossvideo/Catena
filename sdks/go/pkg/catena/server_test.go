@@ -765,7 +765,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetDevice,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetDeviceHandler(slot, func(uint16, HandlerContext, Stream[st2138.DeviceComponent]) StatusResult {
+				srv.RegisterGetDeviceHandler(slot, func(HandlerContext, GetDeviceRequest, Stream[st2138.DeviceComponent]) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -774,7 +774,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetValue,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetValueHandler(slot, func(uint16, string, HandlerContext) (st2138.Value, StatusResult) {
+				srv.RegisterGetValueHandler(slot, func(HandlerContext, GetValueRequest) (st2138.Value, StatusResult) {
 					return Reply(st2138.Value{})
 				})
 			},
@@ -783,7 +783,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointSetValue,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterSetValueHandler(slot, func(uint16, []SetValueEntry, HandlerContext) StatusResult {
+				srv.RegisterSetValueHandler(slot, func(HandlerContext, SetValueRequest) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -792,7 +792,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointGetParam,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetParamHandler(slot, func(uint16, string, HandlerContext) (st2138.Param, StatusResult) {
+				srv.RegisterGetParamHandler(slot, func(HandlerContext, GetParamRequest) (st2138.Param, StatusResult) {
 					return Reply(st2138.Param{})
 				})
 			},
@@ -801,7 +801,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointReadAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterReadAssetHandler(slot, func(uint16, string, HandlerContext, Stream[st2138.Asset]) StatusResult {
+				srv.RegisterReadAssetHandler(slot, func(HandlerContext, ReadAssetRequest, Stream[st2138.Asset]) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -810,7 +810,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointCreateAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterCreateAssetHandler(slot, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(slot, func(HandlerContext, CreateAssetRequest) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -819,7 +819,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointUpdateAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterUpdateAssetHandler(slot, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(slot, func(HandlerContext, UpdateAssetRequest) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -828,7 +828,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointDeleteAsset,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterDeleteAssetHandler(slot, func(uint16, string, HandlerContext) StatusResult {
+				srv.RegisterDeleteAssetHandler(slot, func(HandlerContext, DeleteAssetRequest) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -837,7 +837,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointExecuteCommand,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterExecuteCommandHandler(slot, func(uint16, string, any, bool, HandlerContext, Stream[st2138.CommandResponse]) StatusResult {
+				srv.RegisterExecuteCommandHandler(slot, func(HandlerContext, ExecuteCommandRequest, Stream[st2138.CommandResponse]) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -846,7 +846,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointParamInfo,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterParamInfoHandler(slot, func(uint16, string, bool, HandlerContext, Stream[st2138.ParamInfo]) StatusResult {
+				srv.RegisterParamInfoHandler(slot, func(HandlerContext, ParamInfoRequest, Stream[st2138.ParamInfo]) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -855,7 +855,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointListLanguages,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterListLanguagesHandler(slot, func(uint16, HandlerContext) ([]string, StatusResult) {
+				srv.RegisterListLanguagesHandler(slot, func(HandlerContext, ListLanguagesRequest) ([]string, StatusResult) {
 					return []string{}, StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -864,7 +864,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointReadLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterReadLanguagePackHandler(slot, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterReadLanguagePackHandler(slot, func(HandlerContext, ReadLanguagePackRequest) (LanguagePack, StatusResult) {
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -873,7 +873,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointCreateLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterCreateLanguagePackHandler(slot, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterCreateLanguagePackHandler(slot, func(HandlerContext, CreateLanguagePackRequest) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -882,7 +882,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointUpdateLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterUpdateLanguagePackHandler(slot, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterUpdateLanguagePackHandler(slot, func(HandlerContext, UpdateLanguagePackRequest) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -891,7 +891,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		{
 			endpoint: EndpointDeleteLanguagePack,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterDeleteLanguagePackHandler(slot, func(uint16, string, HandlerContext) StatusResult {
+				srv.RegisterDeleteLanguagePackHandler(slot, func(HandlerContext, DeleteLanguagePackRequest) StatusResult {
 					return StatusWithCode(StatusCodeOk, "")
 				})
 			},
@@ -1280,10 +1280,10 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 
 		expected := st2138.ComponentDevice(&st2138.Device{Proto: &protos.Device{Slot: 11}})
 		handlerCalled := 0
-		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+		srv.getDeviceHandlers[11] = func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 			handlerCalled++
-			if slot != 11 {
-				t.Errorf("expected slot 11, got %d", slot)
+			if req.Slot != 11 {
+				t.Errorf("expected slot 11, got %d", req.Slot)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1295,7 +1295,7 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.DeviceComponent]{}
-		status := srv.InvokeGetDeviceHandler(11, stream, validTestTransportContext(nil))
+		status := srv.InvokeGetDeviceHandler(validTestTransportContext(nil), GetDeviceRequest{Slot: 11}, stream)
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1316,7 +1316,7 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointGetDevice, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getDeviceHandlers[11] = func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+		srv.getDeviceHandlers[11] = func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 			// Simulate the server shutting down mid-stream; the shutdownStream
 			// wrapper must surface it as a Send error.
 			srv.ctxCancel()
@@ -1327,7 +1327,7 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.DeviceComponent]{}
-		status := srv.InvokeGetDeviceHandler(11, stream, validTestTransportContext(nil))
+		status := srv.InvokeGetDeviceHandler(validTestTransportContext(nil), GetDeviceRequest{Slot: 11}, stream)
 		if status.Code != StatusCodeInternal {
 			t.Errorf("expected internal status from handler, got %v", status)
 		}
@@ -1345,13 +1345,13 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 
 		expected := st2138.Value{}
 		handlerCalled := 0
-		srv.getValueHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+		srv.getValueHandlers[7] = func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
 			handlerCalled++
-			if slot != 7 {
-				t.Errorf("expected slot 7, got %d", slot)
+			if req.Slot != 7 {
+				t.Errorf("expected slot 7, got %d", req.Slot)
 			}
-			if fqoid != "test/param" {
-				t.Errorf("expected fqoid 'test/param', got %s", fqoid)
+			if req.Fqoid != "test/param" {
+				t.Errorf("expected fqoid 'test/param', got %s", req.Fqoid)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1359,7 +1359,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			return Reply(expected)
 		}
 
-		actual, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1381,10 +1381,10 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		paramCalled := 0
-		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			paramCalled++
-			if slot != 7 || fqoid != "test/param" {
-				t.Errorf("unexpected args slot=%d fqoid=%q", slot, fqoid)
+			if req.Slot != 7 || req.Fqoid != "test/param" {
+				t.Errorf("unexpected args slot=%d fqoid=%q", req.Slot, req.Fqoid)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
@@ -1392,7 +1392,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			return Reply(*st2138.NewParamInt32(42))
 		}
 
-		actual, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
 
 		if _, ok := srv.getValueHandlers[7]; ok {
 			t.Error("expected no GetValue handler registered for slot 7")
@@ -1414,15 +1414,15 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getValueHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+		srv.getValueHandlers[7] = func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
 			return Reply(st2138.Value{Proto: st2138.NewParamInt32(1).Proto.GetValue()})
 		}
-		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			t.Error("GetParam handler must not be called when a GetValue handler is registered")
 			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
 		}
 
-		actual, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
@@ -1437,11 +1437,11 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "param not found: test/param")
 		}
 
-		_, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		_, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound propagated from GetParam, got %v", status.Code)
 		}
@@ -1454,11 +1454,11 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[7] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			return st2138.Param{}, StatusWithCode(StatusCodeOk, "")
 		}
 
-		_, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		_, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
 		if status.Code != StatusCodeInternal {
 			t.Errorf("expected Internal for nil derived param, got %v", status.Code)
 		}
@@ -1470,7 +1470,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		_, status := srv.InvokeGetValueHandler(7, "test/param", validTestTransportContext(nil))
+		_, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound, got %v", status.Code)
 		}
@@ -1485,11 +1485,11 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 
 		handlerCalled := 0
 		var got []SetValueEntry
-		srv.setValueHandlers[3] = func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+		srv.setValueHandlers[3] = func(ctx HandlerContext, req SetValueRequest) StatusResult {
 			handlerCalled++
-			got = entries
-			if slot != 3 {
-				t.Errorf("expected slot 3, got %d", slot)
+			got = req.Entries
+			if req.Slot != 3 {
+				t.Errorf("expected slot 3, got %d", req.Slot)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1497,7 +1497,7 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		status := srv.InvokeSetValueHandler(3, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, validTestTransportContext(nil))
+		status := srv.InvokeSetValueHandler(validTestTransportContext(nil), SetValueRequest{Slot: 3, Entries: []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}})
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1516,9 +1516,9 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 
 		callCount := 0
 		var got []SetValueEntry
-		srv.setValueHandlers[0] = func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+		srv.setValueHandlers[0] = func(ctx HandlerContext, req SetValueRequest) StatusResult {
 			callCount++
-			got = entries
+			got = req.Entries
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
@@ -1526,7 +1526,7 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 			{Fqoid: "a", Value: int32(1)},
 			{Fqoid: "b", Value: int32(2)},
 		}
-		status := srv.InvokeSetValueHandler(0, entries, validTestTransportContext(nil))
+		status := srv.InvokeSetValueHandler(validTestTransportContext(nil), SetValueRequest{Slot: 0, Entries: entries})
 
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
@@ -1543,11 +1543,11 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointSetValue, true, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.setValueHandlers[0] = func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+		srv.setValueHandlers[0] = func(ctx HandlerContext, req SetValueRequest) StatusResult {
 			return StatusWithCode(StatusCodeInvalidArgument, "bad value")
 		}
 
-		status := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "a", Value: int32(1)}}, validTestTransportContext(nil))
+		status := srv.InvokeSetValueHandler(validTestTransportContext(nil), SetValueRequest{Slot: 0, Entries: []SetValueEntry{{Fqoid: "a", Value: int32(1)}}})
 		if status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument status, got %v", status.Code)
 		}
@@ -1562,13 +1562,13 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 
 		expected := st2138.Param{}
 		handlerCalled := 0
-		srv.getParamHandlers[22] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[22] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			handlerCalled++
-			if slot != 22 {
-				t.Errorf("expected slot 22, got %d", slot)
+			if req.Slot != 22 {
+				t.Errorf("expected slot 22, got %d", req.Slot)
 			}
-			if fqoid != "test/param" {
-				t.Errorf("expected fqoid 'test/param', got %s", fqoid)
+			if req.Fqoid != "test/param" {
+				t.Errorf("expected fqoid 'test/param', got %s", req.Fqoid)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1576,7 +1576,7 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 			return Reply(expected)
 		}
 
-		actual, status := srv.InvokeGetParamHandler(22, "test/param", validTestTransportContext(nil))
+		actual, status := srv.InvokeGetParamHandler(validTestTransportContext(nil), GetParamRequest{Slot: 22, Fqoid: "test/param"})
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1603,13 +1603,13 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		expected, _ := st2138.ToAsset(dp, false)
 
 		handlerCalled := 0
-		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult {
+		srv.readAssetHandlers[5] = func(ctx HandlerContext, req ReadAssetRequest, stream Stream[st2138.Asset]) StatusResult {
 			handlerCalled++
-			if slot != 5 {
-				t.Errorf("expected slot 5, got %d", slot)
+			if req.Slot != 5 {
+				t.Errorf("expected slot 5, got %d", req.Slot)
 			}
-			if fqoid != "test/asset" {
-				t.Errorf("expected fqoid 'test/asset', got %s", fqoid)
+			if req.Fqoid != "test/asset" {
+				t.Errorf("expected fqoid 'test/asset', got %s", req.Fqoid)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1621,7 +1621,7 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.Asset]{}
-		status := srv.InvokeReadAssetHandler(5, "test/asset", stream, validTestTransportContext(nil))
+		status := srv.InvokeReadAssetHandler(validTestTransportContext(nil), ReadAssetRequest{Slot: 5, Fqoid: "test/asset"}, stream)
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1642,7 +1642,7 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointReadAsset, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		srv.readAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult {
+		srv.readAssetHandlers[5] = func(ctx HandlerContext, req ReadAssetRequest, stream Stream[st2138.Asset]) StatusResult {
 			// Simulate the server shutting down mid-stream; the shutdownStream
 			// wrapper must surface it as a Send error.
 			srv.ctxCancel()
@@ -1653,7 +1653,7 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.Asset]{}
-		status := srv.InvokeReadAssetHandler(5, "test/asset", stream, validTestTransportContext(nil))
+		status := srv.InvokeReadAssetHandler(validTestTransportContext(nil), ReadAssetRequest{Slot: 5, Fqoid: "test/asset"}, stream)
 		if status.Code != StatusCodeInternal {
 			t.Errorf("expected internal status from handler, got %v", status)
 		}
@@ -1673,15 +1673,15 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 		asset, _ := st2138.ToAsset(dp, true)
 
 		handlerCalled := 0
-		srv.createAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset st2138.Asset, ctx HandlerContext) StatusResult {
+		srv.createAssetHandlers[5] = func(ctx HandlerContext, req CreateAssetRequest) StatusResult {
 			handlerCalled++
-			if slot != 5 {
-				t.Errorf("expected slot 5, got %d", slot)
+			if req.Slot != 5 {
+				t.Errorf("expected slot 5, got %d", req.Slot)
 			}
-			if fqoid != "test/asset" {
-				t.Errorf("expected fqoid 'test/asset', got %s", fqoid)
+			if req.Fqoid != "test/asset" {
+				t.Errorf("expected fqoid 'test/asset', got %s", req.Fqoid)
 			}
-			if !proto.Equal(gotAsset.Proto, asset.Proto) {
+			if !proto.Equal(req.Asset.Proto, asset.Proto) {
 				t.Errorf("expected asset to be passed through unchanged")
 			}
 			if ctx.Token != knownCtx.Token {
@@ -1690,7 +1690,7 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		status := srv.InvokeCreateAssetHandler(5, "test/asset", asset, validTestTransportContext(nil))
+		status := srv.InvokeCreateAssetHandler(validTestTransportContext(nil), CreateAssetRequest{Slot: 5, Fqoid: "test/asset", Asset: asset})
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
 		}
@@ -1704,7 +1704,7 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointCreateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		status := srv.InvokeCreateAssetHandler(7, "missing", st2138.Asset{}, validTestTransportContext(nil))
+		status := srv.InvokeCreateAssetHandler(validTestTransportContext(nil), CreateAssetRequest{Slot: 7, Fqoid: "missing", Asset: st2138.Asset{}})
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound when no handler registered, got %v", status)
 		}
@@ -1721,15 +1721,15 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 		asset, _ := st2138.ToAsset(dp, true)
 
 		handlerCalled := 0
-		srv.updateAssetHandlers[5] = func(slot uint16, fqoid string, gotAsset st2138.Asset, ctx HandlerContext) StatusResult {
+		srv.updateAssetHandlers[5] = func(ctx HandlerContext, req UpdateAssetRequest) StatusResult {
 			handlerCalled++
-			if slot != 5 {
-				t.Errorf("expected slot 5, got %d", slot)
+			if req.Slot != 5 {
+				t.Errorf("expected slot 5, got %d", req.Slot)
 			}
-			if fqoid != "test/asset" {
-				t.Errorf("expected fqoid 'test/asset', got %s", fqoid)
+			if req.Fqoid != "test/asset" {
+				t.Errorf("expected fqoid 'test/asset', got %s", req.Fqoid)
 			}
-			if !proto.Equal(gotAsset.Proto, asset.Proto) {
+			if !proto.Equal(req.Asset.Proto, asset.Proto) {
 				t.Errorf("expected asset to be passed through unchanged")
 			}
 			if ctx.Token != knownCtx.Token {
@@ -1738,7 +1738,7 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		status := srv.InvokeUpdateAssetHandler(5, "test/asset", asset, validTestTransportContext(nil))
+		status := srv.InvokeUpdateAssetHandler(validTestTransportContext(nil), UpdateAssetRequest{Slot: 5, Fqoid: "test/asset", Asset: asset})
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
 		}
@@ -1752,7 +1752,7 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointUpdateAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		status := srv.InvokeUpdateAssetHandler(7, "missing", st2138.Asset{}, validTestTransportContext(nil))
+		status := srv.InvokeUpdateAssetHandler(validTestTransportContext(nil), UpdateAssetRequest{Slot: 7, Fqoid: "missing", Asset: st2138.Asset{}})
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound when no handler registered, got %v", status)
 		}
@@ -1766,13 +1766,13 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointDeleteAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		handlerCalled := 0
-		srv.deleteAssetHandlers[5] = func(slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+		srv.deleteAssetHandlers[5] = func(ctx HandlerContext, req DeleteAssetRequest) StatusResult {
 			handlerCalled++
-			if slot != 5 {
-				t.Errorf("expected slot 5, got %d", slot)
+			if req.Slot != 5 {
+				t.Errorf("expected slot 5, got %d", req.Slot)
 			}
-			if fqoid != "test/asset" {
-				t.Errorf("expected fqoid 'test/asset', got %s", fqoid)
+			if req.Fqoid != "test/asset" {
+				t.Errorf("expected fqoid 'test/asset', got %s", req.Fqoid)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1780,7 +1780,7 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 			return StatusWithCode(StatusCodeOk, "")
 		}
 
-		status := srv.InvokeDeleteAssetHandler(5, "test/asset", validTestTransportContext(nil))
+		status := srv.InvokeDeleteAssetHandler(validTestTransportContext(nil), DeleteAssetRequest{Slot: 5, Fqoid: "test/asset"})
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
 		}
@@ -1794,7 +1794,7 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointDeleteAsset, true, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		status := srv.InvokeDeleteAssetHandler(7, "missing", validTestTransportContext(nil))
+		status := srv.InvokeDeleteAssetHandler(validTestTransportContext(nil), DeleteAssetRequest{Slot: 7, Fqoid: "missing"})
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound when no handler registered, got %v", status)
 		}
@@ -1818,39 +1818,39 @@ func TestServer_AssetWriteRequiresNonMonitorScope(t *testing.T) {
 			name:     "CreateAsset",
 			endpoint: EndpointCreateAsset,
 			register: func(srv *server, called *bool) {
-				srv.createAssetHandlers[0] = func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+				srv.createAssetHandlers[0] = func(HandlerContext, CreateAssetRequest) StatusResult {
 					*called = true
 					return StatusWithCode(StatusCodeOk, "")
 				}
 			},
 			invoke: func(srv *server, tc TransportContext) StatusResult {
-				return srv.InvokeCreateAssetHandler(0, "asset", sampleAsset, tc)
+				return srv.InvokeCreateAssetHandler(tc, CreateAssetRequest{Slot: 0, Fqoid: "asset", Asset: sampleAsset})
 			},
 		},
 		{
 			name:     "UpdateAsset",
 			endpoint: EndpointUpdateAsset,
 			register: func(srv *server, called *bool) {
-				srv.updateAssetHandlers[0] = func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+				srv.updateAssetHandlers[0] = func(HandlerContext, UpdateAssetRequest) StatusResult {
 					*called = true
 					return StatusWithCode(StatusCodeOk, "")
 				}
 			},
 			invoke: func(srv *server, tc TransportContext) StatusResult {
-				return srv.InvokeUpdateAssetHandler(0, "asset", sampleAsset, tc)
+				return srv.InvokeUpdateAssetHandler(tc, UpdateAssetRequest{Slot: 0, Fqoid: "asset", Asset: sampleAsset})
 			},
 		},
 		{
 			name:     "DeleteAsset",
 			endpoint: EndpointDeleteAsset,
 			register: func(srv *server, called *bool) {
-				srv.deleteAssetHandlers[0] = func(uint16, string, HandlerContext) StatusResult {
+				srv.deleteAssetHandlers[0] = func(HandlerContext, DeleteAssetRequest) StatusResult {
 					*called = true
 					return StatusWithCode(StatusCodeOk, "")
 				}
 			},
 			invoke: func(srv *server, tc TransportContext) StatusResult {
-				return srv.InvokeDeleteAssetHandler(0, "asset", tc)
+				return srv.InvokeDeleteAssetHandler(tc, DeleteAssetRequest{Slot: 0, Fqoid: "asset"})
 			},
 		},
 	}
@@ -1908,19 +1908,19 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		payload := "test-payload"
 		commandResult := st2138.CommandNoResponse()
 		handlerCalled := 0
-		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, gotRespond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
+		srv.executeCommandHandlers[9] = func(ctx HandlerContext, req ExecuteCommandRequest, stream Stream[st2138.CommandResponse]) StatusResult {
 			handlerCalled++
-			if slot != 9 {
-				t.Errorf("expected slot 9, got %d", slot)
+			if req.Slot != 9 {
+				t.Errorf("expected slot 9, got %d", req.Slot)
 			}
-			if commandFqoid != "test/command" {
-				t.Errorf("expected commandFqoid 'test/command', got %s", commandFqoid)
+			if req.CommandFqoid != "test/command" {
+				t.Errorf("expected commandFqoid 'test/command', got %s", req.CommandFqoid)
 			}
-			if gotPayload != payload {
-				t.Errorf("expected payload %v, got %v", payload, gotPayload)
+			if req.Payload != payload {
+				t.Errorf("expected payload %v, got %v", payload, req.Payload)
 			}
-			if gotRespond != true {
-				t.Errorf("expected gotRespond to be true, got %v", gotRespond)
+			if req.Respond != true {
+				t.Errorf("expected gotRespond to be true, got %v", req.Respond)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1930,7 +1930,7 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.CommandResponse]{}
-		status := srv.InvokeExecuteCommandHandler(9, "test/command", payload, true, stream, validTestTransportContext(nil))
+		status := srv.InvokeExecuteCommandHandler(validTestTransportContext(nil), ExecuteCommandRequest{Slot: 9, CommandFqoid: "test/command", Payload: payload, Respond: true}, stream)
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1956,9 +1956,9 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 
 		handlerCalled := 0
 		var gotRespond bool
-		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
+		srv.executeCommandHandlers[9] = func(ctx HandlerContext, req ExecuteCommandRequest, stream Stream[st2138.CommandResponse]) StatusResult {
 			handlerCalled++
-			gotRespond = respond
+			gotRespond = req.Respond
 			// A naive handler that ignores respond and sends anyway: these must be
 			// gobbled by the server, not delivered to the caller's stream.
 			if err := stream.Send(st2138.CommandNoResponse()); err != nil {
@@ -1972,7 +1972,7 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.CommandResponse]{}
-		status := srv.InvokeExecuteCommandHandler(9, "test/command", "payload", false, stream, validTestTransportContext(nil))
+		status := srv.InvokeExecuteCommandHandler(validTestTransportContext(nil), ExecuteCommandRequest{Slot: 9, CommandFqoid: "test/command", Payload: "payload", Respond: false}, stream)
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1998,9 +1998,9 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		value, _ := st2138.ToValue(int32(42))
 		first := st2138.CommandNoResponse()
 		second := st2138.CommandValue(value)
-		srv.executeCommandHandlers[9] = func(slot uint16, commandFqoid string, gotPayload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
-			if respond != true {
-				t.Errorf("expected handler to observe respond=true, got %v", respond)
+		srv.executeCommandHandlers[9] = func(ctx HandlerContext, req ExecuteCommandRequest, stream Stream[st2138.CommandResponse]) StatusResult {
+			if req.Respond != true {
+				t.Errorf("expected handler to observe respond=true, got %v", req.Respond)
 			}
 			if err := stream.Send(first); err != nil {
 				t.Errorf("unexpected error from stream Send: %v", err)
@@ -2012,7 +2012,7 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.CommandResponse]{}
-		status := srv.InvokeExecuteCommandHandler(9, "test/command", "payload", true, stream, validTestTransportContext(nil))
+		status := srv.InvokeExecuteCommandHandler(validTestTransportContext(nil), ExecuteCommandRequest{Slot: 9, CommandFqoid: "test/command", Payload: "payload", Respond: true}, stream)
 
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
@@ -2033,15 +2033,15 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		handlerCalled := 0
-		srv.paramInfoHandlers[4] = func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
+		srv.paramInfoHandlers[4] = func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult {
 			handlerCalled++
-			if slot != 4 {
-				t.Errorf("expected slot 4, got %d", slot)
+			if req.Slot != 4 {
+				t.Errorf("expected slot 4, got %d", req.Slot)
 			}
-			if oidPrefix != "test/param" {
-				t.Errorf("expected oidPrefix 'test/param', got %s", oidPrefix)
+			if req.OidPrefix != "test/param" {
+				t.Errorf("expected oidPrefix 'test/param', got %s", req.OidPrefix)
 			}
-			if !recursive {
+			if !req.Recursive {
 				t.Error("expected recursive flag to be passed through as true")
 			}
 			if ctx.Token != knownCtx.Token {
@@ -2054,7 +2054,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
-		status := srv.InvokeParamInfoHandler(4, "test/param", true, stream, validTestTransportContext(nil))
+		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "test/param", Recursive: true}, stream)
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -2079,10 +2079,10 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		paramCalled := 0
-		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			paramCalled++
-			if slot != 4 || fqoid != "volume" {
-				t.Errorf("unexpected args slot=%d fqoid=%q", slot, fqoid)
+			if req.Slot != 4 || req.Fqoid != "volume" {
+				t.Errorf("unexpected args slot=%d fqoid=%q", req.Slot, req.Fqoid)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
@@ -2091,7 +2091,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
-		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "volume", Recursive: false}, stream)
 
 		if _, ok := srv.paramInfoHandlers[4]; ok {
 			t.Error("expected no ParamInfo handler registered for slot 4")
@@ -2120,12 +2120,12 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			return Reply(*st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}))
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
-		status := srv.InvokeParamInfoHandler(4, "cfg", true, stream, validTestTransportContext(nil))
+		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "cfg", Recursive: true}, stream)
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
@@ -2151,19 +2151,19 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.paramInfoHandlers[4] = func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
+		srv.paramInfoHandlers[4] = func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult {
 			if err := stream.Send(st2138.NewParamInfo("volume", nil, st2138.ParamTypeInt32, "", 0)); err != nil {
 				return StatusWithCode(StatusCodeInternal, err.Error())
 			}
 			return StatusWithCode(StatusCodeOk, "")
 		}
-		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			t.Error("GetParam handler must not be called when a ParamInfo handler is registered")
 			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
-		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "volume", Recursive: false}, stream)
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
 		}
@@ -2178,13 +2178,13 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			t.Error("GetParam handler must not be called for the whole-tree request")
 			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
-		status := srv.InvokeParamInfoHandler(4, "", true, stream, validTestTransportContext(nil))
+		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "", Recursive: true}, stream)
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound for root request, got %v", status.Code)
 		}
@@ -2196,12 +2196,12 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[4] = func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 			return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "param not found: volume")
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
-		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "volume", Recursive: false}, stream)
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound propagated from GetParam, got %v", status.Code)
 		}
@@ -2217,7 +2217,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
 		stream := &sliceStream[st2138.ParamInfo]{}
-		status := srv.InvokeParamInfoHandler(4, "volume", false, stream, validTestTransportContext(nil))
+		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "volume", Recursive: false}, stream)
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound, got %v", status.Code)
 		}
@@ -2249,155 +2249,155 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 		{
 			endpoint: EndpointGetDevice,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetDeviceHandler(0, func(uint16, HandlerContext, Stream[st2138.DeviceComponent]) StatusResult {
+				srv.RegisterGetDeviceHandler(0, func(HandlerContext, GetDeviceRequest, Stream[st2138.DeviceComponent]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeGetDeviceHandler(0, &sliceStream[st2138.DeviceComponent]{}, invalidContext)
+				return srv.InvokeGetDeviceHandler(invalidContext, GetDeviceRequest{Slot: 0}, &sliceStream[st2138.DeviceComponent]{})
 			},
 		},
 		{
 			endpoint: EndpointGetValue,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetValueHandler(0, func(uint16, string, HandlerContext) (st2138.Value, StatusResult) {
+				srv.RegisterGetValueHandler(0, func(HandlerContext, GetValueRequest) (st2138.Value, StatusResult) {
 					*handlerCalled = true
 					return Reply(st2138.Value{})
 				})
-				_, status := srv.InvokeGetValueHandler(0, "test/param", invalidContext)
+				_, status := srv.InvokeGetValueHandler(invalidContext, GetValueRequest{Slot: 0, Fqoid: "test/param"})
 				return status
 			},
 		},
 		{
 			endpoint: EndpointSetValue,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterSetValueHandler(0, func(uint16, []SetValueEntry, HandlerContext) StatusResult {
+				srv.RegisterSetValueHandler(0, func(HandlerContext, SetValueRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, invalidContext)
+				return srv.InvokeSetValueHandler(invalidContext, SetValueRequest{Slot: 0, Entries: []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}})
 			},
 		},
 		{
 			endpoint: EndpointGetParam,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(uint16, string, HandlerContext) (st2138.Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(HandlerContext, GetParamRequest) (st2138.Param, StatusResult) {
 					*handlerCalled = true
 					return Reply(st2138.Param{})
 				})
-				_, status := srv.InvokeGetParamHandler(0, "test/param", invalidContext)
+				_, status := srv.InvokeGetParamHandler(invalidContext, GetParamRequest{Slot: 0, Fqoid: "test/param"})
 				return status
 			},
 		},
 		{
 			endpoint: EndpointReadAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadAssetHandler(0, func(uint16, string, HandlerContext, Stream[st2138.Asset]) StatusResult {
+				srv.RegisterReadAssetHandler(0, func(HandlerContext, ReadAssetRequest, Stream[st2138.Asset]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeReadAssetHandler(0, "test/asset", &sliceStream[st2138.Asset]{}, invalidContext)
+				return srv.InvokeReadAssetHandler(invalidContext, ReadAssetRequest{Slot: 0, Fqoid: "test/asset"}, &sliceStream[st2138.Asset]{})
 			},
 		},
 		{
 			endpoint: EndpointCreateAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterCreateAssetHandler(0, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(0, func(HandlerContext, CreateAssetRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeCreateAssetHandler(0, "test/asset", st2138.Asset{}, invalidContext)
+				return srv.InvokeCreateAssetHandler(invalidContext, CreateAssetRequest{Slot: 0, Fqoid: "test/asset", Asset: st2138.Asset{}})
 			},
 		},
 		{
 			endpoint: EndpointUpdateAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateAssetHandler(0, func(uint16, string, st2138.Asset, HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(0, func(HandlerContext, UpdateAssetRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateAssetHandler(0, "test/asset", st2138.Asset{}, invalidContext)
+				return srv.InvokeUpdateAssetHandler(invalidContext, UpdateAssetRequest{Slot: 0, Fqoid: "test/asset", Asset: st2138.Asset{}})
 			},
 		},
 		{
 			endpoint: EndpointDeleteAsset,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterDeleteAssetHandler(0, func(uint16, string, HandlerContext) StatusResult {
+				srv.RegisterDeleteAssetHandler(0, func(HandlerContext, DeleteAssetRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeDeleteAssetHandler(0, "test/asset", invalidContext)
+				return srv.InvokeDeleteAssetHandler(invalidContext, DeleteAssetRequest{Slot: 0, Fqoid: "test/asset"})
 			},
 		},
 		{
 			endpoint: EndpointExecuteCommand,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterExecuteCommandHandler(0, func(uint16, string, any, bool, HandlerContext, Stream[st2138.CommandResponse]) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(HandlerContext, ExecuteCommandRequest, Stream[st2138.CommandResponse]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[st2138.CommandResponse]{}, invalidContext)
+				return srv.InvokeExecuteCommandHandler(invalidContext, ExecuteCommandRequest{Slot: 0, CommandFqoid: "test/command", Payload: nil, Respond: false}, &sliceStream[st2138.CommandResponse]{})
 			},
 		},
 		{
 			endpoint: EndpointParamInfo,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterParamInfoHandler(0, func(uint16, string, bool, HandlerContext, Stream[st2138.ParamInfo]) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(HandlerContext, ParamInfoRequest, Stream[st2138.ParamInfo]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[st2138.ParamInfo]{}, invalidContext)
+				return srv.InvokeParamInfoHandler(invalidContext, ParamInfoRequest{Slot: 0, OidPrefix: "test/param", Recursive: false}, &sliceStream[st2138.ParamInfo]{})
 			},
 		},
 		{
 			endpoint: EndpointListLanguages,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterListLanguagesHandler(0, func(uint16, HandlerContext) ([]string, StatusResult) {
+				srv.RegisterListLanguagesHandler(0, func(HandlerContext, ListLanguagesRequest) ([]string, StatusResult) {
 					*handlerCalled = true
 					return []string{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeListLanguagesHandler(0, invalidContext)
+				_, status := srv.InvokeListLanguagesHandler(invalidContext, ListLanguagesRequest{Slot: 0})
 				return status
 			},
 		},
 		{
 			endpoint: EndpointReadLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterReadLanguagePackHandler(0, func(HandlerContext, ReadLanguagePackRequest) (LanguagePack, StatusResult) {
 					*handlerCalled = true
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeReadLanguagePackHandler(0, "es", invalidContext)
+				_, status := srv.InvokeReadLanguagePackHandler(invalidContext, ReadLanguagePackRequest{Slot: 0, Language: "es"})
 				return status
 			},
 		},
 		{
 			endpoint: EndpointCreateLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterCreateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterCreateLanguagePackHandler(0, func(HandlerContext, CreateLanguagePackRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), invalidContext)
+				return srv.InvokeCreateLanguagePackHandler(invalidContext, CreateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()})
 			},
 		},
 		{
 			endpoint: EndpointUpdateLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+				srv.RegisterUpdateLanguagePackHandler(0, func(HandlerContext, UpdateLanguagePackRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), invalidContext)
+				return srv.InvokeUpdateLanguagePackHandler(invalidContext, UpdateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()})
 			},
 		},
 		{
 			endpoint: EndpointDeleteLanguagePack,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterDeleteLanguagePackHandler(0, func(uint16, string, HandlerContext) StatusResult {
+				srv.RegisterDeleteLanguagePackHandler(0, func(HandlerContext, DeleteLanguagePackRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeDeleteLanguagePackHandler(0, "es", invalidContext)
+				return srv.InvokeDeleteLanguagePackHandler(invalidContext, DeleteLanguagePackRequest{Slot: 0, Language: "es"})
 			},
 		},
 		{
@@ -2475,11 +2475,11 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 			endpoint: EndpointExecuteCommand,
 			verifyShutdown: func(t *testing.T, srv *server) error {
 				var sendErr error
-				srv.RegisterExecuteCommandHandler(0, func(_ uint16, _ string, _ any, _ bool, _ HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(_ HandlerContext, req ExecuteCommandRequest, stream Stream[st2138.CommandResponse]) StatusResult {
 					sendErr = stream.Send(st2138.CommandNoResponse())
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[st2138.CommandResponse]{}, TransportContext{})
+				srv.InvokeExecuteCommandHandler(TransportContext{}, ExecuteCommandRequest{Slot: 0, CommandFqoid: "test/command", Payload: nil, Respond: false}, &sliceStream[st2138.CommandResponse]{})
 				return sendErr
 			},
 		},
@@ -2487,11 +2487,11 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 			endpoint: EndpointParamInfo,
 			verifyShutdown: func(t *testing.T, srv *server) error {
 				var sendErr error
-				srv.RegisterParamInfoHandler(0, func(_ uint16, _ string, _ bool, _ HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(_ HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult {
 					sendErr = stream.Send(st2138.NewParamInfo("test/param", nil, st2138.ParamTypeString, "", 0))
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[st2138.ParamInfo]{}, TransportContext{})
+				srv.InvokeParamInfoHandler(TransportContext{}, ParamInfoRequest{Slot: 0, OidPrefix: "test/param", Recursive: false}, &sliceStream[st2138.ParamInfo]{})
 				return sendErr
 			},
 		},
@@ -2600,7 +2600,7 @@ func TestServer_AuthzDisabledSkipsAccessHandlerAndAllowsScopedHandlerChecks(t *t
 		accessCalled = true
 		return false
 	})
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+	srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
 		handlerCalled = true
 		if !ctx.HasReadScope(st2138.ScopeCfg) {
 			return ReplyError[st2138.Value](StatusCodePermissionDenied, "configuration scope required")
@@ -2608,7 +2608,7 @@ func TestServer_AuthzDisabledSkipsAccessHandlerAndAllowsScopedHandlerChecks(t *t
 		return Reply(st2138.Value{})
 	})
 
-	_, status := srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
+	_, status := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: "test/param"})
 
 	if accessCalled {
 		t.Fatal("access handler should not run when authz is disabled")
@@ -2638,14 +2638,14 @@ func TestServer_AuthzDisabledHandlerContextGrantsAllScopes(t *testing.T) {
 		t.Fatal("expected HasAnyReadScope and HasAnyWriteScope to succeed when authz is disabled")
 	}
 
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+	srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
 		if !ctx.HasReadScope(st2138.ScopeCfg) {
 			return ReplyError[st2138.Value](StatusCodePermissionDenied, "configuration scope required")
 		}
 		return Reply(st2138.Value{})
 	})
 
-	_, status = srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
+	_, status = srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: "test/param"})
 	if status.Code != StatusCodeOk {
 		t.Errorf("expected handler scope check to pass when authz is disabled, got %v", status.Code)
 	}
@@ -2672,22 +2672,22 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointGetDevice,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+				srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeGetDeviceHandler(0, &sliceStream[st2138.DeviceComponent]{}, TransportContext{})
+				return srv.InvokeGetDeviceHandler(TransportContext{}, GetDeviceRequest{Slot: 0}, &sliceStream[st2138.DeviceComponent]{})
 			},
 		},
 		{
 			endpoint:          EndpointGetValue,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+				srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
 					*handlerCalled = true
 					return Reply(st2138.Value{})
 				})
-				_, status := srv.InvokeGetValueHandler(0, "test/param", TransportContext{})
+				_, status := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: "test/param"})
 				return status
 			},
 		},
@@ -2695,22 +2695,22 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointSetValue,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+				srv.RegisterSetValueHandler(0, func(ctx HandlerContext, req SetValueRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}, TransportContext{})
+				return srv.InvokeSetValueHandler(TransportContext{}, SetValueRequest{Slot: 0, Entries: []SetValueEntry{{Fqoid: "test/param", Value: int32(42)}}})
 			},
 		},
 		{
 			endpoint:          EndpointGetParam,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+				srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 					*handlerCalled = true
 					return Reply(st2138.Param{})
 				})
-				_, status := srv.InvokeGetParamHandler(0, "test/param", TransportContext{})
+				_, status := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "test/param"})
 				return status
 			},
 		},
@@ -2718,77 +2718,77 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointReadAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult {
+				srv.RegisterReadAssetHandler(0, func(ctx HandlerContext, req ReadAssetRequest, stream Stream[st2138.Asset]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeReadAssetHandler(0, "test/asset", &sliceStream[st2138.Asset]{}, TransportContext{})
+				return srv.InvokeReadAssetHandler(TransportContext{}, ReadAssetRequest{Slot: 0, Fqoid: "test/asset"}, &sliceStream[st2138.Asset]{})
 			},
 		},
 		{
 			endpoint:          EndpointCreateAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterCreateAssetHandler(0, func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult {
+				srv.RegisterCreateAssetHandler(0, func(ctx HandlerContext, req CreateAssetRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeCreateAssetHandler(0, "test/asset", st2138.Asset{}, TransportContext{})
+				return srv.InvokeCreateAssetHandler(TransportContext{}, CreateAssetRequest{Slot: 0, Fqoid: "test/asset", Asset: st2138.Asset{}})
 			},
 		},
 		{
 			endpoint:          EndpointUpdateAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateAssetHandler(0, func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult {
+				srv.RegisterUpdateAssetHandler(0, func(ctx HandlerContext, req UpdateAssetRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateAssetHandler(0, "test/asset", st2138.Asset{}, TransportContext{})
+				return srv.InvokeUpdateAssetHandler(TransportContext{}, UpdateAssetRequest{Slot: 0, Fqoid: "test/asset", Asset: st2138.Asset{}})
 			},
 		},
 		{
 			endpoint:          EndpointDeleteAsset,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterDeleteAssetHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) StatusResult {
+				srv.RegisterDeleteAssetHandler(0, func(ctx HandlerContext, req DeleteAssetRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeDeleteAssetHandler(0, "test/asset", TransportContext{})
+				return srv.InvokeDeleteAssetHandler(TransportContext{}, DeleteAssetRequest{Slot: 0, Fqoid: "test/asset"})
 			},
 		},
 		{
 			endpoint:          EndpointExecuteCommand,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterExecuteCommandHandler(0, func(uint16, string, any, bool, HandlerContext, Stream[st2138.CommandResponse]) StatusResult {
+				srv.RegisterExecuteCommandHandler(0, func(HandlerContext, ExecuteCommandRequest, Stream[st2138.CommandResponse]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeExecuteCommandHandler(0, "test/command", nil, false, &sliceStream[st2138.CommandResponse]{}, TransportContext{})
+				return srv.InvokeExecuteCommandHandler(TransportContext{}, ExecuteCommandRequest{Slot: 0, CommandFqoid: "test/command", Payload: nil, Respond: false}, &sliceStream[st2138.CommandResponse]{})
 			},
 		},
 		{
 			endpoint:          EndpointParamInfo,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
+				srv.RegisterParamInfoHandler(0, func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeParamInfoHandler(0, "test/param", false, &sliceStream[st2138.ParamInfo]{}, TransportContext{})
+				return srv.InvokeParamInfoHandler(TransportContext{}, ParamInfoRequest{Slot: 0, OidPrefix: "test/param", Recursive: false}, &sliceStream[st2138.ParamInfo]{})
 			},
 		},
 		{
 			endpoint:          EndpointListLanguages,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterListLanguagesHandler(0, func(slot uint16, ctx HandlerContext) ([]string, StatusResult) {
+				srv.RegisterListLanguagesHandler(0, func(ctx HandlerContext, req ListLanguagesRequest) ([]string, StatusResult) {
 					*handlerCalled = true
 					return []string{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeListLanguagesHandler(0, TransportContext{})
+				_, status := srv.InvokeListLanguagesHandler(TransportContext{}, ListLanguagesRequest{Slot: 0})
 				return status
 			},
 		},
@@ -2796,11 +2796,11 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointReadLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterReadLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+				srv.RegisterReadLanguagePackHandler(0, func(ctx HandlerContext, req ReadLanguagePackRequest) (LanguagePack, StatusResult) {
 					*handlerCalled = true
 					return LanguagePack{}, StatusWithCode(StatusCodeOk, "")
 				})
-				_, status := srv.InvokeReadLanguagePackHandler(0, "es", TransportContext{})
+				_, status := srv.InvokeReadLanguagePackHandler(TransportContext{}, ReadLanguagePackRequest{Slot: 0, Language: "es"})
 				return status
 			},
 		},
@@ -2808,33 +2808,33 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			endpoint:          EndpointCreateLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
+				srv.RegisterCreateLanguagePackHandler(0, func(ctx HandlerContext, req CreateLanguagePackRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), TransportContext{})
+				return srv.InvokeCreateLanguagePackHandler(TransportContext{}, CreateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()})
 			},
 		},
 		{
 			endpoint:          EndpointUpdateLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, pack LanguagePack, ctx HandlerContext) StatusResult {
+				srv.RegisterUpdateLanguagePackHandler(0, func(ctx HandlerContext, req UpdateLanguagePackRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), TransportContext{})
+				return srv.InvokeUpdateLanguagePackHandler(TransportContext{}, UpdateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()})
 			},
 		},
 		{
 			endpoint:          EndpointDeleteLanguagePack,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+				srv.RegisterDeleteLanguagePackHandler(0, func(ctx HandlerContext, req DeleteLanguagePackRequest) StatusResult {
 					*handlerCalled = true
 					return StatusWithCode(StatusCodeOk, "")
 				})
-				return srv.InvokeDeleteLanguagePackHandler(0, "es", TransportContext{})
+				return srv.InvokeDeleteLanguagePackHandler(TransportContext{}, DeleteLanguagePackRequest{Slot: 0, Language: "es"})
 			},
 		},
 		{
@@ -3493,15 +3493,15 @@ func TestServer_RegisterLanguagePackHandlers(t *testing.T) {
 		srv := newTestServer(t, true)
 
 		handlerCalled := false
-		srv.RegisterReadLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+		srv.RegisterReadLanguagePackHandler(0, func(ctx HandlerContext, req ReadLanguagePackRequest) (LanguagePack, StatusResult) {
 			handlerCalled = true
-			if language != "es" {
-				t.Errorf("expected language 'es', got %s", language)
+			if req.Language != "es" {
+				t.Errorf("expected language 'es', got %s", req.Language)
 			}
 			return NewLanguagePack().WithName("Spanish"), StatusResult{Code: StatusCodeOk}
 		})
 
-		lp, status := srv.InvokeReadLanguagePackHandler(0, "es", validTestTransportContext(nil))
+		lp, status := srv.InvokeReadLanguagePackHandler(validTestTransportContext(nil), ReadLanguagePackRequest{Slot: 0, Language: "es"})
 
 		if !handlerCalled {
 			t.Error("registered handler was not called")
@@ -3518,15 +3518,15 @@ func TestServer_RegisterLanguagePackHandlers(t *testing.T) {
 		srv := newTestServer(t, true)
 
 		handlerCalled := false
-		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterCreateLanguagePackHandler(0, func(ctx HandlerContext, req CreateLanguagePackRequest) StatusResult {
 			handlerCalled = true
-			if language != "fr" {
-				t.Errorf("expected language 'fr', got %s", language)
+			if req.Language != "fr" {
+				t.Errorf("expected language 'fr', got %s", req.Language)
 			}
 			return StatusResult{Code: StatusCodeOk}
 		})
 
-		status := srv.InvokeCreateLanguagePackHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
+		status := srv.InvokeCreateLanguagePackHandler(admTestTransportContext(t), CreateLanguagePackRequest{Slot: 0, Language: "fr", LanguagePack: NewLanguagePack()})
 
 		if !handlerCalled {
 			t.Error("registered handler was not called")
@@ -3540,12 +3540,12 @@ func TestServer_RegisterLanguagePackHandlers(t *testing.T) {
 		srv := newTestServer(t, true)
 
 		handlerCalled := false
-		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterUpdateLanguagePackHandler(0, func(ctx HandlerContext, req UpdateLanguagePackRequest) StatusResult {
 			handlerCalled = true
 			return StatusResult{Code: StatusCodeOk}
 		})
 
-		status := srv.InvokeUpdateLanguagePackHandler(0, "fr", NewLanguagePack(), admTestTransportContext(t))
+		status := srv.InvokeUpdateLanguagePackHandler(admTestTransportContext(t), UpdateLanguagePackRequest{Slot: 0, Language: "fr", LanguagePack: NewLanguagePack()})
 
 		if !handlerCalled {
 			t.Error("registered handler was not called")
@@ -3559,12 +3559,12 @@ func TestServer_RegisterLanguagePackHandlers(t *testing.T) {
 		srv := newTestServer(t, true)
 
 		handlerCalled := false
-		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+		srv.RegisterDeleteLanguagePackHandler(0, func(ctx HandlerContext, req DeleteLanguagePackRequest) StatusResult {
 			handlerCalled = true
 			return StatusResult{Code: StatusCodeOk}
 		})
 
-		status := srv.InvokeDeleteLanguagePackHandler(0, "fr", admTestTransportContext(t))
+		status := srv.InvokeDeleteLanguagePackHandler(admTestTransportContext(t), DeleteLanguagePackRequest{Slot: 0, Language: "fr"})
 
 		if !handlerCalled {
 			t.Error("registered handler was not called")
@@ -3582,28 +3582,28 @@ func TestServer_LanguageHandlersNotRegistered(t *testing.T) {
 
 	t.Run("get", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		if _, status := srv.InvokeReadLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
+		if _, status := srv.InvokeReadLanguagePackHandler(ctx, ReadLanguagePackRequest{Slot: 0, Language: "es"}); status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound, got %v", status.Code)
 		}
 	})
 
 	t.Run("create", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
+		if status := srv.InvokeCreateLanguagePackHandler(ctx, CreateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()}); status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound, got %v", status.Code)
 		}
 	})
 
 	t.Run("update", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), ctx); status.Code != StatusCodeNotFound {
+		if status := srv.InvokeUpdateLanguagePackHandler(ctx, UpdateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()}); status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound, got %v", status.Code)
 		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", ctx); status.Code != StatusCodeNotFound {
+		if status := srv.InvokeDeleteLanguagePackHandler(ctx, DeleteLanguagePackRequest{Slot: 0, Language: "es"}); status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound, got %v", status.Code)
 		}
 	})
@@ -3617,44 +3617,44 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 
 	t.Run("get requires read scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterReadLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult) {
+		srv.RegisterReadLanguagePackHandler(0, func(ctx HandlerContext, req ReadLanguagePackRequest) (LanguagePack, StatusResult) {
 			t.Fatal("handler should not run without read scope")
 			return LanguagePack{}, StatusResult{Code: StatusCodeOk}
 		})
-		if _, status := srv.InvokeReadLanguagePackHandler(0, "es", noReadContext); status.Code != StatusCodePermissionDenied {
+		if _, status := srv.InvokeReadLanguagePackHandler(noReadContext, ReadLanguagePackRequest{Slot: 0, Language: "es"}); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("add requires write scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterCreateLanguagePackHandler(0, func(ctx HandlerContext, req CreateLanguagePackRequest) StatusResult {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeCreateLanguagePackHandler(noWriteContext, CreateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()}); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires write scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterUpdateLanguagePackHandler(0, func(ctx HandlerContext, req UpdateLanguagePackRequest) StatusResult {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeUpdateLanguagePackHandler(noWriteContext, UpdateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()}); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("delete requires write scope", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+		srv.RegisterDeleteLanguagePackHandler(0, func(ctx HandlerContext, req DeleteLanguagePackRequest) StatusResult {
 			t.Fatal("handler should not run without write scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", noWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeDeleteLanguagePackHandler(noWriteContext, DeleteLanguagePackRequest{Slot: 0, Language: "es"}); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
@@ -3665,33 +3665,33 @@ func TestServer_LanguageHandlersPermissionDenied(t *testing.T) {
 
 	t.Run("add requires adm scope, not just write", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterCreateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterCreateLanguagePackHandler(0, func(ctx HandlerContext, req CreateLanguagePackRequest) StatusResult {
 			t.Fatal("handler should not run without adm scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeCreateLanguagePackHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeCreateLanguagePackHandler(opWriteContext, CreateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()}); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires adm scope, not just write", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterUpdateLanguagePackHandler(0, func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult {
+		srv.RegisterUpdateLanguagePackHandler(0, func(ctx HandlerContext, req UpdateLanguagePackRequest) StatusResult {
 			t.Fatal("handler should not run without adm scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", NewLanguagePack(), opWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeUpdateLanguagePackHandler(opWriteContext, UpdateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: NewLanguagePack()}); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
 
 	t.Run("delete requires adm scope, not just write", func(t *testing.T) {
 		srv := newTestServer(t, true)
-		srv.RegisterDeleteLanguagePackHandler(0, func(slot uint16, language string, ctx HandlerContext) StatusResult {
+		srv.RegisterDeleteLanguagePackHandler(0, func(ctx HandlerContext, req DeleteLanguagePackRequest) StatusResult {
 			t.Fatal("handler should not run without adm scope")
 			return StatusResult{Code: StatusCodeOk}
 		})
-		if status := srv.InvokeDeleteLanguagePackHandler(0, "es", opWriteContext); status.Code != StatusCodePermissionDenied {
+		if status := srv.InvokeDeleteLanguagePackHandler(opWriteContext, DeleteLanguagePackRequest{Slot: 0, Language: "es"}); status.Code != StatusCodePermissionDenied {
 			t.Errorf("expected PermissionDenied, got %v", status.Code)
 		}
 	})
@@ -3707,55 +3707,55 @@ func TestServer_LanguageHandlersValidation(t *testing.T) {
 	// Register handlers so the invoke callback - where argument validation now
 	// lives, after the auth/scope gate - is actually reached. The handlers must
 	// never run, since every case below fails validation first.
-	srv.RegisterReadLanguagePackHandler(0, func(uint16, string, HandlerContext) (LanguagePack, StatusResult) {
+	srv.RegisterReadLanguagePackHandler(0, func(HandlerContext, ReadLanguagePackRequest) (LanguagePack, StatusResult) {
 		t.Fatal("handler should not run when validation fails")
 		return LanguagePack{}, StatusResult{Code: StatusCodeOk}
 	})
-	srv.RegisterCreateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+	srv.RegisterCreateLanguagePackHandler(0, func(HandlerContext, CreateLanguagePackRequest) StatusResult {
 		t.Fatal("handler should not run when validation fails")
 		return StatusResult{Code: StatusCodeOk}
 	})
-	srv.RegisterUpdateLanguagePackHandler(0, func(uint16, string, LanguagePack, HandlerContext) StatusResult {
+	srv.RegisterUpdateLanguagePackHandler(0, func(HandlerContext, UpdateLanguagePackRequest) StatusResult {
 		t.Fatal("handler should not run when validation fails")
 		return StatusResult{Code: StatusCodeOk}
 	})
-	srv.RegisterDeleteLanguagePackHandler(0, func(uint16, string, HandlerContext) StatusResult {
+	srv.RegisterDeleteLanguagePackHandler(0, func(HandlerContext, DeleteLanguagePackRequest) StatusResult {
 		t.Fatal("handler should not run when validation fails")
 		return StatusResult{Code: StatusCodeOk}
 	})
 
 	t.Run("get requires language", func(t *testing.T) {
-		if _, status := srv.InvokeReadLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+		if _, status := srv.InvokeReadLanguagePackHandler(ctx, ReadLanguagePackRequest{Slot: 0, Language: ""}); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("add requires language", func(t *testing.T) {
-		if status := srv.InvokeCreateLanguagePackHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeCreateLanguagePackHandler(ctx, CreateLanguagePackRequest{Slot: 0, Language: "", LanguagePack: NewLanguagePack()}); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("add requires pack", func(t *testing.T) {
-		if status := srv.InvokeCreateLanguagePackHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeCreateLanguagePackHandler(ctx, CreateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: LanguagePack{}}); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires language", func(t *testing.T) {
-		if status := srv.InvokeUpdateLanguagePackHandler(0, "", NewLanguagePack(), ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeUpdateLanguagePackHandler(ctx, UpdateLanguagePackRequest{Slot: 0, Language: "", LanguagePack: NewLanguagePack()}); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("update requires pack", func(t *testing.T) {
-		if status := srv.InvokeUpdateLanguagePackHandler(0, "es", LanguagePack{}, ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeUpdateLanguagePackHandler(ctx, UpdateLanguagePackRequest{Slot: 0, Language: "es", LanguagePack: LanguagePack{}}); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})
 
 	t.Run("delete requires language", func(t *testing.T) {
-		if status := srv.InvokeDeleteLanguagePackHandler(0, "", ctx); status.Code != StatusCodeInvalidArgument {
+		if status := srv.InvokeDeleteLanguagePackHandler(ctx, DeleteLanguagePackRequest{Slot: 0, Language: ""}); status.Code != StatusCodeInvalidArgument {
 			t.Errorf("expected InvalidArgument, got %v", status.Code)
 		}
 	})

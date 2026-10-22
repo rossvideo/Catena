@@ -14,43 +14,43 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// and works well when a device has a small number of params. This handler
 	// also shows a per-endpoint auth restriction: callers must have read access
 	// to the configuration scope before slot 0 values are returned.
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
-		ctx.Logger().Info("GetValue", "slot", slot, "fqoid", fqoid)
+	srv.RegisterGetValueHandler(0, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+		ctx.Logger().Info("GetValue", "slot", req.Slot, "fqoid", req.Fqoid)
 		if !ctx.HasReadScope(st2138.ScopeCfg) {
 			return catena.ReplyError[st2138.Value](catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
-		switch fqoid {
+		switch req.Fqoid {
 		case "counter":
-			return replyValue(fqoid, counter.GetValue(), true)
+			return replyValue(req.Fqoid, counter.GetValue(), true)
 		case "running":
-			return replyValue(fqoid, counter.RunningInt32(), true)
+			return replyValue(req.Fqoid, counter.RunningInt32(), true)
 		case "dashboard_UI":
-			return replyValue(fqoid, dashboardUIValue, true)
+			return replyValue(req.Fqoid, dashboardUIValue, true)
 		default:
-			return replyValue(fqoid, nil, false)
+			return replyValue(req.Fqoid, nil, false)
 		}
 	})
 
 	// Slot 1: direct sync.Map lookup. This demonstrates map-backed state where
 	// parameter OIDs are the storage keys. Slot 1 uses the monitor scope for access
-	srv.RegisterGetValueHandler(1, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
-		ctx.Logger().Info("GetValue", "slot", slot, "fqoid", fqoid)
+	srv.RegisterGetValueHandler(1, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+		ctx.Logger().Info("GetValue", "slot", req.Slot, "fqoid", req.Fqoid)
 		if !ctx.HasReadScope(st2138.ScopeMon) {
 			return catena.ReplyError[st2138.Value](catena.StatusCodePermissionDenied, "monitor scope required")
 		}
 
 		state.mu.RLock()
-		v, ok := state.slotOneParams.Load(fqoid)
+		v, ok := state.slotOneParams.Load(req.Fqoid)
 		state.mu.RUnlock()
-		return replyValue(fqoid, v, ok)
+		return replyValue(req.Fqoid, v, ok)
 	})
 
 	// Slot 2: direct state access. This demonstrates a more traditional
 	// approach where each handler manages its own set of parameters.
 	// This handler requires operation-scope read access.
-	srv.RegisterGetValueHandler(2, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
-		ctx.Logger().Info("GetValue", "slot", slot, "fqoid", fqoid)
+	srv.RegisterGetValueHandler(2, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+		ctx.Logger().Info("GetValue", "slot", req.Slot, "fqoid", req.Fqoid)
 		if !ctx.HasReadScope(st2138.ScopeOp) {
 			return catena.ReplyError[st2138.Value](catena.StatusCodePermissionDenied, "operation scope required")
 		}
@@ -60,14 +60,14 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 
 		var v any
 		var ok bool
-		if fqoid == "volume" {
+		if req.Fqoid == "volume" {
 			v, ok = state.volume, true
-		} else if fqoid == "muted" {
+		} else if req.Fqoid == "muted" {
 			v, ok = state.muted, true
-		} else if fqoid == "device_name" {
+		} else if req.Fqoid == "device_name" {
 			v, ok = state.deviceName, true
-		} else if strings.HasPrefix(fqoid, "struct_example") {
-			switch fqoid {
+		} else if strings.HasPrefix(req.Fqoid, "struct_example") {
+			switch req.Fqoid {
 			case "struct_example":
 				v, ok = state.structExample, true
 			case "struct_example/number":
@@ -75,66 +75,66 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			case "struct_example/text":
 				v, ok = state.structExample["text"]
 			}
-		} else if strings.HasPrefix(fqoid, "sample_struct_variant_array") {
-			v, ok = slotTwoSampleStructVariantArrayValue(fqoid, state.sampleStructVariantArray)
-		} else if strings.HasPrefix(fqoid, "sample_struct_variant") {
-			v, ok = slotTwoSampleStructVariantValue(fqoid, state.sampleStructVariant)
-		} else if strings.HasPrefix(fqoid, "sample_struct_array") {
-			v, ok = slotTwoSampleStructArrayValue(fqoid, state.sampleStructArray)
-		} else if strings.HasPrefix(fqoid, "sample_int_array") {
-			v, ok = slotTwoIndexedArrayValue(fqoid, "sample_int_array", state.sampleIntArray)
-		} else if strings.HasPrefix(fqoid, "sample_float_array") {
-			v, ok = slotTwoIndexedArrayValue(fqoid, "sample_float_array", state.sampleFloatArray)
-		} else if strings.HasPrefix(fqoid, "sample_string_array") {
-			v, ok = slotTwoIndexedArrayValue(fqoid, "sample_string_array", state.sampleStringArray)
-		} else if fqoid == "sample_binary" {
+		} else if strings.HasPrefix(req.Fqoid, "sample_struct_variant_array") {
+			v, ok = slotTwoSampleStructVariantArrayValue(req.Fqoid, state.sampleStructVariantArray)
+		} else if strings.HasPrefix(req.Fqoid, "sample_struct_variant") {
+			v, ok = slotTwoSampleStructVariantValue(req.Fqoid, state.sampleStructVariant)
+		} else if strings.HasPrefix(req.Fqoid, "sample_struct_array") {
+			v, ok = slotTwoSampleStructArrayValue(req.Fqoid, state.sampleStructArray)
+		} else if strings.HasPrefix(req.Fqoid, "sample_int_array") {
+			v, ok = slotTwoIndexedArrayValue(req.Fqoid, "sample_int_array", state.sampleIntArray)
+		} else if strings.HasPrefix(req.Fqoid, "sample_float_array") {
+			v, ok = slotTwoIndexedArrayValue(req.Fqoid, "sample_float_array", state.sampleFloatArray)
+		} else if strings.HasPrefix(req.Fqoid, "sample_string_array") {
+			v, ok = slotTwoIndexedArrayValue(req.Fqoid, "sample_string_array", state.sampleStringArray)
+		} else if req.Fqoid == "sample_binary" {
 			v, ok = st2138.DataPayload{Payload: state.sampleBinary}, true
-		} else if fqoid == "sample_float" {
+		} else if req.Fqoid == "sample_float" {
 			v, ok = state.sampleFloat, true
 		}
 
-		return replyValue(fqoid, v, ok)
+		return replyValue(req.Fqoid, v, ok)
 	})
 
 	// Slot 0: writes use the same manual switch strategy as reads. A single
 	// SetValueHandler covers both single and multi set requests; validate every
 	// entry before applying any so the batch is all-or-nothing.
-	srv.RegisterSetValueHandler(0, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		ctx.Logger().Info("SetValue", "slot", slot, "count", len(entries))
+	srv.RegisterSetValueHandler(0, func(ctx catena.HandlerContext, req catena.SetValueRequest) catena.StatusResult {
+		ctx.Logger().Info("SetValue", "slot", req.Slot, "count", len(req.Entries))
 		if !ctx.HasWriteScope(st2138.ScopeCfg) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "configuration scope required")
 		}
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			if entry.Value == nil {
-				ctx.Logger().Error("SetValue nil value", "slot", slot, "fqoid", entry.Fqoid)
+				ctx.Logger().Error("SetValue nil value", "slot", req.Slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value for "+entry.Fqoid)
 			}
 
 			switch entry.Fqoid {
 			case "running":
-				ctx.Logger().Warn("SetValue rejected for running param", "slot", slot, "fqoid", entry.Fqoid)
+				ctx.Logger().Warn("SetValue rejected for running param", "slot", req.Slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "Running state is read-only")
 			case "dashboard_UI":
-				ctx.Logger().Warn("SetValue rejected for dashboard_UI param", "slot", slot, "fqoid", entry.Fqoid)
+				ctx.Logger().Warn("SetValue rejected for dashboard_UI param", "slot", req.Slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "DashBoard UI reference is read-only")
 			case "counter":
 				if _, ok := entry.Value.(int32); !ok {
-					ctx.Logger().Error("SetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid, "expected", "int32", "got", entry.Value)
+					ctx.Logger().Error("SetValue type mismatch", "slot", req.Slot, "fqoid", entry.Fqoid, "expected", "int32", "got", entry.Value)
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch")
 				}
 			default:
-				ctx.Logger().Error("SetValue param not found", "slot", slot, "fqoid", entry.Fqoid)
+				ctx.Logger().Error("SetValue param not found", "slot", req.Slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+entry.Fqoid)
 			}
 		}
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			if entry.Fqoid == "counter" {
 				counter.SetValue(entry.Value.(int32))
 			}
 			ctx.Logger().Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
-			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, st2138.ScopeCfg)
+			srv.BroadcastUpdate(req.Slot, entry.Fqoid, entry.Value, st2138.ScopeCfg)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
@@ -142,8 +142,8 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// Slot 1: writes update the sync.Map directly after validating the stored
 	// type. This slot only requires monitor-scope write access, demonstrating
 	// that each handler can enforce a different authorization policy.
-	srv.RegisterSetValueHandler(1, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		ctx.Logger().Info("SetValue", "slot", slot, "count", len(entries))
+	srv.RegisterSetValueHandler(1, func(ctx catena.HandlerContext, req catena.SetValueRequest) catena.StatusResult {
+		ctx.Logger().Info("SetValue", "slot", req.Slot, "count", len(req.Entries))
 		if !ctx.HasWriteScope(st2138.ScopeMon) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "monitor scope required")
 		}
@@ -151,9 +151,9 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		state.mu.Lock()
 		defer state.mu.Unlock()
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			if entry.Value == nil {
-				ctx.Logger().Error("SetValue nil value", "slot", slot, "fqoid", entry.Fqoid)
+				ctx.Logger().Error("SetValue nil value", "slot", req.Slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "nil value for "+entry.Fqoid)
 			}
 
@@ -161,24 +161,24 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 			case "resolution", "brightness", "contrast", "saturation":
 				current, ok := state.slotOneParams.Load(entry.Fqoid)
 				if !ok {
-					ctx.Logger().Error("SetValue param not found", "slot", slot, "fqoid", entry.Fqoid)
+					ctx.Logger().Error("SetValue param not found", "slot", req.Slot, "fqoid", entry.Fqoid)
 					return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+entry.Fqoid)
 				}
 				if reflect.TypeOf(current) != reflect.TypeOf(entry.Value) {
-					ctx.Logger().Error("SetValue type mismatch", "slot", slot, "fqoid", entry.Fqoid,
+					ctx.Logger().Error("SetValue type mismatch", "slot", req.Slot, "fqoid", entry.Fqoid,
 						"expected", reflect.TypeOf(current), "got", reflect.TypeOf(entry.Value))
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch for "+entry.Fqoid)
 				}
 			default:
-				ctx.Logger().Error("SetValue param not found", "slot", slot, "fqoid", entry.Fqoid)
+				ctx.Logger().Error("SetValue param not found", "slot", req.Slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+entry.Fqoid)
 			}
 		}
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			state.slotOneParams.Store(entry.Fqoid, entry.Value)
 			ctx.Logger().Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
-			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, st2138.ScopeMon)
+			srv.BroadcastUpdate(req.Slot, entry.Fqoid, entry.Value, st2138.ScopeMon)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
@@ -186,8 +186,8 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 	// Slot 2: writes use prefix-based dispatch and keep product params read-only.
 	// Hold state.mu for the whole handler so validate, apply, and broadcast see
 	// the same snapshot; validate every entry before applying any (all-or-nothing).
-	srv.RegisterSetValueHandler(2, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		ctx.Logger().Info("SetValue", "slot", slot, "count", len(entries))
+	srv.RegisterSetValueHandler(2, func(ctx catena.HandlerContext, req catena.SetValueRequest) catena.StatusResult {
+		ctx.Logger().Info("SetValue", "slot", req.Slot, "count", len(req.Entries))
 		if !ctx.HasWriteScope(st2138.ScopeOp) {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "operation scope required")
 		}
@@ -195,18 +195,18 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 		state.mu.Lock()
 		defer state.mu.Unlock()
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			if status := slotTwoValidateSet(entry.Fqoid, entry.Value, state, ctx); status.Code != catena.StatusCodeOk {
 				return status
 			}
 		}
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			slotTwoApplySet(entry.Fqoid, entry.Value, state)
 		}
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			ctx.Logger().Info("Parameter updated", "fqoid", entry.Fqoid, "value", entry.Value)
-			srv.BroadcastUpdate(slot, entry.Fqoid, entry.Value, st2138.ScopeMon)
+			srv.BroadcastUpdate(req.Slot, entry.Fqoid, entry.Value, st2138.ScopeMon)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
