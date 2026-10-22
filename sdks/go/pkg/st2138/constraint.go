@@ -68,6 +68,7 @@ const (
 	ConstraintTypeStringChoice       ConstraintType = protos.Constraint_STRING_CHOICE
 	ConstraintTypeStringStringChoice ConstraintType = protos.Constraint_STRING_STRING_CHOICE
 	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
+	ConstraintTypeFormattedString    ConstraintType = protos.Constraint_FORMATTED_STRING
 )
 
 // --- Input types for constraint builders ---
@@ -243,6 +244,25 @@ func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) 
 			},
 		},
 		err: nil,
+	}
+}
+
+// NewConstraintFormattedString creates a FORMATTED_STRING constraint.
+// format is a JSON Schema format name (i.e. "email"), or "regex"
+// with a supplied pattern the value must match. When strict is true the
+// value must conform to the format(Not Implemented yet).
+func NewConstraintFormattedString(format, regex string, strict bool) *Constraint {
+	return &Constraint{
+		Proto: &protos.Constraint{
+			Type: protos.Constraint_FORMATTED_STRING,
+			Kind: &protos.Constraint_FormattedString{
+				FormattedString: &protos.FormattedStringConstraint{
+					Format: format,
+					Regex:  regex,
+					Strict: strict,
+				},
+			},
+		},
 	}
 }
 
