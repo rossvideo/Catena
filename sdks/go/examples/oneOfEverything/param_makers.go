@@ -51,3 +51,24 @@ func makeRunningParam(counter *CounterState) *st2138.ParamBuilder {
 		})).
 		WithMinimalSet(true)
 }
+
+const contactEmailValue = "operator@example.com"
+const counterModelValue = "CAT-0042"
+
+// makeContactEmailParam builds the slot 0 "contact_email" param (STRING,
+// read-only) with a strict FORMATTED_STRING email constraint. Currently not enforced.
+func makeContactEmailParam() *st2138.ParamBuilder {
+	return st2138.NewParamString(contactEmailValue).
+		WithName(st2138.PolyglotText{"en": "Contact Email"}).
+		WithReadOnly(true).
+		WithConstraint(st2138.NewConstraintFormattedString("email", "", true))
+}
+
+// makeCounterModelParam builds the slot 0 "counter_model" param (STRING,
+// read-only) with an advisory FORMATTED_STRING regex constraint. Currently not enforced.
+func makeCounterModelParam() *st2138.ParamBuilder {
+	return st2138.NewParamString(counterModelValue).
+		WithName(st2138.PolyglotText{"en": "Counter Model"}).
+		WithReadOnly(true).
+		WithConstraint(st2138.NewConstraintFormattedString("regex", "^[A-Z]{3}-[0-9]{4}$", false))
+}
