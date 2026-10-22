@@ -41,6 +41,7 @@ package rest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -214,6 +215,11 @@ func WriteProtoJSON(w http.ResponseWriter, msg proto.Message, statusCode int) er
 	return writeErr
 }
 
+func isRequestBodyTooLargeError(err error) bool {
+	_, ok := errors.AsType[*http.MaxBytesError](err)
+	return ok
+}
+
 // ReadAssetRequestJSON reads and unmarshals a JSON request body into a
 // protos.ExternalObjectPayload (the inverse of MarshalAssetJSON). It validates
 // the Content-Type header and returns an error if it's not application/json.
@@ -253,6 +259,9 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
+		if isRequestBodyTooLargeError(err) {
+			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "request body too large"}
+		}
 		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
 	}
 	return parseValueJSON(r.Header.Get("Content-Type"), data)
@@ -305,6 +314,9 @@ func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, cat
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
+		if isRequestBodyTooLargeError(err) {
+			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "request body too large"}
+		}
 		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
 	}
 

@@ -106,7 +106,8 @@ type RestOptions struct {
 	IdleTimeout time.Duration `env:"REST_IDLE_TIMEOUT" flag:"rest-idle-timeout"`
 	// MaxHeaderBytes is the maximum number of bytes in the HTTP header.
 	MaxHeaderBytes int `env:"REST_MAX_HEADER_BYTES" flag:"rest-max-header-bytes"`
-	// MaxBodyBytes is the maximum number of bytes in the HTTP body.
+	// MaxBodyBytes is the maximum request body size in bytes.
+	// Zero allows no body. Negative disables the limit (unlimited).
 	MaxBodyBytes int `env:"REST_MAX_BODY_BYTES" flag:"rest-max-body-bytes"`
 }
 

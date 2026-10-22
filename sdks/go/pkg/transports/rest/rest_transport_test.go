@@ -62,7 +62,7 @@ import (
 )
 
 func makeTestTransport(tb testing.TB) (*Transport, *transporttest.StubServerRuntime) {
-	transport := NewTransport(config.RestOptions{Port: 8080})
+	transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: -1})
 	stubRuntime := transporttest.MakeStubServerRuntime(tb)
 	stubRuntime.Dev = true
 	transport.runtime = stubRuntime
@@ -1005,6 +1005,129 @@ func TestTransport_DeleteAsset_NotFound(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodDelete, "/st2138-api/v1/0/asset/missing", "")
 	assertStatus(t, rec, http.StatusNotFound)
+}
+
+func TestTransport_MaxBodyBytes(t *testing.T) {
+	newCommandTransport := func(t *testing.T, maxBodyBytes int) (*Transport, *bool) {
+		t.Helper()
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: maxBodyBytes})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		handlerCalled := false
+		runtime.CommandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+			handlerCalled = true
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		return transport, &handlerCalled
+	}
+
+	t.Run("success, within payload size limit", func(t *testing.T) {
+		transport, handlerCalled := newCommandTransport(t, 16)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", "")
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called when the body is within the payload size limit")
+		}
+	})
+
+	t.Run("over payload size limit", func(t *testing.T) {
+		transport, handlerCalled := newCommandTransport(t, 16)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value":"this body is over the limit"}`)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the body exceeds the payload size limit")
+		}
+	})
+
+	t.Run("zero payload size limit", func(t *testing.T) {
+		transport, handlerCalled := newCommandTransport(t, 0)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value":"x"}`)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		if *handlerCalled {
+			t.Error("handler should not be called when the payload size limit is 0")
+		}
+	})
+
+	t.Run("negative payload size limit", func(t *testing.T) {
+		transport, handlerCalled := newCommandTransport(t, -1)
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value":"this body is over the limit"}`)
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called when the payload size limit is negative (no payload size limit)")
+		}
+	})
+}
+
+func TestTransport_RequestBodyTooLargeRoutes(t *testing.T) {
+	const body = `{"int32_value":42,"name":"padding past the limit"}`
+	t.Run("SetValue", func(t *testing.T) {
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness", body)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+	})
+
+	t.Run("SetValues", func(t *testing.T) {
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+	})
+
+	t.Run("CreateAsset", func(t *testing.T) {
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", body)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+	})
+
+	t.Run("UpdateAsset", func(t *testing.T) {
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/asset/logo", body)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+	})
+
+	t.Run("LanguagePackPost", func(t *testing.T) {
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", body)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+	})
+
+	t.Run("LanguagePackPut", func(t *testing.T) {
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/language-pack/fr", body)
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+	})
 }
 
 func TestTransport_CreateAsset_InvalidBody(t *testing.T) {

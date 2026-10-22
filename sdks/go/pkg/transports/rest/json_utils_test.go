@@ -1254,6 +1254,20 @@ func TestInjectJSONField_Float32(t *testing.T) {
 	}
 }
 
+func TestReadRequestJSON_BodyTooLarge(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"int32_value": 42}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Body = http.MaxBytesReader(httptest.NewRecorder(), req.Body, 1)
+
+	_, err := ReadRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatalf("expected invalid argument, got %v", err.Code)
+	}
+	if err.Error != "request body too large" {
+		t.Errorf("expected request body too large, got %q", err.Error)
+	}
+}
+
 func TestReadRequestJSON_BodyReadError(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", errReader{})
 	req.Header.Set("Content-Type", "application/json")
@@ -1264,6 +1278,21 @@ func TestReadRequestJSON_BodyReadError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error, "failed to read request body") {
 		t.Errorf("expected error to contain 'failed to read request body', got: %v", err.Error)
+	}
+}
+
+func TestReadMultiSetValuesRequestJSON_BodyTooLarge(t *testing.T) {
+	body := `{"values":[{"oid":"brightness","value":{"int32_value":42}}]}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Body = http.MaxBytesReader(httptest.NewRecorder(), req.Body, 1)
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if err.Code != catena.StatusCodeInvalidArgument {
+		t.Fatalf("expected invalid argument, got %v", err.Code)
+	}
+	if err.Error != "request body too large" {
+		t.Errorf("expected request body too large, got %q", err.Error)
 	}
 }
 

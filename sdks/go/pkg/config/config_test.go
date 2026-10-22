@@ -58,10 +58,10 @@ func TestDefaultOptions(t *testing.T) {
 			ExtraAllowedMethods: nil,
 			CorsMaxAge:          600 * time.Second,
 			Fallback:            nil,
-			ReadTimeout:         10 * time.Second, // PLACEHOLDS NOT ACTUAL VALUES
-			ReadHeaderTimeout:   10 * time.Second, // NEEDS TO BE REPLACED WITH ACTUAL VALUES
-			WriteTimeout:        10 * time.Second,
-			IdleTimeout:         10 * time.Second,
+			ReadTimeout:         15 * time.Second,
+			ReadHeaderTimeout:   10 * time.Second,
+			WriteTimeout:        0,
+			IdleTimeout:         120 * time.Second,
 			MaxHeaderBytes:      1 << 20,
 			MaxBodyBytes:        1 << 20,
 		},

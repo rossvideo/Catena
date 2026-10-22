@@ -111,8 +111,7 @@ func makeRequest(t *testing.T, transport *Transport, method, path, body string) 
 		req = httptest.NewRequest(method, path, nil)
 	}
 	rec := httptest.NewRecorder()
-	handler := transport.withCORS(transport.mux)
-	handler.ServeHTTP(rec, req)
+	transport.createHttpHandler().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -130,8 +129,7 @@ func makeRequestWithHeaders(t *testing.T, transport *Transport, method, path, bo
 		req.Header.Set(k, v)
 	}
 	rec := httptest.NewRecorder()
-	handler := transport.withCORS(transport.mux)
-	handler.ServeHTTP(rec, req)
+	transport.createHttpHandler().ServeHTTP(rec, req)
 	return rec
 }
 
@@ -227,11 +225,10 @@ func setupSSEConnection(t *testing.T, transport *Transport, headers ...[]string)
 		req.Header.Set(header[0], header[1])
 	}
 	rec := httptest.NewRecorder()
-	handler := transport.withCORS(transport.mux)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		handler.ServeHTTP(rec, req)
+		transport.createHttpHandler().ServeHTTP(rec, req)
 	}()
 	time.Sleep(150 * time.Millisecond)
 	return rec, func() {
