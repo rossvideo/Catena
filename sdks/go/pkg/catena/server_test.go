@@ -1283,7 +1283,10 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 
 		_, status := srv.InvokeGetValueHandler(7, "/invalid/fqoid", validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 	})
 
@@ -1439,7 +1442,10 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 
 		status := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "/invalid/fqoid", Value: int32(1)}}, validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 		if handlerCalled {
 			t.Error("handler should not run when fqoid validation fails")
@@ -1531,7 +1537,10 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 
 		_, status := srv.InvokeGetParamHandler(22, "/invalid/fqoid", validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 	})
 }
@@ -1595,7 +1604,10 @@ func TestServer_InvokeReadAssetHandler(t *testing.T) {
 
 		status := srv.InvokeReadAssetHandler(5, "/invalid/fqoid", &sliceStream[st2138.Asset]{}, validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 		if handlerCalled {
 			t.Error("handler should not run when fqoid validation fails")
@@ -1676,7 +1688,10 @@ func TestServer_InvokeCreateAssetHandler(t *testing.T) {
 
 		status := srv.InvokeCreateAssetHandler(5, "/invalid/fqoid", st2138.Asset{}, validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 		if handlerCalled {
 			t.Error("handler should not run when fqoid validation fails")
@@ -1743,7 +1758,10 @@ func TestServer_InvokeUpdateAssetHandler(t *testing.T) {
 
 		status := srv.InvokeUpdateAssetHandler(5, "/invalid/fqoid", st2138.Asset{}, validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 		if handlerCalled {
 			t.Error("handler should not run when fqoid validation fails")
@@ -1804,7 +1822,10 @@ func TestServer_InvokeDeleteAssetHandler(t *testing.T) {
 
 		status := srv.InvokeDeleteAssetHandler(5, "/invalid/fqoid", validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 		if handlerCalled {
 			t.Error("handler should not run when fqoid validation fails")
@@ -1980,7 +2001,10 @@ func TestServer_InvokeExecuteCommandHandler(t *testing.T) {
 
 		status := srv.InvokeExecuteCommandHandler(9, "/invalid/fqoid", "payload", true, &sliceStream[st2138.CommandResponse]{}, validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 		if handlerCalled {
 			t.Error("handler should not run when fqoid validation fails")
@@ -2117,7 +2141,10 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 
 		status := srv.InvokeParamInfoHandler(4, "/invalid/fqoid", true, &sliceStream[st2138.ParamInfo]{}, validTestTransportContext(nil))
 		if !status.IsError() {
-			t.Errorf("expected InvalidArgument status, got %v", status)
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid fqoid: /invalid/fqoid" {
+			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
 		}
 	})
 
