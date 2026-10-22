@@ -132,8 +132,8 @@ func (mg *MenuGroupBuilder) Build() (MenuGroup, error) {
 
 // Clone returns a deep copy of the MenuGroupBuilder.
 // Inherits the builder's error state, including ErrAlreadyBuilt.
-func (mg *MenuGroupBuilder) Clone() MenuGroupBuilder {
-	return MenuGroupBuilder{proto: proto.Clone(mg.proto).(*protos.MenuGroup), err: mg.err}
+func (mg *MenuGroupBuilder) Clone() *MenuGroupBuilder {
+	return &MenuGroupBuilder{proto: proto.Clone(mg.proto).(*protos.MenuGroup), err: mg.err}
 }
 
 // Menu wraps a protos.Menu and exposes a fluent builder API.

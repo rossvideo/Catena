@@ -98,8 +98,8 @@ func (db *DeviceBuilder) Build() (Device, error) {
 
 // Clone returns a deep copy of the DeviceBuilder.
 // Inherits the builder's error state, including ErrAlreadyBuilt.
-func (db *DeviceBuilder) Clone() DeviceBuilder {
-	return DeviceBuilder{proto: proto.Clone(db.proto).(*protos.Device), err: db.err}
+func (db *DeviceBuilder) Clone() *DeviceBuilder {
+	return &DeviceBuilder{proto: proto.Clone(db.proto).(*protos.Device), err: db.err}
 }
 
 // WithParam inserts param into the device's params map, keyed by oid. The
