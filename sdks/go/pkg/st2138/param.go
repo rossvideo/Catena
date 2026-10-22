@@ -629,7 +629,7 @@ func isConstraintValidForParam(c *Constraint, pt protos.ParamType) bool {
 		return pt == protos.ParamType_INT32 || pt == protos.ParamType_INT32_ARRAY
 	case *protos.Constraint_FloatRange:
 		return pt == protos.ParamType_FLOAT32 || pt == protos.ParamType_FLOAT32_ARRAY
-	case *protos.Constraint_StringChoice, *protos.Constraint_StringStringChoice:
+	case *protos.Constraint_StringChoice, *protos.Constraint_StringStringChoice, *protos.Constraint_FormattedString:
 		return pt == protos.ParamType_STRING || pt == protos.ParamType_STRING_ARRAY
 	default:
 		return false
