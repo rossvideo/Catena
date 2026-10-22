@@ -149,9 +149,11 @@ func applySlotZeroMenuGroups(device *st2138.DeviceBuilder, withMenus bool) *st21
 // slotZeroParams returns slot 0's params keyed by oid.
 func slotZeroParams(counter *CounterState) map[string]*st2138.ParamBuilder {
 	return map[string]*st2138.ParamBuilder{
-		"dashboard_UI": makeDashboardUIParam(),
-		"counter":      makeCounterParam(counter),
-		"running":      makeRunningParam(counter),
+		"dashboard_UI":  makeDashboardUIParam(),
+		"counter":       makeCounterParam(counter),
+		"running":       makeRunningParam(counter),
+		"contact_email": makeContactEmailParam(),
+		"counter_model": makeCounterModelParam(),
 	}
 }
 

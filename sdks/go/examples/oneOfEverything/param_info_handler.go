@@ -62,13 +62,17 @@ func slotZeroParamInfos(fqoid string, recursive bool) ([]st2138.ParamInfo, caten
 	// covers the business-logic params.
 	switch fqoid {
 	case "":
-		return []st2138.ParamInfo{newDashboardUIParamInfo(), newCounterParamInfo(), newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{newDashboardUIParamInfo(), newCounterParamInfo(), newRunningParamInfo(), newContactEmailParamInfo(), newCounterModelParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "counter":
 		return []st2138.ParamInfo{newCounterParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "running":
 		return []st2138.ParamInfo{newRunningParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case "dashboard_UI":
 		return []st2138.ParamInfo{newDashboardUIParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	case "contact_email":
+		return []st2138.ParamInfo{newContactEmailParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	case "counter_model":
+		return []st2138.ParamInfo{newCounterModelParamInfo()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	default:
 		return []st2138.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 	}
@@ -177,6 +181,14 @@ func newCounterParamInfo() st2138.ParamInfo {
 
 func newRunningParamInfo() st2138.ParamInfo {
 	return st2138.NewParamInfo("running", st2138.PolyglotText{"en": "Counter Running Status"}, st2138.ParamTypeInt32, "", 0)
+}
+
+func newContactEmailParamInfo() st2138.ParamInfo {
+	return st2138.NewParamInfo("contact_email", st2138.PolyglotText{"en": "Contact Email"}, st2138.ParamTypeString, "", 0)
+}
+
+func newCounterModelParamInfo() st2138.ParamInfo {
+	return st2138.NewParamInfo("counter_model", st2138.PolyglotText{"en": "Counter Model"}, st2138.ParamTypeString, "", 0)
 }
 
 func newSampleIntArrayParamInfo(state *ExampleState) st2138.ParamInfo {

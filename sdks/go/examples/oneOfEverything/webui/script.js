@@ -265,8 +265,44 @@ async function setParam(name, value, type) {
     }
 }
 
+// Fills the "(model)" suffix on the Counter Demo title from the read-only
+// "counter_model" string param on slot 0.
+function updateCounterModel(model) {
+    const el = document.getElementById('counterModel');
+    if (el) el.textContent = model ? `(${model})` : '';
+}
+
+// Shows the read-only "contact_email" string param on slot 0 in the footer.
+function updateContactEmail(email) {
+    const el = document.getElementById('contactEmail');
+    if (!el) return;
+    el.textContent = '';
+    if (!email) return;
+    const sep = document.createElement('span');
+    sep.className = 'footer-sep';
+    sep.textContent = '•';
+    const link = document.createElement('a');
+    link.href = `mailto:${email}`;
+    link.textContent = email;
+    el.append(' ', sep, ' Contact: ', link);
+}
+
 async function poll() {
     const fetches = [];
+
+    // Read-only string params on slot 0, shown in the Commands title and footer.
+    fetches.push(
+        apiFetch('/st2138-api/v1/0/value/counter_model')
+            .then(r => r.json())
+            .then(data => updateCounterModel(extractValue(data)))
+            .catch(e => console.error('poll counter_model error:', e))
+    );
+    fetches.push(
+        apiFetch('/st2138-api/v1/0/value/contact_email')
+            .then(r => r.json())
+            .then(data => updateContactEmail(extractValue(data)))
+            .catch(e => console.error('poll contact_email error:', e))
+    );
 
     // Fetch counter and running flag from slot 0. Both are plain int32 params.
     fetches.push(
