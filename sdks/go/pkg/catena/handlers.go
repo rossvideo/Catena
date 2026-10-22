@@ -42,11 +42,20 @@ import "github.com/rossvideo/catena/sdks/go/pkg/st2138"
 
 // Handler function types used by both REST and gRPC servers.
 //
+// Every endpoint handler has the shape (ctx, req[, stream]): ctx is the
+// caller's HandlerContext, req is the endpoint's XxxRequest struct carrying the
+// request arguments, and stream is present only for streaming endpoints.
+//
 // A handler runs only after the SDK's authorization gate has enforced scope
 // and endpoint access for the caller, so handlers do not re-check
 // authorization. When a product struct is registered for a slot (see
 // RegisterProductStruct), the SDK owns product/* requests and handlers never
 // see them; otherwise product/* requests fall through to the handler.
+
+// GetDeviceRequest carries the arguments of a GetDevice request.
+type GetDeviceRequest struct {
+	Slot uint16
+}
 
 // DeviceHandler streams the device model for a slot (GetDevice /
 // DeviceRequest). A small device is typically emitted as a single
@@ -62,7 +71,13 @@ import "github.com/rossvideo/catena/sdks/go/pkg/st2138"
 // begins) - so the handler should stop and return. A handler that can produce
 // a whole st2138.Device can delegate the chunking to
 // DeviceComponentsForRequest in device_components.go.
-type DeviceHandler func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult
+type DeviceHandler func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult
+
+// GetValueRequest carries the arguments of a GetValue request.
+type GetValueRequest struct {
+	Slot  uint16
+	Fqoid string
+}
 
 // GetValueHandler returns the current value of the parameter at fqoid for a
 // slot (GetValue). It returns the value with an Ok status, or a zero Value
@@ -71,12 +86,18 @@ type DeviceHandler func(slot uint16, ctx HandlerContext, stream Stream[st2138.De
 // Registering a GetValueHandler is optional: when a slot has none, GetValue is
 // served by deriving the value from that slot's GetParamHandler. See
 // RegisterGetValueHandler.
-type GetValueHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult)
+type GetValueHandler func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult)
+
+// GetParamRequest carries the arguments of a GetParam request.
+type GetParamRequest struct {
+	Slot  uint16
+	Fqoid string
+}
 
 // GetParamHandler returns the full parameter (metadata + value) at fqoid for a
 // slot (GetParam). It returns the param with an Ok status, or a zero Param
 // with an error status (e.g. StatusCodeNotFound for an unknown fqoid).
-type GetParamHandler func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult)
+type GetParamHandler func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult)
 
 // SetValueEntry is a single fqoid/value pair within a SetValue request.
 type SetValueEntry struct {
@@ -84,12 +105,24 @@ type SetValueEntry struct {
 	Value any
 }
 
+// SetValueRequest carries the arguments of a SetValue request.
+type SetValueRequest struct {
+	Slot    uint16
+	Entries []SetValueEntry
+}
+
 // SetValueHandler applies one or more parameter values for a slot. Single-value
 // endpoints invoke it with a one-element slice; multi-value endpoints pass the
 // full slice. The handler must apply the batch atomically (all-or-nothing): if
 // any entry cannot be applied, it must leave every value unchanged and return
 // an error status. On success it returns an Ok status.
-type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult
+type SetValueHandler func(ctx HandlerContext, req SetValueRequest) StatusResult
+
+// ReadAssetRequest carries the arguments of a ReadAsset request.
+type ReadAssetRequest struct {
+	Slot  uint16
+	Fqoid string
+}
 
 // ReadAssetHandler streams the asset stored at fqoid for a slot (ReadAsset /
 // ExternalObjectRequest). A small asset is typically emitted as a single
@@ -102,33 +135,69 @@ type SetValueHandler func(slot uint16, entries []SetValueEntry, ctx HandlerConte
 // disconnected, the transport hit an encoding or write failure, or the server
 // is shutting down (the SDK wraps the stream so Send fails once shutdown
 // begins) - so the handler should stop and return.
-type ReadAssetHandler func(slot uint16, fqoid string, ctx HandlerContext, stream Stream[st2138.Asset]) StatusResult
+type ReadAssetHandler func(ctx HandlerContext, req ReadAssetRequest, stream Stream[st2138.Asset]) StatusResult
+
+// CreateAssetRequest carries the arguments of a CreateAsset request.
+type CreateAssetRequest struct {
+	Slot  uint16
+	Fqoid string
+	Asset st2138.Asset
+}
 
 // CreateAssetHandler stores a new asset at fqoid (HTTP POST / CreateAsset).
 // Business logic decides create-vs-conflict semantics and reports the outcome
 // in the returned StatusResult.
-type CreateAssetHandler func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
+type CreateAssetHandler func(ctx HandlerContext, req CreateAssetRequest) StatusResult
+
+// UpdateAssetRequest carries the arguments of an UpdateAsset request.
+type UpdateAssetRequest struct {
+	Slot  uint16
+	Fqoid string
+	Asset st2138.Asset
+}
 
 // UpdateAssetHandler replaces an existing asset at fqoid (HTTP PUT /
 // UpdateAsset). Business logic decides overwrite-vs-not-found semantics and
 // reports the outcome in the returned StatusResult.
-type UpdateAssetHandler func(slot uint16, fqoid string, asset st2138.Asset, ctx HandlerContext) StatusResult
+type UpdateAssetHandler func(ctx HandlerContext, req UpdateAssetRequest) StatusResult
+
+// DeleteAssetRequest carries the arguments of a DeleteAsset request.
+type DeleteAssetRequest struct {
+	Slot  uint16
+	Fqoid string
+}
 
 // DeleteAssetHandler removes the asset at fqoid (HTTP DELETE / DeleteAsset).
 // Business logic decides delete-vs-not-found semantics and reports the outcome
 // in the returned StatusResult.
-type DeleteAssetHandler func(slot uint16, fqoid string, ctx HandlerContext) StatusResult
+type DeleteAssetHandler func(ctx HandlerContext, req DeleteAssetRequest) StatusResult
 
-// ExecuteCommandHandler executes the command at commandFqoid for a slot with
-// the given payload, emitting any responses through stream.Send and returning
-// a terminal StatusResult. respond=false means the caller opted out of
+// ExecuteCommandRequest carries the arguments of an ExecuteCommand request.
+// Respond=false means the caller opted out of responses.
+type ExecuteCommandRequest struct {
+	Slot         uint16
+	CommandFqoid string
+	Payload      any
+	Respond      bool
+}
+
+// ExecuteCommandHandler executes the command at req.CommandFqoid for a slot with
+// the payload req.Payload, emitting any responses through stream.Send and returning
+// a terminal StatusResult. req.Respond=false means the caller opted out of
 // responses; the SDK already substitutes a stream that discards chunks, so the
 // handler may either skip sending or send as usual. A Send error means the
 // chunk could not be delivered - the client may have disconnected, the
 // transport hit an encoding or write failure, or the server is shutting down
 // (the SDK wraps the stream so Send fails once shutdown begins) - so the
 // handler should stop and return.
-type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, respond bool, ctx HandlerContext, stream Stream[st2138.CommandResponse]) StatusResult
+type ExecuteCommandHandler func(ctx HandlerContext, req ExecuteCommandRequest, stream Stream[st2138.CommandResponse]) StatusResult
+
+// ParamInfoRequest carries the arguments of a ParamInfo request.
+type ParamInfoRequest struct {
+	Slot      uint16
+	OidPrefix string
+	Recursive bool
+}
 
 // ParamInfoHandler streams parameter information for a slot. The handler emits
 // one ParamInfo chunk through stream.Send per parameter under oidPrefix
@@ -145,32 +214,66 @@ type ExecuteCommandHandler func(slot uint16, commandFqoid string, payload any, r
 // for a specific oidPrefix is served by deriving descriptors from that slot's
 // GetParamHandler. The whole-tree request (oidPrefix == "") cannot be derived
 // this way and requires a real handler. See RegisterParamInfoHandler.
-type ParamInfoHandler func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult
+type ParamInfoHandler func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult
+
+// ListLanguagesRequest carries the arguments of a ListLanguages request.
+type ListLanguagesRequest struct {
+	Slot uint16
+}
 
 // ListLanguagesHandler returns the language codes supported by the device model
 // at a slot (e.g. ["en", "fr"]). An empty slice indicates no multi-lingual support.
-type ListLanguagesHandler func(slot uint16, ctx HandlerContext) ([]string, StatusResult)
+type ListLanguagesHandler func(ctx HandlerContext, req ListLanguagesRequest) ([]string, StatusResult)
+
+// ReadLanguagePackRequest carries the arguments of a ReadLanguagePack request.
+type ReadLanguagePackRequest struct {
+	Slot     uint16
+	Language string
+}
 
 // ReadLanguagePackHandler returns the language pack for a language code at a
 // slot (e.g. "en"). It returns the pack with an Ok status, or a zero
 // LanguagePack with an error status (e.g. StatusCodeNotFound for an unknown
 // language).
-type ReadLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) (LanguagePack, StatusResult)
+type ReadLanguagePackHandler func(ctx HandlerContext, req ReadLanguagePackRequest) (LanguagePack, StatusResult)
+
+// CreateLanguagePackRequest carries the arguments of a CreateLanguagePack
+// request.
+type CreateLanguagePackRequest struct {
+	Slot         uint16
+	Language     string
+	LanguagePack LanguagePack
+}
 
 // CreateLanguagePackHandler stores a new language pack for a language code at
 // a slot. Business logic decides create-vs-conflict semantics and reports the
 // outcome in the returned StatusResult.
-type CreateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type CreateLanguagePackHandler func(ctx HandlerContext, req CreateLanguagePackRequest) StatusResult
+
+// UpdateLanguagePackRequest carries the arguments of an UpdateLanguagePack
+// request.
+type UpdateLanguagePackRequest struct {
+	Slot         uint16
+	Language     string
+	LanguagePack LanguagePack
+}
 
 // UpdateLanguagePackHandler replaces the language pack for a language code at
 // a slot. Business logic decides overwrite-vs-not-found semantics and reports
 // the outcome in the returned StatusResult.
-type UpdateLanguagePackHandler func(slot uint16, language string, languagePack LanguagePack, ctx HandlerContext) StatusResult
+type UpdateLanguagePackHandler func(ctx HandlerContext, req UpdateLanguagePackRequest) StatusResult
+
+// DeleteLanguagePackRequest carries the arguments of a DeleteLanguagePack
+// request.
+type DeleteLanguagePackRequest struct {
+	Slot     uint16
+	Language string
+}
 
 // DeleteLanguagePackHandler removes the language pack for a language code at a
 // slot. Business logic decides delete-vs-not-found semantics and reports the
 // outcome in the returned StatusResult.
-type DeleteLanguagePackHandler func(slot uint16, language string, ctx HandlerContext) StatusResult
+type DeleteLanguagePackHandler func(ctx HandlerContext, req DeleteLanguagePackRequest) StatusResult
 
 // HeartbeatHandler is invoked for its slot on every heartbeat tick while
 // StartHeartbeat is running. It is called outside the server lock; a panic is
