@@ -50,124 +50,163 @@ import (
 // --- Factory tests ---
 
 func TestNewParamInt32(t *testing.T) {
-	p := NewParamInt32(42).proto
-	if p.GetType() != protos.ParamType_INT32 {
-		t.Errorf("expected INT32, got %v", p.GetType())
+	p, err := NewParamInt32(42).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue().GetInt32Value() != 42 {
-		t.Errorf("expected 42, got %d", p.GetValue().GetInt32Value())
+	if p.Proto.GetType() != protos.ParamType_INT32 {
+		t.Errorf("expected INT32, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetValue().GetInt32Value() != 42 {
+		t.Errorf("expected 42, got %d", p.Proto.GetValue().GetInt32Value())
 	}
 }
 
 func TestNewParamFloat32(t *testing.T) {
-	p := NewParamFloat32(3.14).proto
-	if p.GetType() != protos.ParamType_FLOAT32 {
-		t.Errorf("expected FLOAT32, got %v", p.GetType())
+	p, err := NewParamFloat32(3.14).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue().GetFloat32Value() != 3.14 {
-		t.Errorf("expected 3.14, got %f", p.GetValue().GetFloat32Value())
+	if p.Proto.GetType() != protos.ParamType_FLOAT32 {
+		t.Errorf("expected FLOAT32, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetValue().GetFloat32Value() != 3.14 {
+		t.Errorf("expected 3.14, got %f", p.Proto.GetValue().GetFloat32Value())
 	}
 }
 
 func TestNewParamString(t *testing.T) {
-	p := NewParamString("hello").proto
-	if p.GetType() != protos.ParamType_STRING {
-		t.Errorf("expected STRING, got %v", p.GetType())
+	p, err := NewParamString("hello").Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue().GetStringValue() != "hello" {
-		t.Errorf("expected 'hello', got %q", p.GetValue().GetStringValue())
+	if p.Proto.GetType() != protos.ParamType_STRING {
+		t.Errorf("expected STRING, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetValue().GetStringValue() != "hello" {
+		t.Errorf("expected 'hello', got %q", p.Proto.GetValue().GetStringValue())
 	}
 }
 
 func TestNewParamStruct(t *testing.T) {
-	p := NewParamStruct().proto
-	if p.GetType() != protos.ParamType_STRUCT {
-		t.Errorf("expected STRUCT, got %v", p.GetType())
+	p, err := NewParamStruct().Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", p.Proto.GetType())
 	}
 }
 
 func TestNewParamStructVariant(t *testing.T) {
-	p := NewParamStructVariant().proto
-	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
-		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
+	p, err := NewParamStructVariant().Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetType() != protos.ParamType_STRUCT_VARIANT {
+		t.Errorf("expected STRUCT_VARIANT, got %v", p.Proto.GetType())
 	}
 }
 
 func TestNewParamInt32Array(t *testing.T) {
-	p := NewParamInt32Array([]int32{1, 2, 3}).proto
-	if p.GetType() != protos.ParamType_INT32_ARRAY {
-		t.Errorf("expected INT32_ARRAY, got %v", p.GetType())
+	p, err := NewParamInt32Array([]int32{1, 2, 3}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	vals := p.GetValue().GetInt32ArrayValues().GetInts()
+	if p.Proto.GetType() != protos.ParamType_INT32_ARRAY {
+		t.Errorf("expected INT32_ARRAY, got %v", p.Proto.GetType())
+	}
+	vals := p.Proto.GetValue().GetInt32ArrayValues().GetInts()
 	if len(vals) != 3 || vals[0] != 1 {
 		t.Errorf("unexpected int32 array: %v", vals)
 	}
 }
 
 func TestNewParamFloat32Array(t *testing.T) {
-	p := NewParamFloat32Array([]float32{1.1, 2.2}).proto
-	if p.GetType() != protos.ParamType_FLOAT32_ARRAY {
-		t.Errorf("expected FLOAT32_ARRAY, got %v", p.GetType())
+	p, err := NewParamFloat32Array([]float32{1.1, 2.2}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	vals := p.GetValue().GetFloat32ArrayValues().GetFloats()
+	if p.Proto.GetType() != protos.ParamType_FLOAT32_ARRAY {
+		t.Errorf("expected FLOAT32_ARRAY, got %v", p.Proto.GetType())
+	}
+	vals := p.Proto.GetValue().GetFloat32ArrayValues().GetFloats()
 	if len(vals) != 2 {
 		t.Errorf("expected 2 floats, got %d", len(vals))
 	}
 }
 
 func TestNewParamStringArray(t *testing.T) {
-	p := NewParamStringArray([]string{"a", "b"}).proto
-	if p.GetType() != protos.ParamType_STRING_ARRAY {
-		t.Errorf("expected STRING_ARRAY, got %v", p.GetType())
+	p, err := NewParamStringArray([]string{"a", "b"}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	vals := p.GetValue().GetStringArrayValues().GetStrings()
+	if p.Proto.GetType() != protos.ParamType_STRING_ARRAY {
+		t.Errorf("expected STRING_ARRAY, got %v", p.Proto.GetType())
+	}
+	vals := p.Proto.GetValue().GetStringArrayValues().GetStrings()
 	if len(vals) != 2 || vals[0] != "a" {
 		t.Errorf("unexpected string array: %v", vals)
 	}
 }
 
 func TestNewParamBinary(t *testing.T) {
-	p := NewParamBinary([]byte{0xDE, 0xAD}).proto
-	if p.GetType() != protos.ParamType_BINARY {
-		t.Errorf("expected BINARY, got %v", p.GetType())
+	p, err := NewParamBinary([]byte{0xDE, 0xAD}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	payload := p.GetValue().GetDataPayload().GetPayload()
+	if p.Proto.GetType() != protos.ParamType_BINARY {
+		t.Errorf("expected BINARY, got %v", p.Proto.GetType())
+	}
+	payload := p.Proto.GetValue().GetDataPayload().GetPayload()
 	if len(payload) != 2 || payload[0] != 0xDE {
 		t.Errorf("unexpected binary payload: %v", payload)
 	}
 }
 
 func TestNewParamStructArray(t *testing.T) {
-	p := NewParamStructArray().proto
-	if p.GetType() != protos.ParamType_STRUCT_ARRAY {
-		t.Errorf("expected STRUCT_ARRAY, got %v", p.GetType())
+	p, err := NewParamStructArray().Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetType() != protos.ParamType_STRUCT_ARRAY {
+		t.Errorf("expected STRUCT_ARRAY, got %v", p.Proto.GetType())
 	}
 }
 
 func TestNewParamStructVariantArray(t *testing.T) {
-	p := NewParamStructVariantArray().proto
-	if p.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
-		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", p.GetType())
+	p, err := NewParamStructVariantArray().Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
+		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", p.Proto.GetType())
 	}
 }
 
 func TestNewParamEmpty(t *testing.T) {
-	p := NewParamEmpty().proto
-	if p.GetType() != protos.ParamType_EMPTY {
-		t.Errorf("expected EMPTY, got %v", p.GetType())
+	p, err := NewParamEmpty().Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue().GetEmptyValue() == nil {
+	if p.Proto.GetType() != protos.ParamType_EMPTY {
+		t.Errorf("expected EMPTY, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetValue().GetEmptyValue() == nil {
 		t.Error("expected EmptyValue to be set")
 	}
 }
 
 func TestNewParamData(t *testing.T) {
 	dp := ToPayload([]byte("content"), "text/plain", "test.txt")
-	p := NewParamData(dp).proto
-	if p.GetType() != protos.ParamType_DATA {
-		t.Errorf("expected DATA, got %v", p.GetType())
+	p, err := NewParamData(dp).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue().GetDataPayload() == nil {
+	if p.Proto.GetType() != protos.ParamType_DATA {
+		t.Errorf("expected DATA, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetValue().GetDataPayload() == nil {
 		t.Error("expected DataPayload to be set")
 	}
 }
@@ -175,14 +214,21 @@ func TestNewParamData(t *testing.T) {
 // --- With* method tests ---
 
 func TestWithName(t *testing.T) {
-	p := NewParamInt32(0).WithName(PolyglotText{"en": "Temperature"}).proto
-	if p.GetName().GetDisplayStrings()["en"] != "Temperature" {
-		t.Errorf("expected 'Temperature', got %q", p.GetName().GetDisplayStrings()["en"])
+	p, err := NewParamInt32(0).WithName(PolyglotText{"en": "Temperature"}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetName().GetDisplayStrings()["en"] != "Temperature" {
+		t.Errorf("expected 'Temperature', got %q", p.Proto.GetName().GetDisplayStrings()["en"])
 	}
 }
 
 func TestWithName_Nil(t *testing.T) {
-	p, err := NewParamInt32(0).WithName(nil).Build()
+	cp := NewParamInt32(0).WithName(nil)
+	if cp.proto.GetName() != nil {
+		t.Error("expected nil name to leave the proto name unset")
+	}
+	p, err := cp.Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -192,7 +238,11 @@ func TestWithName_Nil(t *testing.T) {
 }
 
 func TestWithName_EmptyPolyglotText(t *testing.T) {
-	p, err := NewParamInt32(0).WithName(PolyglotText{}).Build()
+	cp := NewParamInt32(0).WithName(PolyglotText{})
+	if cp.proto.GetName() != nil {
+		t.Error("expected empty polyglot text to leave the proto name unset")
+	}
+	p, err := cp.Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -202,8 +252,11 @@ func TestWithName_EmptyPolyglotText(t *testing.T) {
 }
 
 func TestWithReadOnly(t *testing.T) {
-	p := NewParamInt32(0).WithReadOnly(true).proto
-	if !p.GetReadOnly() {
+	p, err := NewParamInt32(0).WithReadOnly(true).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if !p.Proto.GetReadOnly() {
 		t.Error("expected read_only=true")
 	}
 }
@@ -213,12 +266,15 @@ func TestWithReadOnly(t *testing.T) {
 func TestWithReadOnly_PropagatesToChildrenAddedAfter(t *testing.T) {
 	grandchild := NewParamString("deep")
 	child := NewParamStruct().WithParam("grandchild", grandchild)
-	p := NewParamStruct().
+	p, err := NewParamStruct().
 		WithReadOnly(true).
 		WithParam("child", child).
-		proto
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	sub := p.GetParams()["child"]
+	sub := p.Proto.GetParams()["child"]
 	if sub == nil {
 		t.Fatal("expected sub-param 'child'")
 	}
@@ -235,12 +291,15 @@ func TestWithReadOnly_PropagatesToChildrenAddedAfter(t *testing.T) {
 func TestWithReadOnly_PropagatesToExistingChildren(t *testing.T) {
 	grandchild := NewParamString("deep")
 	child := NewParamStruct().WithParam("grandchild", grandchild)
-	p := NewParamStruct().
+	p, err := NewParamStruct().
 		WithParam("child", child).
 		WithReadOnly(true).
-		proto
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	sub := p.GetParams()["child"]
+	sub := p.Proto.GetParams()["child"]
 	if !sub.GetReadOnly() {
 		t.Error("expected existing child to become read_only when parent set read-only")
 	}
@@ -253,15 +312,18 @@ func TestWithReadOnly_PropagatesToExistingChildren(t *testing.T) {
 // independently marked read-only.
 func TestWithReadOnly_WritableParentKeepsChildReadOnly(t *testing.T) {
 	child := NewParamInt32(0).WithReadOnly(true)
-	p := NewParamStruct().
+	p, err := NewParamStruct().
 		WithReadOnly(false).
 		WithParam("child", child).
-		proto
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	if p.GetReadOnly() {
+	if p.Proto.GetReadOnly() {
 		t.Error("expected parent to remain writable")
 	}
-	if !p.GetParams()["child"].GetReadOnly() {
+	if !p.Proto.GetParams()["child"].GetReadOnly() {
 		t.Error("expected child under writable parent to keep its own read_only=true")
 	}
 }
@@ -270,12 +332,15 @@ func TestWithReadOnly_WritableParentKeepsChildReadOnly(t *testing.T) {
 // added before the parent is marked writable stays read-only.
 func TestWithReadOnly_WritableParentDoesNotClearChild(t *testing.T) {
 	child := NewParamInt32(0).WithReadOnly(true)
-	p := NewParamStruct().
+	p, err := NewParamStruct().
 		WithParam("child", child).
 		WithReadOnly(false).
-		proto
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	if !p.GetParams()["child"].GetReadOnly() {
+	if !p.Proto.GetParams()["child"].GetReadOnly() {
 		t.Error("expected read-only child to stay read_only under writable parent")
 	}
 }
@@ -291,27 +356,36 @@ func TestWithReadOnly_SkipsNilSubParam(t *testing.T) {
 		},
 	}}
 
-	p := cp.WithReadOnly(true).proto
+	p, err := cp.WithReadOnly(true).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	if p.GetParams()["nilChild"] != nil {
+	if p.Proto.GetParams()["nilChild"] != nil {
 		t.Error("expected nil sub-param to remain nil")
 	}
-	if !p.GetParams()["realChild"].GetReadOnly() {
+	if !p.Proto.GetParams()["realChild"].GetReadOnly() {
 		t.Error("expected non-nil sibling to be marked read_only")
 	}
 }
 
 func TestWithWidget(t *testing.T) {
-	p := NewParamInt32(0).WithWidget("slider").proto
-	if p.GetWidget() != "slider" {
-		t.Errorf("expected 'slider', got %q", p.GetWidget())
+	p, err := NewParamInt32(0).WithWidget("slider").Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetWidget() != "slider" {
+		t.Errorf("expected 'slider', got %q", p.Proto.GetWidget())
 	}
 }
 
 func TestWithPrecision(t *testing.T) {
-	p := NewParamFloat32(0).WithPrecision(3).proto
-	if p.GetPrecision() != 3 {
-		t.Errorf("expected precision 3, got %d", p.GetPrecision())
+	p, err := NewParamFloat32(0).WithPrecision(3).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetPrecision() != 3 {
+		t.Errorf("expected precision 3, got %d", p.Proto.GetPrecision())
 	}
 }
 
@@ -319,23 +393,36 @@ func TestWithPrecision(t *testing.T) {
 // params (see device.one_of_everything.yaml, which sets precision: 3 on a
 // FLOAT32_ARRAY).
 func TestWithPrecision_Float32Array(t *testing.T) {
-	p := NewParamFloat32Array([]float32{1.1, 2.2}).WithPrecision(3).proto
-	if p.GetPrecision() != 3 {
-		t.Errorf("expected precision 3 on FLOAT32_ARRAY, got %d", p.GetPrecision())
+	p, err := NewParamFloat32Array([]float32{1.1, 2.2}).WithPrecision(3).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetPrecision() != 3 {
+		t.Errorf("expected precision 3 on FLOAT32_ARRAY, got %d", p.Proto.GetPrecision())
 	}
 }
 
 func TestWithPrecision_WrongType(t *testing.T) {
-	p := NewParamInt32(0).WithPrecision(3).proto
-	if p.GetPrecision() != 0 {
+	cp := NewParamInt32(0).WithPrecision(3)
+	if cp.proto.GetPrecision() != 0 {
 		t.Error("expected precision to remain 0 for non-float param")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with valid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestWithMaxLength(t *testing.T) {
-	p := NewParamString("").WithMaxLength(255).proto
-	if p.GetMaxLength() != 255 {
-		t.Errorf("expected max_length 255, got %d", p.GetMaxLength())
+	p, err := NewParamString("").WithMaxLength(255).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetMaxLength() != 255 {
+		t.Errorf("expected max_length 255, got %d", p.Proto.GetMaxLength())
 	}
 }
 
@@ -343,43 +430,62 @@ func TestWithMaxLength(t *testing.T) {
 // params (see param.string_array_length.yaml, which sets max_length: 10 on a
 // STRING_ARRAY to cap the number of strings in the array).
 func TestWithMaxLength_StringArray(t *testing.T) {
-	p := NewParamStringArray([]string{"a", "b"}).WithMaxLength(10).proto
-	if p.GetMaxLength() != 10 {
-		t.Errorf("expected max_length 10 on STRING_ARRAY, got %d", p.GetMaxLength())
+	p, err := NewParamStringArray([]string{"a", "b"}).WithMaxLength(10).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetMaxLength() != 10 {
+		t.Errorf("expected max_length 10 on STRING_ARRAY, got %d", p.Proto.GetMaxLength())
 	}
 }
 
 func TestWithMaxLength_WrongType(t *testing.T) {
-	p := NewParamInt32(0).WithMaxLength(255).proto
-	if p.GetMaxLength() != 0 {
+	cp := NewParamInt32(0).WithMaxLength(255)
+	if cp.proto.GetMaxLength() != 0 {
 		t.Error("expected max_length to remain 0 for param type that does not support max_length")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with valid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestWithAccessScope(t *testing.T) {
-	p := NewParamInt32(0).WithAccessScope("admin").proto
-	if p.GetAccessScope() != "admin" {
-		t.Errorf("expected 'admin', got %q", p.GetAccessScope())
+	p, err := NewParamInt32(0).WithAccessScope("admin").Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetAccessScope() != "admin" {
+		t.Errorf("expected 'admin', got %q", p.Proto.GetAccessScope())
 	}
 }
 
 func TestWithClientHint(t *testing.T) {
-	p := NewParamInt32(0).
+	p, err := NewParamInt32(0).
 		WithClientHint("display", "compact").
 		WithClientHint("color", "red").
-		proto
-	if p.GetClientHints()["display"] != "compact" {
-		t.Errorf("expected client_hint 'display'='compact', got %q", p.GetClientHints()["display"])
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetClientHints()["color"] != "red" {
-		t.Errorf("expected client_hint 'color'='red', got %q", p.GetClientHints()["color"])
+	if p.Proto.GetClientHints()["display"] != "compact" {
+		t.Errorf("expected client_hint 'display'='compact', got %q", p.Proto.GetClientHints()["display"])
+	}
+	if p.Proto.GetClientHints()["color"] != "red" {
+		t.Errorf("expected client_hint 'color'='red', got %q", p.Proto.GetClientHints()["color"])
 	}
 }
 
 func TestWithParam_Struct(t *testing.T) {
 	child := NewParamInt32(10).WithName(PolyglotText{"en": "child"})
-	p := NewParamStruct().WithParam("brightness", child).proto
-	sub := p.GetParams()["brightness"]
+	p, err := NewParamStruct().WithParam("brightness", child).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	sub := p.Proto.GetParams()["brightness"]
 	if sub == nil {
 		t.Fatal("expected sub-param 'brightness'")
 	}
@@ -391,9 +497,9 @@ func TestWithParam_Struct(t *testing.T) {
 	if sub.GetValue() != nil {
 		t.Error("expected stored sub-param descriptor to be valueless")
 	}
-	if p.GetValue().GetStructValue().GetFields()["brightness"].GetInt32Value() != 10 {
+	if p.Proto.GetValue().GetStructValue().GetFields()["brightness"].GetInt32Value() != 10 {
 		t.Errorf("expected parent struct value field 'brightness'=10, got %d",
-			p.GetValue().GetStructValue().GetFields()["brightness"].GetInt32Value())
+			p.Proto.GetValue().GetStructValue().GetFields()["brightness"].GetInt32Value())
 	}
 }
 
@@ -417,9 +523,16 @@ func TestWithParam_DeepClone(t *testing.T) {
 
 func TestWithParam_WrongType(t *testing.T) {
 	child := NewParamInt32(0)
-	p := NewParamInt32(0).WithParam("x", child).proto
-	if len(p.GetParams()) != 0 {
+	cp := NewParamInt32(0).WithParam("x", child)
+	if len(cp.proto.GetParams()) != 0 {
 		t.Error("expected no sub-params on INT32 param")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with valid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
@@ -430,24 +543,33 @@ func TestWithParam_Nil(t *testing.T) {
 	if cp.err == nil {
 		t.Error("expected error for builder with nil sub-param")
 	}
-	p := cp.proto
-	if len(p.GetParams()) != 0 {
+	if len(cp.proto.GetParams()) != 0 {
 		t.Error("expected nil sub-param to be a no-op")
 	}
-	// Chaining must continue to work after the no-op.
 	child := NewParamInt32(7)
-	p = cp.WithParam("y", child).proto
-	if p.GetParams()["y"] != nil {
+	cp.WithParam("y", child)
+	if cp.proto.GetParams()["y"] != nil {
 		t.Fatal("expected chaining to short-circuit after nil sub-param")
 	}
-	if p.GetValue().GetStructValue().GetFields()["y"].GetInt32Value() == 7 {
+	if cp.proto.GetValue().GetStructValue().GetFields()["y"].GetInt32Value() == 7 {
 		t.Error("expected sub-param value to be ignored after nil sub-param")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid sub-param")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestWithParam_NestedErrors(t *testing.T) {
 	child := NewParamInt32(0, 1)
-	p, err := NewParamStruct().WithParam("x", child).Build()
+	cp := NewParamStruct().WithParam("x", child)
+	if len(cp.proto.GetParams()) != 0 {
+		t.Error("expected nested builder error to leave the parent params unset")
+	}
+	p, err := cp.Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -457,7 +579,11 @@ func TestWithParam_NestedErrors(t *testing.T) {
 }
 
 func TestWithParam_EmptyParam(t *testing.T) {
-	p, err := NewParamStruct().WithParam("x", &ParamBuilder{}).Build()
+	cp := NewParamStruct().WithParam("x", &ParamBuilder{})
+	if len(cp.proto.GetParams()) != 0 {
+		t.Error("expected empty param builder to leave the parent params unset")
+	}
+	p, err := cp.Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -467,21 +593,31 @@ func TestWithParam_EmptyParam(t *testing.T) {
 }
 
 func TestWithResponse(t *testing.T) {
-	p := NewParamEmpty().WithResponse(true).proto
-	if !p.GetResponse() {
+	p, err := NewParamEmpty().WithResponse(true).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if !p.Proto.GetResponse() {
 		t.Error("expected response=true")
 	}
 }
 
 func TestWithHelp(t *testing.T) {
-	p := NewParamInt32(0).WithHelp(PolyglotText{"en": "Adjusts volume"}).proto
-	if p.GetHelp().GetDisplayStrings()["en"] != "Adjusts volume" {
-		t.Errorf("unexpected help text: %q", p.GetHelp().GetDisplayStrings()["en"])
+	p, err := NewParamInt32(0).WithHelp(PolyglotText{"en": "Adjusts volume"}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetHelp().GetDisplayStrings()["en"] != "Adjusts volume" {
+		t.Errorf("unexpected help text: %q", p.Proto.GetHelp().GetDisplayStrings()["en"])
 	}
 }
 
 func TestWithHelp_Nil(t *testing.T) {
-	p, err := NewParamInt32(0).WithHelp(nil).Build()
+	cp := NewParamInt32(0).WithHelp(nil)
+	if cp.proto.GetHelp() != nil {
+		t.Error("expected nil help to leave the proto help unset")
+	}
+	p, err := cp.Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -491,7 +627,11 @@ func TestWithHelp_Nil(t *testing.T) {
 }
 
 func TestWithHelp_EmptyPolyglotText(t *testing.T) {
-	p, err := NewParamInt32(0).WithHelp(PolyglotText{}).Build()
+	cp := NewParamInt32(0).WithHelp(PolyglotText{})
+	if cp.proto.GetHelp() != nil {
+		t.Error("expected empty polyglot text to leave the proto help unset")
+	}
+	p, err := cp.Build()
 	if p != (Param{}) {
 		t.Errorf("expected empty Param, got %v", p)
 	}
@@ -501,31 +641,43 @@ func TestWithHelp_EmptyPolyglotText(t *testing.T) {
 }
 
 func TestWithOidAliases(t *testing.T) {
-	p := NewParamInt32(0).WithOidAliases("/old/path", "/legacy/path").proto
-	aliases := p.GetOidAliases()
+	p, err := NewParamInt32(0).WithOidAliases("/old/path", "/legacy/path").Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	aliases := p.Proto.GetOidAliases()
 	if len(aliases) != 2 || aliases[0] != "/old/path" {
 		t.Errorf("unexpected aliases: %v", aliases)
 	}
 }
 
 func TestWithMinimalSet(t *testing.T) {
-	p := NewParamInt32(0).WithMinimalSet(true).proto
-	if !p.GetMinimalSet() {
+	p, err := NewParamInt32(0).WithMinimalSet(true).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if !p.Proto.GetMinimalSet() {
 		t.Error("expected minimal_set=true")
 	}
 }
 
 func TestWithStateless(t *testing.T) {
-	p := NewParamInt32(0).WithStateless(true).proto
-	if !p.GetStateless() {
+	p, err := NewParamInt32(0).WithStateless(true).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if !p.Proto.GetStateless() {
 		t.Error("expected stateless=true")
 	}
 }
 
 func TestWithTemplateOid(t *testing.T) {
-	p := NewParamInt32(0).WithTemplateOid("templates.volume").proto
-	if p.GetTemplateOid() != "templates.volume" {
-		t.Errorf("expected 'templates.volume', got %q", p.GetTemplateOid())
+	p, err := NewParamInt32(0).WithTemplateOid("templates.volume").Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetTemplateOid() != "templates.volume" {
+		t.Errorf("expected 'templates.volume', got %q", p.Proto.GetTemplateOid())
 	}
 }
 
@@ -535,35 +687,47 @@ func TestWithConstraint_ValidInt32Choice(t *testing.T) {
 	c := NewConstraintInt32Choice([]Int32Choice{
 		{Value: 1, Name: PolyglotText{"en": "one"}},
 	})
-	p := NewParamInt32(0).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamInt32(0).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
-	if p.GetConstraint().GetType() != protos.Constraint_INT_CHOICE {
-		t.Errorf("expected INT_CHOICE, got %v", p.GetConstraint().GetType())
+	if p.Proto.GetConstraint().GetType() != protos.Constraint_INT_CHOICE {
+		t.Errorf("expected INT_CHOICE, got %v", p.Proto.GetConstraint().GetType())
 	}
 }
 
 func TestWithConstraint_ValidIntRange(t *testing.T) {
 	c := NewConstraintInt32Range(0, 100, 1)
-	p := NewParamInt32(50).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamInt32(50).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
 }
 
 func TestWithConstraint_ValidFloatRange(t *testing.T) {
 	c := NewConstraintFloatRange(0, 1, 0.01)
-	p := NewParamFloat32(0.5).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamFloat32(0.5).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
 }
 
 func TestWithConstraint_ValidStringChoice(t *testing.T) {
 	c := NewConstraintStringChoice(true, "a", "b")
-	p := NewParamString("a").WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamString("a").WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
 }
@@ -572,8 +736,11 @@ func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
 	c := NewConstraintStringStringChoice(false, []StringStringChoice{
 		{Value: "v", Name: PolyglotText{"en": "V"}},
 	})
-	p := NewParamString("v").WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamString("v").WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected constraint to be applied")
 	}
 }
@@ -582,8 +749,11 @@ func TestWithConstraint_ValidAlarmTable(t *testing.T) {
 	c := NewConstraintAlarmTable([]AlarmEntry{
 		{BitValue: 0, Severity: AlarmSeverityInfo},
 	})
-	p := NewParamInt32(0).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamInt32(0).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected alarm table constraint to be applied to INT32 param")
 	}
 }
@@ -596,41 +766,72 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 		func() *ParamBuilder { return NewParamString("") },
 		func() *ParamBuilder { return NewParamStruct() },
 	} {
-		p := factory().WithConstraint(c).proto
-		if p.GetConstraint() == nil {
-			t.Errorf("expected RefOid constraint to be valid for param type %v", p.GetType())
+		p, err := factory().WithConstraint(c).Build()
+		if err != nil {
+			t.Fatal("expected no error for builder with valid value", err)
+		}
+		if p.Proto.GetConstraint() == nil {
+			t.Errorf("expected RefOid constraint to be valid for param type %v", p.Proto.GetType())
 		}
 	}
 }
 
 func TestWithConstraint_InvalidStringOnInt(t *testing.T) {
 	c := NewConstraintStringChoice(true, "a", "b")
-	p := NewParamInt32(0).WithConstraint(c).proto
-	if p.GetConstraint() != nil {
+	cp := NewParamInt32(0).WithConstraint(c)
+	if cp.proto.GetConstraint() != nil {
 		t.Error("expected string constraint to be rejected on INT32 param")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid constraint")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestWithConstraint_InvalidIntOnFloat(t *testing.T) {
 	c := NewConstraintInt32Range(0, 100, 1)
-	p := NewParamFloat32(0).WithConstraint(c).proto
-	if p.GetConstraint() != nil {
+	cp := NewParamFloat32(0).WithConstraint(c)
+	if cp.proto.GetConstraint() != nil {
 		t.Error("expected int32 range constraint to be rejected on FLOAT32 param")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid constraint")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestWithConstraint_InvalidFloatOnString(t *testing.T) {
 	c := NewConstraintFloatRange(0, 1, 0.1)
-	p := NewParamString("x").WithConstraint(c).proto
-	if p.GetConstraint() != nil {
+	cp := NewParamString("x").WithConstraint(c)
+	if cp.proto.GetConstraint() != nil {
 		t.Error("expected float range constraint to be rejected on STRING param")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid constraint")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestWithConstraint_Nil(t *testing.T) {
-	p := NewParamInt32(0).WithConstraint(nil).proto
-	if p.GetConstraint() != nil {
+	cp := NewParamInt32(0).WithConstraint(nil)
+	if cp.proto.GetConstraint() != nil {
 		t.Error("expected nil constraint to be a no-op")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid constraint")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
@@ -639,8 +840,11 @@ func TestWithConstraint_Nil(t *testing.T) {
 
 func TestWithConstraint_ValidIntRangeOnInt32Array(t *testing.T) {
 	c := NewConstraintInt32Range(0, 10, 2)
-	p := NewParamInt32Array([]int32{0, 2, 4}).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamInt32Array([]int32{0, 2, 4}).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected int32 range constraint to be applied to INT32_ARRAY param")
 	}
 }
@@ -650,8 +854,11 @@ func TestWithConstraint_ValidInt32ChoiceOnInt32Array(t *testing.T) {
 		{Value: 0, Name: PolyglotText{"en": "Off"}},
 		{Value: 1, Name: PolyglotText{"en": "On"}},
 	})
-	p := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamInt32Array([]int32{0, 1, 0}).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected int32 choice constraint to be applied to INT32_ARRAY param")
 	}
 }
@@ -660,24 +867,33 @@ func TestWithConstraint_ValidAlarmTableOnInt32Array(t *testing.T) {
 	c := NewConstraintAlarmTable([]AlarmEntry{
 		{BitValue: 0, Severity: AlarmSeverityInfo},
 	})
-	p := NewParamInt32Array([]int32{0, 1, 2}).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamInt32Array([]int32{0, 1, 2}).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected alarm table constraint to be applied to INT32_ARRAY param")
 	}
 }
 
 func TestWithConstraint_ValidFloatRangeOnFloat32Array(t *testing.T) {
 	c := NewConstraintFloatRange(0, 100, 0.5)
-	p := NewParamFloat32Array([]float32{1.0, 2.0}).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamFloat32Array([]float32{1.0, 2.0}).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected float range constraint to be applied to FLOAT32_ARRAY param")
 	}
 }
 
 func TestWithConstraint_ValidStringChoiceOnStringArray(t *testing.T) {
 	c := NewConstraintStringChoice(true, "a", "b")
-	p := NewParamStringArray([]string{"a", "b"}).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamStringArray([]string{"a", "b"}).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected string choice constraint to be applied to STRING_ARRAY param")
 	}
 }
@@ -686,17 +902,27 @@ func TestWithConstraint_ValidStringStringChoiceOnStringArray(t *testing.T) {
 	c := NewConstraintStringStringChoice(true, []StringStringChoice{
 		{Value: "<#FF0000>", Name: PolyglotText{"en": "Red"}},
 	})
-	p := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).proto
-	if p.GetConstraint() == nil {
+	p, err := NewParamStringArray([]string{"<#FF0000>"}).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
 		t.Fatal("expected string-string choice constraint to be applied to STRING_ARRAY param")
 	}
 }
 
 func TestWithConstraint_InvalidIntOnStringArray(t *testing.T) {
 	c := NewConstraintInt32Range(0, 10, 1)
-	p := NewParamStringArray([]string{"a"}).WithConstraint(c).proto
-	if p.GetConstraint() != nil {
+	cp := NewParamStringArray([]string{"a"}).WithConstraint(c)
+	if cp.proto.GetConstraint() != nil {
 		t.Error("expected int32 range constraint to be rejected on STRING_ARRAY param")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid constraint")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
@@ -704,7 +930,7 @@ func TestWithConstraint_InvalidIntOnStringArray(t *testing.T) {
 
 func TestFullChaining(t *testing.T) {
 	c := NewConstraintInt32RangeWithDisplay(0, 100, 1, 0, 100)
-	p := NewParamInt32(0).
+	p, err := NewParamInt32(0).
 		WithName(PolyglotText{"en": "Volume"}).
 		WithConstraint(c).
 		WithReadOnly(false).
@@ -716,36 +942,39 @@ func TestFullChaining(t *testing.T) {
 		WithMinimalSet(true).
 		WithStateless(false).
 		WithTemplateOid("templates.volume").
-		proto
-
-	if p.GetType() != protos.ParamType_INT32 {
-		t.Errorf("expected INT32, got %v", p.GetType())
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetName().GetDisplayStrings()["en"] != "Volume" {
+
+	if p.Proto.GetType() != protos.ParamType_INT32 {
+		t.Errorf("expected INT32, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetName().GetDisplayStrings()["en"] != "Volume" {
 		t.Error("name mismatch")
 	}
-	if p.GetConstraint().GetInt32Range().GetMaxValue() != 100 {
+	if p.Proto.GetConstraint().GetInt32Range().GetMaxValue() != 100 {
 		t.Error("constraint mismatch")
 	}
-	if p.GetWidget() != "slider" {
+	if p.Proto.GetWidget() != "slider" {
 		t.Error("widget mismatch")
 	}
-	if p.GetAccessScope() != "operator" {
+	if p.Proto.GetAccessScope() != "operator" {
 		t.Error("access_scope mismatch")
 	}
-	if p.GetClientHints()["unit"] != "dB" {
+	if p.Proto.GetClientHints()["unit"] != "dB" {
 		t.Error("client_hint mismatch")
 	}
-	if p.GetHelp().GetDisplayStrings()["en"] != "Audio volume" {
+	if p.Proto.GetHelp().GetDisplayStrings()["en"] != "Audio volume" {
 		t.Error("help mismatch")
 	}
-	if len(p.GetOidAliases()) != 1 {
+	if len(p.Proto.GetOidAliases()) != 1 {
 		t.Error("oid_aliases mismatch")
 	}
-	if !p.GetMinimalSet() {
+	if !p.Proto.GetMinimalSet() {
 		t.Error("minimal_set mismatch")
 	}
-	if p.GetTemplateOid() != "templates.volume" {
+	if p.Proto.GetTemplateOid() != "templates.volume" {
 		t.Error("template_oid mismatch")
 	}
 }
@@ -757,9 +986,12 @@ func TestWithValue_MatchingType(t *testing.T) {
 	if res != nil {
 		t.Fatal(res)
 	}
-	p := NewParamInt32(0).WithValue(v).proto
-	if p.GetValue().GetInt32Value() != 42 {
-		t.Errorf("expected 42, got %d", p.GetValue().GetInt32Value())
+	p, err := NewParamInt32(0).WithValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue().GetInt32Value() != 42 {
+		t.Errorf("expected 42, got %d", p.Proto.GetValue().GetInt32Value())
 	}
 }
 
@@ -768,8 +1000,11 @@ func TestWithValue_Struct(t *testing.T) {
 	if res != nil {
 		t.Fatal(res)
 	}
-	p := NewParamStruct().WithValue(v).proto
-	fields := p.GetValue().GetStructValue().GetFields()
+	p, err := NewParamStruct().WithValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	fields := p.Proto.GetValue().GetStructValue().GetFields()
 	if fields["name"].GetStringValue() != "test" {
 		t.Errorf("expected struct field 'name'='test', got %q", fields["name"].GetStringValue())
 	}
@@ -781,10 +1016,13 @@ func TestWithValue_StructVariant(t *testing.T) {
 	if res != nil {
 		t.Fatal(res)
 	}
-	p := NewParamStructVariant().WithValue(v).proto
-	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "type_a" {
+	p, err := NewParamStructVariant().WithValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue().GetStructVariantValue().GetStructVariantType() != "type_a" {
 		t.Errorf("expected struct_variant_type 'type_a', got %q",
-			p.GetValue().GetStructVariantValue().GetStructVariantType())
+			p.Proto.GetValue().GetStructVariantValue().GetStructVariantType())
 	}
 }
 
@@ -793,9 +1031,16 @@ func TestWithValue_MismatchedType(t *testing.T) {
 	if res != nil {
 		t.Fatal(res)
 	}
-	p := NewParamInt32(0).WithValue(v).proto
-	if p.GetValue().GetInt32Value() != 0 {
+	cp := NewParamInt32(0).WithValue(v)
+	if cp.proto.GetValue().GetInt32Value() != 0 {
 		t.Error("expected mismatched WithValue to be a no-op")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
@@ -896,29 +1141,38 @@ func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
 // --- Typed factory value tests ---
 
 func TestNewParamStruct_WithValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"a": int32(1)}).proto
-	fields := p.GetValue().GetStructValue().GetFields()
+	p, err := NewParamStruct(map[string]any{"a": int32(1)}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	fields := p.Proto.GetValue().GetStructValue().GetFields()
 	if fields["a"].GetInt32Value() != 1 {
 		t.Errorf("expected struct field 'a'=1, got %d", fields["a"].GetInt32Value())
 	}
 }
 
 func TestNewParamStruct_NoValue(t *testing.T) {
-	p := NewParamStruct().proto
-	if p.GetType() != protos.ParamType_STRUCT {
-		t.Errorf("expected STRUCT, got %v", p.GetType())
+	p, err := NewParamStruct().Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue() != nil {
+	if p.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetValue() != nil {
 		t.Error("expected nil value when no arg provided")
 	}
 }
 
 func TestNewParamStructVariant_WithValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "kind_a", Value: int32(5)}
-	p := NewParamStructVariant(sv).proto
-	if p.GetValue().GetStructVariantValue().GetStructVariantType() != "kind_a" {
+	p, err := NewParamStructVariant(sv).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue().GetStructVariantValue().GetStructVariantType() != "kind_a" {
 		t.Errorf("expected struct_variant_type 'kind_a', got %q",
-			p.GetValue().GetStructVariantValue().GetStructVariantType())
+			p.Proto.GetValue().GetStructVariantValue().GetStructVariantType())
 	}
 }
 
@@ -927,8 +1181,11 @@ func TestNewParamStructArray_WithValue(t *testing.T) {
 		{"x": int32(1)},
 		{"x": int32(2)},
 	}
-	p := NewParamStructArray(arr).proto
-	list := p.GetValue().GetStructArrayValues().GetStructValues()
+	p, err := NewParamStructArray(arr).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	list := p.Proto.GetValue().GetStructArrayValues().GetStructValues()
 	if len(list) != 2 {
 		t.Fatalf("expected 2 structs, got %d", len(list))
 	}
@@ -942,8 +1199,11 @@ func TestNewParamStructVariantArray_WithValue(t *testing.T) {
 		{StructVariantType: "a", Value: int32(1)},
 		{StructVariantType: "b", Value: int32(2)},
 	}
-	p := NewParamStructVariantArray(arr).proto
-	list := p.GetValue().GetStructVariantArrayValues().GetStructVariants()
+	p, err := NewParamStructVariantArray(arr).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	list := p.Proto.GetValue().GetStructVariantArrayValues().GetStructVariants()
 	if len(list) != 2 {
 		t.Fatalf("expected 2 variants, got %d", len(list))
 	}
@@ -956,45 +1216,59 @@ func TestNewParamStructVariantArray_WithValue(t *testing.T) {
 
 func TestNewParamFromValue_Int32(t *testing.T) {
 	v, _ := ToValue(int32(42))
-	cp := NewParamFromValue(v)
-	p := cp.proto
-	if p.GetType() != protos.ParamType_INT32 {
-		t.Errorf("expected INT32, got %v", p.GetType())
+	cp, err := NewParamFromValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue().GetInt32Value() != 42 {
-		t.Errorf("expected 42, got %d", p.GetValue().GetInt32Value())
+	if cp.Proto.GetType() != protos.ParamType_INT32 {
+		t.Errorf("expected INT32, got %v", cp.Proto.GetType())
+	}
+	if cp.Proto.GetValue().GetInt32Value() != 42 {
+		t.Errorf("expected 42, got %d", cp.Proto.GetValue().GetInt32Value())
 	}
 }
 
 func TestNewParamFromValue_Struct(t *testing.T) {
 	v, _ := ToValue(map[string]any{"k": "v"})
-	cp := NewParamFromValue(v)
-	if cp.proto.GetType() != protos.ParamType_STRUCT {
-		t.Errorf("expected STRUCT, got %v", cp.proto.GetType())
+	cp, err := NewParamFromValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if cp.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", cp.Proto.GetType())
 	}
 }
 
 func TestNewParamFromValue_StructVariant(t *testing.T) {
 	v, _ := ToValue(StructVariantValue{StructVariantType: "t", Value: int32(0)})
-	cp := NewParamFromValue(v)
-	if cp.proto.GetType() != protos.ParamType_STRUCT_VARIANT {
-		t.Errorf("expected STRUCT_VARIANT, got %v", cp.proto.GetType())
+	cp, err := NewParamFromValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if cp.Proto.GetType() != protos.ParamType_STRUCT_VARIANT {
+		t.Errorf("expected STRUCT_VARIANT, got %v", cp.Proto.GetType())
 	}
 }
 
 func TestNewParamFromValue_StructArray(t *testing.T) {
 	v, _ := ToValue([]map[string]any{{"a": int32(1)}})
-	cp := NewParamFromValue(v)
-	if cp.proto.GetType() != protos.ParamType_STRUCT_ARRAY {
-		t.Errorf("expected STRUCT_ARRAY, got %v", cp.proto.GetType())
+	cp, err := NewParamFromValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if cp.Proto.GetType() != protos.ParamType_STRUCT_ARRAY {
+		t.Errorf("expected STRUCT_ARRAY, got %v", cp.Proto.GetType())
 	}
 }
 
 func TestNewParamFromValue_StructVariantArray(t *testing.T) {
 	v, _ := ToValue([]StructVariantValue{{StructVariantType: "t", Value: int32(0)}})
-	cp := NewParamFromValue(v)
-	if cp.proto.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
-		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", cp.proto.GetType())
+	cp, err := NewParamFromValue(v).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if cp.Proto.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
+		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", cp.Proto.GetType())
 	}
 }
 
@@ -1002,6 +1276,13 @@ func TestNewParamFromValue_Nil(t *testing.T) {
 	cp := NewParamFromValue(Value{})
 	if cp.proto.GetType() != protos.ParamType_UNDEFINED {
 		t.Errorf("expected UNDEFINED for nil value, got %v", cp.proto.GetType())
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
@@ -1024,9 +1305,12 @@ func TestNewParamFromValue_AllScalarTypes(t *testing.T) {
 			if res != nil {
 				t.Fatalf("ToValue failed: %s", res)
 			}
-			cp := NewParamFromValue(v)
-			if cp.proto.GetType() != tt.wantType {
-				t.Errorf("expected %v, got %v", tt.wantType, cp.proto.GetType())
+			cp, err := NewParamFromValue(v).Build()
+			if err != nil {
+				t.Fatal("expected no error for builder with valid value", err)
+			}
+			if cp.Proto.GetType() != tt.wantType {
+				t.Errorf("expected %v, got %v", tt.wantType, cp.Proto.GetType())
 			}
 		})
 	}
@@ -1101,89 +1385,151 @@ func TestParamTypeFromValueKind_DataPayload(t *testing.T) {
 	}
 }
 
-func TestWithParam_SelfReference(t *testing.T) {
+func TestWithParam_SelfReferenceNoClone(t *testing.T) {
 	cp := NewParamStruct()
 	cp.WithParam("self", cp)
-	sub := cp.proto.GetParams()["self"]
-	if sub == nil {
+	if cp.proto.GetParams()["self"] == nil {
 		t.Fatal("expected self-referencing sub-param to be set")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with self-reference")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
+	}
+}
+
+func TestWithParam_SelfReferenceClone(t *testing.T) {
+	cp := NewParamStruct()
+	cp.WithParam("self", cp.Clone())
+	if cp.proto.GetParams()["self"] == nil {
+		t.Fatal("expected cloned self sub-param to be set")
+	}
+	p, err := cp.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with cloned self")
+	}
+	if p.Proto.GetParams()["self"] == nil {
+		t.Fatal("expected cloned self sub-param to be set")
 	}
 }
 
 // --- Error path tests ---
 
 func TestNewParamStruct_InvalidValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"bad": struct{}{}}).proto
-	if p.GetType() != protos.ParamType_STRUCT {
-		t.Errorf("expected STRUCT, got %v", p.GetType())
+	cp := NewParamStruct(map[string]any{"bad": struct{}{}})
+	if cp.proto.GetType() != protos.ParamType_STRUCT {
+		t.Errorf("expected STRUCT, got %v", cp.proto.GetType())
 	}
-	if p.GetValue() != nil {
+	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestNewParamStructVariant_InvalidValue(t *testing.T) {
 	sv := StructVariantValue{StructVariantType: "t", Value: struct{}{}}
-	p := NewParamStructVariant(sv).proto
-	if p.GetType() != protos.ParamType_STRUCT_VARIANT {
-		t.Errorf("expected STRUCT_VARIANT, got %v", p.GetType())
+	cp := NewParamStructVariant(sv)
+	if cp.proto.GetType() != protos.ParamType_STRUCT_VARIANT {
+		t.Errorf("expected STRUCT_VARIANT, got %v", cp.proto.GetType())
 	}
-	if p.GetValue() != nil {
+	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestNewParamStructArray_InvalidValue(t *testing.T) {
 	arr := []map[string]any{{"bad": struct{}{}}}
-	p := NewParamStructArray(arr).proto
-	if p.GetType() != protos.ParamType_STRUCT_ARRAY {
-		t.Errorf("expected STRUCT_ARRAY, got %v", p.GetType())
+	cp := NewParamStructArray(arr)
+	if cp.proto.GetType() != protos.ParamType_STRUCT_ARRAY {
+		t.Errorf("expected STRUCT_ARRAY, got %v", cp.proto.GetType())
 	}
-	if p.GetValue() != nil {
+	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestNewParamStructVariantArray_InvalidValue(t *testing.T) {
 	arr := []StructVariantValue{{StructVariantType: "t", Value: struct{}{}}}
-	p := NewParamStructVariantArray(arr).proto
-	if p.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
-		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", p.GetType())
+	cp := NewParamStructVariantArray(arr)
+	if cp.proto.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
+		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", cp.proto.GetType())
 	}
-	if p.GetValue() != nil {
+	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestNewParamData_EmptyPayload(t *testing.T) {
 	dp := DataPayload{}
-	p := NewParamData(dp).proto
-	if p.GetType() != protos.ParamType_DATA {
-		t.Errorf("expected DATA, got %v", p.GetType())
+	p, err := NewParamData(dp).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if p.GetValue() == nil || p.GetValue().GetDataPayload() == nil {
+	if p.Proto.GetType() != protos.ParamType_DATA {
+		t.Errorf("expected DATA, got %v", p.Proto.GetType())
+	}
+	if p.Proto.GetValue() == nil || p.Proto.GetValue().GetDataPayload() == nil {
 		t.Fatal("expected DataPayload value")
 	}
-	if payload, ok := p.GetValue().GetDataPayload().GetKind().(*protos.DataPayload_Payload); !ok || len(payload.Payload) != 0 {
-		t.Errorf("expected empty payload kind, got %T", p.GetValue().GetDataPayload().GetKind())
+	if payload, ok := p.Proto.GetValue().GetDataPayload().GetKind().(*protos.DataPayload_Payload); !ok || len(payload.Payload) != 0 {
+		t.Errorf("expected empty payload kind, got %T", p.Proto.GetValue().GetDataPayload().GetKind())
 	}
 }
 
 func TestNewParamData_BothPayloadAndUrl(t *testing.T) {
 	dp := DataPayload{Payload: []byte("data"), Url: "http://example.com"}
-	p := NewParamData(dp).proto
-	if p.GetType() != protos.ParamType_DATA {
-		t.Errorf("expected DATA, got %v", p.GetType())
+	cp := NewParamData(dp)
+	if cp.proto.GetType() != protos.ParamType_DATA {
+		t.Errorf("expected DATA, got %v", cp.proto.GetType())
 	}
-	if p.GetValue() != nil {
+	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when both payload and url are set")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
 
 func TestWithParam_StructVariant(t *testing.T) {
 	child := NewParamInt32(5)
-	p := NewParamStructVariant().WithParam("field", child).proto
-	sub := p.GetParams()["field"]
+	p, err := NewParamStructVariant().WithParam("field", child).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	sub := p.Proto.GetParams()["field"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_VARIANT")
 	}
@@ -1194,8 +1540,11 @@ func TestWithParam_StructVariant(t *testing.T) {
 
 func TestWithParam_StructArray(t *testing.T) {
 	child := NewParamString("val")
-	p := NewParamStructArray().WithParam("item", child).proto
-	sub := p.GetParams()["item"]
+	p, err := NewParamStructArray().WithParam("item", child).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	sub := p.Proto.GetParams()["item"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_ARRAY")
 	}
@@ -1206,8 +1555,11 @@ func TestWithParam_StructArray(t *testing.T) {
 
 func TestWithParam_StructVariantArray(t *testing.T) {
 	child := NewParamFloat32(1.5)
-	p := NewParamStructVariantArray().WithParam("entry", child).proto
-	sub := p.GetParams()["entry"]
+	p, err := NewParamStructVariantArray().WithParam("entry", child).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	sub := p.Proto.GetParams()["entry"]
 	if sub == nil {
 		t.Fatal("expected sub-param on STRUCT_VARIANT_ARRAY")
 	}
@@ -1276,29 +1628,31 @@ func TestSetValue_InvalidThenValid(t *testing.T) {
 }
 
 func TestWithParam_StructValuesFromSubParams(t *testing.T) {
-	param := NewParamStruct().
+	param, err := NewParamStruct().
 		WithName(PolyglotText{"en": "Struct Example"}).
 		WithParam("number", NewParamInt32(7).WithConstraint(NewConstraintInt32Range(0, 10, 1))).
-		WithParam("text", NewParamString("hello"))
-
-	if param.proto.GetType() != protos.ParamType_STRUCT {
-		t.Fatalf("expected STRUCT, got %v", param.proto.GetType())
+		WithParam("text", NewParamString("hello")).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	fields := param.proto.GetValue().GetStructValue().GetFields()
+	if param.Proto.GetType() != protos.ParamType_STRUCT {
+		t.Fatalf("expected STRUCT, got %v", param.Proto.GetType())
+	}
+	fields := param.Proto.GetValue().GetStructValue().GetFields()
 	if fields["number"].GetInt32Value() != 7 {
 		t.Errorf("expected struct value field 'number'=7, got %d", fields["number"].GetInt32Value())
 	}
 	if fields["text"].GetStringValue() != "hello" {
 		t.Errorf("expected struct value field 'text'='hello', got %q", fields["text"].GetStringValue())
 	}
-	number := param.proto.GetParams()["number"]
+	number := param.Proto.GetParams()["number"]
 	if number.GetValue() != nil {
 		t.Error("expected number descriptor to be valueless")
 	}
 	if number.GetConstraint().GetInt32Range().GetMaxValue() != 10 {
 		t.Fatal("expected nested int32 range constraint max 10")
 	}
-	if param.proto.GetParams()["text"].GetValue() != nil {
+	if param.Proto.GetParams()["text"].GetValue() != nil {
 		t.Error("expected text descriptor to be valueless")
 	}
 }
@@ -1326,10 +1680,14 @@ func TestNewParamX_NoValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.param.proto.GetType() != tt.wantType {
-				t.Errorf("expected %v, got %v", tt.wantType, tt.param.proto.GetType())
+			p, err := tt.param.Build()
+			if err != nil {
+				t.Fatal("expected no error for builder with valid value", err)
 			}
-			if tt.param.proto.GetValue() != nil {
+			if p.Proto.GetType() != tt.wantType {
+				t.Errorf("expected %v, got %v", tt.wantType, p.Proto.GetType())
+			}
+			if p.Proto.GetValue() != nil {
 				t.Error("expected nil value when no value given")
 			}
 		})
@@ -1339,135 +1697,74 @@ func TestNewParamX_NoValue(t *testing.T) {
 // Intentionally default values (zero int, empty string, EMPTY) still produce
 // a non-nil value, which is what distinguishes them from no-arg factories.
 func TestNewParamX_DefaultValueIsSet(t *testing.T) {
-	if NewParamInt32(0).proto.GetValue() == nil {
+	p, err := NewParamInt32(0).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue() == nil {
 		t.Error("expected non-nil value for intentionally default int32")
 	}
-	if NewParamString("").proto.GetValue() == nil {
+	p, err = NewParamString("").Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue() == nil {
 		t.Error("expected non-nil value for intentionally empty string")
 	}
-	if NewParamEmpty().proto.GetValue() == nil {
+	p, err = NewParamEmpty().Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue() == nil {
 		t.Error("expected non-nil value for EMPTY param")
 	}
 }
 
 func TestNewParamX_ExtraValuesErrors(t *testing.T) {
-	t.Run("INT32", func(t *testing.T) {
-		p, err := NewParamInt32(1, 2).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("FLOAT32", func(t *testing.T) {
-		p, err := NewParamFloat32(1.1, 2.2).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("STRING", func(t *testing.T) {
-		p, err := NewParamString("a", "b").Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("STRUCT", func(t *testing.T) {
-		p, err := NewParamStruct(map[string]any{"a": 1}, map[string]any{"b": 2}).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("STRUCT_VARIANT", func(t *testing.T) {
-		p, err := NewParamStructVariant(
+	tests := []struct {
+		name     string
+		param    *ParamBuilder
+		wantType protos.ParamType
+	}{
+		{"INT32", NewParamInt32(1, 2), protos.ParamType_INT32},
+		{"FLOAT32", NewParamFloat32(1.1, 2.2), protos.ParamType_FLOAT32},
+		{"STRING", NewParamString("a", "b"), protos.ParamType_STRING},
+		{"STRUCT", NewParamStruct(map[string]any{"a": 1}, map[string]any{"b": 2}), protos.ParamType_STRUCT},
+		{"STRUCT_VARIANT", NewParamStructVariant(
 			StructVariantValue{StructVariantType: "a", Value: NewParamInt32(1)},
-			StructVariantValue{StructVariantType: "b", Value: NewParamInt32(2)}).
-			Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("INT32_ARRAY", func(t *testing.T) {
-		p, err := NewParamInt32Array([]int32{1, 2, 3}, []int32{4, 5, 6}).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("FLOAT32_ARRAY", func(t *testing.T) {
-		p, err := NewParamFloat32Array([]float32{1.1, 2.2}, []float32{3.3, 4.4}).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("STRING_ARRAY", func(t *testing.T) {
-		p, err := NewParamStringArray([]string{"a", "b"}, []string{"c", "d"}).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("BINARY", func(t *testing.T) {
-		p, err := NewParamBinary([]byte{0xDE, 0xAD}, []byte{0xBE, 0xEF}).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("STRUCT_ARRAY", func(t *testing.T) {
-		p, err := NewParamStructArray([]map[string]any{{"a": 1, "b": 2}}, []map[string]any{{"c": 3, "d": 4}}).Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("STRUCT_VARIANT_ARRAY", func(t *testing.T) {
-		p, err := NewParamStructVariantArray(
+			StructVariantValue{StructVariantType: "b", Value: NewParamInt32(2)},
+		), protos.ParamType_STRUCT_VARIANT},
+		{"INT32_ARRAY", NewParamInt32Array([]int32{1, 2, 3}, []int32{4, 5, 6}), protos.ParamType_INT32_ARRAY},
+		{"FLOAT32_ARRAY", NewParamFloat32Array([]float32{1.1, 2.2}, []float32{3.3, 4.4}), protos.ParamType_FLOAT32_ARRAY},
+		{"STRING_ARRAY", NewParamStringArray([]string{"a", "b"}, []string{"c", "d"}), protos.ParamType_STRING_ARRAY},
+		{"BINARY", NewParamBinary([]byte{0xDE, 0xAD}, []byte{0xBE, 0xEF}), protos.ParamType_BINARY},
+		{"STRUCT_ARRAY", NewParamStructArray([]map[string]any{{"a": 1, "b": 2}}, []map[string]any{{"c": 3, "d": 4}}), protos.ParamType_STRUCT_ARRAY},
+		{"STRUCT_VARIANT_ARRAY", NewParamStructVariantArray(
 			[]StructVariantValue{{StructVariantType: "a", Value: NewParamInt32(1)}},
-			[]StructVariantValue{{StructVariantType: "b", Value: NewParamInt32(2)}}).
-			Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
-	t.Run("DATA", func(t *testing.T) {
-		p, err := NewParamData(
+			[]StructVariantValue{{StructVariantType: "b", Value: NewParamInt32(2)}},
+		), protos.ParamType_STRUCT_VARIANT_ARRAY},
+		{"DATA", NewParamData(
 			ToPayload([]byte("content"), "text/plain", "test.txt"),
-			ToPayload([]byte("content2"), "text/plain", "test2.txt")).
-			Build()
-		if p != (Param{}) {
-			t.Errorf("expected empty Param, got %v", p)
-		}
-		if err == nil {
-			t.Error("expected error for builder with extra values")
-		}
-	})
+			ToPayload([]byte("content2"), "text/plain", "test2.txt"),
+		), protos.ParamType_DATA},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.param.proto.GetType() != tt.wantType {
+				t.Errorf("expected %v, got %v", tt.wantType, tt.param.proto.GetType())
+			}
+			if tt.param.proto.GetValue() != nil {
+				t.Error("expected nil value when extra values are rejected")
+			}
+			p, err := tt.param.Build()
+			if err == nil {
+				t.Error("expected error for builder with extra values")
+			}
+			if p != (Param{}) {
+				t.Errorf("expected empty Param, got %v", p)
+			}
+		})
+	}
 }
 
 func TestSetValue_FailureLeavesValueNil(t *testing.T) {
@@ -1484,14 +1781,17 @@ func TestSetValue_FailureLeavesValueNil(t *testing.T) {
 }
 
 func TestNewParamStruct_AutoDescriptors(t *testing.T) {
-	p := NewParamStruct(map[string]any{
+	p, err := NewParamStruct(map[string]any{
 		"number": int32(42),
 		"text":   "hi",
 		"ratio":  float32(0.5),
 		"nested": map[string]any{"inner": int32(1)},
-	}).proto
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	params := p.GetParams()
+	params := p.Proto.GetParams()
 	if len(params) != 4 {
 		t.Fatalf("expected 4 auto-created descriptors, got %d", len(params))
 	}
@@ -1540,15 +1840,18 @@ func TestStructFieldDescriptors_NoFields(t *testing.T) {
 // A valueless sub-param can refine an auto-created descriptor (name,
 // constraint, ...) without overriding the value that came from the map.
 func TestWithParam_ValuelessDoesNotOverrideMapValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"field2": int32(42)}).
+	p, err := NewParamStruct(map[string]any{"field2": int32(42)}).
 		WithParam("field2", NewParamInt32().WithName(PolyglotText{"en": "Field 2"})).
-		proto
-
-	if p.GetValue().GetStructValue().GetFields()["field2"].GetInt32Value() != 42 {
-		t.Errorf("expected map-provided value 42 to be kept, got %d",
-			p.GetValue().GetStructValue().GetFields()["field2"].GetInt32Value())
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	sub := p.GetParams()["field2"]
+
+	if p.Proto.GetValue().GetStructValue().GetFields()["field2"].GetInt32Value() != 42 {
+		t.Errorf("expected map-provided value 42 to be kept, got %d",
+			p.Proto.GetValue().GetStructValue().GetFields()["field2"].GetInt32Value())
+	}
+	sub := p.Proto.GetParams()["field2"]
 	if sub.GetName().GetDisplayStrings()["en"] != "Field 2" {
 		t.Errorf("expected replaced descriptor to carry name 'Field 2', got %q",
 			sub.GetName().GetDisplayStrings()["en"])
@@ -1560,13 +1863,16 @@ func TestWithParam_ValuelessDoesNotOverrideMapValue(t *testing.T) {
 
 // A valued sub-param overrides the value that came from the map.
 func TestWithParam_ValueOverridesMapValue(t *testing.T) {
-	p := NewParamStruct(map[string]any{"field3": float32(0.0)}).
+	p, err := NewParamStruct(map[string]any{"field3": float32(0.0)}).
 		WithParam("field3", NewParamFloat32(1.2)).
-		proto
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
 
-	if p.GetValue().GetStructValue().GetFields()["field3"].GetFloat32Value() != 1.2 {
+	if p.Proto.GetValue().GetStructValue().GetFields()["field3"].GetFloat32Value() != 1.2 {
 		t.Errorf("expected overridden value 1.2, got %f",
-			p.GetValue().GetStructValue().GetFields()["field3"].GetFloat32Value())
+			p.Proto.GetValue().GetStructValue().GetFields()["field3"].GetFloat32Value())
 	}
 }
 
@@ -1574,28 +1880,39 @@ func TestWithParam_ValueOverridesMapValue(t *testing.T) {
 // map up front, and a struct populated via WithParam propagates its value
 // when nested into another struct.
 func TestWithParam_CleanBuilderEquivalence(t *testing.T) {
-	clean := NewParamStruct().
+	cleanBuilder := NewParamStruct().
 		WithParam("field1", NewParamString("value1")).
 		WithParam("field2", NewParamInt32(42))
-	upfront := NewParamStruct(map[string]any{
+	cleanClone := cleanBuilder.Clone()
+	clean, err := cleanBuilder.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	upfront, err := NewParamStruct(map[string]any{
 		"field1": "value1",
 		"field2": int32(42),
-	})
-
-	if !proto.Equal(clean.proto, upfront.proto) {
-		t.Errorf("expected clean builder proto to equal up-front map proto:\nclean:   %v\nupfront: %v",
-			clean.proto, upfront.proto)
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
 	}
-	if clean.proto.GetValue() == nil {
+
+	if !proto.Equal(clean.Proto, upfront.Proto) {
+		t.Errorf("expected clean builder proto to equal up-front map proto:\nclean:   %v\nupfront: %v",
+			clean.Proto, upfront.Proto)
+	}
+	if clean.Proto.GetValue() == nil {
 		t.Error("expected struct built via valued WithParam calls to have a non-nil value")
 	}
 
-	outer := NewParamStruct().WithParam("inner", clean)
-	innerValue := outer.proto.GetValue().GetStructValue().GetFields()["inner"]
+	outer, err := NewParamStruct().WithParam("inner", cleanClone).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	innerValue := outer.Proto.GetValue().GetStructValue().GetFields()["inner"]
 	if innerValue.GetStructValue().GetFields()["field1"].GetStringValue() != "value1" {
 		t.Error("expected nested struct value to propagate into outer struct value")
 	}
-	if outer.proto.GetParams()["inner"].GetValue() != nil {
+	if outer.Proto.GetParams()["inner"].GetValue() != nil {
 		t.Error("expected nested struct descriptor to be valueless")
 	}
 }
