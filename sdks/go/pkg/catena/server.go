@@ -46,7 +46,6 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -279,22 +278,6 @@ var ErrServerStopped = errors.New("server is stopped")
 // defaultServerMaxShutdownWait is a fallback safety cap for shutdown paths when
 // callers pass an unbounded context. Caller-provided earlier deadlines still win.
 const defaultServerMaxShutdownWait = 10 * time.Second
-
-func ValidateSlot(slot uint32) (uint16, StatusResult) {
-	if slot > uint32(math.MaxUint16) {
-		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
-
-	}
-	return uint16(slot), StatusWithCode(StatusCodeOk, "")
-}
-
-func ValidateSlotString(slot string) (uint16, StatusResult) {
-	slotInt, err := strconv.ParseUint(slot, 10, 32)
-	if err != nil {
-		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
-	}
-	return ValidateSlot(uint32(slotInt))
-}
 
 type Transport interface {
 	// Start begins transport operation with the given context.
@@ -1119,6 +1102,11 @@ func (s *server) InvokeGetDeviceHandler(slot uint16, stream Stream[st2138.Device
 func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Value, StatusResult) {
 	return withGate(s, transportContext, EndpointGetValue, false,
 		func(ctx HandlerContext) (st2138.Value, StatusResult) {
+
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return st2138.Value{}, result
+			}
+
 			// The SDK owns product/* only when a product struct is registered for the
 			// slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed read on mon. When
@@ -1169,6 +1157,10 @@ func (s *server) InvokeGetValueHandler(slot uint16, fqoid string, transportConte
 func (s *server) InvokeGetParamHandler(slot uint16, fqoid string, transportContext TransportContext) (st2138.Param, StatusResult) {
 	return withGate(s, transportContext, EndpointGetParam, false,
 		func(ctx HandlerContext) (st2138.Param, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return st2138.Param{}, result
+			}
+
 			// The SDK owns product/* only when a product struct is registered for the
 			// slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed read on mon. This
@@ -1208,6 +1200,10 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 			// The product struct is always read-only; reject any write targeting
 			// product/* regardless of whether the SDK or business logic manages it.
 			for _, entry := range entries {
+				if result := ValidateFqoid(entry.Fqoid); result.IsError() {
+					return struct{}{}, result
+				}
+
 				if isProductOid(entry.Fqoid) {
 					return struct{}{}, StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
 				}
@@ -1225,6 +1221,9 @@ func (s *server) InvokeReadAssetHandler(slot uint16, fqoid string, stream Stream
 	_, res := invokeHandler(s, transportContext, EndpointReadAsset, false, s.readAssetHandlers, slot,
 		"fqoid "+fqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ReadAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(slot, fqoid, ctx, stream)
 		})
 	return res
@@ -1248,6 +1247,9 @@ func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st213
 	_, res := invokeHandler(s, transportContext, EndpointCreateAsset, true, s.createAssetHandlers, slot,
 		"no CreateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler CreateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
@@ -1260,6 +1262,9 @@ func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st213
 	_, res := invokeHandler(s, transportContext, EndpointUpdateAsset, true, s.updateAssetHandlers, slot,
 		"no UpdateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
@@ -1272,6 +1277,9 @@ func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportCo
 	_, res := invokeHandler(s, transportContext, EndpointDeleteAsset, true, s.deleteAssetHandlers, slot,
 		"no DeleteAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
@@ -1294,6 +1302,9 @@ func (s *server) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, p
 	_, res := invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, slot,
 		"ExecuteCommand "+commandFqoid+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ExecuteCommandHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(commandFqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(slot, commandFqoid, payload, respond, ctx, stream)
 		})
 	return res
@@ -1306,6 +1317,12 @@ func (s *server) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive
 	stream = shutdownStream[st2138.ParamInfo]{inner: stream, shutdown: s.ctx}
 	_, res := withGate(s, transportContext, EndpointParamInfo, false,
 		func(ctx HandlerContext) (struct{}, StatusResult) {
+			if oidPrefix != "" {
+				if result := ValidateFqoid(oidPrefix); result.IsError() {
+					return struct{}{}, result
+				}
+			}
+
 			// The SDK owns product/* ParamInfo only when a product struct is registered
 			// for the slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed request on mon. When
@@ -1366,11 +1383,10 @@ func (s *server) InvokeReadLanguagePackHandler(slot uint16, language string, tra
 	return invokeHandler(s, transportContext, EndpointReadLanguagePack, false, s.readLanguagePackHandlers, slot,
 		"LanguagePack "+language+" not found at slot "+strconv.Itoa(int(slot)),
 		func(handler ReadLanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
-			// Argument validation runs after the auth gate so an unauthorized
-			// caller only ever sees a security error, never a validation hint.
-			if language == "" {
-				return LanguagePack{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return LanguagePack{}, result
 			}
+
 			return handler(slot, language, ctx)
 		})
 }
@@ -1379,6 +1395,9 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.createLanguagePackHandlers, slot,
 		"CreateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler CreateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
+			}
 			// Mutations require the adm scope specifically, not merely any write
 			// scope, so narrow the coarse write gate now that we have the context.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
@@ -1386,9 +1405,6 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 			}
 			// Argument validation runs after the scope check so an unauthorized
 			// caller only ever sees a security error, never a validation hint.
-			if language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
-			}
 			if languagePack.Proto == nil {
 				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
 			}
@@ -1401,12 +1417,12 @@ func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, l
 	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguagePackHandlers, slot,
 		"UpdateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
+			}
 			// Mutations require the adm scope specifically, not merely any write scope.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
-			}
-			if language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
 			}
 			if languagePack.Proto == nil {
 				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
@@ -1420,12 +1436,12 @@ func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, t
 	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguagePackHandlers, slot,
 		"DeleteLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
+			}
 			// Mutations require the adm scope specifically, not merely any write scope.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
-			}
-			if language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
 			}
 			return struct{}{}, handler(slot, language, ctx)
 		})
