@@ -559,8 +559,8 @@ func (cp *ParamBuilder) Build() (Param, error) {
 
 // Clone returns a deep copy of the ParamBuilder.
 // Inherits the builder's error state, including ErrAlreadyBuilt.
-func (cp *ParamBuilder) Clone() ParamBuilder {
-	return ParamBuilder{proto: proto.Clone(cp.proto).(*protos.Param), err: cp.err}
+func (cp *ParamBuilder) Clone() *ParamBuilder {
+	return &ParamBuilder{proto: proto.Clone(cp.proto).(*protos.Param), err: cp.err}
 }
 
 // SetValue converts v to a proto value via ToProto, validates it against the
