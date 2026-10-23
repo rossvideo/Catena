@@ -817,6 +817,22 @@ func TestWithConstraint_Nil(t *testing.T) {
 	}
 }
 
+func TestWithConstraint_NestedErrors(t *testing.T) {
+	constraint := NewConstraintInt32Range(0, 10, 1)
+	constraint.err = errors.New("test error")
+	cp := NewParamInt32(0).WithConstraint(constraint)
+	if cp.proto.GetConstraint() != nil {
+		t.Error("expected nested builder error to leave constraint unchanged")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with constraint builder error, got nil")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with constraint builder error, got %v", p)
+	}
+}
+
 // Scalar constraints must also be accepted on their corresponding array
 // param types, matching the Catena protocol
 

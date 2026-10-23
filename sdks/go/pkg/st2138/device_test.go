@@ -190,6 +190,22 @@ func TestDevice_WithConstraint_Nil(t *testing.T) {
 	}
 }
 
+func TestDevice_WithConstraint_NestedErrors(t *testing.T) {
+	constraint := NewConstraintInt32Range(0, 10, 1)
+	constraint.err = errors.New("test error")
+	builder := NewDevice(0).WithConstraint("nothing", constraint)
+	if _, ok := builder.proto.GetConstraints()["nothing"]; ok {
+		t.Error("expected nested builder error to leave constraints unchanged")
+	}
+	cd, err := builder.Build()
+	if cd != (Device{}) {
+		t.Errorf("expected empty device, got %v", cd)
+	}
+	if err == nil {
+		t.Error("expected error for builder with constraint builder error, got nil")
+	}
+}
+
 func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 	builder := NewDevice(0).WithMenuGroup("nothing", nil)
 	if _, ok := builder.proto.GetMenuGroups()["nothing"]; ok {
