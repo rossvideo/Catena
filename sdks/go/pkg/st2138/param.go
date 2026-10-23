@@ -559,6 +559,7 @@ func (cp *ParamBuilder) Build() (Param, error) {
 
 // Clone returns a deep copy of the ParamBuilder.
 // Inherits the builder's error state, including ErrAlreadyBuilt.
+// Must be called before Build(), or the clone will be unusable.
 func (cp *ParamBuilder) Clone() *ParamBuilder {
 	return &ParamBuilder{proto: proto.Clone(cp.proto).(*protos.Param), err: cp.err}
 }

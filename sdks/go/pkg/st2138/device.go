@@ -98,6 +98,7 @@ func (db *DeviceBuilder) Build() (Device, error) {
 
 // Clone returns a deep copy of the DeviceBuilder.
 // Inherits the builder's error state, including ErrAlreadyBuilt.
+// Must be called before Build(), or the clone will be unusable.
 func (db *DeviceBuilder) Clone() *DeviceBuilder {
 	return &DeviceBuilder{proto: proto.Clone(db.proto).(*protos.Device), err: db.err}
 }
