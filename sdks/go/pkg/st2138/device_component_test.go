@@ -85,8 +85,11 @@ func TestComponentParam(t *testing.T) {
 }
 
 func TestComponentConstraint(t *testing.T) {
-	constraint := NewConstraintInt32Range(0, 100, 1)
-	chunk := ComponentConstraint("range", constraint)
+	constraint, err := NewConstraintInt32Range(0, 100, 1).Build()
+	if err != nil {
+		t.Fatalf("NewConstraintInt32Range(0, 100, 1).Build() failed: %v", err)
+	}
+	chunk := ComponentConstraint("range", &constraint)
 
 	component := chunk.Proto.GetSharedConstraint()
 	if component.GetOid() != "range" {

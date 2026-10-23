@@ -203,23 +203,11 @@ func TestDevice_WithCommand_EmptyParam(t *testing.T) {
 func TestDevice_WithConstraint_Nil(t *testing.T) {
 	builder := NewDevice(0).WithConstraint("nothing", nil)
 	if _, ok := builder.proto.GetConstraints()["nothing"]; ok {
-		t.Error("expected nil constraint to short-circuit")
+		t.Error("expected nil constraint builder to short-circuit")
 	}
 	cd, err := builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with nil constraint")
-	}
-	if cd != (Device{}) {
-		t.Errorf("expected empty Device, got %v", cd)
-	}
-
-	builder = NewDevice(0).WithConstraint("nothing", &Constraint{})
-	if _, ok := builder.proto.GetConstraints()["nothing"]; ok {
-		t.Error("expected constraint with nil Proto to short-circuit")
-	}
-	cd, err = builder.Build()
-	if err == nil {
-		t.Error("expected error for builder with constraint with nil Proto")
 	}
 	if cd != (Device{}) {
 		t.Errorf("expected empty Device, got %v", cd)

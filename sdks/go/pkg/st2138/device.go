@@ -159,7 +159,7 @@ func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *
 // WithConstraint inserts a shared constraint into the device's constraints map,
 // keyed by oid. The constraint's proto is deep-copied. A nil constraint
 // errors and short-circuits further method calls. Params can reference shared constraints via NewConstraintRefOid.
-func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *DeviceBuilder {
+func (db *DeviceBuilder) WithConstraint(oid string, constraint *ConstraintBuilder) *DeviceBuilder {
 	if db.err != nil {
 		return db
 	}
@@ -167,14 +167,15 @@ func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *Dev
 		db.err = errors.New("WithConstraint: constraint cannot be nil")
 		return db
 	}
-	if constraint.Proto == nil {
-		db.err = errors.New("WithConstraint: constraint proto cannot be nil")
+	c, err := constraint.Build()
+	if err != nil {
+		db.err = err
 		return db
 	}
 	if db.proto.Constraints == nil {
 		db.proto.Constraints = map[string]*protos.Constraint{}
 	}
-	db.proto.Constraints[oid] = proto.Clone(constraint.Proto).(*protos.Constraint)
+	db.proto.Constraints[oid] = proto.Clone(c.Proto).(*protos.Constraint)
 	return db
 }
 

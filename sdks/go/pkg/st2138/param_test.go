@@ -766,7 +766,7 @@ func TestWithConstraint_RefOid_AnyType(t *testing.T) {
 		func() *ParamBuilder { return NewParamString("") },
 		func() *ParamBuilder { return NewParamStruct() },
 	} {
-		p, err := factory().WithConstraint(c).Build()
+		p, err := factory().WithConstraint(c.Clone()).Build()
 		if err != nil {
 			t.Fatal("expected no error for builder with valid value", err)
 		}

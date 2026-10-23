@@ -318,15 +318,20 @@ func (cp *ParamBuilder) WithValue(v Value) *ParamBuilder {
 	return cp
 }
 
-func (cp *ParamBuilder) WithConstraint(c *Constraint) *ParamBuilder {
+func (cp *ParamBuilder) WithConstraint(cb *ConstraintBuilder) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	if c == nil || c.Proto == nil {
-		cp.err = fmt.Errorf("constraint is nil")
+	if cb == nil {
+		cp.err = fmt.Errorf("WithConstraint: constraint builder cannot be nil")
 		return cp
 	}
-	if !isConstraintValidForParam(c, cp.proto.Type) {
+	c, err := cb.Build()
+	if err != nil {
+		cp.err = err
+		return cp
+	}
+	if !isConstraintValidForParam(&c, cp.proto.Type) {
 		cp.err = fmt.Errorf("WithConstraint: constraint type incompatible with param type: constraint_type=%s, param_type=%s",
 			c.Proto.GetType().String(),
 			cp.proto.Type.String(),

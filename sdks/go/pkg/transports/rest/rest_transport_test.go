@@ -335,11 +335,15 @@ func TestTransport_GetDevice_AggregatesComponents(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
+		rangeConstraint, err := st2138.NewConstraintInt32Range(0, 100, 1).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		return []st2138.DeviceComponent{
 			st2138.ComponentDevice(&device),
 			st2138.ComponentParam("brightness", &brightness),
 			st2138.ComponentCommand("reset", &reset),
-			st2138.ComponentConstraint("range", st2138.NewConstraintInt32Range(0, 100, 1)),
+			st2138.ComponentConstraint("range", &rangeConstraint),
 			st2138.ComponentMenu("status/main", &menu),
 			st2138.ComponentLanguagePack("en", "English", map[string]string{"greeting": "Hello"}),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
