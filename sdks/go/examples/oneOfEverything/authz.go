@@ -154,7 +154,7 @@ func registerAuthz(srv catena.Server) {
 		SerialNumber: "1234567890",
 	})
 
-	srv.RegisterGetDeviceHandler(authzSlot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+	srv.RegisterGetDeviceHandler(authzSlot, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 		device, err := st2138.NewDevice(authzSlot).
 			WithDefaultScope(st2138.ScopeMon).
 			WithMultiSetEnabled(false).
@@ -232,9 +232,9 @@ func registerAuthz(srv catena.Server) {
 		return catena.StatusOk()
 	})
 
-	srv.RegisterGetParamHandler(authzSlot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Param, catena.StatusResult) {
+	srv.RegisterGetParamHandler(authzSlot, func(ctx catena.HandlerContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
 		if ctx.HasReadScope(st2138.ScopeMon) {
-			switch fqoid {
+			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
 					userAccessParam, err := makeUserAccess(ctx)
@@ -270,9 +270,9 @@ func registerAuthz(srv catena.Server) {
 		return catena.ReplyError[st2138.Param](catena.StatusCodeNotFound, "param not found")
 	})
 
-	srv.RegisterGetValueHandler(authzSlot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
+	srv.RegisterGetValueHandler(authzSlot, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 		if ctx.HasReadScope(st2138.ScopeMon) {
-			switch fqoid {
+			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
 					userAccessParam, err := makeUserAccess(ctx)
@@ -308,8 +308,8 @@ func registerAuthz(srv catena.Server) {
 		return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "value not found")
 	})
 
-	srv.RegisterSetValueHandler(authzSlot, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		if len(entries) > 1 {
+	srv.RegisterSetValueHandler(authzSlot, func(ctx catena.HandlerContext, req catena.SetValueRequest) catena.StatusResult {
+		if len(req.Entries) > 1 {
 			return catena.StatusWithCode(catena.StatusCodePermissionDenied, "multi set not allowed")
 		}
 

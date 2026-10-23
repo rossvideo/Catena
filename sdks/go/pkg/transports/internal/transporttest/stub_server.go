@@ -55,21 +55,21 @@ type StubServerRuntime struct {
 	Dev                      bool
 	Slots                    []uint16
 	GetSlotsFn               func(ctx catena.TransportContext) ([]uint16, catena.StatusResult)
-	GetDeviceFn              func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult)
-	GetValueFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult)
-	GetParamFn               func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult)
-	SetValueFn               func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult
-	ReadAssetFn              func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult)
-	CreateAssetFn            func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult
-	UpdateAssetFn            func(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult
-	DeleteAssetFn            func(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult
-	CommandFn                func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult)
-	ParamInfoFn              func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult)
-	ListLanguagesFn          func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult)
-	LanguagePackFn           func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult)
-	AddLanguageFn            func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult
-	UpdateLanguageFn         func(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult
-	DeleteLanguageFn         func(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult
+	GetDeviceFn              func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult)
+	GetValueFn               func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult)
+	GetParamFn               func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult)
+	SetValueFn               func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult
+	ReadAssetFn              func(ctx catena.TransportContext, req catena.ReadAssetRequest) ([]st2138.Asset, catena.StatusResult)
+	CreateAssetFn            func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult
+	UpdateAssetFn            func(ctx catena.TransportContext, req catena.UpdateAssetRequest) catena.StatusResult
+	DeleteAssetFn            func(ctx catena.TransportContext, req catena.DeleteAssetRequest) catena.StatusResult
+	CommandFn                func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult)
+	ParamInfoFn              func(ctx catena.TransportContext, req catena.ParamInfoRequest) ([]st2138.ParamInfo, catena.StatusResult)
+	ListLanguagesFn          func(ctx catena.TransportContext, req catena.ListLanguagesRequest) ([]string, catena.StatusResult)
+	LanguagePackFn           func(ctx catena.TransportContext, req catena.ReadLanguagePackRequest) (catena.LanguagePack, catena.StatusResult)
+	AddLanguageFn            func(ctx catena.TransportContext, req catena.CreateLanguagePackRequest) catena.StatusResult
+	UpdateLanguageFn         func(ctx catena.TransportContext, req catena.UpdateLanguagePackRequest) catena.StatusResult
+	DeleteLanguageFn         func(ctx catena.TransportContext, req catena.DeleteLanguagePackRequest) catena.StatusResult
 	RegisterTransportConnFn  func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult)
 	DeregisterConnFn         func(connID int)
 	ShutdownTransportConnsFn func(ctx context.Context, transport catena.Transport)
@@ -113,9 +113,9 @@ func (s *StubServerRuntime) GetSlots(ctx catena.TransportContext) ([]uint16, cat
 	return s.Slots, catena.StatusResult{Code: catena.StatusCodeOk}
 }
 
-func (s *StubServerRuntime) InvokeGetDeviceHandler(slot uint16, stream catena.Stream[st2138.DeviceComponent], ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeGetDeviceHandler(ctx catena.TransportContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 	if s.GetDeviceFn != nil {
-		components, status := s.GetDeviceFn(slot, ctx)
+		components, status := s.GetDeviceFn(ctx, req)
 		for _, component := range components {
 			if err := stream.Send(component); err != nil {
 				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
@@ -123,37 +123,37 @@ func (s *StubServerRuntime) InvokeGetDeviceHandler(slot uint16, stream catena.St
 		}
 		return status
 	}
-	s.panicf("GetDevice handler not implemented in stubServerRuntime for slot %d", slot)
+	s.panicf("GetDevice handler not implemented in stubServerRuntime for slot %d", req.Slot)
 	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "GetDevice handler not implemented"}
 }
 
-func (s *StubServerRuntime) InvokeGetValueHandler(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
+func (s *StubServerRuntime) InvokeGetValueHandler(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 	if s.GetValueFn != nil {
-		return s.GetValueFn(slot, fqoid, ctx)
+		return s.GetValueFn(ctx, req)
 	}
-	s.panicf("GetValue handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	s.panicf("GetValue handler not implemented in stubServerRuntime for slot %d, fqoid %s", req.Slot, req.Fqoid)
 	return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "GetValue handler not implemented")
 }
 
-func (s *StubServerRuntime) InvokeGetParamHandler(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
+func (s *StubServerRuntime) InvokeGetParamHandler(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
 	if s.GetParamFn != nil {
-		return s.GetParamFn(slot, fqoid, ctx)
+		return s.GetParamFn(ctx, req)
 	}
-	s.panicf("GetParam handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	s.panicf("GetParam handler not implemented in stubServerRuntime for slot %d, fqoid %s", req.Slot, req.Fqoid)
 	return st2138.Param{}, catena.StatusResult{Code: catena.StatusCodeInternal, Error: "GetParam handler not implemented"}
 }
 
-func (s *StubServerRuntime) InvokeSetValueHandler(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeSetValueHandler(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 	if s.SetValueFn != nil {
-		return s.SetValueFn(slot, entries, ctx)
+		return s.SetValueFn(ctx, req)
 	}
-	s.panicf("SetValue handler not implemented in stubServerRuntime for slot %d, count %d", slot, len(entries))
+	s.panicf("SetValue handler not implemented in stubServerRuntime for slot %d, count %d", req.Slot, len(req.Entries))
 	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
-func (s *StubServerRuntime) InvokeReadAssetHandler(slot uint16, fqoid string, stream catena.Stream[st2138.Asset], ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeReadAssetHandler(ctx catena.TransportContext, req catena.ReadAssetRequest, stream catena.Stream[st2138.Asset]) catena.StatusResult {
 	if s.ReadAssetFn != nil {
-		chunks, status := s.ReadAssetFn(slot, fqoid, ctx)
+		chunks, status := s.ReadAssetFn(ctx, req)
 		for _, chunk := range chunks {
 			if err := stream.Send(chunk); err != nil {
 				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
@@ -161,36 +161,36 @@ func (s *StubServerRuntime) InvokeReadAssetHandler(slot uint16, fqoid string, st
 		}
 		return status
 	}
-	panic(fmt.Sprintf("ReadAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid))
+	panic(fmt.Sprintf("ReadAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", req.Slot, req.Fqoid))
 }
 
-func (s *StubServerRuntime) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeCreateAssetHandler(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
 	if s.CreateAssetFn != nil {
-		return s.CreateAssetFn(slot, fqoid, asset, ctx)
+		return s.CreateAssetFn(ctx, req)
 	}
-	s.panicf("CreateAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	s.panicf("CreateAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", req.Slot, req.Fqoid)
 	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "CreateAsset handler not implemented"}
 }
 
-func (s *StubServerRuntime) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st2138.Asset, ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeUpdateAssetHandler(ctx catena.TransportContext, req catena.UpdateAssetRequest) catena.StatusResult {
 	if s.UpdateAssetFn != nil {
-		return s.UpdateAssetFn(slot, fqoid, asset, ctx)
+		return s.UpdateAssetFn(ctx, req)
 	}
-	s.panicf("UpdateAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	s.panicf("UpdateAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", req.Slot, req.Fqoid)
 	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "UpdateAsset handler not implemented"}
 }
 
-func (s *StubServerRuntime) InvokeDeleteAssetHandler(slot uint16, fqoid string, ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeDeleteAssetHandler(ctx catena.TransportContext, req catena.DeleteAssetRequest) catena.StatusResult {
 	if s.DeleteAssetFn != nil {
-		return s.DeleteAssetFn(slot, fqoid, ctx)
+		return s.DeleteAssetFn(ctx, req)
 	}
-	s.panicf("DeleteAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", slot, fqoid)
+	s.panicf("DeleteAsset handler not implemented in stubServerRuntime for slot %d, fqoid %s", req.Slot, req.Fqoid)
 	return catena.StatusResult{Code: catena.StatusCodeInternal, Error: "DeleteAsset handler not implemented"}
 }
 
-func (s *StubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoid string, payload any, respond bool, stream catena.Stream[st2138.CommandResponse], ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeExecuteCommandHandler(ctx catena.TransportContext, req catena.ExecuteCommandRequest, stream catena.Stream[st2138.CommandResponse]) catena.StatusResult {
 	if s.CommandFn != nil {
-		results, status := s.CommandFn(slot, commandFqoid, payload, respond, ctx)
+		results, status := s.CommandFn(ctx, req)
 		for _, result := range results {
 			if err := stream.Send(result); err != nil {
 				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
@@ -198,13 +198,13 @@ func (s *StubServerRuntime) InvokeExecuteCommandHandler(slot uint16, commandFqoi
 		}
 		return status
 	}
-	s.panicf("ExecuteCommand handler not implemented in stubServerRuntime for slot %d, commandFqoid %s", slot, commandFqoid)
+	s.panicf("ExecuteCommand handler not implemented in stubServerRuntime for slot %d, commandFqoid %s", req.Slot, req.CommandFqoid)
 	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
-func (s *StubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string, recursive bool, stream catena.Stream[st2138.ParamInfo], ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeParamInfoHandler(ctx catena.TransportContext, req catena.ParamInfoRequest, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
 	if s.ParamInfoFn != nil {
-		infos, res := s.ParamInfoFn(slot, oidPrefix, recursive, ctx)
+		infos, res := s.ParamInfoFn(ctx, req)
 		for _, info := range infos {
 			if err := stream.Send(info); err != nil {
 				return catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
@@ -212,47 +212,47 @@ func (s *StubServerRuntime) InvokeParamInfoHandler(slot uint16, oidPrefix string
 		}
 		return res
 	}
-	s.panicf("ParamInfo handler not implemented in stubServerRuntime for slot %d, oidPrefix %s", slot, oidPrefix)
+	s.panicf("ParamInfo handler not implemented in stubServerRuntime for slot %d, oidPrefix %s", req.Slot, req.OidPrefix)
 	return catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
-func (s *StubServerRuntime) InvokeListLanguagesHandler(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+func (s *StubServerRuntime) InvokeListLanguagesHandler(ctx catena.TransportContext, req catena.ListLanguagesRequest) ([]string, catena.StatusResult) {
 	if s.ListLanguagesFn != nil {
-		return s.ListLanguagesFn(slot, ctx)
+		return s.ListLanguagesFn(ctx, req)
 	}
-	s.panicf("ListLanguages handler not implemented in stubServerRuntime for slot %d", slot)
+	s.panicf("ListLanguages handler not implemented in stubServerRuntime for slot %d", req.Slot)
 	return nil, catena.StatusResult{Code: catena.StatusCodeInternal, Error: "ListLanguages handler not implemented"}
 }
 
-func (s *StubServerRuntime) InvokeReadLanguagePackHandler(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+func (s *StubServerRuntime) InvokeReadLanguagePackHandler(ctx catena.TransportContext, req catena.ReadLanguagePackRequest) (catena.LanguagePack, catena.StatusResult) {
 	if s.LanguagePackFn != nil {
-		return s.LanguagePackFn(slot, language, ctx)
+		return s.LanguagePackFn(ctx, req)
 	}
-	s.panicf("LanguagePack handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
+	s.panicf("LanguagePack handler not implemented in stubServerRuntime for slot %d, language %s", req.Slot, req.Language)
 	return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeInternal, "LanguagePack handler not implemented")
 }
 
-func (s *StubServerRuntime) InvokeCreateLanguagePackHandler(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeCreateLanguagePackHandler(ctx catena.TransportContext, req catena.CreateLanguagePackRequest) catena.StatusResult {
 	if s.AddLanguageFn != nil {
-		return s.AddLanguageFn(slot, language, languagePack, ctx)
+		return s.AddLanguageFn(ctx, req)
 	}
-	s.panicf("AddLanguage handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
+	s.panicf("AddLanguage handler not implemented in stubServerRuntime for slot %d, language %s", req.Slot, req.Language)
 	return catena.StatusWithCode(catena.StatusCodeInternal, "AddLanguage handler not implemented")
 }
 
-func (s *StubServerRuntime) InvokeUpdateLanguagePackHandler(slot uint16, language string, languagePack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeUpdateLanguagePackHandler(ctx catena.TransportContext, req catena.UpdateLanguagePackRequest) catena.StatusResult {
 	if s.UpdateLanguageFn != nil {
-		return s.UpdateLanguageFn(slot, language, languagePack, ctx)
+		return s.UpdateLanguageFn(ctx, req)
 	}
-	s.panicf("UpdateLanguage handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
+	s.panicf("UpdateLanguage handler not implemented in stubServerRuntime for slot %d, language %s", req.Slot, req.Language)
 	return catena.StatusWithCode(catena.StatusCodeInternal, "UpdateLanguage handler not implemented")
 }
 
-func (s *StubServerRuntime) InvokeDeleteLanguagePackHandler(slot uint16, language string, ctx catena.TransportContext) catena.StatusResult {
+func (s *StubServerRuntime) InvokeDeleteLanguagePackHandler(ctx catena.TransportContext, req catena.DeleteLanguagePackRequest) catena.StatusResult {
 	if s.DeleteLanguageFn != nil {
-		return s.DeleteLanguageFn(slot, language, ctx)
+		return s.DeleteLanguageFn(ctx, req)
 	}
-	s.panicf("DeleteLanguage handler not implemented in stubServerRuntime for slot %d, language %s", slot, language)
+	s.panicf("DeleteLanguage handler not implemented in stubServerRuntime for slot %d, language %s", req.Slot, req.Language)
 	return catena.StatusWithCode(catena.StatusCodeInternal, "DeleteLanguage handler not implemented")
 }
 

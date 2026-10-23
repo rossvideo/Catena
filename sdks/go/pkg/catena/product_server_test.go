@@ -108,7 +108,7 @@ func deviceFromStream(t *testing.T, stream *sliceStream[st2138.DeviceComponent])
 func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+	srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 		// Business logic sends a device with a bogus product that must be
 		// overwritten, plus its own param that must be preserved.
 		device, err := st2138.NewDevice(0).
@@ -124,7 +124,7 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 	})
 
 	stream := &sliceStream[st2138.DeviceComponent]{}
-	res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
+	res := srv.InvokeGetDeviceHandler(TransportContext{}, GetDeviceRequest{Slot: 0}, stream)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -149,7 +149,7 @@ func TestServer_GetDevice_InjectsProduct(t *testing.T) {
 func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+	srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 		wrong, err := st2138.NewParamString("wrong").Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
@@ -176,7 +176,7 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 	})
 
 	stream := &sliceStream[st2138.DeviceComponent]{}
-	res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
+	res := srv.InvokeGetDeviceHandler(TransportContext{}, GetDeviceRequest{Slot: 0}, stream)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -194,7 +194,7 @@ func TestServer_GetDevice_ProductParamChunk(t *testing.T) {
 // untouched when no product is registered for the slot.
 func TestServer_GetDevice_NoProductRegistered(t *testing.T) {
 	srv := newTestServer(t, false)
-	srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+	srv.RegisterGetDeviceHandler(0, func(ctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 		device, err := st2138.NewDevice(0).WithParam("brightness", st2138.NewParamInt32(50)).Build()
 		if err != nil {
 			t.Fatalf("NewDevice(0).WithParam('brightness', NewParamInt32(50)).Build() failed: %v", err)
@@ -206,7 +206,7 @@ func TestServer_GetDevice_NoProductRegistered(t *testing.T) {
 	})
 
 	stream := &sliceStream[st2138.DeviceComponent]{}
-	res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
+	res := srv.InvokeGetDeviceHandler(TransportContext{}, GetDeviceRequest{Slot: 0}, stream)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -220,8 +220,8 @@ func TestServer_GetDevice_NoProductRegistered(t *testing.T) {
 func TestServer_GetValue_Product(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
-		t.Errorf("business-logic GetValue should not be called for %q", fqoid)
+	srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
+		t.Errorf("business-logic GetValue should not be called for %q", req.Fqoid)
 		return ReplyError[st2138.Value](StatusCodeInternal, "should not happen")
 	})
 
@@ -232,7 +232,7 @@ func TestServer_GetValue_Product(t *testing.T) {
 		"product/st2138_sdk_version": SDKVersion,
 	}
 	for fqoid, want := range cases {
-		value, res := srv.InvokeGetValueHandler(0, fqoid, TransportContext{})
+		value, res := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: fqoid})
 		if res.Code != StatusCodeOk {
 			t.Fatalf("%s: expected OK, got %v: %s", fqoid, res.Code, res.Error)
 		}
@@ -242,7 +242,7 @@ func TestServer_GetValue_Product(t *testing.T) {
 	}
 
 	// The whole struct is returned for the bare "product" oid.
-	value, res := srv.InvokeGetValueHandler(0, "product", TransportContext{})
+	value, res := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: "product"})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -257,7 +257,7 @@ func TestServer_GetValue_ProductUnknownField(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 
-	_, res := srv.InvokeGetValueHandler(0, "product/nope", TransportContext{})
+	_, res := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: "product/nope"})
 	if res.Code != StatusCodeNotFound {
 		t.Fatalf("expected NOT_FOUND, got %v: %s", res.Code, res.Error)
 	}
@@ -269,13 +269,13 @@ func TestServer_GetValue_NonProductCallsHandler(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 	called := false
-	srv.RegisterGetValueHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+	srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
 		called = true
 		v, _ := st2138.ToValue(int32(7))
 		return Reply(v)
 	})
 
-	value, res := srv.InvokeGetValueHandler(0, "brightness", TransportContext{})
+	value, res := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: "brightness"})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -292,13 +292,13 @@ func TestServer_GetValue_NonProductCallsHandler(t *testing.T) {
 func TestServer_GetParam_Product(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
-		t.Errorf("business-logic GetParam should not be called for %q", fqoid)
+	srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+		t.Errorf("business-logic GetParam should not be called for %q", req.Fqoid)
 		return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
 	})
 
 	// Bare "product" returns the full golden proto.
-	param, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})
+	param, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -307,7 +307,7 @@ func TestServer_GetParam_Product(t *testing.T) {
 	}
 
 	// A single field returns a STRING param carrying that field's value.
-	param, res = srv.InvokeGetParamHandler(0, "product/name", TransportContext{})
+	param, res = srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product/name"})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product/name: expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -319,7 +319,7 @@ func TestServer_GetParam_Product(t *testing.T) {
 	}
 
 	// An unknown field is NotFound.
-	_, res = srv.InvokeGetParamHandler(0, "product/nope", TransportContext{})
+	_, res = srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product/nope"})
 	if res.Code != StatusCodeNotFound {
 		t.Fatalf("product/nope: expected NOT_FOUND, got %v: %s", res.Code, res.Error)
 	}
@@ -333,7 +333,7 @@ func TestServer_GetParam_ProductNoHandler(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 
-	param, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})
+	param, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -342,7 +342,7 @@ func TestServer_GetParam_ProductNoHandler(t *testing.T) {
 	}
 
 	// A non-product oid with no handler is still NotFound.
-	_, res = srv.InvokeGetParamHandler(0, "somethingElse", TransportContext{})
+	_, res = srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "somethingElse"})
 	if res.Code != StatusCodeNotFound {
 		t.Fatalf("somethingElse: expected NOT_FOUND, got %v: %s", res.Code, res.Error)
 	}
@@ -353,7 +353,7 @@ func TestServer_GetParam_ProductNoHandler(t *testing.T) {
 func TestServer_GetParam_NoProductRegistered(t *testing.T) {
 	srv := newTestServer(t, false)
 	called := false
-	srv.RegisterGetParamHandler(0, func(slot uint16, fqoid string, ctx HandlerContext) (st2138.Param, StatusResult) {
+	srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
 		called = true
 		p, err := st2138.NewParamString("bl").Build()
 		if err != nil {
@@ -362,7 +362,7 @@ func TestServer_GetParam_NoProductRegistered(t *testing.T) {
 		return p, StatusWithCode(StatusCodeOk, "")
 	})
 
-	_, res := srv.InvokeGetParamHandler(0, "product", TransportContext{})
+	_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -376,12 +376,12 @@ func TestServer_GetParam_NoProductRegistered(t *testing.T) {
 func TestServer_SetValue_ProductRejected(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+	srv.RegisterSetValueHandler(0, func(ctx HandlerContext, req SetValueRequest) StatusResult {
 		t.Error("business-logic SetValue should not be called for product writes")
 		return StatusWithCode(StatusCodeInternal, "should not happen")
 	})
 
-	res := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "product/name", Value: "hacked"}}, TransportContext{})
+	res := srv.InvokeSetValueHandler(TransportContext{}, SetValueRequest{Slot: 0, Entries: []SetValueEntry{{Fqoid: "product/name", Value: "hacked"}}})
 	if res.Code != StatusCodePermissionDenied {
 		t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
 	}
@@ -392,12 +392,12 @@ func TestServer_SetValue_ProductRejected(t *testing.T) {
 // struct is always read-only regardless of who manages it.
 func TestServer_SetValue_ProductRejectedWithoutRegistration(t *testing.T) {
 	srv := newTestServer(t, false)
-	srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+	srv.RegisterSetValueHandler(0, func(ctx HandlerContext, req SetValueRequest) StatusResult {
 		t.Error("business-logic SetValue should not be called for product writes")
 		return StatusWithCode(StatusCodeInternal, "should not happen")
 	})
 
-	res := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "product/name", Value: "hacked"}}, TransportContext{})
+	res := srv.InvokeSetValueHandler(TransportContext{}, SetValueRequest{Slot: 0, Entries: []SetValueEntry{{Fqoid: "product/name", Value: "hacked"}}})
 	if res.Code != StatusCodePermissionDenied {
 		t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
 	}
@@ -409,12 +409,12 @@ func TestServer_SetValue_NonProductAllowed(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 	called := false
-	srv.RegisterSetValueHandler(0, func(slot uint16, entries []SetValueEntry, ctx HandlerContext) StatusResult {
+	srv.RegisterSetValueHandler(0, func(ctx HandlerContext, req SetValueRequest) StatusResult {
 		called = true
 		return StatusWithCode(StatusCodeOk, "")
 	})
 
-	res := srv.InvokeSetValueHandler(0, []SetValueEntry{{Fqoid: "brightness", Value: int32(1)}}, TransportContext{})
+	res := srv.InvokeSetValueHandler(TransportContext{}, SetValueRequest{Slot: 0, Entries: []SetValueEntry{{Fqoid: "brightness", Value: int32(1)}}})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -428,13 +428,13 @@ func TestServer_SetValue_NonProductAllowed(t *testing.T) {
 func TestServer_ParamInfo_Product(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
-		t.Errorf("business-logic ParamInfo should not be called for %q", oidPrefix)
+	srv.RegisterParamInfoHandler(0, func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult {
+		t.Errorf("business-logic ParamInfo should not be called for %q", req.OidPrefix)
 		return StatusWithCode(StatusCodeInternal, "should not happen")
 	})
 
 	stream := &sliceStream[st2138.ParamInfo]{}
-	res := srv.InvokeParamInfoHandler(0, "product", true, stream, TransportContext{})
+	res := srv.InvokeParamInfoHandler(TransportContext{}, ParamInfoRequest{Slot: 0, OidPrefix: "product", Recursive: true}, stream)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
@@ -471,7 +471,7 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 		srv := newTestServer(t, true)
 		srv.RegisterProductStruct(0, testProduct())
 		called := false
-		srv.RegisterGetDeviceHandler(0, func(slot uint16, hctx HandlerContext, stream Stream[st2138.DeviceComponent]) StatusResult {
+		srv.RegisterGetDeviceHandler(0, func(hctx HandlerContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult {
 			called = true
 			device, err := st2138.NewDevice(0).
 				WithParam("product", st2138.NewParamString("wrong")).
@@ -491,7 +491,7 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 	t.Run("MonInjectsProduct", func(t *testing.T) {
 		srv, called := newDeviceServer(t, monScopeContext())
 		stream := &sliceStream[st2138.DeviceComponent]{}
-		res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
+		res := srv.InvokeGetDeviceHandler(TransportContext{}, GetDeviceRequest{Slot: 0}, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 		}
@@ -514,7 +514,7 @@ func TestServer_GetDevice_ProductScope(t *testing.T) {
 	t.Run("NonMonStripsProduct", func(t *testing.T) {
 		srv, called := newDeviceServer(t, nonMonScopeContext())
 		stream := &sliceStream[st2138.DeviceComponent]{}
-		res := srv.InvokeGetDeviceHandler(0, stream, TransportContext{})
+		res := srv.InvokeGetDeviceHandler(TransportContext{}, GetDeviceRequest{Slot: 0}, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 		}
@@ -539,12 +539,12 @@ func TestServer_GetValue_ProductScope(t *testing.T) {
 		t.Run("Mon/"+fqoid, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
-			srv.RegisterGetValueHandler(0, func(slot uint16, oid string, ctx HandlerContext) (st2138.Value, StatusResult) {
-				t.Errorf("business-logic GetValue should not be called for %q", oid)
+			srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
+				t.Errorf("business-logic GetValue should not be called for %q", req.Fqoid)
 				return ReplyError[st2138.Value](StatusCodeInternal, "should not happen")
 			})
 			mockInvokeGateFn(t, srv, EndpointGetValue, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetValueHandler(0, fqoid, TransportContext{})
+			_, res := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: fqoid})
 			if res.Code != StatusCodeOk {
 				t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 			}
@@ -553,12 +553,12 @@ func TestServer_GetValue_ProductScope(t *testing.T) {
 		t.Run("NonMon/"+fqoid, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
-			srv.RegisterGetValueHandler(0, func(slot uint16, oid string, ctx HandlerContext) (st2138.Value, StatusResult) {
-				t.Errorf("business-logic GetValue should not be called for %q", oid)
+			srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
+				t.Errorf("business-logic GetValue should not be called for %q", req.Fqoid)
 				return ReplyError[st2138.Value](StatusCodeInternal, "should not happen")
 			})
 			mockInvokeGateFn(t, srv, EndpointGetValue, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetValueHandler(0, fqoid, TransportContext{})
+			_, res := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: fqoid})
 			if res.Code != StatusCodePermissionDenied {
 				t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
 			}
@@ -573,12 +573,12 @@ func TestServer_GetParam_ProductScope(t *testing.T) {
 		t.Run("Mon/"+fqoid, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
-			srv.RegisterGetParamHandler(0, func(slot uint16, oid string, ctx HandlerContext) (st2138.Param, StatusResult) {
-				t.Errorf("business-logic GetParam should not be called for %q", oid)
+			srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+				t.Errorf("business-logic GetParam should not be called for %q", req.Fqoid)
 				return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
 			})
 			mockInvokeGateFn(t, srv, EndpointGetParam, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetParamHandler(0, fqoid, TransportContext{})
+			_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: fqoid})
 			if res.Code != StatusCodeOk {
 				t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 			}
@@ -587,12 +587,12 @@ func TestServer_GetParam_ProductScope(t *testing.T) {
 		t.Run("NonMon/"+fqoid, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
-			srv.RegisterGetParamHandler(0, func(slot uint16, oid string, ctx HandlerContext) (st2138.Param, StatusResult) {
-				t.Errorf("business-logic GetParam should not be called for %q", oid)
+			srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+				t.Errorf("business-logic GetParam should not be called for %q", req.Fqoid)
 				return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
 			})
 			mockInvokeGateFn(t, srv, EndpointGetParam, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetParamHandler(0, fqoid, TransportContext{})
+			_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: fqoid})
 			if res.Code != StatusCodePermissionDenied {
 				t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
 			}
@@ -606,13 +606,13 @@ func TestServer_ParamInfo_ProductScope(t *testing.T) {
 	t.Run("Mon", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		srv.RegisterProductStruct(0, testProduct())
-		srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
-			t.Errorf("business-logic ParamInfo should not be called for %q", oidPrefix)
+		srv.RegisterParamInfoHandler(0, func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult {
+			t.Errorf("business-logic ParamInfo should not be called for %q", req.OidPrefix)
 			return StatusWithCode(StatusCodeInternal, "should not happen")
 		})
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := srv.InvokeParamInfoHandler(0, "product", true, stream, TransportContext{})
+		res := srv.InvokeParamInfoHandler(TransportContext{}, ParamInfoRequest{Slot: 0, OidPrefix: "product", Recursive: true}, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 		}
@@ -624,13 +624,13 @@ func TestServer_ParamInfo_ProductScope(t *testing.T) {
 	t.Run("NonMon", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		srv.RegisterProductStruct(0, testProduct())
-		srv.RegisterParamInfoHandler(0, func(slot uint16, oidPrefix string, recursive bool, ctx HandlerContext, stream Stream[st2138.ParamInfo]) StatusResult {
-			t.Errorf("business-logic ParamInfo should not be called for %q", oidPrefix)
+		srv.RegisterParamInfoHandler(0, func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult {
+			t.Errorf("business-logic ParamInfo should not be called for %q", req.OidPrefix)
 			return StatusWithCode(StatusCodeInternal, "should not happen")
 		})
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := srv.InvokeParamInfoHandler(0, "product", true, stream, TransportContext{})
+		res := srv.InvokeParamInfoHandler(TransportContext{}, ParamInfoRequest{Slot: 0, OidPrefix: "product", Recursive: true}, stream)
 		if res.Code != StatusCodePermissionDenied {
 			t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
 		}
@@ -644,14 +644,14 @@ func TestServer_ParamInfo_ProductScope(t *testing.T) {
 func TestServer_GetValue_ProductScopeUnregistered(t *testing.T) {
 	srv := newTestServer(t, true)
 	handlerCalled := false
-	srv.RegisterGetValueHandler(0, func(slot uint16, oid string, ctx HandlerContext) (st2138.Value, StatusResult) {
+	srv.RegisterGetValueHandler(0, func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult) {
 		handlerCalled = true
 		value, _ := st2138.ToValue("from business logic")
 		return Reply(value)
 	})
 	mockInvokeGateFn(t, srv, EndpointGetValue, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
 
-	_, res := srv.InvokeGetValueHandler(0, "product/name", TransportContext{})
+	_, res := srv.InvokeGetValueHandler(TransportContext{}, GetValueRequest{Slot: 0, Fqoid: "product/name"})
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK from handler fallback, got %v: %s", res.Code, res.Error)
 	}
