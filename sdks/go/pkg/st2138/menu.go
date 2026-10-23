@@ -241,6 +241,6 @@ func (m *MenuBuilder) Build() (Menu, error) {
 
 // Clone returns a deep copy of the MenuBuilder.
 // Inherits the builder's error state, including ErrAlreadyBuilt.
-func (m *MenuBuilder) Clone() MenuBuilder {
-	return MenuBuilder{proto: proto.Clone(m.proto).(*protos.Menu), err: m.err}
+func (m *MenuBuilder) Clone() *MenuBuilder {
+	return &MenuBuilder{proto: proto.Clone(m.proto).(*protos.Menu), err: m.err}
 }
