@@ -1247,11 +1247,11 @@ func (s *server) InvokeCreateAssetHandler(slot uint16, fqoid string, asset st213
 	_, res := invokeHandler(s, transportContext, EndpointCreateAsset, true, s.createAssetHandlers, slot,
 		"no CreateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler CreateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if result := ValidateFqoid(fqoid); result.IsError() {
-				return struct{}{}, result
-			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
+			}
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
 			}
 			return struct{}{}, handler(slot, fqoid, asset, ctx)
 		})
@@ -1262,11 +1262,11 @@ func (s *server) InvokeUpdateAssetHandler(slot uint16, fqoid string, asset st213
 	_, res := invokeHandler(s, transportContext, EndpointUpdateAsset, true, s.updateAssetHandlers, slot,
 		"no UpdateAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if result := ValidateFqoid(fqoid); result.IsError() {
-				return struct{}{}, result
-			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
+			}
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
 			}
 			return struct{}{}, handler(slot, fqoid, asset, ctx)
 		})
@@ -1277,11 +1277,11 @@ func (s *server) InvokeDeleteAssetHandler(slot uint16, fqoid string, transportCo
 	_, res := invokeHandler(s, transportContext, EndpointDeleteAsset, true, s.deleteAssetHandlers, slot,
 		"no DeleteAsset handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if result := ValidateFqoid(fqoid); result.IsError() {
-				return struct{}{}, result
-			}
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
+			}
+			if result := ValidateFqoid(fqoid); result.IsError() {
+				return struct{}{}, result
 			}
 			return struct{}{}, handler(slot, fqoid, ctx)
 		})
@@ -1395,13 +1395,13 @@ func (s *server) InvokeCreateLanguagePackHandler(slot uint16, language string, l
 	_, res := invokeHandler(s, transportContext, EndpointCreateLanguagePack, true, s.createLanguagePackHandlers, slot,
 		"CreateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler CreateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if result := ValidateLanguageCode(language); result.IsError() {
-				return struct{}{}, result
-			}
 			// Mutations require the adm scope specifically, not merely any write
 			// scope, so narrow the coarse write gate now that we have the context.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
+			}
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
 			}
 			// Argument validation runs after the scope check so an unauthorized
 			// caller only ever sees a security error, never a validation hint.
@@ -1417,12 +1417,12 @@ func (s *server) InvokeUpdateLanguagePackHandler(slot uint16, language string, l
 	_, res := invokeHandler(s, transportContext, EndpointUpdateLanguagePack, true, s.updateLanguagePackHandlers, slot,
 		"UpdateLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler UpdateLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if result := ValidateLanguageCode(language); result.IsError() {
-				return struct{}{}, result
-			}
 			// Mutations require the adm scope specifically, not merely any write scope.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
+			}
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
 			}
 			if languagePack.Proto == nil {
 				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
@@ -1436,12 +1436,12 @@ func (s *server) InvokeDeleteLanguagePackHandler(slot uint16, language string, t
 	_, res := invokeHandler(s, transportContext, EndpointDeleteLanguagePack, true, s.deleteLanguagePackHandlers, slot,
 		"DeleteLanguagePack handler not found at slot "+strconv.Itoa(int(slot)),
 		func(handler DeleteLanguagePackHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			if result := ValidateLanguageCode(language); result.IsError() {
-				return struct{}{}, result
-			}
 			// Mutations require the adm scope specifically, not merely any write scope.
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
+			}
+			if result := ValidateLanguageCode(language); result.IsError() {
+				return struct{}{}, result
 			}
 			return struct{}{}, handler(slot, language, ctx)
 		})
