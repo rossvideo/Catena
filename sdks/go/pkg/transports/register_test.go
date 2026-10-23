@@ -64,7 +64,7 @@ func TestRegisterFrom_GRPCOnly(t *testing.T) {
 	srv := &recordingServer{}
 	opts := config.RuntimeOptions{
 		UseGrpc: true,
-		Grpc:    config.GrpcOptions{Port: 0},
+		Grpc:    config.GrpcOptions{Port: 0, Reflection: true},
 	}
 
 	if err := transports.RegisterFrom(srv, opts); err != nil {
@@ -80,7 +80,7 @@ func TestRegisterFrom_RESTOnly(t *testing.T) {
 	srv := &recordingServer{}
 	opts := config.RuntimeOptions{
 		UseRest: true,
-		Rest:    config.RestOptions{Port: 0},
+		Rest:    config.RestOptions{Port: 0, CorsMaxAge: 50},
 	}
 
 	if err := transports.RegisterFrom(srv, opts); err != nil {
@@ -97,8 +97,8 @@ func TestRegisterFrom_Both(t *testing.T) {
 	opts := config.RuntimeOptions{
 		UseGrpc: true,
 		UseRest: true,
-		Grpc:    config.GrpcOptions{Port: 0},
-		Rest:    config.RestOptions{Port: 0},
+		Grpc:    config.GrpcOptions{Port: 0, Reflection: true},
+		Rest:    config.RestOptions{Port: 0, CorsMaxAge: 50},
 	}
 
 	if err := transports.RegisterFrom(srv, opts); err != nil {
@@ -169,6 +169,15 @@ func assertTransport(t *testing.T, got catena.Transport, want any, port int) {
 	t.Helper()
 	if reflect.TypeOf(got) != reflect.TypeOf(want) {
 		t.Fatalf("type = %T, want %T", got, want)
+	}
+	if want == (*grpc.Transport)(nil) {
+		if !reflect.ValueOf(got).Elem().FieldByName("reflection").Bool() {
+			t.Fatalf("reflection = false, want true")
+		}
+	} else if want == (*rest.Transport)(nil) {
+		if reflect.ValueOf(got).Elem().FieldByName("corsMaxAge").Int() != int64(50) {
+			t.Fatalf("corsMaxAge = %d, want %d", reflect.ValueOf(got).Elem().FieldByName("corsMaxAge").Int(), 50)
+		}
 	}
 	gotPort := int(reflect.ValueOf(got).Elem().FieldByName("port").Int())
 	if gotPort != port {
