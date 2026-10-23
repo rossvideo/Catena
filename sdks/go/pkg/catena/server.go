@@ -1197,13 +1197,13 @@ func (s *server) InvokeSetValueHandler(slot uint16, entries []SetValueEntry, tra
 	_, res := invokeHandler(s, transportContext, EndpointSetValue, true, s.setValueHandlers, slot,
 		"no SetValue handler registered for slot "+strconv.Itoa(int(slot)),
 		func(handler SetValueHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			// The product struct is always read-only; reject any write targeting
-			// product/* regardless of whether the SDK or business logic manages it.
 			for _, entry := range entries {
 				if result := ValidateFqoid(entry.Fqoid); result.IsError() {
 					return struct{}{}, result
 				}
 
+				// The product struct is always read-only; reject any write targeting
+				// product/* regardless of whether the SDK or business logic manages it.
 				if isProductOid(entry.Fqoid) {
 					return struct{}{}, StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
 				}

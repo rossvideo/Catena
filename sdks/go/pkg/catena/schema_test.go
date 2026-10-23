@@ -39,115 +39,143 @@
 package catena
 
 import (
-	"fmt"
 	"testing"
 )
 
-func TestValidateSlot_Valid(t *testing.T) {
-	tests := []struct {
-		name string
-		in   uint32
-	}{
-		{name: "zero", in: 0},
-		{name: "one", in: 1},
-		{name: "typical", in: 42},
-		{name: "max uint16", in: 65535},
-	}
+func TestValidateSlot(t *testing.T) {
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ValidateSlot(tt.in)
-			if err.Code != StatusCodeOk {
-				t.Errorf("expected no error, got %v", err)
-			}
-			if result != uint16(tt.in) {
-				t.Errorf("expected result %v, got %v", tt.in, result)
-			}
-		})
-	}
+	t.Run("valid slot, zero value", func(t *testing.T) {
+		result, err := ValidateSlot(0)
+		if err.Code != StatusCodeOk {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if result != uint16(0) {
+			t.Errorf("expected result %v, got %v", 0, result)
+		}
+	})
+
+	t.Run("valid slot, typical value", func(t *testing.T) {
+		result, err := ValidateSlot(42)
+		if err.Code != StatusCodeOk {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if result != uint16(42) {
+			t.Errorf("expected result %v, got %v", 42, result)
+		}
+	})
+
+	t.Run("valid slot max uint16", func(t *testing.T) {
+		result, err := ValidateSlot(65535)
+		if err.Code != StatusCodeOk {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if result != uint16(65535) {
+			t.Errorf("expected result %v, got %v", 65535, result)
+		}
+	})
+
+	t.Run("invalid slot negative (uint32 underflow)", func(t *testing.T) {
+		result, err := ValidateSlot(^uint32(0))
+		if err.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
+		}
+		if result != 0 {
+			t.Errorf("expected result 0 on error, got %v", result)
+		}
+	})
+
+	t.Run("invalid slot too large", func(t *testing.T) {
+		result, err := ValidateSlot(65536)
+		if err.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
+		}
+		if result != 0 {
+			t.Errorf("expected result 0 on error, got %v", result)
+		}
+	})
 }
 
-func TestValidateSlot_Invalid(t *testing.T) {
-	tests := []struct {
-		name string
-		in   uint32
-	}{
-		{name: "negative (uint32 underflow)", in: ^uint32(0)}, // 0xFFFFFFFF = 4294967295, which is -1 if interpreted as signed
-		{name: "too large", in: 65536},
-	}
+func TestValidateSlotString(t *testing.T) {
+	t.Run("zero", func(t *testing.T) {
+		result, err := ValidateSlotString("0")
+		if err.Code != StatusCodeOk {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if result != 0 {
+			t.Errorf("expected result 0, got %v", result)
+		}
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ValidateSlot(tt.in)
-			if err.Code != StatusCodeInvalidArgument {
-				t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
-			}
-			if result != 0 {
-				t.Errorf("expected result 0 on error, got %v", result)
-			}
-		})
-	}
-}
+	t.Run("typical", func(t *testing.T) {
+		result, err := ValidateSlotString("42")
+		if err.Code != StatusCodeOk {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if result != 42 {
+			t.Errorf("expected result 42, got %v", result)
+		}
+	})
 
-func TestValidateSlotString_Valid(t *testing.T) {
-	tests := []struct {
-		name string
-		in   string
-	}{
-		{name: "zero", in: "0"},
-		{name: "one", in: "1"},
-		{name: "typical", in: "42"},
-		{name: "max uint16", in: "65535"},
-	}
+	t.Run("max uint16", func(t *testing.T) {
+		result, err := ValidateSlotString("65535")
+		if err.Code != StatusCodeOk {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if result != uint16(65535) {
+			t.Errorf("expected result 65535, got %v", result)
+		}
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ValidateSlotString(tt.in)
-			if err.Code != StatusCodeOk {
-				t.Errorf("expected no error, got %v", err)
-			}
-			expected := uint16(0)
-			fmt.Sscanf(tt.in, "%d", &expected)
-			if result != expected {
-				t.Errorf("expected result %v, got %v", expected, result)
-			}
-		})
-	}
-}
+	t.Run("empty", func(t *testing.T) {
+		result, err := ValidateSlotString("")
+		if err.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
+		}
+		if result != 0 {
+			t.Errorf("expected result 0 on error, got %v", result)
+		}
+	})
 
-func TestValidateSlotString_Invalid(t *testing.T) {
-	tests := []struct {
-		name string
-		in   string
-	}{
-		{name: "empty", in: ""},
-		{name: "negative", in: "-1"},
-		{name: "too large", in: "65536"},
-		{name: "non-numeric", in: "abc"},
-	}
+	t.Run("negative", func(t *testing.T) {
+		result, err := ValidateSlotString("-1")
+		if err.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
+		}
+		if result != 0 {
+			t.Errorf("expected result 0 on error, got %v", result)
+		}
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ValidateSlotString(tt.in)
-			if err.Code != StatusCodeInvalidArgument {
-				t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
-			}
-			if result != 0 {
-				t.Errorf("expected result 0 on error, got %v", result)
-			}
-		})
-	}
-}
+	t.Run("too large", func(t *testing.T) {
+		result, err := ValidateSlotString("65536")
+		if err.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
+		}
+		if result != 0 {
+			t.Errorf("expected result 0 on error, got %v", result)
+		}
+	})
 
-func expectInvalidFqoid(t *testing.T, fqoid string) {
-	t.Helper()
-	result := ValidateFqoid(fqoid)
-	if result.Code != StatusCodeInvalidArgument {
-		t.Errorf("ValidateFqoid(%q) = %v, want InvalidArgument", fqoid, result.Code)
-	}
+	t.Run("non-numeric", func(t *testing.T) {
+		result, err := ValidateSlotString("abc")
+		if err.Code != StatusCodeInvalidArgument {
+			t.Errorf("expected StatusCodeInvalidArgument error, got %v", err)
+		}
+		if result != 0 {
+			t.Errorf("expected result 0 on error, got %v", result)
+		}
+	})
 }
 
 func TestValidateFqoid(t *testing.T) {
+
+	expectInvalidFqoid := func(t *testing.T, fqoid string) {
+		t.Helper()
+		result := ValidateFqoid(fqoid)
+		if result.Code != StatusCodeInvalidArgument {
+			t.Errorf("ValidateFqoid(%q) = %v, want InvalidArgument", fqoid, result.Code)
+		}
+	}
 
 	t.Run("valid", func(t *testing.T) {
 		result := ValidateFqoid("inputs/0/gain")
@@ -176,33 +204,15 @@ func TestValidateFqoid(t *testing.T) {
 	})
 }
 
-func TestValidateLanguageCode_Valid(t *testing.T) {
-	tests := []string{
-		"en",
-		"fr",
-		"en-US",
-		"zz-ZZ",
-	}
-
-	for _, code := range tests {
-		t.Run(code, func(t *testing.T) {
-			result := ValidateLanguageCode(code)
-			if result.Code != StatusCodeOk {
-				t.Errorf("ValidateLanguageCode(%q) = %v, %s", code, result.Code, result.Error)
-			}
-		})
-	}
-}
-
-func expectInvalidLanguageCode(t *testing.T, code string) {
-	t.Helper()
-	result := ValidateLanguageCode(code)
-	if result.Code != StatusCodeInvalidArgument {
-		t.Errorf("ValidateLanguageCode(%q) = %v, want InvalidArgument", code, result.Code)
-	}
-}
-
 func TestValidateLanguageCode(t *testing.T) {
+
+	expectInvalidLanguageCode := func(t *testing.T, code string) {
+		t.Helper()
+		result := ValidateLanguageCode(code)
+		if result.Code != StatusCodeInvalidArgument {
+			t.Errorf("ValidateLanguageCode(%q) = %v, want InvalidArgument", code, result.Code)
+		}
+	}
 
 	t.Run("valid", func(t *testing.T) {
 		result := ValidateLanguageCode("en")
