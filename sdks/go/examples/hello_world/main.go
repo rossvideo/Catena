@@ -88,16 +88,6 @@ func buildDevice() *st2138.Device {
 }
 
 func main() {
-	// Build an application logger and hand it to the SDK. The SDK logs nothing
-	// unless it is given a logger.
-	logOptions := logger.DefaultOptions()
-	logOptions.AppName = "hello_world"
-	log, closeLog, err := logger.New(logOptions)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
-		os.Exit(1)
-	}
-	defer closeLog()
 
 	options, err := config.InitOptions("hello_world", os.Args[1:], config.WithDefaults(catena.DefaultRuntimeOptions()))
 	if err != nil {
@@ -106,6 +96,15 @@ func main() {
 		}
 		os.Exit(1)
 	}
+
+	// Build an application logger and hand it to the SDK. The SDK logs nothing
+	// unless it is given a logger.
+	log, closeLog, err := logger.New(options.Logger)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+	defer closeLog()
 
 	options.Server.Logger = log
 	options.Server.AuthzEnabled = false
