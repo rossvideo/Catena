@@ -559,7 +559,7 @@ func (t *Transport) handleLanguagesEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	languages, result := t.runtime.InvokeListLanguagesHandler(slot, transportContext)
+	languages, result := t.runtime.InvokeListLanguagesHandler(transportContext, catena.ListLanguagesRequest{Slot: slot})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
@@ -582,7 +582,7 @@ func (t *Transport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, 
 	switch r.Method {
 	case http.MethodGet:
 		transportContext := t.retrieveMetadataFromRequest(r)
-		val, res := t.runtime.InvokeGetValueHandler(slot, fqoid, transportContext)
+		val, res := t.runtime.InvokeGetValueHandler(transportContext, catena.GetValueRequest{Slot: slot, Fqoid: fqoid})
 		t.writeHTTPResult(w, res, val)
 
 	case http.MethodPut:
@@ -605,7 +605,7 @@ func (t *Transport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, 
 
 		transportContext := t.retrieveMetadataFromRequest(r)
 		entries := []catena.SetValueEntry{{Fqoid: fqoid, Value: nativeValue}}
-		res := t.runtime.InvokeSetValueHandler(slot, entries, transportContext)
+		res := t.runtime.InvokeSetValueHandler(transportContext, catena.SetValueRequest{Slot: slot, Entries: entries})
 		t.writeHTTPStatusResultNoBody(w, res)
 
 	default:
@@ -630,7 +630,7 @@ func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request,
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	res := t.runtime.InvokeSetValueHandler(slot, entries, transportContext)
+	res := t.runtime.InvokeSetValueHandler(transportContext, catena.SetValueRequest{Slot: slot, Entries: entries})
 	t.writeHTTPStatusResultNoBody(w, res)
 }
 
@@ -640,7 +640,7 @@ func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request,
 func (t *Transport) handleGetDevice(w http.ResponseWriter, r *http.Request, slot uint16) {
 	device, result := resolveUnary(&deviceAggregateStream{}, "device",
 		func(stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-			return t.runtime.InvokeGetDeviceHandler(slot, stream, t.retrieveMetadataFromRequest(r))
+			return t.runtime.InvokeGetDeviceHandler(t.retrieveMetadataFromRequest(r), catena.GetDeviceRequest{Slot: slot}, stream)
 		})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
@@ -656,7 +656,7 @@ func (t *Transport) handleGetDevice(w http.ResponseWriter, r *http.Request, slot
 func (t *Transport) streamDeviceRequest(w http.ResponseWriter, r *http.Request, slot uint16) {
 	streamSSE(t, w, r, marshalDeviceComponentWire,
 		func(stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-			return t.runtime.InvokeGetDeviceHandler(slot, stream, t.retrieveMetadataFromRequest(r))
+			return t.runtime.InvokeGetDeviceHandler(t.retrieveMetadataFromRequest(r), catena.GetDeviceRequest{Slot: slot}, stream)
 		},
 		"endpoint", "device", "slot", slot)
 }
@@ -687,12 +687,16 @@ func (t *Transport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, 
 	case http.MethodGet:
 		t.handleReadAsset(w, r, slot, fqoid)
 	case http.MethodPost:
-		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeCreateAssetHandler)
+		t.handleWriteAsset(w, r, func(asset st2138.Asset, transportContext catena.TransportContext) catena.StatusResult {
+			return t.runtime.InvokeCreateAssetHandler(transportContext, catena.CreateAssetRequest{Slot: slot, Fqoid: fqoid, Asset: asset})
+		})
 	case http.MethodPut:
-		t.handleWriteAsset(w, r, slot, fqoid, t.runtime.InvokeUpdateAssetHandler)
+		t.handleWriteAsset(w, r, func(asset st2138.Asset, transportContext catena.TransportContext) catena.StatusResult {
+			return t.runtime.InvokeUpdateAssetHandler(transportContext, catena.UpdateAssetRequest{Slot: slot, Fqoid: fqoid, Asset: asset})
+		})
 	case http.MethodDelete:
 		transportContext := t.retrieveMetadataFromRequest(r)
-		res := t.runtime.InvokeDeleteAssetHandler(slot, fqoid, transportContext)
+		res := t.runtime.InvokeDeleteAssetHandler(transportContext, catena.DeleteAssetRequest{Slot: slot, Fqoid: fqoid})
 		t.writeHTTPStatusResultNoBody(w, res)
 	default:
 		t.writeHTTPMethodNotAllowed(w, "only GET, POST, PUT, DELETE allowed")
@@ -707,7 +711,7 @@ func (t *Transport) handleAssetEndpoint(w http.ResponseWriter, r *http.Request, 
 func (t *Transport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
 	asset, result := resolveUnary(&assetAggregateStream{}, "asset",
 		func(stream catena.Stream[st2138.Asset]) catena.StatusResult {
-			return t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, t.retrieveMetadataFromRequest(r))
+			return t.runtime.InvokeReadAssetHandler(t.retrieveMetadataFromRequest(r), catena.ReadAssetRequest{Slot: slot, Fqoid: fqoid}, stream)
 		})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
@@ -741,7 +745,7 @@ func (t *Transport) handleReadAsset(w http.ResponseWriter, r *http.Request, slot
 func (t *Transport) streamReadAsset(w http.ResponseWriter, r *http.Request, slot uint16, fqoid string) {
 	streamSSE(t, w, r, MarshalProtoJSON,
 		func(stream catena.Stream[st2138.Asset]) catena.StatusResult {
-			return t.runtime.InvokeReadAssetHandler(slot, fqoid, stream, t.retrieveMetadataFromRequest(r))
+			return t.runtime.InvokeReadAssetHandler(t.retrieveMetadataFromRequest(r), catena.ReadAssetRequest{Slot: slot, Fqoid: fqoid}, stream)
 		},
 		"endpoint", "asset", "slot", slot, "fqoid", fqoid)
 }
@@ -752,9 +756,7 @@ func (t *Transport) streamReadAsset(w http.ResponseWriter, r *http.Request, slot
 func (t *Transport) handleWriteAsset(
 	w http.ResponseWriter,
 	r *http.Request,
-	slot uint16,
-	fqoid string,
-	invoke func(slot uint16, fqoid string, asset st2138.Asset, transportContext catena.TransportContext) catena.StatusResult,
+	invoke func(asset st2138.Asset, transportContext catena.TransportContext) catena.StatusResult,
 ) {
 	payload, err := ReadAssetRequestJSON(r)
 	if err != nil {
@@ -764,7 +766,7 @@ func (t *Transport) handleWriteAsset(
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	res := invoke(slot, fqoid, st2138.Asset{Proto: payload}, transportContext)
+	res := invoke(st2138.Asset{Proto: payload}, transportContext)
 	t.writeHTTPStatusResultNoBody(w, res)
 }
 
@@ -784,7 +786,7 @@ func (t *Transport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, 
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	param, result := t.runtime.InvokeGetParamHandler(slot, fqoid, transportContext)
+	param, result := t.runtime.InvokeGetParamHandler(transportContext, catena.GetParamRequest{Slot: slot, Fqoid: fqoid})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
@@ -856,7 +858,7 @@ func (t *Transport) handleParamInfoEndpoint(w http.ResponseWriter, r *http.Reque
 	// Unary: the handler still streams, so collect its first message and discard the rest.
 	info, result := resolveUnary(&firstStream[st2138.ParamInfo]{}, "param info",
 		func(stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-			return t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
+			return t.runtime.InvokeParamInfoHandler(transportContext, catena.ParamInfoRequest{Slot: slot, OidPrefix: oidPrefix, Recursive: recursive}, stream)
 		})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
@@ -882,7 +884,7 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 
 	switch r.Method {
 	case http.MethodGet:
-		languagePack, res := t.runtime.InvokeReadLanguagePackHandler(slot, language, transportContext)
+		languagePack, res := t.runtime.InvokeReadLanguagePackHandler(transportContext, catena.ReadLanguagePackRequest{Slot: slot, Language: language})
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
 			return
@@ -925,9 +927,9 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 
 		var res catena.StatusResult
 		if r.Method == http.MethodPut {
-			res = t.runtime.InvokeUpdateLanguagePackHandler(slot, language, languagePack, transportContext)
+			res = t.runtime.InvokeUpdateLanguagePackHandler(transportContext, catena.UpdateLanguagePackRequest{Slot: slot, Language: language, LanguagePack: languagePack})
 		} else {
-			res = t.runtime.InvokeCreateLanguagePackHandler(slot, language, languagePack, transportContext)
+			res = t.runtime.InvokeCreateLanguagePackHandler(transportContext, catena.CreateLanguagePackRequest{Slot: slot, Language: language, LanguagePack: languagePack})
 		}
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
@@ -936,7 +938,7 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusNoContent)
 
 	case http.MethodDelete:
-		res := t.runtime.InvokeDeleteLanguagePackHandler(slot, language, transportContext)
+		res := t.runtime.InvokeDeleteLanguagePackHandler(transportContext, catena.DeleteLanguagePackRequest{Slot: slot, Language: language})
 		if res.Code != catena.StatusCodeOk {
 			t.writeHTTPStatusResult(w, res)
 			return
@@ -955,7 +957,7 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 func (t *Transport) streamParamInfo(w http.ResponseWriter, r *http.Request, slot uint16, oidPrefix string, recursive bool, transportContext catena.TransportContext) {
 	streamSSE(t, w, r, MarshalProtoJSON,
 		func(stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-			return t.runtime.InvokeParamInfoHandler(slot, oidPrefix, recursive, stream, transportContext)
+			return t.runtime.InvokeParamInfoHandler(transportContext, catena.ParamInfoRequest{Slot: slot, OidPrefix: oidPrefix, Recursive: recursive}, stream)
 		},
 		"endpoint", "param-info", "slot", slot, "oid_prefix", oidPrefix)
 }
@@ -1035,7 +1037,7 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 	// handler can skip emitting responses; the server also swaps in a nullStream
 	// when respond=false, so nothing reaches this stream in that case.
 	stream := &lastStream[st2138.CommandResponse]{}
-	result := t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
+	result := t.runtime.InvokeExecuteCommandHandler(transportContext, catena.ExecuteCommandRequest{Slot: slot, CommandFqoid: commandOid, Payload: payload, Respond: respond}, stream)
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
@@ -1062,7 +1064,7 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 func (t *Transport) streamExecuteCommand(w http.ResponseWriter, r *http.Request, slot uint16, commandOid string, payload any, respond bool, transportContext catena.TransportContext) {
 	streamSSE(t, w, r, MarshalProtoJSON,
 		func(stream catena.Stream[st2138.CommandResponse]) catena.StatusResult {
-			return t.runtime.InvokeExecuteCommandHandler(slot, commandOid, payload, respond, stream, transportContext)
+			return t.runtime.InvokeExecuteCommandHandler(transportContext, catena.ExecuteCommandRequest{Slot: slot, CommandFqoid: commandOid, Payload: payload, Respond: respond}, stream)
 		},
 		"endpoint", "command", "slot", slot, "command_oid", commandOid)
 }

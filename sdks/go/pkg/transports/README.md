@@ -54,8 +54,8 @@ func main() {
     // catena.DeviceComponentsForRequest chunks a whole device into
     // DeviceComponent stream sends; a small model could equally be sent as a
     // single st2138.ComponentDevice chunk.
-    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-        return catena.DeviceComponentsForRequest(st2138.NewDevice(slot), stream)
+    srv.RegisterGetDeviceHandler(0, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+        return catena.DeviceComponentsForRequest(st2138.NewDevice(req.Slot), stream)
     })
 
     if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {

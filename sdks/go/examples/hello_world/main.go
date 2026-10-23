@@ -118,8 +118,8 @@ func main() {
 		SerialNumber: "SN-HELLO-0001",
 	})
 
-	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-		ctx.Logger().Info("GetDevice", "slot", slot)
+	srv.RegisterGetDeviceHandler(slot, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+		ctx.Logger().Info("GetDevice", "slot", req.Slot)
 		// A small device fits in a single component; large devices may stream
 		// several (see the oneOfEverything example).
 		device, err := buildDevice()
@@ -132,10 +132,10 @@ func main() {
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
-	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
-		ctx.Logger().Info("GetValue", "slot", slot, "fqoid", fqoid)
-		if fqoid != helloWorldOID {
-			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
+	srv.RegisterGetValueHandler(slot, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+		ctx.Logger().Info("GetValue", "slot", req.Slot, "fqoid", req.Fqoid)
+		if req.Fqoid != helloWorldOID {
+			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+req.Fqoid)
 		}
 
 		value, err := st2138.ToValue(helloWorld.Get())
@@ -146,10 +146,10 @@ func main() {
 		return catena.Reply(value)
 	})
 
-	srv.RegisterSetValueHandler(slot, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		ctx.Logger().Info("SetValue", "slot", slot, "count", len(entries))
+	srv.RegisterSetValueHandler(slot, func(ctx catena.HandlerContext, req catena.SetValueRequest) catena.StatusResult {
+		ctx.Logger().Info("SetValue", "slot", req.Slot, "count", len(req.Entries))
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			if entry.Fqoid != helloWorldOID {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "parameter not found: "+entry.Fqoid)
 			}
@@ -161,10 +161,10 @@ func main() {
 			}
 		}
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			stringValue := entry.Value.(string)
 			helloWorld.Set(stringValue)
-			srv.BroadcastUpdate(slot, entry.Fqoid, stringValue, st2138.ScopeMon)
+			srv.BroadcastUpdate(req.Slot, entry.Fqoid, stringValue, st2138.ScopeMon)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
