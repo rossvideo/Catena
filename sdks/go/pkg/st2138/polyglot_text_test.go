@@ -54,6 +54,14 @@ func TestPolyglotText_With(t *testing.T) {
 	}
 }
 
+func TestPolyglotText_With_NilPolyglotText(t *testing.T) {
+	var pt PolyglotText
+	pt = pt.With("fr", "Bonjour")
+	if pt["fr"] != "Bonjour" {
+		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
+	}
+}
+
 func TestPolyglotText_Get(t *testing.T) {
 	pt := PolyglotText{"en": "Hello", "fr": "Bonjour"}
 	if pt.Get("fr", "en") != "Bonjour" {

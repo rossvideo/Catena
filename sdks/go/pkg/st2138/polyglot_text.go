@@ -58,8 +58,13 @@ func (p PolyglotText) Proto() *protos.PolyglotText {
 	}
 }
 
-// With returns the PolyglotText with an additional language entry added.
+// With adds a language entry and returns the result. Always use the return
+// value: p is mutated in place when non-nil, but a nil p yields a newly
+// allocated PolyglotText and the original stays nil.
 func (p PolyglotText) With(lang, text string) PolyglotText {
+	if p == nil {
+		p = PolyglotText{}
+	}
 	p[lang] = text
 	return p
 }
@@ -72,12 +77,12 @@ func (p PolyglotText) Get(lang, fallback string) string {
 	return p[fallback]
 }
 
-// FromProto creates a PolyglotText map from a protobuf PolyglotText.
+// PolyglotTextFromProto creates a PolyglotText map from a protobuf PolyglotText.
 func PolyglotTextFromProto(proto *protos.PolyglotText) PolyglotText {
-	pt := PolyglotText{}
 	if proto == nil || len(proto.DisplayStrings) == 0 {
 		return nil
 	}
+	pt := PolyglotText{}
 	maps.Copy(pt, proto.DisplayStrings)
 	return pt
 }
