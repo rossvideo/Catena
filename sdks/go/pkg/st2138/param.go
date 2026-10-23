@@ -463,9 +463,7 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 
-	cloned := proto.Clone(p.Proto).(*protos.Param)
-
-	if cp.proto.Type == protos.ParamType_STRUCT && cloned.Value != nil {
+	if cp.proto.Type == protos.ParamType_STRUCT && p.Proto.Value != nil {
 		sv := cp.proto.Value.GetStructValue()
 		if sv == nil {
 			sv = &protos.StructValue{}
@@ -474,8 +472,8 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		if sv.Fields == nil {
 			sv.Fields = map[string]*protos.Value{}
 		}
-		sv.Fields[oid] = cloned.Value
-		cloned.Value = nil
+		sv.Fields[oid] = p.Proto.Value
+		p.Proto.Value = nil
 	}
 
 	if cp.proto.Params == nil {
@@ -485,10 +483,10 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 	// writable the child keeps its own read_only flag, so a child can still be
 	// independently marked read-only.
 	if cp.proto.ReadOnly {
-		cloned.ReadOnly = true
-		propagateReadOnly(cloned.Params)
+		p.Proto.ReadOnly = true
+		propagateReadOnly(p.Proto.Params)
 	}
-	cp.proto.Params[oid] = cloned
+	cp.proto.Params[oid] = p.Proto
 	return cp
 }
 

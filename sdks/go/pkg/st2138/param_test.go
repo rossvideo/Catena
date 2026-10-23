@@ -503,24 +503,6 @@ func TestWithParam_Struct(t *testing.T) {
 	}
 }
 
-func TestWithParam_DeepClone(t *testing.T) {
-	child := NewParamInt32(1)
-	childValue := child.proto.GetValue()
-	parent := NewParamStruct().WithParam("x", child)
-	parentValue := parent.proto.GetValue().
-		GetStructValue().
-		GetFields()["x"]
-	if parent.proto.GetParams()["x"] == child.proto {
-		t.Error("expected sub-param descriptor to be cloned")
-	}
-	if parentValue == childValue {
-		t.Error("expected sub-param value to be cloned")
-	}
-	if !proto.Equal(parentValue, childValue) {
-		t.Error("expected cloned value to equal the original")
-	}
-}
-
 func TestWithParam_WrongType(t *testing.T) {
 	child := NewParamInt32(0)
 	cp := NewParamInt32(0).WithParam("x", child)

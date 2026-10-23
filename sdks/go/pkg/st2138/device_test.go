@@ -86,30 +86,6 @@ func TestNewDevice_WithParams(t *testing.T) {
 	}
 }
 
-func TestDevice_WithParam_DeepCopies(t *testing.T) {
-	param := NewParamInt32(1)
-	builder := NewDevice(0).
-		WithParam("counter", param)
-
-	stored := builder.proto.GetParams()["counter"]
-	if stored == param.proto {
-		t.Error("expected stored param to be cloned")
-	}
-	if stored.GetValue() == param.proto.GetValue() {
-		t.Error("expected stored param value to be cloned")
-	}
-	if !proto.Equal(stored, param.proto) {
-		t.Error("expected stored param to be equal to original")
-	}
-	cd, err := builder.Build()
-	if err != nil {
-		t.Fatal("expected no error for builder with valid value", err)
-	}
-	if cd.Proto.GetParams()["counter"] == nil {
-		t.Fatal("expected built device to contain counter param")
-	}
-}
-
 func TestDevice_WithParam_Nil(t *testing.T) {
 	builder := NewDevice(0).WithParam("nothing", nil)
 	if _, ok := builder.proto.GetParams()["nothing"]; ok {

@@ -107,7 +107,7 @@ func (mg *MenuGroupBuilder) WithMenu(oid string, menu *MenuBuilder) *MenuGroupBu
 	if mg.proto.Menus == nil {
 		mg.proto.Menus = map[string]*protos.Menu{}
 	}
-	mg.proto.Menus[oid] = proto.Clone(m.Proto).(*protos.Menu)
+	mg.proto.Menus[oid] = m.Proto
 	return mg
 }
 

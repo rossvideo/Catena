@@ -126,7 +126,7 @@ func (db *DeviceBuilder) WithParam(oid string, paramBuilder *ParamBuilder) *Devi
 	if db.proto.Params == nil {
 		db.proto.Params = map[string]*protos.Param{}
 	}
-	db.proto.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
+	db.proto.Params[oid] = param.Proto
 	return db
 }
 
@@ -152,7 +152,7 @@ func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *
 	if db.proto.Commands == nil {
 		db.proto.Commands = map[string]*protos.Param{}
 	}
-	db.proto.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
+	db.proto.Commands[oid] = command.Proto
 	return db
 }
 
@@ -175,7 +175,7 @@ func (db *DeviceBuilder) WithConstraint(oid string, constraint *ConstraintBuilde
 	if db.proto.Constraints == nil {
 		db.proto.Constraints = map[string]*protos.Constraint{}
 	}
-	db.proto.Constraints[oid] = proto.Clone(c.Proto).(*protos.Constraint)
+	db.proto.Constraints[oid] = c.Proto
 	return db
 }
 
@@ -201,7 +201,7 @@ func (db *DeviceBuilder) WithMenuGroup(oid string, groupBuilder *MenuGroupBuilde
 	if db.proto.MenuGroups == nil {
 		db.proto.MenuGroups = map[string]*protos.MenuGroup{}
 	}
-	db.proto.MenuGroups[oid] = proto.Clone(group.Proto).(*protos.MenuGroup)
+	db.proto.MenuGroups[oid] = group.Proto
 	return db
 }
 
