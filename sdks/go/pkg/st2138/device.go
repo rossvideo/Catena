@@ -40,7 +40,7 @@
 package st2138
 
 import (
-	"log/slog"
+	"errors"
 
 	"google.golang.org/protobuf/proto"
 
@@ -67,6 +67,11 @@ type Device struct {
 	Proto *protos.Device
 }
 
+type DeviceBuilder struct {
+	proto *protos.Device
+	err   error
+}
+
 // NewDevice creates an empty Device for the given slot. Params, commands,
 // constraints, and menus are attached with the chainable With* methods.
 //
@@ -74,114 +79,194 @@ type Device struct {
 // Server.RegisterProductStruct and the SDK injects it into the device on
 // GetDevice and serves it on GetValue / ParamInfo. NewDevice does not deal with
 // the product struct.
-func NewDevice(slot uint16) *Device {
-	return &Device{Proto: &protos.Device{Slot: uint32(slot)}}
+func NewDevice(slot uint16) *DeviceBuilder {
+	return &DeviceBuilder{
+		proto: &protos.Device{Slot: uint32(slot)},
+		err:   nil,
+	}
+}
+
+// Build returns a usable Device from the builder. If the builder has an error, it
+// returns an empty Device and the error. Must be called after all builder methods have been called.
+func (db *DeviceBuilder) Build() (Device, error) {
+	if db.err != nil {
+		return Device{}, db.err
+	}
+	db.err = ErrAlreadyBuilt
+	return Device{Proto: db.proto}, nil
+}
+
+// Clone returns a deep copy of the DeviceBuilder.
+// Inherits the builder's error state, including ErrAlreadyBuilt.
+func (db *DeviceBuilder) Clone() *DeviceBuilder {
+	return &DeviceBuilder{proto: proto.Clone(db.proto).(*protos.Device), err: db.err}
 }
 
 // WithParam inserts param into the device's params map, keyed by oid. The
 // param's proto is deep-copied so later builder mutations on the caller's Param
-// do not affect entries already added. A nil param is ignored.
-func (cd *Device) WithParam(oid string, param *Param) *Device {
-	if param == nil || param.Proto == nil {
-		slog.Warn("Device.WithParam called with nil param; ignoring", "oid", oid)
-		return cd
+// do not affect entries already added. A nil param errors and short-circuits further method calls.
+func (db *DeviceBuilder) WithParam(oid string, paramBuilder *ParamBuilder) *DeviceBuilder {
+	if db.err != nil {
+		return db
 	}
-	if cd.Proto.Params == nil {
-		cd.Proto.Params = map[string]*protos.Param{}
+	if paramBuilder == nil {
+		db.err = errors.New("WithParam: param builder cannot be nil")
+		return db
 	}
-	cd.Proto.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
-	return cd
+	param, err := paramBuilder.Build()
+	if err != nil {
+		db.err = err
+		return db
+	}
+	if param == (Param{}) {
+		db.err = errors.New("WithParam: param builder returned empty param")
+		return db
+	}
+	if db.proto.Params == nil {
+		db.proto.Params = map[string]*protos.Param{}
+	}
+	db.proto.Params[oid] = proto.Clone(param.Proto).(*protos.Param)
+	return db
 }
 
 // WithCommand inserts command into the device's commands map, keyed by oid. The
-// command's proto is deep-copied. A nil command is ignored.
-func (cd *Device) WithCommand(oid string, command *Param) *Device {
-	if command == nil || command.Proto == nil {
-		slog.Warn("Device.WithCommand called with nil command; ignoring", "oid", oid)
-		return cd
+// command's proto is deep-copied. A nil command errors and short-circuits further method calls.
+func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *DeviceBuilder {
+	if db.err != nil {
+		return db
 	}
-	if cd.Proto.Commands == nil {
-		cd.Proto.Commands = map[string]*protos.Param{}
+	if commandBuilder == nil {
+		db.err = errors.New("WithCommand: command builder cannot be nil")
+		return db
 	}
-	cd.Proto.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
-	return cd
+	command, err := commandBuilder.Build()
+	if err != nil {
+		db.err = err
+		return db
+	}
+	if command == (Param{}) {
+		db.err = errors.New("WithCommand: command builder returned empty command")
+		return db
+	}
+	if db.proto.Commands == nil {
+		db.proto.Commands = map[string]*protos.Param{}
+	}
+	db.proto.Commands[oid] = proto.Clone(command.Proto).(*protos.Param)
+	return db
 }
 
 // WithConstraint inserts a shared constraint into the device's constraints map,
-// keyed by oid. The constraint's proto is deep-copied. A nil constraint is
-// ignored. Params can reference shared constraints via NewConstraintRefOid.
-func (cd *Device) WithConstraint(oid string, constraint *Constraint) *Device {
-	if constraint == nil || constraint.Proto == nil {
-		slog.Warn("Device.WithConstraint called with nil constraint; ignoring", "oid", oid)
-		return cd
+// keyed by oid. The constraint's proto is deep-copied. A nil constraint
+// errors and short-circuits further method calls. Params can reference shared constraints via NewConstraintRefOid.
+func (db *DeviceBuilder) WithConstraint(oid string, constraint *Constraint) *DeviceBuilder {
+	if db.err != nil {
+		return db
 	}
-	if cd.Proto.Constraints == nil {
-		cd.Proto.Constraints = map[string]*protos.Constraint{}
+	if constraint == nil {
+		db.err = errors.New("WithConstraint: constraint cannot be nil")
+		return db
 	}
-	cd.Proto.Constraints[oid] = proto.Clone(constraint.Proto).(*protos.Constraint)
-	return cd
+	if constraint.Proto == nil {
+		db.err = errors.New("WithConstraint: constraint proto cannot be nil")
+		return db
+	}
+	if db.proto.Constraints == nil {
+		db.proto.Constraints = map[string]*protos.Constraint{}
+	}
+	db.proto.Constraints[oid] = proto.Clone(constraint.Proto).(*protos.Constraint)
+	return db
 }
 
 // WithMenuGroup inserts a menu group into the device's menu_groups map, keyed
-// by oid. The group's proto is deep-copied. A nil group is ignored.
-func (cd *Device) WithMenuGroup(oid string, group *MenuGroup) *Device {
-	if group == nil || group.Proto == nil {
-		slog.Warn("Device.WithMenuGroup called with nil menu group; ignoring", "oid", oid)
-		return cd
+// by oid. The group's proto is deep-copied. A nil group errors and short-circuits further method calls.
+func (db *DeviceBuilder) WithMenuGroup(oid string, groupBuilder *MenuGroupBuilder) *DeviceBuilder {
+	if db.err != nil {
+		return db
 	}
-	if cd.Proto.MenuGroups == nil {
-		cd.Proto.MenuGroups = map[string]*protos.MenuGroup{}
+	if groupBuilder == nil {
+		db.err = errors.New("WithMenuGroup: menu group builder cannot be nil")
+		return db
 	}
-	cd.Proto.MenuGroups[oid] = proto.Clone(group.Proto).(*protos.MenuGroup)
-	return cd
+	group, err := groupBuilder.Build()
+	if err != nil {
+		db.err = err
+		return db
+	}
+	if group == (MenuGroup{}) {
+		db.err = errors.New("WithMenuGroup: menu group builder returned empty menu group")
+		return db
+	}
+	if db.proto.MenuGroups == nil {
+		db.proto.MenuGroups = map[string]*protos.MenuGroup{}
+	}
+	db.proto.MenuGroups[oid] = proto.Clone(group.Proto).(*protos.MenuGroup)
+	return db
 }
 
 // WithLanguagePack inserts a language pack into the device's language_packs map,
 // keyed by language code (e.g. "en"). Replaces any existing pack at that code.
-func (cd *Device) WithLanguagePack(code, name string, words map[string]string) *Device {
-	if cd.Proto.LanguagePacks == nil {
-		cd.Proto.LanguagePacks = &protos.LanguagePacks{}
+func (db *DeviceBuilder) WithLanguagePack(code, name string, words map[string]string) *DeviceBuilder {
+	if db.err != nil {
+		return db
 	}
-	if cd.Proto.LanguagePacks.Packs == nil {
-		cd.Proto.LanguagePacks.Packs = map[string]*protos.LanguagePack{}
+	if db.proto.LanguagePacks == nil {
+		db.proto.LanguagePacks = &protos.LanguagePacks{}
+	}
+	if db.proto.LanguagePacks.Packs == nil {
+		db.proto.LanguagePacks.Packs = map[string]*protos.LanguagePack{}
 	}
 	copied := make(map[string]string, len(words))
 	for k, v := range words {
 		copied[k] = v
 	}
-	cd.Proto.LanguagePacks.Packs[code] = &protos.LanguagePack{
+	db.proto.LanguagePacks.Packs[code] = &protos.LanguagePack{
 		Name:  name,
 		Words: copied,
 	}
-	return cd
+	return db
 }
 
 // WithDetailLevel sets how much of the device model to deliver.
-func (cd *Device) WithDetailLevel(level DetailLevel) *Device {
-	cd.Proto.DetailLevel = level
-	return cd
+func (db *DeviceBuilder) WithDetailLevel(level DetailLevel) *DeviceBuilder {
+	if db.err != nil {
+		return db
+	}
+	db.proto.DetailLevel = level
+	return db
 }
 
 // WithMultiSetEnabled sets whether the device supports multi-set requests.
-func (cd *Device) WithMultiSetEnabled(enabled bool) *Device {
-	cd.Proto.MultiSetEnabled = enabled
-	return cd
+func (db *DeviceBuilder) WithMultiSetEnabled(enabled bool) *DeviceBuilder {
+	if db.err != nil {
+		return db
+	}
+	db.proto.MultiSetEnabled = enabled
+	return db
 }
 
 // WithSubscriptions sets whether the device supports subscriptions.
-func (cd *Device) WithSubscriptions(subscriptions bool) *Device {
-	cd.Proto.Subscriptions = subscriptions
-	return cd
+func (db *DeviceBuilder) WithSubscriptions(subscriptions bool) *DeviceBuilder {
+	if db.err != nil {
+		return db
+	}
+	db.proto.Subscriptions = subscriptions
+	return db
 }
 
 // WithAccessScopes sets the device's access scopes, replacing any existing ones.
-func (cd *Device) WithAccessScopes(scopes ...string) *Device {
-	cd.Proto.AccessScopes = scopes
-	return cd
+func (db *DeviceBuilder) WithAccessScopes(scopes ...string) *DeviceBuilder {
+	if db.err != nil {
+		return db
+	}
+	db.proto.AccessScopes = scopes
+	return db
 }
 
 // WithDefaultScope sets the device's default access scope.
-func (cd *Device) WithDefaultScope(scope string) *Device {
-	cd.Proto.DefaultScope = scope
-	return cd
+func (db *DeviceBuilder) WithDefaultScope(scope string) *DeviceBuilder {
+	if db.err != nil {
+		return db
+	}
+	db.proto.DefaultScope = scope
+	return db
 }

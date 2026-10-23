@@ -105,7 +105,7 @@ func NewConstraintInt32Choice(choices []Int32Choice) *Constraint {
 	for i, c := range choices {
 		pbChoices[i] = &protos.Int32ChoiceConstraint_IntChoice{
 			Value: c.Value,
-			Name:  &protos.PolyglotText{DisplayStrings: c.Name},
+			Name:  c.Name.Proto(),
 		}
 	}
 	return &Constraint{
@@ -216,7 +216,7 @@ func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) 
 	for i, c := range choices {
 		pbChoices[i] = &protos.StringStringChoiceConstraint_StringStringChoice{
 			Value: c.Value,
-			Name:  &protos.PolyglotText{DisplayStrings: c.Name},
+			Name:  c.Name.Proto(),
 		}
 	}
 	return &Constraint{
@@ -240,9 +240,7 @@ func NewConstraintAlarmTable(alarms []AlarmEntry) *Constraint {
 			BitValue: a.BitValue,
 			Severity: a.Severity,
 		}
-		if a.Description != nil {
-			pbAlarms[i].Description = &protos.PolyglotText{DisplayStrings: a.Description}
-		}
+		pbAlarms[i].Description = a.Description.Proto()
 	}
 	return &Constraint{
 		Proto: &protos.Constraint{

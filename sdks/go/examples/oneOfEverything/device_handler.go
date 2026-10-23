@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -41,24 +39,43 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	// kinds.
 	srv.RegisterGetDeviceHandler(0, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 		ctx.Logger().Info("GetDevice", "slot", req.Slot)
-		if err := stream.Send(st2138.ComponentDevice(slotZeroSkeleton())); err != nil {
+		device, err := applySlotZeroMenuGroups(slotZeroSkeleton(), false).Build()
+		if err != nil {
+			return catena.StatusError(err)
+		}
+		if err := stream.Send(st2138.ComponentDevice(&device)); err != nil {
 			ctx.Logger().Warn("GetDevice stream closed", "slot", req.Slot, "error", err)
 			return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send device: "+err.Error())
 		}
 		for oid, menu := range slotZeroMenus() {
-			if err := stream.Send(st2138.ComponentMenu(oid, menu)); err != nil {
+			menu, err := menu.Build()
+			if err != nil {
+				ctx.Logger().Error("expected no error for builder with valid value", "error", err.Error())
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build menu: "+err.Error())
+			}
+			if err := stream.Send(st2138.ComponentMenu(oid, &menu)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", req.Slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send menu: "+err.Error())
 			}
 		}
 		for oid, param := range slotZeroParams(counter) {
-			if err := stream.Send(st2138.ComponentParam(oid, param)); err != nil {
+			param, err := param.Build()
+			if err != nil {
+				ctx.Logger().Error("expected no error for builder with valid value", "error", err.Error())
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build param: "+err.Error())
+			}
+			if err := stream.Send(st2138.ComponentParam(oid, &param)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", req.Slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send param: "+err.Error())
 			}
 		}
 		for oid, command := range slotZeroCommands() {
-			if err := stream.Send(st2138.ComponentCommand(oid, command)); err != nil {
+			command, err := command.Build()
+			if err != nil {
+				ctx.Logger().Error("expected no error for builder with valid value", "error", err.Error())
+				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to build command: "+err.Error())
+			}
+			if err := stream.Send(st2138.ComponentCommand(oid, &command)); err != nil {
 				ctx.Logger().Warn("GetDevice stream closed", "slot", req.Slot, "oid", oid, "error", err)
 				return catena.StatusWithCode(catena.StatusCodeInternal, "failed to send command: "+err.Error())
 			}
@@ -73,9 +90,9 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 		}
 		srv.RegisterGetDeviceHandler(slot, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
 			ctx.Logger().Info("GetDevice", "slot", req.Slot)
-			device, ok := buildDeviceDefinition(req.Slot, counter, state)
-			if !ok {
-				return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+			device, status := buildDeviceDefinition(req.Slot, counter, state)
+			if status.IsError() {
+				return status
 			}
 			return catena.DeviceComponentsForRequest(device, stream)
 		})
@@ -83,42 +100,55 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 }
 
 // slotZeroSkeleton returns slot 0's device minus its params, commands, and
-// menus: slot metadata, access scopes, and menu-group shells (display name and
+// menus/menuGroups: slot metadata, access scopes, and menu-group shells (display name and
 // order only). The GetDevice handler sends it as the leading ComponentDevice
 // chunk; the menus themselves are streamed as ComponentMenu chunks (see
 // slotZeroMenus) and the params and commands as their own chunks.
-func slotZeroSkeleton() *st2138.Device {
-	return st2138.NewDevice(0).
+func slotZeroSkeleton() *st2138.DeviceBuilder {
+	deviceBuilder := st2138.NewDevice(0).
 		WithDetailLevel(st2138.DetailLevelFull).
 		WithMultiSetEnabled(true).
 		WithSubscriptions(true).
 		WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
-		WithDefaultScope("st2138:cfg").
-		WithMenuGroup("status", st2138.NewMenuGroup().
-			WithName(st2138.NewPolyglotText("en", "Status")).
-			WithOrder(0)).
-		WithMenuGroup("config", st2138.NewMenuGroup().
-			WithName(st2138.NewPolyglotText("en", "Configuration")).
-			WithOrder(1))
+		WithDefaultScope("st2138:cfg")
+
+	return deviceBuilder
 }
 
 // slotZeroMenus returns slot 0's menus keyed by "group/menu", the oid form a
 // ComponentMenu chunk carries; clients merge each menu back into its group
 // shell on the skeleton. buildDeviceDefinition attaches them the same way.
-func slotZeroMenus() map[string]*st2138.Menu {
-	return map[string]*st2138.Menu{
+func slotZeroMenus() map[string]*st2138.MenuBuilder {
+	return map[string]*st2138.MenuBuilder{
 		"status/status": st2138.NewMenu().
-			WithName(st2138.NewPolyglotText("en", "Status")).
+			WithName(st2138.PolyglotText{"en": "Status"}).
 			WithParamOids("product", "counter", "running"),
 		"config/control": st2138.NewMenu().
-			WithName(st2138.NewPolyglotText("en", "Control")).
+			WithName(st2138.PolyglotText{"en": "Control"}).
 			WithCommandOids("start", "stop", "add10", "reset"),
 	}
 }
 
+// applySlotZeroMenuGroups applies the slot 0 menu groups to the device builder.
+// If withMenus is true, the menus will be added to the device builder as well.
+func applySlotZeroMenuGroups(device *st2138.DeviceBuilder, withMenus bool) *st2138.DeviceBuilder {
+	status := st2138.NewMenuGroup().
+		WithName(st2138.PolyglotText{"en": "Status"}).
+		WithOrder(0)
+	config := st2138.NewMenuGroup().
+		WithName(st2138.PolyglotText{"en": "Configuration"}).
+		WithOrder(1)
+	if withMenus {
+		menus := slotZeroMenus()
+		status.WithMenu("status", menus["status/status"])
+		config.WithMenu("control", menus["config/control"])
+	}
+	return device.WithMenuGroup("status", status).WithMenuGroup("config", config)
+}
+
 // slotZeroParams returns slot 0's params keyed by oid.
-func slotZeroParams(counter *CounterState) map[string]*st2138.Param {
-	return map[string]*st2138.Param{
+func slotZeroParams(counter *CounterState) map[string]*st2138.ParamBuilder {
+	return map[string]*st2138.ParamBuilder{
 		"dashboard_UI": makeDashboardUIParam(),
 		"counter":      makeCounterParam(counter),
 		"running":      makeRunningParam(counter),
@@ -126,16 +156,16 @@ func slotZeroParams(counter *CounterState) map[string]*st2138.Param {
 }
 
 // slotZeroCommands returns slot 0's commands keyed by oid.
-func slotZeroCommands() map[string]*st2138.Param {
-	return map[string]*st2138.Param{
+func slotZeroCommands() map[string]*st2138.ParamBuilder {
+	return map[string]*st2138.ParamBuilder{
 		"start": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Start Counter")),
+			WithName(st2138.PolyglotText{"en": "Start Counter"}),
 		"stop": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Stop Counter")),
+			WithName(st2138.PolyglotText{"en": "Stop Counter"}),
 		"add10": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Add 10 to Counter")),
+			WithName(st2138.PolyglotText{"en": "Add 10 to Counter"}),
 		"reset": st2138.NewParamEmpty().
-			WithName(st2138.NewPolyglotText("en", "Reset Counter")),
+			WithName(st2138.PolyglotText{"en": "Reset Counter"}),
 	}
 }
 
@@ -157,26 +187,24 @@ func slotZeroCommands() map[string]*st2138.Param {
 //   - 0: counter, commands, constraints, subscriptions, cfg-scope reads
 //   - 1: sync.Map-backed picture controls; ParamInfo delegates here via ParamInfosForRequest
 //   - 2: prefix-dispatched params plus sample_* types (including INT32_ARRAY)
-func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleState) (*st2138.Device, bool) {
+func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleState) (*st2138.Device, catena.StatusResult) {
 	switch slot {
 	case 0:
 		// Slot 0: INT32, STRUCT, EMPTY commands, INT32_CHOICE constraint.
 		// Composed from the same slotZero* helpers the GetDevice handler
 		// streams chunk-by-chunk, so the two views stay in sync.
-		device := slotZeroSkeleton()
-		for oid, menu := range slotZeroMenus() {
-			group, name, _ := strings.Cut(oid, "/")
-			if groupProto := device.Proto.GetMenuGroups()[group]; groupProto != nil {
-				(&st2138.MenuGroup{Proto: groupProto}).WithMenu(name, menu)
-			}
-		}
+		deviceBuilder := applySlotZeroMenuGroups(slotZeroSkeleton(), true)
 		for oid, param := range slotZeroParams(counter) {
-			device.WithParam(oid, param)
+			deviceBuilder.WithParam(oid, param)
 		}
 		for oid, command := range slotZeroCommands() {
-			device.WithCommand(oid, command)
+			deviceBuilder.WithCommand(oid, command)
 		}
-		return device, true
+		device, err := deviceBuilder.Build()
+		if err != nil {
+			return nil, catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+		}
+		return &device, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case 1:
 		// Slot 1 intentionally stores its business data in a sync.Map to show
 		// adopters they can back handlers with any application data structure,
@@ -209,33 +237,37 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		}
 		state.mu.RUnlock()
 
-		device := st2138.NewDevice(1).
+		device, err := st2138.NewDevice(1).
 			WithDetailLevel(st2138.DetailLevelFull).
 			WithMultiSetEnabled(false).
 			WithSubscriptions(true).
 			WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 			WithDefaultScope("st2138:mon").
 			WithParam("resolution", st2138.NewParamString(resolution).
-				WithName(st2138.NewPolyglotText("en", "Resolution"))).
+				WithName(st2138.PolyglotText{"en": "Resolution"})).
 			WithParam("brightness", st2138.NewParamInt32(brightness).
-				WithName(st2138.NewPolyglotText("en", "Brightness"))).
+				WithName(st2138.PolyglotText{"en": "Brightness"})).
 			WithParam("contrast", st2138.NewParamInt32(contrast).
-				WithName(st2138.NewPolyglotText("en", "Contrast"))).
+				WithName(st2138.PolyglotText{"en": "Contrast"})).
 			WithParam("saturation", st2138.NewParamInt32(saturation).
-				WithName(st2138.NewPolyglotText("en", "Saturation"))).
+				WithName(st2138.PolyglotText{"en": "Saturation"})).
 			WithMenuGroup("status", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Status")).
+				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).
 				WithMenu("status", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Status")).
+					WithName(st2138.PolyglotText{"en": "Status"}).
 					WithParamOids("resolution"))).
 			WithMenuGroup("config", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Configuration")).
+				WithName(st2138.PolyglotText{"en": "Configuration"}).
 				WithOrder(1).
 				WithMenu("picture", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Picture")).
-					WithParamOids("brightness", "contrast", "saturation")))
-		return device, true
+					WithName(st2138.PolyglotText{"en": "Picture"}).
+					WithParamOids("brightness", "contrast", "saturation"))).
+			Build()
+		if err != nil {
+			return nil, catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+		}
+		return &device, catena.StatusWithCode(catena.StatusCodeOk, "")
 	case 2:
 		// Slot 2: prefix-dispatched identity/audio params plus FLOAT32, arrays,
 		// BINARY, STRUCT_VARIANT, STRUCT_ARRAY, STRUCT_VARIANT_ARRAY examples.
@@ -262,57 +294,57 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 		structNumber, _ := structExample["number"].(int32)
 		structText, _ := structExample["text"].(string)
 
-		device := st2138.NewDevice(2).
+		device, err := st2138.NewDevice(2).
 			WithDetailLevel(st2138.DetailLevelFull).
 			WithMultiSetEnabled(true).
 			WithSubscriptions(false).
 			WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 			WithDefaultScope("st2138:op").
 			WithParam("volume", st2138.NewParamInt32(volume).
-				WithName(st2138.NewPolyglotText("en", "Volume"))).
+				WithName(st2138.PolyglotText{"en": "Volume"})).
 			WithParam("muted", st2138.NewParamInt32(muted).
-				WithName(st2138.NewPolyglotText("en", "Muted"))).
+				WithName(st2138.PolyglotText{"en": "Muted"})).
 			WithParam("device_name", st2138.NewParamString(deviceName).
-				WithName(st2138.NewPolyglotText("en", "Device Name"))).
+				WithName(st2138.PolyglotText{"en": "Device Name"})).
 			// NewParamStruct auto-creates the valueless "number" and "text"
 			// field descriptors from the values map.
 			WithParam("struct_example", st2138.NewParamStruct(map[string]any{
 				"number": structNumber,
 				"text":   structText,
 			}).
-				WithName(st2138.NewPolyglotText("en", "Struct Example"))).
+				WithName(st2138.PolyglotText{"en": "Struct Example"})).
 			WithParam("sample_float", st2138.NewParamFloat32(sampleFloat).
-				WithName(st2138.NewPolyglotText("en", "Sample Float"))).
+				WithName(st2138.PolyglotText{"en": "Sample Float"})).
 			WithParam("sample_int_array", st2138.NewParamInt32Array(sampleIntArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Int Array"))).
+				WithName(st2138.PolyglotText{"en": "Sample Int Array"})).
 			WithParam("sample_float_array", st2138.NewParamFloat32Array(sampleFloatArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Float Array"))).
+				WithName(st2138.PolyglotText{"en": "Sample Float Array"})).
 			WithParam("sample_string_array", st2138.NewParamStringArray(sampleStringArray).
-				WithName(st2138.NewPolyglotText("en", "Sample String Array"))).
+				WithName(st2138.PolyglotText{"en": "Sample String Array"})).
 			WithParam("sample_binary", st2138.NewParamBinary(sampleBinary).
-				WithName(st2138.NewPolyglotText("en", "Sample Binary"))).
+				WithName(st2138.PolyglotText{"en": "Sample Binary"})).
 			// Valueless NewParamX() calls build sub-param descriptors without
 			// dummy values; the actual values live in the parent param's value.
 			WithParam("sample_struct_variant", st2138.NewParamStructVariant(sampleStructVariant).
-				WithName(st2138.NewPolyglotText("en", "Sample Struct Variant")).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Variant"}).
 				WithParam("int_kind", st2138.NewParamInt32()).
 				WithParam("string_kind", st2138.NewParamString())).
 			WithParam("sample_struct_array", st2138.NewParamStructArray(sampleStructArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Struct Array")).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Array"}).
 				WithParam("label", st2138.NewParamString()).
 				WithParam("count", st2138.NewParamInt32())).
 			WithParam("sample_struct_variant_array", st2138.NewParamStructVariantArray(sampleStructVariantArray).
-				WithName(st2138.NewPolyglotText("en", "Sample Struct Variant Array")).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Variant Array"}).
 				WithParam("int_kind", st2138.NewParamInt32()).
 				WithParam("string_kind", st2138.NewParamString())).
 			WithMenuGroup("status", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Status")).
+				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).
 				WithMenu("identity", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Identity")).
+					WithName(st2138.PolyglotText{"en": "Identity"}).
 					WithParamOids("product", "device_name", "struct_example")).
 				WithMenu("types", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Catena Types")).
+					WithName(st2138.PolyglotText{"en": "Catena Types"}).
 					WithParamOids(
 						"sample_float",
 						"sample_int_array",
@@ -324,13 +356,17 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 						"sample_struct_variant_array",
 					))).
 			WithMenuGroup("config", st2138.NewMenuGroup().
-				WithName(st2138.NewPolyglotText("en", "Configuration")).
+				WithName(st2138.PolyglotText{"en": "Configuration"}).
 				WithOrder(1).
 				WithMenu("audio", st2138.NewMenu().
-					WithName(st2138.NewPolyglotText("en", "Audio")).
-					WithParamOids("volume", "muted")))
-		return device, true
+					WithName(st2138.PolyglotText{"en": "Audio"}).
+					WithParamOids("volume", "muted"))).
+			Build()
+		if err != nil {
+			return nil, catena.StatusWithCode(catena.StatusCodeInternal, err.Error())
+		}
+		return &device, catena.StatusWithCode(catena.StatusCodeOk, "")
 	default:
-		return nil, false
+		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 	}
 }
