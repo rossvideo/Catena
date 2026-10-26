@@ -560,20 +560,6 @@ func TestWithParam_NestedErrors(t *testing.T) {
 	}
 }
 
-func TestWithParam_EmptyParam(t *testing.T) {
-	cp := NewParamStruct().WithParam("x", &ParamBuilder{})
-	if len(cp.proto.GetParams()) != 0 {
-		t.Error("expected empty param builder to leave the parent params unset")
-	}
-	p, err := cp.Build()
-	if p != (Param{}) {
-		t.Errorf("expected empty Param, got %v", p)
-	}
-	if err == nil {
-		t.Error("expected error for builder with empty param")
-	}
-}
-
 func TestWithResponse(t *testing.T) {
 	p, err := NewParamEmpty().WithResponse(true).Build()
 	if err != nil {

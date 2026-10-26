@@ -40,8 +40,6 @@
 package st2138
 
 import (
-	"errors"
-
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -107,52 +105,22 @@ func (db *DeviceBuilder) Clone() *DeviceBuilder {
 // param's proto is deep-copied so later builder mutations on the caller's Param
 // do not affect entries already added. A nil param errors and short-circuits further method calls.
 func (db *DeviceBuilder) WithParam(oid string, paramBuilder *ParamBuilder) *DeviceBuilder {
-	if db.err != nil {
+	param, ok := buildChild(&db.err, paramBuilder, (*ParamBuilder).Build, "WithParam")
+	if !ok {
 		return db
 	}
-	if paramBuilder == nil {
-		db.err = errors.New("WithParam: param builder cannot be nil")
-		return db
-	}
-	param, err := paramBuilder.Build()
-	if err != nil {
-		db.err = err
-		return db
-	}
-	if param == (Param{}) {
-		db.err = errors.New("WithParam: param builder returned empty param")
-		return db
-	}
-	if db.proto.Params == nil {
-		db.proto.Params = map[string]*protos.Param{}
-	}
-	db.proto.Params[oid] = param.Proto
+	put(&db.proto.Params, oid, param.Proto)
 	return db
 }
 
 // WithCommand inserts command into the device's commands map, keyed by oid. The
 // command's proto is deep-copied. A nil command errors and short-circuits further method calls.
 func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *DeviceBuilder {
-	if db.err != nil {
+	command, ok := buildChild(&db.err, commandBuilder, (*ParamBuilder).Build, "WithCommand")
+	if !ok {
 		return db
 	}
-	if commandBuilder == nil {
-		db.err = errors.New("WithCommand: command builder cannot be nil")
-		return db
-	}
-	command, err := commandBuilder.Build()
-	if err != nil {
-		db.err = err
-		return db
-	}
-	if command == (Param{}) {
-		db.err = errors.New("WithCommand: command builder returned empty command")
-		return db
-	}
-	if db.proto.Commands == nil {
-		db.proto.Commands = map[string]*protos.Param{}
-	}
-	db.proto.Commands[oid] = command.Proto
+	put(&db.proto.Commands, oid, command.Proto)
 	return db
 }
 
@@ -160,48 +128,22 @@ func (db *DeviceBuilder) WithCommand(oid string, commandBuilder *ParamBuilder) *
 // keyed by oid. The constraint's proto is deep-copied. A nil constraint
 // errors and short-circuits further method calls. Params can reference shared constraints via NewConstraintRefOid.
 func (db *DeviceBuilder) WithConstraint(oid string, constraint *ConstraintBuilder) *DeviceBuilder {
-	if db.err != nil {
+	c, ok := buildChild(&db.err, constraint, (*ConstraintBuilder).Build, "WithConstraint")
+	if !ok {
 		return db
 	}
-	if constraint == nil {
-		db.err = errors.New("WithConstraint: constraint cannot be nil")
-		return db
-	}
-	c, err := constraint.Build()
-	if err != nil {
-		db.err = err
-		return db
-	}
-	if db.proto.Constraints == nil {
-		db.proto.Constraints = map[string]*protos.Constraint{}
-	}
-	db.proto.Constraints[oid] = c.Proto
+	put(&db.proto.Constraints, oid, c.Proto)
 	return db
 }
 
 // WithMenuGroup inserts a menu group into the device's menu_groups map, keyed
 // by oid. The group's proto is deep-copied. A nil group errors and short-circuits further method calls.
 func (db *DeviceBuilder) WithMenuGroup(oid string, groupBuilder *MenuGroupBuilder) *DeviceBuilder {
-	if db.err != nil {
+	group, ok := buildChild(&db.err, groupBuilder, (*MenuGroupBuilder).Build, "WithMenuGroup")
+	if !ok {
 		return db
 	}
-	if groupBuilder == nil {
-		db.err = errors.New("WithMenuGroup: menu group builder cannot be nil")
-		return db
-	}
-	group, err := groupBuilder.Build()
-	if err != nil {
-		db.err = err
-		return db
-	}
-	if group == (MenuGroup{}) {
-		db.err = errors.New("WithMenuGroup: menu group builder returned empty menu group")
-		return db
-	}
-	if db.proto.MenuGroups == nil {
-		db.proto.MenuGroups = map[string]*protos.MenuGroup{}
-	}
-	db.proto.MenuGroups[oid] = group.Proto
+	put(&db.proto.MenuGroups, oid, group.Proto)
 	return db
 }
 

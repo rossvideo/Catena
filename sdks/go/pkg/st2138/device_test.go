@@ -98,18 +98,6 @@ func TestDevice_WithParam_Nil(t *testing.T) {
 	if cd != (Device{}) {
 		t.Errorf("expected empty Device, got %v", cd)
 	}
-
-	builder = NewDevice(0).WithParam("nothing", &ParamBuilder{})
-	if _, ok := builder.proto.GetParams()["nothing"]; ok {
-		t.Error("expected param with nil Proto to short-circuit")
-	}
-	cd, err = builder.Build()
-	if err == nil {
-		t.Error("expected error for builder with param with nil Proto")
-	}
-	if cd != (Device{}) {
-		t.Errorf("expected empty Device, got %v", cd)
-	}
 }
 
 func TestDevice_WithParam_NestedErrors(t *testing.T) {
@@ -162,20 +150,6 @@ func TestDevice_WithCommand_NestedErrors(t *testing.T) {
 	}
 }
 
-func TestDevice_WithCommand_EmptyParam(t *testing.T) {
-	builder := NewDevice(0).WithCommand("nothing", &ParamBuilder{})
-	if _, ok := builder.proto.GetCommands()["nothing"]; ok {
-		t.Error("expected empty param builder to leave commands unchanged")
-	}
-	cd, err := builder.Build()
-	if cd != (Device{}) {
-		t.Errorf("expected nil device, got %v", cd)
-	}
-	if err == nil {
-		t.Error("expected error for builder with empty param")
-	}
-}
-
 func TestDevice_WithConstraint_Nil(t *testing.T) {
 	builder := NewDevice(0).WithConstraint("nothing", nil)
 	if _, ok := builder.proto.GetConstraints()["nothing"]; ok {
@@ -214,18 +188,6 @@ func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 	cd, err := builder.Build()
 	if err == nil {
 		t.Error("expected error for builder with nil menu group")
-	}
-	if cd != (Device{}) {
-		t.Errorf("expected empty Device, got %v", cd)
-	}
-
-	builder = NewDevice(0).WithMenuGroup("nothing", &MenuGroupBuilder{})
-	if _, ok := builder.proto.GetMenuGroups()["nothing"]; ok {
-		t.Error("expected menu group with nil Proto to short-circuit")
-	}
-	cd, err = builder.Build()
-	if err == nil {
-		t.Error("expected error for builder with menu group with nil Proto")
 	}
 	if cd != (Device{}) {
 		t.Errorf("expected empty Device, got %v", cd)

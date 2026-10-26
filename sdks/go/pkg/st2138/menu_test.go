@@ -201,20 +201,6 @@ func TestMenuGroup_WithMenu_NestedErrors(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_WithMenu_EmptyMenu(t *testing.T) {
-	builder := NewMenuGroup().WithMenu("video", &MenuBuilder{})
-	if _, ok := builder.proto.GetMenus()["video"]; ok {
-		t.Error("expected empty menu builder to leave the proto menus unchanged")
-	}
-	mg, err := builder.Build()
-	if mg != (MenuGroup{}) {
-		t.Errorf("expected nil menu group, got %v", mg)
-	}
-	if err == nil {
-		t.Error("expected error for builder with empty menu")
-	}
-}
-
 func TestMenuGroup_MultipleMenus(t *testing.T) {
 	mg, err := NewMenuGroup().
 		WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Video"})).

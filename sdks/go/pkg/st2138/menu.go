@@ -88,26 +88,11 @@ func (mg *MenuGroupBuilder) WithName(name PolyglotText) *MenuGroupBuilder {
 // caller's Menu (or reusing it under another oid) do not affect entries that
 // were already added.
 func (mg *MenuGroupBuilder) WithMenu(oid string, menu *MenuBuilder) *MenuGroupBuilder {
-	if mg.err != nil {
+	m, ok := buildChild(&mg.err, menu, (*MenuBuilder).Build, "WithMenu")
+	if !ok {
 		return mg
 	}
-	if menu == nil {
-		mg.err = errors.New("menu cannot be nil")
-		return mg
-	}
-	m, err := menu.Build()
-	if err != nil {
-		mg.err = err
-		return mg
-	}
-	if m == (Menu{}) || m.Proto == nil {
-		mg.err = errors.New("menu builder returned nil menu")
-		return mg
-	}
-	if mg.proto.Menus == nil {
-		mg.proto.Menus = map[string]*protos.Menu{}
-	}
-	mg.proto.Menus[oid] = m.Proto
+	put(&mg.proto.Menus, oid, m.Proto)
 	return mg
 }
 
