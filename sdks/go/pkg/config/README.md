@@ -34,6 +34,7 @@ Optional `InitOption` values let callers customize behavior:
 - `WithPrefix("MYAPP")` to use `MYAPP_*` env variables.
 - `WithDefaults(customDefaults)` to replace the baseline defaults before env/CLI overrides.
 - `WithSuppressedInputs("flag-name", ...)` to suppress both env and CLI for selected inputs.
+- `WithOnlyInputs("flag-name", "prefix-*", ...)` to load only the selected inputs and suppress all others.
 
 ## Basic Usage
 
@@ -109,6 +110,27 @@ Suppressed inputs are matched by CLI flag name.
 - The suppressed flags are not registered in `--help` output.
 - Their corresponding environment variables are ignored.
 - If a user still passes a suppressed CLI flag explicitly, it is treated as an unknown flag by Go's `flag` parser.
+- Suppressing `log-level` also hides the `-v`, `-vv` and `-vvv` shorthands.
+
+### Only Inputs (allowlist)
+
+```go
+opts, err := config.InitOptions(
+	"my-tool",
+	os.Args[1:],
+	config.WithOnlyInputs(
+		"use-grpc", "use-rest",
+		"grpc-port", "rest-port",
+		"grpc-tls-*", "rest-tls-*",
+	),
+)
+```
+
+`WithOnlyInputs` is the inverse of `WithSuppressedInputs`: every input not listed is suppressed, so options added to the SDK later stay hidden without updating the list.
+
+- Names are matched by CLI flag name and may use `path.Match` wildcards such as `grpc-tls-*`.
+- If a name is in both `WithOnlyInputs` and `WithSuppressedInputs`, it is suppressed.
+- Calling `WithOnlyInputs()` with no names suppresses everything.
 
 ## Example Scenarios
 
