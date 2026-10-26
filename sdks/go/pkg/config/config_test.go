@@ -173,8 +173,9 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			"cors_max_age":          json.Number("0"),
 		},
 		"grpc": map[string]any{
-			"port":       json.Number("0"),
-			"reflection": false,
+			"port":           json.Number("0"),
+			"reflection":     false,
+			"disable_health": false,
 			"tls": map[string]any{
 				"enabled":        false,
 				"cert_file":      "",
@@ -277,6 +278,9 @@ func TestDefaultOptions_TransportFlags(t *testing.T) {
 	opts := DefaultRuntimeOptions()
 	if opts.Grpc.Reflection != false {
 		t.Errorf("expected default Grpc.Reflection=false, got %v", opts.Grpc.Reflection)
+	}
+	if opts.Grpc.DisableHealth {
+		t.Errorf("expected default Grpc.DisableHealth=false, got %v", opts.Grpc.DisableHealth)
 	}
 	if opts.UseGrpc != false {
 		t.Errorf("expected default UseGrpc=false, got %v", opts.UseGrpc)

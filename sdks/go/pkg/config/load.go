@@ -174,6 +174,7 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractPositiveDuration("REST_CORS_MAX_AGE", "rest-cors-max-age", "CORS preflight Max-Age duration (e.g. 10m, 600s). Defaults to seconds if no unit is specified.", &opts.Rest.CorsMaxAge).
 		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
 		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
+		extractBool("GRPC_DISABLE_HEALTH", "grpc-disable-health", "Disable the standard gRPC health service (grpc.health.v1), which is otherwise enabled", &opts.Grpc.DisableHealth).
 		extractBool("GRPC_TLS_ENABLED", "grpc-tls-enabled", "Enable TLS on the gRPC transport listener", &opts.Grpc.TLS.Enabled).
 		extractString("GRPC_TLS_CERT_FILE", "grpc-tls-cert-file", "Path to the PEM server certificate for the gRPC transport", &opts.Grpc.TLS.CertFile).
 		extractString("GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "Path to the PEM server private key for the gRPC transport", &opts.Grpc.TLS.KeyFile).

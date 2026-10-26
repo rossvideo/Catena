@@ -51,6 +51,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection/grpc_reflection_v1"
 	"google.golang.org/grpc/status"
@@ -67,13 +68,20 @@ import (
 const bufSize = 1024 * 1024
 
 type testTransportConfig struct {
-	port         uint16
-	reflection   bool
-	isDev        bool
-	startupDelay time.Duration
+	port          uint16
+	reflection    bool
+	disableHealth bool
+	isDev         bool
+	startupDelay  time.Duration
 }
 
 type testTransportOption func(*testTransportConfig)
+
+func withTestTransportHealthDisabled() testTransportOption {
+	return func(cfg *testTransportConfig) {
+		cfg.disableHealth = true
+	}
+}
 
 func withTestTransportDevMode(isDev bool) testTransportOption {
 	return func(cfg *testTransportConfig) {
@@ -102,7 +110,7 @@ func setupTestTransport(t *testing.T, slots []uint16, opts ...testTransportOptio
 	}
 
 	lis := bufconn.Listen(bufSize)
-	transport := NewTransport(config.GrpcOptions{Port: int(cfg.port), Reflection: cfg.reflection})
+	transport := NewTransport(config.GrpcOptions{Port: int(cfg.port), Reflection: cfg.reflection, DisableHealth: cfg.disableHealth})
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.Dev = cfg.isDev
 	runtime.Slots = slots
@@ -2126,6 +2134,58 @@ func TestTransport_AddLanguage_HandlerError(t *testing.T) {
 		LanguagePack: &protos.LanguagePack{Name: "Global Dutch"},
 	})
 	assertGRPCCode(t, err, codes.Internal, "AddLanguage handler error")
+}
+
+// =============================================================================
+// Test: gRPC Health
+// =============================================================================
+
+func TestTransport_Health_Enabled(t *testing.T) {
+	ctx := context.Background()
+	transport, _, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	conn, err := dialTestServer(ctx, lis)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer conn.Close()
+
+	client := healthpb.NewHealthClient(conn)
+	resp, err := client.Check(ctx, &healthpb.HealthCheckRequest{})
+	if err != nil {
+		t.Fatalf("Check failed: %v", err)
+	}
+	if resp.Status != healthpb.HealthCheckResponse_SERVING {
+		t.Errorf("expected SERVING, got %v", resp.Status)
+	}
+
+	// Shutdown flips the service to NOT_SERVING so probes stop routing to us.
+	transport.healthServer.Shutdown()
+	resp, err = client.Check(ctx, &healthpb.HealthCheckRequest{})
+	if err != nil {
+		t.Fatalf("Check after shutdown failed: %v", err)
+	}
+	if resp.Status != healthpb.HealthCheckResponse_NOT_SERVING {
+		t.Errorf("expected NOT_SERVING after shutdown, got %v", resp.Status)
+	}
+}
+
+func TestTransport_Health_Disabled(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestTransport(t, []uint16{0}, withTestTransportHealthDisabled())
+	defer cleanup()
+
+	conn, err := dialTestServer(ctx, lis)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer conn.Close()
+
+	_, err = healthpb.NewHealthClient(conn).Check(ctx, &healthpb.HealthCheckRequest{})
+	if status.Code(err) != codes.Unimplemented {
+		t.Errorf("expected Unimplemented when health is disabled, got: %v", err)
+	}
 }
 
 // =============================================================================

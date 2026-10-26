@@ -349,6 +349,7 @@ func TestOptionMappings(t *testing.T) {
 		// gRPC transport
 		{"GRPC_PORT", "grpc-port", "7000", 7000, func(o RuntimeOptions) any { return o.Grpc.Port }},
 		{"GRPC_REFLECTION", "grpc-reflection", "true", true, func(o RuntimeOptions) any { return o.Grpc.Reflection }},
+		{"GRPC_DISABLE_HEALTH", "grpc-disable-health", "true", true, func(o RuntimeOptions) any { return o.Grpc.DisableHealth }},
 		{"GRPC_TLS_ENABLED", "grpc-tls-enabled", "true", true, func(o RuntimeOptions) any { return o.Grpc.TLS.Enabled }},
 		{"GRPC_TLS_CERT_FILE", "grpc-tls-cert-file", "/certs/grpc.crt", "/certs/grpc.crt", func(o RuntimeOptions) any { return o.Grpc.TLS.CertFile }},
 		{"GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "/certs/grpc.key", "/certs/grpc.key", func(o RuntimeOptions) any { return o.Grpc.TLS.KeyFile }},

@@ -296,6 +296,7 @@ All options can be configured via env and CLI.
 
 - `PREFIX_GRPC_PORT` <-> `--grpc-port`
 - `PREFIX_GRPC_REFLECTION` <-> `--grpc-reflection`
+- `PREFIX_GRPC_DISABLE_HEALTH` <-> `--grpc-disable-health` (the standard `grpc.health.v1` service is enabled unless this is set)
 - `PREFIX_GRPC_TLS_ENABLED` <-> `--grpc-tls-enabled`
 - `PREFIX_GRPC_TLS_CERT_FILE` <-> `--grpc-tls-cert-file`
 - `PREFIX_GRPC_TLS_KEY_FILE` <-> `--grpc-tls-key-file`
