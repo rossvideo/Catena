@@ -223,34 +223,6 @@ func TestWithName(t *testing.T) {
 	}
 }
 
-func TestWithName_Nil(t *testing.T) {
-	cp := NewParamInt32(0).WithName(nil)
-	if cp.proto.GetName() != nil {
-		t.Error("expected nil name to leave the proto name unset")
-	}
-	p, err := cp.Build()
-	if p != (Param{}) {
-		t.Errorf("expected empty Param, got %v", p)
-	}
-	if err == nil {
-		t.Error("expected error for builder with nil name")
-	}
-}
-
-func TestWithName_EmptyPolyglotText(t *testing.T) {
-	cp := NewParamInt32(0).WithName(PolyglotText{})
-	if cp.proto.GetName() != nil {
-		t.Error("expected empty polyglot text to leave the proto name unset")
-	}
-	p, err := cp.Build()
-	if p != (Param{}) {
-		t.Errorf("expected empty Param, got %v", p)
-	}
-	if err == nil {
-		t.Error("expected error for builder with nil PolyglotText")
-	}
-}
-
 func TestWithReadOnly(t *testing.T) {
 	p, err := NewParamInt32(0).WithReadOnly(true).Build()
 	if err != nil {

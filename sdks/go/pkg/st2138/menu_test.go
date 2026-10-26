@@ -111,20 +111,6 @@ func TestMenuGroup_WithName_LoopBuiltName(t *testing.T) {
 	}
 }
 
-func TestMenuGroup_WithName_EmptyPolyglotText(t *testing.T) {
-	builder := NewMenuGroup().WithName(PolyglotText{})
-	if builder.proto.GetName() != nil {
-		t.Error("expected empty polyglot text to leave the proto name unset")
-	}
-	mg, err := builder.Build()
-	if mg != (MenuGroup{}) {
-		t.Errorf("expected nil menu group, got %v", mg)
-	}
-	if err == nil {
-		t.Error("expected error for builder with empty polyglot text")
-	}
-}
-
 func TestMenuGroup_WithMenu(t *testing.T) {
 	mg, err := NewMenuGroup().WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Video"})).Build()
 	if err != nil {
@@ -188,7 +174,9 @@ func TestMenuGroup_WithMenu_Nil(t *testing.T) {
 }
 
 func TestMenuGroup_WithMenu_NestedErrors(t *testing.T) {
-	builder := NewMenuGroup().WithMenu("video", NewMenu().WithName(nil))
+	m := NewMenu()
+	m.err = errors.New("Test error")
+	builder := NewMenuGroup().WithMenu("video", m)
 	if _, ok := builder.proto.GetMenus()["video"]; ok {
 		t.Error("expected nested builder error to leave the proto menus unchanged")
 	}
@@ -275,7 +263,9 @@ func TestMenuGroup_Build(t *testing.T) {
 }
 
 func TestMenuGroup_BuildSurfacesError(t *testing.T) {
-	mg, err := NewMenuGroup().WithName(nil).Build()
+	mgb := NewMenuGroup()
+	mgb.err = errors.New("Test error")
+	mg, err := mgb.Build()
 	if err == nil {
 		t.Fatal("expected error for builder with invalid value", err)
 	}
@@ -415,20 +405,6 @@ func TestMenu_WithName_Replaces(t *testing.T) {
 	}
 }
 
-func TestMenu_WithName_EmptyPolyglotText(t *testing.T) {
-	builder := NewMenu().WithName(PolyglotText{})
-	if builder.proto.GetName() != nil {
-		t.Error("expected empty polyglot text to leave the proto name unset")
-	}
-	m, err := builder.Build()
-	if m != (Menu{}) {
-		t.Errorf("expected nil menu, got %v", m)
-	}
-	if err == nil {
-		t.Error("expected error for builder with empty polyglot text")
-	}
-}
-
 func TestMenu_WithFields(t *testing.T) {
 	m, err := NewMenu().
 		WithName(PolyglotText{"en": "Video"}).
@@ -492,7 +468,9 @@ func TestMenu_Build(t *testing.T) {
 }
 
 func TestMenu_BuildSurfacesError(t *testing.T) {
-	m, err := NewMenu().WithName(nil).Build()
+	mb := NewMenu()
+	mb.err = errors.New("Test error")
+	m, err := mb.Build()
 	if err == nil {
 		t.Errorf("expected error for builder with invalid value, got %v", err)
 	}

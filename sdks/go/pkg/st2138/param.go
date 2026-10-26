@@ -272,10 +272,6 @@ func (cp *ParamBuilder) WithName(name PolyglotText) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	if len(name) == 0 {
-		cp.err = fmt.Errorf("WithName: name cannot be nil")
-		return cp
-	}
 	cp.proto.Name = name.Proto()
 	return cp
 }

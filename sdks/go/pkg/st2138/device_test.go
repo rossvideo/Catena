@@ -195,7 +195,9 @@ func TestDevice_WithMenuGroup_Nil(t *testing.T) {
 }
 
 func TestDevice_WithMenuGroup_NestedErrors(t *testing.T) {
-	builder := NewDevice(0).WithMenuGroup("nothing", NewMenuGroup().WithName(nil))
+	mb := NewMenuGroup()
+	mb.err = errors.New("Test error")
+	builder := NewDevice(0).WithMenuGroup("nothing", mb)
 	if _, ok := builder.proto.GetMenuGroups()["nothing"]; ok {
 		t.Error("expected nested builder error to leave menu groups unchanged")
 	}

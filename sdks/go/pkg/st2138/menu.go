@@ -39,8 +39,6 @@
 package st2138
 
 import (
-	"errors"
-
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -73,11 +71,6 @@ func (mg *MenuGroupBuilder) WithName(name PolyglotText) *MenuGroupBuilder {
 	if mg.err != nil {
 		return mg
 	}
-	if len(name) == 0 {
-		mg.err = errors.New("name cannot be nil")
-		return mg
-	}
-
 	mg.proto.Name = name.Proto()
 	return mg
 }
@@ -147,11 +140,6 @@ func (m *MenuBuilder) WithName(name PolyglotText) *MenuBuilder {
 	if m.err != nil {
 		return m
 	}
-	if len(name) == 0 {
-		m.err = errors.New("name is required")
-		return m
-	}
-
 	m.proto.Name = name.Proto()
 	return m
 }
