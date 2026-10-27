@@ -85,16 +85,9 @@ func NewParamString(value ...string) *ParamBuilder {
 // auto-created for every field (recursively for nested maps), so trivial
 // fields need no explicit WithParam calls.
 func NewParamStruct(value ...map[string]any) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
-	if cp.err = extraValueCheck(value, "NewParamStruct"); cp.err != nil {
-		return cp
-	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStruct: failed to convert value: %w", err)
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT, "NewParamStruct", value,
+		func(v map[string]any) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
 	params, err := structFieldDescriptors(pv.GetStructValue())
@@ -107,16 +100,9 @@ func NewParamStruct(value ...map[string]any) *ParamBuilder {
 // struct values recurse. An empty variant type errors.
 // Alternatives that are not the current value still need WithParam.
 func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
-	if cp.err = extraValueCheck(value, "NewParamStructVariant"); cp.err != nil {
-		return cp
-	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructVariant: failed to convert value: %w", err)
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT_VARIANT, "NewParamStructVariant", value,
+		func(v StructVariantValue) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
 	params, err := variantDescriptors(pv.GetStructVariantValue())
@@ -153,19 +139,12 @@ func NewParamBinary(value ...[]byte) *ParamBuilder {
 // type union their nested descriptors. A field name that appears as two
 // different types fails the builder.
 func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
-	if cp.err = extraValueCheck(value, "NewParamStructArray"); cp.err != nil {
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT_ARRAY, "NewParamStructArray", value,
+		func(v []map[string]any) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructArray: failed to convert value: %w", err)
-		return cp
-	}
-	params, err := mergeStructDescriptors(pv.GetStructArrayValues().GetStructValues())
+	params, err := mergeArrayDescriptors(pv.GetStructArrayValues().GetStructValues(), structFieldDescriptors)
 	return setInferredValue(cp, "NewParamStructArray", pv, params, err)
 }
 
@@ -175,19 +154,12 @@ func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
 // inner type union nested descriptors. The same variant type with two different
 // inner types fails the builder. An empty variant type errors.
 func NewParamStructVariantArray(value ...[]StructVariantValue) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
-	if cp.err = extraValueCheck(value, "NewParamStructVariantArray"); cp.err != nil {
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT_VARIANT_ARRAY, "NewParamStructVariantArray", value,
+		func(v []StructVariantValue) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructVariantArray: failed to convert value: %w", err)
-		return cp
-	}
-	params, err := mergeVariantDescriptors(pv.GetStructVariantArrayValues().GetStructVariants())
+	params, err := mergeArrayDescriptors(pv.GetStructVariantArrayValues().GetStructVariants(), variantDescriptors)
 	return setInferredValue(cp, "NewParamStructVariantArray", pv, params, err)
 }
 
@@ -201,17 +173,8 @@ func NewParamEmpty() *ParamBuilder {
 }
 
 func NewParamData(payload ...DataPayload) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_DATA}}
-	if cp.err = extraValueCheck(payload, "NewParamData"); cp.err != nil {
-		return cp
-	}
-	if len(payload) == 0 {
-		return cp
-	}
-	pdp, err := dataPayloadToProto(payload[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamData: failed to convert DataPayload: %w", err)
-
+	cp, pdp, shortCircuit := newParamStructLikeBuilder(protos.ParamType_DATA, "NewParamData", payload, dataPayloadToProto)
+	if shortCircuit {
 		return cp
 	}
 	cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
@@ -291,44 +254,27 @@ func nestedParams(v *protos.Value) (map[string]*protos.Param, error) {
 	switch kind := v.Kind.(type) {
 	case *protos.Value_StructValue:
 		return structFieldDescriptors(kind.StructValue)
-	case *protos.Value_StructArrayValues:
-		return mergeStructDescriptors(kind.StructArrayValues.GetStructValues())
 	case *protos.Value_StructVariantValue:
 		return variantDescriptors(kind.StructVariantValue)
+	case *protos.Value_StructArrayValues:
+		return mergeArrayDescriptors(kind.StructArrayValues.GetStructValues(), structFieldDescriptors)
 	case *protos.Value_StructVariantArrayValues:
-		return mergeVariantDescriptors(kind.StructVariantArrayValues.GetStructVariants())
+		return mergeArrayDescriptors(kind.StructVariantArrayValues.GetStructVariants(), variantDescriptors)
 	default:
 		return nil, nil
 	}
 }
 
-// mergeStructDescriptors unions field descriptors across array elements, in
-// order. Same-type fields union their nested descriptors.
-func mergeStructDescriptors(elements []*protos.StructValue) (map[string]*protos.Param, error) {
+// mergeArrayDescriptors unions descriptors across array elements, in order.
+// protoFunc is used to convert the element to a map of descriptors.
+func mergeArrayDescriptors[T any](elements []T, protoFunc func(T) (map[string]*protos.Param, error)) (map[string]*protos.Param, error) {
 	var merged map[string]*protos.Param
 	for _, el := range elements {
-		fields, err := structFieldDescriptors(el)
+		fields, err := protoFunc(el)
 		if err != nil {
 			return nil, err
 		}
 		merged, err = mergeDescriptors(merged, fields)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return merged, nil
-}
-
-// mergeVariantDescriptors unions one descriptor per variant type present, in
-// element order. An empty variant type is skipped.
-func mergeVariantDescriptors(variants []*protos.StructVariantValue) (map[string]*protos.Param, error) {
-	var merged map[string]*protos.Param
-	for _, sv := range variants {
-		one, err := variantDescriptors(sv)
-		if err != nil {
-			return nil, err
-		}
-		merged, err = mergeDescriptors(merged, one)
 		if err != nil {
 			return nil, err
 		}
@@ -400,6 +346,26 @@ func newParamBuilder[T any](typ protos.ParamType, name string, value []T, valueO
 		cp.proto.Value = valueOf(value[0])
 	}
 	return cp
+}
+
+// newParamStructLikeBuilder creates a param builder for a struct-like param.
+// Returns a builder, the proto value, and a boolean indicating whether the
+// builder should short-circuit due to an error or an empty value collection.
+// protoFunc is used to convert the first value to a proto value.
+func newParamStructLikeBuilder[T any, PV any](typ protos.ParamType, name string, value []T, protoFunc func(T) (*PV, error)) (*ParamBuilder, *PV, bool) {
+	cp := &ParamBuilder{proto: &protos.Param{Type: typ}}
+	if cp.err = extraValueCheck(value, name); cp.err != nil {
+		return cp, nil, true
+	}
+	if len(value) == 0 {
+		return cp, nil, true
+	}
+	pv, err := protoFunc(value[0])
+	if err != nil {
+		cp.err = fmt.Errorf("%s: %w", name, err)
+		return cp, nil, true
+	}
+	return cp, pv, false
 }
 
 // --- Chainable With* methods ---
