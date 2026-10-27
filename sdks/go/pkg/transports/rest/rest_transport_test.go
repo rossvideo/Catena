@@ -62,7 +62,7 @@ import (
 )
 
 func makeTestTransport(tb testing.TB) (*Transport, *transporttest.StubServerRuntime) {
-	transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: -1})
+	transport := NewTransport(config.RestOptions{Port: 8080, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1})
 	stubRuntime := transporttest.MakeStubServerRuntime(tb)
 	stubRuntime.Dev = true
 	transport.runtime = stubRuntime
