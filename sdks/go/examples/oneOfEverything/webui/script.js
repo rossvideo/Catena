@@ -33,7 +33,7 @@ async function selectSlot(slot) {
 async function fetchDevice(slot) {
     const details = document.getElementById('deviceDetails');
     try {
-        const res = await fetch(`/st2138-api/v1/${slot}`);
+        const res = await apiFetch(`/st2138-api/v1/${slot}`);
         if (!res.ok) {
             details.innerHTML = `<div class="device-loading">Error: ${res.status}</div>`;
             return;
@@ -117,12 +117,23 @@ function renderDevice(device) {
     details.innerHTML = `<pre class="json-display">${highlighted}</pre>`;
 }
 
+// Helper function to fetch with the auth header and handle 401 errors
+async function apiFetch(url, options) {
+    const opts = Object.assign({}, options);
+    opts.headers = Object.assign({}, opts.headers, { 'Authorization': 'Bearer ' + getToken() });
+    const res = await fetch(url, opts);
+    if (res.status === 401) {
+        console.error('The server rejected this request. Use Authorize to paste a token or sign in.');
+    }
+    return res;
+}
+
 // =====================================================================
 // Commands Section
 // =====================================================================
 async function cmd(name) {
     try {
-        const res = await fetch(`/st2138-api/v1/0/command/${name}`, {
+        const res = await apiFetch(`/st2138-api/v1/0/command/${name}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -238,7 +249,7 @@ async function setParam(name, value, type) {
                    : type === 'string' ? { string_value: value } 
                    : value;
         const slot = paramConfig.find(p => p.name === name)?.slot ?? 0;
-        const res = await fetch(`/st2138-api/v1/${slot}/value/${name}`, {
+        const res = await apiFetch(`/st2138-api/v1/${slot}/value/${name}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -259,7 +270,7 @@ async function poll() {
 
     // Fetch counter and running flag from slot 0. Both are plain int32 params.
     fetches.push(
-        fetch('/st2138-api/v1/0/value/counter')
+        apiFetch('/st2138-api/v1/0/value/counter')
             .then(r => r.json())
             .then(data => {
                 const value = extractValue(data);
@@ -268,7 +279,7 @@ async function poll() {
             .catch(e => console.error('poll counter error:', e))
     );
     fetches.push(
-        fetch('/st2138-api/v1/0/value/running')
+        apiFetch('/st2138-api/v1/0/value/running')
             .then(r => r.json())
             .then(data => {
                 const value = extractValue(data);
@@ -280,7 +291,7 @@ async function poll() {
     // Fetch each param from its proper slot
     for (const p of paramConfig) {
         fetches.push(
-            fetch(`/st2138-api/v1/${p.slot}/value/${p.name}`)
+            apiFetch(`/st2138-api/v1/${p.slot}/value/${p.name}`)
                 .then(r => r.json())
                 .then(data => {
                     const val = extractValue(data);
@@ -296,39 +307,96 @@ async function poll() {
 // =====================================================================
 // SSE Connection (replaces polling)
 // =====================================================================
-function connectSSE() {
-    const es = new EventSource('/st2138-api/v1/connect');
+function updateStream(data) {
+    if (!data.value) return;
 
-    es.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            if (data.value) {
-                const oid = data.value.oid;
-                const protoVal = data.value.value;
-                const val = extractValue(protoVal);
-                if (val === null) return;
-                if (oid === 'counter') {
-                    updateCounter(val);
-                } else if (oid === 'running') {
-                    updateRunning(val);
-                } else {
-                    updateParamInput(oid, val);
-                }
-            }
-        } catch (e) {
-            console.error('SSE parse error:', e);
+    const oid = data.value.oid;
+    const val = extractValue(data.value.value);
+
+    if (val === null) return;
+
+    if (oid === 'counter')
+    {
+        updateCounter(val);
+    }
+    else if (oid === 'running')
+    {
+        updateRunning(val);
+    }
+    else
+    {
+        updateParamInput(oid, val);
+    }
+}
+
+function handleSSEFrame(frame) {
+    const data = frame.split('\n')
+        .filter(line => line.startsWith('data:'))
+        .map(line => line.slice(5).trimStart())
+        .join('\n');
+    if (!data) return;
+    try {
+        updateStream(JSON.parse(data));
+    } catch (e) {
+        console.error('SSE parse error:', e);
+    }
+}
+
+let sseController = null;
+let sseRetryTimer = null;
+
+async function connectSSE() {
+    if (sseController) sseController.abort();
+    clearTimeout(sseRetryTimer);
+    const controller = new AbortController();
+    sseController = controller;
+
+    const retry = () => {
+        if (sseController !== controller) return;
+        sseRetryTimer = setTimeout(() => connectSSE(), 2000);
+    };
+
+    try {
+        const res = await apiFetch('/st2138-api/v1/connect', {
+            headers: { Accept: 'text/event-stream' },
+            signal: controller.signal,
+        });
+
+        if (!res.ok || !res.body) {
+            retry();
+            return;
         }
-    };
 
-    es.onerror = () => {
-        console.warn('SSE connection lost, will auto-reconnect');
-    };
+        await poll();
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+            const { value, done } = await reader.read();
 
-    es.addEventListener('open', () => {
-        poll();
-    });
+            if (done || controller.signal.aborted) {
+                console.warn('SSE connection closed, will retry');
+                retry();
+                return;
+            }
 
-    return es;
+            buffer += decoder.decode(value, {stream: true});
+
+            // Normalize CRLF & CR line ending to LF
+            buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+            // SSE frame
+            let splitAt;
+            while ((splitAt = buffer.indexOf('\n\n')) !== -1) {
+                handleSSEFrame(buffer.slice(0, splitAt));
+                buffer = buffer.slice(splitAt + 2);
+            }
+        }
+    } catch (e) {
+        if (controller.signal.aborted) return;
+        console.warn('SSE connection lost, will retry');
+        retry();
+    }
 }
 
 // =====================================================================
@@ -337,7 +405,7 @@ function connectSSE() {
 async function fetchAssets() {
     const container = document.getElementById('assetsContainer');
     try {
-        const res = await fetch('/assets-list');
+        const res = await apiFetch('/assets-list');
         if (!res.ok) {
             container.innerHTML = '<div class="asset-error">Failed to load assets</div>';
             return;
@@ -386,7 +454,7 @@ function decodeAssetPayload(base64) {
 
 // Fetch and decode asset from API
 async function fetchAssetData(assetId) {
-    const res = await fetch(`/st2138-api/v1/0/asset/${assetId}`);
+    const res = await apiFetch(`/st2138-api/v1/0/asset/${assetId}`);
     if (!res.ok) throw new Error(`Failed to fetch asset: ${res.status}`);
     const data = await res.json();
     
@@ -475,10 +543,285 @@ function escapeHtml(text) {
 }
 
 // =====================================================================
+// Authorization
+// =====================================================================
+
+let demoConfig = {
+    jwtIssuer: ''
+};
+
+async function loadDemoConfig() {
+    try {
+        const res = await fetch('/demo-config');
+        if (!res.ok) return;
+        Object.assign(demoConfig, await res.json());
+    } catch (e) {
+        console.error('demo-config error:', e);
+    }
+}
+
+// Session storage for the token and the in-progress Keycloak login.
+const TOKEN_STORAGE_KEY = 'st2138-token';
+const KEYCLOAK_CLIENT_ID = 'oneofeverything';
+const PKCE_VERIFIER_KEY = 'st2138-pkce-verifier';
+const OAUTH_STATE_KEY = 'st2138-oauth-state';
+const OAUTH_REDIRECT_KEY = 'st2138-oauth-redirect';
+
+function getRawToken(token) {
+    token = (token || '').trim();
+
+    // Remove the Bearer prefix if it exists
+    if (token.toLowerCase().startsWith('bearer ')) {
+        // remove first 7 characters (length of "bearer ")
+        token = token.slice(7).trim();
+    }
+    return token;
+}
+
+function getToken() {
+    return sessionStorage.getItem(TOKEN_STORAGE_KEY) || '';
+}
+
+function setToken(token) {
+    token = getRawToken(token);
+    if (token) sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    return token;
+}
+
+function setAuthStatus(message, isError) {
+    const status = document.getElementById('authStatus');
+    status.textContent = message || '';
+    status.classList.toggle('error', !!isError);
+}
+
+function openAuthModal() {
+    const modal = document.getElementById('authModal');
+    const input = document.getElementById('tokenInput');
+
+    setAuthStatus('');
+    modal.classList.add('open');
+    input.focus();
+}
+
+function closeAuthModal() {
+    document.getElementById('authModal').classList.remove('open');
+}
+
+function selectedScope() {
+    const read = new Set();
+    const write = new Set();
+
+    const scopeCheckBoxList = Array.from(document.querySelectorAll('#authModal input[type="checkbox"][data-scope]'));
+
+    scopeCheckBoxList.forEach(box => {
+        if (!box.checked) return;
+        if (box.dataset.access === 'write') write.add(box.dataset.scope);
+        else read.add(box.dataset.scope);
+    });
+
+    write.forEach(scope => read.add(scope)); // A write scope impled a read scope aswell
+
+    // Build the scope string with the read and write scopes and the roles
+    const names = [];
+    ['st2138:mon', 'st2138:op', 'st2138:cfg', 'st2138:adm'].forEach(scope => {
+        if (read.has(scope)) names.push(scope);
+        if (write.has(scope)) names.push(scope + ':w');
+    });
+
+    return names.join(' ');
+}
+
+function bytesToBase64Url(bytes) {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function refreshAfterAuthChange() {
+    poll();
+    connectSSE();
+    fetchDevice(lastDeviceSlot ?? 0);
+    fetchAssets();
+}
+
+// Generate unsigned token for the demo with the selected scopes
+function buildDemoToken() {
+
+    const now = Math.floor(Date.now() / 1000);
+
+    const claims = {
+        sub: 'demo-user',
+        scope: selectedScope(),
+        iat: now - 30,
+        exp: now + 3600,
+    };
+    // --jwt-issuer makes the iss claim mandatory, even when the signature is not checked.
+    if (demoConfig.jwtIssuer) claims.iss = demoConfig.jwtIssuer;
+
+    const headerJSON = JSON.stringify({ alg: 'none', typ: 'JWT' });
+    const payloadJSON = JSON.stringify(claims);
+
+    const header = bytesToBase64Url(new TextEncoder().encode(headerJSON));
+    const payload = bytesToBase64Url(new TextEncoder().encode(payloadJSON));
+
+    return header + '.' + payload + '.';
+}
+
+function keycloakBrowserIssuer() {
+    return (demoConfig.jwtIssuer || '').replace(/\/$/, '');
+}
+
+async function sha256Base64Url(value) {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+    return bytesToBase64Url(new Uint8Array(digest));
+}
+
+function cleanAuthQuery() {
+    const url = new URL(location.href);
+    ['code', 'state', 'session_state', 'iss', 'error', 'error_description'].forEach(name => {
+        url.searchParams.delete(name);
+    });
+    const query = url.searchParams.toString();
+    history.replaceState({}, '', url.pathname + (query ? '?' + query : '') + url.hash);
+}
+
+// Send the browser to Keycloak's login page.
+async function signInWithKeycloak() {
+    const issuer = keycloakBrowserIssuer();
+    if (!issuer) {
+        setAuthStatus('Keycloak issuer is not configured. Start the example with --jwt-issuer set to the realm URL.', true);
+        return;
+    }
+
+    const verifier = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+    const challenge = await sha256Base64Url(verifier);
+    const state = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)));
+    const redirectUri = location.origin + '/';
+
+    sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+    sessionStorage.setItem(OAUTH_STATE_KEY, state);
+    sessionStorage.setItem(OAUTH_REDIRECT_KEY, redirectUri);
+
+    const auth = new URL(issuer + '/protocol/openid-connect/auth');
+    auth.searchParams.set('client_id', KEYCLOAK_CLIENT_ID);
+    auth.searchParams.set('response_type', 'code');
+    auth.searchParams.set('redirect_uri', redirectUri);
+    auth.searchParams.set('state', state);
+    auth.searchParams.set('code_challenge', challenge);
+    auth.searchParams.set('code_challenge_method', 'S256');
+    auth.searchParams.set('prompt', 'login');
+
+    setAuthStatus('Redirecting to the Keycloak login page…');
+    location.assign(auth.toString());
+}
+
+// Finish the login after Keycloak redirects back with an authorization code.
+async function completeKeycloakLogin() {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const code = params.get('code');
+    if (!error && !code) return;
+
+    const returnedState = params.get('state');
+    const description = params.get('error_description');
+    cleanAuthQuery();
+
+    if (error) {
+        openAuthModal();
+        setAuthStatus(description || error, true);
+        return;
+    }
+
+    const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
+    const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+    const redirectUri = sessionStorage.getItem(OAUTH_REDIRECT_KEY);
+    sessionStorage.removeItem(OAUTH_STATE_KEY);
+    sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+    sessionStorage.removeItem(OAUTH_REDIRECT_KEY);
+
+    if (!expectedState || returnedState !== expectedState || !verifier || !redirectUri) {
+        openAuthModal();
+        setAuthStatus('Keycloak login could not be completed. Start sign-in again from Authorize.', true);
+        return;
+    }
+
+    try {
+        const body = new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: KEYCLOAK_CLIENT_ID,
+            code,
+            redirect_uri: redirectUri,
+            code_verifier: verifier,
+        });
+        const res = await fetch(keycloakBrowserIssuer() + '/protocol/openid-connect/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body,
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.access_token) {
+            openAuthModal();
+            setAuthStatus(data.error_description || data.error || 'Keycloak did not return an access token.', true);
+            return;
+        }
+        setToken(data.access_token);
+        document.getElementById('tokenInput').value = data.access_token;
+    } catch (e) {
+        console.error('keycloak token error:', e);
+        openAuthModal();
+        setAuthStatus('Could not reach Keycloak to finish sign-in.', true);
+    }
+}
+
+function bindAuthUI() {
+    document.getElementById('authorizeBtn').addEventListener('click', openAuthModal);
+    document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
+    document.getElementById('authModal').addEventListener('click', (e) => {
+        if (e.target.id === 'authModal') closeAuthModal();
+    });
+
+    document.getElementById('applyTokenBtn').addEventListener('click', () => {
+        const token = getRawToken(document.getElementById('tokenInput').value);
+        if (!token) {
+            setAuthStatus('Paste a token before applying.', true);
+            return;
+        }
+        setToken(token);
+        closeAuthModal();
+        refreshAfterAuthChange();
+    });
+
+    document.getElementById('clearTokenBtn').addEventListener('click', () => {
+        document.getElementById('tokenInput').value = '';
+        setToken('');
+        closeAuthModal();
+        refreshAfterAuthChange();
+    });
+
+    document.getElementById('generateTokenBtn').addEventListener('click', () => {
+        const token = buildDemoToken();
+        document.getElementById('tokenInput').value = token;
+        setToken(token);
+    
+        closeAuthModal();
+        refreshAfterAuthChange();
+    });
+
+    document.getElementById('keycloakTokenBtn').addEventListener('click', signInWithKeycloak);
+}
+
+// =====================================================================
 // Initialization
 // =====================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    bindAuthUI();
     buildParamsUI();
+
+    await loadDemoConfig();
+    await completeKeycloakLogin();
+
     poll();
     connectSSE();
     fetchDevice(0);

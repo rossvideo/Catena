@@ -228,7 +228,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "get value",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
+				runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 					assertContext(t, ctx)
 					value, _ := st2138.ToValue(int32(42))
 					return catena.Reply(value)
@@ -242,7 +242,7 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "multi set value",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+				runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 					assertContext(t, ctx)
 					return catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
@@ -258,9 +258,9 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "device request",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+				runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(req.Slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
@@ -385,9 +385,9 @@ func TestTransport_DeviceRequest_Success(t *testing.T) {
 
 	// Register mock handler
 	handlerCalled := false
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
-		device := st2138.NewDevice(slot).
+		device := st2138.NewDevice(req.Slot).
 			WithDetailLevel(st2138.DetailLevelFull)
 		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -420,9 +420,9 @@ func TestTransport_DeviceRequest_MultipleChunks(t *testing.T) {
 
 	// The handler streams the device in pieces: a skeleton Device chunk
 	// followed by a param and a command component.
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 		return []st2138.DeviceComponent{
-			st2138.ComponentDevice(st2138.NewDevice(slot)),
+			st2138.ComponentDevice(st2138.NewDevice(req.Slot)),
 			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
 			st2138.ComponentCommand("reset", st2138.NewParamEmpty()),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -494,7 +494,7 @@ func TestTransport_DeviceRequest_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	// Register handler that returns error
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 	}
 
@@ -569,9 +569,9 @@ func TestTransport_GetValue_Success(t *testing.T) {
 			_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 			defer cleanup()
 
-			runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
-				if fqoid != "device.param1" {
-					t.Errorf("expected fqoid 'device.param1', got %s", fqoid)
+			runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+				if req.Fqoid != "device.param1" {
+					t.Errorf("expected fqoid 'device.param1', got %s", req.Fqoid)
 				}
 				value, _ := st2138.ToValue(tt.handlerValue)
 				return catena.Reply(value)
@@ -604,7 +604,7 @@ func TestTransport_GetValue_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
+	runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 		return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "param not supported")
 	}
 
@@ -625,10 +625,10 @@ func TestTransport_ListLanguages_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.ListLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+	runtime.ListLanguagesFn = func(ctx catena.TransportContext, req catena.ListLanguagesRequest) ([]string, catena.StatusResult) {
 		handlerCalled = true
-		if slot != 0 {
-			t.Errorf("expected slot 0, got %d", slot)
+		if req.Slot != 0 {
+			t.Errorf("expected slot 0, got %d", req.Slot)
 		}
 		return []string{"en", "fr", "es", "de"}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -658,7 +658,7 @@ func TestTransport_ListLanguages_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.ListLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+	runtime.ListLanguagesFn = func(ctx catena.TransportContext, req catena.ListLanguagesRequest) ([]string, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "no languages handler registered")
 	}
 
@@ -675,7 +675,7 @@ func TestTransport_ListLanguages_InvalidSlot(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.ListLanguagesFn = func(slot uint16, ctx catena.TransportContext) ([]string, catena.StatusResult) {
+	runtime.ListLanguagesFn = func(ctx catena.TransportContext, req catena.ListLanguagesRequest) ([]string, catena.StatusResult) {
 		handlerCalled = true
 		return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -700,10 +700,10 @@ func TestTransport_GetParam_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
+	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
 		handlerCalled = true
-		if fqoid != "counter" {
-			t.Errorf("expected fqoid 'counter', got %s", fqoid)
+		if req.Fqoid != "counter" {
+			t.Errorf("expected fqoid 'counter', got %s", req.Fqoid)
 		}
 		param := st2138.NewParamInt32(21).
 			WithName(st2138.NewPolyglotText("en", "Counter")).
@@ -755,7 +755,7 @@ func TestTransport_GetParam_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.GetParamFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Param, catena.StatusResult) {
+	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
 		return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
@@ -776,13 +776,13 @@ func TestTransport_SetValue_Success(t *testing.T) {
 	defer cleanup()
 
 	receivedValue := any(nil)
-	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
-		if len(entries) != 1 {
-			t.Fatalf("expected 1 entry, got %d", len(entries))
+	runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
+		if len(req.Entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(req.Entries))
 		}
-		receivedValue = entries[0].Value
-		if entries[0].Fqoid != "device.param1" {
-			t.Errorf("expected fqoid 'device.param1', got %s", entries[0].Fqoid)
+		receivedValue = req.Entries[0].Value
+		if req.Entries[0].Fqoid != "device.param1" {
+			t.Errorf("expected fqoid 'device.param1', got %s", req.Entries[0].Fqoid)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -812,12 +812,12 @@ func TestTransport_SetValue_LeadingSlashNormalized(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
-		if len(entries) != 1 {
-			t.Fatalf("expected 1 entry, got %d", len(entries))
+	runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
+		if len(req.Entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(req.Entries))
 		}
-		if entries[0].Fqoid != "brightness" {
-			t.Errorf("expected fqoid 'brightness', got %q", entries[0].Fqoid)
+		if req.Entries[0].Fqoid != "brightness" {
+			t.Errorf("expected fqoid 'brightness', got %q", req.Entries[0].Fqoid)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -862,7 +862,7 @@ func TestTransport_SetValue_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 	}
 
@@ -884,9 +884,9 @@ func TestTransport_MultiSetValue_Success(t *testing.T) {
 
 	callCount := 0
 	var got []catena.SetValueEntry
-	runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 		callCount++
-		got = values
+		got = req.Entries
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -928,7 +928,7 @@ func TestTransport_MultiSetValue_HandlerError(t *testing.T) {
 	defer cleanup()
 
 	callCount := 0
-	runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 		callCount++
 		return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value invalid")
 	}
@@ -955,9 +955,9 @@ func TestTransport_MultiSetValue_EmptyValues(t *testing.T) {
 
 	callCount := 0
 	var got []catena.SetValueEntry
-	runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+	runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 		callCount++
-		got = values
+		got = req.Entries
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -991,10 +991,10 @@ func TestTransport_ExternalObjectRequest_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(ctx catena.TransportContext, req catena.ReadAssetRequest) ([]st2138.Asset, catena.StatusResult) {
 		handlerCalled = true
-		if fqoid != "device.image1" {
-			t.Errorf("expected fqoid 'device.image1', got %s", fqoid)
+		if req.Fqoid != "device.image1" {
+			t.Errorf("expected fqoid 'device.image1', got %s", req.Fqoid)
 		}
 		payload := st2138.ToPayloadFromURL("http://example.com/asset.jpg")
 		asset, _ := st2138.ToAsset(payload, true)
@@ -1026,7 +1026,7 @@ func TestTransport_ExternalObjectRequest_MultipleChunks(t *testing.T) {
 	// The handler streams a large asset as several chunks whose payload bytes
 	// the client concatenates in send order.
 	chunks := [][]byte{[]byte("first-"), []byte("second-"), []byte("third")}
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(ctx catena.TransportContext, req catena.ReadAssetRequest) ([]st2138.Asset, catena.StatusResult) {
 		assets := make([]st2138.Asset, 0, len(chunks))
 		for _, data := range chunks {
 			asset, _ := st2138.ToAsset(st2138.ToPayload(data, "application/octet-stream", "blob.bin"), false)
@@ -1076,7 +1076,7 @@ func TestTransport_ExternalObjectRequest_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+	runtime.ReadAssetFn = func(ctx catena.TransportContext, req catena.ReadAssetRequest) ([]st2138.Asset, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
 	}
 
@@ -1103,12 +1103,12 @@ func TestTransport_ParamInfoRequest_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult) {
+	runtime.ParamInfoFn = func(ctx catena.TransportContext, req catena.ParamInfoRequest) ([]st2138.ParamInfo, catena.StatusResult) {
 		handlerCalled = true
-		if oidPrefix != "parent" {
-			t.Errorf("expected oidPrefix 'parent', got %s", oidPrefix)
+		if req.OidPrefix != "parent" {
+			t.Errorf("expected oidPrefix 'parent', got %s", req.OidPrefix)
 		}
-		if !recursive {
+		if !req.Recursive {
 			t.Error("expected recursive=true")
 		}
 		return []st2138.ParamInfo{
@@ -1155,11 +1155,11 @@ func TestTransport_ParamInfoRequest_TopLevel(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult) {
-		if oidPrefix != "" {
-			t.Errorf("expected empty oidPrefix, got %q", oidPrefix)
+	runtime.ParamInfoFn = func(ctx catena.TransportContext, req catena.ParamInfoRequest) ([]st2138.ParamInfo, catena.StatusResult) {
+		if req.OidPrefix != "" {
+			t.Errorf("expected empty oidPrefix, got %q", req.OidPrefix)
 		}
-		if recursive {
+		if req.Recursive {
 			t.Error("expected recursive=false")
 		}
 		return []st2138.ParamInfo{
@@ -1193,7 +1193,7 @@ func TestTransport_ParamInfoRequest_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult) {
+	runtime.ParamInfoFn = func(ctx catena.TransportContext, req catena.ParamInfoRequest) ([]st2138.ParamInfo, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
@@ -1218,7 +1218,7 @@ func TestTransport_ParamInfoRequest_EmptyResult_OK(t *testing.T) {
 		_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 		defer cleanup()
 
-		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(ctx catena.TransportContext, req catena.ParamInfoRequest) ([]st2138.ParamInfo, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -1247,7 +1247,7 @@ func TestTransport_ParamInfoRequest_EmptyResult_OK(t *testing.T) {
 		_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 		defer cleanup()
 
-		runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult) {
+		runtime.ParamInfoFn = func(ctx catena.TransportContext, req catena.ParamInfoRequest) ([]st2138.ParamInfo, catena.StatusResult) {
 			return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
 
@@ -1299,12 +1299,12 @@ func TestTransport_ExecuteCommand_WithResponse(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+	runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
 		handlerCalled = true
-		if fqoid != "device.reboot" {
-			t.Errorf("expected fqoid 'device.reboot', got %s", fqoid)
+		if req.CommandFqoid != "device.reboot" {
+			t.Errorf("expected fqoid 'device.reboot', got %s", req.CommandFqoid)
 		}
-		if payload == nil {
+		if req.Payload == nil {
 			t.Error("expected non-nil payload")
 		}
 		value, _ := st2138.ToValue(string("Command executed"))
@@ -1334,7 +1334,7 @@ func TestTransport_ExecuteCommand_WithoutResponse(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+	runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
 		return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -1354,8 +1354,8 @@ func TestTransport_ExecuteCommand_NilPayload(t *testing.T) {
 	defer cleanup()
 
 	receivedPayload := "not nil"
-	runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
-		if payload != nil {
+	runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
+		if req.Payload != nil {
 			receivedPayload = "not nil"
 		} else {
 			receivedPayload = "nil"
@@ -1400,7 +1400,7 @@ func TestTransport_ExecuteCommand_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+	runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
 		return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "command not supported")
 	}
 
@@ -1576,7 +1576,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "param not supported",
 			grpcCode:   codes.Unimplemented,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
+				runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 					return catena.ReplyError[st2138.Value](catena.StatusCodeUnimplemented, "param not supported")
 				}
 			},
@@ -1590,7 +1590,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "value out of range",
 			grpcCode:   codes.InvalidArgument,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.SetValueFn = func(slot uint16, entries []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+				runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "value out of range")
 				}
 			},
@@ -1611,7 +1611,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "multi set failed",
 			grpcCode:   codes.FailedPrecondition,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.SetValueFn = func(slot uint16, values []catena.SetValueEntry, ctx catena.TransportContext) catena.StatusResult {
+				runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodeFailedPrecondition, "multi set failed")
 				}
 			},
@@ -1631,7 +1631,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "language not writable",
 			grpcCode:   codes.PermissionDenied,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.AddLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+				runtime.AddLanguageFn = func(ctx catena.TransportContext, req catena.CreateLanguagePackRequest) catena.StatusResult {
 					return catena.StatusWithCode(catena.StatusCodePermissionDenied, "language not writable")
 				}
 			},
@@ -1652,7 +1652,7 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 			devMessage: "language not found",
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.LanguagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+				runtime.LanguagePackFn = func(ctx catena.TransportContext, req catena.ReadLanguagePackRequest) (catena.LanguagePack, catena.StatusResult) {
 					return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
 				}
 			},
@@ -1751,7 +1751,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "device not found",
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
+				runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 					return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 				}
 			},
@@ -1769,7 +1769,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "asset not found",
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.ReadAssetFn = func(slot uint16, fqoid string, ctx catena.TransportContext) ([]st2138.Asset, catena.StatusResult) {
+				runtime.ReadAssetFn = func(ctx catena.TransportContext, req catena.ReadAssetRequest) ([]st2138.Asset, catena.StatusResult) {
 					return nil, catena.StatusWithCode(catena.StatusCodeNotFound, "asset not found")
 				}
 			},
@@ -1787,7 +1787,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "command not supported",
 			grpcCode:   codes.Unimplemented,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.CommandFn = func(slot uint16, fqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+				runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
 					return nil, catena.StatusWithCode(catena.StatusCodeUnimplemented, "command not supported")
 				}
 			},
@@ -1805,7 +1805,7 @@ func TestErrorMessages_DevVsProd_Streaming(t *testing.T) {
 			devMessage: "param not found",
 			grpcCode:   codes.NotFound,
 			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
-				runtime.ParamInfoFn = func(slot uint16, oidPrefix string, recursive bool, ctx catena.TransportContext) ([]st2138.ParamInfo, catena.StatusResult) {
+				runtime.ParamInfoFn = func(ctx catena.TransportContext, req catena.ParamInfoRequest) ([]st2138.ParamInfo, catena.StatusResult) {
 					return nil, catena.StatusResult{Code: catena.StatusCodeNotFound, Error: "param not found"}
 				}
 			},
@@ -1957,10 +1957,10 @@ func TestTransport_AddLanguage_Success(t *testing.T) {
 	var gotSlot uint16
 	var gotLanguage string
 	var gotPack catena.LanguagePack
-	runtime.AddLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
-		gotSlot = slot
-		gotLanguage = language
-		gotPack = pack
+	runtime.AddLanguageFn = func(ctx catena.TransportContext, req catena.CreateLanguagePackRequest) catena.StatusResult {
+		gotSlot = req.Slot
+		gotLanguage = req.Language
+		gotPack = req.LanguagePack
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -2028,8 +2028,8 @@ func TestTransport_LanguagePackRequest_Success(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.LanguagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
-		if language != "nl" {
+	runtime.LanguagePackFn = func(ctx catena.TransportContext, req catena.ReadLanguagePackRequest) (catena.LanguagePack, catena.StatusResult) {
+		if req.Language != "nl" {
 			return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
 		}
 		return catena.NewLanguagePack().
@@ -2066,7 +2066,7 @@ func TestTransport_LanguagePackRequest_NotFound(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.LanguagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+	runtime.LanguagePackFn = func(ctx catena.TransportContext, req catena.ReadLanguagePackRequest) (catena.LanguagePack, catena.StatusResult) {
 		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeNotFound, "language not found")
 	}
 
@@ -2085,7 +2085,7 @@ func TestTransport_LanguagePackRequest_NilProtoOnOk(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.LanguagePackFn = func(slot uint16, language string, ctx catena.TransportContext) (catena.LanguagePack, catena.StatusResult) {
+	runtime.LanguagePackFn = func(ctx catena.TransportContext, req catena.ReadLanguagePackRequest) (catena.LanguagePack, catena.StatusResult) {
 		return catena.LanguagePack{}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -2113,7 +2113,7 @@ func TestTransport_AddLanguage_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.AddLanguageFn = func(slot uint16, language string, pack catena.LanguagePack, ctx catena.TransportContext) catena.StatusResult {
+	runtime.AddLanguageFn = func(ctx catena.TransportContext, req catena.CreateLanguagePackRequest) catena.StatusResult {
 		return catena.StatusWithCode(catena.StatusCodeInternal, "boom")
 	}
 
@@ -2229,7 +2229,7 @@ func TestTransport_ConcurrentClients(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
+	runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 		value, _ := st2138.ToValue(int32(42))
 		return catena.Reply(value)
 	}
@@ -2266,12 +2266,12 @@ func TestTransport_DifferentHandlersPerSlot(t *testing.T) {
 	defer cleanup()
 
 	// Register different handlers for each slot
-	runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
-		if slot == 0 {
+	runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+		if req.Slot == 0 {
 			value, _ := st2138.ToValue(int32(100))
 			return catena.Reply(value)
 		}
-		if slot == 1 {
+		if req.Slot == 1 {
 			value, _ := st2138.ToValue(int32(200))
 			return catena.Reply(value)
 		}
@@ -2315,13 +2315,13 @@ func TestTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	// Register handlers
-	runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
+	runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 		value, _ := st2138.ToValue(int32(42))
 		return catena.Reply(value)
 	}
 
-	runtime.GetDeviceFn = func(slot uint16, ctx catena.TransportContext) ([]st2138.DeviceComponent, catena.StatusResult) {
-		device := st2138.NewDevice(slot).
+	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
+		device := st2138.NewDevice(req.Slot).
 			WithDetailLevel(st2138.DetailLevelFull)
 		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
@@ -2566,7 +2566,7 @@ func TestTransport_MultipleClients_RealNetwork(t *testing.T) {
 	}
 
 	runtime := transporttest.MakeStubServerRuntime(t)
-	runtime.GetValueFn = func(slot uint16, fqoid string, ctx catena.TransportContext) (st2138.Value, catena.StatusResult) {
+	runtime.GetValueFn = func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
 		value, _ := st2138.ToValue(int32(99))
 		return catena.Reply(value)
 	}

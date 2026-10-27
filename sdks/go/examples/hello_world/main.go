@@ -38,6 +38,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -45,10 +46,10 @@ import (
 	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
+	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/logger"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
-	"github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
+	"github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
 const (
@@ -87,21 +88,27 @@ func buildDevice() *st2138.Device {
 }
 
 func main() {
+
+	options, err := config.InitOptions("hello_world", os.Args[1:], config.WithDefaults(catena.DefaultRuntimeOptions()))
+	if err != nil {
+		if errors.Is(err, config.ErrHelp) {
+			os.Exit(0)
+		}
+		os.Exit(1)
+	}
+
 	// Build an application logger and hand it to the SDK. The SDK logs nothing
 	// unless it is given a logger.
-	logOptions := logger.DefaultOptions()
-	logOptions.AppName = "hello_world"
-	log, closeLog, err := logger.New(logOptions)
+	log, closeLog, err := logger.New(options.Logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 	defer closeLog()
 
-	options := catena.DefaultServerOptions()
-	options.Logger = log
-	options.AuthzEnabled = false
-	srv, err := catena.NewServer(options)
+	options.Server.Logger = log
+	options.Server.AuthzEnabled = false
+	srv, err := catena.NewServer(options.Server)
 	if err != nil {
 		log.Error("Failed to create Catena server", "error", err)
 		os.Exit(1)
@@ -116,8 +123,8 @@ func main() {
 		SerialNumber: "SN-HELLO-0001",
 	})
 
-	srv.RegisterGetDeviceHandler(slot, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-		ctx.Logger().Info("GetDevice", "slot", slot)
+	srv.RegisterGetDeviceHandler(slot, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+		ctx.Logger().Info("GetDevice", "slot", req.Slot)
 		// A small device fits in a single component; large devices may stream
 		// several (see the oneOfEverything example).
 		if err := stream.Send(st2138.ComponentDevice(buildDevice())); err != nil {
@@ -126,10 +133,10 @@ func main() {
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
-	srv.RegisterGetValueHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Value, catena.StatusResult) {
-		ctx.Logger().Info("GetValue", "slot", slot, "fqoid", fqoid)
-		if fqoid != helloWorldOID {
-			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+fqoid)
+	srv.RegisterGetValueHandler(slot, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+		ctx.Logger().Info("GetValue", "slot", req.Slot, "fqoid", req.Fqoid)
+		if req.Fqoid != helloWorldOID {
+			return catena.ReplyError[st2138.Value](catena.StatusCodeNotFound, "parameter not found: "+req.Fqoid)
 		}
 
 		value, err := st2138.ToValue(helloWorld.Get())
@@ -140,10 +147,10 @@ func main() {
 		return catena.Reply(value)
 	})
 
-	srv.RegisterSetValueHandler(slot, func(slot uint16, entries []catena.SetValueEntry, ctx catena.HandlerContext) catena.StatusResult {
-		ctx.Logger().Info("SetValue", "slot", slot, "count", len(entries))
+	srv.RegisterSetValueHandler(slot, func(ctx catena.HandlerContext, req catena.SetValueRequest) catena.StatusResult {
+		ctx.Logger().Info("SetValue", "slot", req.Slot, "count", len(req.Entries))
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			if entry.Fqoid != helloWorldOID {
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "parameter not found: "+entry.Fqoid)
 			}
@@ -155,32 +162,36 @@ func main() {
 			}
 		}
 
-		for _, entry := range entries {
+		for _, entry := range req.Entries {
 			stringValue := entry.Value.(string)
 			helloWorld.Set(stringValue)
-			srv.BroadcastUpdate(slot, entry.Fqoid, stringValue, st2138.ScopeMon)
+			srv.BroadcastUpdate(req.Slot, entry.Fqoid, stringValue, st2138.ScopeMon)
 		}
 		return catena.StatusWithCode(catena.StatusCodeOk, "")
 	})
 
-	if err := srv.RegisterTransport(rest.NewTransport(rest.DefaultOptions())); err != nil {
-		log.Error("Failed to register REST transport", "error", err)
-		os.Exit(1)
-	}
-	if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {
-		log.Error("Failed to register gRPC transport", "error", err)
+	if err := transports.RegisterFrom(srv, options); err != nil {
+		log.Error("Failed to register transports", "error", err)
 		os.Exit(1)
 	}
 
 	log.Info("=======================================================")
 	log.Info("Hello World Example")
 	log.Info("=======================================================")
-	log.Info("REST transport listening on default port 9080")
-	log.Info("gRPC transport listening on default port 6254")
-	log.Info("Try REST:")
-	log.Info("  GET  http://localhost:9080/st2138-api/v1/0/value/hello_world")
-	log.Info("Try gRPC:")
-	log.Info("  grpcurl -plaintext -import-path ~/Catena/smpte/interface/proto -proto service.proto -d '{\"slot\":0,\"oid\":\"hello_world\"}' localhost:6254 st2138.CatenaService/GetValue")
+	if options.UseRest {
+		log.Info("REST transport listening on default port 9080")
+	}
+	if options.UseGrpc {
+		log.Info("gRPC transport listening on default port 6254")
+	}
+	if options.UseRest {
+		log.Info("Try REST:")
+		log.Info("  GET  http://localhost:9080/st2138-api/v1/0/value/hello_world")
+	}
+	if options.UseGrpc {
+		log.Info("Try gRPC:")
+		log.Info("  grpcurl -plaintext -import-path ~/Catena/smpte/interface/proto -proto service.proto -d '{\"slot\":0,\"oid\":\"hello_world\"}' localhost:6254 st2138.CatenaService/GetValue")
+	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()

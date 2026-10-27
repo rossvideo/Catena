@@ -18,17 +18,17 @@ import (
 // never drift between the two endpoints because both come from one source.
 func registerGetParamHandlers(srv catena.Server, counter *CounterState, state *ExampleState) {
 	for _, slot := range slotList {
-		srv.RegisterGetParamHandler(slot, func(slot uint16, fqoid string, ctx catena.HandlerContext) (st2138.Param, catena.StatusResult) {
-			ctx.Logger().Info("GetParam", "slot", slot, "fqoid", fqoid)
+		srv.RegisterGetParamHandler(slot, func(ctx catena.HandlerContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+			ctx.Logger().Info("GetParam", "slot", req.Slot, "fqoid", req.Fqoid)
 
-			device, ok := buildDeviceDefinition(slot, counter, state)
+			device, ok := buildDeviceDefinition(req.Slot, counter, state)
 			if !ok {
 				return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 			}
 
-			param, found := lookupParam(device.Proto, fqoid)
+			param, found := lookupParam(device.Proto, req.Fqoid)
 			if !found {
-				return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
+				return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+req.Fqoid)
 			}
 
 			return st2138.Param{Proto: param}, catena.StatusWithCode(catena.StatusCodeOk, "")

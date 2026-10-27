@@ -16,6 +16,14 @@ The server architecture is now transport-agnostic:
 
 ## Quick Start
 
+`transports.RegisterFrom` is the recommended setup path for simple implementations. It reads `UseGrpc` and `UseRest` on a `RuntimeOptions` value and registers `grpc.NewTransport(opts.Grpc)` and `rest.NewTransport(opts.Rest)` for each enabled transport. When both are enabled, gRPC is registered first. If neither toggle is set, it returns `ErrNoTransportEnabled`. If registration fails, the error names the transport (`register gRPC transport` or `register REST transport`) and wraps the error from `RegisterTransport`. A transport that already started is left registered.
+
+If dynamic transports or explicit deregistering is required, then transports should be manually registered individually as `transports.RegisterFrom` does not return the transport references.
+
+Set any REST fallback on `opts.Rest` before calling `RegisterFrom`. The helper passes that options struct through, so the fallback does not need a transport reference after construction.
+
+To attach one transport yourself, construct it with `grpc.NewTransport` or `rest.NewTransport` and pass it to `srv.RegisterTransport`.
+
 ```go
 package main
 
@@ -29,15 +37,16 @@ import (
 
     "github.com/rossvideo/catena/sdks/go/pkg/catena"
     "github.com/rossvideo/catena/sdks/go/pkg/st2138"
-    "github.com/rossvideo/catena/sdks/go/pkg/transports/grpc"
-    "github.com/rossvideo/catena/sdks/go/pkg/transports/rest"
+    "github.com/rossvideo/catena/sdks/go/pkg/transports"
 )
 
 func main() {
-    opts := catena.DefaultServerOptions()
+    opts := catena.DefaultRuntimeOptions()
+    opts.UseGrpc = true
+    opts.UseRest = true
     // Optional: without a logger the SDK and its transports stay silent.
-    opts.Logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
-    srv, err := catena.NewServer(opts)
+    opts.Server.Logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
+    srv, err := catena.NewServer(opts.Server)
     if err != nil {
         panic(err)
     }
@@ -54,21 +63,16 @@ func main() {
     // catena.DeviceComponentsForRequest chunks a whole device into
     // DeviceComponent stream sends; a small model could equally be sent as a
     // single st2138.ComponentDevice chunk.
-    srv.RegisterGetDeviceHandler(0, func(slot uint16, ctx catena.HandlerContext, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-        return catena.DeviceComponentsForRequest(st2138.NewDevice(slot), stream)
+    srv.RegisterGetDeviceHandler(0, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
+        return catena.DeviceComponentsForRequest(st2138.NewDevice(req.Slot), stream)
     })
 
-    if err := srv.RegisterTransport(grpc.NewTransport(grpc.DefaultOptions())); err != nil {
-        panic(err)
-    }
-
-    restOpts := rest.DefaultOptions()
     // Optional custom HTTP routes that match no ST 2138 route.
-    // Set before NewTransport; routes are registered during construction.
-    restOpts.Fallback = func(w http.ResponseWriter, r *http.Request) {
+    // Set on RestOptions before RegisterFrom; the helper passes them through.
+    opts.Rest.Fallback = func(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "endpoint not found", http.StatusNotFound)
     }
-    if err := srv.RegisterTransport(rest.NewTransport(restOpts)); err != nil {
+    if err := transports.RegisterFrom(srv, opts); err != nil {
         panic(err)
     }
 

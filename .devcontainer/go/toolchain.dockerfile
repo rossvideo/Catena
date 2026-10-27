@@ -15,8 +15,7 @@ RUN . /root/toolchain.env \
     git \
     openssh-client \
     libssl-dev=$OPENSSL_VERSION \
-    doxygen=$DOXYGEN_VERSION \
-    valgrind=$VALGRIND_VERSION \
+    protobuf-compiler=${PROTOBUF_COMPILER_VERSION} \
     curl \
     ca-certificates \
     wget \
@@ -27,14 +26,6 @@ RUN . /root/toolchain.env \
     && rm -f /tmp/nodesource_setup.sh \
     && npm install -g n \
     && apt-get clean
-
-# install Go
-RUN . /root/toolchain.env \
-    && wget https://go.dev/dl/${GO_VERSION}.tar.gz \
-    && sudo tar -C /usr/local -xzf ${GO_VERSION}.tar.gz \
-    && rm ${GO_VERSION}.tar.gz
-
-ENV PATH=$PATH:/usr/local/go/bin
 
 # Install Docker & Docker Compose
 RUN . /root/toolchain.env \
@@ -54,17 +45,21 @@ COPY smpte/scripts/common.sh /root/smpte/scripts/common.sh
 WORKDIR /root/smpte
 RUN IN_CONTAINER_BUILD=1 YQ_INSTALL_DIR=/usr/local/bin ./install-tooling.sh
 
-# Install protobuf compiler and Go tools
-RUN . /root/toolchain.env \
-    && apt-get update \
-    && apt-get install --no-install-recommends -y protobuf-compiler=${PROTOBUF_COMPILER_VERSION} \
-    && apt-get clean
-
-ENV GOBIN=/usr/local/bin
-
 WORKDIR /toolchain
 
 COPY .devcontainer/go/go.mod .devcontainer/go/go.sum ./
+
+# Install the Go version required by the toolchain's go.mod (the toolchain line wins over the go line)
+RUN GO_VERSION=$(awk '/^toolchain /{t=$2} /^go /{g=$2} END{ if (t == "") { if (split(g, a, ".") == 2) g = g ".0"; t = "go" g } print t }' go.mod).linux-amd64 \
+    && echo "Installing Go version ${GO_VERSION}" \
+    && wget https://go.dev/dl/${GO_VERSION}.tar.gz \
+    && sudo tar -C /usr/local -xzf ${GO_VERSION}.tar.gz \
+    && rm ${GO_VERSION}.tar.gz
+
+ENV GOBIN=/usr/local/bin
+ENV PATH=$PATH:/usr/local/go/bin
+# Fail the build rather than auto-download a toolchain under /root
+ENV GOTOOLCHAIN=local
 
 RUN go mod download
 
@@ -72,6 +67,7 @@ RUN go mod download
 RUN go install tool
 
 ENV GOBIN=
+ENV GOTOOLCHAIN=
 
 USER ubuntu
 WORKDIR /home/ubuntu
