@@ -66,7 +66,7 @@ func TestParamInfosForRequest(t *testing.T) {
 
 		// each node is emitted immediately followed by its subtree, so parent/child
 		// appears right after parent, before the alphabetically-later siblings.
-		assertParamInfoOids(t, stream.Items, []string{"alpha", "floats", "numbers", "parent", "parent/child", "strings", "structs", "variants"})
+		assertParamInfoOids(t, stream.Items, []string{"alpha", "floats", "numbers", "parent", "parent/child", "strings", "structs", "structs/x", "variants", "variants/type_a"})
 	})
 
 	t.Run("NestedRecursive", func(t *testing.T) {
