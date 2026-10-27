@@ -58,9 +58,8 @@ RUN GO_VERSION=$(awk '/^toolchain /{t=$2} /^go /{g=$2} END{ if (t == "") { if (s
 
 ENV GOBIN=/usr/local/bin
 ENV PATH=$PATH:/usr/local/go/bin
-# Fail the build rather than auto-download a toolchain under /root, and keep build paths out of the tool binaries
+# Fail the build rather than auto-download a toolchain under /root
 ENV GOTOOLCHAIN=local
-ENV GOFLAGS=-trimpath
 
 RUN go mod download
 
@@ -69,7 +68,6 @@ RUN go install tool
 
 ENV GOBIN=
 ENV GOTOOLCHAIN=
-ENV GOFLAGS=
 
 USER ubuntu
 WORKDIR /home/ubuntu

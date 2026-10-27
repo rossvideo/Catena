@@ -11,32 +11,32 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	// Slot 0: fully manual ParamInfo construction with a switch. This is useful
 	// when an application has only a few params or does not keep a full device
 	// definition around for ParamInfo requests.
-	srv.RegisterParamInfoHandler(0, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-		ctx.Logger().Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
-		infos, res := slotZeroParamInfos(fqoid, recursive)
+	srv.RegisterParamInfoHandler(0, func(ctx catena.HandlerContext, req catena.ParamInfoRequest, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
+		ctx.Logger().Info("GetParamInfo", "slot", req.Slot, "fqoid", req.OidPrefix, "recursive", req.Recursive)
+		infos, res := slotZeroParamInfos(req.OidPrefix, req.Recursive)
 		return streamParamInfos(stream, infos, res)
 	})
 
 	// Slot 1: generate the current device definition and delegate to the SDK
 	// helper. This demonstrates the simplest path when your business logic can
 	// already produce device["params"].
-	srv.RegisterParamInfoHandler(1, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-		ctx.Logger().Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
+	srv.RegisterParamInfoHandler(1, func(ctx catena.HandlerContext, req catena.ParamInfoRequest, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
+		ctx.Logger().Info("GetParamInfo", "slot", req.Slot, "fqoid", req.OidPrefix, "recursive", req.Recursive)
 
-		deviceInfo, ok := buildDeviceDefinition(slot, counter, state)
+		deviceInfo, ok := buildDeviceDefinition(req.Slot, counter, state)
 		if !ok {
 			return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
 		}
 
-		return catena.ParamInfosForRequest(fqoid, deviceInfo, recursive, stream)
+		return catena.ParamInfosForRequest(req.OidPrefix, deviceInfo, req.Recursive, stream)
 	})
 
 	// Slot 2: prefix-based if statements with manual responses. This is useful
 	// when params are grouped by naming convention or owned by different pieces
 	// of application code.
-	srv.RegisterParamInfoHandler(2, func(slot uint16, fqoid string, recursive bool, ctx catena.HandlerContext, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
-		ctx.Logger().Info("GetParamInfo", "slot", slot, "fqoid", fqoid, "recursive", recursive)
-		infos, res := slotTwoParamInfos(fqoid, recursive, state)
+	srv.RegisterParamInfoHandler(2, func(ctx catena.HandlerContext, req catena.ParamInfoRequest, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
+		ctx.Logger().Info("GetParamInfo", "slot", req.Slot, "fqoid", req.OidPrefix, "recursive", req.Recursive)
+		infos, res := slotTwoParamInfos(req.OidPrefix, req.Recursive, state)
 		return streamParamInfos(stream, infos, res)
 	})
 }
