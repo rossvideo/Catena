@@ -10,10 +10,11 @@ import (
 // requested OID back out of it. Because both endpoints trace back to these
 // makers, a param can never drift between GetDevice and GetParam.
 
-// dashboardUIGridOid is the asset id of the custom DashBoard panel shipped in
-// static/; dashboardUIValue is the external-object URI DashBoard dereferences
-// to download it (see asset_handler.go).
-const dashboardUIGridOid = "oneOfEverything.grid"
+// dashboardUIGridOid is the fqoid of static/oneOfEverything.grid. The file
+// keeps its extension; the id does not, because an fqoid cannot contain '.'.
+// dashboardUIValue is the external-object URI DashBoard dereferences to
+// download it (see asset_handler.go).
+const dashboardUIGridOid = "oneOfEverything"
 const dashboardUIValue = "eo://" + dashboardUIGridOid
 
 // makeDashboardUIParam builds the slot 0 "dashboard_UI" param (STRING,
