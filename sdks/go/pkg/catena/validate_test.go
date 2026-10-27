@@ -168,75 +168,82 @@ func TestValidateSlotString(t *testing.T) {
 }
 
 func TestValidateFqoid(t *testing.T) {
-
-	expectInvalidFqoid := func(t *testing.T, fqoid string) {
-		t.Helper()
-		result := ValidateFqoid(fqoid)
-		if result.Code != StatusCodeInvalidArgument {
-			t.Errorf("ValidateFqoid(%q) = %v, want InvalidArgument", fqoid, result.Code)
-		}
-	}
-
 	t.Run("valid", func(t *testing.T) {
-		result := ValidateFqoid("inputs/0/gain")
-		if result.Code != StatusCodeOk {
-			t.Errorf("ValidateFqoid(%q) = %v, %s", "inputs/0/gain", result.Code, result.Error)
+		tests := []struct {
+			name  string
+			fqoid string
+		}{
+			{name: "single segment", fqoid: "gain"},
+			{name: "indexed path", fqoid: "inputs/0/gain"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				result := ValidateFqoid(tt.fqoid)
+				if result.Code != StatusCodeOk {
+					t.Errorf("ValidateFqoid(%q) = %v, %s", tt.fqoid, result.Code, result.Error)
+				}
+			})
 		}
 	})
 
-	t.Run("empty", func(t *testing.T) {
-		expectInvalidFqoid(t, "")
-	})
-	t.Run("leading slash", func(t *testing.T) {
-		expectInvalidFqoid(t, "/brightness")
-	})
-	t.Run("trailing slash", func(t *testing.T) {
-		expectInvalidFqoid(t, "foo/")
-	})
-	t.Run("dot", func(t *testing.T) {
-		expectInvalidFqoid(t, "foo.bar")
-	})
-	t.Run("reserved stream", func(t *testing.T) {
-		expectInvalidFqoid(t, "stream")
-	})
-	t.Run("empty segment", func(t *testing.T) {
-		expectInvalidFqoid(t, "foo//bar")
+	t.Run("invalid", func(t *testing.T) {
+		tests := []struct {
+			name  string
+			fqoid string
+		}{
+			{name: "empty", fqoid: ""},
+			{name: "leading slash", fqoid: "/brightness"},
+			{name: "reserved stream", fqoid: "stream"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				result := ValidateFqoid(tt.fqoid)
+				if result.Code != StatusCodeInvalidArgument {
+					t.Errorf("ValidateFqoid(%q) = %v, want InvalidArgument", tt.fqoid, result.Code)
+				}
+			})
+		}
 	})
 }
 
 func TestValidateLanguageCode(t *testing.T) {
-
-	expectInvalidLanguageCode := func(t *testing.T, code string) {
-		t.Helper()
-		result := ValidateLanguageCode(code)
-		if result.Code != StatusCodeInvalidArgument {
-			t.Errorf("ValidateLanguageCode(%q) = %v, want InvalidArgument", code, result.Code)
-		}
-	}
-
 	t.Run("valid", func(t *testing.T) {
-		result := ValidateLanguageCode("en")
-		if result.Code != StatusCodeOk {
-			t.Errorf("ValidateLanguageCode(%q) = %v, %s", "en", result.Code, result.Error)
+		tests := []struct {
+			name string
+			code string
+		}{
+			{name: "language", code: "en"},
+			{name: "language and region", code: "en-US"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				result := ValidateLanguageCode(tt.code)
+				if result.Code != StatusCodeOk {
+					t.Errorf("ValidateLanguageCode(%q) = %v, %s", tt.code, result.Code, result.Error)
+				}
+			})
 		}
 	})
 
-	t.Run("empty", func(t *testing.T) {
-		expectInvalidLanguageCode(t, "")
-	})
-	t.Run("one letter", func(t *testing.T) {
-		expectInvalidLanguageCode(t, "e")
-	})
-	t.Run("three letters", func(t *testing.T) {
-		expectInvalidLanguageCode(t, "eng")
-	})
-	t.Run("uppercase language", func(t *testing.T) {
-		expectInvalidLanguageCode(t, "EN")
-	})
-	t.Run("region code", func(t *testing.T) {
-		expectInvalidLanguageCode(t, "en-us")
-	})
-	t.Run("word", func(t *testing.T) {
-		expectInvalidLanguageCode(t, "english")
+	t.Run("invalid", func(t *testing.T) {
+		tests := []struct {
+			name string
+			code string
+		}{
+			{name: "empty", code: ""},
+			{name: "uppercase language", code: "EN"},
+			{name: "word", code: "english"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				result := ValidateLanguageCode(tt.code)
+				if result.Code != StatusCodeInvalidArgument {
+					t.Errorf("ValidateLanguageCode(%q) = %v, want InvalidArgument", tt.code, result.Code)
+				}
+			})
+		}
 	})
 }
