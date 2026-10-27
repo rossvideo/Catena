@@ -20,9 +20,9 @@ GO_M_OPTS      := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES
 # protoc-gen-go-grpc emits a file only for protos that declare a service.
 GRPC_M_OPTS    := $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(filter-out $(PROTO_DIR)/service.proto,$(PROTO_FILES)))) --go-grpc_opt=Mservice.proto=$(RPC_IMPORT_PATH)
 
-.PHONY: proto-tools protos clean-protos
+.PHONY: proto-tools protos clean-protos schema
 
-all: protos examples
+all: protos schema examples
 
 examples: $(CMDS)
 
@@ -67,6 +67,11 @@ protos: proto-tools
 clean-protos:
 	rm -rf "$(GENERATED_DIR)"
 
+# Refresh pkg/catena/schema_generated.go from the device.yaml path in schema.go's
+# go:generate line. A missing file leaves the committed constants in place.
+schema:
+	go generate ./pkg/catena/
+
 # Test targets
 .PHONY: test race coverage coverage-html coverage-lcov coverage-cobertura clean-coverage
 
@@ -81,6 +86,7 @@ COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
 VERBOSE ?= 0
 
 test:
+	go generate ./pkg/catena/
 	go test -v ./...
 
 RACE_PACKAGES ?= $(TEST_PACKAGES)

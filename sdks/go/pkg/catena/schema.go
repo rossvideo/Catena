@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Copies of regular expressions from the ST 2138 device schema.
+ * @brief Validation for values constrained by the ST 2138 device schema.
  * @file schema.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Omar Shah (omar.shah@rossvideo.com)
@@ -38,20 +38,14 @@
 
 package catena
 
+//go:generate go run ./internal/schemagen -schema ../../../../smpte/interface/schema/device.yaml -o schema_generated.go
+
 import (
 	"fmt"
 	"math"
 	"strconv"
 
 	"github.com/dlclark/regexp2"
-)
-
-const (
-	// fqoidPattern is $defs/fqoid.pattern.
-	fqoidPattern = `^(?!.*\.)(?!stream(?:$|/))[A-Za-z][A-Za-z0-9_]{0,30}(?:/(?:(?!stream(?:$|/))[A-Za-z][A-Za-z0-9_]{0,30}|(?:0|[1-9]\d{0,14}|[1-8]\d{15}))){0,29}(?:/(?:(?!stream$)[A-Za-z][A-Za-z0-9_]{0,30}|(?:0|[1-9]\d{0,14}|[1-8]\d{15})|-))?$`
-
-	// languageCodePattern is $defs/language_code.pattern.
-	languageCodePattern = `^[a-z]{2}(-[A-Z]{2})?$`
 )
 
 var (
