@@ -1016,7 +1016,7 @@ func TestTransport_MaxBodyBytes(t *testing.T) {
 		transport.runtime = runtime
 
 		handlerCalled := false
-		runtime.CommandFn = func(slot uint16, commandFqoid string, payload any, respond bool, ctx catena.TransportContext) ([]st2138.CommandResponse, catena.StatusResult) {
+		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
 			handlerCalled = true
 			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
 		}
