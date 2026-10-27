@@ -40,6 +40,7 @@ package st2138
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"google.golang.org/protobuf/proto"
@@ -1392,6 +1393,9 @@ func TestNewParamStruct_InvalidValue(t *testing.T) {
 	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
 	}
+	if cp.proto.GetParams() != nil {
+		t.Error("expected nil params when conversion fails")
+	}
 	p, err := cp.Build()
 	if err == nil {
 		t.Fatal("expected error for builder with invalid value")
@@ -1409,6 +1413,9 @@ func TestNewParamStructVariant_InvalidValue(t *testing.T) {
 	}
 	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
+	}
+	if cp.proto.GetParams() != nil {
+		t.Error("expected nil params when conversion fails")
 	}
 	p, err := cp.Build()
 	if err == nil {
@@ -1428,6 +1435,9 @@ func TestNewParamStructArray_InvalidValue(t *testing.T) {
 	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
 	}
+	if cp.proto.GetParams() != nil {
+		t.Error("expected nil params when conversion fails")
+	}
 	p, err := cp.Build()
 	if err == nil {
 		t.Fatal("expected error for builder with invalid value")
@@ -1445,6 +1455,9 @@ func TestNewParamStructVariantArray_InvalidValue(t *testing.T) {
 	}
 	if cp.proto.GetValue() != nil {
 		t.Error("expected nil value when conversion fails")
+	}
+	if cp.proto.GetParams() != nil {
+		t.Error("expected nil params when conversion fails")
 	}
 	p, err := cp.Build()
 	if err == nil {
@@ -1657,6 +1670,9 @@ func TestNewParamX_NoValue(t *testing.T) {
 			if p.Proto.GetValue() != nil {
 				t.Error("expected nil value when no value given")
 			}
+			if p.Proto.GetParams() != nil {
+				t.Error("expected nil params when no value given")
+			}
 		})
 	}
 }
@@ -1747,6 +1763,19 @@ func TestSetValue_FailureLeavesValueNil(t *testing.T) {
 	}
 }
 
+func assertValuelessDescriptor(t *testing.T, p *protos.Param, oid string, want protos.ParamType) {
+	t.Helper()
+	if p == nil {
+		t.Fatalf("expected descriptor %q", oid)
+	}
+	if p.GetType() != want {
+		t.Errorf("expected %q type %v, got %v", oid, want, p.GetType())
+	}
+	if p.GetValue() != nil {
+		t.Errorf("expected %q descriptor to be valueless", oid)
+	}
+}
+
 func TestNewParamStruct_AutoDescriptors(t *testing.T) {
 	p, err := NewParamStruct(map[string]any{
 		"number": int32(42),
@@ -1769,16 +1798,7 @@ func TestNewParamStruct_AutoDescriptors(t *testing.T) {
 		"nested": protos.ParamType_STRUCT,
 	}
 	for oid, wantType := range wantTypes {
-		sub := params[oid]
-		if sub == nil {
-			t.Fatalf("expected auto-created descriptor for %q", oid)
-		}
-		if sub.GetType() != wantType {
-			t.Errorf("expected %q descriptor type %v, got %v", oid, wantType, sub.GetType())
-		}
-		if sub.GetValue() != nil {
-			t.Errorf("expected %q descriptor to be valueless", oid)
-		}
+		assertValuelessDescriptor(t, params[oid], oid, wantType)
 	}
 	inner := params["nested"].GetParams()["inner"]
 	if inner == nil {
@@ -1789,18 +1809,348 @@ func TestNewParamStruct_AutoDescriptors(t *testing.T) {
 	}
 }
 
+func TestNewParamStructVariant_AutoDescriptors(t *testing.T) {
+	p, err := NewParamStructVariant(StructVariantValue{
+		StructVariantType: "left",
+		Value:             float32(0.5),
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetValue().GetStructVariantValue().GetValue().GetFloat32Value() != 0.5 {
+		t.Error("expected variant value 0.5")
+	}
+	left := p.Proto.GetParams()["left"]
+	assertValuelessDescriptor(t, left, "left", protos.ParamType_FLOAT32)
+	if len(left.GetParams()) != 0 {
+		t.Errorf("expected scalar variant descriptor to have no nested params, got %v", left.GetParams())
+	}
+
+	nested, err := NewParamStructVariant(StructVariantValue{
+		StructVariantType: "point",
+		Value:             map[string]any{"x": int32(1), "y": int32(2)},
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	point := nested.Proto.GetParams()["point"]
+	assertValuelessDescriptor(t, point, "point", protos.ParamType_STRUCT)
+	assertValuelessDescriptor(t, point.GetParams()["x"], "x", protos.ParamType_INT32)
+	assertValuelessDescriptor(t, point.GetParams()["y"], "y", protos.ParamType_INT32)
+}
+
+func TestNewParamStructArray_AutoDescriptors(t *testing.T) {
+	p, err := NewParamStructArray([]map[string]any{
+		{"label": "a", "nested": map[string]any{"a": int32(1)}},
+		{"count": int32(2), "nested": map[string]any{"b": int32(3)}},
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	params := p.Proto.GetParams()
+	if len(params) != 3 {
+		t.Fatalf("expected 3 merged descriptors, got %d", len(params))
+	}
+	assertValuelessDescriptor(t, params["label"], "label", protos.ParamType_STRING)
+	assertValuelessDescriptor(t, params["count"], "count", protos.ParamType_INT32)
+	nested := params["nested"]
+	if len(nested.GetParams()) != 2 {
+		t.Fatalf("expected 2 nested descriptors, got %d", len(nested.GetParams()))
+	}
+	assertValuelessDescriptor(t, nested, "nested", protos.ParamType_STRUCT)
+	assertValuelessDescriptor(t, nested.GetParams()["a"], "a", protos.ParamType_INT32)
+	assertValuelessDescriptor(t, nested.GetParams()["b"], "b", protos.ParamType_INT32)
+}
+
+func TestNewParamStructVariantArray_AutoDescriptors(t *testing.T) {
+	p, err := NewParamStructVariantArray([]StructVariantValue{
+		{StructVariantType: "int_kind", Value: int32(10)},
+		{StructVariantType: "string_kind", Value: "hello"},
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	params := p.Proto.GetParams()
+	if len(params) != 2 {
+		t.Fatalf("expected 2 variant descriptors, got %d", len(params))
+	}
+	assertValuelessDescriptor(t, params["int_kind"], "int_kind", protos.ParamType_INT32)
+	assertValuelessDescriptor(t, params["string_kind"], "string_kind", protos.ParamType_STRING)
+
+	repeated, err := NewParamStructVariantArray([]StructVariantValue{
+		{StructVariantType: "point", Value: map[string]any{"x": int32(1)}},
+		{StructVariantType: "point", Value: map[string]any{"y": int32(2)}},
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if len(repeated.Proto.GetParams()) != 1 {
+		t.Fatalf("expected 1 variant descriptor, got %d", len(repeated.Proto.GetParams()))
+	}
+	point := repeated.Proto.GetParams()["point"]
+	assertValuelessDescriptor(t, point, "point", protos.ParamType_STRUCT)
+	if len(point.GetParams()) != 2 {
+		t.Fatalf("expected 2 nested descriptors, got %d", len(point.GetParams()))
+	}
+	assertValuelessDescriptor(t, point.GetParams()["x"], "x", protos.ParamType_INT32)
+	assertValuelessDescriptor(t, point.GetParams()["y"], "y", protos.ParamType_INT32)
+}
+
+func TestNewParamStruct_AutoDescriptorsNestedStructLike(t *testing.T) {
+	p, err := NewParamStruct(map[string]any{
+		"struct": map[string]any{
+			"a": int32(1),
+			"b": float32(2.0),
+		},
+		"structArray": []map[string]any{
+			{"n": int32(1)},
+			{"n": int32(2)},
+		},
+		"variant": StructVariantValue{StructVariantType: "left", Value: float32(0.5)},
+		"variantArray": []StructVariantValue{
+			{StructVariantType: "point", Value: map[string]any{"x": int32(1)}},
+			{StructVariantType: "point", Value: map[string]any{"y": int32(2)}},
+		},
+	}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if len(p.Proto.GetParams()) != 4 {
+		t.Fatalf("expected 4 auto-created descriptors, got %d", len(p.Proto.GetParams()))
+	}
+
+	structParam := p.Proto.GetParams()["struct"]
+	if len(structParam.GetParams()) != 2 {
+		t.Fatalf("expected 2 nested descriptors, got %d", len(structParam.GetParams()))
+	}
+	assertValuelessDescriptor(t, structParam, "struct", protos.ParamType_STRUCT)
+	assertValuelessDescriptor(t, structParam.GetParams()["a"], "a", protos.ParamType_INT32)
+	assertValuelessDescriptor(t, structParam.GetParams()["b"], "b", protos.ParamType_FLOAT32)
+
+	structArray := p.Proto.GetParams()["structArray"]
+	if len(structArray.GetParams()) != 1 {
+		t.Fatalf("expected 1 nested descriptor, got %d", len(structArray.GetParams()))
+	}
+	assertValuelessDescriptor(t, structArray, "structArray", protos.ParamType_STRUCT_ARRAY)
+	assertValuelessDescriptor(t, structArray.GetParams()["n"], "n", protos.ParamType_INT32)
+
+	variant := p.Proto.GetParams()["variant"]
+	if len(variant.GetParams()) != 1 {
+		t.Fatalf("expected 1 nested descriptor, got %d", len(variant.GetParams()))
+	}
+	assertValuelessDescriptor(t, variant, "variant", protos.ParamType_STRUCT_VARIANT)
+	assertValuelessDescriptor(t, variant.GetParams()["left"], "left", protos.ParamType_FLOAT32)
+
+	variantArray := p.Proto.GetParams()["variantArray"]
+	if len(variantArray.GetParams()) != 1 {
+		t.Fatalf("expected 1 nested descriptor, got %d", len(variantArray.GetParams()))
+	}
+	assertValuelessDescriptor(t, variantArray, "variantArray", protos.ParamType_STRUCT_VARIANT_ARRAY)
+	assertValuelessDescriptor(t, variantArray.GetParams()["point"], "point", protos.ParamType_STRUCT)
+	if len(variantArray.GetParams()["point"].GetParams()) != 2 {
+		t.Fatalf("expected 2 nested descriptors, got %d", len(variantArray.GetParams()["point"].GetParams()))
+	}
+	assertValuelessDescriptor(t, variantArray.GetParams()["point"].GetParams()["x"], "x", protos.ParamType_INT32)
+	assertValuelessDescriptor(t, variantArray.GetParams()["point"].GetParams()["y"], "y", protos.ParamType_INT32)
+}
+
+func TestNewParamStructLike_TypeConflict(t *testing.T) {
+	tests := []struct {
+		name  string
+		param *ParamBuilder
+		want  string
+	}{
+		{
+			name: "struct array field",
+			param: NewParamStructArray([]map[string]any{
+				{"count": int32(1)},
+				{"count": "nope"},
+			}),
+			want: `conflicting sub-param types for "count": is INT32, got STRING`,
+		},
+		{
+			name: "variant array type",
+			param: NewParamStructVariantArray([]StructVariantValue{
+				{StructVariantType: "left", Value: float32(0.5)},
+				{StructVariantType: "left", Value: "nope"},
+			}),
+			want: `conflicting sub-param types for "left": is FLOAT32, got STRING`,
+		},
+		{
+			name: "nested array inside struct",
+			param: NewParamStruct(map[string]any{
+				"items": []map[string]any{
+					{"n": int32(1)},
+					{"n": "x"},
+				},
+			}),
+			want: `conflicting sub-param types for "n": is INT32, got STRING`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.param.proto.GetValue() != nil {
+				t.Error("expected nil value when descriptor types conflict")
+			}
+			if tt.param.proto.GetParams() != nil {
+				t.Error("expected nil params when descriptor types conflict")
+			}
+			p, err := tt.param.Build()
+			if err == nil {
+				t.Fatal("expected error for conflicting descriptor types")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Errorf("expected error to contain %q, got %v", tt.want, err)
+			}
+			if p != (Param{}) {
+				t.Errorf("expected empty Param for builder with error, got %v", p)
+			}
+		})
+	}
+}
+
+func TestNewParamStructLikeArray_EmptyCollectionBuilds(t *testing.T) {
+
+	structArray, err := NewParamStructArray([]map[string]any{}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if structArray.Proto.GetValue().GetStructArrayValues() == nil {
+		t.Fatal("expected empty struct array value")
+	}
+	if structArray.Proto.GetParams() != nil {
+		t.Errorf("expected nil params for empty struct array, got %v", structArray.Proto.GetParams())
+	}
+
+	variantArray, err := NewParamStructVariantArray([]StructVariantValue{}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if variantArray.Proto.GetValue().GetStructVariantArrayValues() == nil {
+		t.Fatal("expected empty struct variant array value")
+	}
+	if variantArray.Proto.GetParams() != nil {
+		t.Errorf("expected nil params for empty variant array, got %v", variantArray.Proto.GetParams())
+	}
+}
+
+func TestNewParamStructLike_EmptyOIDErrors(t *testing.T) {
+
+	structParam, err := NewParamStruct(map[string]any{
+		"": int32(1),
+	}).Build()
+	if err == nil {
+		t.Fatal("expected error for empty struct field name")
+	}
+	if !strings.Contains(err.Error(), "struct field name cannot be empty") {
+		t.Errorf("expected error to contain %q, got %v", "struct field name cannot be empty", err)
+	}
+	if structParam != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", structParam)
+	}
+
+	structArray, err := NewParamStructArray([]map[string]any{
+		{"": int32(1)},
+	}).Build()
+	if err == nil {
+		t.Fatal("expected error for empty struct field name")
+	}
+	if !strings.Contains(err.Error(), "struct field name cannot be empty") {
+		t.Errorf("expected error to contain %q, got %v", "struct field name cannot be empty", err)
+	}
+	if structArray != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", structArray)
+	}
+
+	variant, err := NewParamStructVariant(StructVariantValue{StructVariantType: "", Value: int32(1)}).Build()
+	if err == nil {
+		t.Fatal("expected error for empty variant type")
+	}
+	if !strings.Contains(err.Error(), "struct variant type cannot be nil or empty") {
+		t.Errorf("expected error to contain %q, got %v", "struct variant type cannot be nil or empty", err)
+	}
+	if variant != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", variant)
+	}
+
+	variantArray, err := NewParamStructVariantArray([]StructVariantValue{
+		{StructVariantType: "", Value: int32(1)},
+	}).Build()
+	if err == nil {
+		t.Fatal("expected error for empty variant array type")
+	}
+	if !strings.Contains(err.Error(), "struct variant type cannot be nil or empty") {
+		t.Errorf("expected error to contain %q, got %v", "struct variant type cannot be nil or empty", err)
+	}
+	if variantArray != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", variantArray)
+	}
+}
+
+func TestWithParam_ValuelessRefinesAutoDescriptor(t *testing.T) {
+	variant, err := NewParamStructVariant(StructVariantValue{
+		StructVariantType: "left",
+		Value:             float32(0.5),
+	}).WithParam("left", NewParamFloat32().WithName(PolyglotText{"en": "Left"})).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if variant.Proto.GetValue().GetStructVariantValue().GetValue().GetFloat32Value() != 0.5 {
+		t.Error("expected variant value to stay 0.5")
+	}
+	left := variant.Proto.GetParams()["left"]
+	if left.GetName().GetDisplayStrings()["en"] != "Left" {
+		t.Errorf("expected refined name 'Left', got %q", left.GetName().GetDisplayStrings()["en"])
+	}
+	if left.GetValue() != nil {
+		t.Error("expected refined variant descriptor to remain valueless")
+	}
+
+	array, err := NewParamStructArray([]map[string]any{{"count": int32(2)}}).
+		WithParam("count", NewParamInt32().WithName(PolyglotText{"en": "Count"})).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if array.Proto.GetValue().GetStructArrayValues().GetStructValues()[0].GetFields()["count"].GetInt32Value() != 2 {
+		t.Error("expected struct array field value to stay 2")
+	}
+	if array.Proto.GetParams()["count"].GetName().GetDisplayStrings()["en"] != "Count" {
+		t.Error("expected refined struct array descriptor name 'Count'")
+	}
+	if array.Proto.GetParams()["count"].GetValue() != nil {
+		t.Error("expected refined struct array descriptor to remain valueless")
+	}
+
+	variantArray, err := NewParamStructVariantArray([]StructVariantValue{
+		{StructVariantType: "int_kind", Value: int32(10)},
+	}).WithParam("int_kind", NewParamInt32().WithName(PolyglotText{"en": "Int"})).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	got := variantArray.Proto.GetValue().GetStructVariantArrayValues().GetStructVariants()
+	if len(got) != 1 || got[0].GetValue().GetInt32Value() != 10 {
+		t.Error("expected variant array value to stay 10")
+	}
+	if variantArray.Proto.GetParams()["int_kind"].GetName().GetDisplayStrings()["en"] != "Int" {
+		t.Error("expected refined variant array descriptor name 'Int'")
+	}
+	if variantArray.Proto.GetParams()["int_kind"].GetValue() != nil {
+		t.Error("expected refined variant array descriptor to remain valueless")
+	}
+}
+
 // structFieldDescriptors is unreachable with empty fields via NewParamStruct
 // (Toproto rejects nil/empty maps), so exercise the guard directly: a nil or
 // field-less struct value must yield no descriptors rather than an empty map.
 func TestStructFieldDescriptors_NoFields(t *testing.T) {
-	if got := structFieldDescriptors(nil); got != nil {
-		t.Errorf("expected nil descriptors for nil struct value, got %v", got)
+	if got, err := structFieldDescriptors(nil); err != nil || got != nil {
+		t.Errorf("expected nil descriptors for nil struct value, got %v, %v", got, err)
 	}
-	if got := structFieldDescriptors(&protos.StructValue{}); got != nil {
-		t.Errorf("expected nil descriptors for struct value without fields, got %v", got)
+	if got, err := structFieldDescriptors(&protos.StructValue{}); err != nil || got != nil {
+		t.Errorf("expected nil descriptors for struct value without fields, got %v, %v", got, err)
 	}
-	if got := structFieldDescriptors(&protos.StructValue{Fields: map[string]*protos.Value{}}); got != nil {
-		t.Errorf("expected nil descriptors for struct value with empty fields map, got %v", got)
+	if got, err := structFieldDescriptors(&protos.StructValue{Fields: map[string]*protos.Value{}}); err != nil || got != nil {
+		t.Errorf("expected nil descriptors for struct value with empty fields map, got %v, %v", got, err)
 	}
 }
 
