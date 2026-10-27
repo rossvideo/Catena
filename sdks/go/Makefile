@@ -79,7 +79,8 @@ schema:
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
 TRANSPORTTEST_PKG := github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest
 TESTCERTS_PKG := github.com/rossvideo/catena/sdks/go/pkg/internal/testcerts
-TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG)|$(TESTCERTS_PKG))($$|/)')
+SCHEMAGEN_PKG := github.com/rossvideo/catena/sdks/go/pkg/catena/internal/schemagen
+TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG)|$(TESTCERTS_PKG)|$(SCHEMAGEN_PKG))($$|/)')
 
 COVERAGE_DIR ?= $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
