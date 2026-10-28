@@ -41,6 +41,7 @@
 package rest
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -1005,129 +1006,6 @@ func TestTransport_DeleteAsset_NotFound(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodDelete, "/st2138-api/v1/0/asset/missing", "")
 	assertStatus(t, rec, http.StatusNotFound)
-}
-
-func TestTransport_MaxBodyBytes(t *testing.T) {
-	newCommandTransport := func(t *testing.T, maxBodyBytes int) (*Transport, *bool) {
-		t.Helper()
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: maxBodyBytes})
-		runtime := transporttest.MakeStubServerRuntime(t)
-		runtime.Dev = true
-		transport.runtime = runtime
-
-		handlerCalled := false
-		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
-			handlerCalled = true
-			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
-		}
-		return transport, &handlerCalled
-	}
-
-	t.Run("success, within payload size limit", func(t *testing.T) {
-		transport, handlerCalled := newCommandTransport(t, 16)
-		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", "")
-		assertStatus(t, rec, http.StatusOK)
-		if !*handlerCalled {
-			t.Error("handler should be called when the body is within the payload size limit")
-		}
-	})
-
-	t.Run("over payload size limit", func(t *testing.T) {
-		transport, handlerCalled := newCommandTransport(t, 16)
-		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value":"this body is over the limit"}`)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		assertBodyContains(t, rec, "request body too large")
-		if *handlerCalled {
-			t.Error("handler should not be called when the body exceeds the payload size limit")
-		}
-	})
-
-	t.Run("zero payload size limit", func(t *testing.T) {
-		transport, handlerCalled := newCommandTransport(t, 0)
-		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value":"x"}`)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		if *handlerCalled {
-			t.Error("handler should not be called when the payload size limit is 0")
-		}
-	})
-
-	t.Run("negative payload size limit", func(t *testing.T) {
-		transport, handlerCalled := newCommandTransport(t, -1)
-		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", `{"string_value":"this body is over the limit"}`)
-		assertStatus(t, rec, http.StatusOK)
-		if !*handlerCalled {
-			t.Error("handler should be called when the payload size limit is negative (no payload size limit)")
-		}
-	})
-}
-
-func TestTransport_RequestBodyTooLargeRoutes(t *testing.T) {
-	const body = `{"int32_value":42,"name":"padding past the limit"}`
-	t.Run("SetValue", func(t *testing.T) {
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
-		runtime := transporttest.MakeStubServerRuntime(t)
-		runtime.Dev = true
-		transport.runtime = runtime
-
-		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness", body)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		assertBodyContains(t, rec, "request body too large")
-	})
-
-	t.Run("SetValues", func(t *testing.T) {
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
-		runtime := transporttest.MakeStubServerRuntime(t)
-		runtime.Dev = true
-		transport.runtime = runtime
-
-		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		assertBodyContains(t, rec, "request body too large")
-	})
-
-	t.Run("CreateAsset", func(t *testing.T) {
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
-		runtime := transporttest.MakeStubServerRuntime(t)
-		runtime.Dev = true
-		transport.runtime = runtime
-
-		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", body)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		assertBodyContains(t, rec, "request body too large")
-	})
-
-	t.Run("UpdateAsset", func(t *testing.T) {
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
-		runtime := transporttest.MakeStubServerRuntime(t)
-		runtime.Dev = true
-		transport.runtime = runtime
-
-		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/asset/logo", body)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		assertBodyContains(t, rec, "request body too large")
-	})
-
-	t.Run("LanguagePackPost", func(t *testing.T) {
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
-		runtime := transporttest.MakeStubServerRuntime(t)
-		runtime.Dev = true
-		transport.runtime = runtime
-
-		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", body)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		assertBodyContains(t, rec, "request body too large")
-	})
-
-	t.Run("LanguagePackPut", func(t *testing.T) {
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
-		runtime := transporttest.MakeStubServerRuntime(t)
-		runtime.Dev = true
-		transport.runtime = runtime
-
-		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/language-pack/fr", body)
-		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
-		assertBodyContains(t, rec, "request body too large")
-	})
 }
 
 func TestTransport_CreateAsset_InvalidBody(t *testing.T) {
@@ -3137,5 +3015,294 @@ func TestTransport_LanguagePackUnsupportedMethod(t *testing.T) {
 
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected status 405, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestTransport_MaxBodyBytes(t *testing.T) {
+
+	const commandBody = `{"string_value":"x"}`
+
+	newTransportWithCommandHandler := func(t *testing.T, maxBodyBytes int, dev bool) (*Transport, *bool) {
+		t.Helper()
+
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: maxBodyBytes})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = dev
+		transport.runtime = runtime
+
+		handlerCalled := false
+		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
+			handlerCalled = true
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		return transport, &handlerCalled
+	}
+
+	t.Run("accepts a body exactly at the limit", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, len(commandBody), true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called when the body is exactly at the limit")
+		}
+	})
+
+	t.Run("rejects a body over the size limit", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, len(commandBody)-1, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the body is one byte over the limit")
+		}
+	})
+
+	t.Run("allows an empty body when the limit is zero", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, 0, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", "")
+
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called for an empty body when the limit is zero")
+		}
+	})
+
+	t.Run("rejects a non-empty body when the limit is zero", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, 0, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the limit is zero and the body is non-empty")
+		}
+	})
+
+	t.Run("accepts a large body when the limit is negative", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, -1, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called when the limit is negative")
+		}
+	})
+
+	t.Run("standard phrase outside of dev mode", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, len(commandBody)-1, false)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, http.StatusText(http.StatusRequestEntityTooLarge))
+		assertBodyNotContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the body exceeds the limit")
+		}
+	})
+}
+
+func TestTransport_RequestBodyTooLargeRoutes(t *testing.T) {
+	const body = `{"int32_value":42,"name":"padding so the body is over the limit"}`
+
+	newTransport := func(t *testing.T) (*Transport, *transporttest.StubServerRuntime) {
+		t.Helper()
+
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		return transport, runtime
+	}
+
+	t.Run("SetValue endpoint", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("SetValues endpoint", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("Asset write endpoints", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("LanguagePackPost write endpoints", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.AddLanguageFn = func(ctx catena.TransportContext, req catena.CreateLanguagePackRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("CommandStream", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
+			handlerCalled = true
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process/stream", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+}
+
+func TestTransport_Connect_SurvivesWriteTimeout(t *testing.T) {
+	runtime := transporttest.MakeStubServerRuntime(t)
+	connection := transporttest.MakeTestConnection(1)
+	runtime.WithConnection(connection)
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, got catena.Transport) {
+		select {
+		case connection.Done <- struct{}{}:
+		default:
+		}
+	}
+
+	// Creates and starts the transport
+	transport := NewTransport(config.RestOptions{
+		Port:              0,
+		ReadTimeout:       50 * time.Millisecond,
+		ReadHeaderTimeout: 50 * time.Millisecond,
+		WriteTimeout:      0,
+		IdleTimeout:       50 * time.Millisecond,
+		MaxBodyBytes:      0,
+	})
+	if err := transport.Start(context.Background(), runtime); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := transport.Shutdown(ctx); err != nil {
+			t.Errorf("Shutdown: %v", err)
+		}
+	})
+
+	// Make and send the HTTP request
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	transportURL := fmt.Sprintf("http://127.0.0.1:%d%s", transport.listener.Addr().(*net.TCPAddr).Port, "/st2138-api/v1/connect")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, transportURL, nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("GET connect: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read and verify the response header
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+	if got := resp.Header.Get("Content-Type"); got != "text/event-stream" {
+		t.Fatalf("expected Content-Type text/event-stream, got %q", got)
+	}
+
+	// Read the response body in a goroutine
+	frame := make(chan string, 1)
+	readErr := make(chan error, 1)
+	go func() {
+		reader := bufio.NewReader(resp.Body)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				readErr <- err
+				return
+			}
+			if strings.HasPrefix(line, "data: ") {
+				frame <- line
+				return
+			}
+		}
+	}()
+
+	// Push an update to the connection
+	time.Sleep(200 * time.Millisecond)
+	connection.Updates <- &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{Slots: []uint32{0, 1}},
+		},
+	}
+
+	// Wait for the update to be received and verify it contains the expected data
+	// and the connection is not closed due to a timeout.
+	select {
+	// An event was received
+	case frameData := <-frame:
+		if !strings.Contains(frameData, "slots_added") {
+			t.Errorf("expected slots_added in the SSE frame, got %q", frameData)
+		}
+	// The connection was closed
+	case err := <-readErr:
+		t.Fatalf("SSE connection closed before the event: %v", err)
+
+	// The timeout was reached
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for the SSE frame")
 	}
 }

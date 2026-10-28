@@ -257,12 +257,12 @@ func (t *Transport) createHttpHandler() http.Handler {
 }
 
 // handlerWithRequestBodySizeLimit caps request bodies at limit bytes via
-// http.MaxBytesReader. Zero allows no body. A negative limit leaves the body
-// unlimited.
+// http.MaxBytesReader. Zero allows no body. A negative limit leaves the body unlimited
 func handlerWithRequestBodySizeLimit(next http.Handler, limit int64) http.Handler {
 	if limit < 0 {
 		return next
 	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Body != nil {
 			r.Body = http.MaxBytesReader(w, r.Body, limit)
@@ -271,7 +271,7 @@ func handlerWithRequestBodySizeLimit(next http.Handler, limit int64) http.Handle
 	})
 }
 
-// Writes a
+// writeHTTPPayloadTooLarge writes HTTP 413 with a JSON error body.
 func (t *Transport) writeHTTPPayloadTooLarge(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusRequestEntityTooLarge)
 	msg := http.StatusText(http.StatusRequestEntityTooLarge)
