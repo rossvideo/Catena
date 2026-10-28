@@ -60,8 +60,7 @@ func TestDeviceComponentsForRequest(t *testing.T) {
 			WithAccessScopes("st2138:mon", "st2138:cfg").
 			WithDefaultScope("st2138:mon").
 			WithParam("alpha", st2138.NewParamInt32(1)).
-			WithParam("parent", st2138.NewParamStruct().
-				WithParam("child", st2138.NewParamString("x"))).
+			WithParam("parent", st2138.NewParamStruct(map[string]any{"child": "x"})).
 			WithCommand("go", st2138.NewParamEmpty()).
 			WithConstraint("percent", st2138.NewConstraintInt32Range(0, 100, 1)).
 			WithMenuGroup("status", st2138.NewMenuGroup().

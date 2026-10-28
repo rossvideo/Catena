@@ -198,9 +198,8 @@ func TestParamInfosFromParam(t *testing.T) {
 		// The sub-param subtree of the single param is flattened with
 		// fully-qualified oids, mirroring ParamInfosForRequest's NestedRecursive.
 		stream := &sliceStream[st2138.ParamInfo]{}
-		parent, err := st2138.NewParamStruct().
-			WithName(st2138.PolyglotText{"en": "Parent"}).
-			WithParam("child", st2138.NewParamString("")).Build()
+		parent, err := st2138.NewParamStruct(map[string]any{"child": ""}).
+			WithName(st2138.PolyglotText{"en": "Parent"}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
@@ -216,8 +215,7 @@ func TestParamInfosFromParam(t *testing.T) {
 		// A non-recursive request emits only the param's own descriptor even when
 		// it has sub-params.
 		stream := &sliceStream[st2138.ParamInfo]{}
-		parent, err := st2138.NewParamStruct().
-			WithParam("child", st2138.NewParamString("")).Build()
+		parent, err := st2138.NewParamStruct(map[string]any{"child": ""}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
@@ -283,8 +281,7 @@ func TestParamInfosFromParam(t *testing.T) {
 		// The param descriptor is accepted (FailAfter 1); the Send while recursing
 		// into its children then fails.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 1}
-		parent, err := st2138.NewParamStruct().
-			WithParam("child", st2138.NewParamString("")).Build()
+		parent, err := st2138.NewParamStruct(map[string]any{"child": ""}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
@@ -320,9 +317,8 @@ func TestFindParamDescriptor_EmptyOid(t *testing.T) {
 func testDeviceDefinition(t *testing.T) *st2138.Device {
 	t.Helper()
 	device, err := st2138.NewDevice(0).
-		WithParam("parent", st2138.NewParamStruct().
-			WithName(st2138.PolyglotText{"en": "Parent"}).
-			WithParam("child", st2138.NewParamString(""))).
+		WithParam("parent", st2138.NewParamStruct(map[string]any{"child": ""}).
+			WithName(st2138.PolyglotText{"en": "Parent"})).
 		WithParam("alpha", st2138.NewParamInt32(0).
 			WithName(st2138.PolyglotText{"en": "Alpha"})).
 		WithParam("numbers", st2138.NewParamInt32Array([]int32{1, 2, 3})).

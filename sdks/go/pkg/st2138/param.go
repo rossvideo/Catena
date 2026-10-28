@@ -82,7 +82,7 @@ func NewParamString(value ...string) *ParamBuilder {
 
 // NewParamStruct creates a STRUCT param. When a map of field values is given,
 // it becomes the struct's Value and a valueless sub-param descriptor is
-// auto-created for every field (recursively for nested maps), so trivial
+// auto-created for every field (recursively for nested struct-likes), so trivial
 // fields need no explicit WithParam calls.
 func NewParamStruct(value ...map[string]any) *ParamBuilder {
 	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT, "NewParamStruct", value,
@@ -200,6 +200,8 @@ func NewParamFromValue(v Value) *ParamBuilder {
 	}
 }
 
+// --- Factory helper functions ---
+
 // structFieldDescriptors builds a valueless sub-param descriptor for each
 // field of a struct value, inferring each descriptor's type from the field's
 // value kind. Nested struct fields recurse so their fields get descriptors
@@ -224,7 +226,7 @@ func structFieldDescriptors(sv *protos.StructValue) (map[string]*protos.Param, e
 }
 
 // variantDescriptors builds one valueless descriptor keyed by the variant
-// type. An empty type is skipped so it does not become an oid.
+// type. An empty type errors.
 func variantDescriptors(sv *protos.StructVariantValue) (map[string]*protos.Param, error) {
 	if sv == nil || sv.GetStructVariantType() == "" {
 		return nil, fmt.Errorf("struct variant type cannot be nil or empty")
@@ -501,14 +503,11 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 	protos.ParamType_STRUCT_VARIANT_ARRAY: {},
 }
 
-// WithParam attaches a sub-param descriptor under oid. On a STRUCT parent, a
-// sub-param with a value contributes that value to the struct's own
-// Value.Fields[oid]; the stored descriptor is kept valueless, since field
-// values live in the struct's Value and sub-params are descriptors only. A
-// valueless sub-param never touches the parent's Value, so it can refine a
-// descriptor (name, constraint, ...) without overriding a value that came
-// from NewParamStruct, NewParamStructArray, NewParamStructVariant, or
-// NewParamStructVariantArray.
+// WithParam attaches a valueless sub-param descriptor under oid. A
+// sub-param matching an existing oid can refine a descriptor (name, constraint, ...) without
+// overriding a value that came from NewParamStruct, NewParamStructArray, NewParamStructVariant,
+// or NewParamStructVariantArray. Inserting a param with a value or attempting to modify
+// an existing descriptor's type causes an error, invalidating the builder.
 func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder {
 	p, ok := buildChild(&cp.err, param, (*ParamBuilder).Build, "WithParam")
 	if !ok {
@@ -521,17 +520,18 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 
-	if cp.proto.Type == protos.ParamType_STRUCT && p.Proto.Value != nil {
-		sv := cp.proto.Value.GetStructValue()
-		if sv == nil {
-			sv = &protos.StructValue{}
-			cp.proto.Value = &protos.Value{Kind: &protos.Value_StructValue{StructValue: sv}}
+	if p.Proto.Value != nil {
+		cp.err = fmt.Errorf("WithParam called using param with value %v, only valueless params are supported", p.Proto.Value)
+		return cp
+	}
+
+	if descriptor, ok := cp.proto.Params[oid]; ok {
+		if descriptor.Type != p.Proto.Type {
+			cp.err = fmt.Errorf("WithParam called using param with type %s, mismatches existing sub-param type %s for oid %s",
+				p.Proto.Type.String(), descriptor.Type.String(), oid,
+			)
+			return cp
 		}
-		if sv.Fields == nil {
-			sv.Fields = map[string]*protos.Value{}
-		}
-		sv.Fields[oid] = p.Proto.Value
-		p.Proto.Value = nil
 	}
 
 	// A read-only parent forces its children read-only. When the parent is
