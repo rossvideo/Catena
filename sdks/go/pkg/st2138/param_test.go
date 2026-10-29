@@ -552,34 +552,6 @@ func TestWithHelp(t *testing.T) {
 	}
 }
 
-func TestWithHelp_Nil(t *testing.T) {
-	cp := NewParamInt32(0).WithHelp(nil)
-	if cp.proto.GetHelp() != nil {
-		t.Error("expected nil help to leave the proto help unset")
-	}
-	p, err := cp.Build()
-	if p != (Param{}) {
-		t.Errorf("expected empty Param, got %v", p)
-	}
-	if err == nil {
-		t.Error("expected error for builder with nil help")
-	}
-}
-
-func TestWithHelp_EmptyPolyglotText(t *testing.T) {
-	cp := NewParamInt32(0).WithHelp(PolyglotText{})
-	if cp.proto.GetHelp() != nil {
-		t.Error("expected empty polyglot text to leave the proto help unset")
-	}
-	p, err := cp.Build()
-	if p != (Param{}) {
-		t.Errorf("expected empty Param, got %v", p)
-	}
-	if err == nil {
-		t.Error("expected error for builder with empty help")
-	}
-}
-
 func TestWithOidAliases(t *testing.T) {
 	p, err := NewParamInt32(0).WithOidAliases("/old/path", "/legacy/path").Build()
 	if err != nil {

@@ -318,6 +318,7 @@ func TestFindParamDescriptor_EmptyOid(t *testing.T) {
 }
 
 func testDeviceDefinition(t *testing.T) *st2138.Device {
+	t.Helper()
 	device, err := st2138.NewDevice(0).
 		WithParam("parent", st2138.NewParamStruct().
 			WithName(st2138.PolyglotText{"en": "Parent"}).

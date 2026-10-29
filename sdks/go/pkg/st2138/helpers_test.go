@@ -129,3 +129,11 @@ func TestPut(t *testing.T) {
 		t.Errorf("expected value to be 'value', got %s", m["key"])
 	}
 }
+
+func TestPut_NilMap(t *testing.T) {
+	var m map[string]string
+	put(&m, "key", "value")
+	if m["key"] != "value" {
+		t.Errorf("expected value to be 'value', got %s", m["key"])
+	}
+}

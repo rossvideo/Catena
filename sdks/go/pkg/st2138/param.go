@@ -294,13 +294,8 @@ func (cp *ParamBuilder) WithConstraint(cb *ConstraintBuilder) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	if cb == nil {
-		cp.err = fmt.Errorf("WithConstraint: constraint builder cannot be nil")
-		return cp
-	}
-	c, err := cb.Build()
-	if err != nil {
-		cp.err = err
+	c, ok := buildChild(&cp.err, cb, (*ConstraintBuilder).Build, "WithConstraint")
+	if !ok {
 		return cp
 	}
 	if !isConstraintValidForParam(&c, cp.proto.Type) {
@@ -460,10 +455,6 @@ func (cp *ParamBuilder) WithResponse(response bool) *ParamBuilder {
 
 func (cp *ParamBuilder) WithHelp(help PolyglotText) *ParamBuilder {
 	if cp.err != nil {
-		return cp
-	}
-	if len(help) == 0 {
-		cp.err = fmt.Errorf("WithHelp: help cannot be nil")
 		return cp
 	}
 	cp.proto.Help = help.Proto()

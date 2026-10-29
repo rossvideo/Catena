@@ -187,10 +187,7 @@ func (m *MenuBuilder) WithClientHint(key, value string) *MenuBuilder {
 	if m.err != nil {
 		return m
 	}
-	if m.proto.ClientHints == nil {
-		m.proto.ClientHints = map[string]string{}
-	}
-	m.proto.ClientHints[key] = value
+	put(&m.proto.ClientHints, key, value)
 	return m
 }
 

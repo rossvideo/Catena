@@ -50,7 +50,7 @@ import (
 func TestProductParam_Golden(t *testing.T) {
 	param, err := ProductParam(testProduct())
 	if err != nil {
-		t.Errorf("failed to build product param: %v", err)
+		t.Fatalf("failed to build product param: %v", err)
 	}
 	got := param.Proto
 	if !proto.Equal(got, expectedProductParam()) {
