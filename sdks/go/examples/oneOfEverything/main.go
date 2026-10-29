@@ -272,6 +272,13 @@ func (s *ExampleState) sampleStructVariantArrayValue() []st2138.StructVariantVal
 	return s.sampleStructVariantArray
 }
 
+// extractAssetFqoid is the id clients use to fetch an embedded file. The filename
+// stays in the payload's file-name metadata; the id drops the extension
+// because an fqoid cannot contain '.'.
+func extractAssetFqoid(id string) string {
+	return strings.ReplaceAll(id, ".", "_")
+}
+
 func sortedAssetIDs(assets *sync.Map) []string {
 	var ids []string
 	assets.Range(func(key, _ any) bool {
@@ -354,7 +361,7 @@ func main() {
 		os.Exit(1)
 	}
 	for id, payload := range payloads {
-		assets.Store(id, storedAsset{payload: payload, cachable: true})
+		assets.Store(extractAssetFqoid(id), storedAsset{payload: payload, cachable: true})
 	}
 	assetIDs := sortedAssetIDs(assets)
 
