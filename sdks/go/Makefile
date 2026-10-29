@@ -20,13 +20,13 @@ GO_M_OPTS      := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES
 # protoc-gen-go-grpc emits a file only for protos that declare a service.
 GRPC_M_OPTS    := $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(filter-out $(PROTO_DIR)/service.proto,$(PROTO_FILES)))) --go-grpc_opt=Mservice.proto=$(RPC_IMPORT_PATH)
 
-.PHONY: proto-tools protos clean-protos schema
+.PHONY: proto-tools protos clean-protos schema generate
 
-all: protos schema examples
+all: examples
 
 examples: $(CMDS)
 
-$(CMDS):
+$(CMDS): generate
 	mkdir -p $(BIN_DIR)/$@
 	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
 
@@ -72,6 +72,9 @@ clean-protos:
 schema:
 	go generate ./pkg/catena/
 
+# All code generation that must be in place before building or testing.
+generate: protos schema
+
 # Test targets
 .PHONY: test race coverage coverage-html coverage-lcov coverage-cobertura clean-coverage
 
@@ -86,8 +89,7 @@ COVERAGE_DIR ?= $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
 VERBOSE ?= 0
 
-test:
-	go generate ./pkg/catena/
+test: generate
 	go test -v ./...
 
 RACE_PACKAGES ?= $(TEST_PACKAGES)
@@ -97,14 +99,14 @@ GOTESTSUM = gotestsum \
 	--format $(if $(filter 1,$(VERBOSE)),standard-verbose,pkgname) \
 	$(GOTESTSUM_OPTS) --
 
-race: protos
+race: generate
 	$(GOTESTSUM) \
 		-race \
 		-count=$(RACE_COUNT) \
 		$(if $(filter 1,$(VERBOSE)),-v) \
 		$(RACE_PACKAGES)
 
-coverage: | $(COVERAGE_DIR) protos
+coverage: generate | $(COVERAGE_DIR)
 	$(GOTESTSUM) \
 		-coverprofile=$(COVERAGE_OUT) \
 		-covermode=count \
