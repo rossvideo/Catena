@@ -289,7 +289,7 @@ func DefaultLoggerOptions() LoggerOptions {
 		LogDir:         "./logs",
 		Silent:         false,
 		Level:          slog.LevelInfo, // INFO default in prod
-		WriteToFile:    true,
+		WriteToFile:    false,
 		WriteToConsole: true,
 		UseJSON:        false,
 	}

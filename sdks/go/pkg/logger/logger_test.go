@@ -207,8 +207,8 @@ func TestNew(t *testing.T) {
 		if opts.Level != slog.LevelInfo {
 			t.Fatalf("Level = %d, want %d", opts.Level, slog.LevelInfo)
 		}
-		if opts.WriteToFile != true {
-			t.Fatalf("WriteToFile = %t, want %t", opts.WriteToFile, true)
+		if opts.WriteToFile != false {
+			t.Fatalf("WriteToFile = %t, want %t", opts.WriteToFile, false)
 		}
 		if opts.WriteToConsole != true {
 			t.Fatalf("WriteToConsole = %t, want %t", opts.WriteToConsole, true)

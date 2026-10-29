@@ -78,7 +78,7 @@ func TestDefaultOptions(t *testing.T) {
 			LogDir:         "./logs",
 			Silent:         false,
 			Level:          slog.LevelInfo,
-			WriteToFile:    true,
+			WriteToFile:    false,
 			WriteToConsole: true,
 			UseJSON:        false,
 		},

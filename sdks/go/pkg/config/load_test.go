@@ -378,7 +378,7 @@ func TestOptionMappings(t *testing.T) {
 		{"SILENT", "silent", "true", true, func(o RuntimeOptions) any { return o.Logger.Silent }},
 		{"LOG_DIR", "log-dir", "/var/log/catena", "/var/log/catena", func(o RuntimeOptions) any { return o.Logger.LogDir }},
 		{"LOG_LEVEL", "log-level", "error", slog.LevelError, func(o RuntimeOptions) any { return o.Logger.Level }},
-		{"LOG_TO_FILE", "log-to-file", "false", false, func(o RuntimeOptions) any { return o.Logger.WriteToFile }},          // defaults true
+		{"LOG_TO_FILE", "log-to-file", "true", true, func(o RuntimeOptions) any { return o.Logger.WriteToFile }},
 		{"LOG_TO_CONSOLE", "log-to-console", "false", false, func(o RuntimeOptions) any { return o.Logger.WriteToConsole }}, // defaults true
 		{"LOG_USE_JSON", "log-use-json", "true", true, func(o RuntimeOptions) any { return o.Logger.UseJSON }},
 	}
