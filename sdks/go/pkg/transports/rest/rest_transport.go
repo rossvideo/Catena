@@ -259,7 +259,7 @@ func (t *Transport) createHttpHandler() http.Handler {
 // handlerWithRequestBodySizeLimit caps request bodies at limit bytes via
 // http.MaxBytesReader. Zero allows no body. A negative limit leaves the body unlimited
 func handlerWithRequestBodySizeLimit(next http.Handler, limit int64) http.Handler {
-	if limit <= 0 {
+	if limit < 0 {
 		return next
 	}
 

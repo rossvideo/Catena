@@ -3073,14 +3073,15 @@ func TestTransport_MaxBodyBytes(t *testing.T) {
 		}
 	})
 
-	t.Run("accepts a large body when the limit is zero", func(t *testing.T) {
+	t.Run("rejects a non-empty body when the limit is zero", func(t *testing.T) {
 		transport, handlerCalled := newTransportWithCommandHandler(t, 0, true)
 
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
 
-		assertStatus(t, rec, http.StatusOK)
-		if !*handlerCalled {
-			t.Error("handler should be called when the limit is zero")
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the limit is zero and the body is non-empty")
 		}
 	})
 
