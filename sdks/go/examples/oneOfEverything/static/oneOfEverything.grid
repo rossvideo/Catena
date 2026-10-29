@@ -3,7 +3,7 @@
   Custom DashBoard panel for slot 0 of the oneOfEverything example.
 
   DashBoard discovers this panel through the "dashboard_UI" param (well-known
-  oid alias 0xFF0E), whose value "eo://oneOfEverything.grid" points at this
+  oid alias 0xFF0E), whose value "eo://oneOfEverything_grid" points at this
   file. DashBoard downloads it via ExternalObjectRequest (served chunked by
   asset_handler.go) and renders it in place of the auto-generated UI.
 -->
