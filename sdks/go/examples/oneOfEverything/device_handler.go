@@ -325,8 +325,9 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithName(st2138.PolyglotText{"en": "Sample String Array"})).
 			WithParam("sample_binary", st2138.NewParamBinary(sampleBinary).
 				WithName(st2138.PolyglotText{"en": "Sample Binary"})).
-			// Valueless NewParamX() calls build sub-param descriptors without
-			// dummy values; the actual values live in the parent param's value.
+			// Struct-like factories auto-create valueless descriptors from the
+			// value. string_kind is not the current sampleStructVariant value,
+			// so that alternative is still declared by hand.
 			WithParam("sample_struct_variant", st2138.NewParamStructVariant(sampleStructVariant).
 				WithName(st2138.PolyglotText{"en": "Sample Struct Variant"}).
 				WithParam("int_kind", st2138.NewParamInt32()).

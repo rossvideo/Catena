@@ -82,61 +82,31 @@ func NewParamString(value ...string) *ParamBuilder {
 
 // NewParamStruct creates a STRUCT param. When a map of field values is given,
 // it becomes the struct's Value and a valueless sub-param descriptor is
-// auto-created for every field (recursively for nested maps), so trivial
+// auto-created for every field (recursively for nested struct-likes), so trivial
 // fields need no explicit WithParam calls.
 func NewParamStruct(value ...map[string]any) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
-	if cp.err = extraValueCheck(value, "NewParamStruct"); cp.err != nil {
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT, "NewParamStruct", value,
+		func(v map[string]any) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStruct: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	cp.proto.Params = structFieldDescriptors(pv.GetStructValue())
-	return cp
+	params, err := structFieldDescriptors(pv.GetStructValue())
+	return setInferredValue(cp, "NewParamStruct", pv, params, err)
 }
 
-// structFieldDescriptors builds a valueless sub-param descriptor for each
-// field of a struct value, inferring each descriptor's type from the field's
-// value kind. Nested struct fields recurse so their fields get descriptors
-// too.
-func structFieldDescriptors(sv *protos.StructValue) map[string]*protos.Param {
-	fields := sv.GetFields()
-	if len(fields) == 0 {
-		return nil
-	}
-	params := make(map[string]*protos.Param, len(fields))
-	for oid, fv := range fields {
-		p := &protos.Param{Type: paramTypeFromValueKind(fv)}
-		if nested := fv.GetStructValue(); nested != nil {
-			p.Params = structFieldDescriptors(nested)
-		}
-		params[oid] = p
-	}
-	return params
-}
-
+// NewParamStructVariant creates a STRUCT_VARIANT param. When a value is given,
+// it becomes the param's Value and a valueless sub-param descriptor is
+// auto-created under the variant type, typed from the inner value. Nested
+// struct values recurse. An empty variant type errors.
+// Alternatives that are not the current value still need WithParam.
 func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
-	if cp.err = extraValueCheck(value, "NewParamStructVariant"); cp.err != nil {
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT_VARIANT, "NewParamStructVariant", value,
+		func(v StructVariantValue) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructVariant: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	return cp
+	params, err := variantDescriptors(pv.GetStructVariantValue())
+	return setInferredValue(cp, "NewParamStructVariant", pv, params, err)
 }
 
 func NewParamInt32Array(value ...[]int32) *ParamBuilder {
@@ -163,38 +133,34 @@ func NewParamBinary(value ...[]byte) *ParamBuilder {
 	})
 }
 
+// NewParamStructArray creates a STRUCT_ARRAY param. When element values are
+// given, they become the param's Value and valueless field descriptors are
+// merged across every element, including nested structs. Fields of the same
+// type union their nested descriptors. A field name that appears as two
+// different types fails the builder.
 func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
-	if cp.err = extraValueCheck(value, "NewParamStructArray"); cp.err != nil {
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT_ARRAY, "NewParamStructArray", value,
+		func(v []map[string]any) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructArray: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	return cp
+	params, err := mergeArrayDescriptors(pv.GetStructArrayValues().GetStructValues(), structFieldDescriptors)
+	return setInferredValue(cp, "NewParamStructArray", pv, params, err)
 }
 
+// NewParamStructVariantArray creates a STRUCT_VARIANT_ARRAY param. When
+// elements are given, they become the param's Value and a valueless descriptor
+// is auto-created for each variant type present. Repeated types of the same
+// inner type union nested descriptors. The same variant type with two different
+// inner types fails the builder. An empty variant type errors.
 func NewParamStructVariantArray(value ...[]StructVariantValue) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
-	if cp.err = extraValueCheck(value, "NewParamStructVariantArray"); cp.err != nil {
+	cp, pv, shortCircuit := newParamStructLikeBuilder(protos.ParamType_STRUCT_VARIANT_ARRAY, "NewParamStructVariantArray", value,
+		func(v []StructVariantValue) (*protos.Value, error) { return ToProto(v) })
+	if shortCircuit {
 		return cp
 	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructVariantArray: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	return cp
+	params, err := mergeArrayDescriptors(pv.GetStructVariantArrayValues().GetStructVariants(), variantDescriptors)
+	return setInferredValue(cp, "NewParamStructVariantArray", pv, params, err)
 }
 
 func NewParamEmpty() *ParamBuilder {
@@ -207,17 +173,8 @@ func NewParamEmpty() *ParamBuilder {
 }
 
 func NewParamData(payload ...DataPayload) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_DATA}}
-	if cp.err = extraValueCheck(payload, "NewParamData"); cp.err != nil {
-		return cp
-	}
-	if len(payload) == 0 {
-		return cp
-	}
-	pdp, err := dataPayloadToProto(payload[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamData: failed to convert DataPayload: %w", err)
-
+	cp, pdp, shortCircuit := newParamStructLikeBuilder(protos.ParamType_DATA, "NewParamData", payload, dataPayloadToProto)
+	if shortCircuit {
 		return cp
 	}
 	cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
@@ -243,6 +200,133 @@ func NewParamFromValue(v Value) *ParamBuilder {
 	}
 }
 
+// --- Factory helper functions ---
+
+// structFieldDescriptors builds a valueless sub-param descriptor for each
+// field of a struct value, inferring each descriptor's type from the field's
+// value kind. Nested struct fields recurse so their fields get descriptors
+// too. A type conflict inside a nested array is returned.
+func structFieldDescriptors(sv *protos.StructValue) (map[string]*protos.Param, error) {
+	fields := sv.GetFields()
+	if len(fields) == 0 {
+		return nil, nil
+	}
+	params := make(map[string]*protos.Param, len(fields))
+	for oid, fv := range fields {
+		if oid == "" {
+			return nil, fmt.Errorf("struct field name cannot be empty")
+		}
+		p, err := descriptorForValue(fv)
+		if err != nil {
+			return nil, err
+		}
+		params[oid] = p
+	}
+	return params, nil
+}
+
+// variantDescriptors builds one valueless descriptor keyed by the variant
+// type. An empty type errors.
+func variantDescriptors(sv *protos.StructVariantValue) (map[string]*protos.Param, error) {
+	if sv == nil || sv.GetStructVariantType() == "" {
+		return nil, fmt.Errorf("struct variant type cannot be nil or empty")
+	}
+	p, err := descriptorForValue(sv.GetValue())
+	if err != nil {
+		return nil, err
+	}
+	return map[string]*protos.Param{sv.GetStructVariantType(): p}, nil
+}
+
+// descriptorForValue builds a valueless descriptor whose type matches v.
+// Also handles nested descriptors.
+func descriptorForValue(v *protos.Value) (*protos.Param, error) {
+	nested, err := nestedParams(v)
+	if err != nil {
+		return nil, err
+	}
+	return &protos.Param{Type: paramTypeFromValueKind(v), Params: nested}, nil
+}
+
+// nestedParams returns valueless descriptors for a struct-like value.
+func nestedParams(v *protos.Value) (map[string]*protos.Param, error) {
+	if v == nil {
+		return nil, nil
+	}
+	switch kind := v.Kind.(type) {
+	case *protos.Value_StructValue:
+		return structFieldDescriptors(kind.StructValue)
+	case *protos.Value_StructVariantValue:
+		return variantDescriptors(kind.StructVariantValue)
+	case *protos.Value_StructArrayValues:
+		return mergeArrayDescriptors(kind.StructArrayValues.GetStructValues(), structFieldDescriptors)
+	case *protos.Value_StructVariantArrayValues:
+		return mergeArrayDescriptors(kind.StructVariantArrayValues.GetStructVariants(), variantDescriptors)
+	default:
+		return nil, nil
+	}
+}
+
+// mergeArrayDescriptors unions descriptors across array elements, in order.
+// protoFunc is used to convert the element to a map of descriptors.
+func mergeArrayDescriptors[T any](elements []T, protoFunc func(T) (map[string]*protos.Param, error)) (map[string]*protos.Param, error) {
+	var merged map[string]*protos.Param
+	for _, el := range elements {
+		fields, err := protoFunc(el)
+		if err != nil {
+			return nil, err
+		}
+		merged, err = mergeDescriptors(merged, fields)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return merged, nil
+}
+
+// mergeDescriptors inserts src into dst. A key already present with the same
+// ParamType unions its nested descriptors. A different ParamType is an error
+// and the partial map is discarded.
+func mergeDescriptors(dst, src map[string]*protos.Param) (map[string]*protos.Param, error) {
+	if len(src) == 0 {
+		return dst, nil
+	}
+	if dst == nil {
+		dst = make(map[string]*protos.Param, len(src))
+	}
+	for oid, incoming := range src {
+		existing, ok := dst[oid]
+		if !ok {
+			dst[oid] = incoming
+			continue
+		}
+		if existing.GetType() != incoming.GetType() {
+			return nil, fmt.Errorf("conflicting sub-param types for %q: is %s, got %s",
+				oid, existing.GetType().String(), incoming.GetType().String())
+		}
+		nested, err := mergeDescriptors(existing.GetParams(), incoming.GetParams())
+		if err != nil {
+			return nil, err
+		}
+		if len(nested) > 0 {
+			existing.Params = nested
+		}
+	}
+	return dst, nil
+}
+
+// setInferredValue stores pv and its valueless descriptors. On err neither is
+// stored, so Build reports the failure with an empty Param.
+func setInferredValue(cp *ParamBuilder, fn string, pv *protos.Value, params map[string]*protos.Param, err error) *ParamBuilder {
+	if err != nil {
+		cp.err = fmt.Errorf("%s: %w", fn, err)
+		return cp
+	}
+	cp.proto.Value = pv
+	cp.proto.Params = params
+	return cp
+}
+
 // extraValueCheck checks that there is at most one value provided.
 // Returns an error, with the given name of the calling function, if more than one value is provided.
 // Returns nil otherwise.
@@ -264,6 +348,26 @@ func newParamBuilder[T any](typ protos.ParamType, name string, value []T, valueO
 		cp.proto.Value = valueOf(value[0])
 	}
 	return cp
+}
+
+// newParamStructLikeBuilder creates a param builder for a struct-like param.
+// Returns a builder, the proto value, and a boolean indicating whether the
+// builder should short-circuit due to an error or an empty value collection.
+// protoFunc is used to convert the first value to a proto value.
+func newParamStructLikeBuilder[T any, PV any](typ protos.ParamType, name string, value []T, protoFunc func(T) (*PV, error)) (*ParamBuilder, *PV, bool) {
+	cp := &ParamBuilder{proto: &protos.Param{Type: typ}}
+	if cp.err = extraValueCheck(value, name); cp.err != nil {
+		return cp, nil, true
+	}
+	if len(value) == 0 {
+		return cp, nil, true
+	}
+	pv, err := protoFunc(value[0])
+	if err != nil {
+		cp.err = fmt.Errorf("%s: %w", name, err)
+		return cp, nil, true
+	}
+	return cp, pv, false
 }
 
 // --- Chainable With* methods ---
@@ -399,13 +503,11 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 	protos.ParamType_STRUCT_VARIANT_ARRAY: {},
 }
 
-// WithParam attaches a sub-param descriptor under oid. On a STRUCT parent, a
-// sub-param with a value contributes that value to the struct's own
-// Value.Fields[oid]; the stored descriptor is kept valueless, since field
-// values live in the struct's Value and sub-params are descriptors only. A
-// valueless sub-param never touches the parent's Value, so it can refine a
-// descriptor (name, constraint, ...) without overriding a value that came
-// from the NewParamStruct map.
+// WithParam attaches a valueless sub-param descriptor under oid. A
+// sub-param matching an existing oid can refine a descriptor (name, constraint, ...) without
+// overriding a value that came from NewParamStruct, NewParamStructArray, NewParamStructVariant,
+// or NewParamStructVariantArray. Inserting a param with a value or attempting to modify
+// an existing descriptor's type causes an error, invalidating the builder.
 func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder {
 	p, ok := buildChild(&cp.err, param, (*ParamBuilder).Build, "WithParam")
 	if !ok {
@@ -418,17 +520,18 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 
-	if cp.proto.Type == protos.ParamType_STRUCT && p.Proto.Value != nil {
-		sv := cp.proto.Value.GetStructValue()
-		if sv == nil {
-			sv = &protos.StructValue{}
-			cp.proto.Value = &protos.Value{Kind: &protos.Value_StructValue{StructValue: sv}}
+	if p.Proto.Value != nil {
+		cp.err = fmt.Errorf("WithParam called using param with value %v, only valueless params are supported", p.Proto.Value)
+		return cp
+	}
+
+	if descriptor, ok := cp.proto.Params[oid]; ok {
+		if descriptor.Type != p.Proto.Type {
+			cp.err = fmt.Errorf("WithParam called using param with type %s, mismatches existing sub-param type %s for oid %s",
+				p.Proto.Type.String(), descriptor.Type.String(), oid,
+			)
+			return cp
 		}
-		if sv.Fields == nil {
-			sv.Fields = map[string]*protos.Value{}
-		}
-		sv.Fields[oid] = p.Proto.Value
-		p.Proto.Value = nil
 	}
 
 	// A read-only parent forces its children read-only. When the parent is
