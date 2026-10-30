@@ -39,34 +39,32 @@
 package st2138
 
 import (
-	"log/slog"
+	"maps"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 // PolyglotText maps BCP-47 language codes to display strings.
 type PolyglotText map[string]string
 
-// NewPolyglotText creates a PolyglotText from zero or more (lang, text) pairs.
-// Calling it with no arguments yields an empty PolyglotText, which is useful
-// for building entries up in a loop before passing the result to a builder:
-//
-//	name := NewPolyglotText()
-//	for lang := range langs {
-//		name.With(lang, translate(lang, "Hello"))
-//	}
-func NewPolyglotText(pairs ...string) PolyglotText {
-	p := PolyglotText{}
-	for i := 0; i+1 < len(pairs); i += 2 {
-		p[pairs[i]] = pairs[i+1]
+// Proto creates a protobuf PolyglotText from the PolyglotText map.
+// Returns nil if the PolyglotText is empty.
+func (p PolyglotText) Proto() *protos.PolyglotText {
+	if len(p) == 0 {
+		return nil
 	}
-	if len(pairs)%2 != 0 {
-		slog.Warn("NewPolyglotText: odd number of arguments; ignoring trailing lang with no text",
-			"lang", pairs[len(pairs)-1])
+	return &protos.PolyglotText{
+		DisplayStrings: maps.Clone(p),
 	}
-	return p
 }
 
-// With returns the PolyglotText with an additional language entry added.
+// With adds a language entry and returns the result. Always use the return
+// value: p is mutated in place when non-nil, but a nil p yields a newly
+// allocated PolyglotText and the original stays nil.
 func (p PolyglotText) With(lang, text string) PolyglotText {
+	if p == nil {
+		p = PolyglotText{}
+	}
 	p[lang] = text
 	return p
 }
@@ -77,4 +75,14 @@ func (p PolyglotText) Get(lang, fallback string) string {
 		return s
 	}
 	return p[fallback]
+}
+
+// PolyglotTextFromProto creates a PolyglotText map from a protobuf PolyglotText.
+func PolyglotTextFromProto(proto *protos.PolyglotText) PolyglotText {
+	if proto == nil || len(proto.DisplayStrings) == 0 {
+		return nil
+	}
+	pt := PolyglotText{}
+	maps.Copy(pt, proto.DisplayStrings)
+	return pt
 }

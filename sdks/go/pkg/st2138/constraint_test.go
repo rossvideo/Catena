@@ -31,16 +31,22 @@
 package st2138
 
 import (
+	"errors"
 	"testing"
+
+	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestNewConstraintInt32Choice(t *testing.T) {
-	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 1, Name: NewPolyglotText("en", "one")},
-		{Value: 2, Name: NewPolyglotText("en", "two")},
-	})
+	c, err := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+		{Value: 2, Name: PolyglotText{"en": "two"}},
+	}).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_INT_CHOICE {
 		t.Errorf("expected INT_CHOICE, got %v", c.Proto.GetType())
 	}
@@ -63,7 +69,10 @@ func TestNewConstraintInt32Choice(t *testing.T) {
 }
 
 func TestNewConstraintInt32Choice_Empty(t *testing.T) {
-	c := NewConstraintInt32Choice(nil)
+	c, err := NewConstraintInt32Choice(nil).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_INT_CHOICE {
 		t.Errorf("expected INT_CHOICE, got %v", c.Proto.GetType())
 	}
@@ -73,7 +82,10 @@ func TestNewConstraintInt32Choice_Empty(t *testing.T) {
 }
 
 func TestNewConstraintInt32Range(t *testing.T) {
-	c := NewConstraintInt32Range(0, 100, 5)
+	c, err := NewConstraintInt32Range(0, 100, 5).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_INT_RANGE {
 		t.Errorf("expected INT_RANGE, got %v", c.Proto.GetType())
 	}
@@ -93,7 +105,10 @@ func TestNewConstraintInt32Range(t *testing.T) {
 }
 
 func TestNewConstraintInt32RangeWithDisplay(t *testing.T) {
-	c := NewConstraintInt32RangeWithDisplay(0, 100, 1, 10, 90)
+	c, err := NewConstraintInt32RangeWithDisplay(0, 100, 1, 10, 90).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	r := c.Proto.GetInt32Range()
 	if r.GetDisplayMin() != 10 {
 		t.Errorf("expected display min 10, got %d", r.GetDisplayMin())
@@ -104,7 +119,10 @@ func TestNewConstraintInt32RangeWithDisplay(t *testing.T) {
 }
 
 func TestNewConstraintFloatRange(t *testing.T) {
-	c := NewConstraintFloatRange(0, 1, 0.01)
+	c, err := NewConstraintFloatRange(0, 1, 0.01).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_FLOAT_RANGE {
 		t.Errorf("expected FLOAT_RANGE, got %v", c.Proto.GetType())
 	}
@@ -121,7 +139,10 @@ func TestNewConstraintFloatRange(t *testing.T) {
 }
 
 func TestNewConstraintFloatRangeWithDisplay(t *testing.T) {
-	c := NewConstraintFloatRangeWithDisplay(0, 100, 0.5, 10, 90)
+	c, err := NewConstraintFloatRangeWithDisplay(0, 100, 0.5, 10, 90).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	r := c.Proto.GetFloatRange()
 	if r.GetDisplayMin() != 10 {
 		t.Errorf("expected display min 10, got %f", r.GetDisplayMin())
@@ -132,7 +153,10 @@ func TestNewConstraintFloatRangeWithDisplay(t *testing.T) {
 }
 
 func TestNewConstraintStringChoice(t *testing.T) {
-	c := NewConstraintStringChoice(true, "a", "b", "c")
+	c, err := NewConstraintStringChoice(true, "a", "b", "c").Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_STRING_CHOICE {
 		t.Errorf("expected STRING_CHOICE, got %v", c.Proto.GetType())
 	}
@@ -149,17 +173,23 @@ func TestNewConstraintStringChoice(t *testing.T) {
 }
 
 func TestNewConstraintStringChoice_NotStrict(t *testing.T) {
-	c := NewConstraintStringChoice(false, "x")
+	c, err := NewConstraintStringChoice(false, "x").Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetStringChoice().GetStrict() {
 		t.Error("expected strict=false")
 	}
 }
 
 func TestNewConstraintStringStringChoice(t *testing.T) {
-	c := NewConstraintStringStringChoice(true, []StringStringChoice{
-		{Value: "r", Name: NewPolyglotText("en", "Red")},
-		{Value: "g", Name: NewPolyglotText("en", "Green")},
-	})
+	c, err := NewConstraintStringStringChoice(true, []StringStringChoice{
+		{Value: "r", Name: PolyglotText{"en": "Red"}},
+		{Value: "g", Name: PolyglotText{"en": "Green"}},
+	}).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_STRING_STRING_CHOICE {
 		t.Errorf("expected STRING_STRING_CHOICE, got %v", c.Proto.GetType())
 	}
@@ -180,11 +210,14 @@ func TestNewConstraintStringStringChoice(t *testing.T) {
 }
 
 func TestNewConstraintAlarmTable(t *testing.T) {
-	c := NewConstraintAlarmTable([]AlarmEntry{
-		{BitValue: 0, Severity: AlarmSeverityInfo, Description: NewPolyglotText("en", "All clear")},
-		{BitValue: 1, Severity: AlarmSeverityWarning, Description: NewPolyglotText("en", "Caution")},
+	c, err := NewConstraintAlarmTable([]AlarmEntry{
+		{BitValue: 0, Severity: AlarmSeverityInfo, Description: PolyglotText{"en": "All clear"}},
+		{BitValue: 1, Severity: AlarmSeverityWarning, Description: PolyglotText{"en": "Caution"}},
 		{BitValue: 2, Severity: AlarmSeveritySevere},
-	})
+	}).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_ALARM_TABLE {
 		t.Errorf("expected ALARM_TABLE, got %v", c.Proto.GetType())
 	}
@@ -210,14 +243,20 @@ func TestNewConstraintAlarmTable(t *testing.T) {
 }
 
 func TestNewConstraintAlarmTable_Empty(t *testing.T) {
-	c := NewConstraintAlarmTable(nil)
+	c, err := NewConstraintAlarmTable(nil).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if len(c.Proto.GetAlarmTable().GetAlarms()) != 0 {
 		t.Error("expected empty alarms")
 	}
 }
 
 func TestNewConstraintRefOid(t *testing.T) {
-	c := NewConstraintRefOid("shared.my_constraint")
+	c, err := NewConstraintRefOid("shared.my_constraint").Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_UNDEFINED {
 		t.Errorf("expected UNDEFINED type for ref_oid, got %v", c.Proto.GetType())
 	}
@@ -227,15 +266,115 @@ func TestNewConstraintRefOid(t *testing.T) {
 }
 
 func TestNewConstraintInt32Choice_MultiLanguage(t *testing.T) {
-	c := NewConstraintInt32Choice([]Int32Choice{
-		{Value: 1, Name: NewPolyglotText("en", "one").With("fr", "un")},
-	})
+	c, err := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one", "fr": "un"}},
+	}).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	name := c.Proto.GetInt32Choice().GetChoices()[0].GetName().GetDisplayStrings()
 	if name["en"] != "one" {
 		t.Errorf("expected 'one', got %q", name["en"])
 	}
 	if name["fr"] != "un" {
 		t.Errorf("expected 'un', got %q", name["fr"])
+	}
+}
+
+func TestConstraintBuilder_BuildsValidConstraint(t *testing.T) {
+	c, err := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+	}).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if c.Proto == nil {
+		t.Fatal("expected non-nil proto")
+	}
+	if c.Proto.GetType() != protos.Constraint_INT_CHOICE {
+		t.Errorf("expected INT_CHOICE, got %v", c.Proto.GetType())
+	}
+	if len(c.Proto.GetInt32Choice().GetChoices()) != 1 {
+		t.Errorf("expected 1 choice, got %d", len(c.Proto.GetInt32Choice().GetChoices()))
+	}
+}
+
+func TestConstraintBuilder_BuildSurfacesErrors(t *testing.T) {
+	cb := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+	})
+	cb.err = errors.New("test error")
+	if _, err := cb.Build(); err == nil {
+		t.Fatal("expected error for builder with error")
+	}
+}
+
+func TestConstraintBuilder_Clone(t *testing.T) {
+	cb := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+	})
+	clone := cb.Clone()
+	if !proto.Equal(cb.proto, clone.proto) {
+		t.Fatal("expected clone to be equal to original")
+	}
+	if clone == cb {
+		t.Fatal("expected clone to be a different object")
+	}
+	if clone.proto == cb.proto {
+		t.Fatal("expected clone to have a different proto")
+	}
+}
+
+func TestConstraintBuilder_CloneInheritsError(t *testing.T) {
+
+	cb := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+	})
+	cb.err = errors.New("test error")
+	clone := cb.Clone()
+	if clone.err == nil || clone.err.Error() != "test error" {
+		t.Fatal("expected clone to inherit error")
+	}
+}
+
+func TestConstraint_AlreadyBuilt(t *testing.T) {
+	cb := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+	})
+	c1, err := cb.Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if c1.Proto.GetType() != protos.Constraint_INT_CHOICE {
+		t.Errorf("expected INT_CHOICE, got %v", c1.Proto.GetType())
+	}
+	c2, err := cb.Build()
+	if err == nil || !errors.Is(err, ErrAlreadyBuilt) {
+		t.Fatal("expected error for builder after Build(), got", err)
+	}
+	if c2 != (Constraint{}) {
+		t.Fatal("expected empty constraint for building already built constraint, got", c2)
+	}
+}
+
+func TestConstraintBuilder_CloneAlreadyBuilt(t *testing.T) {
+	cb := NewConstraintInt32Choice([]Int32Choice{
+		{Value: 1, Name: PolyglotText{"en": "one"}},
+	})
+	c1, err := cb.Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if c1.Proto.GetType() != protos.Constraint_INT_CHOICE {
+		t.Errorf("expected INT_CHOICE, got %v", c1.Proto.GetType())
+	}
+	clone := cb.Clone()
+	c2, err := clone.Build()
+	if err == nil || !errors.Is(err, ErrAlreadyBuilt) {
+		t.Fatal("expected error for clone after Build(), got", err)
+	}
+	if c2 != (Constraint{}) {
+		t.Fatal("expected empty constraint for clone after Build(), got", c2)
 	}
 }
 

@@ -43,8 +43,11 @@ import (
 )
 
 func TestComponentDevice(t *testing.T) {
-	device := NewDevice(3)
-	chunk := ComponentDevice(device)
+	device, err := NewDevice(3).Build()
+	if err != nil {
+		t.Fatalf("NewDevice(3).Build() failed: %v", err)
+	}
+	chunk := ComponentDevice(&device)
 
 	got := chunk.Proto.GetDevice()
 	if got != device.Proto {
@@ -66,8 +69,11 @@ func TestComponentDevice_Nil(t *testing.T) {
 }
 
 func TestComponentParam(t *testing.T) {
-	param := NewParamInt32(42)
-	chunk := ComponentParam("brightness", param)
+	param, err := NewParamInt32(42).Build()
+	if err != nil {
+		t.Fatalf("NewParamInt32(42).Build() failed: %v", err)
+	}
+	chunk := ComponentParam("brightness", &param)
 
 	component := chunk.Proto.GetParam()
 	if component.GetOid() != "brightness" {
@@ -79,8 +85,11 @@ func TestComponentParam(t *testing.T) {
 }
 
 func TestComponentConstraint(t *testing.T) {
-	constraint := NewConstraintInt32Range(0, 100, 1)
-	chunk := ComponentConstraint("range", constraint)
+	constraint, err := NewConstraintInt32Range(0, 100, 1).Build()
+	if err != nil {
+		t.Fatalf("NewConstraintInt32Range(0, 100, 1).Build() failed: %v", err)
+	}
+	chunk := ComponentConstraint("range", &constraint)
 
 	component := chunk.Proto.GetSharedConstraint()
 	if component.GetOid() != "range" {
@@ -92,8 +101,11 @@ func TestComponentConstraint(t *testing.T) {
 }
 
 func TestComponentMenu(t *testing.T) {
-	menu := NewMenu().WithParamOids("brightness")
-	chunk := ComponentMenu("status/main", menu)
+	menu, err := NewMenu().WithParamOids("brightness").Build()
+	if err != nil {
+		t.Fatalf("NewMenu().WithParamOids('brightness').Build() failed: %v", err)
+	}
+	chunk := ComponentMenu("status/main", &menu)
 
 	component := chunk.Proto.GetMenu()
 	if component.GetOid() != "status/main" {
@@ -105,8 +117,11 @@ func TestComponentMenu(t *testing.T) {
 }
 
 func TestComponentCommand(t *testing.T) {
-	command := NewParamEmpty()
-	chunk := ComponentCommand("reset", command)
+	command, err := NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("NewParamEmpty().Build() failed: %v", err)
+	}
+	chunk := ComponentCommand("reset", &command)
 
 	component := chunk.Proto.GetCommand()
 	if component.GetOid() != "reset" {
@@ -134,7 +149,11 @@ func TestComponentLanguagePack(t *testing.T) {
 }
 
 func TestDeviceComponent_Wire(t *testing.T) {
-	chunk := ComponentDevice(NewDevice(1))
+	device, err := NewDevice(1).Build()
+	if err != nil {
+		t.Fatalf("NewDevice(1).Build() failed: %v", err)
+	}
+	chunk := ComponentDevice(&device)
 	wire := chunk.Wire()
 	if wire != chunk.Proto {
 		t.Errorf("expected Wire() to return the underlying proto, got %v", wire)

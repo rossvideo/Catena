@@ -99,9 +99,7 @@ func CommandException(exType, details string, errorMessage PolyglotText) Command
 		Type:    exType,
 		Details: details,
 	}
-	if errorMessage != nil {
-		exc.ErrorMessage = &protos.PolyglotText{DisplayStrings: errorMessage}
-	}
+	exc.ErrorMessage = errorMessage.Proto()
 	return CommandResponse{
 		Proto: &protos.CommandResponse{
 			Kind: &protos.CommandResponse_Exception{Exception: exc},
