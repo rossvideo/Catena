@@ -330,11 +330,16 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			// so that alternative is still declared by hand.
 			WithParam("sample_struct_variant", st2138.NewParamStructVariant(sampleStructVariant).
 				WithName(st2138.PolyglotText{"en": "Sample Struct Variant"}).
+				WithParam("int_kind", st2138.NewParamInt32()).
 				WithParam("string_kind", st2138.NewParamString())).
 			WithParam("sample_struct_array", st2138.NewParamStructArray(sampleStructArray).
-				WithName(st2138.PolyglotText{"en": "Sample Struct Array"})).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Array"}).
+				WithParam("label", st2138.NewParamString()).
+				WithParam("count", st2138.NewParamInt32())).
 			WithParam("sample_struct_variant_array", st2138.NewParamStructVariantArray(sampleStructVariantArray).
-				WithName(st2138.PolyglotText{"en": "Sample Struct Variant Array"})).
+				WithName(st2138.PolyglotText{"en": "Sample Struct Variant Array"}).
+				WithParam("int_kind", st2138.NewParamInt32()).
+				WithParam("string_kind", st2138.NewParamString())).
 			WithMenuGroup("status", st2138.NewMenuGroup().
 				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).
