@@ -210,7 +210,10 @@ func TestNewConstraintStringStringChoice(t *testing.T) {
 }
 
 func TestNewConstraintFormattedString(t *testing.T) {
-	c := NewConstraintFormattedString("email", "", true)
+	c, err := NewConstraintFormattedString("email", "", true).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_FORMATTED_STRING {
 		t.Errorf("expected FORMATTED_STRING, got %v", c.Proto.GetType())
 	}
@@ -227,7 +230,10 @@ func TestNewConstraintFormattedString(t *testing.T) {
 }
 
 func TestNewConstraintFormattedString_Regex(t *testing.T) {
-	c := NewConstraintFormattedString("regex", "^AST-[0-9]{4}$", false)
+	c, err := NewConstraintFormattedString("regex", "^AST-[0-9]{4}$", false).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	if c.Proto.GetType() != protos.Constraint_FORMATTED_STRING {
 		t.Errorf("expected FORMATTED_STRING, got %v", c.Proto.GetType())
 	}

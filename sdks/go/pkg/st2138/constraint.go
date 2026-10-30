@@ -251,9 +251,9 @@ func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) 
 // format is a JSON Schema format name (i.e. "email"), or "regex"
 // with a supplied pattern the value must match. When strict is true the
 // value must conform to the format(Not Implemented yet).
-func NewConstraintFormattedString(format, regex string, strict bool) *Constraint {
-	return &Constraint{
-		Proto: &protos.Constraint{
+func NewConstraintFormattedString(format, regex string, strict bool) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_FORMATTED_STRING,
 			Kind: &protos.Constraint_FormattedString{
 				FormattedString: &protos.FormattedStringConstraint{
@@ -263,6 +263,7 @@ func NewConstraintFormattedString(format, regex string, strict bool) *Constraint
 				},
 			},
 		},
+		err: nil,
 	}
 }
 
