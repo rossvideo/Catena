@@ -209,6 +209,46 @@ func TestNewConstraintStringStringChoice(t *testing.T) {
 	}
 }
 
+func TestNewConstraintFormattedString(t *testing.T) {
+	c, err := NewConstraintFormattedString("email", "", true).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if c.Proto.GetType() != protos.Constraint_FORMATTED_STRING {
+		t.Errorf("expected FORMATTED_STRING, got %v", c.Proto.GetType())
+	}
+	fs := c.Proto.GetFormattedString()
+	if fs.GetFormat() != "email" {
+		t.Errorf("expected format 'email', got %q", fs.GetFormat())
+	}
+	if fs.GetRegex() != "" {
+		t.Errorf("expected empty regex, got %q", fs.GetRegex())
+	}
+	if !fs.GetStrict() {
+		t.Error("expected strict=true")
+	}
+}
+
+func TestNewConstraintFormattedString_Regex(t *testing.T) {
+	c, err := NewConstraintFormattedString("regex", "^AST-[0-9]{4}$", false).Build()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if c.Proto.GetType() != protos.Constraint_FORMATTED_STRING {
+		t.Errorf("expected FORMATTED_STRING, got %v", c.Proto.GetType())
+	}
+	fs := c.Proto.GetFormattedString()
+	if fs.GetFormat() != "regex" {
+		t.Errorf("expected format 'regex', got %q", fs.GetFormat())
+	}
+	if fs.GetRegex() != "^AST-[0-9]{4}$" {
+		t.Errorf("expected regex '^AST-[0-9]{4}$', got %q", fs.GetRegex())
+	}
+	if fs.GetStrict() {
+		t.Error("expected strict=false")
+	}
+}
+
 func TestNewConstraintAlarmTable(t *testing.T) {
 	c, err := NewConstraintAlarmTable([]AlarmEntry{
 		{BitValue: 0, Severity: AlarmSeverityInfo, Description: PolyglotText{"en": "All clear"}},

@@ -657,6 +657,34 @@ func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
 	}
 }
 
+func TestWithConstraint_ValidFormattedString(t *testing.T) {
+	c := NewConstraintFormattedString("email", "", true)
+	p, err := NewParamString("operator@example.com").WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
+		t.Fatal("expected formatted string constraint to be applied to STRING param")
+	}
+	if p.Proto.GetConstraint().GetType() != protos.Constraint_FORMATTED_STRING {
+		t.Errorf("expected FORMATTED_STRING, got %v", p.Proto.GetConstraint().GetType())
+	}
+}
+
+func TestWithConstraint_ValidFormattedStringOnStringArray(t *testing.T) {
+	c := NewConstraintFormattedString("email", "", true)
+	p, err := NewParamStringArray([]string{"operator@example.com"}).WithConstraint(c).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	if p.Proto.GetConstraint() == nil {
+		t.Fatal("expected formatted string constraint to be applied to STRING_ARRAY param")
+	}
+	if p.Proto.GetConstraint().GetType() != protos.Constraint_FORMATTED_STRING {
+		t.Errorf("expected FORMATTED_STRING, got %v", p.Proto.GetConstraint().GetType())
+	}
+}
+
 func TestWithConstraint_ValidAlarmTable(t *testing.T) {
 	c := NewConstraintAlarmTable([]AlarmEntry{
 		{BitValue: 0, Severity: AlarmSeverityInfo},
@@ -695,6 +723,17 @@ func TestWithConstraint_InvalidStringOnInt(t *testing.T) {
 		t.Error("expected string constraint to be rejected on INT32 param")
 	}
 	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with invalid constraint")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
+	}
+}
+
+func TestWithConstraint_InvalidFormattedStringOnInt(t *testing.T) {
+	c := NewConstraintFormattedString("email", "", true)
+	p, err := NewParamInt32(0).WithConstraint(c).Build()
 	if err == nil {
 		t.Fatal("expected error for builder with invalid constraint")
 	}

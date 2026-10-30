@@ -207,6 +207,12 @@ h1 {
     color: var(--text-muted);
 }
 
+.counter-model {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    letter-spacing: 0;
+}
+
 .counter-buttons {
     display: flex;
     gap: 0.5rem;
@@ -827,4 +833,9 @@ footer {
     border-top: 1px solid var(--border);
     color: var(--text-muted);
     font-size: 0.75rem;
+}
+
+.footer-sep {
+    font-size: 1rem;
+    vertical-align: middle;
 }
