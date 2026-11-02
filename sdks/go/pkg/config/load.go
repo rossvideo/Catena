@@ -149,6 +149,11 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractStringSlice("REST_EXTRA_ALLOWED_HEADERS", "rest-extra-allowed-headers", "Additional CORS allowed headers (unioned with SDK baselines)", &opts.Rest.ExtraAllowedHeaders).
 		extractStringSlice("REST_EXTRA_ALLOWED_METHODS", "rest-extra-allowed-methods", "Additional CORS allowed methods (unioned with SDK baselines)", &opts.Rest.ExtraAllowedMethods).
 		extractPositiveDuration("REST_CORS_MAX_AGE", "rest-cors-max-age", "CORS preflight Max-Age duration (e.g. 10m, 600s). Defaults to seconds if no unit is specified.", &opts.Rest.CorsMaxAge).
+		extractPositiveDuration("REST_READ_TIMEOUT", "rest-read-timeout", "Maximum duration for reading the entire request, including the body. Zero means no timeout. Defaults to seconds if no unit is specified.", &opts.Rest.ReadTimeout).
+		extractPositiveDuration("REST_READ_HEADER_TIMEOUT", "rest-read-header-timeout", "Maximum duration for reading request headers. Zero falls back to the read timeout. Defaults to seconds if no unit is specified.", &opts.Rest.ReadHeaderTimeout).
+		extractPositiveDuration("REST_WRITE_TIMEOUT", "rest-write-timeout", "Maximum duration before timing out response writes. Zero means no timeout. Defaults to seconds if no unit is specified.", &opts.Rest.WriteTimeout).
+		extractPositiveDuration("REST_IDLE_TIMEOUT", "rest-idle-timeout", "Maximum time to wait for the next request on keep-alive connections. Zero falls back to the read timeout. Defaults to seconds if no unit is specified.", &opts.Rest.IdleTimeout).
+		extractInt("REST_MAX_HEADER_BYTES", "rest-max-header-bytes", "Maximum size of request headers in bytes. Zero or negative uses the net/http default (1 MiB)", &opts.Rest.MaxHeaderBytes).
 		extractInt("REST_MAX_BODY_BYTES", "rest-max-body-bytes", "Maximum request body size in bytes. Zero allows no body. Negative disables the limit", &opts.Rest.MaxBodyBytes).
 		extractInt("REST_MAX_ASSET_BODY_BYTES", "rest-max-asset-body-bytes", "Maximum asset upload body size in bytes. Zero allows no body. Negative disables the limit", &opts.Rest.MaxAssetBodyBytes).
 		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).

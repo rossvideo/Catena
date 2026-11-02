@@ -281,6 +281,11 @@ func TestOptionMappings(t *testing.T) {
 		{"REST_EXTRA_ALLOWED_HEADERS", "rest-extra-allowed-headers", "X-A,X-B", []string{"X-A", "X-B"}, func(o RuntimeOptions) any { return o.Rest.ExtraAllowedHeaders }},
 		{"REST_EXTRA_ALLOWED_METHODS", "rest-extra-allowed-methods", "PATCH", []string{"PATCH"}, func(o RuntimeOptions) any { return o.Rest.ExtraAllowedMethods }},
 		{"REST_CORS_MAX_AGE", "rest-cors-max-age", "5m", 5 * time.Minute, func(o RuntimeOptions) any { return o.Rest.CorsMaxAge }},
+		{"REST_READ_TIMEOUT", "rest-read-timeout", "30s", 30 * time.Second, func(o RuntimeOptions) any { return o.Rest.ReadTimeout }},
+		{"REST_READ_HEADER_TIMEOUT", "rest-read-header-timeout", "5s", 5 * time.Second, func(o RuntimeOptions) any { return o.Rest.ReadHeaderTimeout }},
+		{"REST_WRITE_TIMEOUT", "rest-write-timeout", "45s", 45 * time.Second, func(o RuntimeOptions) any { return o.Rest.WriteTimeout }},
+		{"REST_IDLE_TIMEOUT", "rest-idle-timeout", "1m", time.Minute, func(o RuntimeOptions) any { return o.Rest.IdleTimeout }},
+		{"REST_MAX_HEADER_BYTES", "rest-max-header-bytes", "65536", 65536, func(o RuntimeOptions) any { return o.Rest.MaxHeaderBytes }},
 		{"REST_MAX_BODY_BYTES", "rest-max-body-bytes", "4096", 4096, func(o RuntimeOptions) any { return o.Rest.MaxBodyBytes }},
 		{"REST_MAX_ASSET_BODY_BYTES", "rest-max-asset-body-bytes", "8192", 8192, func(o RuntimeOptions) any { return o.Rest.MaxAssetBodyBytes }},
 		// gRPC transport
