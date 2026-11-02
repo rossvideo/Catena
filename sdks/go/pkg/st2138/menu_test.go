@@ -111,6 +111,24 @@ func TestMenuGroup_WithName_LoopBuiltName(t *testing.T) {
 	}
 }
 
+func TestMenuGroup_WithName_NilOrEmpty(t *testing.T) {
+	mg, err := NewMenuGroup().WithName(PolyglotText{"en": "test"}).WithName(nil).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with nil name", err)
+	}
+	if mg.Proto.GetName() != nil {
+		t.Error("expected nil name to be applied")
+	}
+
+	mg, err = NewMenuGroup().WithName(PolyglotText{"en": "test"}).WithName(PolyglotText{}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with empty name", err)
+	}
+	if mg.Proto.GetName() != nil {
+		t.Error("expected empty name to be applied")
+	}
+}
+
 func TestMenuGroup_WithMenu(t *testing.T) {
 	mg, err := NewMenuGroup().WithMenu("video", NewMenu().WithName(PolyglotText{"en": "Video"})).Build()
 	if err != nil {
@@ -402,6 +420,24 @@ func TestMenu_WithName_Replaces(t *testing.T) {
 	}
 	if _, ok := ds["fr"]; ok {
 		t.Errorf("expected fr to be absent after replacement, got %s", ds["fr"])
+	}
+}
+
+func TestMenu_WithName_NilOrEmpty(t *testing.T) {
+	m, err := NewMenu().WithName(PolyglotText{"en": "test"}).WithName(nil).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with nil name", err)
+	}
+	if m.Proto.GetName() != nil {
+		t.Error("expected nil name to be applied")
+	}
+
+	m, err = NewMenu().WithName(PolyglotText{"en": "test"}).WithName(PolyglotText{}).Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with empty name", err)
+	}
+	if m.Proto.GetName() != nil {
+		t.Error("expected empty name to be applied")
 	}
 }
 

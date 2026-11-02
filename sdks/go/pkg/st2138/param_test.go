@@ -223,6 +223,32 @@ func TestWithName(t *testing.T) {
 	}
 }
 
+func TestWithName_NilOrEmpty(t *testing.T) {
+	cp := NewParamInt32(0).WithName(PolyglotText{"en": "test"}).WithName(nil)
+	if cp.proto.GetName() != nil {
+		t.Error("expected nil name to be a no-op")
+	}
+	p, err := cp.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with nil name", err)
+	}
+	if p.Proto.GetName() != nil {
+		t.Error("expected nil name to be applied")
+	}
+
+	cp = NewParamInt32(0).WithName(PolyglotText{"en": "test"}).WithName(PolyglotText{})
+	if cp.proto.GetName() != nil {
+		t.Error("expected empty name to be a no-op")
+	}
+	p, err = cp.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with empty name", err)
+	}
+	if p.Proto.GetName() != nil {
+		t.Error("expected empty name to be applied")
+	}
+}
+
 func TestWithReadOnly(t *testing.T) {
 	p, err := NewParamInt32(0).WithReadOnly(true).Build()
 	if err != nil {
@@ -549,6 +575,32 @@ func TestWithHelp(t *testing.T) {
 	}
 	if p.Proto.GetHelp().GetDisplayStrings()["en"] != "Adjusts volume" {
 		t.Errorf("unexpected help text: %q", p.Proto.GetHelp().GetDisplayStrings()["en"])
+	}
+}
+
+func TestWithHelp_NilOrEmpty(t *testing.T) {
+	cp := NewParamInt32(0).WithHelp(PolyglotText{"en": "test"}).WithHelp(nil)
+	if cp.proto.GetHelp() != nil {
+		t.Error("expected nil help to be a no-op")
+	}
+	p, err := cp.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with nil help", err)
+	}
+	if p.Proto.GetHelp() != nil {
+		t.Error("expected nil help to be applied")
+	}
+
+	cp = NewParamInt32(0).WithHelp(PolyglotText{"en": "test"}).WithHelp(PolyglotText{})
+	if cp.proto.GetHelp() != nil {
+		t.Error("expected empty help to be a no-op")
+	}
+	p, err = cp.Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with empty help", err)
+	}
+	if p.Proto.GetHelp() != nil {
+		t.Error("expected empty help to be applied")
 	}
 }
 
