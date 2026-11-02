@@ -149,6 +149,8 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractStringSlice("REST_EXTRA_ALLOWED_HEADERS", "rest-extra-allowed-headers", "Additional CORS allowed headers (unioned with SDK baselines)", &opts.Rest.ExtraAllowedHeaders).
 		extractStringSlice("REST_EXTRA_ALLOWED_METHODS", "rest-extra-allowed-methods", "Additional CORS allowed methods (unioned with SDK baselines)", &opts.Rest.ExtraAllowedMethods).
 		extractPositiveDuration("REST_CORS_MAX_AGE", "rest-cors-max-age", "CORS preflight Max-Age duration (e.g. 10m, 600s). Defaults to seconds if no unit is specified.", &opts.Rest.CorsMaxAge).
+		extractInt("REST_MAX_BODY_BYTES", "rest-max-body-bytes", "Maximum request body size in bytes. Zero allows no body. Negative disables the limit", &opts.Rest.MaxBodyBytes).
+		extractInt("REST_MAX_ASSET_BODY_BYTES", "rest-max-asset-body-bytes", "Maximum asset upload body size in bytes. Zero allows no body. Negative disables the limit", &opts.Rest.MaxAssetBodyBytes).
 		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
 		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
 		extractBool("GRPC_TLS_ENABLED", "grpc-tls-enabled", "Enable TLS on the gRPC transport listener", &opts.Grpc.TLS.Enabled).

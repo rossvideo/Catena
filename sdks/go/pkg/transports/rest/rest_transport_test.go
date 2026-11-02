@@ -63,7 +63,7 @@ import (
 )
 
 func makeTestTransport(tb testing.TB) (*Transport, *transporttest.StubServerRuntime) {
-	transport := NewTransport(config.RestOptions{Port: 8080, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1})
+	transport := NewTransport(config.RestOptions{Port: 8080, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1, MaxAssetBodyBytes: -1})
 	stubRuntime := transporttest.MakeStubServerRuntime(tb)
 	stubRuntime.Dev = true
 	transport.runtime = stubRuntime
@@ -3018,14 +3018,14 @@ func TestTransport_LanguagePackUnsupportedMethod(t *testing.T) {
 	}
 }
 
-func TestTransport_MaxBodyBytes(t *testing.T) {
+func TestTransport_NewTransport_MaxBodyBytes(t *testing.T) {
 
 	const commandBody = `{"string_value":"x"}`
 
 	newTransportWithCommandHandler := func(t *testing.T, maxBodyBytes int, dev bool) (*Transport, *bool) {
 		t.Helper()
 
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: maxBodyBytes})
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: maxBodyBytes, MaxAssetBodyBytes: -1})
 		runtime := transporttest.MakeStubServerRuntime(t)
 		runtime.Dev = dev
 		transport.runtime = runtime
@@ -3110,13 +3110,81 @@ func TestTransport_MaxBodyBytes(t *testing.T) {
 	})
 }
 
+func TestTransport_NewTransport_MaxAssetBodyBytes(t *testing.T) {
+	const commandBody = `{"string_value":"x"}`
+
+	newTransport := func(t *testing.T, maxBodyBytes, maxAssetBodyBytes int) (*Transport, *transporttest.StubServerRuntime) {
+		t.Helper()
+
+		transport := NewTransport(config.RestOptions{
+			Port:              8080,
+			MaxBodyBytes:      maxBodyBytes,
+			MaxAssetBodyBytes: maxAssetBodyBytes,
+		})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+		return transport, runtime
+	}
+
+	t.Run("accepts an asset body above the general limit", func(t *testing.T) {
+		transport, runtime := newTransport(t, len(commandBody), len(assetRequestBody))
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusNoContent)
+		if !handlerCalled {
+			t.Error("handler should be called when the asset body is within MaxAssetBodyBytes")
+		}
+	})
+
+	t.Run("rejects an asset body over the asset limit", func(t *testing.T) {
+		transport, runtime := newTransport(t, len(assetRequestBody), len(assetRequestBody)-1)
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called when the body exceeds MaxAssetBodyBytes")
+		}
+	})
+
+	t.Run("keeps the general limit on other routes", func(t *testing.T) {
+		transport, runtime := newTransport(t, len(commandBody)-1, len(assetRequestBody))
+		handlerCalled := false
+		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
+			handlerCalled = true
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("command handler should not be called when the body exceeds MaxBodyBytes")
+		}
+	})
+}
+
 func TestTransport_RequestBodyTooLargeRoutes(t *testing.T) {
 	const body = `{"int32_value":42,"name":"padding so the body is over the limit"}`
 
 	newTransport := func(t *testing.T) (*Transport, *transporttest.StubServerRuntime) {
 		t.Helper()
 
-		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8})
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8, MaxAssetBodyBytes: 8})
 		runtime := transporttest.MakeStubServerRuntime(t)
 		runtime.Dev = true
 		transport.runtime = runtime

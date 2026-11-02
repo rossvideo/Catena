@@ -109,6 +109,9 @@ type RestOptions struct {
 	// MaxBodyBytes is the maximum request body size in bytes.
 	// Zero allows no body. Negative disables the limit (unlimited).
 	MaxBodyBytes int `env:"REST_MAX_BODY_BYTES" flag:"rest-max-body-bytes"`
+	// MaxAssetBodyBytes is the maximum request body size for external-object
+	// uploads. Zero allows no body. Negative disables the limit (unlimited).
+	MaxAssetBodyBytes int `env:"REST_MAX_ASSET_BODY_BYTES" flag:"rest-max-asset-body-bytes"`
 }
 
 // GrpcOptions configures the gRPC transport.
@@ -269,6 +272,7 @@ func DefaultRestOptions() RestOptions {
 		IdleTimeout:         120 * time.Second,
 		MaxHeaderBytes:      1 << 20,
 		MaxBodyBytes:        1 << 20,
+		MaxAssetBodyBytes:   1 << 20,
 	}
 }
 
@@ -365,6 +369,7 @@ func (o RestOptions) LogValue() slog.Value {
 		slog.Duration("idle_timeout", o.IdleTimeout),
 		slog.Int("max_header_bytes", o.MaxHeaderBytes),
 		slog.Int("max_body_bytes", o.MaxBodyBytes),
+		slog.Int("max_asset_body_bytes", o.MaxAssetBodyBytes),
 	)
 }
 

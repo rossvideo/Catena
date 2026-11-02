@@ -64,6 +64,7 @@ func TestDefaultOptions(t *testing.T) {
 			IdleTimeout:         120 * time.Second,
 			MaxHeaderBytes:      1 << 20,
 			MaxBodyBytes:        1 << 20,
+			MaxAssetBodyBytes:   1 << 20,
 		},
 		Grpc: GrpcOptions{Port: 6254, Reflection: false},
 		Server: ServerOptions{
@@ -183,6 +184,7 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			"idle_timeout":          json.Number("0"),
 			"max_header_bytes":      json.Number("0"),
 			"max_body_bytes":        json.Number("0"),
+			"max_asset_body_bytes":  json.Number("0"),
 		},
 		"grpc": map[string]any{
 			"port":       json.Number("0"),

@@ -268,6 +268,8 @@ All options can be configured via env and CLI.
 - `PREFIX_REST_EXTRA_ALLOWED_HEADERS` <-> `--rest-extra-allowed-headers`
 - `PREFIX_REST_EXTRA_ALLOWED_METHODS` <-> `--rest-extra-allowed-methods`
 - `PREFIX_REST_CORS_MAX_AGE` <-> `--rest-cors-max-age` (Go duration, e.g. `10m`)
+- `PREFIX_REST_MAX_BODY_BYTES` <-> `--rest-max-body-bytes` (zero allows no body; negative disables the limit)
+- `PREFIX_REST_MAX_ASSET_BODY_BYTES` <-> `--rest-max-asset-body-bytes` (asset POST/PUT only; zero allows no body; negative disables the limit)
 - `RestOptions.Fallback` (`http.HandlerFunc`) is code-only. It is not an environment variable or flag; assign it in code before constructing the REST transport. Nil leaves the transport's default 404.
 
 ### gRPC Transport

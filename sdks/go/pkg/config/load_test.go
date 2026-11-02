@@ -281,6 +281,8 @@ func TestOptionMappings(t *testing.T) {
 		{"REST_EXTRA_ALLOWED_HEADERS", "rest-extra-allowed-headers", "X-A,X-B", []string{"X-A", "X-B"}, func(o RuntimeOptions) any { return o.Rest.ExtraAllowedHeaders }},
 		{"REST_EXTRA_ALLOWED_METHODS", "rest-extra-allowed-methods", "PATCH", []string{"PATCH"}, func(o RuntimeOptions) any { return o.Rest.ExtraAllowedMethods }},
 		{"REST_CORS_MAX_AGE", "rest-cors-max-age", "5m", 5 * time.Minute, func(o RuntimeOptions) any { return o.Rest.CorsMaxAge }},
+		{"REST_MAX_BODY_BYTES", "rest-max-body-bytes", "4096", 4096, func(o RuntimeOptions) any { return o.Rest.MaxBodyBytes }},
+		{"REST_MAX_ASSET_BODY_BYTES", "rest-max-asset-body-bytes", "8192", 8192, func(o RuntimeOptions) any { return o.Rest.MaxAssetBodyBytes }},
 		// gRPC transport
 		{"GRPC_PORT", "grpc-port", "7000", 7000, func(o RuntimeOptions) any { return o.Grpc.Port }},
 		{"GRPC_REFLECTION", "grpc-reflection", "true", true, func(o RuntimeOptions) any { return o.Grpc.Reflection }},

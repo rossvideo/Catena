@@ -81,6 +81,7 @@ type Transport struct {
 	idleTimeout       time.Duration
 	maxHeaderBytes    int
 	maxBodyBytes      int
+	maxAssetBodyBytes int
 }
 
 var _ catena.Transport = (*Transport)(nil)
@@ -103,6 +104,7 @@ func NewTransport(cfg Options) *Transport {
 		idleTimeout:         cfg.IdleTimeout,
 		maxHeaderBytes:      cfg.MaxHeaderBytes,
 		maxBodyBytes:        cfg.MaxBodyBytes,
+		maxAssetBodyBytes:   cfg.MaxAssetBodyBytes,
 	}
 	t.registerRoutes()
 	return t
@@ -253,22 +255,34 @@ func (t *Transport) writeHTTPResult(w http.ResponseWriter, result catena.StatusR
 
 // createHttpHandler creates a handler that is wrapped with CORS and a request body size limit
 func (t *Transport) createHttpHandler() http.Handler {
-	return t.withCORS(handlerWithRequestBodySizeLimit(t.mux, int64(t.maxBodyBytes)))
+	return t.withCORS(t.handlerWithRequestBodySizeLimit(t.mux))
 }
 
-// handlerWithRequestBodySizeLimit caps request bodies at limit bytes via
-// http.MaxBytesReader. Zero allows no body. A negative limit leaves the body unlimited
-func handlerWithRequestBodySizeLimit(next http.Handler, limit int64) http.Handler {
-	if limit < 0 {
-		return next
-	}
-
+// handlerWithRequestBodySizeLimit caps request bodies with the http.MaxBytesReader POST
+// and PUT asset routes are limited to MaxAssetBodyBytes. All other routes uses MaxBodyBytes
+// . A Zero limit allows no body, a negative limit leaves the body unlimited.
+func (t *Transport) handlerWithRequestBodySizeLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Body != nil {
-			r.Body = http.MaxBytesReader(w, r.Body, limit)
+		bodySizeLimit := t.maxBodyBytes
+		if isAssetWrite(r) {
+			bodySizeLimit = t.maxAssetBodyBytes
 		}
+
+		if bodySizeLimit >= 0 && r.Body != nil {
+			r.Body = http.MaxBytesReader(w, r.Body, int64(bodySizeLimit))
+		}
+
 		next.ServeHTTP(w, r)
 	})
+}
+
+// isAssetWrite checks if a request is a POST or PUT request for /st2138-api/v1/{slot}/asset/{fqoid...}.
+func isAssetWrite(r *http.Request) bool {
+	if r.Method != http.MethodPost && r.Method != http.MethodPut {
+		return false
+	}
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	return len(parts) >= 4 && parts[0] == "st2138-api" && parts[1] == "v1" && parts[3] == "asset"
 }
 
 // writeHTTPPayloadTooLarge writes HTTP 413 with a JSON error body.
