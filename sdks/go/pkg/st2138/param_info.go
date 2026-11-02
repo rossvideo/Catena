@@ -60,9 +60,7 @@ func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOi
 		Type:        paramType,
 		TemplateOid: templateOid,
 	}
-	if name != nil {
-		info.Name = &protos.PolyglotText{DisplayStrings: name}
-	}
+	info.Name = name.Proto()
 	return ParamInfo{
 		Proto: &protos.ParamInfoResponse{
 			Info:        info,

@@ -40,7 +40,6 @@ package st2138
 
 import (
 	"fmt"
-	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 
@@ -52,64 +51,54 @@ type Param struct {
 	Proto *protos.Param
 }
 
+type ParamBuilder struct {
+	proto *protos.Param
+	err   error
+}
+
 // --- Factory functions (one per ParamType) ---
 //
 // Each factory accepts an optional value. With no arguments the param is
 // created without a value, which is useful for valueless sub-param
-// descriptors. If more than one value is passed, the first is used and the
-// rest are ignored with a warning.
+// descriptors. If more than one value is passed, the builder returns an error.
 
-// pickValue returns the first element of values, warning when extras beyond
-// the first were supplied. values must be non-empty.
-func pickValue[T any](fn string, values []T) T {
-	if len(values) > 1 {
-		slog.Warn(fn+": more than one value provided; using the first and ignoring the rest",
-			"ignored", len(values)-1)
-	}
-	return values[0]
+func NewParamInt32(value ...int32) *ParamBuilder {
+	return newParamBuilder(protos.ParamType_INT32, "NewParamInt32", value, func(v int32) *protos.Value {
+		return &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: v}}
+	})
 }
 
-func NewParamInt32(value ...int32) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_INT32}}
-	if len(value) > 0 {
-		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: pickValue("NewParamInt32", value)}}
-	}
-	return cp
+func NewParamFloat32(value ...float32) *ParamBuilder {
+	return newParamBuilder(protos.ParamType_FLOAT32, "NewParamFloat32", value, func(v float32) *protos.Value {
+		return &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: v}}
+	})
 }
 
-func NewParamFloat32(value ...float32) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_FLOAT32}}
-	if len(value) > 0 {
-		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Float32Value{Float32Value: pickValue("NewParamFloat32", value)}}
-	}
-	return cp
-}
-
-func NewParamString(value ...string) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRING}}
-	if len(value) > 0 {
-		cp.Proto.Value = &protos.Value{Kind: &protos.Value_StringValue{StringValue: pickValue("NewParamString", value)}}
-	}
-	return cp
+func NewParamString(value ...string) *ParamBuilder {
+	return newParamBuilder(protos.ParamType_STRING, "NewParamString", value, func(v string) *protos.Value {
+		return &protos.Value{Kind: &protos.Value_StringValue{StringValue: v}}
+	})
 }
 
 // NewParamStruct creates a STRUCT param. When a map of field values is given,
 // it becomes the struct's Value and a valueless sub-param descriptor is
 // auto-created for every field (recursively for nested maps), so trivial
 // fields need no explicit WithParam calls.
-func NewParamStruct(value ...map[string]any) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT}}
+func NewParamStruct(value ...map[string]any) *ParamBuilder {
+	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
+	if cp.err = extraValueCheck(value, "NewParamStruct"); cp.err != nil {
+		return cp
+	}
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStruct", value))
+	pv, err := ToProto(value[0])
 	if err != nil {
-		slog.Warn("NewParamStruct: failed to convert value; value left nil",
-			"error", err)
+		cp.err = fmt.Errorf("NewParamStruct: failed to convert value: %w", err)
 		return cp
 	}
-	cp.Proto.Value = pv
-	cp.Proto.Params = structFieldDescriptors(pv.GetStructValue())
+	cp.proto.Value = pv
+	cp.proto.Params = structFieldDescriptors(pv.GetStructValue())
 	return cp
 }
 
@@ -133,104 +122,105 @@ func structFieldDescriptors(sv *protos.StructValue) map[string]*protos.Param {
 	return params
 }
 
-func NewParamStructVariant(value ...StructVariantValue) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
+func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
+	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
+	if cp.err = extraValueCheck(value, "NewParamStructVariant"); cp.err != nil {
+		return cp
+	}
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStructVariant", value))
+	pv, err := ToProto(value[0])
 	if err != nil {
-		slog.Warn("NewParamStructVariant: failed to convert value; value left nil",
-			"error", err)
+		cp.err = fmt.Errorf("NewParamStructVariant: failed to convert value: %w", err)
 		return cp
 	}
-	cp.Proto.Value = pv
+	cp.proto.Value = pv
 	return cp
 }
 
-func NewParamInt32Array(value ...[]int32) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_INT32_ARRAY}}
-	if len(value) > 0 {
-		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: pickValue("NewParamInt32Array", value)}}}
+func NewParamInt32Array(value ...[]int32) *ParamBuilder {
+	return newParamBuilder(protos.ParamType_INT32_ARRAY, "NewParamInt32Array", value, func(v []int32) *protos.Value {
+		return &protos.Value{Kind: &protos.Value_Int32ArrayValues{Int32ArrayValues: &protos.Int32List{Ints: v}}}
+	})
+}
+
+func NewParamFloat32Array(value ...[]float32) *ParamBuilder {
+	return newParamBuilder(protos.ParamType_FLOAT32_ARRAY, "NewParamFloat32Array", value, func(v []float32) *protos.Value {
+		return &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: v}}}
+	})
+}
+
+func NewParamStringArray(value ...[]string) *ParamBuilder {
+	return newParamBuilder(protos.ParamType_STRING_ARRAY, "NewParamStringArray", value, func(v []string) *protos.Value {
+		return &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: v}}}
+	})
+}
+
+func NewParamBinary(value ...[]byte) *ParamBuilder {
+	return newParamBuilder(protos.ParamType_BINARY, "NewParamBinary", value, func(v []byte) *protos.Value {
+		return &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: v}}}}
+	})
+}
+
+func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
+	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
+	if cp.err = extraValueCheck(value, "NewParamStructArray"); cp.err != nil {
+		return cp
 	}
-	return cp
-}
-
-func NewParamFloat32Array(value ...[]float32) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_FLOAT32_ARRAY}}
-	if len(value) > 0 {
-		cp.Proto.Value = &protos.Value{Kind: &protos.Value_Float32ArrayValues{Float32ArrayValues: &protos.Float32List{Floats: pickValue("NewParamFloat32Array", value)}}}
-	}
-	return cp
-}
-
-func NewParamStringArray(value ...[]string) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRING_ARRAY}}
-	if len(value) > 0 {
-		cp.Proto.Value = &protos.Value{Kind: &protos.Value_StringArrayValues{StringArrayValues: &protos.StringList{Strings: pickValue("NewParamStringArray", value)}}}
-	}
-	return cp
-}
-
-func NewParamBinary(value ...[]byte) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_BINARY}}
-	if len(value) > 0 {
-		cp.Proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: pickValue("NewParamBinary", value)}}}}
-	}
-	return cp
-}
-
-func NewParamStructArray(value ...[]map[string]any) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStructArray", value))
+	pv, err := ToProto(value[0])
 	if err != nil {
-		slog.Warn("NewParamStructArray: failed to convert value; value left nil",
-			"error", err)
+		cp.err = fmt.Errorf("NewParamStructArray: failed to convert value: %w", err)
 		return cp
 	}
-	cp.Proto.Value = pv
+	cp.proto.Value = pv
 	return cp
 }
 
-func NewParamStructVariantArray(value ...[]StructVariantValue) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
+func NewParamStructVariantArray(value ...[]StructVariantValue) *ParamBuilder {
+	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
+	if cp.err = extraValueCheck(value, "NewParamStructVariantArray"); cp.err != nil {
+		return cp
+	}
 	if len(value) == 0 {
 		return cp
 	}
-	pv, err := ToProto(pickValue("NewParamStructVariantArray", value))
+	pv, err := ToProto(value[0])
 	if err != nil {
-		slog.Warn("NewParamStructVariantArray: failed to convert value; value left nil",
-			"error", err)
+		cp.err = fmt.Errorf("NewParamStructVariantArray: failed to convert value: %w", err)
 		return cp
 	}
-	cp.Proto.Value = pv
+	cp.proto.Value = pv
 	return cp
 }
 
-func NewParamEmpty() *Param {
-	return &Param{
-		Proto: &protos.Param{
+func NewParamEmpty() *ParamBuilder {
+	return &ParamBuilder{
+		proto: &protos.Param{
 			Type:  protos.ParamType_EMPTY,
 			Value: &protos.Value{Kind: &protos.Value_EmptyValue{EmptyValue: &protos.Empty{}}},
 		},
 	}
 }
 
-func NewParamData(payload ...DataPayload) *Param {
-	cp := &Param{Proto: &protos.Param{Type: protos.ParamType_DATA}}
+func NewParamData(payload ...DataPayload) *ParamBuilder {
+	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_DATA}}
+	if cp.err = extraValueCheck(payload, "NewParamData"); cp.err != nil {
+		return cp
+	}
 	if len(payload) == 0 {
 		return cp
 	}
-	pdp, err := dataPayloadToProto(pickValue("NewParamData", payload))
+	pdp, err := dataPayloadToProto(payload[0])
 	if err != nil {
-		slog.Warn("NewParamData: failed to convert DataPayload; value left nil",
-			"error", err)
+		cp.err = fmt.Errorf("NewParamData: failed to convert DataPayload: %w", err)
+
 		return cp
 	}
-	cp.Proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
+	cp.proto.Value = &protos.Value{Kind: &protos.Value_DataPayload{DataPayload: pdp}}
 	return cp
 }
 
@@ -238,47 +228,84 @@ func NewParamData(payload ...DataPayload) *Param {
 // Value's proto kind. This allows dynamic param creation regardless of type.
 // DataPayload values are mapped to ParamType_DATA since the two
 // cannot be distinguished from the value alone.
-func NewParamFromValue(v Value) *Param {
+func NewParamFromValue(v Value) *ParamBuilder {
 	pt := paramTypeFromValueKind(v.Proto)
+	var err error
 	if pt == protos.ParamType_UNDEFINED {
-		slog.Warn("NewParamFromValue: could not infer param type from value; using UNDEFINED")
+		err = fmt.Errorf("NewParamFromValue: could not infer param type from value")
 	}
-	return &Param{
-		Proto: &protos.Param{
+	return &ParamBuilder{
+		proto: &protos.Param{
 			Type:  pt,
 			Value: v.Proto,
 		},
+		err: err,
 	}
+}
+
+// extraValueCheck checks that there is at most one value provided.
+// Returns an error, with the given name of the calling function, if more than one value is provided.
+// Returns nil otherwise.
+func extraValueCheck[T any](values []T, name string) error {
+	if len(values) > 1 {
+		return fmt.Errorf("%s: more than one value provided", name)
+	}
+	return nil
+}
+
+// newParamBuilder builds a scalar or array paramBuilder. valueOf should create a proto.Value by
+// taking in value; extra values are recorded as the builder's error.
+func newParamBuilder[T any](typ protos.ParamType, name string, value []T, valueOf func(T) *protos.Value) *ParamBuilder {
+	cp := &ParamBuilder{proto: &protos.Param{Type: typ}}
+	if cp.err = extraValueCheck(value, name); cp.err != nil {
+		return cp
+	}
+	if len(value) > 0 {
+		cp.proto.Value = valueOf(value[0])
+	}
+	return cp
 }
 
 // --- Chainable With* methods ---
 
-func (cp *Param) WithName(name PolyglotText) *Param {
-	cp.Proto.Name = &protos.PolyglotText{DisplayStrings: name}
+func (cp *ParamBuilder) WithName(name PolyglotText) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.Name = name.Proto()
 	return cp
 }
 
-func (cp *Param) WithValue(v Value) *Param {
-	if !isValueValidForParamType(v.Proto, cp.Proto.Type) {
-		slog.Warn("WithValue: value kind incompatible with param type; ignoring",
-			"param_type", cp.Proto.Type.String())
+func (cp *ParamBuilder) WithValue(v Value) *ParamBuilder {
+	if cp.err != nil {
 		return cp
 	}
-	cp.Proto.Value = v.Proto
+	if !isValueValidForParamType(v.Proto, cp.proto.Type) {
+		cp.err = fmt.Errorf("WithValue: value kind incompatible with param type: param_type=%s",
+			cp.proto.Type.String(),
+		)
+		return cp
+	}
+	cp.proto.Value = v.Proto
 	return cp
 }
 
-func (cp *Param) WithConstraint(c *Constraint) *Param {
-	if c == nil || c.Proto == nil {
+func (cp *ParamBuilder) WithConstraint(cb *ConstraintBuilder) *ParamBuilder {
+	if cp.err != nil {
 		return cp
 	}
-	if !isConstraintValidForParam(c, cp.Proto.Type) {
-		slog.Warn("WithConstraint: constraint type incompatible with param type; ignoring",
-			"constraint_type", c.Proto.GetType().String(),
-			"param_type", cp.Proto.Type.String())
+	c, ok := buildChild(&cp.err, cb, (*ConstraintBuilder).Build, "WithConstraint")
+	if !ok {
 		return cp
 	}
-	cp.Proto.Constraint = c.Proto
+	if !isConstraintValidForParam(&c, cp.proto.Type) {
+		cp.err = fmt.Errorf("WithConstraint: constraint type incompatible with param type: constraint_type=%s, param_type=%s",
+			c.Proto.GetType().String(),
+			cp.proto.Type.String(),
+		)
+		return cp
+	}
+	cp.proto.Constraint = c.Proto
 	return cp
 }
 
@@ -287,10 +314,13 @@ func (cp *Param) WithConstraint(c *Constraint) *Param {
 // marked read-only, since a child of a read-only parent cannot be writable.
 // Setting it to false leaves sub-params untouched, so a child may still be
 // independently marked read-only under a writable parent.
-func (cp *Param) WithReadOnly(readOnly bool) *Param {
-	cp.Proto.ReadOnly = readOnly
+func (cp *ParamBuilder) WithReadOnly(readOnly bool) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.ReadOnly = readOnly
 	if readOnly {
-		propagateReadOnly(cp.Proto.Params)
+		propagateReadOnly(cp.proto.Params)
 	}
 	return cp
 }
@@ -307,41 +337,58 @@ func propagateReadOnly(params map[string]*protos.Param) {
 	}
 }
 
-func (cp *Param) WithWidget(widget string) *Param {
-	cp.Proto.Widget = widget
-	return cp
-}
-
-func (cp *Param) WithPrecision(precision uint32) *Param {
-	if cp.Proto.Type != protos.ParamType_FLOAT32 && cp.Proto.Type != protos.ParamType_FLOAT32_ARRAY {
-		slog.Warn("WithPrecision called on non-float param; ignoring",
-			"param_type", cp.Proto.Type.String())
+func (cp *ParamBuilder) WithWidget(widget string) *ParamBuilder {
+	if cp.err != nil {
 		return cp
 	}
-	cp.Proto.Precision = precision
+	cp.proto.Widget = widget
 	return cp
 }
 
-func (cp *Param) WithMaxLength(maxLength uint32) *Param {
-	if cp.Proto.Type != protos.ParamType_STRING && cp.Proto.Type != protos.ParamType_STRING_ARRAY {
-		slog.Warn("WithMaxLength called on param type that does not support max_length; ignoring",
-			"param_type", cp.Proto.Type.String())
+func (cp *ParamBuilder) WithPrecision(precision uint32) *ParamBuilder {
+	if cp.err != nil {
 		return cp
 	}
-	cp.Proto.MaxLength = maxLength
-	return cp
-}
-
-func (cp *Param) WithAccessScope(scope string) *Param {
-	cp.Proto.AccessScope = scope
-	return cp
-}
-
-func (cp *Param) WithClientHint(key, value string) *Param {
-	if cp.Proto.ClientHints == nil {
-		cp.Proto.ClientHints = map[string]string{}
+	if cp.proto.Type != protos.ParamType_FLOAT32 && cp.proto.Type != protos.ParamType_FLOAT32_ARRAY {
+		cp.err = fmt.Errorf("WithPrecision called on non-float param: param_type=%s",
+			cp.proto.Type.String(),
+		)
+		return cp
 	}
-	cp.Proto.ClientHints[key] = value
+	cp.proto.Precision = precision
+	return cp
+}
+
+func (cp *ParamBuilder) WithMaxLength(maxLength uint32) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	if cp.proto.Type != protos.ParamType_STRING && cp.proto.Type != protos.ParamType_STRING_ARRAY {
+		cp.err = fmt.Errorf("WithMaxLength called on param type that does not support max_length: param_type=%s",
+			cp.proto.Type.String(),
+		)
+		return cp
+	}
+	cp.proto.MaxLength = maxLength
+	return cp
+}
+
+func (cp *ParamBuilder) WithAccessScope(scope string) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.AccessScope = scope
+	return cp
+}
+
+func (cp *ParamBuilder) WithClientHint(key, value string) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	if cp.proto.ClientHints == nil {
+		cp.proto.ClientHints = map[string]string{}
+	}
+	cp.proto.ClientHints[key] = value
 	return cp
 }
 
@@ -359,73 +406,82 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 // valueless sub-param never touches the parent's Value, so it can refine a
 // descriptor (name, constraint, ...) without overriding a value that came
 // from the NewParamStruct map.
-func (cp *Param) WithParam(oid string, param *Param) *Param {
-	if param == nil {
-		slog.Warn("WithParam called with nil sub-param; ignoring",
-			"oid", oid)
+func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder {
+	p, ok := buildChild(&cp.err, param, (*ParamBuilder).Build, "WithParam")
+	if !ok {
+		return cp
+	}
+	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
+		cp.err = fmt.Errorf("WithParam called on param type that does not support sub-params: param_type=%s",
+			cp.proto.Type.String(),
+		)
 		return cp
 	}
 
-	if _, ok := paramTypesWithSubParams[cp.Proto.Type]; !ok {
-		slog.Warn("WithParam called on param type that does not support sub-params; ignoring",
-			"param_type", cp.Proto.Type.String())
-		return cp
-	}
-
-	cloned := proto.Clone(param.Proto).(*protos.Param)
-
-	if cp.Proto.Type == protos.ParamType_STRUCT && cloned.Value != nil {
-		sv := cp.Proto.Value.GetStructValue()
+	if cp.proto.Type == protos.ParamType_STRUCT && p.Proto.Value != nil {
+		sv := cp.proto.Value.GetStructValue()
 		if sv == nil {
 			sv = &protos.StructValue{}
-			cp.Proto.Value = &protos.Value{Kind: &protos.Value_StructValue{StructValue: sv}}
+			cp.proto.Value = &protos.Value{Kind: &protos.Value_StructValue{StructValue: sv}}
 		}
 		if sv.Fields == nil {
 			sv.Fields = map[string]*protos.Value{}
 		}
-		sv.Fields[oid] = cloned.Value
-		cloned.Value = nil
+		sv.Fields[oid] = p.Proto.Value
+		p.Proto.Value = nil
 	}
 
-	if cp.Proto.Params == nil {
-		cp.Proto.Params = map[string]*protos.Param{}
-	}
 	// A read-only parent forces its children read-only. When the parent is
 	// writable the child keeps its own read_only flag, so a child can still be
 	// independently marked read-only.
-	if cp.Proto.ReadOnly {
-		cloned.ReadOnly = true
-		propagateReadOnly(cloned.Params)
+	if cp.proto.ReadOnly {
+		p.Proto.ReadOnly = true
+		propagateReadOnly(p.Proto.Params)
 	}
-	cp.Proto.Params[oid] = cloned
+	put(&cp.proto.Params, oid, p.Proto)
 	return cp
 }
 
 // TODO: WithResponse only applies to commands. When we add a CatenaCommand helper,
 // move this there. Consider an unexported baseParam that both Param and
 // CatenaCommand compose from, since other fields may also be command-specific.
-func (cp *Param) WithResponse(response bool) *Param {
-	cp.Proto.Response = response
+func (cp *ParamBuilder) WithResponse(response bool) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.Response = response
 	return cp
 }
 
-func (cp *Param) WithHelp(help PolyglotText) *Param {
-	cp.Proto.Help = &protos.PolyglotText{DisplayStrings: help}
+func (cp *ParamBuilder) WithHelp(help PolyglotText) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.Help = help.Proto()
 	return cp
 }
 
-func (cp *Param) WithOidAliases(aliases ...string) *Param {
-	cp.Proto.OidAliases = aliases
+func (cp *ParamBuilder) WithOidAliases(aliases ...string) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.OidAliases = aliases
 	return cp
 }
 
-func (cp *Param) WithMinimalSet(minimalSet bool) *Param {
-	cp.Proto.MinimalSet = minimalSet
+func (cp *ParamBuilder) WithMinimalSet(minimalSet bool) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.MinimalSet = minimalSet
 	return cp
 }
 
-func (cp *Param) WithStateless(stateless bool) *Param {
-	cp.Proto.Stateless = stateless
+func (cp *ParamBuilder) WithStateless(stateless bool) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.Stateless = stateless
 	return cp
 }
 
@@ -434,9 +490,29 @@ func (cp *Param) WithStateless(stateless bool) *Param {
 // assigned externally via WithParam). Auto-linking would require params to
 // know their full mounted path, which adds significant complexity. Revisit if
 // we ever add path tracking to the param tree.
-func (cp *Param) WithTemplateOid(oid string) *Param {
-	cp.Proto.TemplateOid = oid
+func (cp *ParamBuilder) WithTemplateOid(oid string) *ParamBuilder {
+	if cp.err != nil {
+		return cp
+	}
+	cp.proto.TemplateOid = oid
 	return cp
+}
+
+// Build returns a usable Param from the builder. If the builder has an error, it
+// returns an empty Param and the error. Must be called after all builder methods have been called.
+func (cp *ParamBuilder) Build() (Param, error) {
+	if cp.err != nil {
+		return Param{}, cp.err
+	}
+	cp.err = ErrAlreadyBuilt
+	return Param{Proto: cp.proto}, nil
+}
+
+// Clone returns a deep copy of the ParamBuilder.
+// Inherits the builder's error state, including ErrAlreadyBuilt.
+// Must be called before Build(), or the clone will be unusable.
+func (cp *ParamBuilder) Clone() *ParamBuilder {
+	return &ParamBuilder{proto: proto.Clone(cp.proto).(*protos.Param), err: cp.err}
 }
 
 // SetValue converts v to a proto value via ToProto, validates it against the

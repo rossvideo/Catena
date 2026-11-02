@@ -49,7 +49,7 @@ import (
 func TestParamInfosForRequest(t *testing.T) {
 	t.Run("RootNonRecursive", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosForRequest("", testDeviceDefinition(), false, stream)
+		res := ParamInfosForRequest("", testDeviceDefinition(t), false, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -59,7 +59,7 @@ func TestParamInfosForRequest(t *testing.T) {
 
 	t.Run("RootRecursive", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosForRequest("", testDeviceDefinition(), true, stream)
+		res := ParamInfosForRequest("", testDeviceDefinition(t), true, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -71,7 +71,7 @@ func TestParamInfosForRequest(t *testing.T) {
 
 	t.Run("NestedRecursive", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosForRequest("parent", testDeviceDefinition(), true, stream)
+		res := ParamInfosForRequest("parent", testDeviceDefinition(t), true, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -100,7 +100,7 @@ func TestParamInfosForRequest(t *testing.T) {
 		}
 		for _, c := range cases {
 			stream := &sliceStream[st2138.ParamInfo]{}
-			res := ParamInfosForRequest(c.oid, testDeviceDefinition(), false, stream)
+			res := ParamInfosForRequest(c.oid, testDeviceDefinition(t), false, stream)
 			if res.Code != StatusCodeOk {
 				t.Fatalf("%s: expected OK, got %v", c.oid, res)
 			}
@@ -112,7 +112,7 @@ func TestParamInfosForRequest(t *testing.T) {
 
 	t.Run("MissingParam", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosForRequest("missing", testDeviceDefinition(), false, stream)
+		res := ParamInfosForRequest("missing", testDeviceDefinition(t), false, stream)
 		if res.Code != StatusCodeNotFound {
 			t.Fatalf("expected NOT_FOUND, got %v", res)
 		}
@@ -135,7 +135,7 @@ func TestParamInfosForRequest(t *testing.T) {
 	t.Run("RootSendError", func(t *testing.T) {
 		// FailAfter 0 fails the very first Send while walking the whole tree.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 0}
-		res := ParamInfosForRequest("", testDeviceDefinition(), false, stream)
+		res := ParamInfosForRequest("", testDeviceDefinition(t), false, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed Send, got %v", res)
 		}
@@ -144,7 +144,7 @@ func TestParamInfosForRequest(t *testing.T) {
 	t.Run("SpecificSendError", func(t *testing.T) {
 		// FailAfter 0 fails the single descriptor Send on the specific-oid path.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 0}
-		res := ParamInfosForRequest("alpha", testDeviceDefinition(), false, stream)
+		res := ParamInfosForRequest("alpha", testDeviceDefinition(t), false, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed Send, got %v", res)
 		}
@@ -154,7 +154,7 @@ func TestParamInfosForRequest(t *testing.T) {
 		// The parent descriptor is accepted (FailAfter 1); the Send while recursing
 		// into its children then fails.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 1}
-		res := ParamInfosForRequest("parent", testDeviceDefinition(), true, stream)
+		res := ParamInfosForRequest("parent", testDeviceDefinition(t), true, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed child Send, got %v", res)
 		}
@@ -168,7 +168,7 @@ func TestParamInfosForRequest(t *testing.T) {
 		// (FailAfter 4), then the nested recursion into parent's child fails,
 		// exercising the error return inside the recursive sendParamInfos call.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 4}
-		res := ParamInfosForRequest("", testDeviceDefinition(), true, stream)
+		res := ParamInfosForRequest("", testDeviceDefinition(t), true, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed nested Send, got %v", res)
 		}
@@ -178,8 +178,12 @@ func TestParamInfosForRequest(t *testing.T) {
 func TestParamInfosFromParam(t *testing.T) {
 	t.Run("SpecificNonRecursive", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosFromParam("volume", st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Volume")), false, stream)
+		volume, err := st2138.NewParamInt32(0).
+			WithName(st2138.PolyglotText{"en": "Volume"}).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		res := ParamInfosFromParam("volume", &volume, false, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -194,9 +198,13 @@ func TestParamInfosFromParam(t *testing.T) {
 		// The sub-param subtree of the single param is flattened with
 		// fully-qualified oids, mirroring ParamInfosForRequest's NestedRecursive.
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosFromParam("parent", st2138.NewParamStruct().
-			WithName(st2138.NewPolyglotText("en", "Parent")).
-			WithParam("child", st2138.NewParamString("")), true, stream)
+		parent, err := st2138.NewParamStruct().
+			WithName(st2138.PolyglotText{"en": "Parent"}).
+			WithParam("child", st2138.NewParamString("")).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		res := ParamInfosFromParam("parent", &parent, true, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -208,8 +216,12 @@ func TestParamInfosFromParam(t *testing.T) {
 		// A non-recursive request emits only the param's own descriptor even when
 		// it has sub-params.
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosFromParam("parent", st2138.NewParamStruct().
-			WithParam("child", st2138.NewParamString("")), false, stream)
+		parent, err := st2138.NewParamStruct().
+			WithParam("child", st2138.NewParamString("")).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		res := ParamInfosFromParam("parent", &parent, false, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -219,7 +231,11 @@ func TestParamInfosFromParam(t *testing.T) {
 
 	t.Run("ArrayLengthFromValue", func(t *testing.T) {
 		stream := &sliceStream[st2138.ParamInfo]{}
-		res := ParamInfosFromParam("numbers", st2138.NewParamInt32Array([]int32{1, 2, 3}), false, stream)
+		numbers, err := st2138.NewParamInt32Array([]int32{1, 2, 3}).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		res := ParamInfosFromParam("numbers", &numbers, false, stream)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("expected OK, got %v", res)
 		}
@@ -253,7 +269,11 @@ func TestParamInfosFromParam(t *testing.T) {
 	t.Run("SendError", func(t *testing.T) {
 		// FailAfter 0 fails the single descriptor Send.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 0}
-		res := ParamInfosFromParam("volume", st2138.NewParamInt32(0), false, stream)
+		volume, err := st2138.NewParamInt32(0).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		res := ParamInfosFromParam("volume", &volume, false, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed Send, got %v", res)
 		}
@@ -263,8 +283,12 @@ func TestParamInfosFromParam(t *testing.T) {
 		// The param descriptor is accepted (FailAfter 1); the Send while recursing
 		// into its children then fails.
 		stream := &sliceStream[st2138.ParamInfo]{Err: errors.New("boom"), FailAfter: 1}
-		res := ParamInfosFromParam("parent", st2138.NewParamStruct().
-			WithParam("child", st2138.NewParamString("")), true, stream)
+		parent, err := st2138.NewParamStruct().
+			WithParam("child", st2138.NewParamString("")).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		res := ParamInfosFromParam("parent", &parent, true, stream)
 		if res.Code != StatusCodeInternal {
 			t.Fatalf("expected INTERNAL from a failed child Send, got %v", res)
 		}
@@ -287,24 +311,29 @@ func TestSendParamInfos_SkipsNilParam(t *testing.T) {
 
 func TestFindParamDescriptor_EmptyOid(t *testing.T) {
 	// An empty oid has no descriptor to resolve; the guard returns (nil, false).
-	params := testDeviceDefinition().Proto.GetParams()
+	params := testDeviceDefinition(t).Proto.GetParams()
 	if _, ok := findParamDescriptor(params, ""); ok {
 		t.Error("expected findParamDescriptor to report not-found for an empty oid")
 	}
 }
 
-func testDeviceDefinition() *st2138.Device {
-	return st2138.NewDevice(0).
+func testDeviceDefinition(t *testing.T) *st2138.Device {
+	t.Helper()
+	device, err := st2138.NewDevice(0).
 		WithParam("parent", st2138.NewParamStruct().
-			WithName(st2138.NewPolyglotText("en", "Parent")).
+			WithName(st2138.PolyglotText{"en": "Parent"}).
 			WithParam("child", st2138.NewParamString(""))).
 		WithParam("alpha", st2138.NewParamInt32(0).
-			WithName(st2138.NewPolyglotText("en", "Alpha"))).
+			WithName(st2138.PolyglotText{"en": "Alpha"})).
 		WithParam("numbers", st2138.NewParamInt32Array([]int32{1, 2, 3})).
 		WithParam("floats", st2138.NewParamFloat32Array([]float32{1.5, 2.5})).
 		WithParam("strings", st2138.NewParamStringArray([]string{"a", "b", "c", "d"})).
 		WithParam("structs", st2138.NewParamStructArray([]map[string]any{{"x": int32(1)}, {"x": int32(2)}})).
-		WithParam("variants", st2138.NewParamStructVariantArray([]st2138.StructVariantValue{{StructVariantType: "type_a", Value: int32(9)}}))
+		WithParam("variants", st2138.NewParamStructVariantArray([]st2138.StructVariantValue{{StructVariantType: "type_a", Value: int32(9)}})).Build()
+	if err != nil {
+		t.Fatalf("testDeviceDefinition failed: %v", err)
+	}
+	return &device
 }
 
 func assertParamInfoOids(t *testing.T, infos []st2138.ParamInfo, expected []string) {
