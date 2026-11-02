@@ -290,7 +290,6 @@ func (t *Transport) writeHTTPPayloadTooLarge(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusRequestEntityTooLarge)
 	msg := http.StatusText(http.StatusRequestEntityTooLarge)
 	if t.isDevMode() {
-		fmt.Println(msg)
 		msg = "request body too large"
 	}
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
