@@ -3128,7 +3128,7 @@ func TestTransport_NewTransport_MaxAssetBodyBytes(t *testing.T) {
 	}
 
 	t.Run("accepts an asset body above the general limit", func(t *testing.T) {
-		transport, runtime := newTransport(t, len(commandBody), len(assetRequestBody))
+		transport, runtime := newTransport(t, 0, len(assetRequestBody))
 		handlerCalled := false
 		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
 			handlerCalled = true
@@ -3174,6 +3174,39 @@ func TestTransport_NewTransport_MaxAssetBodyBytes(t *testing.T) {
 		assertBodyContains(t, rec, "request body too large")
 		if handlerCalled {
 			t.Error("command handler should not be called when the body exceeds MaxBodyBytes")
+		}
+	})
+
+	t.Run("rejects a non-empty body when the asset limit is zero", func(t *testing.T) {
+		transport, runtime := newTransport(t, len(assetRequestBody), 0)
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called when MaxAssetBodyBytes is zero and the body is non-empty")
+		}
+	})
+
+	t.Run("accepts a body when the asset limit is negative", func(t *testing.T) {
+		transport, runtime := newTransport(t, 0, -1)
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusNoContent)
+		if !handlerCalled {
+			t.Error("handler should be called when MaxAssetBodyBytes is negative")
 		}
 	})
 }
