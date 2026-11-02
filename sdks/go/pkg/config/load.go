@@ -156,6 +156,16 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractString("GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "Path to the PEM server private key for the gRPC transport", &opts.Grpc.TLS.KeyFile).
 		extractString("GRPC_TLS_CLIENT_CA_FILE", "grpc-tls-client-ca-file", "Path to the PEM client CA bundle for gRPC mutual TLS", &opts.Grpc.TLS.ClientCAFile).
 		extractBool("GRPC_TLS_MUTUAL_AUTH", "grpc-tls-mutual-auth", "Require and verify client certificates on the gRPC transport (mTLS)", &opts.Grpc.TLS.MutualAuth).
+		extractPositiveInt("GRPC_MAX_RECV_MSG_SIZE", "grpc-max-recv-msg-size", "Maximum gRPC message size in bytes the server accepts", &opts.Grpc.MaxRecvMsgSize).
+		extractPositiveInt("GRPC_MAX_SEND_MSG_SIZE", "grpc-max-send-msg-size", "Maximum gRPC message size in bytes the server sends", &opts.Grpc.MaxSendMsgSize).
+		extractUint32("GRPC_MAX_CONCURRENT_STREAMS", "grpc-max-concurrent-streams", "Maximum concurrent gRPC streams per connection (0 for unlimited)", &opts.Grpc.MaxConcurrentStreams).
+		extractPositiveDuration("GRPC_MAX_CONNECTION_IDLE", "grpc-max-connection-idle", "Close gRPC connections with no active RPCs after this duration (0 disables)", &opts.Grpc.MaxConnectionIdle).
+		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE", "grpc-max-connection-age", "Close gRPC connections after this duration, severing open streams (0 disables)", &opts.Grpc.MaxConnectionAge).
+		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE_GRACE", "grpc-max-connection-age-grace", "Grace period for in-flight RPCs after max connection age (0 for unlimited)", &opts.Grpc.MaxConnectionAgeGrace).
+		extractPositiveDuration("GRPC_KEEPALIVE_TIME", "grpc-keepalive-time", "Idle duration before the gRPC server pings the client", &opts.Grpc.KeepaliveTime).
+		extractPositiveDuration("GRPC_KEEPALIVE_TIMEOUT", "grpc-keepalive-timeout", "Time to wait for a gRPC keepalive ping ack before closing the connection", &opts.Grpc.KeepaliveTimeout).
+		extractPositiveDuration("GRPC_KEEPALIVE_MIN_TIME", "grpc-keepalive-min-time", "Minimum interval allowed between client keepalive pings", &opts.Grpc.MinTime).
+		extractBool("GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM", "grpc-keepalive-permit-without-stream", "Allow client keepalive pings when there are no active RPCs", &opts.Grpc.PermitWithoutStream).
 		//server options
 		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
 		extractBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
@@ -274,6 +284,16 @@ func (l *configLoader) extractInt(envName, cliName, usage string, val *int) *con
 	return l
 }
 
+func (l *configLoader) extractPositiveInt(envName, cliName, usage string, val *int) *configLoader {
+	loadParser(l, envName, cliName, usage, val, parsePositiveInt)
+	return l
+}
+
+func (l *configLoader) extractUint32(envName, cliName, usage string, val *uint32) *configLoader {
+	loadParser(l, envName, cliName, usage, val, parseUint32)
+	return l
+}
+
 func (l *configLoader) extractString(envName, cliName, usage string, val *string) *configLoader {
 	// dummy passthrough parser func
 	loadParser(l, envName, cliName, usage, val, func(s string) (string, error) {
@@ -295,6 +315,27 @@ func (l *configLoader) extractDuration(envName, cliName, usage string, val *time
 func (l *configLoader) extractPositiveDuration(envName, cliName, usage string, val *time.Duration) *configLoader {
 	loadParser(l, envName, cliName, usage, val, parsePositiveDuration)
 	return l
+}
+
+// parsePositiveInt parses an int that must be greater than zero.
+func parsePositiveInt(s string) (int, error) {
+	v, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil {
+		return 0, err
+	}
+
+	if v <= 0 {
+		return 0, fmt.Errorf("%s is not a valid positive integer", s)
+	}
+	return v, nil
+}
+
+func parseUint32(s string) (uint32, error) {
+	v, err := strconv.ParseUint(strings.TrimSpace(s), 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(v), nil
 }
 
 // parseStringSlice comma-splits, trims, and drops empty tokens so "" and

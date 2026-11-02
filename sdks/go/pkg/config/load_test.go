@@ -289,6 +289,16 @@ func TestOptionMappings(t *testing.T) {
 		{"GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "/certs/grpc.key", "/certs/grpc.key", func(o RuntimeOptions) any { return o.Grpc.TLS.KeyFile }},
 		{"GRPC_TLS_CLIENT_CA_FILE", "grpc-tls-client-ca-file", "/certs/grpc-ca.crt", "/certs/grpc-ca.crt", func(o RuntimeOptions) any { return o.Grpc.TLS.ClientCAFile }},
 		{"GRPC_TLS_MUTUAL_AUTH", "grpc-tls-mutual-auth", "true", true, func(o RuntimeOptions) any { return o.Grpc.TLS.MutualAuth }},
+		{"GRPC_MAX_RECV_MSG_SIZE", "grpc-max-recv-msg-size", "1048576", 1 << 20, func(o RuntimeOptions) any { return o.Grpc.MaxRecvMsgSize }},
+		{"GRPC_MAX_SEND_MSG_SIZE", "grpc-max-send-msg-size", "2097152", 2 << 20, func(o RuntimeOptions) any { return o.Grpc.MaxSendMsgSize }},
+		{"GRPC_MAX_CONCURRENT_STREAMS", "grpc-max-concurrent-streams", "50", uint32(50), func(o RuntimeOptions) any { return o.Grpc.MaxConcurrentStreams }},
+		{"GRPC_MAX_CONNECTION_IDLE", "grpc-max-connection-idle", "30m", 30 * time.Minute, func(o RuntimeOptions) any { return o.Grpc.MaxConnectionIdle }},
+		{"GRPC_MAX_CONNECTION_AGE", "grpc-max-connection-age", "24h", 24 * time.Hour, func(o RuntimeOptions) any { return o.Grpc.MaxConnectionAge }},
+		{"GRPC_MAX_CONNECTION_AGE_GRACE", "grpc-max-connection-age-grace", "1m", time.Minute, func(o RuntimeOptions) any { return o.Grpc.MaxConnectionAgeGrace }},
+		{"GRPC_KEEPALIVE_TIME", "grpc-keepalive-time", "1h", time.Hour, func(o RuntimeOptions) any { return o.Grpc.KeepaliveTime }},
+		{"GRPC_KEEPALIVE_TIMEOUT", "grpc-keepalive-timeout", "10s", 10 * time.Second, func(o RuntimeOptions) any { return o.Grpc.KeepaliveTimeout }},
+		{"GRPC_KEEPALIVE_MIN_TIME", "grpc-keepalive-min-time", "1m", time.Minute, func(o RuntimeOptions) any { return o.Grpc.MinTime }},
+		{"GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM", "grpc-keepalive-permit-without-stream", "true", true, func(o RuntimeOptions) any { return o.Grpc.PermitWithoutStream }},
 		// server
 		{"MAX_CONNECTIONS", "max-connections", "250", 250, func(o RuntimeOptions) any { return o.Server.MaxConnections }},
 		{"DEV_MODE", "dev", "true", true, func(o RuntimeOptions) any { return o.Server.IsDev }},
@@ -657,6 +667,105 @@ func TestLoader_PositiveDuration(t *testing.T) {
 		}
 		if val != 0 {
 			t.Errorf("Expected val to be 0 got: %v", val)
+		}
+	})
+}
+
+func TestLoader_PositiveInt(t *testing.T) {
+	t.Run("env var parsing", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := 1
+		t.Setenv("TEST_POSITIVE_INT", "4096")
+		loader.extractPositiveInt("TEST_POSITIVE_INT", "test-positive-int", "Test positive int flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 4096 {
+			t.Errorf("Expected val 4096 got: %v", val)
+		}
+	})
+
+	t.Run("zero", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := 1
+		t.Setenv("TEST_POSITIVE_INT", "0")
+		loader.extractPositiveInt("TEST_POSITIVE_INT", "test-positive-int", "Test positive int flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+		if val != 1 {
+			t.Errorf("Expected val to stay 1 got: %v", val)
+		}
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := 1
+		t.Setenv("TEST_POSITIVE_INT", "-1")
+		loader.extractPositiveInt("TEST_POSITIVE_INT", "test-positive-int", "Test positive int flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+		if val != 1 {
+			t.Errorf("Expected val to stay 1 got: %v", val)
+		}
+	})
+
+	t.Run("invalid int", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		val := 1
+		t.Setenv("TEST_POSITIVE_INT", "notanint")
+		loader.extractPositiveInt("TEST_POSITIVE_INT", "test-positive-int", "Test positive int flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+		if val != 1 {
+			t.Errorf("Expected val to stay 1 got: %v", val)
+		}
+	})
+}
+
+func TestLoader_Uint32(t *testing.T) {
+	t.Run("env var parsing", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		var val uint32 = 1
+		t.Setenv("TEST_UINT32", "0")
+		loader.extractUint32("TEST_UINT32", "test-uint32", "Test uint32 flag", &val)
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
+		}
+		if val != 0 {
+			t.Errorf("Expected val 0 got: %v", val)
+		}
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		var val uint32 = 1
+		t.Setenv("TEST_UINT32", "-1")
+		loader.extractUint32("TEST_UINT32", "test-uint32", "Test uint32 flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
+
+	t.Run("overflow", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		var val uint32 = 1
+		t.Setenv("TEST_UINT32", "4294967296")
+		loader.extractUint32("TEST_UINT32", "test-uint32", "Test uint32 flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
+
+	t.Run("invalid int", func(t *testing.T) {
+		loader := makeTestLoader(t)
+		var val uint32 = 1
+		t.Setenv("TEST_UINT32", "notanint")
+		loader.extractUint32("TEST_UINT32", "test-uint32", "Test uint32 flag", &val)
+		if loader.err == nil {
+			t.Errorf("Expected error got nil")
 		}
 	})
 }

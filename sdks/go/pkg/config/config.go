@@ -99,6 +99,10 @@ type RestOptions struct {
 }
 
 // GrpcOptions configures the gRPC transport.
+//
+// GrpcOptions must be initialized before use. Prefer config.InitOptions or
+// config.DefaultGrpcOptions(): MaxRecvMsgSize and MaxSendMsgSize are passed
+// straight to grpc-go, where 0 means "0 bytes", not "unlimited".
 type GrpcOptions struct {
 	// Port is the TCP port the gRPC server listens on (default 6254).
 	Port int `env:"GRPC_PORT" flag:"grpc-port"`
@@ -107,6 +111,27 @@ type GrpcOptions struct {
 	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
 	// TLS configures optional TLS for the gRPC listener (env: GRPC_TLS_*).
 	TLS TLSOptions
+
+	// MaxRecvMsgSize is the largest message in bytes the server will accept
+	MaxRecvMsgSize int `env:"GRPC_MAX_RECV_MSG_SIZE" flag:"grpc-max-recv-msg-size"`
+	// MaxSendMsgSize is the largest message in bytes the server will send
+	MaxSendMsgSize int `env:"GRPC_MAX_SEND_MSG_SIZE" flag:"grpc-max-send-msg-size"`
+	// MaxConcurrentStreams limits concurrent RPCs per client connection
+	MaxConcurrentStreams uint32 `env:"GRPC_MAX_CONCURRENT_STREAMS" flag:"grpc-max-concurrent-streams"`
+	// MaxConnectionIdle closes connections that have had no active RPCs for this duration
+	MaxConnectionIdle time.Duration `env:"GRPC_MAX_CONNECTION_IDLE" flag:"grpc-max-connection-idle"`
+	// MaxConnectionAge closes connections after this duration regardless of activity
+	MaxConnectionAge time.Duration `env:"GRPC_MAX_CONNECTION_AGE" flag:"grpc-max-connection-age"`
+	// MaxConnectionAgeGrace is how long in-flight RPCs may continue after MaxConnectionAge is reached
+	MaxConnectionAgeGrace time.Duration `env:"GRPC_MAX_CONNECTION_AGE_GRACE" flag:"grpc-max-connection-age-grace"`
+	// KeepaliveTime is how long a connection may be idle before the server pings the client to check it is still alive
+	KeepaliveTime time.Duration `env:"GRPC_KEEPALIVE_TIME" flag:"grpc-keepalive-time"`
+	// KeepaliveTimeout is how long the server waits for a keepalive ping ack before closing the connection
+	KeepaliveTimeout time.Duration `env:"GRPC_KEEPALIVE_TIMEOUT" flag:"grpc-keepalive-timeout"`
+	// MinTime is the minimum interval a client may send keepalive pings
+	MinTime time.Duration `env:"GRPC_KEEPALIVE_MIN_TIME" flag:"grpc-keepalive-min-time"`
+	// PermitWithoutStream allows client keepalive pings on connections with no active RPCs
+	PermitWithoutStream bool `env:"GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM" flag:"grpc-keepalive-permit-without-stream"`
 }
 
 type ServerOptions struct {
@@ -254,7 +279,20 @@ func DefaultRestOptions() RestOptions {
 }
 
 func DefaultGrpcOptions() GrpcOptions {
-	return GrpcOptions{Port: 6254, Reflection: false}
+	return GrpcOptions{
+		Port:                  6254,
+		Reflection:            false,
+		MaxRecvMsgSize:        4 << 20,
+		MaxSendMsgSize:        4 << 20,
+		MaxConcurrentStreams:  100,
+		MaxConnectionIdle:     15 * time.Minute,
+		MaxConnectionAge:      0, // disabled by default to avoid severing long-lived connections
+		MaxConnectionAgeGrace: 0,
+		KeepaliveTime:         2 * time.Hour,
+		KeepaliveTimeout:      20 * time.Second,
+		MinTime:               5 * time.Minute, // ping-flood guard
+		PermitWithoutStream:   false,
+	}
 }
 
 func DefaultServerOptions() ServerOptions {
@@ -348,6 +386,16 @@ func (o GrpcOptions) LogValue() slog.Value {
 		slog.Int("port", o.Port),
 		slog.Bool("reflection", o.Reflection),
 		slog.Any("tls", o.TLS),
+		slog.Int("max_recv_msg_size", o.MaxRecvMsgSize),
+		slog.Int("max_send_msg_size", o.MaxSendMsgSize),
+		slog.Uint64("max_concurrent_streams", uint64(o.MaxConcurrentStreams)),
+		slog.Duration("max_connection_idle", o.MaxConnectionIdle),
+		slog.Duration("max_connection_age", o.MaxConnectionAge),
+		slog.Duration("max_connection_age_grace", o.MaxConnectionAgeGrace),
+		slog.Duration("keepalive_time", o.KeepaliveTime),
+		slog.Duration("keepalive_timeout", o.KeepaliveTimeout),
+		slog.Duration("keepalive_min_time", o.MinTime),
+		slog.Bool("keepalive_permit_without_stream", o.PermitWithoutStream),
 	)
 }
 
