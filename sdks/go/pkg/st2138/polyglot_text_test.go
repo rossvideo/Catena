@@ -40,17 +40,12 @@ package st2138
 
 import (
 	"testing"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-func TestNewPolyglotText(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
-	}
-}
-
 func TestPolyglotText_With(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
+	pt := PolyglotText{"en": "Hello"}.With("fr", "Bonjour")
 	if pt["en"] != "Hello" {
 		t.Errorf("expected 'Hello', got %s", pt["en"])
 	}
@@ -59,43 +54,16 @@ func TestPolyglotText_With(t *testing.T) {
 	}
 }
 
-func TestNewPolyglotText_Empty(t *testing.T) {
-	pt := NewPolyglotText()
-	if pt == nil {
-		t.Fatal("expected non-nil PolyglotText")
-	}
-	if len(pt) != 0 {
-		t.Errorf("expected empty PolyglotText, got %d entries", len(pt))
-	}
-
-	pt.With("en", "Hello").With("fr", "Bonjour")
-	if pt["en"] != "Hello" || pt["fr"] != "Bonjour" {
-		t.Errorf("expected entries to be added, got %v", pt)
-	}
-}
-
-func TestNewPolyglotText_MultiplePairs(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello", "fr", "Bonjour")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
-	}
+func TestPolyglotText_With_NilPolyglotText(t *testing.T) {
+	var pt PolyglotText
+	pt = pt.With("fr", "Bonjour")
 	if pt["fr"] != "Bonjour" {
 		t.Errorf("expected 'Bonjour', got %s", pt["fr"])
-	}
-}
-
-func TestNewPolyglotText_OddArgs(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello", "fr")
-	if pt["en"] != "Hello" {
-		t.Errorf("expected 'Hello', got %s", pt["en"])
-	}
-	if _, ok := pt["fr"]; ok {
-		t.Errorf("expected unpaired trailing lang to be ignored, got %v", pt)
 	}
 }
 
 func TestPolyglotText_Get(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello").With("fr", "Bonjour")
+	pt := PolyglotText{"en": "Hello", "fr": "Bonjour"}
 	if pt.Get("fr", "en") != "Bonjour" {
 		t.Errorf("expected 'Bonjour', got %s", pt.Get("fr", "en"))
 	}
@@ -105,8 +73,42 @@ func TestPolyglotText_Get(t *testing.T) {
 }
 
 func TestPolyglotText_Get_MissingFallback(t *testing.T) {
-	pt := NewPolyglotText("en", "Hello")
+	pt := PolyglotText{"en": "Hello"}
 	if pt.Get("de", "fr") != "" {
 		t.Errorf("expected empty string for missing fallback, got %s", pt.Get("de", "fr"))
+	}
+}
+
+func TestPolyglotText_Proto(t *testing.T) {
+	pt := PolyglotText{"en": "Hello", "fr": "Bonjour"}
+	proto := pt.Proto()
+	if proto == nil {
+		t.Fatal("expected non-nil proto")
+	}
+	if proto.DisplayStrings["en"] != "Hello" || proto.DisplayStrings["fr"] != "Bonjour" {
+		t.Errorf("expected display strings [en:Hello fr:Bonjour], got %v", proto.DisplayStrings)
+	}
+}
+
+func TestPolyglotText_FromProto(t *testing.T) {
+	proto := &protos.PolyglotText{DisplayStrings: map[string]string{"en": "Hello", "fr": "Bonjour"}}
+	pt := PolyglotTextFromProto(proto)
+	if pt["en"] != "Hello" || pt["fr"] != "Bonjour" {
+		t.Errorf("expected display strings [en:Hello fr:Bonjour], got %v", pt)
+	}
+}
+
+func TestPolyglotText_FromProto_Empty(t *testing.T) {
+	proto := &protos.PolyglotText{}
+	pt := PolyglotTextFromProto(proto)
+	if pt != nil {
+		t.Errorf("expected empty PolyglotText, got %v", pt)
+	}
+}
+
+func TestPolyglotText_FromProto_Nil(t *testing.T) {
+	pt := PolyglotTextFromProto(nil)
+	if pt != nil {
+		t.Errorf("expected empty PolyglotText, got %v", pt)
 	}
 }
