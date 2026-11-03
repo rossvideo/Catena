@@ -2186,8 +2186,8 @@ func TestWithParam_ValueErrors(t *testing.T) {
 	p, err := NewParamStruct(map[string]any{"field3": float32(0.0)}).
 		WithParam("field3", NewParamFloat32(1.2)).
 		Build()
-	if err == nil || err.Error() != "WithParam called using param with value float32_value:1.2, only valueless params are supported" {
-		t.Errorf("expected error for builder with value, got %v", err)
+	if err == nil || err.Error() != "WithParam: called using param with value float32_value:1.2, only valueless params are supported" {
+		t.Errorf("expected specificerror for builder with value, got %v", err)
 	}
 	if p != (Param{}) {
 		t.Errorf("expected empty param for builder with error, got %v", p)
@@ -2198,8 +2198,33 @@ func TestWithParam_TypeMismatchErrors(t *testing.T) {
 	p, err := NewParamStruct(map[string]any{"field3": float32(0.0)}).
 		WithParam("field3", NewParamInt32()).
 		Build()
-	if err == nil || err.Error() != "WithParam called using param with type INT32, mismatches existing sub-param type FLOAT32 for oid field3" {
+	if err == nil || err.Error() != "WithParam: called using param with type INT32, mismatches existing sub-param type FLOAT32 for oid field3" {
 		t.Errorf("expected error for builder with type mismatch, got %v", err)
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty param for builder with error, got %v", p)
+	}
+}
+
+func TestWithParam_NestedTypeMismatchErrors(t *testing.T) {
+	p, err := NewParamStruct(map[string]any{"field1": map[string]any{"field2": int32(1)}}).
+		WithParam("field1", NewParamStruct().
+			WithParam("field2", NewParamFloat32())).
+		Build()
+	if err == nil || err.Error() != "WithParam: called using param with type FLOAT32, mismatches existing sub-param type INT32 for oid field2" {
+		t.Errorf("expected specific error for builder with nested type mismatch, got %v", err)
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty param for builder with error, got %v", p)
+	}
+}
+
+func TestWithParam_MissingNestedParamErrors(t *testing.T) {
+	p, err := NewParamStruct(map[string]any{"field1": map[string]any{"field2": int32(1)}}).
+		WithParam("field1", NewParamStruct()).
+		Build()
+	if err == nil || err.Error() != "WithParam: called using param with missing nested param oid field2, in parent field1" {
+		t.Errorf("expected specific error for builder with missing nested param, got %v", err)
 	}
 	if p != (Param{}) {
 		t.Errorf("expected empty param for builder with error, got %v", p)

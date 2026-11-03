@@ -520,18 +520,9 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 
-	if p.Proto.Value != nil {
-		cp.err = fmt.Errorf("WithParam called using param with value %v, only valueless params are supported", p.Proto.Value)
+	if err := validateDescriptor(cp.proto.Params, oid, p.Proto); err != nil {
+		cp.err = fmt.Errorf("WithParam: %w", err)
 		return cp
-	}
-
-	if descriptor, ok := cp.proto.Params[oid]; ok {
-		if descriptor.Type != p.Proto.Type {
-			cp.err = fmt.Errorf("WithParam called using param with type %s, mismatches existing sub-param type %s for oid %s",
-				p.Proto.Type.String(), descriptor.Type.String(), oid,
-			)
-			return cp
-		}
 	}
 
 	// A read-only parent forces its children read-only. When the parent is
@@ -642,6 +633,38 @@ func (cp *Param) GetValue() (any, error) {
 }
 
 // --- Validation helpers ---
+
+// validateDescriptor validates a sub-param descriptor on a struct-like param.
+// The descriptor must be valueless, and the param's inner and outer types must be compatible with the existing
+//
+//	descriptor's types, if any. Also checks nested descriptors for compatibility.
+func validateDescriptor(parent map[string]*protos.Param, oid string, newDescriptor *protos.Param) error {
+	if newDescriptor.Value != nil {
+		return fmt.Errorf("called using param with value %v, only valueless params are supported", newDescriptor.Value)
+	}
+
+	// If the descriptor already exists, validate the type.
+	if descriptor, ok := parent[oid]; ok {
+		if descriptor.Type != newDescriptor.Type {
+			return fmt.Errorf("called using param with type %s, mismatches existing sub-param type %s for oid %s",
+				newDescriptor.Type.String(), descriptor.Type.String(), oid,
+			)
+		}
+		// If the descriptor is a struct-like param, validate the nested descriptors.
+		if _, ok := paramTypesWithSubParams[descriptor.Type]; ok {
+			for nestedOid := range descriptor.Params {
+				newNested, ok := newDescriptor.Params[nestedOid]
+				if !ok {
+					return fmt.Errorf("called using param with missing nested param oid %s, in parent %s", nestedOid, oid)
+				}
+				if err := validateDescriptor(descriptor.Params, nestedOid, newNested); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
 
 // isValueValidForParamType checks whether a Value kind is compatible with the
 // given ParamType.
