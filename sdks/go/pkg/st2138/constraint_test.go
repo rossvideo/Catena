@@ -209,8 +209,8 @@ func TestNewConstraintStringStringChoice(t *testing.T) {
 	}
 }
 
-func TestNewConstraintFormattedString(t *testing.T) {
-	c, err := NewConstraintFormattedString("email", "", true).Build()
+func TestNewConstraintStringFormat(t *testing.T) {
+	c, err := NewConstraintStringFormat(EmailFormat, true).Build()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -229,8 +229,18 @@ func TestNewConstraintFormattedString(t *testing.T) {
 	}
 }
 
-func TestNewConstraintFormattedString_Regex(t *testing.T) {
-	c, err := NewConstraintFormattedString("regex", "^AST-[0-9]{4}$", false).Build()
+func TestNewConstraintStringFormat_Invalid(t *testing.T) {
+	c, err := NewConstraintStringFormat("invalid", true).Build()
+	if err == nil || err.Error() != "invalid string format: invalid" {
+		t.Fatal("expected error for invalid string format")
+	}
+	if c != (Constraint{}) {
+		t.Fatal("expected empty constraint for invalid string format")
+	}
+}
+
+func TestNewConstraintStringRegex(t *testing.T) {
+	c, err := NewConstraintStringRegex("^AST-[0-9]{4}$", false).Build()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

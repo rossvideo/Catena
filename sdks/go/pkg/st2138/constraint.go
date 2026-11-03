@@ -39,6 +39,8 @@
 package st2138
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -247,21 +249,84 @@ func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) 
 	}
 }
 
-// NewConstraintFormattedString creates a FORMATTED_STRING constraint.
-// format is a JSON Schema format name (i.e. "email"), or "regex"
-// with a supplied pattern the value must match. When strict is true the
+type StringFormat = string
+
+// StringFormat constants matching the JSON Schema format names,
+// "regex" excluded as it is handled by NewConstraintStringRegex.
+const (
+	DateTimeFormat            StringFormat = "date-time"
+	DateFormat                StringFormat = "date"
+	TimeFormat                StringFormat = "time"
+	DurationFormat            StringFormat = "duration"
+	EmailFormat               StringFormat = "email"
+	IdnEmailFormat            StringFormat = "idn-email"
+	HostnameFormat            StringFormat = "hostname"
+	IdnHostnameFormat         StringFormat = "idn-hostname"
+	Ipv4Format                StringFormat = "ipv4"
+	Ipv6Format                StringFormat = "ipv6"
+	UriFormat                 StringFormat = "uri"
+	UriReferenceFormat        StringFormat = "uri-reference"
+	IriFormat                 StringFormat = "iri"
+	IriReferenceFormat        StringFormat = "iri-reference"
+	UuidFormat                StringFormat = "uuid"
+	UriTemplateFormat         StringFormat = "uri-template"
+	JsonPointerFormat         StringFormat = "json-pointer"
+	RelativeJsonPointerFormat StringFormat = "relative-json-pointer"
+)
+
+var validStringFormats = map[StringFormat]struct{}{
+	DateTimeFormat:            {},
+	DateFormat:                {},
+	TimeFormat:                {},
+	DurationFormat:            {},
+	EmailFormat:               {},
+	IdnEmailFormat:            {},
+	HostnameFormat:            {},
+	IdnHostnameFormat:         {},
+	Ipv4Format:                {},
+	Ipv6Format:                {},
+	UriFormat:                 {},
+	UriReferenceFormat:        {},
+	IriFormat:                 {},
+	IriReferenceFormat:        {},
+	UuidFormat:                {},
+	UriTemplateFormat:         {},
+	JsonPointerFormat:         {},
+	RelativeJsonPointerFormat: {},
+}
+
+// NewConstraintStringFormat creates a FORMATTED_STRING constraint.
+// StringFormat is a JSON Schema format name (i.e. "email", "date"). When strict is true the
 // value must conform to the format(Not Implemented yet).
-func NewConstraintFormattedString(format, regex string, strict bool) *ConstraintBuilder {
+func NewConstraintStringFormat(format StringFormat, strict bool) *ConstraintBuilder {
+	if _, ok := validStringFormats[format]; !ok {
+		return &ConstraintBuilder{err: fmt.Errorf("invalid string format: %s", format)}
+	}
 	return &ConstraintBuilder{
 		proto: &protos.Constraint{
 			Type: protos.Constraint_FORMATTED_STRING,
 			Kind: &protos.Constraint_FormattedString{
 				FormattedString: &protos.FormattedStringConstraint{
 					Format: format,
-					Regex:  regex,
 					Strict: strict,
 				},
 			},
+		},
+		err: nil,
+	}
+}
+
+// NewConstraintStringRegex creates a FORMATTED_STRING constraint with a regex pattern.
+// When strict is true the value must conform to the regex(Not Implemented yet).
+func NewConstraintStringRegex(regex string, strict bool) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
+			Type: protos.Constraint_FORMATTED_STRING,
+			Kind: &protos.Constraint_FormattedString{FormattedString: &protos.FormattedStringConstraint{
+				Format: "regex",
+				Regex:  regex,
+				Strict: strict,
+			}},
 		},
 		err: nil,
 	}

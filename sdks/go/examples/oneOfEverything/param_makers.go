@@ -61,7 +61,7 @@ func makeContactEmailParam() *st2138.ParamBuilder {
 	return st2138.NewParamString(contactEmailValue).
 		WithName(st2138.PolyglotText{"en": "Contact Email"}).
 		WithReadOnly(true).
-		WithConstraint(st2138.NewConstraintFormattedString("email", "", true))
+		WithConstraint(st2138.NewConstraintStringFormat(st2138.EmailFormat, true))
 }
 
 // makeCounterModelParam builds the slot 0 "counter_model" param (STRING,
@@ -70,5 +70,5 @@ func makeCounterModelParam() *st2138.ParamBuilder {
 	return st2138.NewParamString(counterModelValue).
 		WithName(st2138.PolyglotText{"en": "Counter Model"}).
 		WithReadOnly(true).
-		WithConstraint(st2138.NewConstraintFormattedString("regex", "^[A-Z]{3}-[0-9]{4}$", false))
+		WithConstraint(st2138.NewConstraintStringRegex("^[A-Z]{3}-[0-9]{4}$", false))
 }
