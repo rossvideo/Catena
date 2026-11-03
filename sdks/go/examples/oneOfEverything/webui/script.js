@@ -290,15 +290,9 @@ function updateContactEmail(email) {
 async function poll() {
     const fetches = [];
 
-    // Read-only string params on slot 0, shown in the Commands title and footer.
+    // Read-only string params on slot 1, shown in the footer.
     fetches.push(
-        apiFetch('/st2138-api/v1/0/value/counter_model')
-            .then(r => r.json())
-            .then(data => updateCounterModel(extractValue(data)))
-            .catch(e => console.error('poll counter_model error:', e))
-    );
-    fetches.push(
-        apiFetch('/st2138-api/v1/0/value/contact_email')
+        apiFetch('/st2138-api/v1/1/value/contact_email')
             .then(r => r.json())
             .then(data => updateContactEmail(extractValue(data)))
             .catch(e => console.error('poll contact_email error:', e))

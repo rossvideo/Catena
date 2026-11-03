@@ -149,11 +149,9 @@ func applySlotZeroMenuGroups(device *st2138.DeviceBuilder, withMenus bool) *st21
 // slotZeroParams returns slot 0's params keyed by oid.
 func slotZeroParams(counter *CounterState) map[string]*st2138.ParamBuilder {
 	return map[string]*st2138.ParamBuilder{
-		"dashboard_UI":  makeDashboardUIParam(),
-		"counter":       makeCounterParam(counter),
-		"running":       makeRunningParam(counter),
-		"contact_email": makeContactEmailParam(),
-		"counter_model": makeCounterModelParam(),
+		"dashboard_UI": makeDashboardUIParam(),
+		"counter":      makeCounterParam(counter),
+		"running":      makeRunningParam(counter),
 	}
 }
 
@@ -246,13 +244,18 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 			WithDefaultScope("st2138:mon").
 			WithParam("resolution", st2138.NewParamString(resolution).
-				WithName(st2138.PolyglotText{"en": "Resolution"})).
+				WithName(st2138.PolyglotText{"en": "Resolution"}).
+				WithConstraint(st2138.NewConstraintStringRegex(`^\d{3,4}x\d{3,4}$`, true))).
 			WithParam("brightness", st2138.NewParamInt32(brightness).
 				WithName(st2138.PolyglotText{"en": "Brightness"})).
 			WithParam("contrast", st2138.NewParamInt32(contrast).
 				WithName(st2138.PolyglotText{"en": "Contrast"})).
 			WithParam("saturation", st2138.NewParamInt32(saturation).
 				WithName(st2138.PolyglotText{"en": "Saturation"})).
+			WithParam("contact_email", st2138.NewParamString("operator@example.com").
+				WithName(st2138.PolyglotText{"en": "Contact Email"}).
+				WithConstraint(st2138.NewConstraintStringFormat(st2138.EmailFormat, true)).
+				WithReadOnly(true)).
 			WithMenuGroup("status", st2138.NewMenuGroup().
 				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).
