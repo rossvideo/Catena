@@ -710,7 +710,7 @@ func TestWithConstraint_ValidStringStringChoice(t *testing.T) {
 }
 
 func TestWithConstraint_ValidFormattedString(t *testing.T) {
-	c := NewConstraintStringFormat(EmailFormat, true)
+	c := NewConstraintStringFormat(StringFormatEmail, true)
 	p, err := NewParamString("operator@example.com").WithConstraint(c).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
@@ -724,7 +724,7 @@ func TestWithConstraint_ValidFormattedString(t *testing.T) {
 }
 
 func TestWithConstraint_ValidFormattedStringOnStringArray(t *testing.T) {
-	c := NewConstraintStringFormat(EmailFormat, true)
+	c := NewConstraintStringFormat(StringFormatEmail, true)
 	p, err := NewParamStringArray([]string{"operator@example.com"}).WithConstraint(c).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
@@ -784,7 +784,7 @@ func TestWithConstraint_InvalidStringOnInt(t *testing.T) {
 }
 
 func TestWithConstraint_InvalidFormattedStringOnInt(t *testing.T) {
-	c := NewConstraintStringFormat(EmailFormat, true)
+	c := NewConstraintStringFormat(StringFormatEmail, true)
 	p, err := NewParamInt32(0).WithConstraint(c).Build()
 	if err == nil {
 		t.Fatal("expected error for builder with invalid constraint")

@@ -210,7 +210,7 @@ func TestNewConstraintStringStringChoice(t *testing.T) {
 }
 
 func TestNewConstraintStringFormat(t *testing.T) {
-	c, err := NewConstraintStringFormat(EmailFormat, true).Build()
+	c, err := NewConstraintStringFormat(StringFormatEmail, true).Build()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

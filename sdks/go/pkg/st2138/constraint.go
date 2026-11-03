@@ -249,57 +249,48 @@ func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) 
 	}
 }
 
-type StringFormat = string
+type StringFormat string
 
 // StringFormat constants matching the JSON Schema format names,
 // "regex" excluded as it is handled by NewConstraintStringRegex.
 const (
-	DateTimeFormat            StringFormat = "date-time"
-	DateFormat                StringFormat = "date"
-	TimeFormat                StringFormat = "time"
-	DurationFormat            StringFormat = "duration"
-	EmailFormat               StringFormat = "email"
-	IdnEmailFormat            StringFormat = "idn-email"
-	HostnameFormat            StringFormat = "hostname"
-	IdnHostnameFormat         StringFormat = "idn-hostname"
-	Ipv4Format                StringFormat = "ipv4"
-	Ipv6Format                StringFormat = "ipv6"
-	UriFormat                 StringFormat = "uri"
-	UriReferenceFormat        StringFormat = "uri-reference"
-	IriFormat                 StringFormat = "iri"
-	IriReferenceFormat        StringFormat = "iri-reference"
-	UuidFormat                StringFormat = "uuid"
-	UriTemplateFormat         StringFormat = "uri-template"
-	JsonPointerFormat         StringFormat = "json-pointer"
-	RelativeJsonPointerFormat StringFormat = "relative-json-pointer"
+	StringFormatDateTime            StringFormat = "date-time"
+	StringFormatDate                StringFormat = "date"
+	StringFormatTime                StringFormat = "time"
+	StringFormatDuration            StringFormat = "duration"
+	StringFormatEmail               StringFormat = "email"
+	StringFormatIDNEmail            StringFormat = "idn-email"
+	StringFormatHostname            StringFormat = "hostname"
+	StringFormatIDNHostname         StringFormat = "idn-hostname"
+	StringFormatIPv4                StringFormat = "ipv4"
+	StringFormatIPv6                StringFormat = "ipv6"
+	StringFormatURI                 StringFormat = "uri"
+	StringFormatURIReference        StringFormat = "uri-reference"
+	StringFormatIRI                 StringFormat = "iri"
+	StringFormatIRIReference        StringFormat = "iri-reference"
+	StringFormatUUID                StringFormat = "uuid"
+	StringFormatURITemplate         StringFormat = "uri-template"
+	StringFormatJSONPointer         StringFormat = "json-pointer"
+	StringFormatRelativeJSONPointer StringFormat = "relative-json-pointer"
 )
 
-var validStringFormats = map[StringFormat]struct{}{
-	DateTimeFormat:            {},
-	DateFormat:                {},
-	TimeFormat:                {},
-	DurationFormat:            {},
-	EmailFormat:               {},
-	IdnEmailFormat:            {},
-	HostnameFormat:            {},
-	IdnHostnameFormat:         {},
-	Ipv4Format:                {},
-	Ipv6Format:                {},
-	UriFormat:                 {},
-	UriReferenceFormat:        {},
-	IriFormat:                 {},
-	IriReferenceFormat:        {},
-	UuidFormat:                {},
-	UriTemplateFormat:         {},
-	JsonPointerFormat:         {},
-	RelativeJsonPointerFormat: {},
+func (sf StringFormat) IsValid() bool {
+	switch sf {
+	case StringFormatDateTime, StringFormatDate, StringFormatTime, StringFormatDuration,
+		StringFormatEmail, StringFormatIDNEmail, StringFormatHostname, StringFormatIDNHostname,
+		StringFormatIPv4, StringFormatIPv6, StringFormatURI, StringFormatURIReference,
+		StringFormatIRI, StringFormatIRIReference, StringFormatUUID, StringFormatURITemplate,
+		StringFormatJSONPointer, StringFormatRelativeJSONPointer:
+		return true
+	}
+	return false
 }
 
 // NewConstraintStringFormat creates a FORMATTED_STRING constraint.
 // StringFormat is a JSON Schema format name (i.e. "email", "date"). When strict is true the
 // value must conform to the format(Not Implemented yet).
 func NewConstraintStringFormat(format StringFormat, strict bool) *ConstraintBuilder {
-	if _, ok := validStringFormats[format]; !ok {
+	if !format.IsValid() {
 		return &ConstraintBuilder{err: fmt.Errorf("invalid string format: %s", format)}
 	}
 	return &ConstraintBuilder{
@@ -307,7 +298,7 @@ func NewConstraintStringFormat(format StringFormat, strict bool) *ConstraintBuil
 			Type: protos.Constraint_FORMATTED_STRING,
 			Kind: &protos.Constraint_FormattedString{
 				FormattedString: &protos.FormattedStringConstraint{
-					Format: format,
+					Format: string(format),
 					Strict: strict,
 				},
 			},

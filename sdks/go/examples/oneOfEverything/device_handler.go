@@ -254,7 +254,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithName(st2138.PolyglotText{"en": "Saturation"})).
 			WithParam("contact_email", st2138.NewParamString("operator@example.com").
 				WithName(st2138.PolyglotText{"en": "Contact Email"}).
-				WithConstraint(st2138.NewConstraintStringFormat(st2138.EmailFormat, true)).
+				WithConstraint(st2138.NewConstraintStringFormat(st2138.StringFormatEmail, true)).
 				WithReadOnly(true)).
 			WithMenuGroup("status", st2138.NewMenuGroup().
 				WithName(st2138.PolyglotText{"en": "Status"}).
