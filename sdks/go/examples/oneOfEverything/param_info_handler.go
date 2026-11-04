@@ -23,9 +23,9 @@ func registerParamInfoHandlers(srv catena.Server, counter *CounterState, state *
 	srv.RegisterParamInfoHandler(1, func(ctx catena.HandlerContext, req catena.ParamInfoRequest, stream catena.Stream[st2138.ParamInfo]) catena.StatusResult {
 		ctx.Logger().Info("GetParamInfo", "slot", req.Slot, "fqoid", req.OidPrefix, "recursive", req.Recursive)
 
-		deviceInfo, ok := buildDeviceDefinition(req.Slot, counter, state)
-		if !ok {
-			return catena.StatusWithCode(catena.StatusCodeNotFound, "device not found")
+		deviceInfo, status := buildDeviceDefinition(req.Slot, counter, state)
+		if status.IsError() {
+			return status
 		}
 
 		return catena.ParamInfosForRequest(req.OidPrefix, deviceInfo, req.Recursive, stream)
@@ -78,24 +78,24 @@ func slotTwoParamInfos(fqoid string, recursive bool, state *ExampleState) ([]st2
 	if fqoid == "" {
 		// product/* is served by the SDK (RegisterProductStruct); omit it here.
 		return []st2138.ParamInfo{
-			st2138.NewParamInfo("volume", st2138.NewPolyglotText("en", "Volume"), st2138.ParamTypeInt32, "", 0),
-			st2138.NewParamInfo("muted", st2138.NewPolyglotText("en", "Muted"), st2138.ParamTypeInt32, "", 0),
-			st2138.NewParamInfo("device_name", st2138.NewPolyglotText("en", "Device Name"), st2138.ParamTypeString, "", 0),
-			st2138.NewParamInfo("struct_example", st2138.NewPolyglotText("en", "Struct Example"), st2138.ParamTypeStruct, "", 0),
-			st2138.NewParamInfo("sample_float", st2138.NewPolyglotText("en", "Sample Float"), st2138.ParamTypeFloat32, "", 0),
+			st2138.NewParamInfo("volume", st2138.PolyglotText{"en": "Volume"}, st2138.ParamTypeInt32, "", 0),
+			st2138.NewParamInfo("muted", st2138.PolyglotText{"en": "Muted"}, st2138.ParamTypeInt32, "", 0),
+			st2138.NewParamInfo("device_name", st2138.PolyglotText{"en": "Device Name"}, st2138.ParamTypeString, "", 0),
+			st2138.NewParamInfo("struct_example", st2138.PolyglotText{"en": "Struct Example"}, st2138.ParamTypeStruct, "", 0),
+			st2138.NewParamInfo("sample_float", st2138.PolyglotText{"en": "Sample Float"}, st2138.ParamTypeFloat32, "", 0),
 			newSampleIntArrayParamInfo(state),
-			st2138.NewParamInfo("sample_float_array", st2138.NewPolyglotText("en", "Sample Float Array"), st2138.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue()))),
-			st2138.NewParamInfo("sample_string_array", st2138.NewPolyglotText("en", "Sample String Array"), st2138.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue()))),
-			st2138.NewParamInfo("sample_binary", st2138.NewPolyglotText("en", "Sample Binary"), st2138.ParamTypeBinary, "", 0),
-			st2138.NewParamInfo("sample_struct_variant", st2138.NewPolyglotText("en", "Sample Struct Variant"), st2138.ParamTypeStructVariant, "", 0),
-			st2138.NewParamInfo("sample_struct_array", st2138.NewPolyglotText("en", "Sample Struct Array"), st2138.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue()))),
-			st2138.NewParamInfo("sample_struct_variant_array", st2138.NewPolyglotText("en", "Sample Struct Variant Array"), st2138.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue()))),
+			st2138.NewParamInfo("sample_float_array", st2138.PolyglotText{"en": "Sample Float Array"}, st2138.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue()))),
+			st2138.NewParamInfo("sample_string_array", st2138.PolyglotText{"en": "Sample String Array"}, st2138.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue()))),
+			st2138.NewParamInfo("sample_binary", st2138.PolyglotText{"en": "Sample Binary"}, st2138.ParamTypeBinary, "", 0),
+			st2138.NewParamInfo("sample_struct_variant", st2138.PolyglotText{"en": "Sample Struct Variant"}, st2138.ParamTypeStructVariant, "", 0),
+			st2138.NewParamInfo("sample_struct_array", st2138.PolyglotText{"en": "Sample Struct Array"}, st2138.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue()))),
+			st2138.NewParamInfo("sample_struct_variant_array", st2138.PolyglotText{"en": "Sample Struct Variant Array"}, st2138.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue()))),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	if strings.HasPrefix(fqoid, "struct_example") {
 		infos := []st2138.ParamInfo{
-			st2138.NewParamInfo("struct_example", st2138.NewPolyglotText("en", "Struct Example"), st2138.ParamTypeStruct, "", 0),
+			st2138.NewParamInfo("struct_example", st2138.PolyglotText{"en": "Struct Example"}, st2138.ParamTypeStruct, "", 0),
 		}
 		if recursive {
 			infos = append(infos,
@@ -114,21 +114,21 @@ func slotTwoParamInfos(fqoid string, recursive bool, state *ExampleState) ([]st2
 	}
 
 	if strings.HasPrefix(fqoid, "device_name") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("device_name", st2138.NewPolyglotText("en", "Device Name"), st2138.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("device_name", st2138.PolyglotText{"en": "Device Name"}, st2138.ParamTypeString, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "volume") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("volume", st2138.NewPolyglotText("en", "Volume"), st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("volume", st2138.PolyglotText{"en": "Volume"}, st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "muted") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("muted", st2138.NewPolyglotText("en", "Muted"), st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("muted", st2138.PolyglotText{"en": "Muted"}, st2138.ParamTypeInt32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	if strings.HasPrefix(fqoid, "sample_struct_variant_array") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_variant_array", st2138.NewPolyglotText("en", "Sample Struct Variant Array"), st2138.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_variant_array", st2138.PolyglotText{"en": "Sample Struct Variant Array"}, st2138.ParamTypeStructVariantArray, "", uint32(len(state.sampleStructVariantArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_struct_variant") {
 		infos := []st2138.ParamInfo{
-			st2138.NewParamInfo("sample_struct_variant", st2138.NewPolyglotText("en", "Sample Struct Variant"), st2138.ParamTypeStructVariant, "", 0),
+			st2138.NewParamInfo("sample_struct_variant", st2138.PolyglotText{"en": "Sample Struct Variant"}, st2138.ParamTypeStructVariant, "", 0),
 		}
 		if recursive {
 			infos = append(infos,
@@ -146,39 +146,39 @@ func slotTwoParamInfos(fqoid string, recursive bool, state *ExampleState) ([]st2
 		}
 	}
 	if strings.HasPrefix(fqoid, "sample_struct_array") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_array", st2138.NewPolyglotText("en", "Sample Struct Array"), st2138.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_struct_array", st2138.PolyglotText{"en": "Sample Struct Array"}, st2138.ParamTypeStructArray, "", uint32(len(state.sampleStructArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_int_array") {
 		return []st2138.ParamInfo{newSampleIntArrayParamInfo(state)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_float_array") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("sample_float_array", st2138.NewPolyglotText("en", "Sample Float Array"), st2138.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_float_array", st2138.PolyglotText{"en": "Sample Float Array"}, st2138.ParamTypeFloat32Array, "", uint32(len(state.sampleFloatArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_string_array") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("sample_string_array", st2138.NewPolyglotText("en", "Sample String Array"), st2138.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_string_array", st2138.PolyglotText{"en": "Sample String Array"}, st2138.ParamTypeStringArray, "", uint32(len(state.sampleStringArrayValue())))}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_binary") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("sample_binary", st2138.NewPolyglotText("en", "Sample Binary"), st2138.ParamTypeBinary, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_binary", st2138.PolyglotText{"en": "Sample Binary"}, st2138.ParamTypeBinary, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 	if strings.HasPrefix(fqoid, "sample_float") {
-		return []st2138.ParamInfo{st2138.NewParamInfo("sample_float", st2138.NewPolyglotText("en", "Sample Float"), st2138.ParamTypeFloat32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return []st2138.ParamInfo{st2138.NewParamInfo("sample_float", st2138.PolyglotText{"en": "Sample Float"}, st2138.ParamTypeFloat32, "", 0)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	return []st2138.ParamInfo{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+fqoid)
 }
 
 func newDashboardUIParamInfo() st2138.ParamInfo {
-	return st2138.NewParamInfo("dashboard_UI", st2138.NewPolyglotText("en", "DashBoard UI"), st2138.ParamTypeString, "", 0)
+	return st2138.NewParamInfo("dashboard_UI", st2138.PolyglotText{"en": "DashBoard UI"}, st2138.ParamTypeString, "", 0)
 }
 
 func newCounterParamInfo() st2138.ParamInfo {
-	return st2138.NewParamInfo("counter", st2138.NewPolyglotText("en", "Counter"), st2138.ParamTypeInt32, "", 0)
+	return st2138.NewParamInfo("counter", st2138.PolyglotText{"en": "Counter"}, st2138.ParamTypeInt32, "", 0)
 }
 
 func newRunningParamInfo() st2138.ParamInfo {
-	return st2138.NewParamInfo("running", st2138.NewPolyglotText("en", "Counter Running Status"), st2138.ParamTypeInt32, "", 0)
+	return st2138.NewParamInfo("running", st2138.PolyglotText{"en": "Counter Running Status"}, st2138.ParamTypeInt32, "", 0)
 }
 
 func newSampleIntArrayParamInfo(state *ExampleState) st2138.ParamInfo {
-	return st2138.NewParamInfo("sample_int_array", st2138.NewPolyglotText("en", "Sample Int Array"), st2138.ParamTypeInt32Array, "", uint32(len(state.sampleIntArrayValue())))
+	return st2138.NewParamInfo("sample_int_array", st2138.PolyglotText{"en": "Sample Int Array"}, st2138.ParamTypeInt32Array, "", uint32(len(state.sampleIntArrayValue())))
 }

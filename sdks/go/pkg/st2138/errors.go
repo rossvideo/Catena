@@ -57,4 +57,7 @@ var (
 	// ErrNotExist indicates a referenced entity does not exist (e.g. an unknown
 	// param OID while walking a device subtree).
 	ErrNotExist = errors.New("does not exist")
+
+	// ErrAlreadyBuilt indicates a proto builder was used after Build() was called.
+	ErrAlreadyBuilt = errors.New("already built")
 )
