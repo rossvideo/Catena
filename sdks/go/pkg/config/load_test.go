@@ -291,7 +291,6 @@ func TestOptionMappings(t *testing.T) {
 		{"GRPC_TLS_MUTUAL_AUTH", "grpc-tls-mutual-auth", "true", true, func(o RuntimeOptions) any { return o.Grpc.TLS.MutualAuth }},
 		{"GRPC_MAX_RECV_MSG_SIZE", "grpc-max-recv-msg-size", "1048576", 1 << 20, func(o RuntimeOptions) any { return o.Grpc.MaxRecvMsgSize }},
 		{"GRPC_MAX_SEND_MSG_SIZE", "grpc-max-send-msg-size", "2097152", 2 << 20, func(o RuntimeOptions) any { return o.Grpc.MaxSendMsgSize }},
-		{"GRPC_MAX_CONCURRENT_STREAMS", "grpc-max-concurrent-streams", "50", uint32(50), func(o RuntimeOptions) any { return o.Grpc.MaxConcurrentStreams }},
 		{"GRPC_MAX_CONNECTION_IDLE", "grpc-max-connection-idle", "30m", 30 * time.Minute, func(o RuntimeOptions) any { return o.Grpc.MaxConnectionIdle }},
 		{"GRPC_MAX_CONNECTION_AGE", "grpc-max-connection-age", "24h", 24 * time.Hour, func(o RuntimeOptions) any { return o.Grpc.MaxConnectionAge }},
 		{"GRPC_MAX_CONNECTION_AGE_GRACE", "grpc-max-connection-age-grace", "1m", time.Minute, func(o RuntimeOptions) any { return o.Grpc.MaxConnectionAgeGrace }},

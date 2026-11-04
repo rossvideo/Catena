@@ -64,7 +64,6 @@ func TestDefaultOptions(t *testing.T) {
 			Reflection:            false,
 			MaxRecvMsgSize:        4 << 20,
 			MaxSendMsgSize:        4 << 20,
-			MaxConcurrentStreams:  100,
 			MaxConnectionIdle:     15 * time.Minute,
 			MaxConnectionAge:      0,
 			MaxConnectionAgeGrace: 0,
@@ -115,7 +114,6 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 		Grpc: GrpcOptions{
 			MaxRecvMsgSize:        1024,
 			MaxSendMsgSize:        2048,
-			MaxConcurrentStreams:  10,
 			MaxConnectionIdle:     1,
 			MaxConnectionAge:      2,
 			MaxConnectionAgeGrace: 3,
@@ -209,7 +207,6 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			},
 			"max_recv_msg_size":               json.Number("1024"),
 			"max_send_msg_size":               json.Number("2048"),
-			"max_concurrent_streams":          json.Number("10"),
 			"max_connection_idle":             json.Number("1"),
 			"max_connection_age":              json.Number("2"),
 			"max_connection_age_grace":        json.Number("3"),

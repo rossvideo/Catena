@@ -279,6 +279,17 @@ All options can be configured via env and CLI.
 - `PREFIX_GRPC_TLS_KEY_FILE` <-> `--grpc-tls-key-file`
 - `PREFIX_GRPC_TLS_CLIENT_CA_FILE` <-> `--grpc-tls-client-ca-file`
 - `PREFIX_GRPC_TLS_MUTUAL_AUTH` <-> `--grpc-tls-mutual-auth`
+- `PREFIX_GRPC_MAX_RECV_MSG_SIZE` <-> `--grpc-max-recv-msg-size` (bytes, must be > 0; default 4 MiB)
+- `PREFIX_GRPC_MAX_SEND_MSG_SIZE` <-> `--grpc-max-send-msg-size` (bytes, must be > 0; default 4 MiB)
+- `PREFIX_GRPC_MAX_CONNECTION_IDLE` <-> `--grpc-max-connection-idle` (Go duration; 0 disables; default `15m`)
+- `PREFIX_GRPC_MAX_CONNECTION_AGE` <-> `--grpc-max-connection-age` (Go duration; 0 disables; default 0 so long-lived streams are not severed)
+- `PREFIX_GRPC_MAX_CONNECTION_AGE_GRACE` <-> `--grpc-max-connection-age-grace` (Go duration; 0 for unlimited)
+- `PREFIX_GRPC_KEEPALIVE_TIME` <-> `--grpc-keepalive-time` (Go duration; default `2h`)
+- `PREFIX_GRPC_KEEPALIVE_TIMEOUT` <-> `--grpc-keepalive-timeout` (Go duration; default `20s`)
+- `PREFIX_GRPC_KEEPALIVE_MIN_TIME` <-> `--grpc-keepalive-min-time` (Go duration; default `5m`)
+- `PREFIX_GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM` <-> `--grpc-keepalive-permit-without-stream`
+
+See the gRPC transport's `GRPC.md` for how these limits interact with streaming RPCs.
 
 ### Server
 

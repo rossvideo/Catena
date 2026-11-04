@@ -158,7 +158,6 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractBool("GRPC_TLS_MUTUAL_AUTH", "grpc-tls-mutual-auth", "Require and verify client certificates on the gRPC transport (mTLS)", &opts.Grpc.TLS.MutualAuth).
 		extractPositiveInt("GRPC_MAX_RECV_MSG_SIZE", "grpc-max-recv-msg-size", "Maximum gRPC message size in bytes the server accepts", &opts.Grpc.MaxRecvMsgSize).
 		extractPositiveInt("GRPC_MAX_SEND_MSG_SIZE", "grpc-max-send-msg-size", "Maximum gRPC message size in bytes the server sends", &opts.Grpc.MaxSendMsgSize).
-		extractUint32("GRPC_MAX_CONCURRENT_STREAMS", "grpc-max-concurrent-streams", "Maximum concurrent gRPC streams per connection (0 for unlimited)", &opts.Grpc.MaxConcurrentStreams).
 		extractPositiveDuration("GRPC_MAX_CONNECTION_IDLE", "grpc-max-connection-idle", "Close gRPC connections with no active RPCs after this duration (0 disables)", &opts.Grpc.MaxConnectionIdle).
 		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE", "grpc-max-connection-age", "Close gRPC connections after this duration, severing open streams (0 disables)", &opts.Grpc.MaxConnectionAge).
 		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE_GRACE", "grpc-max-connection-age-grace", "Grace period for in-flight RPCs after max connection age (0 for unlimited)", &opts.Grpc.MaxConnectionAgeGrace).

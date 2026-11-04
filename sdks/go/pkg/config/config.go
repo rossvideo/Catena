@@ -116,8 +116,6 @@ type GrpcOptions struct {
 	MaxRecvMsgSize int `env:"GRPC_MAX_RECV_MSG_SIZE" flag:"grpc-max-recv-msg-size"`
 	// MaxSendMsgSize is the largest message in bytes the server will send
 	MaxSendMsgSize int `env:"GRPC_MAX_SEND_MSG_SIZE" flag:"grpc-max-send-msg-size"`
-	// MaxConcurrentStreams limits concurrent RPCs per client connection
-	MaxConcurrentStreams uint32 `env:"GRPC_MAX_CONCURRENT_STREAMS" flag:"grpc-max-concurrent-streams"`
 	// MaxConnectionIdle closes connections that have had no active RPCs for this duration
 	MaxConnectionIdle time.Duration `env:"GRPC_MAX_CONNECTION_IDLE" flag:"grpc-max-connection-idle"`
 	// MaxConnectionAge closes connections after this duration regardless of activity
@@ -284,7 +282,6 @@ func DefaultGrpcOptions() GrpcOptions {
 		Reflection:            false,
 		MaxRecvMsgSize:        4 << 20,
 		MaxSendMsgSize:        4 << 20,
-		MaxConcurrentStreams:  100,
 		MaxConnectionIdle:     15 * time.Minute,
 		MaxConnectionAge:      0, // disabled by default to avoid severing long-lived connections
 		MaxConnectionAgeGrace: 0,
@@ -388,7 +385,6 @@ func (o GrpcOptions) LogValue() slog.Value {
 		slog.Any("tls", o.TLS),
 		slog.Int("max_recv_msg_size", o.MaxRecvMsgSize),
 		slog.Int("max_send_msg_size", o.MaxSendMsgSize),
-		slog.Uint64("max_concurrent_streams", uint64(o.MaxConcurrentStreams)),
 		slog.Duration("max_connection_idle", o.MaxConnectionIdle),
 		slog.Duration("max_connection_age", o.MaxConnectionAge),
 		slog.Duration("max_connection_age_grace", o.MaxConnectionAgeGrace),
