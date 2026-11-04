@@ -187,17 +187,28 @@ func NewParamData(payload ...DataPayload) *ParamBuilder {
 // cannot be distinguished from the value alone.
 func NewParamFromValue(v Value) *ParamBuilder {
 	pt := paramTypeFromValueKind(v.Proto)
-	var err error
+	cp := &ParamBuilder{proto: &protos.Param{Type: pt}}
 	if pt == protos.ParamType_UNDEFINED {
-		err = fmt.Errorf("NewParamFromValue: could not infer param type from value")
+		cp.err = fmt.Errorf("NewParamFromValue: could not infer param type from value")
+		return cp
 	}
-	return &ParamBuilder{
-		proto: &protos.Param{
-			Type:  pt,
-			Value: v.Proto,
-		},
-		err: err,
+
+	var err error
+	var params map[string]*protos.Param
+	switch pt {
+	case protos.ParamType_STRUCT:
+		params, err = structFieldDescriptors(v.Proto.GetStructValue())
+	case protos.ParamType_STRUCT_VARIANT:
+		params, err = variantDescriptors(v.Proto.GetStructVariantValue())
+	case protos.ParamType_STRUCT_ARRAY:
+		params, err = mergeArrayDescriptors(v.Proto.GetStructArrayValues().GetStructValues(), structFieldDescriptors)
+	case protos.ParamType_STRUCT_VARIANT_ARRAY:
+		params, err = mergeArrayDescriptors(v.Proto.GetStructVariantArrayValues().GetStructVariants(), variantDescriptors)
+	default:
+		cp.proto.Value = v.Proto
+		return cp
 	}
+	return setInferredValue(cp, "NewParamFromValue", v.Proto, params, err)
 }
 
 // --- Factory helper functions ---

@@ -1248,6 +1248,16 @@ func TestNewParamFromValue_Struct(t *testing.T) {
 	if cp.Proto.GetType() != protos.ParamType_STRUCT {
 		t.Errorf("expected STRUCT, got %v", cp.Proto.GetType())
 	}
+	fields := cp.Proto.GetValue().GetStructValue().GetFields()
+	if fields["k"].GetStringValue() != "v" {
+		t.Errorf("expected struct field 'k'='v', got %q", fields["k"].GetStringValue())
+	}
+	if len(cp.Proto.GetParams()) != 1 {
+		t.Errorf("expected 1 param, got %d", len(cp.Proto.GetParams()))
+	}
+	if cp.Proto.GetParams()["k"] == nil {
+		t.Error("expected param 'k' to be set")
+	}
 }
 
 func TestNewParamFromValue_StructVariant(t *testing.T) {
@@ -1258,6 +1268,13 @@ func TestNewParamFromValue_StructVariant(t *testing.T) {
 	}
 	if cp.Proto.GetType() != protos.ParamType_STRUCT_VARIANT {
 		t.Errorf("expected STRUCT_VARIANT, got %v", cp.Proto.GetType())
+	}
+	sv := cp.Proto.GetValue().GetStructVariantValue()
+	if sv.GetStructVariantType() != "t" {
+		t.Errorf("expected struct_variant_type 't', got %q", sv.GetStructVariantType())
+	}
+	if sv.GetValue().GetInt32Value() != 0 {
+		t.Errorf("expected value 0, got %d", sv.GetValue().GetInt32Value())
 	}
 }
 
@@ -1270,6 +1287,13 @@ func TestNewParamFromValue_StructArray(t *testing.T) {
 	if cp.Proto.GetType() != protos.ParamType_STRUCT_ARRAY {
 		t.Errorf("expected STRUCT_ARRAY, got %v", cp.Proto.GetType())
 	}
+	list := cp.Proto.GetValue().GetStructArrayValues().GetStructValues()
+	if len(list) != 1 {
+		t.Fatalf("expected 1 struct, got %d", len(list))
+	}
+	if list[0].GetFields()["a"].GetInt32Value() != 1 {
+		t.Error("expected first struct field a=1")
+	}
 }
 
 func TestNewParamFromValue_StructVariantArray(t *testing.T) {
@@ -1280,6 +1304,16 @@ func TestNewParamFromValue_StructVariantArray(t *testing.T) {
 	}
 	if cp.Proto.GetType() != protos.ParamType_STRUCT_VARIANT_ARRAY {
 		t.Errorf("expected STRUCT_VARIANT_ARRAY, got %v", cp.Proto.GetType())
+	}
+	list := cp.Proto.GetValue().GetStructVariantArrayValues().GetStructVariants()
+	if len(list) != 1 {
+		t.Fatalf("expected 1 variant, got %d", len(list))
+	}
+	if list[0].GetStructVariantType() != "t" {
+		t.Error("expected first variant type 't'")
+	}
+	if list[0].GetValue().GetInt32Value() != 0 {
+		t.Error("expected value 0")
 	}
 }
 
