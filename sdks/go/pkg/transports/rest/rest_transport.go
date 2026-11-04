@@ -44,6 +44,7 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -264,7 +265,7 @@ func (t *Transport) createHttpHandler() http.Handler {
 func (t *Transport) handlerWithRequestBodySizeLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bodySizeLimit := t.maxBodyBytes
-		if isAssetWrite(r) {
+		if isAssetWriteEndpoint(r) {
 			bodySizeLimit = t.maxAssetBodyBytes
 		}
 
@@ -277,7 +278,7 @@ func (t *Transport) handlerWithRequestBodySizeLimit(next http.Handler) http.Hand
 }
 
 // isAssetWrite checks if a request is a POST or PUT request for /st2138-api/v1/{slot}/asset/{fqoid...}.
-func isAssetWrite(r *http.Request) bool {
+func isAssetWriteEndpoint(r *http.Request) bool {
 	if r.Method != http.MethodPost && r.Method != http.MethodPut {
 		return false
 	}
@@ -285,13 +286,25 @@ func isAssetWrite(r *http.Request) bool {
 	return len(parts) >= 4 && parts[0] == "st2138-api" && parts[1] == "v1" && parts[3] == "asset"
 }
 
-// writeHTTPPayloadTooLarge writes HTTP 413 with a JSON error body.
-func (t *Transport) writeHTTPPayloadTooLarge(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusRequestEntityTooLarge)
-	msg := http.StatusText(http.StatusRequestEntityTooLarge)
-	if t.isDevMode() {
-		msg = "request body too large"
+// writeError maps a request-parsing error onto one HTTP response.
+// *http.MaxBytesError is 413. A statusError sentinel uses the code it carries.
+// Anything else is 400. Dev mode writes err.Error(); otherwise the body is
+// the standard status text.
+func (t *Transport) writeError(w http.ResponseWriter, err error) {
+	status := http.StatusBadRequest
+
+	if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
+		status = http.StatusRequestEntityTooLarge
+	} else if se, ok := errors.AsType[*statusError](err); ok {
+		status = se.status
 	}
+
+	msg := http.StatusText(status)
+	if t.isDevMode() {
+		msg = err.Error()
+	}
+
+	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
@@ -650,13 +663,9 @@ func (t *Transport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, 
 	case http.MethodPut:
 		// Read request body
 		reqValue, err := ReadRequestJSON(r)
-		if err.Code != catena.StatusCodeOk {
+		if err != nil {
 			t.log.Error("failed to read request", "error", err)
-			if err.Error == "request body too large" {
-				t.writeHTTPPayloadTooLarge(w)
-				return
-			}
-			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
+			t.writeError(w, err)
 			return
 		}
 
@@ -689,13 +698,9 @@ func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request,
 	}
 
 	entries, err := ReadMultiSetValuesRequestJSON(r)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.log.Error("failed to read request", "error", err)
-		if err.Error == "request body too large" {
-			t.writeHTTPPayloadTooLarge(w)
-			return
-		}
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
+		t.writeError(w, err)
 		return
 	}
 
@@ -831,11 +836,7 @@ func (t *Transport) handleWriteAsset(
 	payload, err := ReadAssetRequestJSON(r)
 	if err != nil {
 		t.log.Error("failed to read asset request", "error", err)
-		if isRequestBodyTooLargeError(err) {
-			t.writeHTTPPayloadTooLarge(w)
-			return
-		}
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, err.Error()))
+		t.writeError(w, err)
 		return
 	}
 
@@ -987,11 +988,7 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 	case http.MethodPost, http.MethodPut:
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			if isRequestBodyTooLargeError(err) {
-				t.writeHTTPPayloadTooLarge(w)
-				return
-			}
-			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "failed to read request body"))
+			t.writeError(w, fmt.Errorf("failed to read request body: %w", err))
 			return
 		}
 
@@ -1081,20 +1078,14 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 	r.Body.Close()
 	if err != nil {
 		t.log.Error("failed to read command payload", "error", err)
-		if isRequestBodyTooLargeError(err) {
-			t.writeHTTPPayloadTooLarge(w)
-			return
-		}
-		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
-		t.writeHTTPResult(w, res, val)
+		t.writeError(w, fmt.Errorf("failed to read command payload: %w", err))
 		return
 	}
 	if len(body) > 0 {
 		reqValue, parseErr := parseValueJSON(r.Header.Get("Content-Type"), body)
-		if parseErr.IsError() {
+		if parseErr != nil {
 			t.log.Error("failed to read command payload", "error", parseErr)
-			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
-			t.writeHTTPResult(w, res, val)
+			t.writeError(w, parseErr)
 			return
 		}
 		var errProto error
