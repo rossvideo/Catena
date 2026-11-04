@@ -708,9 +708,9 @@ func TestTransport_SetValue_InvalidContentType(t *testing.T) {
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness",
 		`{"int32_value": 42}`, map[string]string{"Content-Type": "text/plain"})
 	assertStatus(t, rec, http.StatusBadRequest)
-	errMsg := assertHasError(t, rec)
-	if errMsg != "invalid request body" {
-		t.Errorf("expected error 'invalid request body', got %s", errMsg)
+	const expectedErrorMessage = "unsupported content type: text/plain, expected application/json"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
 	}
 	if handlerCalled {
 		t.Error("registered handler should not have been called")
@@ -784,8 +784,9 @@ func TestTransport_SetValues_InvalidContentType(t *testing.T) {
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
 		`{"values":[]}`, map[string]string{"Content-Type": "text/plain"})
 	assertStatus(t, rec, http.StatusBadRequest)
-	if errMsg := assertHasError(t, rec); errMsg != "invalid request body" {
-		t.Errorf("expected error 'invalid request body', got %s", errMsg)
+	const expectedErrorMessage = "unsupported content type: text/plain, expected application/json"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
 	}
 	if handlerCalled {
 		t.Error("handler should not have been called")
@@ -796,6 +797,10 @@ func TestTransport_SetValues_MalformedBody(t *testing.T) {
 	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", `{"values": not-json}`)
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "failed to unmarshal request body:"
+	if errorMsg := assertHasError(t, rec); !strings.HasPrefix(errorMsg, expectedErrorMessage) {
+		t.Errorf("expected error prefix %q, got %q", expectedErrorMessage, errorMsg)
+	}
 }
 
 func TestTransport_SetValues_FromProtoError(t *testing.T) {
@@ -803,6 +808,10 @@ func TestTransport_SetValues_FromProtoError(t *testing.T) {
 	body := `{"values":[{"oid":"param","value":{"struct_variant_value":{"variant_name":"test"}}}]}`
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "invalid value at index 0: failed to convert struct variant value: nil Value: invalid argument"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
+	}
 }
 
 func TestTransport_SetValues_MethodNotAllowed(t *testing.T) {
@@ -1077,6 +1086,10 @@ func TestTransport_CreateAsset_InvalidBody(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", "{ not valid json")
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "failed to unmarshal request body:"
+	if errorMsg := assertHasError(t, rec); !strings.HasPrefix(errorMsg, expectedErrorMessage) {
+		t.Errorf("expected error prefix %q, got %q", expectedErrorMessage, errorMsg)
+	}
 	if handlerCalled {
 		t.Error("handler should not be called with invalid body")
 	}
@@ -1094,6 +1107,10 @@ func TestTransport_UpdateAsset_MissingContentType(t *testing.T) {
 	// No Content-Type header set.
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/asset/logo", assetRequestBody, nil)
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "missing Content-Type header"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
+	}
 	if handlerCalled {
 		t.Error("handler should not be called without Content-Type")
 	}
@@ -1273,12 +1290,20 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 		rec := httptest.NewRecorder()
 		transport.mux.ServeHTTP(rec, req)
 		assertStatus(t, rec, http.StatusBadRequest)
+		const expectedErrorMessage = "failed to read command payload: simulated read error"
+		if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+			t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
+		}
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
 		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/test", `{invalid json}`)
 		assertStatus(t, rec, http.StatusBadRequest)
+		const expectedErrorMessage = "failed to unmarshal request body:"
+		if errorMsg := assertHasError(t, rec); !strings.HasPrefix(errorMsg, expectedErrorMessage) {
+			t.Errorf("expected error prefix %q, got %q", expectedErrorMessage, errorMsg)
+		}
 	})
 
 	t.Run("FromProtoError", func(t *testing.T) {
@@ -3058,8 +3083,10 @@ func TestTransport_LanguagePackInvalidJSON(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", `{invalid json}`)
 
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected status 400, got %d: %s", rec.Code, rec.Body.String())
+	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "invalid language pack request body"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
 	}
 }
 
