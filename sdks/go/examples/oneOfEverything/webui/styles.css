@@ -207,12 +207,6 @@ h1 {
     color: var(--text-muted);
 }
 
-.counter-model {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text-muted);
-    letter-spacing: 0;
-}
-
 .counter-buttons {
     display: flex;
     gap: 0.5rem;

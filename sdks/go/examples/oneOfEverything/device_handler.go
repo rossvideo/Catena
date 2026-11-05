@@ -235,6 +235,12 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				saturation = typed
 			}
 		}
+		contactEmail := ""
+		if value, ok := state.slotOneParams.Load("contact_email"); ok {
+			if typed, ok := value.(string); ok {
+				contactEmail = typed
+			}
+		}
 		state.mu.RUnlock()
 
 		device, err := st2138.NewDevice(1).
@@ -252,7 +258,7 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithName(st2138.PolyglotText{"en": "Contrast"})).
 			WithParam("saturation", st2138.NewParamInt32(saturation).
 				WithName(st2138.PolyglotText{"en": "Saturation"})).
-			WithParam("contact_email", st2138.NewParamString("operator@example.com").
+			WithParam("contact_email", st2138.NewParamString(contactEmail).
 				WithName(st2138.PolyglotText{"en": "Contact Email"}).
 				WithConstraint(st2138.NewConstraintStringFormat(st2138.StringFormatEmail, true)).
 				WithReadOnly(true)).

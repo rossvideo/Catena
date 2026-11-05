@@ -265,14 +265,7 @@ async function setParam(name, value, type) {
     }
 }
 
-// Fills the "(model)" suffix on the Counter Demo title from the read-only
-// "counter_model" string param on slot 0.
-function updateCounterModel(model) {
-    const el = document.getElementById('counterModel');
-    if (el) el.textContent = model ? `(${model})` : '';
-}
-
-// Shows the read-only "contact_email" string param on slot 0 in the footer.
+// Shows the read-only "contact_email" string param on slot 1 in the footer.
 function updateContactEmail(email) {
     const el = document.getElementById('contactEmail');
     if (!el) return;
