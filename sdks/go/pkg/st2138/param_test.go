@@ -1071,6 +1071,34 @@ func TestSetValue_OK(t *testing.T) {
 	}
 }
 
+func TestSetValue_StructLike(t *testing.T) {
+	cp, err := NewParamStruct().WithParam("field", NewParamInt32()).WithParam("field2", NewParamString()).Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
+	res := cp.SetValue(map[string]any{"field": int32(1), "field2": "value2"})
+	if res != nil {
+		t.Fatalf("expected OK, got %v", res)
+	}
+	if cp.Proto.GetValue().GetStructValue().GetFields()["field"].GetInt32Value() != 1 {
+		t.Errorf("expected 1, got %d", cp.Proto.GetValue().GetStructValue().GetFields()["field"].GetInt32Value())
+	}
+	if cp.Proto.GetValue().GetStructValue().GetFields()["field2"].GetStringValue() != "value2" {
+		t.Errorf("expected value2, got %q", cp.Proto.GetValue().GetStructValue().GetFields()["field2"].GetStringValue())
+	}
+}
+
+func TestSetValue_StructLikeErrors(t *testing.T) {
+	cp, err := NewParamStruct().WithParam("field", NewParamInt32()).WithParam("field2", NewParamString()).Build()
+	if err != nil {
+		t.Fatalf("failed to build param: %v", err)
+	}
+	res := cp.SetValue(map[string]any{"field": int32(1)})
+	if res == nil || !strings.Contains(res.Error(), "struct value has different number of fields than descriptors:") {
+		t.Fatalf("expected specificerror, got %v", res)
+	}
+}
+
 func TestSetValue_TypeMismatch(t *testing.T) {
 	cp, err := NewParamInt32(0).Build()
 	if err != nil {
@@ -1126,7 +1154,7 @@ func TestGetValue_Nil(t *testing.T) {
 }
 
 func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
-	cp, err := NewParamStruct().Build()
+	cp, err := NewParamStruct().WithParam("x", NewParamInt32()).WithParam("y", NewParamInt32()).Build()
 	if err != nil {
 		t.Fatalf("failed to build param: %v", err)
 	}
@@ -1166,7 +1194,7 @@ func TestNewParamFromValue_Int32(t *testing.T) {
 
 func TestNewParamFromValue_Struct(t *testing.T) {
 	v, _ := ToValue(map[string]any{"k": "v"})
-	cp, err := NewParamFromValue(v).Build()
+	cp, err := NewParamFromValue(v).WithParam("k", NewParamString()).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -1177,7 +1205,7 @@ func TestNewParamFromValue_Struct(t *testing.T) {
 
 func TestNewParamFromValue_StructVariant(t *testing.T) {
 	v, _ := ToValue(StructVariantValue{StructVariantType: "t", Value: int32(0)})
-	cp, err := NewParamFromValue(v).Build()
+	cp, err := NewParamFromValue(v).WithParam("t", NewParamInt32()).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -1188,7 +1216,7 @@ func TestNewParamFromValue_StructVariant(t *testing.T) {
 
 func TestNewParamFromValue_StructArray(t *testing.T) {
 	v, _ := ToValue([]map[string]any{{"a": int32(1)}})
-	cp, err := NewParamFromValue(v).Build()
+	cp, err := NewParamFromValue(v).WithParam("a", NewParamInt32()).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -1199,7 +1227,7 @@ func TestNewParamFromValue_StructArray(t *testing.T) {
 
 func TestNewParamFromValue_StructVariantArray(t *testing.T) {
 	v, _ := ToValue([]StructVariantValue{{StructVariantType: "t", Value: int32(0)}})
-	cp, err := NewParamFromValue(v).Build()
+	cp, err := NewParamFromValue(v).WithParam("t", NewParamInt32()).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -1382,6 +1410,16 @@ func TestNewParamData_BothPayloadAndUrl(t *testing.T) {
 	p, err := cp.Build()
 	if err == nil {
 		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
+	}
+}
+
+func TestWithParam_EmptyOid(t *testing.T) {
+	p, err := NewParamStruct().WithParam("", NewParamString()).Build()
+	if err == nil || !strings.Contains(err.Error(), "WithParam called with empty oid") {
+		t.Fatalf("expected error for builder with empty oid, got %v", err)
 	}
 	if p != (Param{}) {
 		t.Errorf("expected empty Param for builder with error, got %v", p)
@@ -1690,21 +1728,6 @@ func TestSetValue_FailureLeavesValueNil(t *testing.T) {
 	}
 }
 
-// structFieldDescriptors is unreachable with empty fields via NewParamStruct
-// (Toproto rejects nil/empty maps), so exercise the guard directly: a nil or
-// field-less struct value must yield no descriptors rather than an empty map.
-func TestStructFieldDescriptors_NoFields(t *testing.T) {
-	if got := structFieldDescriptors(nil); got != nil {
-		t.Errorf("expected nil descriptors for nil struct value, got %v", got)
-	}
-	if got := structFieldDescriptors(&protos.StructValue{}); got != nil {
-		t.Errorf("expected nil descriptors for struct value without fields, got %v", got)
-	}
-	if got := structFieldDescriptors(&protos.StructValue{Fields: map[string]*protos.Value{}}); got != nil {
-		t.Errorf("expected nil descriptors for struct value with empty fields map, got %v", got)
-	}
-}
-
 // A valueless sub-param can refine a descriptor (name,
 // constraint, ...) without overriding the current value.
 func TestWithParam_ValuelessDoesNotOverrideMapValue(t *testing.T) {
@@ -1803,6 +1826,77 @@ func TestParamBuilder_BuildSurfacesErrors(t *testing.T) {
 	cp.err = errors.New("test error")
 	if _, err := cp.Build(); err == nil {
 		t.Fatal("expected error for builder with error")
+	}
+}
+
+func TestParamBuilder_StructLikeValidation(t *testing.T) {
+	structValue := map[string]any{"field": int32(1), "field2": "value2"}
+	structVariantValue := StructVariantValue{StructVariantType: "field", Value: int32(1)}
+	structArrayValue := []map[string]any{{"field": int32(1), "field2": "value2"}, {"field": int32(2), "field2": "value2"}}
+	structVariantArrayValue := []StructVariantValue{{StructVariantType: "field", Value: int32(1)}, {StructVariantType: "field2", Value: "value2"}}
+	structNestedValue := map[string]any{"field": map[string]any{"field2": "value2"}}
+	structVariantNestedValue := StructVariantValue{StructVariantType: "field", Value: StructVariantValue{StructVariantType: "field2", Value: "value2"}}
+
+	tests := []struct {
+		name  string
+		param *ParamBuilder
+		value any
+	}{
+		{"STRUCT", NewParamStruct().WithParam("field", NewParamInt32()).WithParam("field2", NewParamString()).WithValue(structValue), structValue},
+		{"STRUCT_VARIANT", NewParamStructVariant().WithParam("field", NewParamInt32()).WithParam("field2", NewParamString()).WithValue(structVariantValue), structVariantValue},
+		{"STRUCT_ARRAY", NewParamStructArray().WithParam("field", NewParamInt32()).WithParam("field2", NewParamString()).WithValue(structArrayValue), structArrayValue},
+		{"STRUCT_VARIANT_ARRAY", NewParamStructVariantArray().WithParam("field", NewParamInt32()).WithParam("field2", NewParamString()).WithValue(structVariantArrayValue), structVariantArrayValue},
+		{"STRUCT_NESTED", NewParamStruct().WithParam("field", NewParamStruct().WithParam("field2", NewParamString())).WithValue(structNestedValue), structNestedValue},
+		{"STRUCT_VARIANT_NESTED", NewParamStructVariant().WithParam("field", NewParamStructVariant().WithParam("field2", NewParamString())).WithValue(structVariantNestedValue), structVariantNestedValue},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p, err := tt.param.Build()
+			if err != nil {
+				t.Fatal("expected no error for builder with valid value", err)
+			}
+			if p.Proto.GetValue() == nil {
+				t.Error("expected non-nil value for struct-like param")
+			}
+		})
+	}
+}
+
+func TestParamBuilder_StructLikeValidationErrors(t *testing.T) {
+	tests := []struct {
+		name      string
+		param     *ParamBuilder
+		wantError string
+	}{
+		{"STRUCT_MISSING_DESCRIPTOR", NewParamStruct().WithValue(map[string]any{"field": int32(1)}),
+			"struct value has different number of fields than descriptors:"},
+		{"STRUCT_VARIANT_MISSING_DESCRIPTOR", NewParamStructVariant().WithValue(StructVariantValue{StructVariantType: "field", Value: int32(1)}),
+			"struct variant type does not match any descriptor:"},
+		{"STRUCT_ARRAY_MISSING_DESCRIPTOR", NewParamStructArray().WithValue([]map[string]any{{"field": int32(1)}, {"field2": int32(2)}}),
+			"struct value has different number of fields than descriptors:"},
+		{"STRUCT_VARIANT_ARRAY_MISSING_DESCRIPTOR", NewParamStructVariantArray().WithValue([]StructVariantValue{{StructVariantType: "field", Value: int32(1)}, {StructVariantType: "field2", Value: int32(2)}}),
+			"struct variant type does not match any descriptor:"},
+		{"STRUCT_MISMATCH_DESCRIPTOR", NewParamStruct().WithParam("field", NewParamInt32()).WithValue(map[string]any{"notField": int32(1)}),
+			"struct value contains unknown field:"},
+		{"STRUCT_MISMATCH_DESCRIPTOR_TYPE", NewParamStruct().WithParam("field", NewParamInt32()).WithValue(map[string]any{"field": float32(1.1)}),
+			"struct value field field has incompatible type with descriptor:"},
+		{"STRUCT_VARIANT_MISMATCH_DESCRIPTOR_TYPE", NewParamStructVariant().WithParam("field", NewParamInt32()).WithValue(StructVariantValue{StructVariantType: "field", Value: float32(1.1)}),
+			"struct variant value and descriptor have incompatible fundamental types:"},
+		{"STRUCT_NESTED_MISSING_DESCRIPTOR", NewParamStruct().WithParam("field", NewParamStruct()).WithValue(map[string]any{"field": map[string]any{"field2": int32(1)}}),
+			"struct value has different number of fields than descriptors:"},
+		{"STRUCT_VARIANT_NESTED_MISSING_DESCRIPTOR", NewParamStructVariant().WithParam("field", NewParamStructVariant()).WithValue(StructVariantValue{StructVariantType: "field", Value: StructVariantValue{StructVariantType: "field2", Value: int32(1)}}),
+			"struct variant type does not match any descriptor:"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p, err := tt.param.Build()
+			if err == nil || !strings.Contains(err.Error(), tt.wantError) {
+				t.Fatalf("expected %v, got %v", tt.wantError, err)
+			}
+			if p != (Param{}) {
+				t.Errorf("expected empty Param, got %v", p)
+			}
+		})
 	}
 }
 

@@ -80,34 +80,16 @@ func NewParamString(value ...string) *ParamBuilder {
 	})
 }
 
-// NewParamStruct creates a STRUCT param. When a map of field values is given,
-// it becomes the struct's Value and a valueless sub-param descriptor is
-// auto-created for every field (recursively for nested maps), so trivial
-// fields need no explicit WithParam calls.
+// NewParamStruct creates a STRUCT param. Values and their matching
+// descriptors must be added using WithValue and WithParam before being built.
+// All descriptors must have a matching field in the StructValue.
 func NewParamStruct() *ParamBuilder {
 	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
 }
 
-// structFieldDescriptors builds a valueless sub-param descriptor for each
-// field of a struct value, inferring each descriptor's type from the field's
-// value kind. Nested struct fields recurse so their fields get descriptors
-// too.
-func structFieldDescriptors(sv *protos.StructValue) map[string]*protos.Param {
-	fields := sv.GetFields()
-	if len(fields) == 0 {
-		return nil
-	}
-	params := make(map[string]*protos.Param, len(fields))
-	for oid, fv := range fields {
-		p := &protos.Param{Type: paramTypeFromValueKind(fv)}
-		if nested := fv.GetStructValue(); nested != nil {
-			p.Params = structFieldDescriptors(nested)
-		}
-		params[oid] = p
-	}
-	return params
-}
-
+// NewParamStructVariant creates a STRUCT_VARIANT param. Values and descriptors
+// must be added using WithValue and WithParam before being built.
+// At least one descriptor matching the value's StructVariantType must be added.
 func NewParamStructVariant() *ParamBuilder {
 	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
 }
@@ -136,10 +118,16 @@ func NewParamBinary(value ...[]byte) *ParamBuilder {
 	})
 }
 
+// NewParamStructArray creates a STRUCT_ARRAY param. Values and descriptors
+// must be added using WithValue and WithParam before being built.
+// All elements must implement all added descriptors.
 func NewParamStructArray() *ParamBuilder {
 	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
 }
 
+// NewParamStructVariantArray creates a STRUCT_VARIANT_ARRAY param. Values and descriptors
+// must be added using WithValue and WithParam before being built.
+// All elements must implement one of the added descriptors.
 func NewParamStructVariantArray() *ParamBuilder {
 	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
 }
@@ -174,7 +162,8 @@ func NewParamData(payload ...DataPayload) *ParamBuilder {
 // NewParamFromValue creates a Param by inferring the ParamType from the
 // Value's proto kind. This allows dynamic param creation regardless of type.
 // DataPayload values are mapped to ParamType_DATA since the two
-// cannot be distinguished from the value alone.
+// cannot be distinguished from the value alone. Struct-like values must have
+// a matching descriptor added using WithParam before being built.
 func NewParamFromValue(v Value) *ParamBuilder {
 	pt := paramTypeFromValueKind(v.Proto)
 	var err error
@@ -355,13 +344,19 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 // WithParam attaches a sub-param descriptor under oid. On a STRUCT parent, a
 // sub-param with a value contributes that value to the struct's own
 // Value.Fields[oid]; the stored descriptor is kept valueless, since field
-// values live in the struct's Value and sub-params are descriptors only. A
-// valueless sub-param never touches the parent's Value, so it can refine a
-// descriptor (name, constraint, ...) without overriding a value that came
-// from the NewParamStruct map.
+// values live in the struct's Value and sub-params are descriptors only. On a
+// STRUCT_VARIANT parent, a sub-param with a value sets the value if not set already,
+// erroring otherwise. Sub-params with a value always error on STRUCT_ARRAY and
+// STRUCT_VARIANT_ARRAY parents. A valueless sub-param never touches the parent's
+// Value, so it can refine a descriptor (name, constraint, ...) without overriding
+// a pre-existing value.
 func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder {
 	p, ok := buildChild(&cp.err, param, (*ParamBuilder).Build, "WithParam")
 	if !ok {
+		return cp
+	}
+	if oid == "" {
+		cp.err = fmt.Errorf("WithParam called with empty oid")
 		return cp
 	}
 	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
@@ -476,9 +471,17 @@ func (cp *ParamBuilder) WithTemplateOid(oid string) *ParamBuilder {
 
 // Build returns a usable Param from the builder. If the builder has an error, it
 // returns an empty Param and the error. Must be called after all builder methods have been called.
+// Validates struct-like params values against their descriptors.
 func (cp *ParamBuilder) Build() (Param, error) {
 	if cp.err != nil {
 		return Param{}, cp.err
+	}
+
+	if _, ok := paramTypesWithSubParams[cp.proto.Type]; ok {
+		cp.err = validateStructLikeValue(cp.proto.Value, cp.proto.Params, cp.proto.Type)
+		if cp.err != nil {
+			return Param{}, cp.err
+		}
 	}
 	cp.err = ErrAlreadyBuilt
 	return Param{Proto: cp.proto}, nil
@@ -501,6 +504,11 @@ func (cp *Param) SetValue(v any) error {
 	if !isValueValidForParamType(pv, cp.Proto.Type) {
 		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.Proto.Type.String(), ErrInvalid)
 	}
+	if _, ok := paramTypesWithSubParams[cp.Proto.Type]; ok {
+		if err := validateStructLikeValue(pv, cp.Proto.Params, cp.Proto.Type); err != nil {
+			return err
+		}
+	}
 	cp.Proto.Value = pv
 	return nil
 }
@@ -515,6 +523,88 @@ func (cp *Param) GetValue() (any, error) {
 }
 
 // --- Validation helpers ---
+
+// validateStructLikeValue validates a struct-like's value against its descriptors.
+// Recursively validates nested struct-like values.
+// STRUCT values must have a match for all descriptors in the value's fields.
+// STRUCT_VARIANT values only need to match one descriptor.
+func validateStructLikeValue(v *protos.Value, p map[string]*protos.Param, parentType protos.ParamType) error {
+	if v == nil {
+		return nil
+	}
+	switch parentType {
+	case protos.ParamType_STRUCT:
+		return validateStructValue(v.GetStructValue(), p)
+	case protos.ParamType_STRUCT_VARIANT:
+		return validateStructVariantValue(v.GetStructVariantValue(), p)
+	case protos.ParamType_STRUCT_ARRAY:
+		elems := v.GetStructArrayValues()
+		for _, elem := range elems.StructValues {
+			if err := validateStructValue(elem, p); err != nil {
+				return err
+			}
+		}
+	case protos.ParamType_STRUCT_VARIANT_ARRAY:
+		elems := v.GetStructVariantArrayValues()
+		for _, elem := range elems.StructVariants {
+			if err := validateStructVariantValue(elem, p); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// validateStructValue is a helper for validateStructLikeValue. Handles STRUCT values.
+func validateStructValue(v *protos.StructValue, p map[string]*protos.Param) error {
+	if len(v.Fields) != len(p) {
+		return fmt.Errorf("struct value has different number of fields than descriptors: value_fields=%d, descriptors=%d",
+			len(v.Fields), len(p),
+		)
+	}
+	for oid, value := range v.Fields {
+		param, ok := p[oid]
+		if !ok {
+			return fmt.Errorf("struct value contains unknown field: oid=%s", oid)
+		}
+		valueType := paramTypeFromValueKind(value)
+		if valueType != param.Type {
+			return fmt.Errorf("struct value field %s has incompatible type with descriptor: value_type=%s, descriptor_type=%s",
+				oid, valueType.String(), param.Type.String())
+		}
+		if _, ok := paramTypesWithSubParams[valueType]; ok {
+			if err := validateStructLikeValue(value, param.Params, valueType); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// validateStructVariantValue is a helper for validateStructLikeValue. Handles STRUCT_VARIANT values.
+func validateStructVariantValue(v *protos.StructVariantValue, p map[string]*protos.Param) error {
+	var validValue bool = false
+	for oid, desc := range p {
+		if v.StructVariantType == oid {
+			valueType := paramTypeFromValueKind(v.Value)
+			if valueType != desc.Type {
+				return fmt.Errorf("struct variant value and descriptor have incompatible fundamental types: value_type=%s, descriptor_type=%s",
+					valueType.String(), desc.Type.String())
+			}
+			if _, ok := paramTypesWithSubParams[valueType]; ok {
+				if err := validateStructLikeValue(v.Value, desc.Params, valueType); err != nil {
+					return err
+				}
+			}
+			validValue = true
+		}
+	}
+	if !validValue {
+		return fmt.Errorf("struct variant type does not match any descriptor: value_type=%s",
+			v.StructVariantType)
+	}
+	return nil
+}
 
 // isValueValidForParamType checks whether a Value kind is compatible with the
 // given ParamType.
