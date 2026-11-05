@@ -84,22 +84,8 @@ func NewParamString(value ...string) *ParamBuilder {
 // it becomes the struct's Value and a valueless sub-param descriptor is
 // auto-created for every field (recursively for nested maps), so trivial
 // fields need no explicit WithParam calls.
-func NewParamStruct(value ...map[string]any) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
-	if cp.err = extraValueCheck(value, "NewParamStruct"); cp.err != nil {
-		return cp
-	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStruct: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	cp.proto.Params = structFieldDescriptors(pv.GetStructValue())
-	return cp
+func NewParamStruct() *ParamBuilder {
+	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
 }
 
 // structFieldDescriptors builds a valueless sub-param descriptor for each
@@ -122,21 +108,8 @@ func structFieldDescriptors(sv *protos.StructValue) map[string]*protos.Param {
 	return params
 }
 
-func NewParamStructVariant(value ...StructVariantValue) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
-	if cp.err = extraValueCheck(value, "NewParamStructVariant"); cp.err != nil {
-		return cp
-	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructVariant: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	return cp
+func NewParamStructVariant() *ParamBuilder {
+	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT}}
 }
 
 func NewParamInt32Array(value ...[]int32) *ParamBuilder {
@@ -163,38 +136,12 @@ func NewParamBinary(value ...[]byte) *ParamBuilder {
 	})
 }
 
-func NewParamStructArray(value ...[]map[string]any) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
-	if cp.err = extraValueCheck(value, "NewParamStructArray"); cp.err != nil {
-		return cp
-	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructArray: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	return cp
+func NewParamStructArray() *ParamBuilder {
+	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_ARRAY}}
 }
 
-func NewParamStructVariantArray(value ...[]StructVariantValue) *ParamBuilder {
-	cp := &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
-	if cp.err = extraValueCheck(value, "NewParamStructVariantArray"); cp.err != nil {
-		return cp
-	}
-	if len(value) == 0 {
-		return cp
-	}
-	pv, err := ToProto(value[0])
-	if err != nil {
-		cp.err = fmt.Errorf("NewParamStructVariantArray: failed to convert value: %w", err)
-		return cp
-	}
-	cp.proto.Value = pv
-	return cp
+func NewParamStructVariantArray() *ParamBuilder {
+	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY}}
 }
 
 func NewParamEmpty() *ParamBuilder {
@@ -276,17 +223,23 @@ func (cp *ParamBuilder) WithName(name PolyglotText) *ParamBuilder {
 	return cp
 }
 
-func (cp *ParamBuilder) WithValue(v Value) *ParamBuilder {
+func (cp *ParamBuilder) WithValue(v any) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	if !isValueValidForParamType(v.Proto, cp.proto.Type) {
-		cp.err = fmt.Errorf("WithValue: value kind incompatible with param type: param_type=%s",
+	pv, err := ToProto(v)
+	if err != nil {
+		cp.err = fmt.Errorf("WithValue: failed to convert value to proto: %w", err)
+		return cp
+	}
+	if !isValueValidForParamType(pv, cp.proto.Type) {
+		cp.err = fmt.Errorf("WithValue: value kind incompatible with param type: param_type=%s: %w",
 			cp.proto.Type.String(),
+			ErrInvalid,
 		)
 		return cp
 	}
-	cp.proto.Value = v.Proto
+	cp.proto.Value = pv
 	return cp
 }
 
@@ -418,17 +371,40 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 		return cp
 	}
 
-	if cp.proto.Type == protos.ParamType_STRUCT && p.Proto.Value != nil {
-		sv := cp.proto.Value.GetStructValue()
-		if sv == nil {
-			sv = &protos.StructValue{}
-			cp.proto.Value = &protos.Value{Kind: &protos.Value_StructValue{StructValue: sv}}
+	if p.Proto.Value != nil {
+		switch cp.proto.Type {
+		case protos.ParamType_STRUCT:
+			sv := cp.proto.Value.GetStructValue()
+			if sv == nil {
+				sv = &protos.StructValue{}
+				cp.proto.Value = &protos.Value{Kind: &protos.Value_StructValue{StructValue: sv}}
+			}
+			if sv.Fields == nil {
+				sv.Fields = map[string]*protos.Value{}
+			}
+			sv.Fields[oid] = p.Proto.Value
+			p.Proto.Value = nil
+		case protos.ParamType_STRUCT_VARIANT:
+			sv := cp.proto.Value.GetStructVariantValue()
+			if sv != nil {
+				cp.err = fmt.Errorf("WithParam called with value-bearing param input on struct variant param with existing value: current_value=%v, new_value=%v",
+					sv.Value.String(),
+					p.Proto.Value.String(),
+				)
+				return cp
+			}
+			sv = &protos.StructVariantValue{}
+			cp.proto.Value = &protos.Value{Kind: &protos.Value_StructVariantValue{StructVariantValue: sv}}
+			sv.StructVariantType = oid
+			sv.Value = p.Proto.Value
+			p.Proto.Value = nil
+		case protos.ParamType_STRUCT_ARRAY, protos.ParamType_STRUCT_VARIANT_ARRAY:
+			cp.err = fmt.Errorf("WithParam called on param type that does not support value-bearing param inputs: param_type=%s, value=%v",
+				cp.proto.Type.String(),
+				p.Proto.Value.String(),
+			)
+			return cp
 		}
-		if sv.Fields == nil {
-			sv.Fields = map[string]*protos.Value{}
-		}
-		sv.Fields[oid] = p.Proto.Value
-		p.Proto.Value = nil
 	}
 
 	// A read-only parent forces its children read-only. When the parent is

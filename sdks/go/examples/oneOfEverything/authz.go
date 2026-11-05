@@ -80,13 +80,14 @@ func registerAuthz(srv catena.Server) {
 		} else {
 			accessMap["adm"] = "---\n---"
 		}
-		return st2138.NewParamStruct(accessMap).
+		return st2138.NewParamStruct().
 			WithReadOnly(true).
 			WithName(st2138.PolyglotText{"en": "Scopes"}).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Monitor"})).
 			WithParam("op", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Operate"})).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Configure"})).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Administer"})).
+			WithValue(accessMap).
 			Build()
 	}
 
@@ -99,13 +100,14 @@ func registerAuthz(srv catena.Server) {
 			{"role": "producer", "mon": "Read\nWrite", "op": "Read\n---", "cfg": "Read\n---", "adm": "---\n---"},
 			{"role": "tech-director", "mon": "Read\nWrite", "op": "Read\nWrite", "cfg": "Read\nWrite", "adm": "Read\n---"},
 		}
-		return st2138.NewParamStructArray(roles).
+		return st2138.NewParamStructArray().
 			WithReadOnly(true).
 			WithParam("role", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Role"})).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Monitor"})).
 			WithParam("op", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Operate"})).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Configure"})).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Administer"})).
+			WithValue(roles).
 			Build()
 	}
 
@@ -125,11 +127,12 @@ func registerAuthz(srv catena.Server) {
 				}
 			}
 		}
-		return st2138.NewParamStructArray(valMap).
+		return st2138.NewParamStructArray().
 			WithReadOnly(true).
 			WithName(st2138.PolyglotText{"en": "JWT Claims"}).
 			WithParam("key", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Key"})).
 			WithParam("value", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Value"})).
+			WithValue(valMap).
 			Build()
 	}
 
