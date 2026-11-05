@@ -235,6 +235,12 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				saturation = typed
 			}
 		}
+		contactEmail := ""
+		if value, ok := state.slotOneParams.Load("contact_email"); ok {
+			if typed, ok := value.(string); ok {
+				contactEmail = typed
+			}
+		}
 		state.mu.RUnlock()
 
 		device, err := st2138.NewDevice(1).
@@ -244,13 +250,18 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			WithAccessScopes("st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm").
 			WithDefaultScope("st2138:mon").
 			WithParam("resolution", st2138.NewParamString(resolution).
-				WithName(st2138.PolyglotText{"en": "Resolution"})).
+				WithName(st2138.PolyglotText{"en": "Resolution"}).
+				WithConstraint(st2138.NewConstraintStringRegex(`^\d{3,4}x\d{3,4}$`, true))).
 			WithParam("brightness", st2138.NewParamInt32(brightness).
 				WithName(st2138.PolyglotText{"en": "Brightness"})).
 			WithParam("contrast", st2138.NewParamInt32(contrast).
 				WithName(st2138.PolyglotText{"en": "Contrast"})).
 			WithParam("saturation", st2138.NewParamInt32(saturation).
 				WithName(st2138.PolyglotText{"en": "Saturation"})).
+			WithParam("contact_email", st2138.NewParamString(contactEmail).
+				WithName(st2138.PolyglotText{"en": "Contact Email"}).
+				WithConstraint(st2138.NewConstraintStringFormat(st2138.StringFormatEmail, true)).
+				WithReadOnly(true)).
 			WithMenuGroup("status", st2138.NewMenuGroup().
 				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).
