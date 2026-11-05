@@ -169,6 +169,9 @@ func registerValueHandlers(srv catena.Server, counter *CounterState, state *Exam
 						"expected", reflect.TypeOf(current), "got", reflect.TypeOf(entry.Value))
 					return catena.StatusWithCode(catena.StatusCodeInvalidArgument, "type mismatch for "+entry.Fqoid)
 				}
+			case "contact_email":
+				ctx.Logger().Warn("SetValue rejected for contact_email param", "slot", req.Slot, "fqoid", entry.Fqoid)
+				return catena.StatusWithCode(catena.StatusCodePermissionDenied, "Contact email is read-only")
 			default:
 				ctx.Logger().Error("SetValue param not found", "slot", req.Slot, "fqoid", entry.Fqoid)
 				return catena.StatusWithCode(catena.StatusCodeNotFound, "param not found: "+entry.Fqoid)
