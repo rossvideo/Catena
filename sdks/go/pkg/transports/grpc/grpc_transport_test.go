@@ -40,16 +40,19 @@
 package grpc
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection/grpc_reflection_v1"
@@ -57,7 +60,6 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
-	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos/rpc"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
@@ -71,9 +73,25 @@ type testTransportConfig struct {
 	reflection   bool
 	isDev        bool
 	startupDelay time.Duration
+	grpcOpts     *Options
 }
 
 type testTransportOption func(*testTransportConfig)
+
+// testOptions returns DefaultOptions with the given port.
+func testOptions(port int) Options {
+	opts := DefaultOptions()
+	opts.Port = port
+	return opts
+}
+
+// withTestTransportOptions builds the transport from opts as-is, ignoring the
+// port and reflection settings. Start from DefaultOptions().
+func withTestTransportOptions(opts Options) testTransportOption {
+	return func(cfg *testTransportConfig) {
+		cfg.grpcOpts = &opts
+	}
+}
 
 func withTestTransportDevMode(isDev bool) testTransportOption {
 	return func(cfg *testTransportConfig) {
@@ -102,7 +120,14 @@ func setupTestTransport(t *testing.T, slots []uint16, opts ...testTransportOptio
 	}
 
 	lis := bufconn.Listen(bufSize)
-	transport := NewTransport(config.GrpcOptions{Port: int(cfg.port), Reflection: cfg.reflection})
+
+	grpcOpts := testOptions(int(cfg.port))
+	grpcOpts.Reflection = cfg.reflection
+	if cfg.grpcOpts != nil {
+		grpcOpts = *cfg.grpcOpts
+	}
+
+	transport := NewTransport(grpcOpts)
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.Dev = cfg.isDev
 	runtime.Slots = slots
@@ -159,7 +184,7 @@ func assertGRPCError(t *testing.T, err error, expectedCode codes.Code) {
 // =============================================================================
 
 func TestTransport_New(t *testing.T) {
-	transport := NewTransport(config.GrpcOptions{Port: 1234, Reflection: false})
+	transport := NewTransport(testOptions(1234))
 
 	if transport == nil {
 		t.Fatal("NewTransport returned nil")
@@ -2304,7 +2329,7 @@ func TestTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	shutdownCalled := false
-	transport := NewTransport(config.GrpcOptions{Port: 0, Reflection: false})
+	transport := NewTransport(testOptions(0))
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.Slots = []uint16{0, 1}
 	runtime.ShutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2393,7 +2418,7 @@ func TestTransport_Shutdown_GracefulConnectionClose(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	transport := NewTransport(config.GrpcOptions{Port: 0, Reflection: false})
+	transport := NewTransport(testOptions(0))
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.WithConnection(transporttest.MakeTestConnection(1))
 	runtime.ShutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2458,7 +2483,7 @@ func TestTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	transport := NewTransport(config.GrpcOptions{Port: 0, Reflection: false})
+	transport := NewTransport(testOptions(0))
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.WithConnection(transporttest.MakeTestConnection(1))
 	runtime.ShutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2500,7 +2525,7 @@ func TestTransport_Shutdown_ReturnsContextErrorWhenForced(t *testing.T) {
 }
 
 func TestTransport_Shutdown_IgnoresClosedListener(t *testing.T) {
-	transport := NewTransport(config.GrpcOptions{Port: 1234, Reflection: false})
+	transport := NewTransport(testOptions(1234))
 
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -2542,7 +2567,7 @@ func TestTransport_Start_PortAlreadyInUse(t *testing.T) {
 	port := portListener.Addr().(*net.TCPAddr).Port
 	defer portListener.Close()
 
-	transport := NewTransport(config.GrpcOptions{Port: port, Reflection: false})
+	transport := NewTransport(testOptions(port))
 
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.ShutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
@@ -2574,7 +2599,7 @@ func TestTransport_MultipleClients_RealNetwork(t *testing.T) {
 	// Use port 0 so net.Listen picks an available port; read the bound
 	// address back from the listener after Start to avoid a TOCTOU race
 	// between Close() and rebind.
-	transport := NewTransport(config.GrpcOptions{Port: 0, Reflection: false})
+	transport := NewTransport(testOptions(0))
 
 	runtime.ShutdownTransportConnsFn = func(gotCtx context.Context, gotTransport catena.Transport) {
 		if gotTransport != transport {
@@ -2631,5 +2656,174 @@ func TestTransport_MultipleClients_RealNetwork(t *testing.T) {
 		if err != nil {
 			t.Errorf("client failed: %v", err)
 		}
+	}
+}
+
+// TestTransport_MaxRecvMsgSize verifies the size limits reach grpc.NewServer.
+func TestTransport_MaxRecvMsgSize(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	opts := DefaultOptions()
+	opts.MaxRecvMsgSize = 1024
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0}, withTestTransportOptions(opts))
+	defer cleanup()
+
+	runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
+		return catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	_, err := makeSetValueRequest(t, client, ctx, 0, "device.param1", strings.Repeat("x", 2048))
+	assertGRPCCode(t, err, codes.ResourceExhausted, "oversized SetValue")
+}
+
+type collectingAssetStream struct {
+	chunks []st2138.Asset
+}
+
+func (s *collectingAssetStream) Send(chunk st2138.Asset) error {
+	s.chunks = append(s.chunks, chunk)
+	return nil
+}
+
+func TestTransport_DefaultOptions_StreamLargeAsset(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	// Create a large asset that is larger than the default MaxSendMsgSize
+	data := bytes.Repeat([]byte{0xAB}, 5*DefaultOptions().MaxSendMsgSize)
+
+	// Read the asset and collect the chunks
+	runtime.ReadAssetFn = func(ctx catena.TransportContext, req catena.ReadAssetRequest) ([]st2138.Asset, catena.StatusResult) {
+		stream := &collectingAssetStream{}
+		res := catena.SendAssetChunks(req.Slot, req.Fqoid, stream, st2138.ToPayload(data, "application/octet-stream", "big.bin"), true)
+		return stream.chunks, res
+	}
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	stream, err := makeExternalObjectRequest(t, client, ctx, 0, "device.asset")
+	assertNoError(t, err)
+
+	var got []byte
+	for {
+		msg, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
+		assertNoError(t, err)
+
+		got = append(got, msg.GetPayload().GetPayload()...)
+	}
+
+	if !bytes.Equal(got, data) {
+		t.Fatalf("reassembled asset mismatch: got %d bytes, want %d", len(got), len(data))
+	}
+}
+
+// TestTransport_DefaultOptions_LongLivedConnectStream verifies that a Connect
+// stream survives the connection reaching MaxConnectionAge. This should not reap
+// the connection because the default MaxConnectionAgeGrace is 0 (unlimited grace period).
+func TestTransport_MaxConnectionsAge_DoesNotReapActiveConnection(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	const age = 50 * time.Millisecond
+	const wait = age + 150*time.Millisecond
+	opts := DefaultOptions()
+	opts.MaxConnectionAge = age
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0}, withTestTransportOptions(opts))
+	defer cleanup()
+
+	connection := transporttest.MakeTestConnection(1)
+	runtime.WithConnection(connection)
+
+	client, clientCleanup := setupGRPCClient(t, ctx, lis)
+	defer clientCleanup()
+
+	stream, err := makeConnectRequest(t, client, ctx)
+	assertNoError(t, err)
+
+	push := func(v int32) {
+		t.Helper()
+
+		connection.Updates <- &protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{
+				Value: &protos.PushUpdates_PushValue{
+					Oid:   "device.param1",
+					Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: v}},
+				},
+			},
+		}
+
+		assertInt32Value(t, assertPushUpdateValue(t, receivePushUpdate(t, stream), 0, "device.param1"), v)
+	}
+
+	push(1)
+	time.Sleep(wait)
+	push(2)
+}
+
+// TestTransport_MaxConnectionIdle_DoesNotReapActiveConnectStream verifies that
+// an open Connect stream keeps its connection out of idle reaping
+func TestTransport_MaxConnectionIdle_DoesNotReapActiveConnection(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	const idle = 50 * time.Millisecond
+	opts := DefaultOptions()
+	opts.MaxConnectionIdle = idle
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0}, withTestTransportOptions(opts))
+	defer cleanup()
+
+	connection := transporttest.MakeTestConnection(1)
+	runtime.WithConnection(connection)
+
+	conn, err := dialTestServer(ctx, lis)
+	assertNoError(t, err)
+	defer conn.Close()
+
+	client := rpc.NewCatenaServiceClient(conn)
+
+	streamCtx, streamCancel := context.WithCancel(ctx)
+	defer streamCancel()
+	stream, err := makeConnectRequest(t, client, streamCtx)
+	assertNoError(t, err)
+
+	push := func(v int32) {
+		t.Helper()
+		connection.Updates <- &protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{
+				Value: &protos.PushUpdates_PushValue{
+					Oid:   "device.param1",
+					Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: v}},
+				},
+			},
+		}
+		assertInt32Value(t, assertPushUpdateValue(t, receivePushUpdate(t, stream), 0, "device.param1"), v)
+	}
+
+	push(1)
+
+	time.Sleep(5 * idle)
+	if s := conn.GetState(); s != connectivity.Ready {
+		t.Fatalf("expected connection to stay READY while Connect is open, got %v", s)
+	}
+	push(2)
+
+	// With the stream closed the connection has no active RPCs, so it is reaped.
+	streamCancel()
+	if !conn.WaitForStateChange(ctx, connectivity.Ready) {
+		t.Fatal("connection was not reaped after the Connect stream ended")
 	}
 }

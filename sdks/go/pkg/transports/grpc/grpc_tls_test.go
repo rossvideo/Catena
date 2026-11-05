@@ -78,7 +78,9 @@ func reserveTestPort(t *testing.T) int {
 func startTLSTransport(t *testing.T, tlsOpts config.TLSOptions) string {
 	t.Helper()
 	port := reserveTestPort(t)
-	transport := NewTransport(config.GrpcOptions{Port: port, TLS: tlsOpts})
+	opts := testOptions(port)
+	opts.TLS = tlsOpts
+	transport := NewTransport(opts)
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.Slots = []uint16{0}
 	runtime.ShutdownTransportConnsFn = func(ctx context.Context, gotTransport catena.Transport) {}
@@ -213,7 +215,9 @@ func TestTransport_New_TLS_BadConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			transport := NewTransport(config.GrpcOptions{Port: reserveTestPort(t), TLS: tt.tls})
+			opts := testOptions(reserveTestPort(t))
+			opts.TLS = tt.tls
+			transport := NewTransport(opts)
 			if transport.initErr == nil {
 				t.Error("expected initErr to be set for bad TLS config")
 			}
