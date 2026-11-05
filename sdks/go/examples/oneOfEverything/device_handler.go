@@ -320,10 +320,8 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 			// NewParamStruct auto-creates the valueless "number" and "text"
 			// field descriptors from the values map.
 			WithParam("struct_example", st2138.NewParamStruct().
-				WithValue(map[string]any{
-					"number": structNumber,
-					"text":   structText,
-				}).
+				WithParam("number", st2138.NewParamInt32(structNumber)).
+				WithParam("text", st2138.NewParamString(structText)).
 				WithName(st2138.PolyglotText{"en": "Struct Example"})).
 			WithParam("sample_float", st2138.NewParamFloat32(sampleFloat).
 				WithName(st2138.PolyglotText{"en": "Sample Float"})).
