@@ -993,11 +993,7 @@ func TestFullChaining(t *testing.T) {
 // --- WithValue tests ---
 
 func TestWithValue_MatchingType(t *testing.T) {
-	v, res := ToValue(int32(42))
-	if res != nil {
-		t.Fatal(res)
-	}
-	p, err := NewParamInt32(0).WithValue(v).Build()
+	p, err := NewParamInt32(0).WithValue(int32(42)).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -1007,11 +1003,9 @@ func TestWithValue_MatchingType(t *testing.T) {
 }
 
 func TestWithValue_Struct(t *testing.T) {
-	v, res := ToValue(map[string]any{"name": "test"})
-	if res != nil {
-		t.Fatal(res)
-	}
-	p, err := NewParamStruct().WithValue(v).Build()
+	p, err := NewParamStruct().
+		WithParam("name", NewParamString()).
+		WithValue(map[string]any{"name": "test"}).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -1022,12 +1016,9 @@ func TestWithValue_Struct(t *testing.T) {
 }
 
 func TestWithValue_StructVariant(t *testing.T) {
-	sv := StructVariantValue{StructVariantType: "type_a", Value: int32(10)}
-	v, res := ToValue(sv)
-	if res != nil {
-		t.Fatal(res)
-	}
-	p, err := NewParamStructVariant().WithValue(v).Build()
+	p, err := NewParamStructVariant().
+		WithParam("type_a", NewParamInt32()).
+		WithValue(StructVariantValue{StructVariantType: "type_a", Value: int32(10)}).Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
 	}
@@ -1038,11 +1029,7 @@ func TestWithValue_StructVariant(t *testing.T) {
 }
 
 func TestWithValue_MismatchedType(t *testing.T) {
-	v, res := ToValue("hello")
-	if res != nil {
-		t.Fatal(res)
-	}
-	cp := NewParamInt32(0).WithValue(v)
+	cp := NewParamInt32(0).WithValue("hello")
 	if cp.proto.GetValue().GetInt32Value() != 0 {
 		t.Error("expected mismatched WithValue to be a no-op")
 	}
@@ -1052,6 +1039,144 @@ func TestWithValue_MismatchedType(t *testing.T) {
 	}
 	if p != (Param{}) {
 		t.Errorf("expected empty Param for builder with error, got %v", p)
+	}
+}
+
+func TestWithValue_ConversionError(t *testing.T) {
+	cp := NewParamInt32(0).WithValue(struct{}{})
+	if cp.proto.GetValue().GetInt32Value() != 0 {
+		t.Error("expected conversion failure to leave the original value")
+	}
+	p, err := cp.Build()
+	if err == nil {
+		t.Fatal("expected error for builder with unsupported value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
+	}
+}
+
+// A struct-like value is rejected when a field or variant does not match the
+// param's sub-param descriptors. WithValue and SetValue leave the param unchanged.
+func TestValue_StructDescriptorsRejected(t *testing.T) {
+	variant := NewParamStructVariant(StructVariantValue{StructVariantType: "type_a", Value: int32(1)})
+	structParam := NewParamStruct(map[string]any{"a": int32(1)})
+	structArray := NewParamStructArray([]map[string]any{{"count": int32(1)}})
+	variantArray := NewParamStructVariantArray([]StructVariantValue{{StructVariantType: "type_a", Value: int32(1)}})
+	nestedVariant := NewParamStruct(map[string]any{
+		"variant": StructVariantValue{StructVariantType: "type_a", Value: int32(1)},
+	})
+	nestedStruct := NewParamStruct(map[string]any{"nested": map[string]any{"inner": int32(1)}})
+	nestedArray := NewParamStruct(map[string]any{"items": []map[string]any{{"n": int32(1)}}})
+
+	tests := []struct {
+		name  string
+		param *ParamBuilder
+		value any
+		want  string
+	}{
+		{"variant type not in descriptors", variant, StructVariantValue{StructVariantType: "type_b", Value: "one"}, `struct variant type "type_b" has no descriptor`},
+		{"variant inner type mismatch", variant, StructVariantValue{StructVariantType: "type_a", Value: "one"}, `struct variant type "type_a": value kind incompatible with param type INT32`},
+		{"empty variant type", variant, StructVariantValue{StructVariantType: "", Value: int32(1)}, "struct variant type cannot be nil or empty"},
+		{"struct field not in descriptors", structParam, map[string]any{"a": int32(2), "b": "one"}, `struct field "b" has no descriptor`},
+		{"struct field type mismatch", structParam, map[string]any{"a": "one"}, `struct field "a": value kind incompatible with param type INT32`},
+		{"empty struct field name", structParam, map[string]any{"": int32(2)}, "struct field name cannot be empty"},
+		{"nested variant mismatch", nestedVariant, map[string]any{"variant": StructVariantValue{StructVariantType: "type_b", Value: "one"}}, `struct field "variant": struct variant type "type_b" has no descriptor`},
+		{"nested struct field mismatch", nestedStruct, map[string]any{"nested": map[string]any{"inner": "nope"}}, `struct field "nested": struct field "inner": value kind incompatible with param type INT32`},
+		{"struct array element type mismatch", structArray, []map[string]any{{"count": int32(2)}, {"count": "nope"}}, `struct array element 1: struct field "count": value kind incompatible with param type INT32`},
+		{"variant array unknown type", variantArray, []StructVariantValue{{StructVariantType: "type_b", Value: "one"}}, `struct variant array element 0: struct variant type "type_b" has no descriptor`},
+		{"variant array inner type mismatch", variantArray, []StructVariantValue{{StructVariantType: "type_a", Value: "one"}}, `struct variant array element 0: struct variant type "type_a": value kind incompatible with param type INT32`},
+		{"nested struct array inside struct", nestedArray, map[string]any{"items": []map[string]any{{"n": "x"}}}, `struct field "items": struct array element 0: struct field "n": value kind incompatible with param type INT32`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cp := tt.param.Clone()
+			cp.WithValue(tt.value)
+			if cp.err == nil || !strings.Contains(cp.err.Error(), tt.want) {
+				t.Fatalf("expected error containing %q, got %v", tt.want, cp.err)
+			}
+			if !proto.Equal(tt.param.proto, cp.proto) {
+				t.Fatal("expected failed WithValue to leave the param unchanged")
+			}
+			p, err := cp.Build()
+			if err == nil {
+				t.Fatal("expected Build to surface the WithValue error")
+			}
+			if p != (Param{}) {
+				t.Errorf("expected empty Param for builder with error, got %v", p)
+			}
+
+			built, err := tt.param.Clone().Build()
+			if err != nil {
+				t.Fatalf("builder setup failed: %v", err)
+			}
+			err = built.SetValue(tt.value)
+			if err == nil || !strings.Contains(err.Error(), tt.want) || !errors.Is(err, ErrInvalid) {
+				t.Fatalf("expected ErrInvalid containing %q, got %v", tt.want, err)
+			}
+			if !proto.Equal(tt.param.proto, built.Proto) {
+				t.Fatal("expected failed SetValue to leave the param unchanged")
+			}
+		})
+	}
+}
+
+// A value that agrees with the descriptors replaces the param value and leaves
+// the descriptors in place. Missing descriptor keys are allowed.
+func TestValue_StructDescriptorsAccepted(t *testing.T) {
+	variant := NewParamStructVariant(StructVariantValue{StructVariantType: "type_a", Value: int32(1)})
+	variantWithAlt := variant.Clone().WithParam("type_b", NewParamString())
+	structParam := NewParamStruct(map[string]any{"a": int32(1), "b": "x"})
+	structArray := NewParamStructArray([]map[string]any{{"label": "a", "count": int32(1)}})
+	variantArray := NewParamStructVariantArray([]StructVariantValue{
+		{StructVariantType: "type_a", Value: int32(1)},
+		{StructVariantType: "type_b", Value: "one"},
+	})
+
+	tests := []struct {
+		name  string
+		param *ParamBuilder
+		value any
+	}{
+		{"matching variant replacement", variant, StructVariantValue{StructVariantType: "type_a", Value: int32(2)}},
+		{"declared alternate variant", variantWithAlt, StructVariantValue{StructVariantType: "type_b", Value: "one"}},
+		{"struct subset of fields", structParam, map[string]any{"a": int32(2)}},
+		{"struct array partial fields", structArray, []map[string]any{{"label": "b"}, {"count": int32(2)}}},
+		{"variant array matching element", variantArray, []StructVariantValue{{StructVariantType: "type_b", Value: "two"}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			want, err := ToProto(tt.value)
+			if err != nil {
+				t.Fatalf("ToProto: %v", err)
+			}
+
+			cp := tt.param.Clone()
+			p, err := cp.WithValue(tt.value).Build()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !proto.Equal(p.Proto.GetValue(), want) {
+				t.Errorf("expected value %v, got %v", want, p.Proto.GetValue())
+			}
+			if !proto.Equal(&protos.Param{Params: tt.param.proto.GetParams()}, &protos.Param{Params: p.Proto.GetParams()}) {
+				t.Error("expected descriptors to stay unchanged")
+			}
+
+			built, err := tt.param.Clone().Build()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := built.SetValue(tt.value); err != nil {
+				t.Fatal(err)
+			}
+			if !proto.Equal(built.Proto.GetValue(), want) {
+				t.Errorf("expected value %v, got %v", want, built.Proto.GetValue())
+			}
+			if !proto.Equal(&protos.Param{Params: tt.param.proto.GetParams()}, &protos.Param{Params: built.Proto.GetParams()}) {
+				t.Error("expected descriptors to stay unchanged")
+			}
+		})
 	}
 }
 
@@ -1127,7 +1252,10 @@ func TestGetValue_Nil(t *testing.T) {
 }
 
 func TestSetGetValue_Roundtrip_Struct(t *testing.T) {
-	cp, err := NewParamStruct().Build()
+	cp, err := NewParamStruct().
+		WithParam("x", NewParamInt32()).
+		WithParam("y", NewParamInt32()).
+		Build()
 	if err != nil {
 		t.Fatalf("failed to build param: %v", err)
 	}
@@ -2270,12 +2398,8 @@ func TestWithParam_MissingNestedParamErrors(t *testing.T) {
 func TestWithParam_CleanBuilderEquivalence(t *testing.T) {
 	cleanBuilder := NewParamStruct().
 		WithParam("field1", NewParamString()).
-		WithParam("field2", NewParamInt32())
-	val, err := ToValue(map[string]any{"field1": "value1", "field2": int32(42)})
-	if err != nil {
-		t.Errorf("expected no error for ToValue with valid value, got %v", err)
-	}
-	cleanBuilder.WithValue(val)
+		WithParam("field2", NewParamInt32()).
+		WithValue(map[string]any{"field1": "value1", "field2": int32(42)})
 	clean, err := cleanBuilder.Build()
 	if err != nil {
 		t.Fatal("expected no error for builder with valid value", err)
@@ -2321,14 +2445,10 @@ func TestParamBuilder_WithShortCircuitErrors(t *testing.T) {
 	cp := NewParamInt32()
 	cp.err = errors.New("test error")
 	before := proto.Clone(cp.proto)
-	value, convErr := ToValue(int32(7))
-	if convErr != nil {
-		t.Fatal(convErr)
-	}
 
 	p, err := cp.
 		WithName(PolyglotText{"en": "Test"}).
-		WithValue(value).
+		WithValue(int32(7)).
 		WithConstraint(NewConstraintInt32Range(0, 10, 1)).
 		WithReadOnly(true).
 		WithWidget("slider").
