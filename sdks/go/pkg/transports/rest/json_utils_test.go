@@ -50,18 +50,9 @@ import (
 
 	"github.com/valyala/fastjson"
 
-	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
-
-// errReader is an io.Reader that always fails, used to exercise body-read
-// error paths in the request readers.
-type errReader struct{}
-
-func (errReader) Read([]byte) (int, error) {
-	return 0, errors.New("simulated read error")
-}
 
 func TestReadRequestJSON_ValidInt32(t *testing.T) {
 	body := `{"int32_value": 42}`
@@ -69,7 +60,7 @@ func TestReadRequestJSON_ValidInt32(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetInt32Value() != 42 {
@@ -83,7 +74,7 @@ func TestReadRequestJSON_ValidString(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetStringValue() != "hello" {
@@ -97,7 +88,7 @@ func TestReadRequestJSON_ValidFloat(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetFloat32Value() < 3.13 || val.GetFloat32Value() > 3.15 {
@@ -111,7 +102,7 @@ func TestReadRequestJSON_ContentTypeWithCharset(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	val, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if val.GetInt32Value() != 100 {
@@ -125,11 +116,8 @@ func TestReadRequestJSON_MissingContentType(t *testing.T) {
 	// No Content-Type header
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for missing Content-Type")
-	}
-	if err.Error != "missing Content-Type header" {
-		t.Errorf("expected 'missing Content-Type header' error, got: %v", err)
+	if !errors.Is(err, errMissingContentType) {
+		t.Fatalf("expected missing Content-Type, got %v", err)
 	}
 }
 
@@ -139,11 +127,8 @@ func TestReadRequestJSON_InvalidContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "text/plain")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected error for invalid Content-Type")
-	}
-	if err.Error != "unsupported content type: text/plain, expected application/json" {
-		t.Errorf("expected 'unsupported content type: text/plain, expected application/json' error, got: %v", err)
+	if !errors.Is(err, errUnsupportedMediaType) {
+		t.Fatalf("expected unsupported content type, got %v", err)
 	}
 }
 
@@ -153,11 +138,8 @@ func TestReadRequestJSON_MalformedContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "invalid;;;type")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected error for malformed Content-Type")
-	}
-	if err.Error != "invalid content type: invalid;;;type" {
-		t.Errorf("expected 'invalid content type' error, got: %v", err)
+	if !errors.Is(err, errInvalidContentType) {
+		t.Fatalf("expected invalid content type, got %v", err)
 	}
 }
 
@@ -167,11 +149,8 @@ func TestReadRequestJSON_InvalidJSON(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for invalid JSON")
-	}
-	if !strings.Contains(err.Error, "failed to unmarshal request body") {
-		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err.Error)
+	if !errors.Is(err, errMalformedBody) {
+		t.Fatalf("expected malformed body, got %v", err)
 	}
 }
 
@@ -180,11 +159,8 @@ func TestReadRequestJSON_EmptyBody(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for empty body")
-	}
-	if !strings.Contains(err.Error, "failed to unmarshal request body") {
-		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err.Error)
+	if !errors.Is(err, errMalformedBody) {
+		t.Fatalf("expected malformed body, got %v", err)
 	}
 }
 
@@ -194,7 +170,7 @@ func TestReadMultiSetValuesRequestJSON_Valid(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	entries, err := ReadMultiSetValuesRequestJSON(req)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if len(entries) != 2 {
@@ -220,11 +196,8 @@ func TestReadMultiSetValuesRequestJSON_MissingContentType(t *testing.T) {
 	// No Content-Type header
 
 	_, err := ReadMultiSetValuesRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for missing Content-Type")
-	}
-	if err.Error != "missing Content-Type header" {
-		t.Errorf("expected 'missing Content-Type header' error, got: %v", err)
+	if !errors.Is(err, errMissingContentType) {
+		t.Fatalf("expected missing Content-Type, got %v", err)
 	}
 }
 
@@ -234,11 +207,8 @@ func TestReadMultiSetValuesRequestJSON_MalformedContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "invalid;;;type")
 
 	_, err := ReadMultiSetValuesRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected error for malformed Content-Type")
-	}
-	if err.Error != "invalid content type: invalid;;;type" {
-		t.Errorf("expected 'invalid content type' error, got: %v", err)
+	if !errors.Is(err, errInvalidContentType) {
+		t.Fatalf("expected invalid content type, got %v", err)
 	}
 }
 
@@ -248,11 +218,8 @@ func TestReadMultiSetValuesRequestJSON_UnsupportedContentType(t *testing.T) {
 	req.Header.Set("Content-Type", "text/plain")
 
 	_, err := ReadMultiSetValuesRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected error for unsupported Content-Type")
-	}
-	if err.Error != "unsupported content type: text/plain, expected application/json" {
-		t.Errorf("expected 'unsupported content type' error, got: %v", err)
+	if !errors.Is(err, errUnsupportedMediaType) {
+		t.Fatalf("expected unsupported content type, got %v", err)
 	}
 }
 
@@ -262,11 +229,8 @@ func TestReadMultiSetValuesRequestJSON_MalformedBody(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadMultiSetValuesRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for malformed body")
-	}
-	if !strings.Contains(err.Error, "failed to unmarshal request body") {
-		t.Errorf("expected error to contain 'failed to unmarshal request body', got: %v", err.Error)
+	if !errors.Is(err, errMalformedBody) {
+		t.Fatalf("expected malformed body, got %v", err)
 	}
 }
 
@@ -276,11 +240,8 @@ func TestReadMultiSetValuesRequestJSON_InvalidValue(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadMultiSetValuesRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error for invalid value")
-	}
-	if !strings.Contains(err.Error, "invalid value at index 0") {
-		t.Errorf("expected error to contain 'invalid value at index 0', got: %v", err.Error)
+	if !errors.Is(err, errInvalidValue) {
+		t.Fatalf("expected invalid value, got %v", err)
 	}
 }
 
@@ -1287,16 +1248,48 @@ func TestInjectJSONField_Float32(t *testing.T) {
 	}
 }
 
+// errSimulatedRead is the error returned by errReader. Tests match it with
+// errors.Is to confirm body-read failures are wrapped with %w.
+var errSimulatedRead = errors.New("simulated read error")
+
+// errReader is an io.Reader that always fails, used to exercise body-read
+// error paths in the request readers.
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) {
+	return 0, errSimulatedRead
+}
+
+func TestReadRequestJSON_BodyTooLarge(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"int32_value": 42}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Body = http.MaxBytesReader(httptest.NewRecorder(), req.Body, 1)
+
+	_, err := ReadRequestJSON(req)
+	if _, ok := errors.AsType[*http.MaxBytesError](err); !ok {
+		t.Fatalf("expected *http.MaxBytesError, got %v", err)
+	}
+}
+
 func TestReadRequestJSON_BodyReadError(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", errReader{})
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error when reading the body fails")
+	if !errors.Is(err, errSimulatedRead) {
+		t.Fatalf("expected simulated read error, got %v", err)
 	}
-	if !strings.Contains(err.Error, "failed to read request body") {
-		t.Errorf("expected error to contain 'failed to read request body', got: %v", err.Error)
+}
+
+func TestReadMultiSetValuesRequestJSON_BodyTooLarge(t *testing.T) {
+	body := `{"values":[{"oid":"brightness","value":{"int32_value":42}}]}`
+	req := httptest.NewRequest(http.MethodPut, "/", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Body = http.MaxBytesReader(httptest.NewRecorder(), req.Body, 1)
+
+	_, err := ReadMultiSetValuesRequestJSON(req)
+	if _, ok := errors.AsType[*http.MaxBytesError](err); !ok {
+		t.Fatalf("expected *http.MaxBytesError, got %v", err)
 	}
 }
 
@@ -1305,11 +1298,8 @@ func TestReadMultiSetValuesRequestJSON_BodyReadError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadMultiSetValuesRequestJSON(req)
-	if err.Code != catena.StatusCodeInvalidArgument {
-		t.Fatal("expected BAD_REQUEST error when reading the body fails")
-	}
-	if !strings.Contains(err.Error, "failed to read request body") {
-		t.Errorf("expected error to contain 'failed to read request body', got: %v", err.Error)
+	if !errors.Is(err, errSimulatedRead) {
+		t.Fatalf("expected simulated read error, got %v", err)
 	}
 }
 
