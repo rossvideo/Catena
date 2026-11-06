@@ -58,7 +58,7 @@ type ParamBuilder struct {
 
 // --- Factory functions (one per ParamType) ---
 //
-// Each factory accepts an optional value. With no arguments the param is
+// Each factory accepts an optional value, except struct-like factories. With no arguments the param is
 // created without a value, which is useful for valueless sub-param
 // descriptors. If more than one value is passed, the builder returns an error.
 
@@ -82,7 +82,7 @@ func NewParamString(value ...string) *ParamBuilder {
 
 // NewParamStruct creates a STRUCT param. Values and their matching
 // descriptors must be added using WithValue and WithParam before being built.
-// All descriptors must have a matching field in the StructValue.
+// The set struct value must implement all added descriptors.
 func NewParamStruct() *ParamBuilder {
 	return &ParamBuilder{proto: &protos.Param{Type: protos.ParamType_STRUCT}}
 }
@@ -212,6 +212,8 @@ func (cp *ParamBuilder) WithName(name PolyglotText) *ParamBuilder {
 	return cp
 }
 
+// WithValue sets the param's value. If the param is a struct-like param,
+// the value must implement all added descriptors, or will error on Build().
 func (cp *ParamBuilder) WithValue(v any) *ParamBuilder {
 	if cp.err != nil {
 		return cp

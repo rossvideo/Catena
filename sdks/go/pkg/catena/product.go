@@ -108,8 +108,7 @@ const (
 
 // ProductParam builds the mandatory read-only "product" STRUCT param from p,
 // including the SDK-managed st2138_sdk and st2138_sdk_version fields. The field
-// values live in the struct's Value; NewParamStruct auto-creates the valueless
-// STRING field descriptors from the values map. The SDK uses this to seed the
+// values live in the struct's Value. The SDK uses this to seed the
 // product param into the device on GetDevice. Returns nil and an error
 // if the param cannot be built.
 func ProductParam(p ProductStruct) (*st2138.Param, error) {

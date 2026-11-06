@@ -317,8 +317,6 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithName(st2138.PolyglotText{"en": "Muted"})).
 			WithParam("device_name", st2138.NewParamString(deviceName).
 				WithName(st2138.PolyglotText{"en": "Device Name"})).
-			// NewParamStruct auto-creates the valueless "number" and "text"
-			// field descriptors from the values map.
 			WithParam("struct_example", st2138.NewParamStruct().
 				WithParam("number", st2138.NewParamInt32(structNumber)).
 				WithParam("text", st2138.NewParamString(structText)).
