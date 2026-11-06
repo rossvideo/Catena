@@ -43,6 +43,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -57,6 +58,8 @@ type initOptions struct {
 	prefix           string
 	defaults         RuntimeOptions
 	suppressedInputs []string
+	onlyInputs       []string
+	onlyInputsSet    bool
 }
 
 func WithPrefix(prefix string) InitOption {
@@ -74,6 +77,21 @@ func WithDefaults(defaults RuntimeOptions) InitOption {
 func WithSuppressedInputs(inputs ...string) InitOption {
 	return func(opts *initOptions) {
 		opts.suppressedInputs = inputs
+	}
+}
+
+// WithOnlyInputs is the allowlist counterpart of WithSuppressedInputs: only the
+// named inputs are loaded from env and CLI, and every other input is suppressed.
+// New config options are therefore hidden by default, with no list to maintain.
+//
+// Names are matched by CLI flag name and may use path.Match wildcards, for
+// example "grpc-tls-*". A name listed in both WithOnlyInputs and
+// WithSuppressedInputs is suppressed. Calling WithOnlyInputs with no names
+// suppresses everything.
+func WithOnlyInputs(inputs ...string) InitOption {
+	return func(opts *initOptions) {
+		opts.onlyInputs = inputs
+		opts.onlyInputsSet = true
 	}
 }
 
@@ -99,6 +117,9 @@ func WithSuppressedInputs(inputs ...string) InitOption {
 //     provided option names (matched by CLI flag name, e.g. "dashboard-node-id").
 //     Suppressed options are not registered in flag help output and their env vars
 //     are ignored.
+//   - WithOnlyInputs(names...) is the allowlist form: only the provided option
+//     names (wildcards like "grpc-tls-*" allowed) are loaded and all others are
+//     suppressed. Suppressed names still win over allowed ones.
 //
 // If the help flag is provided, InitOptions prints usage and returns ErrHelp.
 // If an environment variable or command-line flag cannot be parsed, it prints
@@ -132,6 +153,8 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		flags:            flags,
 		envPrefix:        resolvedInitOpts.prefix + "_",
 		suppressedInputs: resolvedInitOpts.suppressedInputs,
+		onlyInputs:       resolvedInitOpts.onlyInputs,
+		onlyInputsSet:    resolvedInitOpts.onlyInputsSet,
 	}
 	// chain building all the options up
 	loader.
@@ -151,6 +174,7 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractPositiveDuration("REST_CORS_MAX_AGE", "rest-cors-max-age", "CORS preflight Max-Age duration (e.g. 10m, 600s). Defaults to seconds if no unit is specified.", &opts.Rest.CorsMaxAge).
 		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
 		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
+		extractBool("GRPC_DISABLE_HEALTH", "grpc-disable-health", "Disable the standard gRPC health service (grpc.health.v1), which is otherwise enabled", &opts.Grpc.DisableHealth).
 		extractBool("GRPC_TLS_ENABLED", "grpc-tls-enabled", "Enable TLS on the gRPC transport listener", &opts.Grpc.TLS.Enabled).
 		extractString("GRPC_TLS_CERT_FILE", "grpc-tls-cert-file", "Path to the PEM server certificate for the gRPC transport", &opts.Grpc.TLS.CertFile).
 		extractString("GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "Path to the PEM server private key for the gRPC transport", &opts.Grpc.TLS.KeyFile).
@@ -185,9 +209,13 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 
 	// basic flag lib doesn't support repeating flags, so we can just manually do the 3
 	// levels of verbosity as a special case that sets the log level
-	flagWarn := flags.Bool("v", false, "Warning logging level (equivalent to log level WARN)")
-	flagInfo := flags.Bool("vv", false, "Info logging level (equivalent to log level INFO)")
-	flagDebug := flags.Bool("vvv", false, "Debug logging level (equivalent to log level DEBUG)")
+	// they are shorthands for log-level, so they follow its suppression
+	flagWarn, flagInfo, flagDebug := new(bool), new(bool), new(bool)
+	if !loader.shouldSuppressInput("log-level") {
+		flags.BoolVar(flagWarn, "v", false, "Warning logging level (equivalent to log level WARN)")
+		flags.BoolVar(flagInfo, "vv", false, "Info logging level (equivalent to log level INFO)")
+		flags.BoolVar(flagDebug, "vvv", false, "Debug logging level (equivalent to log level DEBUG)")
+	}
 
 	// if there was an error setting up the flags (e.g. invalid env var) return that
 	if loader.err != nil {
@@ -231,6 +259,8 @@ type configLoader struct {
 	flags            *flag.FlagSet
 	envPrefix        string
 	suppressedInputs []string
+	onlyInputs       []string
+	onlyInputsSet    bool
 }
 
 func (l *configLoader) prefixEnv(name string) string {
@@ -238,7 +268,17 @@ func (l *configLoader) prefixEnv(name string) string {
 }
 
 func (l *configLoader) shouldSuppressInput(cliName string) bool {
-	return slices.Contains(l.suppressedInputs, cliName)
+	if slices.Contains(l.suppressedInputs, cliName) {
+		return true
+	}
+	if !l.onlyInputsSet {
+		return false
+	}
+	return !slices.ContainsFunc(l.onlyInputs, func(pattern string) bool {
+		// a malformed pattern returns an error and simply doesn't match
+		ok, _ := path.Match(pattern, cliName)
+		return ok
+	})
 }
 
 func (l *configLoader) extractBool(envName, cliName, usage string, val *bool) *configLoader {
