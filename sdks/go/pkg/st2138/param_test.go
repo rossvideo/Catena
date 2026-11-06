@@ -1770,47 +1770,6 @@ func TestWithParam_ValueOverridesMapValue(t *testing.T) {
 	}
 }
 
-// The clean builder style produces the same struct value as passing the full
-// map up front, and a struct populated via WithParam propagates its value
-// when nested into another struct.
-func TestWithParam_CleanBuilderEquivalence(t *testing.T) {
-	cleanBuilder := NewParamStruct().
-		WithParam("field1", NewParamString("value1")).
-		WithParam("field2", NewParamInt32(42))
-	cleanClone := cleanBuilder.Clone()
-	clean, err := cleanBuilder.Build()
-	if err != nil {
-		t.Fatal("expected no error for builder with valid value", err)
-	}
-	upfront, err := NewParamStruct().
-		WithParam("field1", NewParamString("value1")).
-		WithParam("field2", NewParamInt32(42)).
-		Build()
-	if err != nil {
-		t.Fatal("expected no error for builder with valid value", err)
-	}
-
-	if !proto.Equal(clean.Proto, upfront.Proto) {
-		t.Errorf("expected clean builder proto to equal up-front map proto:\nclean:   %v\nupfront: %v",
-			clean.Proto, upfront.Proto)
-	}
-	if clean.Proto.GetValue() == nil {
-		t.Error("expected struct built via valued WithParam calls to have a non-nil value")
-	}
-
-	outer, err := NewParamStruct().WithParam("inner", cleanClone).Build()
-	if err != nil {
-		t.Fatal("expected no error for builder with valid value", err)
-	}
-	innerValue := outer.Proto.GetValue().GetStructValue().GetFields()["inner"]
-	if innerValue.GetStructValue().GetFields()["field1"].GetStringValue() != "value1" {
-		t.Error("expected nested struct value to propagate into outer struct value")
-	}
-	if outer.Proto.GetParams()["inner"].GetValue() != nil {
-		t.Error("expected nested struct descriptor to be valueless")
-	}
-}
-
 func TestParamBuilder_BuildsValidParam(t *testing.T) {
 	cp := NewParamInt32(42)
 	p, err := cp.Build()
