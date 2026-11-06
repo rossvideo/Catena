@@ -533,6 +533,13 @@ func TestToProto_EmptyStructVariant(t *testing.T) {
 	}
 }
 
+func TestToProto_EmptyMapInStructArray(t *testing.T) {
+	_, res := ToProto([]map[string]any{{}})
+	if res == nil {
+		t.Error("ToProto(empty map[string]any in struct array) expected error")
+	}
+}
+
 func TestToProto_UnsupportedType(t *testing.T) {
 	tests := []struct {
 		name  string
