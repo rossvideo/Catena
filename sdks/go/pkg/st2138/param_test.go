@@ -1047,7 +1047,7 @@ func TestWithValue_MismatchedType(t *testing.T) {
 		t.Error("expected mismatched WithValue to be a no-op")
 	}
 	p, err := cp.Build()
-	if err == nil {
+	if !errors.Is(err, ErrInvalid) {
 		t.Fatal("expected error for builder with invalid value")
 	}
 	if p != (Param{}) {
@@ -1094,9 +1094,9 @@ func TestSetValue_StructLikeErrors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to build param: %v", err)
 	}
-	res := cp.SetValue(map[string]any{"field": int32(1)})
-	if res == nil || !strings.Contains(res.Error(), "struct value has different number of fields than descriptors:") {
-		t.Fatalf("expected specificerror, got %v", res)
+	err = cp.SetValue(map[string]any{"field": int32(1)})
+	if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "struct value has different number of fields than descriptors:") {
+		t.Fatalf("expected specific error, got %v", err)
 	}
 }
 
@@ -1881,7 +1881,7 @@ func TestParamBuilder_StructLikeValidationErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p, err := tt.param.Build()
-			if err == nil || !strings.Contains(err.Error(), tt.wantError) {
+			if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), tt.wantError) {
 				t.Fatalf("expected %v, got %v", tt.wantError, err)
 			}
 			if p != (Param{}) {
