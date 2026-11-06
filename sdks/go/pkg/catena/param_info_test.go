@@ -66,7 +66,7 @@ func TestParamInfosForRequest(t *testing.T) {
 
 		// each node is emitted immediately followed by its subtree, so parent/child
 		// appears right after parent, before the alphabetically-later siblings.
-		assertParamInfoOids(t, stream.Items, []string{"alpha", "floats", "numbers", "parent", "parent/child", "strings", "structs", "variants"})
+		assertParamInfoOids(t, stream.Items, []string{"alpha", "floats", "numbers", "parent", "parent/child", "strings", "structs", "structs/x", "variants", "variants/type_a"})
 	})
 
 	t.Run("NestedRecursive", func(t *testing.T) {
@@ -328,8 +328,13 @@ func testDeviceDefinition(t *testing.T) *st2138.Device {
 		WithParam("numbers", st2138.NewParamInt32Array([]int32{1, 2, 3})).
 		WithParam("floats", st2138.NewParamFloat32Array([]float32{1.5, 2.5})).
 		WithParam("strings", st2138.NewParamStringArray([]string{"a", "b", "c", "d"})).
-		WithParam("structs", st2138.NewParamStructArray([]map[string]any{{"x": int32(1)}, {"x": int32(2)}})).
-		WithParam("variants", st2138.NewParamStructVariantArray([]st2138.StructVariantValue{{StructVariantType: "type_a", Value: int32(9)}})).Build()
+		WithParam("structs", st2138.NewParamStructArray().
+			WithParam("x", st2138.NewParamInt32()).
+			WithValue([]map[string]any{{"x": int32(1)}, {"x": int32(2)}})).
+		WithParam("variants", st2138.NewParamStructVariantArray().
+			WithParam("type_a", st2138.NewParamInt32()).
+			WithValue([]st2138.StructVariantValue{{StructVariantType: "type_a", Value: int32(9)}})).
+		Build()
 	if err != nil {
 		t.Fatalf("testDeviceDefinition failed: %v", err)
 	}

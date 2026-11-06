@@ -108,15 +108,15 @@ const (
 
 // ProductParam builds the mandatory read-only "product" STRUCT param from p,
 // including the SDK-managed st2138_sdk and st2138_sdk_version fields. The field
-// values live in the struct's Value; NewParamStruct auto-creates the valueless
-// STRING field descriptors from the values map. The SDK uses this to seed the
+// values live in the struct's Value. The SDK uses this to seed the
 // product param into the device on GetDevice. Returns nil and an error
 // if the param cannot be built.
 func ProductParam(p ProductStruct) (*st2138.Param, error) {
-	param, err := st2138.NewParamStruct(ProductValues(p)).
-		WithReadOnly(true).
-		WithAccessScope(st2138.ScopeMon).
-		Build()
+	pb := st2138.NewParamStruct()
+	for k, v := range ProductValues(p) {
+		pb.WithParam(k, st2138.NewParamString(v.(string)))
+	}
+	param, err := pb.WithReadOnly(true).WithAccessScope(st2138.ScopeMon).Build()
 	if err != nil {
 		return nil, err
 	}
