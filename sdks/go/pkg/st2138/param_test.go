@@ -1815,8 +1815,12 @@ func TestParamBuilder_StructLikeValidation(t *testing.T) {
 			if err != nil {
 				t.Fatal("expected no error for builder with valid value", err)
 			}
-			if p.Proto.GetValue() == nil {
-				t.Error("expected non-nil value for struct-like param")
+			want, err := ToProto(tt.value)
+			if err != nil {
+				t.Fatalf("ToProto: %v", err)
+			}
+			if !proto.Equal(p.Proto.GetValue(), want) {
+				t.Errorf("built value = %v, want %v", p.Proto.GetValue(), want)
 			}
 		})
 	}
