@@ -567,13 +567,12 @@ func validateStructValue(v *protos.StructValue, p map[string]*protos.Param) erro
 		if !ok {
 			return fmt.Errorf("struct value contains unknown field: oid=%s", oid)
 		}
-		valueType := paramTypeFromValueKind(value)
-		if valueType != param.Type {
+		if !isValueValidForParamType(value, param.Type) {
 			return fmt.Errorf("struct value field %s has incompatible type with descriptor: value_type=%s, descriptor_type=%s",
-				oid, valueType.String(), param.Type.String())
+				oid, paramTypeFromValueKind(value).String(), param.Type.String())
 		}
-		if _, ok := paramTypesWithSubParams[valueType]; ok {
-			if err := validateStructLikeValue(value, param.Params, valueType); err != nil {
+		if _, ok := paramTypesWithSubParams[param.Type]; ok {
+			if err := validateStructLikeValue(value, param.Params, param.Type); err != nil {
 				return err
 			}
 		}
@@ -586,13 +585,12 @@ func validateStructVariantValue(v *protos.StructVariantValue, p map[string]*prot
 	var validValue bool = false
 	for oid, desc := range p {
 		if v.StructVariantType == oid {
-			valueType := paramTypeFromValueKind(v.Value)
-			if valueType != desc.Type {
+			if !isValueValidForParamType(v.Value, desc.Type) {
 				return fmt.Errorf("struct variant value and descriptor have incompatible fundamental types: value_type=%s, descriptor_type=%s",
-					valueType.String(), desc.Type.String())
+					paramTypeFromValueKind(v.Value).String(), desc.Type.String())
 			}
-			if _, ok := paramTypesWithSubParams[valueType]; ok {
-				if err := validateStructLikeValue(v.Value, desc.Params, valueType); err != nil {
+			if _, ok := paramTypesWithSubParams[desc.Type]; ok {
+				if err := validateStructLikeValue(v.Value, desc.Params, desc.Type); err != nil {
 					return err
 				}
 			}

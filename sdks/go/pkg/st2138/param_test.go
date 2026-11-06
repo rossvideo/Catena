@@ -40,6 +40,7 @@ package st2138
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 
@@ -1859,6 +1860,33 @@ func TestParamBuilder_StructLikeValidation(t *testing.T) {
 				t.Error("expected non-nil value for struct-like param")
 			}
 		})
+	}
+}
+
+// Descriptors of type DATA and BINARY both accept a DataPayload value.
+func TestParamBuilder_StructLikeValidation_BinaryAndData(t *testing.T) {
+	p, err := NewParamStruct().
+		WithParam("bin", NewParamBinary([]byte{0xDE, 0xAD})).
+		WithParam("data", NewParamData(
+			ToPayload([]byte("content"), "text/plain", "test.txt"),
+		)).
+		Build()
+	if err != nil {
+		t.Fatal("expected no error for builder with valid value", err)
+	}
+	fields := p.Proto.GetValue().GetStructValue().GetFields()
+	if !slices.Equal(fields["bin"].GetDataPayload().GetPayload(), []byte{0xDE, 0xAD}) {
+		t.Errorf("expected binary value to be %v, got %v", []byte{0xDE, 0xAD}, fields["bin"].GetDataPayload().GetPayload())
+	}
+	if !slices.Equal(fields["data"].GetDataPayload().GetPayload(), []byte("content")) {
+		t.Errorf("expected data value to be %v, got %v", []byte("content"), fields["data"].GetDataPayload().GetPayload())
+	}
+	descriptors := p.Proto.GetParams()
+	if descriptors["bin"].GetType() != protos.ParamType_BINARY {
+		t.Errorf("expected binary descriptor to be %v, got %v", protos.ParamType_BINARY, descriptors["bin"].GetType())
+	}
+	if descriptors["data"].GetType() != protos.ParamType_DATA {
+		t.Errorf("expected data descriptor to be %v, got %v", protos.ParamType_DATA, descriptors["data"].GetType())
 	}
 }
 
