@@ -132,7 +132,7 @@ coverage-html: coverage
 
 coverage-lcov: coverage
 	@echo "Generating LCOV coverage file for VS Code Coverage Gutters..."
-	GOENV=$(shell go env) gcov2lcov -infile=$(COVERAGE_OUT) -outfile=$(COVERAGE_DIR)/go_coverage.lcov
+	gcov2lcov -infile=$(COVERAGE_OUT) -outfile=$(COVERAGE_DIR)/go_coverage.lcov
 	@echo "LCOV coverage report generated: $(COVERAGE_DIR)/go_coverage.lcov"
 	@echo "You can now enable Coverage Gutters in VS Code to see coverage highlights"
 
