@@ -67,8 +67,8 @@ protos: proto-tools
 clean-protos:
 	rm -rf "$(GENERATED_DIR)"
 
-# Refresh pkg/catena/schema_generated.go from the device.yaml path in schema.go's
-# go:generate line. A missing file leaves the committed constants in place.
+# Refresh pkg/catena/schema_generated.go from device.yaml. Both paths are defined
+# in pkg/catena/internal/deviceschema and resolved from the module root
 schema:
 	go generate ./pkg/catena/
 

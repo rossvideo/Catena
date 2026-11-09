@@ -43,9 +43,16 @@ import (
 	"go/format"
 	"go/token"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
+)
+
+// relativeDeviceYamlPath and relativeGeneratedPath are relative to the module root (the directory containing go.mod)
+const (
+	relativeDeviceYamlPath = "../../smpte/interface/schema/device.yaml"
+	relativeGeneratedPath  = "pkg/catena/schema_generated.go"
 )
 
 // header to be written to schema_generated.go.
@@ -110,6 +117,42 @@ type Definition struct {
 // Schema represents the top-level structure of the device.yaml schema.
 type Schema struct {
 	Defs map[string]Definition `yaml:"$defs"`
+}
+
+// GetSchemaPaths returns the absolute paths to device.yaml and schema_generated.go with respect to dir
+func GetSchemaPaths(dir string) (deviceYamlPath, schemaGeneratedPath string, err error) {
+	root, err := getModPath(dir)
+	if err != nil {
+		return "", "", err
+	}
+
+	return filepath.Join(root, relativeDeviceYamlPath), filepath.Join(root, relativeGeneratedPath), nil
+}
+
+// getModPath walks up from dir until it finds a directory containing go.mod.
+func getModPath(dir string) (string, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		_, err := os.Stat(filepath.Join(abs, "go.mod"))
+		if err == nil { // go.mod found
+			return abs, nil
+		}
+		if !os.IsNotExist(err) {
+			return "", err
+		}
+
+		// go.mod not found, walk up to the parent directory
+		parent := filepath.Dir(abs)
+		if parent == abs {
+			return "", fmt.Errorf("go.mod not found above %s", dir)
+		}
+
+		abs = parent
+	}
 }
 
 // Generate renders schema_generated.go from the patterns in schemaPath.

@@ -38,7 +38,7 @@
 
 package catena
 
-//go:generate go run ./internal/schemagen -schema ../../../../smpte/interface/schema/device.yaml -o schema_generated.go
+//go:generate go run ./internal/schemagen
 
 import (
 	"fmt"

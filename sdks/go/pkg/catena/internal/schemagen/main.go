@@ -75,23 +75,53 @@ func run(args []string) error {
 		return fmt.Errorf("unexpected arguments: %s", strings.Join(fs.Args(), " "))
 	}
 
-	if *schemaPath == "" {
-		return nil
+	schema, schemaGeneratedPath, err := resolvePaths(*schemaPath, *outPath)
+	if err != nil {
+		return err
 	}
-	if _, err := os.Stat(*schemaPath); err != nil {
+
+	// An omitted -schema uses the module-root device.yaml. A missing file, default
+	// or explicit, leaves schema_generated.go unchanged.
+	if _, err := os.Stat(schema); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			fmt.Fprintf(os.Stderr, "schemagen: %s not found; leaving generated file unchanged\n", *schemaPath)
+			fmt.Fprintf(os.Stderr, "schemagen: %s not found; leaving generated file unchanged\n", schema)
 			return nil
 		}
 		return err
 	}
 
-	src, err := deviceschema.Generate(*schemaPath)
+	src, err := deviceschema.Generate(schema)
 	if err != nil {
 		return err
 	}
 
-	return writeFile(*outPath, src)
+	return writeFile(schemaGeneratedPath, src)
+}
+
+func resolvePaths(deviceYamlPath, schemaGeneratedPath string) (string, string, error) {
+	if deviceYamlPath != "" && schemaGeneratedPath != "" {
+		return deviceYamlPath, schemaGeneratedPath, nil
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", "", err
+	}
+
+	defDeviceYamlPath, defSchemaGeneratedPath, err := deviceschema.GetSchemaPaths(wd)
+	if err != nil {
+		return "", "", err
+	}
+
+	// If no path was provided use the path from deviceschema.GetSchemaPaths
+	if deviceYamlPath == "" {
+		deviceYamlPath = defDeviceYamlPath
+	}
+	if schemaGeneratedPath == "" {
+		schemaGeneratedPath = defSchemaGeneratedPath
+	}
+
+	return deviceYamlPath, schemaGeneratedPath, nil
 }
 
 func writeFile(path string, data []byte) error {
