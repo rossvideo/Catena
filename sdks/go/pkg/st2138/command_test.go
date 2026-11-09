@@ -88,7 +88,7 @@ func TestCommandNoResponse(t *testing.T) {
 }
 
 func TestCommandExceptionResult(t *testing.T) {
-	errorMsg := NewPolyglotText("en", "Something failed")
+	errorMsg := PolyglotText{"en": "Something failed"}
 	result := CommandException("TestError", "detailed info", errorMsg)
 
 	if result.IsEmpty() {
@@ -128,7 +128,7 @@ func TestCommandExceptionResult(t *testing.T) {
 }
 
 func TestCommandExceptionResult_MultipleLanguages(t *testing.T) {
-	errorMsg := NewPolyglotText("en", "Command not found").With("fr", "Commande introuvable")
+	errorMsg := PolyglotText{"en": "Command not found", "fr": "Commande introuvable"}
 	result := CommandException("NotFound", "missing", errorMsg)
 
 	exc := result.GetException()
@@ -177,7 +177,7 @@ func TestCommandResponse_GetProtoResponse_NoResponse(t *testing.T) {
 }
 
 func TestCommandResponse_GetProtoResponse_Exception(t *testing.T) {
-	result := CommandException("E", "d", NewPolyglotText("fr", "erreur"))
+	result := CommandException("E", "d", PolyglotText{"fr": "erreur"})
 	proto := result.Proto
 
 	if _, ok := proto.Kind.(*protos.CommandResponse_Exception); !ok {

@@ -51,6 +51,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection/grpc_reflection_v1"
 	"google.golang.org/grpc/status"
@@ -67,13 +68,20 @@ import (
 const bufSize = 1024 * 1024
 
 type testTransportConfig struct {
-	port         uint16
-	reflection   bool
-	isDev        bool
-	startupDelay time.Duration
+	port          uint16
+	reflection    bool
+	disableHealth bool
+	isDev         bool
+	startupDelay  time.Duration
 }
 
 type testTransportOption func(*testTransportConfig)
+
+func withTestTransportHealthDisabled() testTransportOption {
+	return func(cfg *testTransportConfig) {
+		cfg.disableHealth = true
+	}
+}
 
 func withTestTransportDevMode(isDev bool) testTransportOption {
 	return func(cfg *testTransportConfig) {
@@ -102,7 +110,7 @@ func setupTestTransport(t *testing.T, slots []uint16, opts ...testTransportOptio
 	}
 
 	lis := bufconn.Listen(bufSize)
-	transport := NewTransport(config.GrpcOptions{Port: int(cfg.port), Reflection: cfg.reflection})
+	transport := NewTransport(config.GrpcOptions{Port: int(cfg.port), Reflection: cfg.reflection, DisableHealth: cfg.disableHealth})
 	runtime := transporttest.MakeStubServerRuntime(t)
 	runtime.Dev = cfg.isDev
 	runtime.Slots = slots
@@ -260,7 +268,11 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 					assertContext(t, ctx)
-					return []st2138.DeviceComponent{st2138.ComponentDevice(st2138.NewDevice(req.Slot))}, catena.StatusWithCode(catena.StatusCodeOk, "")
+					device, err := st2138.NewDevice(req.Slot).Build()
+					if err != nil {
+						t.Fatalf("expected no error for builder with valid value, got %v", err)
+					}
+					return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, client rpc.CatenaServiceClient, ctx context.Context, cancel context.CancelFunc) {
@@ -387,9 +399,12 @@ func TestTransport_DeviceRequest_Success(t *testing.T) {
 	handlerCalled := false
 	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
 		handlerCalled = true
-		device := st2138.NewDevice(req.Slot).
-			WithDetailLevel(st2138.DetailLevelFull)
-		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		device, err := st2138.NewDevice(req.Slot).
+			WithDetailLevel(st2138.DetailLevelFull).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -421,10 +436,22 @@ func TestTransport_DeviceRequest_MultipleChunks(t *testing.T) {
 	// The handler streams the device in pieces: a skeleton Device chunk
 	// followed by a param and a command component.
 	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
+		brightness, err := st2138.NewParamInt32(50).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		reset, err := st2138.NewParamEmpty().Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		device, err := st2138.NewDevice(req.Slot).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
 		return []st2138.DeviceComponent{
-			st2138.ComponentDevice(st2138.NewDevice(req.Slot)),
-			st2138.ComponentParam("brightness", st2138.NewParamInt32(50)),
-			st2138.ComponentCommand("reset", st2138.NewParamEmpty()),
+			st2138.ComponentDevice(&device),
+			st2138.ComponentParam("brightness", &brightness),
+			st2138.ComponentCommand("reset", &reset),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
@@ -705,10 +732,14 @@ func TestTransport_GetParam_Success(t *testing.T) {
 		if req.Fqoid != "counter" {
 			t.Errorf("expected fqoid 'counter', got %s", req.Fqoid)
 		}
-		param := st2138.NewParamInt32(21).
-			WithName(st2138.NewPolyglotText("en", "Counter")).
-			WithMinimalSet(true)
-		return *param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		param, err := st2138.NewParamInt32(21).
+			WithName(st2138.PolyglotText{"en": "Counter"}).
+			WithMinimalSet(true).
+			Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -1111,8 +1142,9 @@ func TestTransport_ParamInfoRequest_Success(t *testing.T) {
 		if !req.Recursive {
 			t.Error("expected recursive=true")
 		}
+		parent := st2138.PolyglotText{"en": "Parent"}
 		return []st2138.ParamInfo{
-			st2138.NewParamInfo("parent", st2138.NewPolyglotText("en", "Parent"), st2138.ParamTypeStruct, "", 0),
+			st2138.NewParamInfo("parent", parent, st2138.ParamTypeStruct, "", 0),
 			st2138.NewParamInfo("parent/child", nil, st2138.ParamTypeInt32, "", 0),
 			st2138.NewParamInfo("parent/arr", nil, st2138.ParamTypeStringArray, "", 5),
 		}, catena.StatusWithCode(catena.StatusCodeOk, "")
@@ -2129,6 +2161,58 @@ func TestTransport_AddLanguage_HandlerError(t *testing.T) {
 }
 
 // =============================================================================
+// Test: gRPC Health
+// =============================================================================
+
+func TestTransport_Health_Enabled(t *testing.T) {
+	ctx := context.Background()
+	transport, _, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	conn, err := dialTestServer(ctx, lis)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer conn.Close()
+
+	client := healthpb.NewHealthClient(conn)
+	resp, err := client.Check(ctx, &healthpb.HealthCheckRequest{})
+	if err != nil {
+		t.Fatalf("Check failed: %v", err)
+	}
+	if resp.Status != healthpb.HealthCheckResponse_SERVING {
+		t.Errorf("expected SERVING, got %v", resp.Status)
+	}
+
+	// Shutdown flips the service to NOT_SERVING so probes stop routing to us.
+	transport.healthServer.Shutdown()
+	resp, err = client.Check(ctx, &healthpb.HealthCheckRequest{})
+	if err != nil {
+		t.Fatalf("Check after shutdown failed: %v", err)
+	}
+	if resp.Status != healthpb.HealthCheckResponse_NOT_SERVING {
+		t.Errorf("expected NOT_SERVING after shutdown, got %v", resp.Status)
+	}
+}
+
+func TestTransport_Health_Disabled(t *testing.T) {
+	ctx := context.Background()
+	_, _, lis, cleanup := setupTestTransport(t, []uint16{0}, withTestTransportHealthDisabled())
+	defer cleanup()
+
+	conn, err := dialTestServer(ctx, lis)
+	if err != nil {
+		t.Fatalf("failed to dial: %v", err)
+	}
+	defer conn.Close()
+
+	_, err = healthpb.NewHealthClient(conn).Check(ctx, &healthpb.HealthCheckRequest{})
+	if status.Code(err) != codes.Unimplemented {
+		t.Errorf("expected Unimplemented when health is disabled, got: %v", err)
+	}
+}
+
+// =============================================================================
 // Test: gRPC Reflection
 // =============================================================================
 
@@ -2321,9 +2405,12 @@ func TestTransport_Start_EndpointsReachable(t *testing.T) {
 	}
 
 	runtime.GetDeviceFn = func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
-		device := st2138.NewDevice(req.Slot).
-			WithDetailLevel(st2138.DetailLevelFull)
-		return []st2138.DeviceComponent{st2138.ComponentDevice(device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		device, err := st2138.NewDevice(req.Slot).
+			WithDetailLevel(st2138.DetailLevelFull).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	// Start server in background. Port 0 makes net.Listen pick an available

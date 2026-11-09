@@ -39,6 +39,10 @@
 package st2138
 
 import (
+	"fmt"
+
+	"google.golang.org/protobuf/proto"
+
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
@@ -46,6 +50,11 @@ import (
 // every constraint kind defined in the protocol.
 type Constraint struct {
 	Proto *protos.Constraint
+}
+
+type ConstraintBuilder struct {
+	proto *protos.Constraint
+	err   error
 }
 
 // ConstraintType represents the type of a constraint
@@ -61,6 +70,7 @@ const (
 	ConstraintTypeStringChoice       ConstraintType = protos.Constraint_STRING_CHOICE
 	ConstraintTypeStringStringChoice ConstraintType = protos.Constraint_STRING_STRING_CHOICE
 	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
+	ConstraintTypeFormattedString    ConstraintType = protos.Constraint_FORMATTED_STRING
 )
 
 // --- Input types for constraint builders ---
@@ -100,30 +110,31 @@ type AlarmEntry struct {
 
 // NewConstraintInt32Choice creates an INT_CHOICE constraint from a list of
 // int32 value/name pairs.
-func NewConstraintInt32Choice(choices []Int32Choice) *Constraint {
+func NewConstraintInt32Choice(choices []Int32Choice) *ConstraintBuilder {
 	pbChoices := make([]*protos.Int32ChoiceConstraint_IntChoice, len(choices))
 	for i, c := range choices {
 		pbChoices[i] = &protos.Int32ChoiceConstraint_IntChoice{
 			Value: c.Value,
-			Name:  &protos.PolyglotText{DisplayStrings: c.Name},
+			Name:  c.Name.Proto(),
 		}
 	}
-	return &Constraint{
-		Proto: &protos.Constraint{
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_INT_CHOICE,
 			Kind: &protos.Constraint_Int32Choice{
 				Int32Choice: &protos.Int32ChoiceConstraint{Choices: pbChoices},
 			},
 		},
+		err: nil,
 	}
 }
 
 // NewConstraintInt32Range creates an INT_RANGE constraint with the given
 // min, max, and step. Display min/max default to 0 (use
 // NewConstraintInt32RangeWithDisplay to set them explicitly).
-func NewConstraintInt32Range(min, max, step int32) *Constraint {
-	return &Constraint{
-		Proto: &protos.Constraint{
+func NewConstraintInt32Range(min, max, step int32) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_INT_RANGE,
 			Kind: &protos.Constraint_Int32Range{
 				Int32Range: &protos.Int32RangeConstraint{
@@ -133,14 +144,15 @@ func NewConstraintInt32Range(min, max, step int32) *Constraint {
 				},
 			},
 		},
+		err: nil,
 	}
 }
 
 // NewConstraintInt32RangeWithDisplay creates an INT_RANGE constraint with
 // explicit display bounds.
-func NewConstraintInt32RangeWithDisplay(min, max, step, displayMin, displayMax int32) *Constraint {
-	return &Constraint{
-		Proto: &protos.Constraint{
+func NewConstraintInt32RangeWithDisplay(min, max, step, displayMin, displayMax int32) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_INT_RANGE,
 			Kind: &protos.Constraint_Int32Range{
 				Int32Range: &protos.Int32RangeConstraint{
@@ -152,15 +164,16 @@ func NewConstraintInt32RangeWithDisplay(min, max, step, displayMin, displayMax i
 				},
 			},
 		},
+		err: nil,
 	}
 }
 
 // NewConstraintFloatRange creates a FLOAT_RANGE constraint with the given
 // min, max, and step. Display min/max default to 0 (use
 // NewConstraintFloatRangeWithDisplay to set them explicitly).
-func NewConstraintFloatRange(min, max, step float32) *Constraint {
-	return &Constraint{
-		Proto: &protos.Constraint{
+func NewConstraintFloatRange(min, max, step float32) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_FLOAT_RANGE,
 			Kind: &protos.Constraint_FloatRange{
 				FloatRange: &protos.FloatRangeConstraint{
@@ -170,14 +183,15 @@ func NewConstraintFloatRange(min, max, step float32) *Constraint {
 				},
 			},
 		},
+		err: nil,
 	}
 }
 
 // NewConstraintFloatRangeWithDisplay creates a FLOAT_RANGE constraint with
 // explicit display bounds.
-func NewConstraintFloatRangeWithDisplay(min, max, step, displayMin, displayMax float32) *Constraint {
-	return &Constraint{
-		Proto: &protos.Constraint{
+func NewConstraintFloatRangeWithDisplay(min, max, step, displayMin, displayMax float32) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_FLOAT_RANGE,
 			Kind: &protos.Constraint_FloatRange{
 				FloatRange: &protos.FloatRangeConstraint{
@@ -189,14 +203,15 @@ func NewConstraintFloatRangeWithDisplay(min, max, step, displayMin, displayMax f
 				},
 			},
 		},
+		err: nil,
 	}
 }
 
 // NewConstraintStringChoice creates a STRING_CHOICE constraint. When strict
 // is true the value must be one of the provided choices.
-func NewConstraintStringChoice(strict bool, choices ...string) *Constraint {
-	return &Constraint{
-		Proto: &protos.Constraint{
+func NewConstraintStringChoice(strict bool, choices ...string) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_STRING_CHOICE,
 			Kind: &protos.Constraint_StringChoice{
 				StringChoice: &protos.StringChoiceConstraint{
@@ -205,22 +220,23 @@ func NewConstraintStringChoice(strict bool, choices ...string) *Constraint {
 				},
 			},
 		},
+		err: nil,
 	}
 }
 
 // NewConstraintStringStringChoice creates a STRING_STRING_CHOICE constraint
 // from a list of machine-value / display-name pairs. When strict is true the
 // value must be one of the provided choices.
-func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) *Constraint {
+func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) *ConstraintBuilder {
 	pbChoices := make([]*protos.StringStringChoiceConstraint_StringStringChoice, len(choices))
 	for i, c := range choices {
 		pbChoices[i] = &protos.StringStringChoiceConstraint_StringStringChoice{
 			Value: c.Value,
-			Name:  &protos.PolyglotText{DisplayStrings: c.Name},
+			Name:  c.Name.Proto(),
 		}
 	}
-	return &Constraint{
-		Proto: &protos.Constraint{
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_STRING_STRING_CHOICE,
 			Kind: &protos.Constraint_StringStringChoice{
 				StringStringChoice: &protos.StringStringChoiceConstraint{
@@ -229,38 +245,130 @@ func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) 
 				},
 			},
 		},
+		err: nil,
+	}
+}
+
+type StringFormat string
+
+// StringFormat constants matching the JSON Schema format names,
+// "regex" excluded as it is handled by NewConstraintStringRegex.
+const (
+	StringFormatDateTime            StringFormat = "date-time"
+	StringFormatDate                StringFormat = "date"
+	StringFormatTime                StringFormat = "time"
+	StringFormatDuration            StringFormat = "duration"
+	StringFormatEmail               StringFormat = "email"
+	StringFormatIDNEmail            StringFormat = "idn-email"
+	StringFormatHostname            StringFormat = "hostname"
+	StringFormatIDNHostname         StringFormat = "idn-hostname"
+	StringFormatIPv4                StringFormat = "ipv4"
+	StringFormatIPv6                StringFormat = "ipv6"
+	StringFormatURI                 StringFormat = "uri"
+	StringFormatURIReference        StringFormat = "uri-reference"
+	StringFormatIRI                 StringFormat = "iri"
+	StringFormatIRIReference        StringFormat = "iri-reference"
+	StringFormatUUID                StringFormat = "uuid"
+	StringFormatURITemplate         StringFormat = "uri-template"
+	StringFormatJSONPointer         StringFormat = "json-pointer"
+	StringFormatRelativeJSONPointer StringFormat = "relative-json-pointer"
+)
+
+func (sf StringFormat) IsValid() bool {
+	switch sf {
+	case StringFormatDateTime, StringFormatDate, StringFormatTime, StringFormatDuration,
+		StringFormatEmail, StringFormatIDNEmail, StringFormatHostname, StringFormatIDNHostname,
+		StringFormatIPv4, StringFormatIPv6, StringFormatURI, StringFormatURIReference,
+		StringFormatIRI, StringFormatIRIReference, StringFormatUUID, StringFormatURITemplate,
+		StringFormatJSONPointer, StringFormatRelativeJSONPointer:
+		return true
+	}
+	return false
+}
+
+// NewConstraintStringFormat creates a FORMATTED_STRING constraint.
+// StringFormat is a JSON Schema format name (i.e. "email", "date"). When strict is true the
+// value must conform to the format(Not Implemented yet).
+func NewConstraintStringFormat(format StringFormat, strict bool) *ConstraintBuilder {
+	if !format.IsValid() {
+		return &ConstraintBuilder{err: fmt.Errorf("invalid string format: %s", format)}
+	}
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
+			Type: protos.Constraint_FORMATTED_STRING,
+			Kind: &protos.Constraint_FormattedString{
+				FormattedString: &protos.FormattedStringConstraint{
+					Format: string(format),
+					Strict: strict,
+				},
+			},
+		},
+		err: nil,
+	}
+}
+
+// NewConstraintStringRegex creates a FORMATTED_STRING constraint with a regex pattern.
+// When strict is true the value must conform to the regex(Not Implemented yet).
+func NewConstraintStringRegex(regex string, strict bool) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
+			Type: protos.Constraint_FORMATTED_STRING,
+			Kind: &protos.Constraint_FormattedString{FormattedString: &protos.FormattedStringConstraint{
+				Format: "regex",
+				Regex:  regex,
+				Strict: strict,
+			}},
+		},
+		err: nil,
 	}
 }
 
 // NewConstraintAlarmTable creates an ALARM_TABLE constraint from alarm entries.
-func NewConstraintAlarmTable(alarms []AlarmEntry) *Constraint {
+func NewConstraintAlarmTable(alarms []AlarmEntry) *ConstraintBuilder {
 	pbAlarms := make([]*protos.Alarm, len(alarms))
 	for i, a := range alarms {
 		pbAlarms[i] = &protos.Alarm{
 			BitValue: a.BitValue,
 			Severity: a.Severity,
 		}
-		if a.Description != nil {
-			pbAlarms[i].Description = &protos.PolyglotText{DisplayStrings: a.Description}
-		}
+		pbAlarms[i].Description = a.Description.Proto()
 	}
-	return &Constraint{
-		Proto: &protos.Constraint{
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_ALARM_TABLE,
 			Kind: &protos.Constraint_AlarmTable{
 				AlarmTable: &protos.AlarmTableConstraint{Alarms: pbAlarms},
 			},
 		},
+		err: nil,
 	}
 }
 
 // NewConstraintRefOid creates a constraint that references a shared
 // constraint defined in device.constraints by its OID.
-func NewConstraintRefOid(oid string) *Constraint {
-	return &Constraint{
-		Proto: &protos.Constraint{
+func NewConstraintRefOid(oid string) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
 			Type: protos.Constraint_UNDEFINED,
 			Kind: &protos.Constraint_RefOid{RefOid: oid},
 		},
+		err: nil,
 	}
+}
+
+// Build returns a usable Constraint from the builder. If the builder has an error, it
+// returns an empty Constraint and the error. Must be called after all builder methods have been called.
+func (cb *ConstraintBuilder) Build() (Constraint, error) {
+	if cb.err != nil {
+		return Constraint{}, cb.err
+	}
+	cb.err = ErrAlreadyBuilt
+	return Constraint{Proto: cb.proto}, nil
+}
+
+// Clone returns a deep copy of the ConstraintBuilder.
+// Inherits the builder's error state, including ErrAlreadyBuilt.
+// Must be called before Build(), or the clone will be unusable.
+func (cb *ConstraintBuilder) Clone() *ConstraintBuilder {
+	return &ConstraintBuilder{proto: proto.Clone(cb.proto).(*protos.Constraint), err: cb.err}
 }

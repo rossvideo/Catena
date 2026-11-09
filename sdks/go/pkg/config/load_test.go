@@ -235,6 +235,71 @@ func TestInitOptions(t *testing.T) {
 		}
 	})
 
+	// the verbosity shorthands follow log-level suppression
+	t.Run("suppressing log-level also hides -v shorthands", func(t *testing.T) {
+		_, err := InitOptions("test_app", []string{"-v"}, WithSuppressedInputs("log-level"))
+		if err == nil {
+			t.Errorf("Expected error for the unregistered -v flag got nil")
+		}
+	})
+
+	t.Run("WithOnlyInputs loads only allowed CLI flags", func(t *testing.T) {
+		opts, err := InitOptions("test_app", []string{"--use-rest", "--rest-port=1234"}, WithOnlyInputs("use-rest", "rest-port"))
+		if err != nil {
+			t.Fatalf("Expected no error got: %v", err)
+		}
+		if !opts.UseRest || opts.Rest.Port != 1234 {
+			t.Errorf("Expected UseRest and port 1234 got: %v %d", opts.UseRest, opts.Rest.Port)
+		}
+		if _, err := InitOptions("test_app", []string{"--max-connections=5"}, WithOnlyInputs("use-rest")); err == nil {
+			t.Errorf("Expected error for a flag outside the allowlist got nil")
+		}
+		if _, err := InitOptions("test_app", []string{"-v"}, WithOnlyInputs("use-rest")); err == nil {
+			t.Errorf("Expected error for -v outside the allowlist got nil")
+		}
+	})
+
+	t.Run("WithOnlyInputs ignores env for inputs outside the allowlist", func(t *testing.T) {
+		t.Setenv("CATENA_USE_REST", "true")
+		t.Setenv("CATENA_USE_GRPC", "true")
+		opts, err := InitOptions("test_app", []string{}, WithOnlyInputs("use-rest"))
+		if err != nil {
+			t.Fatalf("Expected no error got: %v", err)
+		}
+		if !opts.UseRest {
+			t.Errorf("Expected allowed env CATENA_USE_REST to load")
+		}
+		if opts.UseGrpc {
+			t.Errorf("Expected CATENA_USE_GRPC to be ignored")
+		}
+	})
+
+	t.Run("WithOnlyInputs supports wildcards", func(t *testing.T) {
+		opts, err := InitOptions("test_app", []string{"--grpc-tls-enabled", "--grpc-tls-cert-file=a.pem"}, WithOnlyInputs("grpc-tls-*"))
+		if err != nil {
+			t.Fatalf("Expected no error got: %v", err)
+		}
+		if !opts.Grpc.TLS.Enabled || opts.Grpc.TLS.CertFile != "a.pem" {
+			t.Errorf("Expected grpc TLS options to load got: %+v", opts.Grpc.TLS)
+		}
+		if _, err := InitOptions("test_app", []string{"--rest-tls-enabled"}, WithOnlyInputs("grpc-tls-*")); err == nil {
+			t.Errorf("Expected error for non-matching flag got nil")
+		}
+	})
+
+	t.Run("WithSuppressedInputs wins over WithOnlyInputs", func(t *testing.T) {
+		_, err := InitOptions("test_app", []string{"--use-rest"}, WithOnlyInputs("use-rest"), WithSuppressedInputs("use-rest"))
+		if err == nil {
+			t.Errorf("Expected error for suppressed flag got nil")
+		}
+	})
+
+	t.Run("WithOnlyInputs with no names suppresses everything", func(t *testing.T) {
+		if _, err := InitOptions("test_app", []string{"--use-rest"}, WithOnlyInputs()); err == nil {
+			t.Errorf("Expected error got nil")
+		}
+	})
+
 	// suppressing an unknown input does nothing
 	t.Run("WithSuppressedInputs unknown name is no-op", func(t *testing.T) {
 		t.Setenv("CATENA_MAX_CONNECTIONS", "222")
@@ -284,6 +349,7 @@ func TestOptionMappings(t *testing.T) {
 		// gRPC transport
 		{"GRPC_PORT", "grpc-port", "7000", 7000, func(o RuntimeOptions) any { return o.Grpc.Port }},
 		{"GRPC_REFLECTION", "grpc-reflection", "true", true, func(o RuntimeOptions) any { return o.Grpc.Reflection }},
+		{"GRPC_DISABLE_HEALTH", "grpc-disable-health", "true", true, func(o RuntimeOptions) any { return o.Grpc.DisableHealth }},
 		{"GRPC_TLS_ENABLED", "grpc-tls-enabled", "true", true, func(o RuntimeOptions) any { return o.Grpc.TLS.Enabled }},
 		{"GRPC_TLS_CERT_FILE", "grpc-tls-cert-file", "/certs/grpc.crt", "/certs/grpc.crt", func(o RuntimeOptions) any { return o.Grpc.TLS.CertFile }},
 		{"GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "/certs/grpc.key", "/certs/grpc.key", func(o RuntimeOptions) any { return o.Grpc.TLS.KeyFile }},
@@ -312,7 +378,7 @@ func TestOptionMappings(t *testing.T) {
 		{"SILENT", "silent", "true", true, func(o RuntimeOptions) any { return o.Logger.Silent }},
 		{"LOG_DIR", "log-dir", "/var/log/catena", "/var/log/catena", func(o RuntimeOptions) any { return o.Logger.LogDir }},
 		{"LOG_LEVEL", "log-level", "error", slog.LevelError, func(o RuntimeOptions) any { return o.Logger.Level }},
-		{"LOG_TO_FILE", "log-to-file", "false", false, func(o RuntimeOptions) any { return o.Logger.WriteToFile }},          // defaults true
+		{"LOG_TO_FILE", "log-to-file", "true", true, func(o RuntimeOptions) any { return o.Logger.WriteToFile }},
 		{"LOG_TO_CONSOLE", "log-to-console", "false", false, func(o RuntimeOptions) any { return o.Logger.WriteToConsole }}, // defaults true
 		{"LOG_USE_JSON", "log-use-json", "true", true, func(o RuntimeOptions) any { return o.Logger.UseJSON }},
 	}

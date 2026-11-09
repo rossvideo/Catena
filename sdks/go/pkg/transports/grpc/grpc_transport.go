@@ -57,6 +57,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -72,6 +74,8 @@ type Transport struct {
 	port       int
 	reflection bool
 	tlsEnabled bool
+	// healthServer is nil when the health service is disabled.
+	healthServer *health.Server
 	// initErr records a construction-time failure (e.g. invalid TLS config).
 	// grpc.Creds must be supplied when the server is created, but NewTransport
 	// cannot return an error, so the error is surfaced from Start instead.
@@ -111,6 +115,11 @@ func NewTransport(cfg Options) *Transport {
 	transport.grpcServer = grpc.NewServer(serverOpts...)
 
 	rpc.RegisterCatenaServiceServer(transport.grpcServer, transport.catenaService)
+
+	if !cfg.DisableHealth {
+		transport.healthServer = health.NewServer()
+		healthpb.RegisterHealthServer(transport.grpcServer, transport.healthServer)
+	}
 
 	if cfg.Reflection {
 		reflection.Register(transport.grpcServer)
@@ -165,6 +174,10 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	}
 	t.log.Info("Shutting down gRPC transport")
 
+	// Report NOT_SERVING first so probes stop routing to us while we drain.
+	if t.healthServer != nil {
+		t.healthServer.Shutdown()
+	}
 	// Gracefully stop the gRPC server in a goroutine so we can also listen for context
 	// cancellation. GracefulStop will wait for existing RPCs to finish but will stop
 	// accepting new connections. If the context is cancelled before it finishes, we force

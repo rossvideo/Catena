@@ -239,6 +239,7 @@ func NewExampleState() *ExampleState {
 	state.slotOneParams.Store("brightness", int32(50))
 	state.slotOneParams.Store("contrast", int32(50))
 	state.slotOneParams.Store("saturation", int32(50))
+	state.slotOneParams.Store("contact_email", "operator@example.com")
 	return state
 }
 
