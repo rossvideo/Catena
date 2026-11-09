@@ -147,3 +147,14 @@ cfg, err := catena.InitOptions()  // reads CATENA_ENV, CATENA_PORT, etc.
 // Use a custom prefix for your application
 cfg, err := catena.InitOptions(catena.Options{Prefix: "MYAPP", AppName: "my_app"})  // reads MYAPP_ENV, MYAPP_PORT, etc.
 ```
+
+## Container Healthchecks
+
+[`cmd/catena-healthcheck`](cmd/catena-healthcheck) is a static binary for container `HEALTHCHECK`s and Kubernetes exec probes, usable in distroless images. It reads the same environment variables and flags as the device and checks every enabled transport (REST and/or gRPC).
+
+```sh
+go get -tool github.com/rossvideo/catena/sdks/go/cmd/catena-healthcheck
+go tool catena-healthcheck --use-rest
+```
+
+See the [package documentation](cmd/catena-healthcheck/doc.go) (or `go doc github.com/rossvideo/catena/sdks/go/cmd/catena-healthcheck`) for options, TLS behavior, exit codes and a Dockerfile example.

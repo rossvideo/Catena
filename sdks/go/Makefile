@@ -1,4 +1,5 @@
 CMDS := oneOfEverything hello_world
+TOOLS := catena-healthcheck
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
@@ -22,13 +23,21 @@ GRPC_M_OPTS    := $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(filter
 
 .PHONY: proto-tools protos clean-protos
 
-all: protos examples
+all: protos examples tools
 
 examples: $(CMDS)
 
 $(CMDS):
 	mkdir -p $(BIN_DIR)/$@
 	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
+
+# Utilities under cmd/. Built static (CGO off) like they ship in distroless
+# images; here it only checks that they build.
+tools: $(TOOLS)
+
+$(TOOLS):
+	mkdir -p $(BIN_DIR)/$@
+	CGO_ENABLED=0 go build -o $(BIN_DIR)/$@/$@ ./cmd/$@
 
 # Clean build artifacts and logs
 clean:
@@ -74,7 +83,7 @@ clean-protos:
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
 TRANSPORTTEST_PKG := github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest
 TESTCERTS_PKG := github.com/rossvideo/catena/sdks/go/pkg/internal/testcerts
-TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG)|$(TESTCERTS_PKG))($$|/)')
+TEST_PACKAGES := $(shell go list ./pkg/... ./cmd/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG)|$(TESTCERTS_PKG))($$|/)')
 
 COVERAGE_DIR ?= $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
