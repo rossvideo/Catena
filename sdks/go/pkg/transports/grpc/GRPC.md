@@ -73,13 +73,14 @@ Options:
 - `MinTime` (default 5m): minimum interval allowed between client keepalive pings.
 - `PermitWithoutStream` (default false): allow client keepalive pings on connections with no active RPCs.
 
-Behavior:
+Behaviour:
 
 - Always start from `grpc.DefaultOptions()` (or `config.InitOptions`). The message size limits are passed to grpc-go unchanged, so the zero value of `Options{}` means a 0-byte limit and rejects every non-empty message.
-- `MaxSendMsgSize` limits each message, not each stream. Handlers that stream large assets through `ExternalObjectRequest`, or large device models through `DeviceRequest`, must split them into chunks that each fit within the limit (`catena.SendAssetChunks` uses 64 KiB chunks); an oversized chunk fails the RPC with `ResourceExhausted`.
+- `MaxSendMsgSize` limits each message, not each stream. Handlers that stream large assets through `ExternalObjectRequest`, or large device models through `DeviceRequest`, must split them into chunks that each fit within the limit. An oversized chunk fails the RPC with `ResourceExhausted`.
 - `MaxConnectionIdle` never closes a connection with an open stream, so long-lived `Connect` streams are not affected; it only reaps connections nobody is using.
-- `MaxConnectionAge` together with a non-zero `MaxConnectionAgeGrace` forcibly closes connections regardless of activity, terminating `Connect` push streams and in-progress `ExternalObjectRequest` transfers. Both default to 0 for that reason; use `MaxConnectionIdle` to reap abandoned connections instead.
-- Clients that ping more often than `MinTime` (or at all while they have no active RPCs, unless `PermitWithoutStream` is set) are disconnected with `GOAWAY ENHANCE_YOUR_CALM` (`too_many_pings`). Clients that configure keepalive must use an interval of at least `MinTime`.
+- `MaxConnectionAge` together with a non-zero `MaxConnectionAgeGrace` forcibly closes connections regardless of activity, terminating `Connect` push streams and in-progress `ExternalObjectRequest` transfers. Both default to 0 for that reason.
+- Clients that ping more often than `MinTime` (or at all while they have no active RPCs, unless `PermitWithoutStream` is set) are disconnected. Clients that configure keepalive must use an interval of at least `MinTime`.
+
 - Env/CLI configuration: `{PREFIX}_GRPC_MAX_RECV_MSG_SIZE`, `{PREFIX}_GRPC_MAX_SEND_MSG_SIZE`, `{PREFIX}_GRPC_MAX_CONNECTION_IDLE`, `{PREFIX}_GRPC_MAX_CONNECTION_AGE`, `{PREFIX}_GRPC_MAX_CONNECTION_AGE_GRACE`, `{PREFIX}_GRPC_KEEPALIVE_TIME`, `{PREFIX}_GRPC_KEEPALIVE_TIMEOUT`, `{PREFIX}_GRPC_KEEPALIVE_MIN_TIME`, `{PREFIX}_GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM` (flags `--grpc-max-*` / `--grpc-keepalive-*`).
 
 ## Implemented RPCs
