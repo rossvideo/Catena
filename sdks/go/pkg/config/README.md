@@ -304,6 +304,7 @@ All options can be configured via env and CLI.
 - `PREFIX_GRPC_TLS_MUTUAL_AUTH` <-> `--grpc-tls-mutual-auth`
 - `PREFIX_GRPC_MAX_RECV_MSG_SIZE` <-> `--grpc-max-recv-msg-size` (bytes, must be > 0; default 4 MiB)
 - `PREFIX_GRPC_MAX_SEND_MSG_SIZE` <-> `--grpc-max-send-msg-size` (bytes, must be > 0; default 4 MiB)
+- `PREFIX_GRPC_MAX_CONCURRENT_STREAMS` <-> `--grpc-max-concurrent-streams` (in-flight RPCs per connection; 0 unlimited; default 100).
 - `PREFIX_GRPC_MAX_CONNECTION_IDLE` <-> `--grpc-max-connection-idle` (Go duration; 0 disables; default `15m`)
 - `PREFIX_GRPC_MAX_CONNECTION_AGE` <-> `--grpc-max-connection-age` (Go duration; 0 disables; default 0 so long-lived streams are not severed)
 - `PREFIX_GRPC_MAX_CONNECTION_AGE_GRACE` <-> `--grpc-max-connection-age-grace` (Go duration; 0 for unlimited)

@@ -103,6 +103,7 @@ func NewTransport(cfg Options) *Transport {
 		grpc.StreamInterceptor(transport.streamInterceptor),
 		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
 		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
+		grpc.MaxConcurrentStreams(cfg.MaxConcurrentStreams),
 
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionIdle:     cfg.MaxConnectionIdle,
