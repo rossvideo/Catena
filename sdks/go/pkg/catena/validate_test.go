@@ -29,8 +29,8 @@
  */
 
 /**
- * @brief Tests that schema.go matches the ST 2138 device schema.
- * @file schema_test.go
+ * @brief Tests that validate.go matches the ST 2138 device schema.
+ * @file validate_test.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Omar Shah (omar.shah@rossvideo.com)
  * @date 2026-10-09

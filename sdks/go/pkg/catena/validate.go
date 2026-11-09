@@ -30,7 +30,7 @@
 
 /**
  * @brief Validation for values constrained by the ST 2138 device schema.
- * @file schema.go
+ * @file validate.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Omar Shah (omar.shah@rossvideo.com)
  * @date 2026-10-09

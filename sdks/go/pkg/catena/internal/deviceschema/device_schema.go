@@ -30,7 +30,7 @@
 
 /**
  * @brief Read the schema pattern generated in device.yaml and render them as Go constants
- * @file deviceschema.go
+ * @file device_schema.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Omar Shah (omar.shah@rossvideo.com)
  * @date 2026-10-26
