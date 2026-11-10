@@ -457,3 +457,141 @@ func TestConnectionQueue_LoggerSilent(t *testing.T) {
 		t.Fatalf("expected no component=connection-queue, got %s", out)
 	}
 }
+
+func TestConnectionCloseReason_String(t *testing.T) {
+	t.Run("none", func(t *testing.T) {
+		if got := CloseReasonNone.String(); got != "none" {
+			t.Errorf("CloseReasonNone.String() = %q, want %q", got, "none")
+		}
+	})
+
+	t.Run("shutdown", func(t *testing.T) {
+		if got := CloseReasonShutdown.String(); got != "shutdown" {
+			t.Errorf("CloseReasonShutdown.String() = %q, want %q", got, "shutdown")
+		}
+	})
+
+	t.Run("expired", func(t *testing.T) {
+		if got := CloseReasonExpired.String(); got != "expired" {
+			t.Errorf("CloseReasonExpired.String() = %q, want %q", got, "expired")
+		}
+	})
+
+	t.Run("unknown", func(t *testing.T) {
+		if got := ConnectionCloseReason(99).String(); got != "unknown" {
+			t.Errorf("ConnectionCloseReason(99).String() = %q, want %q", got, "unknown")
+		}
+	})
+}
+
+func TestConnection_RecordCloseReason(t *testing.T) {
+	t.Run("records reason when not closing", func(t *testing.T) {
+		conn := &Connection{}
+		if !conn.recordCloseReason(CloseReasonShutdown) {
+			t.Fatal("expected recordCloseReason to succeed")
+		}
+		if conn.CloseReason() != CloseReasonShutdown {
+			t.Errorf("close reason = %s, want shutdown", conn.CloseReason())
+		}
+	})
+
+	t.Run("rejects when already closing", func(t *testing.T) {
+		conn := &Connection{closeReason: CloseReasonShutdown}
+		if conn.recordCloseReason(CloseReasonExpired) {
+			t.Fatal("expected markClosing to fail when a reason is already set")
+		}
+		if conn.CloseReason() != CloseReasonShutdown {
+			t.Errorf("close reason = %s, want shutdown", conn.CloseReason())
+		}
+	})
+}
+
+func TestConnectionQueue_SetConnectionExpiryWithMutexHeld(t *testing.T) {
+	t.Run("sets expiry on registered connection", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+
+		expiry := time.Now().Add(time.Hour).UTC()
+		cq.mu.Lock()
+		ok := cq.setConnectionExpiryWithMutexHeld(conn, expiry)
+		cq.mu.Unlock()
+		if !ok {
+			t.Fatal("expected setConnectionExpiryWithMutexHeld to succeed")
+		}
+		if !conn.Expiry.Equal(expiry) {
+			t.Errorf("expiry = %v, want %v", conn.Expiry, expiry)
+		}
+	})
+
+	t.Run("rejects unregistered connection", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		conn := &Connection{ID: 1}
+		expiry := time.Now().Add(time.Hour)
+
+		cq.mu.Lock()
+		ok := cq.setConnectionExpiryWithMutexHeld(conn, expiry)
+		cq.mu.Unlock()
+		if ok {
+			t.Fatal("expected setConnectionExpiryWithMutexHeld to fail for an unregistered connection")
+		}
+		if !conn.Expiry.IsZero() {
+			t.Errorf("expiry = %v, want zero", conn.Expiry)
+		}
+	})
+
+	t.Run("rejects connection that is already closing", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+		if !conn.recordCloseReason(CloseReasonShutdown) {
+			t.Fatal("expected recordCloseReason to succeed")
+		}
+
+		expiry := time.Now().Add(time.Hour)
+		cq.mu.Lock()
+		ok := cq.setConnectionExpiryWithMutexHeld(conn, expiry)
+		cq.mu.Unlock()
+		if ok {
+			t.Fatal("expected setConnectionExpiryWithMutexHeld to fail for a closing connection")
+		}
+		if !conn.Expiry.IsZero() {
+			t.Errorf("expiry = %v, want zero", conn.Expiry)
+		}
+	})
+}
+
+func TestConnectionQueue_SetConnectionExpiry(t *testing.T) {
+	t.Run("sets expiry on registered connection", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+
+		expiry := time.Now().Add(time.Hour).UTC()
+		if !cq.setConnectionExpiry(conn, expiry) {
+			t.Fatal("expected setConnectionExpiry to succeed")
+		}
+		if !conn.Expiry.Equal(expiry) {
+			t.Errorf("expiry = %v, want %v", conn.Expiry, expiry)
+		}
+	})
+
+	t.Run("rejects unregistered connection", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		conn := &Connection{ID: 1}
+		expiry := time.Now().Add(time.Hour)
+
+		if cq.setConnectionExpiry(conn, expiry) {
+			t.Fatal("expected setConnectionExpiry to fail for an unregistered connection")
+		}
+		if !conn.Expiry.IsZero() {
+			t.Errorf("expiry = %v, want zero", conn.Expiry)
+		}
+	})
+}

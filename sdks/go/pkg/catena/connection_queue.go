@@ -44,6 +44,7 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -78,6 +79,7 @@ type Connection struct {
 	Updates        chan *protos.PushUpdates
 	Done           chan struct{}
 	HandlerContext HandlerContext
+	Expiry         time.Time
 	owner          Transport
 	closeReason    ConnectionCloseReason
 }
@@ -109,9 +111,9 @@ func (c *Connection) CloseReason() ConnectionCloseReason {
 	return c.closeReason
 }
 
-// markClosing records reason if the connection is not already closing.
+// recordCloseReason records reason if the connection is not already closing.
 // The caller must hold cq.mu. It returns false when a reason was already set.
-func (c *Connection) markClosing(reason ConnectionCloseReason) bool {
+func (c *Connection) recordCloseReason(reason ConnectionCloseReason) bool {
 	if c.closeReason != CloseReasonNone {
 		return false
 	}
@@ -135,6 +137,33 @@ func newConnectionQueue(maxConnections int, log *slog.Logger) connectionQueueInt
 	}
 	cq.cond = sync.NewCond(&cq.mu)
 	return cq
+}
+
+// setConnectionExpiry sets the expiry time for a connection.
+// Use if cq.mu is not already held at the call site. Using this function while holding the
+// mutex can lead to deadlocks
+func (cq *connectionQueue) setConnectionExpiry(conn *Connection, expiry time.Time) bool {
+	cq.mu.Lock()
+	defer cq.mu.Unlock()
+	return cq.setConnectionExpiryWithMutexHeld(conn, expiry)
+}
+
+// setConnectionExpiryWithMutexHeld sets the expiry time for a connection.
+// The caller must hold cq.mu. If cq.mu is not held at the call site, use SetConnectionExpiry instead.
+// Using this function without holding the mutex can lead to race conditions.
+func (cq *connectionQueue) setConnectionExpiryWithMutexHeld(conn *Connection, expiry time.Time) bool {
+
+	// Checks if the connection is registered and not already closing
+	if registered, ok := cq.connections[conn.ID]; !ok || registered != conn {
+		return false
+	}
+
+	if conn.CloseReason() != CloseReasonNone {
+		return false
+	}
+
+	conn.Expiry = expiry
+	return true
 }
 
 // setMaxConnections updates the maximum number of connections allowed (0 = unlimited).
@@ -273,7 +302,7 @@ func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *C
 	defer cq.mu.Unlock()
 
 	// notify the connection to shut down by closing its Done channel
-	connection.markClosing(CloseReasonShutdown)
+	connection.recordCloseReason(CloseReasonShutdown)
 	select {
 	case <-connection.Done:
 	default:
