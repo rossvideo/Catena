@@ -346,6 +346,10 @@ func TestConnectionQueue_ShutdownConnection_Graceful(t *testing.T) {
 
 	cq.shutdownConnection(context.Background(), conn)
 
+	if conn.CloseReason() != CloseReasonShutdown {
+		t.Errorf("expected close reason shutdown, got %s", conn.CloseReason())
+	}
+
 	if cq.connectionCount() != 0 {
 		t.Errorf("expected 0 connections after shutdown, got %d", cq.connectionCount())
 	}

@@ -48,6 +48,27 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
+type ConnectionCloseReason int32
+
+const (
+	CloseReasonNone ConnectionCloseReason = iota
+	CloseReasonShutdown
+	CloseReasonExpired
+)
+
+func (r ConnectionCloseReason) String() string {
+	switch r {
+	case CloseReasonNone:
+		return "none"
+	case CloseReasonShutdown:
+		return "shutdown"
+	case CloseReasonExpired:
+		return "expired"
+	default:
+		return "unknown"
+	}
+}
+
 // Connection represents an active streaming connection (SSE or gRPC).
 // Each connection runs in its own goroutine and receives updates via the
 // Updates channel as proto PushUpdates messages. The Done channel is closed
@@ -58,6 +79,7 @@ type Connection struct {
 	Done           chan struct{}
 	HandlerContext HandlerContext
 	owner          Transport
+	closeReason    ConnectionCloseReason
 }
 
 // connectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
@@ -81,6 +103,20 @@ type connectionQueueInterface interface {
 	shutdownOwner(ctx context.Context, owner Transport)
 	shutdownConnection(ctx context.Context, connection *Connection)
 	connectionCount() int
+}
+
+func (c *Connection) CloseReason() ConnectionCloseReason {
+	return c.closeReason
+}
+
+// markClosing records reason if the connection is not already closing.
+// The caller must hold cq.mu. It returns false when a reason was already set.
+func (c *Connection) markClosing(reason ConnectionCloseReason) bool {
+	if c.closeReason != CloseReasonNone {
+		return false
+	}
+	c.closeReason = reason
+	return true
 }
 
 var _ connectionQueueInterface = (*connectionQueue)(nil)
@@ -237,6 +273,7 @@ func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *C
 	defer cq.mu.Unlock()
 
 	// notify the connection to shut down by closing its Done channel
+	connection.markClosing(CloseReasonShutdown)
 	select {
 	case <-connection.Done:
 	default:
