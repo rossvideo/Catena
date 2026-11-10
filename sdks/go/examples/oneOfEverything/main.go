@@ -362,16 +362,17 @@ func main() {
 	// --- Handler registration ---
 	// Each register* function wires one Catena endpoint family. Transports call
 	// these through the SDK runtime; you do not implement HTTP/gRPC routing here.
+	languages := NewLanguageStore(slotList)
 	registerAccessHandler(srv)                                           // EndpointAccess gate
 	registerProductStructs(srv, state)                                   // SDK-managed product per slot
 	registerDeviceHandlers(srv, counter, state)                          // GetDevice → buildDeviceDefinition
 	registerValueHandlers(srv, counter, state)                           // GetValue / SetValue
-	registerGetParamHandlers(srv, counter, state)                        // GetParam
+	registerGetComponentHandlers(srv, counter, state, languages)         // GetComponent (also serves GetParam)
 	registerCommandHandler(srv, counter, broadcastRunning, counterScope) // ExecuteCommand
 	registerAssetHandlers(srv, assets)                                   // ExternalObjectRequest
 	registerParamInfoHandlers(srv, counter, state)                       // ParamInfoRequest
 	registerLanguagesHandlers(srv)                                       // ListLanguages
-	registerLanguagePackHandlers(srv)                                    // LanguagePackRequest / AddLanguage / Update / Delete
+	registerLanguagePackHandlers(srv, languages)                         // LanguagePackRequest / AddLanguage / Update / Delete
 	registerHeartbeatHandlers(srv, state)                                // periodic BroadcastUpdate
 
 	srv.StartHeartbeat(5 * time.Second)
