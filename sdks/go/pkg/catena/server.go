@@ -63,7 +63,7 @@ const (
 	EndpointGetSlots EndpointType = iota
 	EndpointGetDevice
 	EndpointGetValue
-	EndpointGetParam
+	EndpointGetComponent
 	EndpointSetValue
 	EndpointReadAsset
 	EndpointCreateAsset
@@ -97,8 +97,8 @@ func (e EndpointType) String() string {
 		return "GetValue"
 	case EndpointSetValue:
 		return "SetValue"
-	case EndpointGetParam:
-		return "GetParam"
+	case EndpointGetComponent:
+		return "GetComponent"
 	case EndpointReadAsset:
 		return "ReadAsset"
 	case EndpointCreateAsset:
@@ -196,22 +196,27 @@ type Server interface {
 	// See [GetValueHandler].
 	//
 	// Registering this handler is optional: if no GetValue handler is registered
-	// for the slot but a GetParam handler is, the SDK derives GetValue responses
-	// from GetParam by returning just the param's value. If neither is
-	// registered, GetValue returns NotFound.
+	// for the slot but a GetComponent handler is, the SDK derives GetValue
+	// responses from GetComponent with kind PARAM by returning just the param's
+	// value. If neither is registered, GetValue returns NotFound.
 	//
 	// Handler signature:
 	//
 	//	func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult)
 	RegisterGetValueHandler(slot uint16, handler GetValueHandler)
 
-	// RegisterGetParamHandler registers the GetParam handler for a slot.
-	// See [GetParamHandler].
+	// RegisterGetComponentHandler registers the GetComponent handler for a slot.
+	// See [GetComponentHandler].
+	//
+	// This is the single registration point for per-component lookups. The
+	// on-the-wire GetParam endpoint is served by invoking this handler with
+	// kind PARAM. GetValue and ParamInfo also fall back to it, with kind PARAM,
+	// when their own handlers are not registered.
 	//
 	// Handler signature:
 	//
-	//	func(ctx catena.HandlerContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult)
-	RegisterGetParamHandler(slot uint16, handler GetParamHandler)
+	//	func(ctx catena.HandlerContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult)
+	RegisterGetComponentHandler(slot uint16, handler GetComponentHandler)
 
 	// RegisterSetValueHandler registers the SetValue handler for a slot. The
 	// handler must apply its batch atomically (all-or-nothing); see
@@ -270,12 +275,12 @@ type Server interface {
 	// [ParamInfoHandler].
 	//
 	// Registering this handler is optional: if no ParamInfo handler is registered
-	// for the slot but a GetParam handler is, the SDK derives ParamInfo responses
-	// for a specific oidPrefix from GetParam (flattening the param's sub-param
-	// subtree when recursive). The whole-tree request (oidPrefix == "") is not
-	// derivable from the single-OID GetParam and returns NotFound; serve it with a
-	// real ParamInfo handler. If neither handler is registered, ParamInfo returns
-	// NotFound.
+	// for the slot but a GetComponent handler is, the SDK derives ParamInfo
+	// responses for a specific oidPrefix from GetComponent with kind PARAM
+	// (flattening the param's sub-param subtree when recursive). The whole-tree
+	// request (oidPrefix == "") is not derivable from the single-OID lookup and
+	// returns NotFound; serve it with a real ParamInfo handler. If neither
+	// handler is registered, ParamInfo returns NotFound.
 	//
 	// Handler signature:
 	//
@@ -341,17 +346,19 @@ type Server interface {
 
 	// RegisterProductStruct hands the mandatory product struct for a slot to the
 	// SDK. Once registered, the SDK injects the product param into the device on
-	// GetDevice, answers GetParam/GetValue/ParamInfo for product/*, and rejects
-	// SetValue writes to product/* with StatusCodePermissionDenied — business
-	// logic no longer needs to handle the product struct. GetParam/GetValue/
-	// ParamInfo serve product/* even when no handler is registered for the slot,
-	// so a product-only slot (e.g. a command-only device with no params) still
-	// exposes its mandatory product param.
+	// GetDevice, answers GetComponent (kind PARAM)/GetValue/ParamInfo for
+	// product/*, and rejects SetValue writes to product/* with
+	// StatusCodePermissionDenied — business logic no longer needs to handle the
+	// product struct. GetComponent/GetValue/ParamInfo serve product/* even when
+	// no handler is registered for the slot, so a product-only slot (e.g. a
+	// command-only device with no params) still exposes its mandatory product
+	// param. GetComponent answers product/* only for kind PARAM; other kinds
+	// fall through to the registered handler.
 	// The product param carries the st2138:mon access scope: when authorization
 	// is enabled and a product struct is registered for the slot, GetDevice omits
 	// the product param for callers without the monitor read scope, and
-	// GetValue/GetParam/ParamInfo reject product/* requests from such callers with
-	// StatusCodePermissionDenied.
+	// GetValue/GetComponent/ParamInfo reject product/* requests from such callers
+	// with StatusCodePermissionDenied.
 	// Note: If you do not register a product struct for a slot, product/* requests
 	// fall through to the registered handler for that slot.
 	RegisterProductStruct(slot uint16, product ProductStruct)
@@ -370,7 +377,7 @@ type ServerRuntime interface {
 	GetSlots(transportContext TransportContext) ([]uint16, StatusResult)
 	InvokeGetDeviceHandler(transportContext TransportContext, req GetDeviceRequest, stream Stream[st2138.DeviceComponent]) StatusResult
 	InvokeGetValueHandler(transportContext TransportContext, req GetValueRequest) (st2138.Value, StatusResult)
-	InvokeGetParamHandler(transportContext TransportContext, req GetParamRequest) (st2138.Param, StatusResult)
+	InvokeGetComponentHandler(transportContext TransportContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult)
 	InvokeSetValueHandler(transportContext TransportContext, req SetValueRequest) StatusResult
 	InvokeReadAssetHandler(transportContext TransportContext, req ReadAssetRequest, stream Stream[st2138.Asset]) StatusResult
 	InvokeCreateAssetHandler(transportContext TransportContext, req CreateAssetRequest) StatusResult
@@ -407,7 +414,7 @@ type server struct {
 	slots                      map[uint16]struct{}
 	getDeviceHandlers          map[uint16]DeviceHandler
 	getValueHandlers           map[uint16]GetValueHandler
-	getParamHandlers           map[uint16]GetParamHandler
+	getComponentHandlers       map[uint16]GetComponentHandler
 	setValueHandlers           map[uint16]SetValueHandler
 	readAssetHandlers          map[uint16]ReadAssetHandler
 	createAssetHandlers        map[uint16]CreateAssetHandler
@@ -469,7 +476,7 @@ func NewServer(opts config.ServerOptions) (Server, error) {
 		slots:                      make(map[uint16]struct{}),
 		getDeviceHandlers:          make(map[uint16]DeviceHandler),
 		getValueHandlers:           make(map[uint16]GetValueHandler),
-		getParamHandlers:           make(map[uint16]GetParamHandler),
+		getComponentHandlers:       make(map[uint16]GetComponentHandler),
 		setValueHandlers:           make(map[uint16]SetValueHandler),
 		readAssetHandlers:          make(map[uint16]ReadAssetHandler),
 		createAssetHandlers:        make(map[uint16]CreateAssetHandler),
@@ -865,8 +872,8 @@ func (s *server) RegisterGetValueHandler(slot uint16, handler GetValueHandler) {
 	s.registerHandlerFn(slot, func() { s.getValueHandlers[slot] = handler })
 }
 
-func (s *server) RegisterGetParamHandler(slot uint16, handler GetParamHandler) {
-	s.registerHandlerFn(slot, func() { s.getParamHandlers[slot] = handler })
+func (s *server) RegisterGetComponentHandler(slot uint16, handler GetComponentHandler) {
+	s.registerHandlerFn(slot, func() { s.getComponentHandlers[slot] = handler })
 }
 
 func (s *server) RegisterSetValueHandler(slot uint16, handler SetValueHandler) {
@@ -991,28 +998,29 @@ func (s *server) InvokeGetValueHandler(transportContext TransportContext, req Ge
 
 			s.mu.Lock()
 			handler, ok := s.getValueHandlers[req.Slot]
-			paramHandler, hasParam := s.getParamHandlers[req.Slot]
+			componentHandler, hasComponent := s.getComponentHandlers[req.Slot]
 			s.mu.Unlock()
 
 			if ok {
 				return handler(ctx, req)
 			}
 
-			// No GetValue handler: derive the value from GetParam when one is
-			// registered, since a value is a strict subset of a param. The gate
-			// above already authorized this as a GetValue request, so dispatch to
-			// the GetParam handler directly (not InvokeGetParamHandler) to avoid
-			// re-running the GetParam access gate. Logged at Debug: for slots
-			// without a GetValue handler this is the normal path on every request,
-			// so it must not spam Info.
-			if hasParam {
-				s.serverLogger.Debug("GetValue not registered; deriving from GetParam handler", "slot", req.Slot, "fqoid", req.Fqoid)
-				param, res := paramHandler(ctx, GetParamRequest{Slot: req.Slot, Fqoid: req.Fqoid})
+			// No GetValue handler: derive the value from GetComponent with kind
+			// PARAM when one is registered, since a value is a strict subset of a
+			// param. The gate above already authorized this as a GetValue request,
+			// so dispatch to the GetComponent handler directly (not
+			// InvokeGetComponentHandler) to avoid re-running the GetComponent
+			// access gate. Logged at Debug: for slots without a GetValue handler
+			// this is the normal path on every request, so it must not spam Info.
+			if hasComponent {
+				s.serverLogger.Debug("GetValue not registered; deriving from GetComponent handler", "slot", req.Slot, "fqoid", req.Fqoid)
+				resp, res := componentHandler(ctx, GetComponentRequest{Slot: req.Slot, Oid: req.Fqoid, Kind: st2138.ComponentKindParam})
 				if res.IsError() {
 					return st2138.Value{}, res
 				}
-				if param.Proto == nil {
-					return st2138.Value{}, StatusWithCode(StatusCodeInternal, "GetParam handler returned nil param")
+				param, res := paramFromComponent(resp)
+				if res.IsError() {
+					return st2138.Value{}, res
 				}
 				return Reply(st2138.Value{Proto: param.Proto.GetValue()})
 			}
@@ -1022,32 +1030,69 @@ func (s *server) InvokeGetValueHandler(transportContext TransportContext, req Ge
 		})
 }
 
-func (s *server) InvokeGetParamHandler(transportContext TransportContext, req GetParamRequest) (st2138.Param, StatusResult) {
-	return withGate(s, transportContext, EndpointGetParam, false,
-		func(ctx HandlerContext) (st2138.Param, StatusResult) {
-			// The SDK owns product/* only when a product struct is registered for the
-			// slot; answer it directly instead of passing to business logic. The
-			// product param is mon-scoped, so gate the SDK-managed read on mon. This
-			// runs before the handler lookup so a product-only slot (e.g. a
-			// command-only device with no params, hence no GetParam handler) still
+// validComponentKind reports whether kind is one of the five addressable
+// component kinds. UNUSED and any other value are not valid requests.
+func validComponentKind(kind st2138.ComponentKind) bool {
+	switch kind {
+	case st2138.ComponentKindParam,
+		st2138.ComponentKindConstraint,
+		st2138.ComponentKindMenu,
+		st2138.ComponentKindCommand,
+		st2138.ComponentKindLanguagePack:
+		return true
+	default:
+		return false
+	}
+}
+
+// paramFromComponent extracts the Param from a kind-PARAM ComponentResponse.
+// A response that is not a param, or whose param proto is nil, is Internal:
+// the handler reported success without returning the requested component.
+func paramFromComponent(resp st2138.ComponentResponse) (st2138.Param, StatusResult) {
+	param := resp.Proto.GetParam().GetParam()
+	if param == nil {
+		return st2138.Param{}, StatusWithCode(StatusCodeInternal, "GetComponent handler returned nil param")
+	}
+	return st2138.Param{Proto: param}, StatusWithCode(StatusCodeOk, "")
+}
+
+func (s *server) InvokeGetComponentHandler(transportContext TransportContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+	return withGate(s, transportContext, EndpointGetComponent, false,
+		func(ctx HandlerContext) (st2138.ComponentResponse, StatusResult) {
+			// Argument validation runs after the auth gate so an unauthorized
+			// caller only ever sees a security error, never a validation hint.
+			if !validComponentKind(req.Kind) {
+				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInvalidArgument, "invalid component kind")
+			}
+
+			// The SDK owns product/* only for kind PARAM, and only when a product
+			// struct is registered for the slot; answer it directly instead of
+			// passing to business logic. The product param is mon-scoped, so gate
+			// the SDK-managed read on mon. This runs before the handler lookup so
+			// a product-only slot (e.g. a command-only device with no params) still
 			// serves product/*. When no product struct is registered, product/*
 			// falls through to the business-logic handler, which does its own scoping.
-			if isProductOid(req.Fqoid) {
+			// Other kinds are not the product param and always fall through.
+			if req.Kind == st2138.ComponentKindParam && isProductOid(req.Oid) {
 				if product, has := s.productForSlot(req.Slot); has {
 					if scopeRes := ctx.RequireReadScope(st2138.ScopeMon); scopeRes.IsError() {
-						return st2138.Param{}, scopeRes
+						return st2138.ComponentResponse{}, scopeRes
 					}
-					return productParamForOid(product, req.Fqoid)
+					param, res := productParamForOid(product, req.Oid)
+					if res.IsError() {
+						return st2138.ComponentResponse{}, res
+					}
+					return st2138.ComponentResponseParam(req.Oid, &param), StatusWithCode(StatusCodeOk, "")
 				}
 			}
 
 			s.mu.Lock()
-			handler, ok := s.getParamHandlers[req.Slot]
+			handler, ok := s.getComponentHandlers[req.Slot]
 			s.mu.Unlock()
 
 			if !ok {
-				s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointGetParam, "slot", req.Slot)
-				return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "fqoid "+req.Fqoid+" not found at slot "+strconv.Itoa(int(req.Slot)))
+				s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointGetComponent, "slot", req.Slot)
+				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "component "+req.Oid+" not found at slot "+strconv.Itoa(int(req.Slot)))
 			}
 			return handler(ctx, req)
 		})
@@ -1178,26 +1223,31 @@ func (s *server) InvokeParamInfoHandler(transportContext TransportContext, req P
 
 			s.mu.Lock()
 			handler, ok := s.paramInfoHandlers[req.Slot]
-			paramHandler, hasParam := s.getParamHandlers[req.Slot]
+			componentHandler, hasComponent := s.getComponentHandlers[req.Slot]
 			s.mu.Unlock()
 
 			if ok {
 				return struct{}{}, handler(ctx, req, stream)
 			}
 
-			// No ParamInfo handler: derive from GetParam when one is registered,
-			// since a param carries every field a ParamInfo needs (recursive
-			// requests flatten the returned param's own sub-param subtree). GetParam
-			// is single-OID, so the whole-tree request (oidPrefix == "") cannot be
-			// served this way and stays NotFound — it needs a real ParamInfo handler.
-			// The gate above already authorized this as a ParamInfo request, so
-			// dispatch to the GetParam handler directly (not InvokeGetParamHandler)
-			// to avoid re-running the GetParam access gate. Logged at Debug: for
-			// slots without a ParamInfo handler this is the normal path on every
-			// request, so it must not spam Info.
-			if hasParam && req.OidPrefix != "" {
-				s.serverLogger.Debug("ParamInfo not registered; deriving from GetParam handler", "slot", req.Slot, "oidPrefix", req.OidPrefix)
-				param, res := paramHandler(ctx, GetParamRequest{Slot: req.Slot, Fqoid: req.OidPrefix})
+			// No ParamInfo handler: derive from GetComponent with kind PARAM when
+			// one is registered, since a param carries every field a ParamInfo
+			// needs (recursive requests flatten the returned param's own sub-param
+			// subtree). GetComponent is single-OID, so the whole-tree request
+			// (oidPrefix == "") cannot be served this way and stays NotFound — it
+			// needs a real ParamInfo handler. The gate above already authorized
+			// this as a ParamInfo request, so dispatch to the GetComponent handler
+			// directly (not InvokeGetComponentHandler) to avoid re-running the
+			// GetComponent access gate. Logged at Debug: for slots without a
+			// ParamInfo handler this is the normal path on every request, so it
+			// must not spam Info.
+			if hasComponent && req.OidPrefix != "" {
+				s.serverLogger.Debug("ParamInfo not registered; deriving from GetComponent handler", "slot", req.Slot, "oidPrefix", req.OidPrefix)
+				resp, res := componentHandler(ctx, GetComponentRequest{Slot: req.Slot, Oid: req.OidPrefix, Kind: st2138.ComponentKindParam})
+				if res.IsError() {
+					return struct{}{}, res
+				}
+				param, res := paramFromComponent(resp)
 				if res.IsError() {
 					return struct{}{}, res
 				}

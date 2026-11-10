@@ -113,7 +113,7 @@ func newParamInfoFromDescriptor(oid string, param *protos.Param) st2138.ParamInf
 }
 
 // ParamInfosFromParam streams ParamInfo responses for oid from a single Param
-// already resolved for it (e.g. the return of a GetParam handler), emitting the
+// already resolved for it (e.g. the param inside a GetComponent response), emitting the
 // param's own descriptor and, when recursive, flattening its sub-param subtree
 // into fully-qualified oids. It is the single-Param mirror of
 // ParamInfosForRequest: a business-logic helper a ParamInfo handler can delegate

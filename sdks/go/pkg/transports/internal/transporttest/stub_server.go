@@ -57,7 +57,7 @@ type StubServerRuntime struct {
 	GetSlotsFn               func(ctx catena.TransportContext) ([]uint16, catena.StatusResult)
 	GetDeviceFn              func(ctx catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult)
 	GetValueFn               func(ctx catena.TransportContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult)
-	GetParamFn               func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult)
+	GetComponentFn           func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult)
 	SetValueFn               func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult
 	ReadAssetFn              func(ctx catena.TransportContext, req catena.ReadAssetRequest) ([]st2138.Asset, catena.StatusResult)
 	CreateAssetFn            func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult
@@ -135,12 +135,12 @@ func (s *StubServerRuntime) InvokeGetValueHandler(ctx catena.TransportContext, r
 	return catena.ReplyError[st2138.Value](catena.StatusCodeInternal, "GetValue handler not implemented")
 }
 
-func (s *StubServerRuntime) InvokeGetParamHandler(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
-	if s.GetParamFn != nil {
-		return s.GetParamFn(ctx, req)
+func (s *StubServerRuntime) InvokeGetComponentHandler(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+	if s.GetComponentFn != nil {
+		return s.GetComponentFn(ctx, req)
 	}
-	s.panicf("GetParam handler not implemented in stubServerRuntime for slot %d, fqoid %s", req.Slot, req.Fqoid)
-	return st2138.Param{}, catena.StatusResult{Code: catena.StatusCodeInternal, Error: "GetParam handler not implemented"}
+	s.panicf("GetComponent handler not implemented in stubServerRuntime for slot %d, oid %s, kind %s", req.Slot, req.Oid, req.Kind)
+	return st2138.ComponentResponse{}, catena.StatusResult{Code: catena.StatusCodeInternal, Error: "GetComponent handler not implemented"}
 }
 
 func (s *StubServerRuntime) InvokeSetValueHandler(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {

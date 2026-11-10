@@ -94,6 +94,21 @@ func MarshalDeviceJSON(device *protos.Device) ([]byte, error) {
 	return cleanDeviceJSON(data)
 }
 
+// MarshalComponentResponseJSON marshals a GetComponent response to JSON with
+// the same SMPTE-compliant treatment as MarshalDeviceComponentJSON. The oneof
+// keys match a DeviceComponent chunk (param, shared_constraint, menu, command,
+// language_pack), so the same cleanup keeps meaningful proto3 zeros.
+func MarshalComponentResponseJSON(resp *protos.ComponentResponse) ([]byte, error) {
+	if resp == nil {
+		return nil, nil
+	}
+	data, err := deviceMarshalOpts.Marshal(resp)
+	if err != nil {
+		return nil, err
+	}
+	return cleanDeviceComponentJSON(data)
+}
+
 // MarshalComponentParamJSON marshals a GetParam response (component param) to
 // JSON with the same SMPTE-compliant treatment as MarshalDeviceJSON. It uses
 // EmitUnpopulated so proto3 defaults that are meaningful for a param survive
