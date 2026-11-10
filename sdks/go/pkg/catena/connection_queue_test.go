@@ -148,6 +148,39 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 	}
 }
 
+func TestConnectionQueue_RegisterOwnedConnection_ExpiredToken(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil)
+		owner := &stubTransport{tb: t}
+
+		valid := HandlerContext{tokenExpiry: time.Now().Add(time.Hour)}
+		conn, res := cq.registerOwnedConnection(owner, valid, nil)
+		if res.Code != StatusCodeOk || conn == nil {
+			t.Fatalf("unexpired token should register, got conn=%v res=%v", conn, res)
+		}
+		if !conn.Expiry.Equal(valid.tokenExpiry) {
+			t.Errorf("expiry = %v, want %v", conn.Expiry, valid.tokenExpiry)
+		}
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil)
+		owner := &stubTransport{tb: t}
+
+		expired := HandlerContext{tokenExpiry: time.Now().Add(-time.Second)}
+		conn, res := cq.registerOwnedConnection(owner, expired, nil)
+		if res.Code != StatusCodePermissionDenied || conn != nil {
+			t.Fatalf("expired token should be rejected, got conn=%v res=%v", conn, res)
+		}
+		if res.Error != "Token expired" {
+			t.Errorf("error = %q, want %q", res.Error, "Token expired")
+		}
+		if cq.connectionCount() != 0 {
+			t.Errorf("expected 0 connections after rejected expiry, got %d", cq.connectionCount())
+		}
+	})
+}
+
 func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 	cq := newConnectionQueue(1, nil)
 	owner := &stubTransport{tb: t}

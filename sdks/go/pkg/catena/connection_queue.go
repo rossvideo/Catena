@@ -187,6 +187,12 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		return nil, StatusWithCode(StatusCodeResourceExhausted, "Maximum connections reached")
 	}
 
+	// Check if the token has expired already
+	expiry := handlerContext.tokenExpiry
+	if !expiry.IsZero() && !time.Now().Before(expiry) {
+		return nil, StatusWithCode(StatusCodePermissionDenied, "Token expired")
+	}
+
 	cq.nextConnID++
 	conn := &Connection{
 		ID:             cq.nextConnID,
@@ -196,6 +202,7 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		owner:          owner,
 	}
 	cq.connections[cq.nextConnID] = conn
+	cq.setConnectionExpiryWithMutexHeld(conn, expiry)
 
 	// send the initial update if provided
 	if initialUpdate != nil {
