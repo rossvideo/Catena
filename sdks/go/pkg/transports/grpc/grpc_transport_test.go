@@ -2815,7 +2815,7 @@ func TestTransport_DefaultOptions_StreamLargeAsset(t *testing.T) {
 	}
 }
 
-// TestTransport_DefaultOptions_LongLivedConnectStream verifies that a Connect
+// TestTransport_MaxConnectionsAge_DoesNotReapActiveConnection verifies that a Connect
 // stream survives the connection reaching MaxConnectionAge. This should not reap
 // the connection because the default MaxConnectionAgeGrace is 0 (unlimited grace period).
 func TestTransport_MaxConnectionsAge_DoesNotReapActiveConnection(t *testing.T) {
@@ -2859,7 +2859,7 @@ func TestTransport_MaxConnectionsAge_DoesNotReapActiveConnection(t *testing.T) {
 	push(2)
 }
 
-// TestTransport_MaxConnectionIdle_DoesNotReapActiveConnectStream verifies that
+// TestTransport_MaxConnectionIdle_DoesNotReapActiveConnection verifies that
 // an open Connect stream keeps its connection out of idle reaping
 func TestTransport_MaxConnectionIdle_DoesNotReapActiveConnection(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
