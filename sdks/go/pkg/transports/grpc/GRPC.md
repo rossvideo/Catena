@@ -66,14 +66,14 @@ Options:
 
 - `MaxRecvMsgSize` (default 4 MiB): largest request message the server accepts; larger requests fail with `ResourceExhausted`.
 - `MaxSendMsgSize` (default 4 MiB): largest message the server sends, applied to each streamed chunk.
-- `MaxConcurrentStreams` (default 100): in-flight RPCs allowed on one client connection.
-- `MaxConnectionIdle` (default 15m): closes connections that have had no active RPCs for this long; 0 disables it.
-- `MaxConnectionAge` (default 0, disabled): the longest a connection may stay open. Once it is reached, the server stops accepting new RPCs on that connection and the client moves new calls to a fresh one, RPCs already open keep running until `MaxConnectionAgeGrace` expires.
-- `MaxConnectionAgeGrace` (default 0, unlimited): how long RPCs already open may continue after `MaxConnectionAge` before the connection is forcibly closed. If set to 0 (unlimited), already open RPCs will not be forcibly shutdown.
-- `KeepaliveTime` (default 2h): how long a connection may be quiet before the server pings the client.
-- `KeepaliveTimeout` (default 20s): how long the server waits for a ping ack before closing the connection.
-- `MinTime` (default 5m): minimum interval allowed between client keepalive pings.
-- `PermitWithoutStream` (default false): allow client keepalive pings on connections with no active RPCs.
+- `MaxConcurrentStreams` (default 100): in-flight RPCs allowed on one client connection. 0 means unlimited.
+- `MaxConnectionIdle` (default 15m): closes connections that have had no active RPCs for this long. 0 disables it. Negative values are rejected from the environment and flags.
+- `MaxConnectionAge` (default 0, disabled): the longest a connection may stay open. Once it is reached, the server stops accepting new RPCs on that connection and the client moves new calls to a fresh one, RPCs already open keep running until `MaxConnectionAgeGrace` expires. 0 disables it. Negative values are rejected from the environment and flags.
+- `MaxConnectionAgeGrace` (default 0, unlimited): how long RPCs already open may continue after `MaxConnectionAge` before the connection is forcibly closed. 0 leaves those RPCs running. Negative values are rejected from the environment and flags.
+- `KeepaliveTime` (default 2h): how long a connection may be quiet before the server pings the client. 0 is ignored by the grpc library, which uses its 2h default. Negative values are rejected from the environment and flags.
+- `KeepaliveTimeout` (default 20s): how long the server waits for a ping ack before closing the connection. 0 is ignored by the grpc library, which uses its 20s default. Negative values are rejected from the environment and flags.
+- `MinTime` (default 5m): minimum interval allowed between client keepalive pings. 0 is ignored by the grpc library, which uses its 5m default. Negative values are rejected from the environment and flags.
+- `PermitWithoutStream` (default false): allow client keepalive pings on connections with no active RPCs. The zero value (false) rejects those pings and the server closes the connection.
 
 Behaviour:
 

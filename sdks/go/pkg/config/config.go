@@ -99,10 +99,6 @@ type RestOptions struct {
 }
 
 // GrpcOptions configures the gRPC transport.
-//
-// GrpcOptions must be initialized before use. Prefer config.InitOptions or
-// config.DefaultGrpcOptions(): MaxRecvMsgSize and MaxSendMsgSize are passed
-// straight to grpc-go, where 0 means "0 bytes", not "unlimited".
 type GrpcOptions struct {
 	// Port is the TCP port the gRPC server listens on (default 6254).
 	Port int `env:"GRPC_PORT" flag:"grpc-port"`
@@ -121,20 +117,28 @@ type GrpcOptions struct {
 	// MaxSendMsgSize is the largest message in bytes the server will send
 	MaxSendMsgSize int `env:"GRPC_MAX_SEND_MSG_SIZE" flag:"grpc-max-send-msg-size"`
 	// MaxConcurrentStreams limits in-flight RPCs on a single client connection
+	// Zero means unlimited.
 	MaxConcurrentStreams uint32 `env:"GRPC_MAX_CONCURRENT_STREAMS" flag:"grpc-max-concurrent-streams"`
-	// MaxConnectionIdle closes connections that have had no active RPCs for this duration
+	// MaxConnectionIdle closes connections that have had no active RPCs for this duration.
+	// Zero disables the idle timeout. Negative values are rejected from the environment and flags.
 	MaxConnectionIdle time.Duration `env:"GRPC_MAX_CONNECTION_IDLE" flag:"grpc-max-connection-idle"`
-	// MaxConnectionAge closes connections after this duration regardless of activity
+	// MaxConnectionAge closes connections after this duration regardless of activity.
+	// Zero disables the age limit. Negative values are rejected from the environment and flags.
 	MaxConnectionAge time.Duration `env:"GRPC_MAX_CONNECTION_AGE" flag:"grpc-max-connection-age"`
-	// MaxConnectionAgeGrace is how long in-flight RPCs may continue after MaxConnectionAge is reached
+	// MaxConnectionAgeGrace is how long in-flight RPCs may continue after MaxConnectionAge is reached.
+	// Zero means unlimited: open RPCs are left running. Negative values are rejected from the environment and flags.
 	MaxConnectionAgeGrace time.Duration `env:"GRPC_MAX_CONNECTION_AGE_GRACE" flag:"grpc-max-connection-age-grace"`
-	// KeepaliveTime is how long a connection may be idle before the server pings the client to check it is still alive
+	// KeepaliveTime is how long a connection may be idle before the server pings the client.
+	// Zero is ignored by the grpc library, which uses its 2h default. Negative values are rejected from the environment and flags.
 	KeepaliveTime time.Duration `env:"GRPC_KEEPALIVE_TIME" flag:"grpc-keepalive-time"`
-	// KeepaliveTimeout is how long the server waits for a keepalive ping ack before closing the connection
+	// KeepaliveTimeout is how long the server waits for a keepalive ping ack before closing the connection.
+	// Zero is ignored by the grpc library, which uses its 20s default. Negative values are rejected from the environment and flags.
 	KeepaliveTimeout time.Duration `env:"GRPC_KEEPALIVE_TIMEOUT" flag:"grpc-keepalive-timeout"`
-	// MinTime is the minimum interval a client may send keepalive pings
+	// MinTime is the minimum interval a client may send keepalive pings.
+	// Zero is ignored by the grpc library, which uses its 5m default. Negative values are rejected from the environment and flags.
 	MinTime time.Duration `env:"GRPC_KEEPALIVE_MIN_TIME" flag:"grpc-keepalive-min-time"`
-	// PermitWithoutStream allows client keepalive pings on connections with no active RPCs
+	// PermitWithoutStream allows client keepalive pings on connections with no active RPCs.
+	// The zero value (false) rejects those pings and the server closes the connection.
 	PermitWithoutStream bool `env:"GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM" flag:"grpc-keepalive-permit-without-stream"`
 }
 

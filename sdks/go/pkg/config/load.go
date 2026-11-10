@@ -186,10 +186,10 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractPositiveDuration("GRPC_MAX_CONNECTION_IDLE", "grpc-max-connection-idle", "Close gRPC connections with no active RPCs after this duration (0 disables)", &opts.Grpc.MaxConnectionIdle).
 		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE", "grpc-max-connection-age", "Close gRPC connections after this duration, severing open streams (0 disables)", &opts.Grpc.MaxConnectionAge).
 		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE_GRACE", "grpc-max-connection-age-grace", "Grace period for in-flight RPCs after max connection age (0 for unlimited)", &opts.Grpc.MaxConnectionAgeGrace).
-		extractPositiveDuration("GRPC_KEEPALIVE_TIME", "grpc-keepalive-time", "Idle duration before the gRPC server pings the client", &opts.Grpc.KeepaliveTime).
-		extractPositiveDuration("GRPC_KEEPALIVE_TIMEOUT", "grpc-keepalive-timeout", "Time to wait for a gRPC keepalive ping ack before closing the connection", &opts.Grpc.KeepaliveTimeout).
-		extractPositiveDuration("GRPC_KEEPALIVE_MIN_TIME", "grpc-keepalive-min-time", "Minimum interval allowed between client keepalive pings", &opts.Grpc.MinTime).
-		extractBool("GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM", "grpc-keepalive-permit-without-stream", "Allow client keepalive pings when there are no active RPCs", &opts.Grpc.PermitWithoutStream).
+		extractPositiveDuration("GRPC_KEEPALIVE_TIME", "grpc-keepalive-time", "Idle duration before the gRPC server pings the client (0 is ignored, grpc library uses 2h)", &opts.Grpc.KeepaliveTime).
+		extractPositiveDuration("GRPC_KEEPALIVE_TIMEOUT", "grpc-keepalive-timeout", "Time to wait for a gRPC keepalive ping ack before closing the connection (0 is ignored; grpc-go uses 20s)", &opts.Grpc.KeepaliveTimeout).
+		extractPositiveDuration("GRPC_KEEPALIVE_MIN_TIME", "grpc-keepalive-min-time", "Minimum interval allowed between client keepalive pings (0 is ignored, grpc library uses 5m)", &opts.Grpc.MinTime).
+		extractBool("GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM", "grpc-keepalive-permit-without-stream", "Allow client keepalive pings when there are no active RPCs (false closes the connection)", &opts.Grpc.PermitWithoutStream).
 		//server options
 		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of Connect and REST SSE subscriptions", &opts.Server.MaxConnections).
 		extractBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
