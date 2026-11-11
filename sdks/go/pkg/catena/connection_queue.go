@@ -94,6 +94,7 @@ type connectionQueue struct {
 	shuttingDown   bool
 	cond           *sync.Cond
 	log            *slog.Logger
+	now            func() time.Time
 }
 
 type connectionQueueInterface interface {
@@ -126,9 +127,14 @@ var _ connectionQueueInterface = (*connectionQueue)(nil)
 // newConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
 func newConnectionQueue(maxConnections int, log *slog.Logger) connectionQueueInterface {
+	return newConnectionQueueWithOptions(maxConnections, log, nil)
+}
+
+func newConnectionQueueWithOptions(maxConnections int, log *slog.Logger, now func() time.Time) connectionQueueInterface {
 	cq := &connectionQueue{
 		connections:    make(map[int]*Connection),
 		maxConnections: maxConnections,
+		now:            time.Now,
 	}
 	if log == nil {
 		cq.log = slog.New(slog.DiscardHandler)
@@ -136,6 +142,9 @@ func newConnectionQueue(maxConnections int, log *slog.Logger) connectionQueueInt
 		cq.log = log.With("component", "connection-queue")
 	}
 	cq.cond = sync.NewCond(&cq.mu)
+	if now != nil {
+		cq.now = now
+	}
 	return cq
 }
 
@@ -183,14 +192,14 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		return nil, StatusWithCode(StatusCodeInternal, "Server is shutting down")
 	}
 
-	if cq.maxConnections > 0 && len(cq.connections) >= cq.maxConnections {
-		return nil, StatusWithCode(StatusCodeResourceExhausted, "Maximum connections reached")
-	}
-
 	// Check if the token has expired already
 	expiry := handlerContext.tokenExpiry
-	if !expiry.IsZero() && !time.Now().Before(expiry) {
-		return nil, StatusWithCode(StatusCodePermissionDenied, "Token expired")
+	if !expiry.IsZero() && !cq.now().Before(expiry) {
+		return nil, StatusWithCode(StatusCodeUnauthenticated, "Token expired")
+	}
+
+	if cq.maxConnections > 0 && len(cq.connections) >= cq.maxConnections {
+		return nil, StatusWithCode(StatusCodeResourceExhausted, "Maximum connections reached")
 	}
 
 	cq.nextConnID++
@@ -237,7 +246,11 @@ func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scope string
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
+	now := cq.now()
 	for connID, conn := range cq.connections {
+		if !conn.Expiry.IsZero() && !now.Before(conn.Expiry) {
+			continue // skips the expired connections
+		}
 		if isValueUpdate(update) && scope != "" && !conn.HandlerContext.HasReadScope(scope) {
 			continue
 		}

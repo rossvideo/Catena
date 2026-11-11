@@ -53,6 +53,41 @@ func TestNewConnectionQueue(t *testing.T) {
 	}
 }
 
+func TestNewConnectionQueueWithOptions_InjectedClock(t *testing.T) {
+	frozenClock := time.Date(2026, 11, 11, 12, 0, 0, 0, time.UTC)
+
+	t.Run("accepts token that expires after the injected clock", func(t *testing.T) {
+		cq := newConnectionQueueWithOptions(0, nil, func() time.Time { return frozenClock })
+		owner := &stubTransport{tb: t}
+
+		valid := HandlerContext{tokenExpiry: frozenClock.Add(time.Second)}
+		conn, res := cq.registerOwnedConnection(owner, valid, nil)
+		if res.Code != StatusCodeOk || conn == nil {
+			t.Fatalf("injected clock should accept a token that expires after now, got conn=%v res=%v", conn, res)
+		}
+		if !conn.Expiry.Equal(valid.tokenExpiry) {
+			t.Errorf("expiry = %v, want %v", conn.Expiry, valid.tokenExpiry)
+		}
+	})
+
+	t.Run("rejects token expired before the injected clock", func(t *testing.T) {
+		cq := newConnectionQueueWithOptions(0, nil, func() time.Time { return frozenClock })
+		owner := &stubTransport{tb: t}
+
+		expired := HandlerContext{tokenExpiry: frozenClock.Add(-time.Second)}
+		conn, res := cq.registerOwnedConnection(owner, expired, nil)
+		if res.Code != StatusCodeUnauthenticated || conn != nil {
+			t.Fatalf("injected clock should reject an already-expired token, got conn=%v res=%v", conn, res)
+		}
+		if res.Error != "Token expired" {
+			t.Errorf("error = %q, want %q", res.Error, "Token expired")
+		}
+		if cq.connectionCount() != 0 {
+			t.Errorf("expected 0 connections after rejected expiry, got %d", cq.connectionCount())
+		}
+	})
+}
+
 func TestConnectionQueue_RegisterDeregister(t *testing.T) {
 	cq := newConnectionQueue(0, nil)
 	owner := &stubTransport{tb: t}
@@ -169,7 +204,7 @@ func TestConnectionQueue_RegisterOwnedConnection_ExpiredToken(t *testing.T) {
 
 		expired := HandlerContext{tokenExpiry: time.Now().Add(-time.Second)}
 		conn, res := cq.registerOwnedConnection(owner, expired, nil)
-		if res.Code != StatusCodePermissionDenied || conn != nil {
+		if res.Code != StatusCodeUnauthenticated || conn != nil {
 			t.Fatalf("expired token should be rejected, got conn=%v res=%v", conn, res)
 		}
 		if res.Error != "Token expired" {
@@ -199,88 +234,119 @@ func TestConnectionQueue_SetMaxConnections(t *testing.T) {
 }
 
 func TestConnectionQueue_NotifyUpdate(t *testing.T) {
-	cq := newConnectionQueue(0, nil)
+	t.Run("delivers to every connection", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil)
 
-	owner := &stubTransport{tb: t}
-	handlerContext := HandlerContext{
-		readScopes:   map[string]struct{}{st2138.ScopeOp: {}},
-		authzEnabled: true,
-	}
-
-	conn1, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
-	conn2, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
-
-	update := &protos.PushUpdates{
-		Slot: 0,
-		Kind: &protos.PushUpdates_Value{
-			Value: &protos.PushUpdates_PushValue{
-				Oid: "test/param",
-			},
-		},
-	}
-
-	cq.notifyUpdate(update, st2138.ScopeOp)
-
-	checkUpdate := func(name string, conn *Connection) {
-		select {
-		case received := <-conn.Updates:
-			pv, ok := received.Kind.(*protos.PushUpdates_Value)
-			if !ok || pv.Value.GetOid() != "test/param" {
-				t.Errorf("%s: expected OID 'test/param'", name)
-			}
-		case <-time.After(time.Second):
-			t.Errorf("%s: did not receive update", name)
+		owner := &stubTransport{tb: t}
+		handlerContext := HandlerContext{
+			readScopes:   map[string]struct{}{st2138.ScopeOp: {}},
+			authzEnabled: true,
 		}
-	}
 
-	checkUpdate("conn1", conn1)
-	checkUpdate("conn2", conn2)
-}
+		conn1, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
+		conn2, _ := cq.registerOwnedConnection(owner, handlerContext, nil)
 
-func TestConnectionQueue_NotifyUpdate_FiltersValueUpdatesByScope(t *testing.T) {
-	cq := newConnectionQueue(0, nil)
-	owner := &stubTransport{tb: t}
+		update := &protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{
+				Value: &protos.PushUpdates_PushValue{
+					Oid: "test/param",
+				},
+			},
+		}
 
-	matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
-		authzEnabled: true,
-	}, nil)
-	matchingWriteConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
-		writeScopes:  map[string]struct{}{st2138.ScopeMon: {}},
-		authzEnabled: true,
-	}, nil)
-	nonMatchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
-		readScopes:   map[string]struct{}{st2138.ScopeCfg: {}},
-		authzEnabled: true,
-	}, nil)
+		cq.notifyUpdate(update, st2138.ScopeOp)
 
-	update := &protos.PushUpdates{
-		Slot: 0,
-		Kind: &protos.PushUpdates_Value{
-			Value: &protos.PushUpdates_PushValue{Oid: "test/param"},
-		},
-	}
+		checkUpdate := func(name string, conn *Connection) {
+			select {
+			case received := <-conn.Updates:
+				pv, ok := received.Kind.(*protos.PushUpdates_Value)
+				if !ok || pv.Value.GetOid() != "test/param" {
+					t.Errorf("%s: expected OID 'test/param'", name)
+				}
+			case <-time.After(time.Second):
+				t.Errorf("%s: did not receive update", name)
+			}
+		}
 
-	cq.notifyUpdate(update, st2138.ScopeMon)
+		checkUpdate("conn1", conn1)
+		checkUpdate("conn2", conn2)
+	})
 
-	select {
-	case <-matchingConn.Updates:
-	case <-time.After(time.Second):
-		t.Fatal("matching connection did not receive value update")
-	}
+	t.Run("filters value updates by scope", func(t *testing.T) {
+		cq := newConnectionQueue(0, nil)
+		owner := &stubTransport{tb: t}
 
-	select {
-	case <-matchingWriteConn.Updates:
-	case <-time.After(time.Second):
-		t.Fatal("matching write-scope connection did not receive value update")
-	}
+		matchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
+			readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
+			authzEnabled: true,
+		}, nil)
+		matchingWriteConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
+			readScopes:   map[string]struct{}{st2138.ScopeMon: {}},
+			writeScopes:  map[string]struct{}{st2138.ScopeMon: {}},
+			authzEnabled: true,
+		}, nil)
+		nonMatchingConn, _ := cq.registerOwnedConnection(owner, HandlerContext{
+			readScopes:   map[string]struct{}{st2138.ScopeCfg: {}},
+			authzEnabled: true,
+		}, nil)
 
-	select {
-	case <-nonMatchingConn.Updates:
-		t.Fatal("non-matching connection should not receive value update")
-	default:
-	}
+		update := &protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{
+				Value: &protos.PushUpdates_PushValue{Oid: "test/param"},
+			},
+		}
+
+		cq.notifyUpdate(update, st2138.ScopeMon)
+
+		select {
+		case <-matchingConn.Updates:
+		case <-time.After(time.Second):
+			t.Fatal("matching connection did not receive value update")
+		}
+
+		select {
+		case <-matchingWriteConn.Updates:
+		case <-time.After(time.Second):
+			t.Fatal("matching write-scope connection did not receive value update")
+		}
+
+		select {
+		case <-nonMatchingConn.Updates:
+			t.Fatal("non-matching connection should not receive value update")
+		default:
+		}
+	})
+
+	t.Run("skips expired connection", func(t *testing.T) {
+		now := time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC)
+		cq := newConnectionQueueWithOptions(0, nil, func() time.Time { return now })
+		owner := &stubTransport{tb: t}
+
+		expiredConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: now.Add(time.Minute)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+		liveConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: now.Add(time.Hour)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+
+		now = now.Add(2 * time.Minute) // the first connection is now expired, the second connection is still alive
+
+		cq.notifyUpdate(&protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{Value: &protos.PushUpdates_PushValue{Oid: "p"}},
+		}, "")
+
+		if len(expiredConnection.Updates) != 0 {
+			t.Error("expired connection must not receive the update")
+		}
+		if len(liveConnection.Updates) != 1 {
+			t.Error("unexpired connection must still receive the update")
+		}
+	})
 }
 
 func TestIsValueUpdate_NilUpdate(t *testing.T) {
