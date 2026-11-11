@@ -876,4 +876,43 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		}
 	})
 
+	t.Run("sweeps expired connections from the ticker loop", func(t *testing.T) {
+		clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
+		cq := newConnectionQueueWithOptions(0, nil,
+			WithClock(clock.Now),
+			WithExpirySweepInterval(10*time.Millisecond),
+		).(*connectionQueue)
+		t.Cleanup(func() { stopConnectionQueue(cq) })
+		owner := &stubTransport{tb: t}
+
+		expired, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("register expired connection: %v", res)
+		}
+		liveConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: clock.Now().Add(time.Hour)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("register live connection: %v", res)
+		}
+
+		go func() {
+			<-expired.Done
+			cq.deregisterConnection(expired.ID)
+		}()
+
+		clock.Advance(2 * time.Minute)
+		waitForCount(cq, 1)
+
+		if expired.CloseReason() != CloseReasonExpired {
+			t.Errorf("expired close reason = %s, want expired", expired.CloseReason())
+		}
+
+		select {
+		case <-liveConnection.Done:
+			t.Fatal("unexpired connection was swept")
+		default:
+		}
+
+		cq.deregisterConnection(liveConnection.ID)
+	})
+
 }
