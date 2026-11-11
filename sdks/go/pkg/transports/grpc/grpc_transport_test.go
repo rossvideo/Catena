@@ -727,10 +727,10 @@ func TestTransport_GetParam_Success(t *testing.T) {
 	defer cleanup()
 
 	handlerCalled := false
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 		handlerCalled = true
-		if req.Fqoid != "counter" {
-			t.Errorf("expected fqoid 'counter', got %s", req.Fqoid)
+		if req.Kind != st2138.ComponentKindParam || req.Oid != "counter" {
+			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
 		}
 		param, err := st2138.NewParamInt32(21).
 			WithName(st2138.PolyglotText{"en": "Counter"}).
@@ -739,7 +739,7 @@ func TestTransport_GetParam_Success(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -786,8 +786,11 @@ func TestTransport_GetParam_HandlerError(t *testing.T) {
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
-		return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam {
+			t.Errorf("expected kind PARAM, got %v", req.Kind)
+		}
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -795,6 +798,157 @@ func TestTransport_GetParam_HandlerError(t *testing.T) {
 
 	_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "missing"})
 	assertGRPCCode(t, err, codes.NotFound, "handler error")
+}
+
+func TestTransport_GetParam_NilComponent(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.GetParam(ctx, &protos.GetParamPayload{Slot: 0, Oid: "counter"})
+	assertGRPCCode(t, err, codes.Internal, "nil param")
+}
+
+func TestTransport_GetComponent_Kinds(t *testing.T) {
+	ctx := context.Background()
+
+	param, err := st2138.NewParamInt32(42).Build()
+	if err != nil {
+		t.Fatalf("NewParamInt32(42).Build() failed: %v", err)
+	}
+	constraint, err := st2138.NewConstraintInt32Range(0, 100, 1).Build()
+	if err != nil {
+		t.Fatalf("NewConstraintInt32Range(0, 100, 1).Build() failed: %v", err)
+	}
+	menu, err := st2138.NewMenu().WithParamOids("brightness").Build()
+	if err != nil {
+		t.Fatalf("NewMenu().WithParamOids('brightness').Build() failed: %v", err)
+	}
+	command, err := st2138.NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("NewParamEmpty().Build() failed: %v", err)
+	}
+
+	tests := []struct {
+		kind    protos.GetComponentPayload_ComponentKind
+		oid     string
+		respond st2138.ComponentResponse
+		check   func(t *testing.T, resp *protos.ComponentResponse)
+	}{
+		{
+			kind: protos.GetComponentPayload_PARAM, oid: "brightness",
+			respond: st2138.ComponentResponseParam("brightness", &param),
+			check: func(t *testing.T, resp *protos.ComponentResponse) {
+				if resp.GetParam().GetOid() != "brightness" || resp.GetParam().GetParam().GetValue().GetInt32Value() != 42 {
+					t.Errorf("param response = %+v", resp.GetParam())
+				}
+			},
+		},
+		{
+			kind: protos.GetComponentPayload_CONSTRAINT, oid: "range",
+			respond: st2138.ComponentResponseConstraint("range", &constraint),
+			check: func(t *testing.T, resp *protos.ComponentResponse) {
+				if resp.GetSharedConstraint().GetOid() != "range" || resp.GetSharedConstraint().GetConstraint() == nil {
+					t.Errorf("constraint response = %+v", resp.GetSharedConstraint())
+				}
+			},
+		},
+		{
+			kind: protos.GetComponentPayload_MENU, oid: "status/main",
+			respond: st2138.ComponentResponseMenu("status/main", &menu),
+			check: func(t *testing.T, resp *protos.ComponentResponse) {
+				if resp.GetMenu().GetOid() != "status/main" || resp.GetMenu().GetMenu() == nil {
+					t.Errorf("menu response = %+v", resp.GetMenu())
+				}
+			},
+		},
+		{
+			kind: protos.GetComponentPayload_COMMAND, oid: "reset",
+			respond: st2138.ComponentResponseCommand("reset", &command),
+			check: func(t *testing.T, resp *protos.ComponentResponse) {
+				if resp.GetCommand().GetOid() != "reset" || resp.GetCommand().GetCommand() == nil {
+					t.Errorf("command response = %+v", resp.GetCommand())
+				}
+			},
+		},
+		{
+			kind: protos.GetComponentPayload_LANGUAGE_PACK, oid: "es",
+			respond: st2138.ComponentResponseLanguagePack("es", "Spanish", map[string]string{"greeting": "Hola"}),
+			check: func(t *testing.T, resp *protos.ComponentResponse) {
+				pack := resp.GetLanguagePack()
+				if pack.GetLanguage() != "es" || pack.GetLanguagePack().GetWords()["greeting"] != "Hola" {
+					t.Errorf("language pack response = %+v", pack)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.kind.String(), func(t *testing.T) {
+			_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+			defer cleanup()
+
+			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+				if req.Kind != st2138.ComponentKind(tt.kind) || req.Oid != tt.oid {
+					t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+				}
+				return tt.respond, catena.StatusWithCode(catena.StatusCodeOk, "")
+			}
+
+			client, cleanup := setupGRPCClient(t, ctx, lis)
+			defer cleanup()
+
+			resp, err := client.GetComponent(ctx, &protos.GetComponentPayload{Slot: 0, Oid: tt.oid, Kind: tt.kind})
+			assertNoError(t, err)
+			tt.check(t, resp)
+		})
+	}
+}
+
+func TestTransport_GetComponent_ForwardsUnusedKind(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	// Kind rejection lives in the runtime. The transport must forward UNUSED
+	// unchanged and surface the status the runtime returns.
+	var got st2138.ComponentKind
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		got = req.Kind
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid component kind")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.GetComponent(ctx, &protos.GetComponentPayload{Slot: 0, Oid: "brightness", Kind: protos.GetComponentPayload_UNUSED})
+	assertGRPCCode(t, err, codes.InvalidArgument, "unused kind")
+	if got != st2138.ComponentKindUnused {
+		t.Errorf("forwarded kind = %v, want UNUSED", got)
+	}
+}
+
+func TestTransport_GetComponent_NilResponse(t *testing.T) {
+	ctx := context.Background()
+	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+
+	client, cleanup := setupGRPCClient(t, ctx, lis)
+	defer cleanup()
+
+	_, err := client.GetComponent(ctx, &protos.GetComponentPayload{Slot: 0, Oid: "brightness", Kind: protos.GetComponentPayload_PARAM})
+	assertGRPCCode(t, err, codes.Internal, "nil response")
 }
 
 // =============================================================================

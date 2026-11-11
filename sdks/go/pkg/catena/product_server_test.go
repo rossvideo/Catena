@@ -287,87 +287,119 @@ func TestServer_GetValue_NonProductCallsHandler(t *testing.T) {
 	}
 }
 
-// TestServer_GetParam_Product verifies product/* GetParam requests are answered
-// by the SDK without invoking the business-logic GetParam handler.
-func TestServer_GetParam_Product(t *testing.T) {
+func invokeProductComponent(srv *server, oid string, kind st2138.ComponentKind) (st2138.ComponentResponse, StatusResult) {
+	return srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: oid, Kind: kind})
+}
+
+// TestServer_GetComponent_Product verifies product/* GetComponent requests with
+// kind PARAM are answered by the SDK without invoking the business-logic handler.
+func TestServer_GetComponent_Product(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
-	srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-		t.Errorf("business-logic GetParam should not be called for %q", req.Fqoid)
-		return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+	srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+		t.Errorf("business-logic GetComponent should not be called for %q", req.Oid)
+		return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 	})
 
 	// Bare "product" returns the full golden proto.
-	param, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})
+	resp, res := invokeProductComponent(srv, "product", st2138.ComponentKindParam)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
 	}
-	if !proto.Equal(param.Proto, expectedProductParam()) {
-		t.Errorf("bare 'product' param does not match expected, got %v", param.Proto)
+	param := resp.Proto.GetParam().GetParam()
+	if !proto.Equal(param, expectedProductParam()) {
+		t.Errorf("bare 'product' param does not match expected, got %v", param)
+	}
+	if resp.Proto.GetParam().GetOid() != "product" {
+		t.Errorf("product oid = %q, want %q", resp.Proto.GetParam().GetOid(), "product")
 	}
 
 	// A single field returns a STRING param carrying that field's value.
-	param, res = srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product/name"})
+	resp, res = invokeProductComponent(srv, "product/name", st2138.ComponentKindParam)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product/name: expected OK, got %v: %s", res.Code, res.Error)
 	}
-	if param.Proto.GetType() != st2138.ParamTypeString {
-		t.Errorf("product/name type = %v, want STRING", param.Proto.GetType())
+	param = resp.Proto.GetParam().GetParam()
+	if param.GetType() != st2138.ParamTypeString {
+		t.Errorf("product/name type = %v, want STRING", param.GetType())
 	}
-	if got := param.Proto.GetValue().GetStringValue(); got != "Camera" {
+	if got := param.GetValue().GetStringValue(); got != "Camera" {
 		t.Errorf("product/name = %q, want %q", got, "Camera")
 	}
 
 	// An unknown field is NotFound.
-	_, res = srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product/nope"})
+	_, res = invokeProductComponent(srv, "product/nope", st2138.ComponentKindParam)
 	if res.Code != StatusCodeNotFound {
 		t.Fatalf("product/nope: expected NOT_FOUND, got %v: %s", res.Code, res.Error)
 	}
 }
 
-// TestServer_GetParam_ProductNoHandler verifies product/* GetParam is served
-// from the registered product struct even when no GetParam handler exists, so a
-// product-only slot (e.g. a command-only device with no params) still exposes
-// its mandatory product param.
-func TestServer_GetParam_ProductNoHandler(t *testing.T) {
+// TestServer_GetComponent_ProductNoHandler verifies product/* GetComponent with
+// kind PARAM is served from the registered product struct even when no
+// GetComponent handler exists, so a product-only slot still exposes its
+// mandatory product param.
+func TestServer_GetComponent_ProductNoHandler(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 
-	param, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})
+	resp, res := invokeProductComponent(srv, "product", st2138.ComponentKindParam)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("product: expected OK, got %v: %s", res.Code, res.Error)
 	}
-	if !proto.Equal(param.Proto, expectedProductParam()) {
-		t.Errorf("bare 'product' param does not match expected, got %v", param.Proto)
+	if !proto.Equal(resp.Proto.GetParam().GetParam(), expectedProductParam()) {
+		t.Errorf("bare 'product' param does not match expected, got %v", resp.Proto.GetParam().GetParam())
 	}
 
 	// A non-product oid with no handler is still NotFound.
-	_, res = srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "somethingElse"})
+	_, res = invokeProductComponent(srv, "somethingElse", st2138.ComponentKindParam)
 	if res.Code != StatusCodeNotFound {
 		t.Fatalf("somethingElse: expected NOT_FOUND, got %v: %s", res.Code, res.Error)
 	}
 }
 
-// TestServer_GetParam_NoProductRegistered verifies product/* GetParam falls
-// through to the business-logic handler when no product is registered.
-func TestServer_GetParam_NoProductRegistered(t *testing.T) {
+// TestServer_GetComponent_NoProductRegistered verifies product/* GetComponent
+// falls through to the business-logic handler when no product is registered.
+func TestServer_GetComponent_NoProductRegistered(t *testing.T) {
 	srv := newTestServer(t, false)
 	called := false
-	srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+	srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 		called = true
 		p, err := st2138.NewParamString("bl").Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return p, StatusWithCode(StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Oid, &p), StatusWithCode(StatusCodeOk, "")
 	})
 
-	_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "product"})
+	_, res := invokeProductComponent(srv, "product", st2138.ComponentKindParam)
 	if res.Code != StatusCodeOk {
 		t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 	}
 	if !called {
-		t.Error("expected business-logic GetParam to be called when no product registered")
+		t.Error("expected business-logic GetComponent to be called when no product registered")
+	}
+}
+
+// TestServer_GetComponent_ProductOtherKindFallsThrough verifies a product oid
+// requested as a non-PARAM kind is not the SDK-managed product param.
+func TestServer_GetComponent_ProductOtherKindFallsThrough(t *testing.T) {
+	srv := newTestServer(t, false)
+	srv.RegisterProductStruct(0, testProduct())
+	called := false
+	srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+		called = true
+		if req.Kind != st2138.ComponentKindMenu || req.Oid != "product" {
+			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		}
+		return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "no menu")
+	})
+
+	_, res := invokeProductComponent(srv, "product", st2138.ComponentKindMenu)
+	if res.Code != StatusCodeNotFound {
+		t.Fatalf("expected NOT_FOUND, got %v: %s", res.Code, res.Error)
+	}
+	if !called {
+		t.Error("expected business-logic GetComponent to be called for a non-PARAM product oid")
 	}
 }
 
@@ -566,33 +598,33 @@ func TestServer_GetValue_ProductScope(t *testing.T) {
 	}
 }
 
-// TestServer_GetParam_ProductScope verifies product/* GetParam requests succeed
-// with the monitor scope and are denied without it.
-func TestServer_GetParam_ProductScope(t *testing.T) {
-	for _, fqoid := range []string{"product", "product/name"} {
-		t.Run("Mon/"+fqoid, func(t *testing.T) {
+// TestServer_GetComponent_ProductScope verifies product/* GetComponent requests
+// with kind PARAM succeed with the monitor scope and are denied without it.
+func TestServer_GetComponent_ProductScope(t *testing.T) {
+	for _, oid := range []string{"product", "product/name"} {
+		t.Run("Mon/"+oid, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
-			srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-				t.Errorf("business-logic GetParam should not be called for %q", req.Fqoid)
-				return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+			srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+				t.Errorf("business-logic GetComponent should not be called for %q", req.Oid)
+				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 			})
-			mockInvokeGateFn(t, srv, EndpointGetParam, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: fqoid})
+			mockInvokeGateFn(t, srv, EndpointGetComponent, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
+			_, res := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: oid, Kind: st2138.ComponentKindParam})
 			if res.Code != StatusCodeOk {
 				t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 			}
 		})
 
-		t.Run("NonMon/"+fqoid, func(t *testing.T) {
+		t.Run("NonMon/"+oid, func(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
-			srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-				t.Errorf("business-logic GetParam should not be called for %q", req.Fqoid)
-				return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+			srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+				t.Errorf("business-logic GetComponent should not be called for %q", req.Oid)
+				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 			})
-			mockInvokeGateFn(t, srv, EndpointGetParam, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: fqoid})
+			mockInvokeGateFn(t, srv, EndpointGetComponent, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
+			_, res := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: oid, Kind: st2138.ComponentKindParam})
 			if res.Code != StatusCodePermissionDenied {
 				t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
 			}

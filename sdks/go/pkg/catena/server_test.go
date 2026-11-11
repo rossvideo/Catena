@@ -790,13 +790,13 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 			has: func(srv *server, slot uint16) bool { return srv.setValueHandlers[slot] != nil },
 		},
 		{
-			endpoint: EndpointGetParam,
+			endpoint: EndpointGetComponent,
 			register: func(srv *server, slot uint16) {
-				srv.RegisterGetParamHandler(slot, func(HandlerContext, GetParamRequest) (st2138.Param, StatusResult) {
-					return Reply(st2138.Param{})
+				srv.RegisterGetComponentHandler(slot, func(HandlerContext, GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+					return Reply(st2138.ComponentResponse{})
 				})
 			},
-			has: func(srv *server, slot uint16) bool { return srv.getParamHandlers[slot] != nil },
+			has: func(srv *server, slot uint16) bool { return srv.getComponentHandlers[slot] != nil },
 		},
 		{
 			endpoint: EndpointReadAsset,
@@ -1373,27 +1373,27 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 	})
 
 	// With no GetValue handler registered, the value is derived from the
-	// registered GetParam handler by projecting out the param's value. The gate
-	// is still evaluated as a GetValue request.
-	t.Run("DerivesFromGetParamWhenUnregistered", func(t *testing.T) {
+	// registered GetComponent handler (kind PARAM) by projecting out the param's
+	// value. The gate is still evaluated as a GetValue request.
+	t.Run("DerivesFromGetComponentWhenUnregistered", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		paramCalled := 0
-		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+		srv.getComponentHandlers[7] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 			paramCalled++
-			if req.Slot != 7 || req.Fqoid != "test/param" {
-				t.Errorf("unexpected args slot=%d fqoid=%q", req.Slot, req.Fqoid)
+			if req.Slot != 7 || req.Oid != "test/param" || req.Kind != st2138.ComponentKindParam {
+				t.Errorf("unexpected args slot=%d oid=%q kind=%v", req.Slot, req.Oid, req.Kind)
 			}
 			if ctx.Token != knownCtx.Token {
-				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
+				t.Error("expected the gate's handler context to be passed through to the GetComponent handler")
 			}
 			p, err := st2138.NewParamInt32(42).Build()
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
-			return Reply(p)
+			return Reply(st2138.ComponentResponseParam(req.Oid, &p))
 		}
 
 		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
@@ -1402,7 +1402,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			t.Error("expected no GetValue handler registered for slot 7")
 		}
 		if paramCalled != 1 {
-			t.Errorf("expected GetParam handler to be called once, got %d", paramCalled)
+			t.Errorf("expected GetComponent handler to be called once, got %d", paramCalled)
 		}
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
@@ -1416,9 +1416,9 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		}
 	})
 
-	// A registered GetValue handler takes precedence: the GetParam handler must
+	// A registered GetValue handler takes precedence: the GetComponent handler must
 	// not be consulted even when both are present.
-	t.Run("PrefersRegisteredGetValueOverGetParam", func(t *testing.T) {
+	t.Run("PrefersRegisteredGetValueOverGetComponent", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
@@ -1429,9 +1429,9 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			}
 			return Reply(st2138.Value{Proto: p.Proto.GetValue()})
 		}
-		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-			t.Error("GetParam handler must not be called when a GetValue handler is registered")
-			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+		srv.getComponentHandlers[7] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			t.Error("GetComponent handler must not be called when a GetValue handler is registered")
+			return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 		}
 
 		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
@@ -1447,31 +1447,31 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		}
 	})
 
-	// An error from the GetParam handler propagates unchanged through the derive
+	// An error from the GetComponent handler propagates unchanged through the derive
 	// path.
-	t.Run("PropagatesGetParamErrorWhenDeriving", func(t *testing.T) {
+	t.Run("PropagatesGetComponentErrorWhenDeriving", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-			return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "param not found: test/param")
+		srv.getComponentHandlers[7] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "param not found: test/param")
 		}
 
 		_, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
 		if status.Code != StatusCodeNotFound {
-			t.Errorf("expected NotFound propagated from GetParam, got %v", status.Code)
+			t.Errorf("expected NotFound propagated from GetComponent, got %v", status.Code)
 		}
 	})
 
-	// A GetParam handler that reports Ok but returns a nil Proto violates the
+	// A GetComponent handler that reports Ok but returns no param violates the
 	// handler contract; the derive path surfaces it as Internal rather than
 	// returning an empty value with an Ok status.
 	t.Run("InternalWhenDerivedParamProtoIsNil", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetValue, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[7] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-			return st2138.Param{}, StatusWithCode(StatusCodeOk, "")
+		srv.getComponentHandlers[7] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			return st2138.ComponentResponse{}, StatusWithCode(StatusCodeOk, "")
 		}
 
 		_, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
@@ -1480,7 +1480,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		}
 	})
 
-	// With neither a GetValue nor a GetParam handler registered, the request is a
+	// With neither a GetValue nor a GetComponent handler registered, the request is a
 	// NotFound as before.
 	t.Run("NotFoundWhenNeitherRegistered", func(t *testing.T) {
 		srv := newTestServer(t, true)
@@ -1570,21 +1570,25 @@ func TestServer_InvokeSetValueHandler(t *testing.T) {
 	})
 }
 
-func TestServer_InvokeGetParamHandler(t *testing.T) {
+func TestServer_InvokeGetComponentHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
-		mockInvokeGateFn(t, srv, EndpointGetParam, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+		mockInvokeGateFn(t, srv, EndpointGetComponent, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
-		expected := st2138.Param{}
+		param, err := st2138.NewParamInt32(7).Build()
+		if err != nil {
+			t.Fatalf("expected no error for builder with valid value, got %v", err)
+		}
+		expected := st2138.ComponentResponseParam("test/param", &param)
 		handlerCalled := 0
-		srv.getParamHandlers[22] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+		srv.getComponentHandlers[22] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 			handlerCalled++
 			if req.Slot != 22 {
 				t.Errorf("expected slot 22, got %d", req.Slot)
 			}
-			if req.Fqoid != "test/param" {
-				t.Errorf("expected fqoid 'test/param', got %s", req.Fqoid)
+			if req.Oid != "test/param" || req.Kind != st2138.ComponentKindParam {
+				t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1592,7 +1596,7 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 			return Reply(expected)
 		}
 
-		actual, status := srv.InvokeGetParamHandler(validTestTransportContext(nil), GetParamRequest{Slot: 22, Fqoid: "test/param"})
+		actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Oid: "test/param", Kind: st2138.ComponentKindParam})
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1602,6 +1606,40 @@ func TestServer_InvokeGetParamHandler(t *testing.T) {
 		}
 		if !proto.Equal(actual.Proto, expected.Proto) {
 			t.Errorf("expected value %v, got %v", expected, actual)
+		}
+	})
+
+	t.Run("RejectsInvalidKind", func(t *testing.T) {
+		for _, kind := range []st2138.ComponentKind{st2138.ComponentKindUnused, st2138.ComponentKind(99)} {
+			srv := newTestServer(t, true)
+			mockInvokeGateFn(t, srv, EndpointGetComponent, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+			handlerCalled := 0
+			srv.getComponentHandlers[22] = func(HandlerContext, GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+				handlerCalled++
+				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeOk, "")
+			}
+
+			actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Oid: "test/param", Kind: kind})
+			if handlerCalled != 0 {
+				t.Errorf("kind %v: handler must not run", kind)
+			}
+			if status.Code != StatusCodeInvalidArgument {
+				t.Errorf("kind %v: expected InvalidArgument, got %v", kind, status.Code)
+			}
+			if actual.Proto != nil {
+				t.Errorf("kind %v: expected empty response, got %v", kind, actual)
+			}
+		}
+	})
+
+	t.Run("NotFoundWhenUnregistered", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetComponent, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		_, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Oid: "missing", Kind: st2138.ComponentKindMenu})
+		if status.Code != StatusCodeNotFound {
+			t.Errorf("expected NotFound, got %v", status.Code)
 		}
 	})
 }
@@ -2087,27 +2125,27 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 	})
 
 	// With no ParamInfo handler registered, a specific-oid request derives the
-	// descriptor from the registered GetParam handler. The gate is still
-	// evaluated as a ParamInfo request.
-	t.Run("DerivesFromGetParamWhenUnregistered", func(t *testing.T) {
+	// descriptor from the registered GetComponent handler with kind PARAM. The
+	// gate is still evaluated as a ParamInfo request.
+	t.Run("DerivesFromGetComponentWhenUnregistered", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
 
 		paramCalled := 0
-		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+		srv.getComponentHandlers[4] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 			paramCalled++
-			if req.Slot != 4 || req.Fqoid != "volume" {
-				t.Errorf("unexpected args slot=%d fqoid=%q", req.Slot, req.Fqoid)
+			if req.Slot != 4 || req.Oid != "volume" || req.Kind != st2138.ComponentKindParam {
+				t.Errorf("unexpected args slot=%d oid=%q kind=%v", req.Slot, req.Oid, req.Kind)
 			}
 			if ctx.Token != knownCtx.Token {
-				t.Error("expected the gate's handler context to be passed through to the GetParam handler")
+				t.Error("expected the gate's handler context to be passed through to the GetComponent handler")
 			}
 			volume, err := st2138.NewParamInt32(42).WithName(st2138.PolyglotText{"en": "Volume"}).Build()
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
-			return Reply(volume)
+			return Reply(st2138.ComponentResponseParam(req.Oid, &volume))
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2117,7 +2155,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			t.Error("expected no ParamInfo handler registered for slot 4")
 		}
 		if paramCalled != 1 {
-			t.Errorf("expected GetParam handler to be called once, got %d", paramCalled)
+			t.Errorf("expected GetComponent handler to be called once, got %d", paramCalled)
 		}
 		if status.IsError() {
 			t.Errorf("expected OK status, got %v", status)
@@ -2135,17 +2173,20 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 	})
 
 	// A recursive request flattens the returned param's sub-param subtree into
-	// fully-qualified oids, all derived from the single GetParam result.
-	t.Run("DerivesRecursivelyFromGetParam", func(t *testing.T) {
+	// fully-qualified oids, all derived from the single GetComponent result.
+	t.Run("DerivesRecursivelyFromGetComponent", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+		srv.getComponentHandlers[4] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			if req.Kind != st2138.ComponentKindParam || req.Oid != "cfg" {
+				t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+			}
 			p, err := st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).Build()
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
-			return Reply(p)
+			return Reply(st2138.ComponentResponseParam(req.Oid, &p))
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2169,9 +2210,9 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		}
 	})
 
-	// A registered ParamInfo handler takes precedence: the GetParam handler must
+	// A registered ParamInfo handler takes precedence: the GetComponent handler must
 	// not be consulted even when both are present.
-	t.Run("PrefersRegisteredParamInfoOverGetParam", func(t *testing.T) {
+	t.Run("PrefersRegisteredParamInfoOverGetComponent", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
@@ -2181,9 +2222,9 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			}
 			return StatusWithCode(StatusCodeOk, "")
 		}
-		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-			t.Error("GetParam handler must not be called when a ParamInfo handler is registered")
-			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+		srv.getComponentHandlers[4] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			t.Error("GetComponent handler must not be called when a ParamInfo handler is registered")
+			return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2197,14 +2238,14 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 	})
 
 	// The whole-tree request (oidPrefix == "") is not derivable from single-OID
-	// GetParam, so it stays NotFound even when a GetParam handler exists.
+	// GetComponent, so it stays NotFound even when a GetComponent handler exists.
 	t.Run("RootRequestNotDerivable", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-			t.Error("GetParam handler must not be called for the whole-tree request")
-			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "should not happen")
+		srv.getComponentHandlers[4] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			t.Error("GetComponent handler must not be called for the whole-tree request")
+			return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2214,27 +2255,27 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		}
 	})
 
-	// An error from the GetParam handler propagates unchanged through the derive
+	// An error from the GetComponent handler propagates unchanged through the derive
 	// path.
-	t.Run("PropagatesGetParamErrorWhenDeriving", func(t *testing.T) {
+	t.Run("PropagatesGetComponentErrorWhenDeriving", func(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-			return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "param not found: volume")
+		srv.getComponentHandlers[4] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "param not found: volume")
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
 		status := srv.InvokeParamInfoHandler(validTestTransportContext(nil), ParamInfoRequest{Slot: 4, OidPrefix: "volume", Recursive: false}, stream)
 		if status.Code != StatusCodeNotFound {
-			t.Errorf("expected NotFound propagated from GetParam, got %v", status.Code)
+			t.Errorf("expected NotFound propagated from GetComponent, got %v", status.Code)
 		}
 		if len(stream.Items) != 0 {
 			t.Errorf("expected nothing streamed on error, got %d items", len(stream.Items))
 		}
 	})
 
-	// With neither a ParamInfo nor a GetParam handler registered, the request is
+	// With neither a ParamInfo nor a GetComponent handler registered, the request is
 	// a NotFound as before.
 	t.Run("NotFoundWhenNeitherRegistered", func(t *testing.T) {
 		srv := newTestServer(t, true)
@@ -2302,13 +2343,13 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 			},
 		},
 		{
-			endpoint: EndpointGetParam,
+			endpoint: EndpointGetComponent,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(HandlerContext, GetParamRequest) (st2138.Param, StatusResult) {
+				srv.RegisterGetComponentHandler(0, func(HandlerContext, GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 					*handlerCalled = true
-					return Reply(st2138.Param{})
+					return Reply(st2138.ComponentResponse{})
 				})
-				_, status := srv.InvokeGetParamHandler(invalidContext, GetParamRequest{Slot: 0, Fqoid: "test/param"})
+				_, status := srv.InvokeGetComponentHandler(invalidContext, GetComponentRequest{Slot: 0, Oid: "test/param", Kind: st2138.ComponentKindParam})
 				return status
 			},
 		},
@@ -2489,7 +2530,7 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 		{endpoint: EndpointGetSlots},
 		{endpoint: EndpointGetDevice},
 		{endpoint: EndpointGetValue},
-		{endpoint: EndpointGetParam},
+		{endpoint: EndpointGetComponent},
 		{endpoint: EndpointSetValue},
 		{endpoint: EndpointReadAsset},
 		{endpoint: EndpointCreateAsset},
@@ -2727,14 +2768,14 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 			},
 		},
 		{
-			endpoint:          EndpointGetParam,
+			endpoint:          EndpointGetComponent,
 			expectHandlerCall: true,
 			invoke: func(srv *server, handlerCalled *bool) StatusResult {
-				srv.RegisterGetParamHandler(0, func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
+				srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 					*handlerCalled = true
-					return Reply(st2138.Param{})
+					return Reply(st2138.ComponentResponse{})
 				})
-				_, status := srv.InvokeGetParamHandler(TransportContext{}, GetParamRequest{Slot: 0, Fqoid: "test/param"})
+				_, status := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: "test/param", Kind: st2138.ComponentKindParam})
 				return status
 			},
 		},

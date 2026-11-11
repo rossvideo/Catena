@@ -148,6 +148,73 @@ func TestComponentLanguagePack(t *testing.T) {
 	}
 }
 
+func TestComponentResponseConstructors(t *testing.T) {
+	param, err := NewParamInt32(42).Build()
+	if err != nil {
+		t.Fatalf("NewParamInt32(42).Build() failed: %v", err)
+	}
+	paramResp := ComponentResponseParam("brightness", &param)
+	if got := paramResp.Proto.GetParam(); got.GetOid() != "brightness" || got.GetParam() != param.Proto {
+		t.Errorf("param response = %+v", got)
+	}
+
+	constraint, err := NewConstraintInt32Range(0, 100, 1).Build()
+	if err != nil {
+		t.Fatalf("NewConstraintInt32Range(0, 100, 1).Build() failed: %v", err)
+	}
+	constraintResp := ComponentResponseConstraint("range", &constraint)
+	if got := constraintResp.Proto.GetSharedConstraint(); got.GetOid() != "range" || got.GetConstraint() != constraint.Proto {
+		t.Errorf("constraint response = %+v", got)
+	}
+
+	menu, err := NewMenu().WithParamOids("brightness").Build()
+	if err != nil {
+		t.Fatalf("NewMenu().WithParamOids('brightness').Build() failed: %v", err)
+	}
+	menuResp := ComponentResponseMenu("status/main", &menu)
+	if got := menuResp.Proto.GetMenu(); got.GetOid() != "status/main" || got.GetMenu() != menu.Proto {
+		t.Errorf("menu response = %+v", got)
+	}
+
+	command, err := NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("NewParamEmpty().Build() failed: %v", err)
+	}
+	commandResp := ComponentResponseCommand("reset", &command)
+	if got := commandResp.Proto.GetCommand(); got.GetOid() != "reset" || got.GetCommand() != command.Proto {
+		t.Errorf("command response = %+v", got)
+	}
+
+	packResp := ComponentResponseLanguagePack("en", "English", map[string]string{"greeting": "Hello"})
+	pack := packResp.Proto.GetLanguagePack()
+	if pack.GetLanguage() != "en" || pack.GetLanguagePack().GetName() != "English" || pack.GetLanguagePack().GetWords()["greeting"] != "Hello" {
+		t.Errorf("language pack response = %+v", pack)
+	}
+}
+
+func TestComponentKindConstants(t *testing.T) {
+	tests := []struct {
+		name     string
+		kind     ComponentKind
+		expected int32
+	}{
+		{"UNUSED", ComponentKindUnused, 0},
+		{"PARAM", ComponentKindParam, 1},
+		{"CONSTRAINT", ComponentKindConstraint, 2},
+		{"MENU", ComponentKindMenu, 3},
+		{"COMMAND", ComponentKindCommand, 4},
+		{"LANGUAGE_PACK", ComponentKindLanguagePack, 5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if int32(tt.kind) != tt.expected {
+				t.Errorf("ComponentKind %s = %d, want %d", tt.name, tt.kind, tt.expected)
+			}
+		})
+	}
+}
+
 func TestDeviceComponent_Wire(t *testing.T) {
 	device, err := NewDevice(1).Build()
 	if err != nil {

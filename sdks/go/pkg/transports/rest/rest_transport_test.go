@@ -154,13 +154,16 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "get param",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+				runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 					assertContext(t, ctx)
+					if req.Kind != st2138.ComponentKindParam || req.Oid != "brightness" {
+						t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+					}
 					param, err := st2138.NewParamInt32(42).Build()
 					if err != nil {
 						t.Fatalf("expected no error for builder with valid value, got %v", err)
 					}
-					return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+					return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -559,10 +562,10 @@ func TestTransport_GetParam_Route(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 		handlerCalled = true
-		if req.Fqoid != "text_box" {
-			t.Errorf("expected fqoid 'text_box', got %s", req.Fqoid)
+		if req.Kind != st2138.ComponentKindParam || req.Oid != "text_box" {
+			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
 		}
 		param, err := st2138.NewParamString("Hello, World!").
 			WithName(st2138.PolyglotText{"en": "Text Box", "es": "Caja de Texto"}).
@@ -570,7 +573,7 @@ func TestTransport_GetParam_Route(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/text_box", "")
@@ -578,6 +581,10 @@ func TestTransport_GetParam_Route(t *testing.T) {
 	assertContentType(t, rec, "application/json")
 	if !handlerCalled {
 		t.Error("registered handler was not called")
+	}
+	body := rec.Body.String()
+	if !strings.HasPrefix(strings.TrimSpace(body), `{"oid":`) {
+		t.Errorf("GetParam body should be an unwrapped component_param, got %s", body)
 	}
 	assertBodyContains(t, rec, `"oid":"text_box"`)
 	assertBodyContains(t, rec, `"string_value":"Hello, World!"`)
@@ -587,16 +594,16 @@ func TestTransport_GetParam_Route(t *testing.T) {
 func TestTransport_GetParam_NestedFqoid(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
-		if req.Fqoid != "parent/child" {
-			t.Errorf("expected fqoid 'parent/child', got %s", req.Fqoid)
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam || req.Oid != "parent/child" {
+			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
 		}
 
 		param, err := st2138.NewParamInt32(7).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/parent/child", "")
@@ -619,8 +626,11 @@ func TestTransport_GetParam_MethodNotAllowed(t *testing.T) {
 func TestTransport_GetParam_HandlerError(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
-		return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam {
+			t.Errorf("expected kind PARAM, got %v", req.Kind)
+		}
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/missing", "")
@@ -633,14 +643,17 @@ func TestTransport_GetParam_HandlerError(t *testing.T) {
 func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam || req.Oid != "zero" {
+			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		}
 		param, err := st2138.NewParamInt32(0).
 			WithName(st2138.PolyglotText{"en": "Zero"}).
 			WithConstraint(st2138.NewConstraintInt32Range(0, 100, 1)).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/zero", "")
@@ -656,18 +669,119 @@ func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 func TestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam || req.Oid != "empty" {
+			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		}
 		param, err := st2138.NewParamString("").
 			WithName(st2138.PolyglotText{"en": "Empty"}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/empty", "")
 	assertStatus(t, rec, http.StatusOK)
 	assertBodyContains(t, rec, `"string_value":""`)
+}
+
+func TestTransport_GetComponent_Kinds(t *testing.T) {
+	param, err := st2138.NewParamInt32(42).Build()
+	if err != nil {
+		t.Fatalf("NewParamInt32(42).Build() failed: %v", err)
+	}
+	constraint, err := st2138.NewConstraintInt32Range(0, 100, 1).Build()
+	if err != nil {
+		t.Fatalf("NewConstraintInt32Range(0, 100, 1).Build() failed: %v", err)
+	}
+	menu, err := st2138.NewMenu().WithParamOids("brightness").Build()
+	if err != nil {
+		t.Fatalf("NewMenu().WithParamOids('brightness').Build() failed: %v", err)
+	}
+	command, err := st2138.NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("NewParamEmpty().Build() failed: %v", err)
+	}
+
+	tests := []struct {
+		kind    st2138.ComponentKind
+		oid     string
+		path    string
+		respond st2138.ComponentResponse
+		want    string
+	}{
+		{st2138.ComponentKindParam, "parent/child", "/st2138-api/v1/0/component/PARAM/parent/child", st2138.ComponentResponseParam("parent/child", &param), `"oid":"parent/child"`},
+		{st2138.ComponentKindConstraint, "range", "/st2138-api/v1/0/component/CONSTRAINT/range", st2138.ComponentResponseConstraint("range", &constraint), `"min_value":0`},
+		{st2138.ComponentKindMenu, "status/main", "/st2138-api/v1/0/component/MENU/status/main", st2138.ComponentResponseMenu("status/main", &menu), `"menu"`},
+		{st2138.ComponentKindCommand, "reset", "/st2138-api/v1/0/component/COMMAND/reset", st2138.ComponentResponseCommand("reset", &command), `"command"`},
+		{st2138.ComponentKindLanguagePack, "es", "/st2138-api/v1/0/component/LANGUAGE_PACK/es", st2138.ComponentResponseLanguagePack("es", "Spanish", map[string]string{"greeting": "Hola"}), `"language":"es"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.kind.String(), func(t *testing.T) {
+			transport, runtime := makeTestTransport(t)
+			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+				if req.Kind != tt.kind || req.Oid != tt.oid {
+					t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+				}
+				return tt.respond, catena.StatusWithCode(catena.StatusCodeOk, "")
+			}
+
+			rec := makeRequest(t, transport, http.MethodGet, tt.path, "")
+			assertStatus(t, rec, http.StatusOK)
+			assertContentType(t, rec, "application/json")
+			assertBodyContains(t, rec, tt.want)
+		})
+	}
+}
+
+func TestTransport_GetComponent_InvalidKind(t *testing.T) {
+	for _, path := range []string{
+		"/st2138-api/v1/0/component/UNUSED/brightness",
+		"/st2138-api/v1/0/component/param/brightness",
+		"/st2138-api/v1/0/component/NOPE/brightness",
+	} {
+		t.Run(path, func(t *testing.T) {
+			transport, runtime := makeTestTransport(t)
+			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+				t.Error("handler must not run for an invalid kind")
+				return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			}
+			rec := makeRequest(t, transport, http.MethodGet, path, "")
+			assertStatus(t, rec, http.StatusBadRequest)
+		})
+	}
+}
+
+func TestTransport_GetComponent_MissingOid(t *testing.T) {
+	transport, _ := makeTestTransport(t)
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/component/PARAM", "")
+	assertStatus(t, rec, http.StatusBadRequest)
+}
+
+func TestTransport_GetComponent_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/component/PARAM/brightness", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+}
+
+func TestTransport_GetComponent_HandlerError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeNotFound, "component not found")
+	}
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/component/MENU/missing", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}
+
+func TestTransport_GetComponent_NilResponse(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/component/PARAM/brightness", "")
+	assertStatus(t, rec, http.StatusInternalServerError)
 }
 
 func TestTransport_SetValue_Route(t *testing.T) {
