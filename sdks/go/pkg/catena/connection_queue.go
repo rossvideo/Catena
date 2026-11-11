@@ -55,6 +55,9 @@ const (
 	CloseReasonNone ConnectionCloseReason = iota
 	CloseReasonShutdown
 	CloseReasonExpired
+
+	DefaultExpirySweepInterval = time.Second
+	DefaultExpiryGracePeriod   = 5 * time.Second
 )
 
 func (r ConnectionCloseReason) String() string {
@@ -94,7 +97,14 @@ type connectionQueue struct {
 	shuttingDown   bool
 	cond           *sync.Cond
 	log            *slog.Logger
-	now            func() time.Time
+
+	now                  func() time.Time
+	expirySweepInterval  time.Duration
+	expiryGracePeriod    time.Duration
+	expiryCleanupWg      sync.WaitGroup
+	expirySweeperStopped chan struct{}
+	expirySweeperDone    chan struct{}
+	stopOnce             sync.Once
 }
 
 type connectionQueueInterface interface {
@@ -124,27 +134,62 @@ func (c *Connection) recordCloseReason(reason ConnectionCloseReason) bool {
 
 var _ connectionQueueInterface = (*connectionQueue)(nil)
 
+type connectionQueueOptions func(*connectionQueue)
+
+func WithClock(now func() time.Time) connectionQueueOptions {
+	return func(cq *connectionQueue) {
+		cq.now = now
+	}
+}
+
+func WithExpirySweepInterval(interval time.Duration) connectionQueueOptions {
+	return func(cq *connectionQueue) {
+		cq.expirySweepInterval = interval
+	}
+}
+
+func WithExpiryGracePeriod(gracePeriod time.Duration) connectionQueueOptions {
+	return func(cq *connectionQueue) {
+		cq.expiryGracePeriod = gracePeriod
+	}
+}
+
 // newConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
 func newConnectionQueue(maxConnections int, log *slog.Logger) connectionQueueInterface {
-	return newConnectionQueueWithOptions(maxConnections, log, nil)
+	return newConnectionQueueWithOptions(maxConnections, log)
 }
 
-func newConnectionQueueWithOptions(maxConnections int, log *slog.Logger, now func() time.Time) connectionQueueInterface {
+func newConnectionQueueWithOptions(maxConnections int, log *slog.Logger, options ...connectionQueueOptions) connectionQueueInterface {
 	cq := &connectionQueue{
-		connections:    make(map[int]*Connection),
-		maxConnections: maxConnections,
-		now:            time.Now,
+		connections:          make(map[int]*Connection),
+		maxConnections:       maxConnections,
+		now:                  time.Now,
+		expirySweepInterval:  DefaultExpirySweepInterval,
+		expiryGracePeriod:    DefaultExpiryGracePeriod,
+		expirySweeperStopped: make(chan struct{}),
+		expirySweeperDone:    make(chan struct{}),
 	}
 	if log == nil {
 		cq.log = slog.New(slog.DiscardHandler)
 	} else {
 		cq.log = log.With("component", "connection-queue")
 	}
+
 	cq.cond = sync.NewCond(&cq.mu)
-	if now != nil {
-		cq.now = now
+	for _, opt := range options {
+		if opt == nil {
+			continue
+		}
+		opt(cq)
 	}
+
+	if cq.expirySweepInterval > 0 {
+		go cq.expirySweepLoop()
+	} else {
+		close(cq.expirySweeperDone)
+	}
+
 	return cq
 }
 
@@ -270,10 +315,69 @@ func isValueUpdate(update *protos.PushUpdates) bool {
 	return ok
 }
 
+func (cq *connectionQueue) expirySweepLoop() {
+	defer close(cq.expirySweeperDone)
+
+	ticker := time.NewTicker(cq.expirySweepInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-cq.expirySweeperStopped:
+			return
+		case <-ticker.C:
+			cq.sweepExpiredConnections()
+		}
+	}
+
+}
+
+func (cq *connectionQueue) sweepExpiredConnections() int {
+	now := cq.now()
+
+	// Find all expired connections and mark them for cleanup
+	cq.mu.Lock()
+	var expiredConnections []*Connection
+	if !cq.shuttingDown {
+		for _, conn := range cq.connections {
+			if conn.Expiry.IsZero() || now.Before(conn.Expiry) {
+				continue
+			}
+
+			if !conn.recordCloseReason(CloseReasonExpired) {
+				continue
+			}
+
+			expiredConnections = append(expiredConnections, conn)
+			cq.expiryCleanupWg.Add(1)
+		}
+	}
+	cq.mu.Unlock()
+
+	for _, conn := range expiredConnections {
+		go func(c *Connection) {
+			defer cq.expiryCleanupWg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), cq.expiryGracePeriod)
+			defer cancel()
+			cq.shutdownConnection(ctx, c)
+		}(conn)
+	}
+
+	return len(expiredConnections)
+}
+
+func (cq *connectionQueue) stopExpirySweeper() {
+	cq.stopOnce.Do(func() { close(cq.expirySweeperStopped) })
+	<-cq.expirySweeperDone
+}
+
 // shutdown signals all connections to stop and waits for them to deregister.
 // Each connection's goroutine will receive the signal via the Done channel,
 // exit its event loop, and deregister itself.
 func (cq *connectionQueue) shutdown(ctx context.Context) {
+
+	cq.stopExpirySweeper()
+
 	cq.mu.Lock()
 	cq.shuttingDown = true
 	conns := make([]*Connection, 0, len(cq.connections))
@@ -291,6 +395,7 @@ func (cq *connectionQueue) shutdown(ctx context.Context) {
 		}(conn)
 	}
 	wg.Wait()
+	cq.expiryCleanupWg.Wait()
 
 	cq.log.Info("All streaming connections shut down")
 }
@@ -336,6 +441,11 @@ func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *C
 		case <-ctx.Done():
 			cq.mu.Lock()
 			defer cq.mu.Unlock()
+
+			if registered, ok := cq.connections[connection.ID]; !ok || registered != connection {
+				return // the connection has been deregistered since the watchdog goroutine was started
+			}
+
 			cq.log.Warn("Connection did not shut down gracefully, forcing close", "connID", connection.ID)
 			delete(cq.connections, connection.ID)
 			connection.HandlerContext.release()
