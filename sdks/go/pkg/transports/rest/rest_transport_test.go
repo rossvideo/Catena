@@ -745,11 +745,19 @@ func TestTransport_GetComponent_InvalidKind(t *testing.T) {
 		t.Run(path, func(t *testing.T) {
 			transport, runtime := makeTestTransport(t)
 			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-				t.Error("handler must not run for an invalid kind")
-				return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+				switch req.Kind {
+				case st2138.ComponentKindParam,
+					st2138.ComponentKindConstraint,
+					st2138.ComponentKindMenu,
+					st2138.ComponentKindCommand,
+					st2138.ComponentKindLanguagePack:
+					return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+				default:
+					return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid component kind")
+				}
 			}
 			rec := makeRequest(t, transport, http.MethodGet, path, "")
-			assertStatus(t, rec, http.StatusBadRequest)
+			assertStatus(t, rec, ToHTTPStatus(catena.StatusCodeInvalidArgument))
 		})
 	}
 }

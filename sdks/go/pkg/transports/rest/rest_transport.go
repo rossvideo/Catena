@@ -818,21 +818,6 @@ func (t *Transport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-// parseComponentKind maps a REST path segment to a component kind. The segment
-// must be an exact schema enum name (PARAM, CONSTRAINT, MENU, COMMAND,
-// LANGUAGE_PACK). UNUSED and any other value are rejected.
-func parseComponentKind(kind string) (st2138.ComponentKind, bool) {
-	value, ok := protos.GetComponentPayload_ComponentKind_value[kind]
-	if !ok {
-		return 0, false
-	}
-	parsed := st2138.ComponentKind(value)
-	if parsed == st2138.ComponentKindUnused {
-		return 0, false
-	}
-	return parsed, true
-}
-
 // handleComponentEndpoint handles GET /st2138-api/v1/{slot}/component/{kind}/{fqoid}.
 // It returns the ComponentResponse oneof for the requested kind. For
 // LANGUAGE_PACK the fqoid path segment is the language code.
@@ -845,11 +830,7 @@ func (t *Transport) handleComponentEndpoint(w http.ResponseWriter, r *http.Reque
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include kind and oid"))
 		return
 	}
-	kind, ok := parseComponentKind(pathParts[0])
-	if !ok {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid component kind"))
-		return
-	}
+	kind := st2138.ComponentKind(protos.GetComponentPayload_ComponentKind_value[pathParts[0]])
 	oid := strings.Join(pathParts[1:], "/")
 	if oid == "" {
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include oid"))
