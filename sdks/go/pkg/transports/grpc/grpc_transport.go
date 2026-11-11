@@ -59,6 +59,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -100,6 +101,22 @@ func NewTransport(cfg Options) *Transport {
 	serverOpts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(transport.unaryInterceptor),
 		grpc.StreamInterceptor(transport.streamInterceptor),
+		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
+		grpc.MaxConcurrentStreams(cfg.MaxConcurrentStreams),
+
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle:     cfg.MaxConnectionIdle,
+			MaxConnectionAge:      cfg.MaxConnectionAge,
+			MaxConnectionAgeGrace: cfg.MaxConnectionAgeGrace,
+			Time:                  cfg.KeepaliveTime,
+			Timeout:               cfg.KeepaliveTimeout,
+		}),
+
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             cfg.MinTime,
+			PermitWithoutStream: cfg.PermitWithoutStream,
+		}),
 	}
 
 	tlsConfig, err := cfg.TLS.ServerTLSConfig()

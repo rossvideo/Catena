@@ -59,7 +59,20 @@ func TestDefaultOptions(t *testing.T) {
 			CorsMaxAge:          600 * time.Second,
 			Fallback:            nil,
 		},
-		Grpc: GrpcOptions{Port: 6254, Reflection: false},
+		Grpc: GrpcOptions{
+			Port:                  6254,
+			Reflection:            false,
+			MaxRecvMsgSize:        4 << 20,
+			MaxSendMsgSize:        4 << 20,
+			MaxConcurrentStreams:  100,
+			MaxConnectionIdle:     15 * time.Minute,
+			MaxConnectionAge:      0,
+			MaxConnectionAgeGrace: 0,
+			KeepaliveTime:         2 * time.Hour,
+			KeepaliveTimeout:      20 * time.Second,
+			MinTime:               5 * time.Minute,
+			PermitWithoutStream:   false,
+		},
 		Server: ServerOptions{
 			IsDev:          false,
 			MaxConnections: 100,
@@ -99,6 +112,18 @@ func TestDefaultOptions(t *testing.T) {
 
 func TestRuntimeOptions_LogValuer(t *testing.T) {
 	opts := RuntimeOptions{
+		Grpc: GrpcOptions{
+			MaxRecvMsgSize:        1024,
+			MaxSendMsgSize:        2048,
+			MaxConcurrentStreams:  50,
+			MaxConnectionIdle:     1,
+			MaxConnectionAge:      2,
+			MaxConnectionAgeGrace: 3,
+			KeepaliveTime:         4,
+			KeepaliveTimeout:      5,
+			MinTime:               6,
+			PermitWithoutStream:   true,
+		},
 		Server: ServerOptions{
 			IsDev:          true,
 			MaxConnections: 123,
@@ -183,6 +208,16 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 				"client_ca_file": "",
 				"mutual_auth":    false,
 			},
+			"max_recv_msg_size":               json.Number("1024"),
+			"max_send_msg_size":               json.Number("2048"),
+			"max_concurrent_streams":          json.Number("50"),
+			"max_connection_idle":             json.Number("1"),
+			"max_connection_age":              json.Number("2"),
+			"max_connection_age_grace":        json.Number("3"),
+			"keepalive_time":                  json.Number("4"),
+			"keepalive_timeout":               json.Number("5"),
+			"keepalive_min_time":              json.Number("6"),
+			"keepalive_permit_without_stream": true,
 		},
 		"server": map[string]any{
 			"dev":             true,

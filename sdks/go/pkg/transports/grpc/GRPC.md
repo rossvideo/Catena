@@ -50,6 +50,41 @@ Behavior:
 - Clients must then dial with TLS credentials, e.g. `grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{...}))`; plaintext (insecure) clients will fail to connect.
 - Env/CLI configuration: `{PREFIX}_GRPC_TLS_ENABLED`, `{PREFIX}_GRPC_TLS_CERT_FILE`, `{PREFIX}_GRPC_TLS_KEY_FILE`, `{PREFIX}_GRPC_TLS_CLIENT_CA_FILE`, `{PREFIX}_GRPC_TLS_MUTUAL_AUTH` (flags `--grpc-tls-*`).
 
+## Resource Limits and Keepalive
+
+The server applies message size limits and keepalive settings from `Options` as `grpc.ServerOption`s:
+
+```go
+opts := grpc.DefaultOptions()
+opts.MaxRecvMsgSize = 8 << 20             // accept requests up to 8 MiB
+opts.MaxConcurrentStreams = 100           // in-flight RPCs allowed on one connection
+opts.MaxConnectionIdle = 30 * time.Minute // reap unused connections after 30m
+grpcTransport := grpc.NewTransport(opts)
+```
+
+Options:
+
+- `MaxRecvMsgSize` (default 4 MiB): largest request message the server accepts; larger requests fail with `ResourceExhausted`.
+- `MaxSendMsgSize` (default 4 MiB): largest message the server sends, applied to each streamed chunk.
+- `MaxConcurrentStreams` (default 100): in-flight RPCs allowed on one client connection. 0 means unlimited.
+- `MaxConnectionIdle` (default 15m): closes connections that have had no active RPCs for this long. 0 disables it. Negative values are rejected from the environment and flags.
+- `MaxConnectionAge` (default 0, disabled): the longest a connection may stay open. Once it is reached, the server stops accepting new RPCs on that connection and the client moves new calls to a fresh one, RPCs already open keep running until `MaxConnectionAgeGrace` expires. 0 disables it. Negative values are rejected from the environment and flags.
+- `MaxConnectionAgeGrace` (default 0, unlimited): how long RPCs already open may continue after `MaxConnectionAge` before the connection is forcibly closed. 0 leaves those RPCs running. Negative values are rejected from the environment and flags.
+- `KeepaliveTime` (default 2h): how long a connection may be quiet before the server pings the client. 0 is ignored by the grpc library, which uses its 2h default. Negative values are rejected from the environment and flags.
+- `KeepaliveTimeout` (default 20s): how long the server waits for a ping ack before closing the connection. 0 is ignored by the grpc library, which uses its 20s default. Negative values are rejected from the environment and flags.
+- `MinTime` (default 5m): minimum interval allowed between client keepalive pings. 0 is ignored by the grpc library, which uses its 5m default. Negative values are rejected from the environment and flags.
+- `PermitWithoutStream` (default false): allow client keepalive pings on connections with no active RPCs. The zero value (false) rejects those pings and the server closes the connection.
+
+Behaviour:
+
+- Always start from `grpc.DefaultOptions()` (or `config.InitOptions`). The message size limits are passed to grpc-go unchanged, so the zero value of `Options{}` means a 0-byte limit and rejects every non-empty message.
+- `MaxSendMsgSize` limits each message, not each stream. Handlers that stream large assets through `ExternalObjectRequest`, or large device models through `DeviceRequest`, must split them into chunks that each fit within the limit. An oversized chunk fails the RPC with `ResourceExhausted`.
+- `MaxConnectionIdle` never closes a connection with an open stream, so long-lived `Connect` streams are not affected; it only reaps connections nobody is using.
+- `MaxConnectionAge` together with a non-zero `MaxConnectionAgeGrace` forcibly closes connections regardless of activity, terminating `Connect` push streams and in-progress `ExternalObjectRequest` transfers. Both default to 0 for that reason.
+- Clients that ping more often than `MinTime` (or at all while they have no active RPCs, unless `PermitWithoutStream` is set) are disconnected. Clients that configure keepalive must use an interval of at least `MinTime`.
+
+- Env/CLI configuration: `{PREFIX}_GRPC_MAX_RECV_MSG_SIZE`, `{PREFIX}_GRPC_MAX_SEND_MSG_SIZE`, `{PREFIX}_GRPC_MAX_CONCURRENT_STREAMS`, `{PREFIX}_GRPC_MAX_CONNECTION_IDLE`, `{PREFIX}_GRPC_MAX_CONNECTION_AGE`, `{PREFIX}_GRPC_MAX_CONNECTION_AGE_GRACE`, `{PREFIX}_GRPC_KEEPALIVE_TIME`, `{PREFIX}_GRPC_KEEPALIVE_TIMEOUT`, `{PREFIX}_GRPC_KEEPALIVE_MIN_TIME`, `{PREFIX}_GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM` (flags `--grpc-max-*` / `--grpc-keepalive-*`).
+
 ## Implemented RPCs
 
 Implemented against shared runtime handlers:
