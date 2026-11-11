@@ -3,19 +3,21 @@ module github.com/rossvideo/catena/sdks/go
 go 1.26.6
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.8.2
+	github.com/MicahParks/keyfunc/v3 v3.9.1
 	github.com/cenkalti/backoff/v5 v5.0.3
+	github.com/dlclark/regexp2 v1.12.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/valyala/fastjson v1.6.10
-	google.golang.org/grpc v1.83.2
+	go.yaml.in/yaml/v3 v3.0.6
+	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
 )
 
 require (
-	github.com/MicahParks/jwkset v0.11.3 // indirect
-	golang.org/x/net v0.60.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	github.com/MicahParks/jwkset v0.11.4 // indirect
+	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260817212433-ac3dfec99bb1 // indirect
 )

@@ -69,12 +69,28 @@ func (p PolyglotText) With(lang, text string) PolyglotText {
 	return p
 }
 
-// Get returns the display string for lang, falling back to fallback if not present.
-func (p PolyglotText) Get(lang, fallback string) string {
+// Lookup returns the entry for lang and whether it was present.
+func (p PolyglotText) Lookup(lang string) (string, bool) {
+	s, ok := p[lang]
+	return s, ok
+}
+
+// GetOrLang returns the entry for lang, or the entry for fallbackLang if lang is
+// missing. Returns "" if neither is present.
+func (p PolyglotText) GetOrLang(lang, fallbackLang string) string {
 	if s, ok := p[lang]; ok {
 		return s
 	}
-	return p[fallback]
+	s, _ := p[fallbackLang]
+	return s
+}
+
+// GetOrDefault returns the entry for lang, or def if lang is missing.
+func (p PolyglotText) GetOrDefault(lang, def string) string {
+	if s, ok := p[lang]; ok {
+		return s
+	}
+	return def
 }
 
 // PolyglotTextFromProto creates a PolyglotText map from a protobuf PolyglotText.

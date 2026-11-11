@@ -39,6 +39,8 @@
 package st2138
 
 import (
+	"fmt"
+
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -68,6 +70,7 @@ const (
 	ConstraintTypeStringChoice       ConstraintType = protos.Constraint_STRING_CHOICE
 	ConstraintTypeStringStringChoice ConstraintType = protos.Constraint_STRING_STRING_CHOICE
 	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
+	ConstraintTypeFormattedString    ConstraintType = protos.Constraint_FORMATTED_STRING
 )
 
 // --- Input types for constraint builders ---
@@ -241,6 +244,80 @@ func NewConstraintStringStringChoice(strict bool, choices []StringStringChoice) 
 					Strict:  strict,
 				},
 			},
+		},
+		err: nil,
+	}
+}
+
+type StringFormat string
+
+// StringFormat constants matching the JSON Schema format names,
+// "regex" excluded as it is handled by NewConstraintStringRegex.
+const (
+	StringFormatDateTime            StringFormat = "date-time"
+	StringFormatDate                StringFormat = "date"
+	StringFormatTime                StringFormat = "time"
+	StringFormatDuration            StringFormat = "duration"
+	StringFormatEmail               StringFormat = "email"
+	StringFormatIDNEmail            StringFormat = "idn-email"
+	StringFormatHostname            StringFormat = "hostname"
+	StringFormatIDNHostname         StringFormat = "idn-hostname"
+	StringFormatIPv4                StringFormat = "ipv4"
+	StringFormatIPv6                StringFormat = "ipv6"
+	StringFormatURI                 StringFormat = "uri"
+	StringFormatURIReference        StringFormat = "uri-reference"
+	StringFormatIRI                 StringFormat = "iri"
+	StringFormatIRIReference        StringFormat = "iri-reference"
+	StringFormatUUID                StringFormat = "uuid"
+	StringFormatURITemplate         StringFormat = "uri-template"
+	StringFormatJSONPointer         StringFormat = "json-pointer"
+	StringFormatRelativeJSONPointer StringFormat = "relative-json-pointer"
+)
+
+func (sf StringFormat) IsValid() bool {
+	switch sf {
+	case StringFormatDateTime, StringFormatDate, StringFormatTime, StringFormatDuration,
+		StringFormatEmail, StringFormatIDNEmail, StringFormatHostname, StringFormatIDNHostname,
+		StringFormatIPv4, StringFormatIPv6, StringFormatURI, StringFormatURIReference,
+		StringFormatIRI, StringFormatIRIReference, StringFormatUUID, StringFormatURITemplate,
+		StringFormatJSONPointer, StringFormatRelativeJSONPointer:
+		return true
+	}
+	return false
+}
+
+// NewConstraintStringFormat creates a FORMATTED_STRING constraint.
+// StringFormat is a JSON Schema format name (i.e. "email", "date"). When strict is true the
+// value must conform to the format(Not Implemented yet).
+func NewConstraintStringFormat(format StringFormat, strict bool) *ConstraintBuilder {
+	if !format.IsValid() {
+		return &ConstraintBuilder{err: fmt.Errorf("invalid string format: %s", format)}
+	}
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
+			Type: protos.Constraint_FORMATTED_STRING,
+			Kind: &protos.Constraint_FormattedString{
+				FormattedString: &protos.FormattedStringConstraint{
+					Format: string(format),
+					Strict: strict,
+				},
+			},
+		},
+		err: nil,
+	}
+}
+
+// NewConstraintStringRegex creates a FORMATTED_STRING constraint with a regex pattern.
+// When strict is true the value must conform to the regex(Not Implemented yet).
+func NewConstraintStringRegex(regex string, strict bool) *ConstraintBuilder {
+	return &ConstraintBuilder{
+		proto: &protos.Constraint{
+			Type: protos.Constraint_FORMATTED_STRING,
+			Kind: &protos.Constraint_FormattedString{FormattedString: &protos.FormattedStringConstraint{
+				Format: "regex",
+				Regex:  regex,
+				Strict: strict,
+			}},
 		},
 		err: nil,
 	}

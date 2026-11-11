@@ -160,6 +160,18 @@ grpcTransport := grpc.NewTransport(opts)
 
 When enabled, tools such as `grpcurl` can discover services and methods dynamically.
 
+## Health Service
+
+The standard `grpc.health.v1` health service is registered by default, so tools such as `grpc_health_probe`, Kubernetes native gRPC probes and the Go SDK's `cmd/catena-healthcheck` can check the server. It reports `SERVING` while running and switches to `NOT_SERVING` when `Shutdown` begins.
+
+It can be turned off with `PREFIX_GRPC_DISABLE_HEALTH=true` / `--grpc-disable-health`, or in code:
+
+```go
+opts := grpc.DefaultOptions()
+opts.DisableHealth = true
+grpcTransport := grpc.NewTransport(opts)
+```
+
 ## Graceful Shutdown
 
 `grpc.Transport.Shutdown(ctx)` performs graceful stop first, then forces stop if context expires.

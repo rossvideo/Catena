@@ -45,6 +45,7 @@
 //
 // By default the CATENA_* environment-variable prefix is used. InitOption
 // values customize behavior, for example WithPrefix to change the env prefix,
-// WithDefaults to replace the baseline defaults, and WithSuppressedInputs to
-// disable env and CLI handling for selected inputs.
+// WithDefaults to replace the baseline defaults, WithSuppressedInputs to
+// disable env and CLI handling for selected inputs, and WithOnlyInputs to
+// allowlist the inputs that are handled and disable the rest.
 package config

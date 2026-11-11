@@ -121,6 +121,10 @@ type GrpcOptions struct {
 	// Reflection enables the gRPC server reflection service, which lets tools
 	// like grpcurl discover services at runtime (default false).
 	Reflection bool `env:"GRPC_REFLECTION" flag:"grpc-reflection"`
+	// DisableHealth turns off the standard gRPC health service (grpc.health.v1).
+	// The service is registered by default (default false) so container and
+	// orchestrator probes can check the server.
+	DisableHealth bool `env:"GRPC_DISABLE_HEALTH" flag:"grpc-disable-health"`
 	// TLS configures optional TLS for the gRPC listener (env: GRPC_TLS_*).
 	TLS TLSOptions
 }
@@ -308,7 +312,7 @@ func DefaultLoggerOptions() LoggerOptions {
 		LogDir:         "./logs",
 		Silent:         false,
 		Level:          slog.LevelInfo, // INFO default in prod
-		WriteToFile:    true,
+		WriteToFile:    false,
 		WriteToConsole: true,
 		UseJSON:        false,
 	}
@@ -377,6 +381,7 @@ func (o GrpcOptions) LogValue() slog.Value {
 	return slog.GroupValue(
 		slog.Int("port", o.Port),
 		slog.Bool("reflection", o.Reflection),
+		slog.Bool("disable_health", o.DisableHealth),
 		slog.Any("tls", o.TLS),
 	)
 }

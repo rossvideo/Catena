@@ -169,6 +169,7 @@ Caller guidance:
 - REST default port: `9080`
 - gRPC default port: `6254`
 - gRPC reflection default: disabled
+- gRPC health service (`grpc.health.v1`) default: enabled
 - TLS default: disabled on both transports
 
 ## TLS

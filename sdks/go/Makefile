@@ -1,4 +1,5 @@
 CMDS := oneOfEverything hello_world
+TOOLS := catena-healthcheck
 BIN_DIR := $(HOME)/Catena/$(BUILD_TARGET)
 LOG_DIR := ./logs
 
@@ -20,15 +21,23 @@ GO_M_OPTS      := $(patsubst %,--go_opt=M%=$(IMPORT_PATH),$(notdir $(PROTO_FILES
 # protoc-gen-go-grpc emits a file only for protos that declare a service.
 GRPC_M_OPTS    := $(patsubst %,--go-grpc_opt=M%=$(IMPORT_PATH),$(notdir $(filter-out $(PROTO_DIR)/service.proto,$(PROTO_FILES)))) --go-grpc_opt=Mservice.proto=$(RPC_IMPORT_PATH)
 
-.PHONY: proto-tools protos clean-protos
+.PHONY: proto-tools protos clean-protos schema generate
 
-all: protos examples
+all: protos examples tools
 
 examples: $(CMDS)
 
-$(CMDS):
+$(CMDS): generate
 	mkdir -p $(BIN_DIR)/$@
 	go build -o $(BIN_DIR)/$@/$@ ./examples/$@
+
+# Utilities under cmd/. Built static (CGO off) like they ship in distroless
+# images; here it only checks that they build.
+tools: $(TOOLS)
+
+$(TOOLS):
+	mkdir -p $(BIN_DIR)/$@
+	CGO_ENABLED=0 go build -o $(BIN_DIR)/$@/$@ ./cmd/$@
 
 # Clean build artifacts and logs
 clean:
@@ -67,6 +76,14 @@ protos: proto-tools
 clean-protos:
 	rm -rf "$(GENERATED_DIR)"
 
+# Refresh pkg/catena/schema_generated.go from device.yaml. Both paths are defined
+# in pkg/catena/internal/deviceschema and resolved from the module root
+schema:
+	go generate ./pkg/catena/
+
+# All code generation that must be in place before building or testing.
+generate: protos schema
+
 # Test targets
 .PHONY: test race coverage coverage-html coverage-lcov coverage-cobertura clean-coverage
 
@@ -74,13 +91,14 @@ clean-protos:
 PROTO_PKG := github.com/rossvideo/catena/sdks/go/pkg/protos
 TRANSPORTTEST_PKG := github.com/rossvideo/catena/sdks/go/pkg/transports/internal/transporttest
 TESTCERTS_PKG := github.com/rossvideo/catena/sdks/go/pkg/internal/testcerts
-TEST_PACKAGES := $(shell go list ./pkg/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG)|$(TESTCERTS_PKG))($$|/)')
+SCHEMAGEN_PKG := github.com/rossvideo/catena/sdks/go/pkg/catena/internal/schemagen
+TEST_PACKAGES := $(shell go list ./pkg/... ./cmd/... | grep -vE '^($(PROTO_PKG)|$(TRANSPORTTEST_PKG)|$(TESTCERTS_PKG))|$(SCHEMAGEN_PKG)($$|/)')
 
 COVERAGE_DIR ?= $(HOME)/Catena/coverage
 COVERAGE_OUT := $(COVERAGE_DIR)/go_coverage.out
 VERBOSE ?= 0
 
-test:
+test: generate
 	go test -v ./...
 
 RACE_PACKAGES ?= $(TEST_PACKAGES)
@@ -90,14 +108,14 @@ GOTESTSUM = gotestsum \
 	--format $(if $(filter 1,$(VERBOSE)),standard-verbose,pkgname) \
 	$(GOTESTSUM_OPTS) --
 
-race: protos
+race: generate
 	$(GOTESTSUM) \
 		-race \
 		-count=$(RACE_COUNT) \
 		$(if $(filter 1,$(VERBOSE)),-v) \
 		$(RACE_PACKAGES)
 
-coverage: | $(COVERAGE_DIR) protos
+coverage: generate | $(COVERAGE_DIR)
 	$(GOTESTSUM) \
 		-coverprofile=$(COVERAGE_OUT) \
 		-covermode=count \

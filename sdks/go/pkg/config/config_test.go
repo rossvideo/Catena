@@ -85,7 +85,7 @@ func TestDefaultOptions(t *testing.T) {
 			LogDir:         "./logs",
 			Silent:         false,
 			Level:          slog.LevelInfo,
-			WriteToFile:    true,
+			WriteToFile:    false,
 			WriteToConsole: true,
 			UseJSON:        false,
 		},
@@ -187,8 +187,9 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			"max_asset_body_bytes":  json.Number("0"),
 		},
 		"grpc": map[string]any{
-			"port":       json.Number("0"),
-			"reflection": false,
+			"port":           json.Number("0"),
+			"reflection":     false,
+			"disable_health": false,
 			"tls": map[string]any{
 				"enabled":        false,
 				"cert_file":      "",
@@ -291,6 +292,9 @@ func TestDefaultOptions_TransportFlags(t *testing.T) {
 	opts := DefaultRuntimeOptions()
 	if opts.Grpc.Reflection != false {
 		t.Errorf("expected default Grpc.Reflection=false, got %v", opts.Grpc.Reflection)
+	}
+	if opts.Grpc.DisableHealth {
+		t.Errorf("expected default Grpc.DisableHealth=false, got %v", opts.Grpc.DisableHealth)
 	}
 	if opts.UseGrpc != false {
 		t.Errorf("expected default UseGrpc=false, got %v", opts.UseGrpc)
