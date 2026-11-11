@@ -62,20 +62,75 @@ func TestPolyglotText_With_NilPolyglotText(t *testing.T) {
 	}
 }
 
-func TestPolyglotText_Get(t *testing.T) {
-	pt := PolyglotText{"en": "Hello", "fr": "Bonjour"}
-	if pt.Get("fr", "en") != "Bonjour" {
-		t.Errorf("expected 'Bonjour', got %s", pt.Get("fr", "en"))
+func TestPolyglotText_Lookup(t *testing.T) {
+	pt := PolyglotText{"en": "Hello", "fr": "Bonjour", "es": ""}
+
+	if s, ok := pt.Lookup("fr"); !ok || s != "Bonjour" {
+		t.Errorf("expected ('Bonjour', true), got (%q, %v)", s, ok)
 	}
-	if pt.Get("de", "en") != "Hello" {
-		t.Errorf("expected fallback 'Hello', got %s", pt.Get("de", "en"))
+	if s, ok := pt.Lookup("de"); ok || s != "" {
+		t.Errorf("expected ('', false) for missing entry, got (%q, %v)", s, ok)
+	}
+	if s, ok := pt.Lookup("es"); !ok || s != "" {
+		t.Errorf("expected ('', true) for present empty entry, got (%q, %v)", s, ok)
 	}
 }
 
-func TestPolyglotText_Get_MissingFallback(t *testing.T) {
+func TestPolyglotText_Lookup_Nil(t *testing.T) {
+	var pt PolyglotText
+	if s, ok := pt.Lookup("en"); ok || s != "" {
+		t.Errorf("expected ('', false) for nil receiver, got (%q, %v)", s, ok)
+	}
+}
+
+func TestPolyglotText_GetOrLang(t *testing.T) {
+	pt := PolyglotText{"en": "Hello", "fr": "Bonjour"}
+	if text := pt.GetOrLang("fr", "en"); text != "Bonjour" {
+		t.Errorf("expected 'Bonjour', got %s", text)
+	}
+	if text := pt.GetOrLang("de", "en"); text != "Hello" {
+		t.Errorf("expected fallback 'Hello', got %s", text)
+	}
+}
+
+func TestPolyglotText_GetOrLang_MissingFallback(t *testing.T) {
 	pt := PolyglotText{"en": "Hello"}
-	if pt.Get("de", "fr") != "" {
-		t.Errorf("expected empty string for missing fallback, got %s", pt.Get("de", "fr"))
+	if text := pt.GetOrLang("de", "fr"); text != "" {
+		t.Errorf("expected empty string for missing fallback, got %s", text)
+	}
+}
+
+func TestPolyglotText_GetOrLang_PresentEmpty(t *testing.T) {
+	pt := PolyglotText{"en": "Hello", "fr": ""}
+	if text := pt.GetOrLang("fr", "en"); text != "" {
+		t.Errorf("expected empty string for present empty entry, got %s", text)
+	}
+}
+
+func TestPolyglotText_GetOrLang_Nil(t *testing.T) {
+	var pt PolyglotText
+	if text := pt.GetOrLang("de", "en"); text != "" {
+		t.Errorf("expected empty string for nil receiver, got %s", text)
+	}
+}
+
+func TestPolyglotText_GetOrDefault(t *testing.T) {
+	pt := PolyglotText{"en": "Hello", "es": ""}
+	if text := pt.GetOrDefault("en", "unused"); text != "Hello" {
+		t.Errorf("expected 'Hello', got %s", text)
+	}
+	if text := pt.GetOrDefault("fr", "Bonjour"); text != "Bonjour" {
+		t.Errorf("expected default 'Bonjour', got %s", text)
+	}
+	if text := pt.GetOrDefault("es", "unused"); text != "" {
+		t.Errorf("expected empty string for present empty entry, got %s", text)
+	}
+}
+
+func TestPolyglotText_GetOrDefault_Nil(t *testing.T) {
+	var pt PolyglotText
+	if text := pt.GetOrDefault("en", "Hello"); text != "Hello" {
+		t.Errorf("expected default 'Hello' for nil receiver, got %s", text)
 	}
 }
 

@@ -46,7 +46,6 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -135,22 +134,6 @@ var ErrServerStopped = errors.New("server is stopped")
 // defaultServerMaxShutdownWait is a fallback safety cap for shutdown paths when
 // callers pass an unbounded context. Caller-provided earlier deadlines still win.
 const defaultServerMaxShutdownWait = 10 * time.Second
-
-func ValidateSlot(slot uint32) (uint16, StatusResult) {
-	if slot > uint32(math.MaxUint16) {
-		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot number: %d", slot))
-
-	}
-	return uint16(slot), StatusWithCode(StatusCodeOk, "")
-}
-
-func ValidateSlotString(slot string) (uint16, StatusResult) {
-	slotInt, err := strconv.ParseUint(slot, 10, 32)
-	if err != nil {
-		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
-	}
-	return ValidateSlot(uint32(slotInt))
-}
 
 type Transport interface {
 	// Start begins transport operation with the given context.
@@ -982,6 +965,11 @@ func (s *server) InvokeGetDeviceHandler(transportContext TransportContext, req G
 func (s *server) InvokeGetValueHandler(transportContext TransportContext, req GetValueRequest) (st2138.Value, StatusResult) {
 	return withGate(s, transportContext, EndpointGetValue, false,
 		func(ctx HandlerContext) (st2138.Value, StatusResult) {
+
+			if result := ValidateFqoid(req.Fqoid); result.IsError() {
+				return st2138.Value{}, result
+			}
+
 			// The SDK owns product/* only when a product struct is registered for the
 			// slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed read on mon. When
@@ -1064,6 +1052,9 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 			if !validComponentKind(req.Kind) {
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInvalidArgument, "invalid component kind")
 			}
+			if result := ValidateFqoid(req.Oid); result.IsError() {
+				return st2138.ComponentResponse{}, result
+			}
 
 			// The SDK owns product/* only for kind PARAM, and only when a product
 			// struct is registered for the slot; answer it directly instead of
@@ -1106,9 +1097,13 @@ func (s *server) InvokeSetValueHandler(transportContext TransportContext, req Se
 	_, res := invokeHandler(s, transportContext, EndpointSetValue, true, s.setValueHandlers, req.Slot,
 		"no SetValue handler registered for slot "+strconv.Itoa(int(req.Slot)),
 		func(handler SetValueHandler, ctx HandlerContext) (struct{}, StatusResult) {
-			// The product struct is always read-only; reject any write targeting
-			// product/* regardless of whether the SDK or business logic manages it.
 			for _, entry := range req.Entries {
+				if result := ValidateFqoid(entry.Fqoid); result.IsError() {
+					return struct{}{}, result
+				}
+
+				// The product struct is always read-only; reject any write targeting
+				// product/* regardless of whether the SDK or business logic manages it.
 				if isProductOid(entry.Fqoid) {
 					return struct{}{}, StatusWithCode(StatusCodePermissionDenied, "product params are read-only")
 				}
@@ -1126,6 +1121,9 @@ func (s *server) InvokeReadAssetHandler(transportContext TransportContext, req R
 	_, res := invokeHandler(s, transportContext, EndpointReadAsset, false, s.readAssetHandlers, req.Slot,
 		"fqoid "+req.Fqoid+" not found at slot "+strconv.Itoa(int(req.Slot)),
 		func(handler ReadAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(req.Fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(ctx, req, stream)
 		})
 	return res
@@ -1152,6 +1150,9 @@ func (s *server) InvokeCreateAssetHandler(transportContext TransportContext, req
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
+			if result := ValidateFqoid(req.Fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(ctx, req)
 		})
 	return res
@@ -1164,6 +1165,9 @@ func (s *server) InvokeUpdateAssetHandler(transportContext TransportContext, req
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
 			}
+			if result := ValidateFqoid(req.Fqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(ctx, req)
 		})
 	return res
@@ -1175,6 +1179,9 @@ func (s *server) InvokeDeleteAssetHandler(transportContext TransportContext, req
 		func(handler DeleteAssetHandler, ctx HandlerContext) (struct{}, StatusResult) {
 			if scopeRes := enforceAssetWriteScope(ctx); scopeRes.IsError() {
 				return struct{}{}, scopeRes
+			}
+			if result := ValidateFqoid(req.Fqoid); result.IsError() {
+				return struct{}{}, result
 			}
 			return struct{}{}, handler(ctx, req)
 		})
@@ -1195,6 +1202,9 @@ func (s *server) InvokeExecuteCommandHandler(transportContext TransportContext, 
 	_, res := invokeHandler(s, transportContext, EndpointExecuteCommand, true, s.executeCommandHandlers, req.Slot,
 		"ExecuteCommand "+req.CommandFqoid+" not found at slot "+strconv.Itoa(int(req.Slot)),
 		func(handler ExecuteCommandHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			if result := ValidateFqoid(req.CommandFqoid); result.IsError() {
+				return struct{}{}, result
+			}
 			return struct{}{}, handler(ctx, req, stream)
 		})
 	return res
@@ -1207,6 +1217,12 @@ func (s *server) InvokeParamInfoHandler(transportContext TransportContext, req P
 	stream = shutdownStream[st2138.ParamInfo]{inner: stream, shutdown: s.ctx}
 	_, res := withGate(s, transportContext, EndpointParamInfo, false,
 		func(ctx HandlerContext) (struct{}, StatusResult) {
+			if req.OidPrefix != "" {
+				if result := ValidateFqoid(req.OidPrefix); result.IsError() {
+					return struct{}{}, result
+				}
+			}
+
 			// The SDK owns product/* ParamInfo only when a product struct is registered
 			// for the slot; answer it directly instead of passing to business logic. The
 			// product param is mon-scoped, so gate the SDK-managed request on mon. When
@@ -1272,11 +1288,10 @@ func (s *server) InvokeReadLanguagePackHandler(transportContext TransportContext
 	return invokeHandler(s, transportContext, EndpointReadLanguagePack, false, s.readLanguagePackHandlers, req.Slot,
 		"LanguagePack "+req.Language+" not found at slot "+strconv.Itoa(int(req.Slot)),
 		func(handler ReadLanguagePackHandler, ctx HandlerContext) (LanguagePack, StatusResult) {
-			// Argument validation runs after the auth gate so an unauthorized
-			// caller only ever sees a security error, never a validation hint.
-			if req.Language == "" {
-				return LanguagePack{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			if result := ValidateLanguageCode(req.Language); result.IsError() {
+				return LanguagePack{}, result
 			}
+
 			return handler(ctx, req)
 		})
 }
@@ -1290,11 +1305,11 @@ func (s *server) InvokeCreateLanguagePackHandler(transportContext TransportConte
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
 			}
+			if result := ValidateLanguageCode(req.Language); result.IsError() {
+				return struct{}{}, result
+			}
 			// Argument validation runs after the scope check so an unauthorized
 			// caller only ever sees a security error, never a validation hint.
-			if req.Language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
-			}
 			if req.LanguagePack.Proto == nil {
 				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
 			}
@@ -1311,8 +1326,8 @@ func (s *server) InvokeUpdateLanguagePackHandler(transportContext TransportConte
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
 			}
-			if req.Language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			if result := ValidateLanguageCode(req.Language); result.IsError() {
+				return struct{}{}, result
 			}
 			if req.LanguagePack.Proto == nil {
 				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language_pack is required")
@@ -1330,8 +1345,8 @@ func (s *server) InvokeDeleteLanguagePackHandler(transportContext TransportConte
 			if res := ctx.RequireWriteScope(st2138.ScopeAdm); res.IsError() {
 				return struct{}{}, res
 			}
-			if req.Language == "" {
-				return struct{}{}, StatusWithCode(StatusCodeInvalidArgument, "language is required")
+			if result := ValidateLanguageCode(req.Language); result.IsError() {
+				return struct{}{}, result
 			}
 			return struct{}{}, handler(ctx, req)
 		})
