@@ -85,7 +85,8 @@ Core routes:
 - `GET /st2138-api/v1/{slot}/value/{oid}` - GetValue
 - `PUT /st2138-api/v1/{slot}/value/{oid}` - SetValue
 - `PUT /st2138-api/v1/{slot}/values` - SetValues (MultiSetValue)
-- `GET /st2138-api/v1/{slot}/param/{oid...}` - GetParam (full param: metadata + value)
+- `GET /st2138-api/v1/{slot}/param/{oid...}` - GetParam (full param: metadata + value; forwarded to GetComponent with kind PARAM)
+- `GET /st2138-api/v1/{slot}/component/{kind}/{oid...}` - GetComponent (one param, constraint, menu, command, or language pack; `kind` is `PARAM`, `CONSTRAINT`, `MENU`, `COMMAND`, or `LANGUAGE_PACK`)
 - `GET /st2138-api/v1/{slot}/asset/{oid}` - ExternalObjectRequest equivalent (ReadAsset; unary, aggregates the chunk stream into one asset)
 - `GET /st2138-api/v1/{slot}/asset/{oid}/stream` - SSE ReadAsset chunk stream
 - `POST /st2138-api/v1/{slot}/asset/{oid}` - CreateAsset (store a new asset, returns 204)
@@ -110,7 +111,8 @@ REST routes invoke handlers registered on `catena.Server`:
 
 - Device routes -> `RegisterGetDeviceHandler` (both the unary and `/stream` routes invoke the same streaming handler)
 - Value routes -> `RegisterGetValueHandler`, `RegisterSetValueHandler` (the set route delivers a one-element `[]SetValueEntry`)
-- Param route -> `RegisterGetParamHandler`
+- Param route -> `RegisterGetComponentHandler` (invoked with kind `PARAM`; the response is unwrapped to the param)
+- Component route -> `RegisterGetComponentHandler`
 - Values route -> `RegisterSetValueHandler` (delivers the full `[]SetValueEntry` for atomic application)
 - Asset routes -> `RegisterReadAssetHandler` (GET, both unary and `/stream`), `RegisterCreateAssetHandler` (POST), `RegisterUpdateAssetHandler` (PUT), `RegisterDeleteAssetHandler` (DELETE)
 - Command routes -> `RegisterExecuteCommandHandler` (both the unary and `/stream` routes invoke the same streaming handler)
