@@ -143,7 +143,7 @@ const (
 
 // ResponseType is a constraint for types that can be returned from handlers
 type ResponseType interface {
-	st2138.Value | st2138.Asset | st2138.Device | st2138.Param | LanguagePack
+	st2138.Value | st2138.Asset | st2138.Device | st2138.Param | st2138.ComponentResponse | LanguagePack
 }
 
 // Reply returns a successful response (StatusCodeOk) with the given value.

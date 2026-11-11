@@ -57,7 +57,8 @@ Implemented against shared runtime handlers:
 - `GetPopulatedSlots`
 - `DeviceRequest` (server-streaming response)
 - `GetValue`
-- `GetParam`
+- `GetParam` (forwarded to GetComponent with kind PARAM)
+- `GetComponent`
 - `SetValue`
 - `MultiSetValue`
 - `ExternalObjectRequest` (server-streaming response)
@@ -80,7 +81,8 @@ RPC methods invoke the same handlers registered on `catena.Server`:
 
 - `DeviceRequest` -> `RegisterGetDeviceHandler`
 - `GetValue` -> `RegisterGetValueHandler`
-- `GetParam` -> `RegisterGetParamHandler`
+- `GetParam` -> `RegisterGetComponentHandler` (invoked with kind PARAM; the response is unwrapped to the param)
+- `GetComponent` -> `RegisterGetComponentHandler`
 - `SetValue` / `MultiSetValue` -> `RegisterSetValueHandler` (the handler receives `[]SetValueEntry`; `SetValue` delivers a one-element slice, `MultiSetValue` delivers the full slice for atomic application)
 - `ExternalObjectRequest` -> `RegisterReadAssetHandler`
 - `ExecuteCommand` -> `RegisterExecuteCommandHandler`

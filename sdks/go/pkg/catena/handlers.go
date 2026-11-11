@@ -84,20 +84,30 @@ type GetValueRequest struct {
 // with an error status (e.g. StatusCodeNotFound for an unknown fqoid).
 //
 // Registering a GetValueHandler is optional: when a slot has none, GetValue is
-// served by deriving the value from that slot's GetParamHandler. See
-// RegisterGetValueHandler.
+// served by deriving the value from that slot's GetComponentHandler with
+// kind PARAM. See RegisterGetValueHandler.
 type GetValueHandler func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult)
 
-// GetParamRequest carries the arguments of a GetParam request.
-type GetParamRequest struct {
-	Slot  uint16
-	Fqoid string
+// GetComponentRequest carries the arguments of a GetComponent request.
+// Oid is the component id at device scope, resolved within Kind. For
+// ComponentKindLanguagePack it carries the language code (e.g. "es"), not an oid.
+type GetComponentRequest struct {
+	Slot uint16
+	Oid  string
+	Kind st2138.ComponentKind
 }
 
-// GetParamHandler returns the full parameter (metadata + value) at fqoid for a
-// slot (GetParam). It returns the param with an Ok status, or a zero Param
-// with an error status (e.g. StatusCodeNotFound for an unknown fqoid).
-type GetParamHandler func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult)
+// GetComponentHandler returns a single device component (param, constraint,
+// menu, command, or language pack) at oid for a slot, selected by kind. It
+// returns the component with an Ok status, or a zero ComponentResponse with an
+// error status (e.g. StatusCodeNotFound for an unknown oid). ComponentKindUnused
+// is not a valid request; the SDK rejects it with StatusCodeInvalidArgument
+// before the handler runs.
+//
+// A PARAM response is also how the SDK serves the on-the-wire GetParam
+// endpoint, and how it derives GetValue and ParamInfo when those handlers are
+// not registered.
+type GetComponentHandler func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult)
 
 // SetValueEntry is a single fqoid/value pair within a SetValue request.
 type SetValueEntry struct {
@@ -212,8 +222,9 @@ type ParamInfoRequest struct {
 //
 // Registering a ParamInfoHandler is optional: when a slot has none, ParamInfo
 // for a specific oidPrefix is served by deriving descriptors from that slot's
-// GetParamHandler. The whole-tree request (oidPrefix == "") cannot be derived
-// this way and requires a real handler. See RegisterParamInfoHandler.
+// GetComponentHandler with kind PARAM. The whole-tree request (oidPrefix == "")
+// cannot be derived this way and requires a real handler. See
+// RegisterParamInfoHandler.
 type ParamInfoHandler func(ctx HandlerContext, req ParamInfoRequest, stream Stream[st2138.ParamInfo]) StatusResult
 
 // ListLanguagesRequest carries the arguments of a ListLanguages request.

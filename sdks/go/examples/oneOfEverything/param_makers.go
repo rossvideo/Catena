@@ -5,10 +5,10 @@ import (
 )
 
 // Shared param makers are the single source of truth for slot 0's params. The
-// device descriptor (device_handler.go) passes each maker to WithParam; GetParam
-// (get_param_handler.go) rebuilds that same device definition and reads the
+// device descriptor (device_handler.go) passes each maker to WithParam; GetComponent
+// (get_component_handler.go) rebuilds that same device definition and reads the
 // requested OID back out of it. Because both endpoints trace back to these
-// makers, a param can never drift between GetDevice and GetParam.
+// makers, a param can never drift between GetDevice and GetComponent.
 
 // dashboardUIGridFile is the embedded DashBoard panel. Its fqoid cannot keep
 // the '.' in the filename, so dashboardUIGridOid is that path encoded by

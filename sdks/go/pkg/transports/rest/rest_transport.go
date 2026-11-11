@@ -470,6 +470,8 @@ func (t *Transport) registerRoutes() {
 				t.handleCommandEndpoint(w, r, slot, parts[4:])
 			case "param":
 				t.handleParamEndpoint(w, r, slot, parts[4:])
+			case "component":
+				t.handleComponentEndpoint(w, r, slot, parts[4:])
 			case "param-info":
 				t.handleParamInfoEndpoint(w, r, slot, parts[4:])
 			case "language-pack":
@@ -786,19 +788,19 @@ func (t *Transport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, 
 	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
-	param, result := t.runtime.InvokeGetParamHandler(transportContext, catena.GetParamRequest{Slot: slot, Fqoid: fqoid})
+	resp, result := t.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
+		Slot: slot,
+		Oid:  fqoid,
+		Kind: st2138.ComponentKindParam,
+	})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
 		return
 	}
-	if param.Proto == nil {
+	component := resp.Proto.GetParam()
+	if component == nil || component.GetParam() == nil {
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "param returned nil"))
 		return
-	}
-
-	component := &protos.DeviceComponent_ComponentParam{
-		Oid:   fqoid,
-		Param: param.Proto,
 	}
 	// Use the device-style marshaller so meaningful proto3 zero values survive
 	// (e.g. constraint min_value:0, or a current value of 0/0.0/"").
@@ -813,6 +815,54 @@ func (t *Transport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, 
 	w.WriteHeader(http.StatusOK)
 	if _, writeErr := w.Write(b); writeErr != nil {
 		t.log.Error("failed to write param response", "error", writeErr)
+	}
+}
+
+// handleComponentEndpoint handles GET /st2138-api/v1/{slot}/component/{kind}/{fqoid}.
+// It returns the ComponentResponse oneof for the requested kind. For
+// LANGUAGE_PACK the fqoid path segment is the language code.
+func (t *Transport) handleComponentEndpoint(w http.ResponseWriter, r *http.Request, slot uint16, pathParts []string) {
+	if r.Method != http.MethodGet {
+		t.writeHTTPMethodNotAllowed(w, "only GET allowed")
+		return
+	}
+	if len(pathParts) < 2 {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include kind and oid"))
+		return
+	}
+	kind := st2138.ComponentKind(protos.GetComponentPayload_ComponentKind_value[pathParts[0]])
+	oid := strings.Join(pathParts[1:], "/")
+	if oid == "" {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include oid"))
+		return
+	}
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	resp, result := t.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
+		Slot: slot,
+		Oid:  oid,
+		Kind: kind,
+	})
+	if result.IsError() {
+		t.writeHTTPStatusResult(w, result)
+		return
+	}
+	if resp.Proto == nil {
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "component returned nil"))
+		return
+	}
+
+	b, err := MarshalComponentResponseJSON(resp.Proto)
+	if err != nil {
+		t.log.Error("failed to marshal component response", "error", err)
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInternal, "failed to marshal component response"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if _, writeErr := w.Write(b); writeErr != nil {
+		t.log.Error("failed to write component response", "error", writeErr)
 	}
 }
 

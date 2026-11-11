@@ -477,7 +477,9 @@ func (s *catenaService) ExecuteCommand(req *protos.ExecuteCommandPayload, stream
 	return nil
 }
 
-// GetParam returns a single parameter (metadata + value)
+// GetParam returns a single parameter (metadata + value). It forwards to the
+// GetComponent handler with kind PARAM and unwraps the param variant, so the
+// on-the-wire GetParam contract is unchanged.
 func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayload) (*protos.DeviceComponent_ComponentParam, error) {
 	slot, err := catena.ValidateSlot(req.Slot)
 	if err.Code != catena.StatusCodeOk {
@@ -488,20 +490,51 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 	s.transport.log.Debug("GetParam", "slot", slot, "fqoid", fqoid)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
-	param, result := s.transport.runtime.InvokeGetParamHandler(transportContext, catena.GetParamRequest{Slot: slot, Fqoid: fqoid})
+	resp, result := s.transport.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
+		Slot: slot,
+		Oid:  fqoid,
+		Kind: st2138.ComponentKindParam,
+	})
 	if result.IsError() {
 		s.transport.log.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
-	if param.Proto == nil {
+	component := resp.Proto.GetParam()
+	if component == nil || component.GetParam() == nil {
 		s.transport.log.Error("GetParam returned nil param", "slot", slot, "fqoid", fqoid)
 		return nil, status.Error(codes.Internal, "param returned nil")
 	}
 
-	return &protos.DeviceComponent_ComponentParam{
-		Oid:   fqoid,
-		Param: param.Proto,
-	}, nil
+	return component, nil
+}
+
+// GetComponent returns one device component selected by kind.
+func (s *catenaService) GetComponent(ctx context.Context, req *protos.GetComponentPayload) (*protos.ComponentResponse, error) {
+	slot, err := catena.ValidateSlot(req.GetSlot())
+	if err.Code != catena.StatusCodeOk {
+		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
+	}
+
+	oid := normalizeFqoid(req.GetOid())
+	kind := st2138.ComponentKind(req.GetKind())
+	s.transport.log.Debug("GetComponent", "slot", slot, "oid", oid, "kind", kind)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	resp, result := s.transport.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
+		Slot: slot,
+		Oid:  oid,
+		Kind: kind,
+	})
+	if result.IsError() {
+		s.transport.log.Error("GetComponent handler error", "slot", slot, "oid", oid, "kind", kind, "error", result.Error)
+		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
+	}
+	if resp.Proto == nil {
+		s.transport.log.Error("GetComponent returned nil response", "slot", slot, "oid", oid, "kind", kind)
+		return nil, status.Error(codes.Internal, "component returned nil")
+	}
+
+	return resp.Proto, nil
 }
 
 // ParamInfoRequest streams parameter information for the given slot and OID prefix.
