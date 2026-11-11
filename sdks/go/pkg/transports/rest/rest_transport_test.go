@@ -707,7 +707,7 @@ func TestTransport_SetValue_InvalidContentType(t *testing.T) {
 
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness",
 		`{"int32_value": 42}`, map[string]string{"Content-Type": "text/plain"})
-	assertStatus(t, rec, http.StatusBadRequest)
+	assertStatus(t, rec, http.StatusUnsupportedMediaType)
 	const expectedErrorMessage = "unsupported content type: text/plain, expected application/json"
 	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
 		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
@@ -783,7 +783,7 @@ func TestTransport_SetValues_InvalidContentType(t *testing.T) {
 
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
 		`{"values":[]}`, map[string]string{"Content-Type": "text/plain"})
-	assertStatus(t, rec, http.StatusBadRequest)
+	assertStatus(t, rec, http.StatusUnsupportedMediaType)
 	const expectedErrorMessage = "unsupported content type: text/plain, expected application/json"
 	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
 		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)

@@ -54,6 +54,18 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
+// errSimulatedRead is the error returned by errReader. Tests match it with
+// errors.Is to confirm body-read failures are wrapped with %w.
+var errSimulatedRead = errors.New("simulated read error")
+
+// errReader is an io.Reader that always fails, used to exercise body-read
+// error paths in the request readers.
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) {
+	return 0, errSimulatedRead
+}
+
 func TestReadRequestJSON_ValidInt32(t *testing.T) {
 	body := `{"int32_value": 42}`
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
@@ -1234,8 +1246,8 @@ func TestReadAssetRequestJSON_BodyReadError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when reading the body fails")
 	}
-	if !strings.Contains(err.Error(), "failed to read request body") {
-		t.Errorf("expected error to contain 'failed to read request body', got: %v", err)
+	if !errors.Is(err, errReadBody) {
+		t.Errorf("expected errReadBody, got: %v", err)
 	}
 }
 
@@ -1248,18 +1260,6 @@ func TestInjectJSONField_Float32(t *testing.T) {
 	}
 }
 
-// errSimulatedRead is the error returned by errReader. Tests match it with
-// errors.Is to confirm body-read failures are wrapped with %w.
-var errSimulatedRead = errors.New("simulated read error")
-
-// errReader is an io.Reader that always fails, used to exercise body-read
-// error paths in the request readers.
-type errReader struct{}
-
-func (errReader) Read([]byte) (int, error) {
-	return 0, errSimulatedRead
-}
-
 func TestReadRequestJSON_BodyTooLarge(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"int32_value": 42}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -1269,6 +1269,9 @@ func TestReadRequestJSON_BodyTooLarge(t *testing.T) {
 	if _, ok := errors.AsType[*http.MaxBytesError](err); !ok {
 		t.Fatalf("expected *http.MaxBytesError, got %v", err)
 	}
+	if !errors.Is(err, errReadBody) {
+		t.Fatalf("expected errReadBody, got %v", err)
+	}
 }
 
 func TestReadRequestJSON_BodyReadError(t *testing.T) {
@@ -1276,6 +1279,9 @@ func TestReadRequestJSON_BodyReadError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadRequestJSON(req)
+	if !errors.Is(err, errReadBody) {
+		t.Fatalf("expected errReadBody, got %v", err)
+	}
 	if !errors.Is(err, errSimulatedRead) {
 		t.Fatalf("expected simulated read error, got %v", err)
 	}
@@ -1291,6 +1297,9 @@ func TestReadMultiSetValuesRequestJSON_BodyTooLarge(t *testing.T) {
 	if _, ok := errors.AsType[*http.MaxBytesError](err); !ok {
 		t.Fatalf("expected *http.MaxBytesError, got %v", err)
 	}
+	if !errors.Is(err, errReadBody) {
+		t.Fatalf("expected errReadBody, got %v", err)
+	}
 }
 
 func TestReadMultiSetValuesRequestJSON_BodyReadError(t *testing.T) {
@@ -1298,6 +1307,9 @@ func TestReadMultiSetValuesRequestJSON_BodyReadError(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	_, err := ReadMultiSetValuesRequestJSON(req)
+	if !errors.Is(err, errReadBody) {
+		t.Fatalf("expected errReadBody, got %v", err)
+	}
 	if !errors.Is(err, errSimulatedRead) {
 		t.Fatalf("expected simulated read error, got %v", err)
 	}

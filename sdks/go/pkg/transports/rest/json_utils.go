@@ -227,7 +227,8 @@ func (e *statusError) Error() string { return e.msg }
 var (
 	errMissingContentType   = &statusError{status: http.StatusBadRequest, msg: "missing Content-Type header"}
 	errInvalidContentType   = &statusError{status: http.StatusBadRequest, msg: "invalid content type"}
-	errUnsupportedMediaType = &statusError{status: http.StatusBadRequest, msg: "unsupported content type"}
+	errUnsupportedMediaType = &statusError{status: http.StatusUnsupportedMediaType, msg: "unsupported content type"}
+	errReadBody             = &statusError{status: http.StatusBadRequest, msg: "failed to read request body"}
 	errMalformedBody        = &statusError{status: http.StatusBadRequest, msg: "failed to unmarshal request body"}
 	errInvalidValue         = &statusError{status: http.StatusBadRequest, msg: "invalid value"}
 )
@@ -249,6 +250,16 @@ func validateJSONContentType(contentType string) error {
 	return nil
 }
 
+// readRequestBody reads r.Body and classifies a read failure as errReadBody (400)
+// The cause of the error is wrapped
+func readRequestBody(r *http.Request) ([]byte, error) {
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", errReadBody, err)
+	}
+	return data, nil
+}
+
 // ReadAssetRequestJSON reads and unmarshals a JSON request body into a
 // protos.ExternalObjectPayload (the inverse of MarshalAssetJSON). It validates
 // the Content-Type header and returns an error if it's not application/json.
@@ -267,9 +278,9 @@ func ReadAssetRequestJSON(r *http.Request) (*protos.ExternalObjectPayload, error
 		return nil, fmt.Errorf("unsupported content type: %s, expected application/json", mediaType)
 	}
 
-	data, err := io.ReadAll(r.Body)
+	data, err := readRequestBody(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read request body: %w", err)
+		return nil, err
 	}
 
 	payload := &protos.ExternalObjectPayload{}
@@ -286,9 +297,9 @@ func ReadAssetRequestJSON(r *http.Request) (*protos.ExternalObjectPayload, error
 func ReadRequestJSON(r *http.Request) (*protos.Value, error) {
 	defer r.Body.Close()
 
-	data, err := io.ReadAll(r.Body)
+	data, err := readRequestBody(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read request body: %w", err)
+		return nil, err
 	}
 	return parseValueJSON(r.Header.Get("Content-Type"), data)
 }
@@ -323,9 +334,9 @@ func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, err
 		return nil, err
 	}
 
-	data, err := io.ReadAll(r.Body)
+	data, err := readRequestBody(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read request body: %w", err)
+		return nil, err
 	}
 
 	payload := &protos.MultiSetValuePayload{}
