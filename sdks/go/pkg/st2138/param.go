@@ -343,34 +343,29 @@ var paramTypesWithSubParams = map[protos.ParamType]struct{}{
 	protos.ParamType_STRUCT_VARIANT_ARRAY: {},
 }
 
-// WithParam attaches a sub-param descriptor under oid. On a STRUCT parent, a
-// sub-param with a value contributes that value to the struct's own
-// Value.Fields[oid]; the stored descriptor is kept valueless, since field
-// values live in the struct's Value and sub-params are descriptors only. On a
-// STRUCT_VARIANT parent, a sub-param with a value sets the value if not set already,
-// erroring otherwise. Sub-params with a value always error on STRUCT_ARRAY and
-// STRUCT_VARIANT_ARRAY parents. A valueless sub-param never touches the parent's
-// Value, so it can refine a descriptor (name, constraint, ...) without overriding
-// a pre-existing value.
+// WithParam attaches a valueless sub-param descriptor to a struct-like param under oid.
+//
+//   - STRUCT: Inserting a valued param sets the struct's own Value.Fields[oid] to the param's value.
+//   - STRUCT_VARIANT: Inserting a valued param sets the struct variant's own Value to the param's value.
+//     If the struct variant already has a value, the operation errors.
+//   - STRUCT_ARRAY: Inserting a valued param errors.
+//   - STRUCT_VARIANT_ARRAY: Inserting a valued param errors.
+//
+// A valueless sub-param never touches the parent's Value, so it can refine a
+// descriptor (name, constraint, ...) without overriding a pre-existing value.
 func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder {
 	p, ok := buildChild(&cp.err, param, (*ParamBuilder).Build, "WithParam")
 	if !ok {
 		return cp
 	}
 	if oid == "" {
-		cp.err = fmt.Errorf("WithParam called with empty oid")
-		return cp
-	}
-	if _, ok := paramTypesWithSubParams[cp.proto.Type]; !ok {
-		cp.err = fmt.Errorf("WithParam called on param type that does not support sub-params: param_type=%s",
-			cp.proto.Type.String(),
-		)
+		cp.err = fmt.Errorf("WithParam called with empty oid: %w", ErrInvalid)
 		return cp
 	}
 
-	if p.Proto.Value != nil {
-		switch cp.proto.Type {
-		case protos.ParamType_STRUCT:
+	switch cp.proto.Type {
+	case protos.ParamType_STRUCT:
+		if p.Proto.Value != nil {
 			sv := cp.proto.Value.GetStructValue()
 			if sv == nil {
 				sv = &protos.StructValue{}
@@ -381,11 +376,16 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 			}
 			sv.Fields[oid] = p.Proto.Value
 			p.Proto.Value = nil
-		case protos.ParamType_STRUCT_VARIANT:
+		}
+	case protos.ParamType_STRUCT_VARIANT:
+		if p.Proto.Value != nil {
 			sv := cp.proto.Value.GetStructVariantValue()
 			if sv != nil {
-				cp.err = fmt.Errorf("WithParam called with value-bearing param input on struct variant param with existing value: current_value=%v, new_value=%v",
+				cp.err = fmt.Errorf("WithParam on struct variant: only one alternative may carry a value, because it selects the variant's active alternative; "+
+					"alternative %q already selected with value %v, cannot also select %q with value %v",
+					sv.StructVariantType,
 					sv.Value.String(),
+					oid,
 					p.Proto.Value.String(),
 				)
 				return cp
@@ -395,13 +395,20 @@ func (cp *ParamBuilder) WithParam(oid string, param *ParamBuilder) *ParamBuilder
 			sv.StructVariantType = oid
 			sv.Value = p.Proto.Value
 			p.Proto.Value = nil
-		case protos.ParamType_STRUCT_ARRAY, protos.ParamType_STRUCT_VARIANT_ARRAY:
+		}
+	case protos.ParamType_STRUCT_ARRAY, protos.ParamType_STRUCT_VARIANT_ARRAY:
+		if p.Proto.Value != nil {
 			cp.err = fmt.Errorf("WithParam called on param type that does not support value-bearing param inputs: param_type=%s, value=%v",
 				cp.proto.Type.String(),
 				p.Proto.Value.String(),
 			)
 			return cp
 		}
+	default:
+		cp.err = fmt.Errorf("WithParam called on param type that does not support sub-params: param_type=%s",
+			cp.proto.Type.String(),
+		)
+		return cp
 	}
 
 	// A read-only parent forces its children read-only. When the parent is
@@ -623,10 +630,6 @@ func isValueValidForParamType(v *protos.Value, pt protos.ParamType) bool {
 		return pt == protos.ParamType_FLOAT32
 	case *protos.Value_StringValue:
 		return pt == protos.ParamType_STRING
-	case *protos.Value_StructValue:
-		return pt == protos.ParamType_STRUCT
-	case *protos.Value_StructVariantValue:
-		return pt == protos.ParamType_STRUCT_VARIANT
 	case *protos.Value_Int32ArrayValues:
 		return pt == protos.ParamType_INT32_ARRAY
 	case *protos.Value_Float32ArrayValues:
@@ -635,14 +638,19 @@ func isValueValidForParamType(v *protos.Value, pt protos.ParamType) bool {
 		return pt == protos.ParamType_STRING_ARRAY
 	case *protos.Value_DataPayload:
 		return pt == protos.ParamType_BINARY || pt == protos.ParamType_DATA
-	case *protos.Value_StructArrayValues:
-		return pt == protos.ParamType_STRUCT_ARRAY
-	case *protos.Value_StructVariantArrayValues:
-		return pt == protos.ParamType_STRUCT_VARIANT_ARRAY
 	case *protos.Value_EmptyValue:
 		return pt == protos.ParamType_EMPTY
 	case *protos.Value_UndefinedValue:
 		return pt == protos.ParamType_UNDEFINED
+	case *protos.Value_StructValue:
+
+		return pt == protos.ParamType_STRUCT
+	case *protos.Value_StructVariantValue:
+		return pt == protos.ParamType_STRUCT_VARIANT
+	case *protos.Value_StructArrayValues:
+		return pt == protos.ParamType_STRUCT_ARRAY
+	case *protos.Value_StructVariantArrayValues:
+		return pt == protos.ParamType_STRUCT_VARIANT_ARRAY
 	default:
 		return false
 	}

@@ -1499,7 +1499,7 @@ func TestWithParam_StructVariantValueAlreadySet(t *testing.T) {
 		WithParam("field1", child1).
 		WithParam("field2", child2).
 		Build()
-	if err == nil || !strings.Contains(err.Error(), "WithParam called with value-bearing param input on struct variant param with existing value:") {
+	if err == nil || !strings.Contains(err.Error(), "WithParam on struct variant: only one alternative may carry a value") {
 		t.Fatalf("expected error for struct variant with existing value, got %v", err)
 	}
 	if p != (Param{}) {
