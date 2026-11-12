@@ -146,6 +146,9 @@ func ToProto(v any) (*protos.Value, error) {
 		}
 		structArr := make([]*protos.StructValue, len(val))
 		for i, m := range val {
+			if len(m) == 0 {
+				return nil, fmt.Errorf("empty map[string]any in array: %w", ErrInvalid)
+			}
 			fields := make(map[string]*protos.Value)
 			for k, v := range m {
 				field, err := ToProto(v)
