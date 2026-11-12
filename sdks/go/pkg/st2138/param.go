@@ -391,17 +391,22 @@ func (cp *ParamBuilder) WithName(name PolyglotText) *ParamBuilder {
 	return cp
 }
 
-func (cp *ParamBuilder) WithValue(v Value) *ParamBuilder {
+// WithValue converts v to a proto value via ToProto, checks it against the
+// param type and any struct-like sub-param descriptors, and sets it.
+func (cp *ParamBuilder) WithValue(v any) *ParamBuilder {
 	if cp.err != nil {
 		return cp
 	}
-	if !isValueValidForParamType(v.Proto, cp.proto.Type) {
-		cp.err = fmt.Errorf("WithValue: value kind incompatible with param type: param_type=%s",
-			cp.proto.Type.String(),
-		)
+	pv, err := ToProto(v)
+	if err != nil {
+		cp.err = fmt.Errorf("WithValue: %w", err)
 		return cp
 	}
-	cp.proto.Value = v.Proto
+	if err := validateValueForParam(pv, cp.proto); err != nil {
+		cp.err = fmt.Errorf("WithValue: %w: %w", err, ErrInvalid)
+		return cp
+	}
+	cp.proto.Value = pv
 	return cp
 }
 
@@ -620,15 +625,15 @@ func (cp *ParamBuilder) Clone() *ParamBuilder {
 	return &ParamBuilder{proto: proto.Clone(cp.proto).(*protos.Param), err: cp.err}
 }
 
-// SetValue converts v to a proto value via ToProto, validates it against the
-// param type, and sets it.
+// SetValue converts v to a proto value via ToProto, checks it against the
+// param type and any struct-like sub-param descriptors, and sets it.
 func (cp *Param) SetValue(v any) error {
 	pv, err := ToProto(v)
 	if err != nil {
 		return err
 	}
-	if !isValueValidForParamType(pv, cp.Proto.Type) {
-		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.Proto.Type.String(), ErrInvalid)
+	if err := validateValueForParam(pv, cp.Proto); err != nil {
+		return fmt.Errorf("%w: %w", err, ErrInvalid)
 	}
 	cp.Proto.Value = pv
 	return nil
@@ -673,6 +678,85 @@ func validateDescriptor(parent map[string]*protos.Param, oid string, newDescript
 				}
 			}
 		}
+	}
+	return nil
+}
+
+// validateValueForParam checks that v is compatible with p. The value kind
+// must match p's type. When p has sub-param descriptors, every struct field
+// and variant inside v must match those descriptors. A struct-like param with no descriptors
+// rejects all values.
+func validateValueForParam(v *protos.Value, p *protos.Param) error {
+	if p == nil || !isValueValidForParamType(v, p.GetType()) {
+		pt := protos.ParamType_UNDEFINED
+		if p != nil {
+			pt = p.GetType()
+		}
+		return fmt.Errorf("value kind incompatible with param type %s", pt.String())
+	}
+	_, ok := paramTypesWithSubParams[p.GetType()]
+	if len(p.GetParams()) == 0 && !ok {
+		return nil
+	}
+	return validateStructLikeValue(v, p.GetParams())
+}
+
+// validateStructLikeValue checks the interior of a struct-like value against
+// descriptors. params is non-empty: each field or variant in v must name one
+// of those descriptors and match it. Descriptor keys absent from v are allowed.
+func validateStructLikeValue(v *protos.Value, params map[string]*protos.Param) error {
+	switch kind := v.Kind.(type) {
+	case *protos.Value_StructValue:
+		return validateStructFields(kind.StructValue.GetFields(), params)
+	case *protos.Value_StructArrayValues:
+		for i, sv := range kind.StructArrayValues.GetStructValues() {
+			if err := validateStructFields(sv.GetFields(), params); err != nil {
+				return fmt.Errorf("struct array element %d: %w", i, err)
+			}
+		}
+	case *protos.Value_StructVariantValue:
+		return validateVariant(kind.StructVariantValue, params)
+	case *protos.Value_StructVariantArrayValues:
+		for i, sv := range kind.StructVariantArrayValues.GetStructVariants() {
+			if err := validateVariant(sv, params); err != nil {
+				return fmt.Errorf("struct variant array element %d: %w", i, err)
+			}
+		}
+	}
+	return nil
+}
+
+// validateStructFields checks each field value against the
+// descriptor stored under the same name.
+func validateStructFields(fields map[string]*protos.Value, params map[string]*protos.Param) error {
+	for oid, fv := range fields {
+		if oid == "" {
+			return fmt.Errorf("struct field name cannot be empty")
+		}
+		desc, ok := params[oid]
+		if !ok || desc == nil {
+			return fmt.Errorf("struct field %q has no descriptor", oid)
+		}
+		if err := validateValueForParam(fv, desc); err != nil {
+			return fmt.Errorf("struct field %q: %w", oid, err)
+		}
+	}
+	return nil
+}
+
+// validateVariant checks that the variant type names a descriptor and that the
+// inner value matches that descriptor.
+func validateVariant(sv *protos.StructVariantValue, params map[string]*protos.Param) error {
+	oid := sv.GetStructVariantType()
+	if oid == "" {
+		return fmt.Errorf("struct variant type cannot be nil or empty")
+	}
+	desc, ok := params[oid]
+	if !ok || desc == nil {
+		return fmt.Errorf("struct variant type %q has no descriptor", oid)
+	}
+	if err := validateValueForParam(sv.GetValue(), desc); err != nil {
+		return fmt.Errorf("struct variant type %q: %w", oid, err)
 	}
 	return nil
 }
