@@ -223,13 +223,6 @@ func (cp *ParamBuilder) WithValue(v any) *ParamBuilder {
 		cp.err = fmt.Errorf("WithValue: failed to convert value to proto: %w", err)
 		return cp
 	}
-	if !isValueValidForParamType(pv, cp.proto.Type) {
-		cp.err = fmt.Errorf("WithValue: value kind incompatible with param type: param_type=%s: %w",
-			cp.proto.Type.String(),
-			ErrInvalid,
-		)
-		return cp
-	}
 	cp.proto.Value = pv
 	return cp
 }
@@ -334,13 +327,6 @@ func (cp *ParamBuilder) WithClientHint(key, value string) *ParamBuilder {
 	}
 	cp.proto.ClientHints[key] = value
 	return cp
-}
-
-var paramTypesWithSubParams = map[protos.ParamType]struct{}{
-	protos.ParamType_STRUCT:               {},
-	protos.ParamType_STRUCT_VARIANT:       {},
-	protos.ParamType_STRUCT_ARRAY:         {},
-	protos.ParamType_STRUCT_VARIANT_ARRAY: {},
 }
 
 // WithParam attaches a valueless sub-param descriptor to a struct-like param under oid.
@@ -480,15 +466,14 @@ func (cp *ParamBuilder) WithTemplateOid(oid string) *ParamBuilder {
 
 // Build returns a usable Param from the builder. If the builder has an error, it
 // returns an empty Param and the error. Must be called after all builder methods have been called.
-// Validates struct-like params values against their descriptors.
+// Validates the param's value against its type and descriptors, if applicable.
 func (cp *ParamBuilder) Build() (Param, error) {
 	if cp.err != nil {
 		return Param{}, cp.err
 	}
-
-	if _, ok := paramTypesWithSubParams[cp.proto.Type]; ok {
-		cp.err = validateStructLikeValue(cp.proto.Value, cp.proto.Params, cp.proto.Type)
-		if cp.err != nil {
+	if cp.proto.Value != nil {
+		if err := isValueValidForParam(cp.proto.Value, cp.proto); err != nil {
+			cp.err = fmt.Errorf("Build: %w: %w", err, ErrInvalid)
 			return Param{}, cp.err
 		}
 	}
@@ -504,19 +489,14 @@ func (cp *ParamBuilder) Clone() *ParamBuilder {
 }
 
 // SetValue converts v to a proto value via ToProto, validates it against the
-// param type, and sets it.
+// Param, and sets it.
 func (cp *Param) SetValue(v any) error {
 	pv, err := ToProto(v)
 	if err != nil {
 		return err
 	}
-	if !isValueValidForParamType(pv, cp.Proto.Type) {
-		return fmt.Errorf("value kind incompatible with param type %s: %w", cp.Proto.Type.String(), ErrInvalid)
-	}
-	if _, ok := paramTypesWithSubParams[cp.Proto.Type]; ok {
-		if err := validateStructLikeValue(pv, cp.Proto.Params, cp.Proto.Type); err != nil {
-			return err
-		}
+	if err := isValueValidForParam(pv, cp.Proto); err != nil {
+		return fmt.Errorf("%w: %w", err, ErrInvalid)
 	}
 	cp.Proto.Value = pv
 	return nil
@@ -533,127 +513,91 @@ func (cp *Param) GetValue() (any, error) {
 
 // --- Validation helpers ---
 
-// validateStructLikeValue validates a struct-like's value against its descriptors.
-// Recursively validates nested struct-like values.
-// STRUCT values must have a match for all descriptors in the value's fields.
-// STRUCT_VARIANT values only need to match one descriptor.
-func validateStructLikeValue(v *protos.Value, p map[string]*protos.Param, parentType protos.ParamType) error {
+// isValueValidForParam checks whether a Value is compatible with the
+// given Param.
+//
+//	-STRUCT: The value must implement all descriptors.
+//	-STRUCT_VARIANT: The value must implement a descriptor.
+//	-STRUCT_ARRAY: All elements must implement all descriptors.
+//	-STRUCT_VARIANT_ARRAY: All elements must implement a descriptor.
+//
+// Returns an error if the value is not valid for the param.
+func isValueValidForParam(v *protos.Value, p *protos.Param) error {
 	if v == nil {
-		return nil
+		return fmt.Errorf("value is nil")
 	}
-	switch parentType {
+	vType := paramTypeFromValueKind(v)
+	var defaultErr error = fmt.Errorf("value is not valid for param type: value_type=%s, param_type=%s", vType.String(), p.Type.String())
+	switch vType {
+	case protos.ParamType_DATA:
+		// Default case can't map DataPayload to both valid types, so unique case is needed.
+		if p.Type != protos.ParamType_BINARY && p.Type != protos.ParamType_DATA {
+			return defaultErr
+		}
 	case protos.ParamType_STRUCT:
-		return validateStructValue(v.GetStructValue(), p)
+		if p.Type != protos.ParamType_STRUCT {
+			return defaultErr
+		}
+		structValue := v.GetStructValue()
+		if len(structValue.Fields) != len(p.Params) {
+			return fmt.Errorf("struct value has different number of fields than descriptors: value_fields=%d, descriptors=%d",
+				len(structValue.Fields), len(p.Params),
+			)
+		}
+		for oid, fieldValue := range structValue.Fields {
+			desc, ok := p.Params[oid]
+			if !ok {
+				return fmt.Errorf("struct value contains unknown field: oid=%s", oid)
+			}
+			if err := isValueValidForParam(fieldValue, desc); err != nil {
+				return fmt.Errorf("struct value field %s: %w", oid, err)
+			}
+		}
+		return nil
 	case protos.ParamType_STRUCT_VARIANT:
-		return validateStructVariantValue(v.GetStructVariantValue(), p)
+		if p.Type != protos.ParamType_STRUCT_VARIANT {
+			return defaultErr
+		}
+		variant := v.GetStructVariantValue()
+		if desc, ok := p.Params[variant.StructVariantType]; ok {
+			if err := isValueValidForParam(variant.Value, desc); err != nil {
+				return fmt.Errorf("struct variant value mismatches descriptor: %w", err)
+			}
+			return nil
+		}
+		return fmt.Errorf("struct variant type does not match any descriptor: value_type=%s", variant.StructVariantType)
 	case protos.ParamType_STRUCT_ARRAY:
-		elems := v.GetStructArrayValues()
-		for _, elem := range elems.StructValues {
-			if err := validateStructValue(elem, p); err != nil {
-				return err
-			}
+		if p.Type != protos.ParamType_STRUCT_ARRAY {
+			return defaultErr
 		}
-	case protos.ParamType_STRUCT_VARIANT_ARRAY:
-		elems := v.GetStructVariantArrayValues()
-		for _, elem := range elems.StructVariants {
-			if err := validateStructVariantValue(elem, p); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// validateStructValue is a helper for validateStructLikeValue. Handles STRUCT values.
-func validateStructValue(v *protos.StructValue, p map[string]*protos.Param) error {
-	if len(v.Fields) != len(p) {
-		return fmt.Errorf("%w: struct value has different number of fields than descriptors: value_fields=%d, descriptors=%d",
-			ErrInvalid,
-			len(v.Fields), len(p),
-		)
-	}
-	for oid, value := range v.Fields {
-		param, ok := p[oid]
-		if !ok {
-			return fmt.Errorf("%w: struct value contains unknown field: oid=%s", ErrInvalid, oid)
-		}
-		if !isValueValidForParamType(value, param.Type) {
-			return fmt.Errorf("%w: struct value field %s has incompatible type with descriptor: value_type=%s, descriptor_type=%s",
-				ErrInvalid,
-				oid,
-				paramTypeFromValueKind(value).String(),
-				param.Type.String(),
-			)
-		}
-		if _, ok := paramTypesWithSubParams[param.Type]; ok {
-			if err := validateStructLikeValue(value, param.Params, param.Type); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// validateStructVariantValue is a helper for validateStructLikeValue. Handles STRUCT_VARIANT values.
-func validateStructVariantValue(v *protos.StructVariantValue, p map[string]*protos.Param) error {
-	if desc, ok := p[v.StructVariantType]; ok {
-		if !isValueValidForParamType(v.Value, desc.Type) {
-			return fmt.Errorf("%w: struct variant value and descriptor have incompatible fundamental types: value_type=%s, descriptor_type=%s",
-				ErrInvalid,
-				paramTypeFromValueKind(v.Value).String(),
-				desc.Type.String(),
-			)
-		}
-		if _, ok := paramTypesWithSubParams[desc.Type]; ok {
-			if err := validateStructLikeValue(v.Value, desc.Params, desc.Type); err != nil {
+		values := v.GetStructArrayValues()
+		elemParam := &protos.Param{Type: protos.ParamType_STRUCT, Params: p.Params}
+		for _, elem := range values.StructValues {
+			elemValue := &protos.Value{Kind: &protos.Value_StructValue{StructValue: elem}}
+			if err := isValueValidForParam(elemValue, elemParam); err != nil {
 				return err
 			}
 		}
 		return nil
-	}
-	return fmt.Errorf("%w: struct variant type does not match any descriptor: value_type=%s",
-		ErrInvalid,
-		v.StructVariantType,
-	)
-}
-
-// isValueValidForParamType checks whether a Value kind is compatible with the
-// given ParamType.
-func isValueValidForParamType(v *protos.Value, pt protos.ParamType) bool {
-	if v == nil {
-		return false
-	}
-	switch v.Kind.(type) {
-	case *protos.Value_Int32Value:
-		return pt == protos.ParamType_INT32
-	case *protos.Value_Float32Value:
-		return pt == protos.ParamType_FLOAT32
-	case *protos.Value_StringValue:
-		return pt == protos.ParamType_STRING
-	case *protos.Value_Int32ArrayValues:
-		return pt == protos.ParamType_INT32_ARRAY
-	case *protos.Value_Float32ArrayValues:
-		return pt == protos.ParamType_FLOAT32_ARRAY
-	case *protos.Value_StringArrayValues:
-		return pt == protos.ParamType_STRING_ARRAY
-	case *protos.Value_DataPayload:
-		return pt == protos.ParamType_BINARY || pt == protos.ParamType_DATA
-	case *protos.Value_EmptyValue:
-		return pt == protos.ParamType_EMPTY
-	case *protos.Value_UndefinedValue:
-		return pt == protos.ParamType_UNDEFINED
-	case *protos.Value_StructValue:
-
-		return pt == protos.ParamType_STRUCT
-	case *protos.Value_StructVariantValue:
-		return pt == protos.ParamType_STRUCT_VARIANT
-	case *protos.Value_StructArrayValues:
-		return pt == protos.ParamType_STRUCT_ARRAY
-	case *protos.Value_StructVariantArrayValues:
-		return pt == protos.ParamType_STRUCT_VARIANT_ARRAY
+	case protos.ParamType_STRUCT_VARIANT_ARRAY:
+		if p.Type != protos.ParamType_STRUCT_VARIANT_ARRAY {
+			return defaultErr
+		}
+		values := v.GetStructVariantArrayValues()
+		elemParam := &protos.Param{Type: protos.ParamType_STRUCT_VARIANT, Params: p.Params}
+		for _, elem := range values.StructVariants {
+			elemValue := &protos.Value{Kind: &protos.Value_StructVariantValue{StructVariantValue: elem}}
+			if err := isValueValidForParam(elemValue, elemParam); err != nil {
+				return err
+			}
+		}
+		return nil
 	default:
-		return false
+		if p.Type != vType {
+			return defaultErr
+		}
 	}
+	return nil
 }
 
 // paramTypeFromValueKind infers the ParamType from a Value's proto kind.

@@ -1283,46 +1283,62 @@ func TestNewParamFromValue_AllScalarTypes(t *testing.T) {
 
 // --- Validation helper tests ---
 
-func TestIsValueValidForParamType_NilValue(t *testing.T) {
-	if isValueValidForParamType(nil, protos.ParamType_INT32) {
+func TestIsValueValidForParam_NilValue(t *testing.T) {
+	p := &protos.Param{Type: protos.ParamType_INT32}
+	if err := isValueValidForParam(nil, p); err == nil {
 		t.Error("expected nil value to be invalid")
 	}
 }
 
-func TestIsValueValidForParamType_DataPayload_Binary(t *testing.T) {
+func TestIsValueValidForParam_DataPayload_Binary(t *testing.T) {
 	v := &protos.Value{Kind: &protos.Value_DataPayload{
 		DataPayload: &protos.DataPayload{Kind: &protos.DataPayload_Payload{Payload: []byte{1}}},
 	}}
-	if !isValueValidForParamType(v, protos.ParamType_BINARY) {
+	b := &protos.Param{Type: protos.ParamType_BINARY}
+	d := &protos.Param{Type: protos.ParamType_DATA}
+	i := &protos.Param{Type: protos.ParamType_INT32}
+	if err := isValueValidForParam(v, b); err != nil {
 		t.Error("expected DataPayload to be valid for BINARY")
 	}
-	if !isValueValidForParamType(v, protos.ParamType_DATA) {
+	if err := isValueValidForParam(v, d); err != nil {
 		t.Error("expected DataPayload to be valid for DATA")
 	}
-	if isValueValidForParamType(v, protos.ParamType_INT32) {
+	if err := isValueValidForParam(v, i); err == nil {
 		t.Error("expected DataPayload to be invalid for INT32")
 	}
 }
 
-func TestIsValueValidForParamType_AllKinds(t *testing.T) {
+func TestIsValueValidForParam_AllKinds(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    any
-		wantType protos.ParamType
+		name  string
+		input any
+		param *protos.Param
 	}{
-		{"int32", int32(1), protos.ParamType_INT32},
-		{"float32", float32(1.5), protos.ParamType_FLOAT32},
-		{"string", "hello", protos.ParamType_STRING},
-		{"struct", map[string]any{"a": int32(1)}, protos.ParamType_STRUCT},
-		{"struct_variant", StructVariantValue{StructVariantType: "a", Value: int32(1)}, protos.ParamType_STRUCT_VARIANT},
-		{"int32_array", []int32{1, 2}, protos.ParamType_INT32_ARRAY},
-		{"float32_array", []float32{1.0}, protos.ParamType_FLOAT32_ARRAY},
-		{"string_array", []string{"a"}, protos.ParamType_STRING_ARRAY},
-		{"data", DataPayload{Payload: []byte("hello")}, protos.ParamType_DATA},
-		{"struct_array", []map[string]any{{"a": int32(1)}}, protos.ParamType_STRUCT_ARRAY},
-		{"struct_variant_array", []StructVariantValue{{StructVariantType: "a", Value: int32(1)}}, protos.ParamType_STRUCT_VARIANT_ARRAY},
-		{"empty", EmptyValue{}, protos.ParamType_EMPTY},
-		{"undefined", UndefinedValue(0), protos.ParamType_UNDEFINED},
+		{"int32", int32(1), &protos.Param{Type: protos.ParamType_INT32}},
+		{"float32", float32(1.5), &protos.Param{Type: protos.ParamType_FLOAT32}},
+		{"string", "hello", &protos.Param{Type: protos.ParamType_STRING}},
+		{"struct", map[string]any{"a": int32(1)},
+			&protos.Param{Type: protos.ParamType_STRUCT, Params: map[string]*protos.Param{
+				"a": {Type: protos.ParamType_INT32},
+			}}},
+		{"struct_variant", StructVariantValue{StructVariantType: "a", Value: int32(1)},
+			&protos.Param{Type: protos.ParamType_STRUCT_VARIANT, Params: map[string]*protos.Param{
+				"a": {Type: protos.ParamType_INT32},
+			}}},
+		{"int32_array", []int32{1, 2}, &protos.Param{Type: protos.ParamType_INT32_ARRAY}},
+		{"float32_array", []float32{1.0}, &protos.Param{Type: protos.ParamType_FLOAT32_ARRAY}},
+		{"string_array", []string{"a"}, &protos.Param{Type: protos.ParamType_STRING_ARRAY}},
+		{"data", DataPayload{Payload: []byte("hello")}, &protos.Param{Type: protos.ParamType_DATA}},
+		{"struct_array", []map[string]any{{"a": int32(1)}},
+			&protos.Param{Type: protos.ParamType_STRUCT_ARRAY, Params: map[string]*protos.Param{
+				"a": {Type: protos.ParamType_INT32},
+			}}},
+		{"struct_variant_array", []StructVariantValue{{StructVariantType: "a", Value: int32(1)}},
+			&protos.Param{Type: protos.ParamType_STRUCT_VARIANT_ARRAY, Params: map[string]*protos.Param{
+				"a": {Type: protos.ParamType_INT32},
+			}}},
+		{"empty", EmptyValue{}, &protos.Param{Type: protos.ParamType_EMPTY}},
+		{"undefined", UndefinedValue(0), &protos.Param{Type: protos.ParamType_UNDEFINED}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1330,8 +1346,9 @@ func TestIsValueValidForParamType_AllKinds(t *testing.T) {
 			if res != nil {
 				t.Fatalf("ToValue failed: %s", res)
 			}
-			if !isValueValidForParamType(v.Proto, tt.wantType) {
-				t.Errorf("expected %v to be valid for %v", tt.input, tt.wantType)
+
+			if err := isValueValidForParam(v.Proto, tt.param); err != nil {
+				t.Errorf("expected %v to be valid input, got error: %v", tt.input, err)
 			}
 		})
 	}
@@ -1557,19 +1574,22 @@ func TestWithParam_StructVariantArrayValueErrors(t *testing.T) {
 		t.Errorf("expected empty Param for builder with error, got %v", p)
 	}
 }
-func TestIsValueValidForParamType_NilKind(t *testing.T) {
+func TestIsValueValidForParam_NilKind(t *testing.T) {
 	v := &protos.Value{}
-	if isValueValidForParamType(v, protos.ParamType_INT32) {
+	p := &protos.Param{Type: protos.ParamType_INT32}
+	if err := isValueValidForParam(v, p); err == nil {
 		t.Error("expected Value with nil Kind to be invalid")
 	}
 }
 
-func TestIsValueValidForParamType_UndefinedValue(t *testing.T) {
+func TestIsValueValidForParam_UndefinedValue(t *testing.T) {
 	v := &protos.Value{Kind: &protos.Value_UndefinedValue{UndefinedValue: 0}}
-	if !isValueValidForParamType(v, protos.ParamType_UNDEFINED) {
+	p := &protos.Param{Type: protos.ParamType_UNDEFINED}
+	if err := isValueValidForParam(v, p); err != nil {
 		t.Error("expected UndefinedValue to be valid for UNDEFINED")
 	}
-	if isValueValidForParamType(v, protos.ParamType_INT32) {
+	p = &protos.Param{Type: protos.ParamType_INT32}
+	if err := isValueValidForParam(v, p); err == nil {
 		t.Error("expected UndefinedValue to be invalid for INT32")
 	}
 }
@@ -1870,9 +1890,9 @@ func TestParamBuilder_StructLikeValidationErrors(t *testing.T) {
 		{"STRUCT_MISMATCH_DESCRIPTOR", NewParamStruct().WithParam("field", NewParamInt32()).WithValue(map[string]any{"notField": int32(1)}),
 			"struct value contains unknown field:"},
 		{"STRUCT_MISMATCH_DESCRIPTOR_TYPE", NewParamStruct().WithParam("field", NewParamInt32()).WithValue(map[string]any{"field": float32(1.1)}),
-			"struct value field field has incompatible type with descriptor:"},
+			"struct value field field: value is not valid for param type:"},
 		{"STRUCT_VARIANT_MISMATCH_DESCRIPTOR_TYPE", NewParamStructVariant().WithParam("field", NewParamInt32()).WithValue(StructVariantValue{StructVariantType: "field", Value: float32(1.1)}),
-			"struct variant value and descriptor have incompatible fundamental types:"},
+			"struct variant value mismatches descriptor:"},
 		{"STRUCT_NESTED_MISSING_DESCRIPTOR", NewParamStruct().WithParam("field", NewParamStruct()).WithValue(map[string]any{"field": map[string]any{"field2": int32(1)}}),
 			"struct value has different number of fields than descriptors:"},
 		{"STRUCT_VARIANT_NESTED_MISSING_DESCRIPTOR", NewParamStructVariant().WithParam("field", NewParamStructVariant()).WithValue(StructVariantValue{StructVariantType: "field", Value: StructVariantValue{StructVariantType: "field2", Value: int32(1)}}),
