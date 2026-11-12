@@ -743,7 +743,7 @@ func (c *manualClock) Advance(d time.Duration) {
 }
 
 func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
-	waitForCount := func(cq connectionQueueInterface, want int) {
+	waitForCount := func(t *testing.T, cq connectionQueueInterface, want int) {
 		t.Helper()
 		deadline := time.Now().Add(2 * time.Second)
 		for time.Now().Before(deadline) {
@@ -801,7 +801,7 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 			<-expired.Done
 			cq.deregisterConnection(expired.ID)
 		}()
-		waitForCount(cq, 2)
+		waitForCount(t, cq, 2)
 
 		if expired.CloseReason() != CloseReasonExpired {
 			t.Errorf("expired close reason = %s, want expired", expired.CloseReason())
@@ -900,7 +900,7 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		}()
 
 		clock.Advance(2 * time.Minute)
-		waitForCount(cq, 1)
+		waitForCount(t, cq, 1)
 
 		if expired.CloseReason() != CloseReasonExpired {
 			t.Errorf("expired close reason = %s, want expired", expired.CloseReason())
@@ -913,6 +913,81 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		}
 
 		cq.deregisterConnection(liveConnection.ID)
+	})
+
+	t.Run("sweep honours newly set connection expiry", func(t *testing.T) {
+		t.Run("token expiry is shortened", func(t *testing.T) {
+			clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
+			cq := newConnectionQueueWithOptions(0, nil,
+				WithClock(clock.Now),
+				WithExpirySweepInterval(10*time.Millisecond),
+			).(*connectionQueue)
+			t.Cleanup(func() { stopConnectionQueue(cq) })
+
+			conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: clock.Now().Add(time.Hour)}, nil)
+			if res.Code != StatusCodeOk {
+				t.Fatalf("register connection: %v", res)
+			}
+			if !cq.setConnectionExpiry(conn, clock.Now().Add(time.Minute)) {
+				t.Fatal("expected setConnectionExpiry to shorten the connection")
+			}
+
+			go func() {
+				<-conn.Done
+				cq.deregisterConnection(conn.ID)
+			}()
+
+			// Past the shortened expiry, and still before the original one.
+			clock.Advance(2 * time.Minute)
+			waitForCount(t, cq, 0)
+
+			if conn.CloseReason() != CloseReasonExpired {
+				t.Errorf("close reason = %s, want expired", conn.CloseReason())
+			}
+
+		})
+
+		t.Run("token expiry is extended", func(t *testing.T) {
+			clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
+			cq := newConnectionQueueWithOptions(0, nil,
+				WithClock(clock.Now),
+				WithExpirySweepInterval(10*time.Millisecond),
+			).(*connectionQueue)
+			t.Cleanup(func() { stopConnectionQueue(cq) })
+
+			conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
+			if res.Code != StatusCodeOk {
+				t.Fatalf("register connection: %v", res)
+			}
+
+			if !cq.setConnectionExpiry(conn, clock.Now().Add(time.Hour)) {
+				t.Fatal("expected setConnectionExpiry to extend the connection")
+			}
+
+			go func() {
+				<-conn.Done
+				cq.deregisterConnection(conn.ID)
+			}()
+
+			clock.Advance(2 * time.Minute)
+
+			if got := cq.sweepExpiredConnections(); got != 0 {
+				t.Fatalf("sweep at the original expiry = %d, want 0", got)
+			}
+
+			select {
+			case <-conn.Done:
+				t.Fatal("connection with an extended expiry was swept at its original expiry")
+			default:
+			}
+
+			clock.Advance(time.Hour)
+			waitForCount(t, cq, 0)
+
+			if conn.CloseReason() != CloseReasonExpired {
+				t.Errorf("close reason = %s, want expired", conn.CloseReason())
+			}
+		})
 	})
 
 }
