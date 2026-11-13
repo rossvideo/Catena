@@ -1055,6 +1055,20 @@ func TestWithValue_MismatchedType(t *testing.T) {
 	}
 }
 
+func TestWithValue_InvalidInput(t *testing.T) {
+	cp := NewParamInt32(0).WithValue(struct{}{})
+	if cp.proto.GetValue().GetInt32Value() != 0 {
+		t.Error("expected mismatched WithValue to be a no-op")
+	}
+	p, err := cp.Build()
+	if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "failed to convert value to proto:") {
+		t.Fatalf("expected specific error for builder with invalid value, got %v", err)
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param for builder with error, got %v", p)
+	}
+}
+
 // --- SetValue / GetValue tests ---
 
 func TestSetValue_OK(t *testing.T) {
@@ -1897,6 +1911,14 @@ func TestParamBuilder_StructLikeValidationErrors(t *testing.T) {
 			"struct value has different number of fields than descriptors:"},
 		{"STRUCT_VARIANT_NESTED_MISSING_DESCRIPTOR", NewParamStructVariant().WithParam("field", NewParamStructVariant()).WithValue(StructVariantValue{StructVariantType: "field", Value: StructVariantValue{StructVariantType: "field2", Value: int32(1)}}),
 			"struct variant type does not match any descriptor:"},
+		{"STRUCT_MISMATCH_PARAM_TYPE", NewParamInt32().WithValue(map[string]any{"field": int32(1)}),
+			"value is not valid for param type:"},
+		{"STRUCT_VARIANT_MISMATCH_PARAM_TYPE", NewParamInt32().WithValue(StructVariantValue{StructVariantType: "field", Value: int32(1)}),
+			"value is not valid for param type:"},
+		{"STRUCT_ARRAY_MISMATCH_PARAM_TYPE", NewParamInt32().WithValue([]map[string]any{{"field": int32(1)}}),
+			"value is not valid for param type:"},
+		{"STRUCT_VARIANT_ARRAY_MISMATCH_PARAM_TYPE", NewParamInt32().WithValue([]StructVariantValue{{StructVariantType: "field", Value: int32(1)}}),
+			"value is not valid for param type:"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

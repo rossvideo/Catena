@@ -220,7 +220,7 @@ func (cp *ParamBuilder) WithValue(v any) *ParamBuilder {
 	}
 	pv, err := ToProto(v)
 	if err != nil {
-		cp.err = fmt.Errorf("WithValue: failed to convert value to proto: %w", err)
+		cp.err = fmt.Errorf("WithValue: failed to convert value to proto: %w: %w", err, ErrInvalid)
 		return cp
 	}
 	cp.proto.Value = pv
