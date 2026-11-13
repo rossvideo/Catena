@@ -2219,7 +2219,10 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
 		srv.getParamHandlers[4] = func(ctx HandlerContext, req GetParamRequest) (st2138.Param, StatusResult) {
-			p, err := st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).Build()
+			p, err := st2138.NewParamStruct().
+				WithParam("number", st2138.NewParamInt32(1)).
+				WithParam("text", st2138.NewParamString("hi")).
+				Build()
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
