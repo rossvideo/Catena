@@ -362,6 +362,7 @@ func TestOptionMappings(t *testing.T) {
 		// JWT validation
 		{"JWT_ISSUER", "jwt-issuer", "https://issuer.example", "https://issuer.example", func(o RuntimeOptions) any { return o.Server.JwtOptions.Issuer }},
 		{"JWT_AUDIENCE", "jwt-audience", "catena-aud", "catena-aud", func(o RuntimeOptions) any { return o.Server.JwtOptions.Audience }},
+		{"JWT_LEEWAY", "jwt-leeway", "30s", 30 * time.Second, func(o RuntimeOptions) any { return o.Server.JwtOptions.Leeway }},
 		{"JWT_INSECURE_SKIP_SIGNATURE_VALIDATION", "jwt-insecure-skip-signature-validation", "true", true, func(o RuntimeOptions) any { return o.Server.JwtOptions.InsecureSkipSignatureValidation }},
 		{"JWT_STARTUP_RETRY_MAX_ELAPSED", "jwt-startup-retry-max-elapsed", "90s", 90 * time.Second, func(o RuntimeOptions) any { return o.Server.JwtOptions.StartupRetryMaxElapsedTime }},
 		// DashBoard connection props

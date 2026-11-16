@@ -502,6 +502,69 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 	})
 }
 
+func TestJwtValidator_getTokenExpiry(t *testing.T) {
+	exp := time.Date(2026, time.November, 16, 12, 0, 0, 0, time.UTC)
+
+	t.Run("expiration without leeway", func(t *testing.T) {
+		v := &jwtValidator{}
+		got, err := v.getTokenExpiry(&jwt.Token{Claims: jwt.MapClaims{"exp": float64(exp.Unix())}})
+		if err != nil {
+			t.Fatalf("getTokenExpiry() error = %v", err)
+		}
+		if !got.Equal(exp) {
+			t.Errorf("getTokenExpiry() = %v, want %v", got, exp)
+		}
+	})
+
+	t.Run("exp plus leeway", func(t *testing.T) {
+		v := &jwtValidator{options: JwtValidationOptions{Leeway: 30 * time.Second}}
+		got, err := v.getTokenExpiry(&jwt.Token{Claims: jwt.MapClaims{"exp": float64(exp.Unix())}})
+		if err != nil {
+			t.Fatalf("getTokenExpiry() error = %v", err)
+		}
+		if want := exp.Add(30 * time.Second); !got.Equal(want) {
+			t.Errorf("getTokenExpiry() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("negative leeway is ignored", func(t *testing.T) {
+		v := &jwtValidator{options: JwtValidationOptions{Leeway: -time.Minute}}
+		got, err := v.getTokenExpiry(&jwt.Token{Claims: jwt.MapClaims{"exp": float64(exp.Unix())}})
+		if err != nil {
+			t.Fatalf("getTokenExpiry() error = %v", err)
+		}
+		if !got.Equal(exp) {
+			t.Errorf("getTokenExpiry() = %v, want %v", got, exp)
+		}
+	})
+
+	t.Run("no exp", func(t *testing.T) {
+		v := &jwtValidator{options: JwtValidationOptions{Leeway: 30 * time.Second}}
+		got, err := v.getTokenExpiry(&jwt.Token{Claims: jwt.MapClaims{"foo": "bar"}})
+		if err != nil {
+			t.Fatalf("getTokenExpiry() error = %v", err)
+		}
+		if !got.IsZero() {
+			t.Errorf("getTokenExpiry() = %v, want zero", got)
+		}
+	})
+
+	t.Run("malformed exp", func(t *testing.T) {
+		v := &jwtValidator{}
+		_, err := v.getTokenExpiry(&jwt.Token{Claims: jwt.MapClaims{"exp": "tomorrow"}})
+		if err == nil || !strings.Contains(err.Error(), "unable to get expiration time") {
+			t.Fatalf("getTokenExpiry() error = %v, want unable to get expiration time", err)
+		}
+	})
+
+	t.Run("nil token", func(t *testing.T) {
+		v := &jwtValidator{}
+		if _, err := v.getTokenExpiry(nil); err == nil || !strings.Contains(err.Error(), "token or claims are required") {
+			t.Fatalf("getTokenExpiry() error = %v, want token or claims are required", err)
+		}
+	})
+}
+
 func TestJwtValidator_validateClaims(t *testing.T) {
 	validator := &jwtValidator{}
 

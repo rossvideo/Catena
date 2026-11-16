@@ -329,6 +329,29 @@ func classifyDiscoveryError(ctx context.Context, err error) error {
 	return backoff.Permanent(doErr)
 }
 
+// getTokenExpiry returns the token's effective expiry. This also takes into
+// account the leeway option. If the token has no expiry, the current time is returned
+func (v *jwtValidator) getTokenExpiry(token *jwt.Token) (time.Time, error) {
+	if token == nil || token.Claims == nil {
+		return time.Time{}, fmt.Errorf("token or claims are required")
+	}
+
+	expiry, err := token.Claims.GetExpirationTime()
+	if err != nil {
+		return time.Time{}, fmt.Errorf("unable to get expiration time: %w", err)
+	}
+	if expiry == nil {
+		return time.Time{}, nil
+	}
+
+	expiryTime := expiry.Time
+	if v.options.Leeway > 0 {
+		expiryTime = expiryTime.Add(v.options.Leeway)
+	}
+
+	return expiryTime, nil
+}
+
 // ValidateJWT verifies a JWT signature against the provided JWKS URL.
 // It fetches, caches, and auto-refreshes the JWKS as needed.
 func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {

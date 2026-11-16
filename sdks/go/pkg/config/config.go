@@ -135,8 +135,8 @@ type JwtValidationOptions struct {
 	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if InsecureSkipSignatureValidation is false.
 	// Required when InsecureSkipSignatureValidation is false (default behavior).
 	Issuer string `env:"JWT_ISSUER" flag:"jwt-issuer"`
-	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
-	Leeway time.Duration
+	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims.
+	Leeway time.Duration `env:"JWT_LEEWAY" flag:"jwt-leeway"`
 	// InsecureSkipSignatureValidation disables JWT signature verification, validating claims only
 	// Zero value (false) means that signatures are being validated, non-zero value (true) means validation is being skipped
 	InsecureSkipSignatureValidation bool `env:"JWT_INSECURE_SKIP_SIGNATURE_VALIDATION" flag:"jwt-insecure-skip-signature-validation"`
