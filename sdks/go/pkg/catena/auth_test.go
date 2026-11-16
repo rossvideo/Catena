@@ -417,6 +417,7 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 }
 
 func TestJwtValidator_validateJwt(t *testing.T) {
+	expiry := time.Date(2026, time.November, 16, 12, 0, 0, 0, time.UTC)
 	pretendString := "ThisIsNotARealTokenButWeCanPretend"
 	t.Run("success", func(t *testing.T) {
 		validator := &jwtValidator{
@@ -427,11 +428,15 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 				return &jwt.Token{
 					Claims: jwt.MapClaims{
 						"foo": "bar",
+						"exp": float64(expiry.Unix()),
 					},
 				}, nil
 			},
 		}
-		token, err := validator.validateJwt(pretendString)
+		token, tokenExpiry, err := validator.validateJwt(pretendString)
+		if !tokenExpiry.Equal(expiry) {
+			t.Fatalf("validateJwt() got expiry = %v, want %v", tokenExpiry, expiry)
+		}
 		if err != nil {
 			t.Fatalf("validateJwt() error = %v", err)
 		}
@@ -450,7 +455,7 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 				return nil, errors.New("validation failed")
 			},
 		}
-		_, err := validator.validateJwt(pretendString)
+		_, _, err := validator.validateJwt(pretendString)
 		if err == nil || !strings.Contains(err.Error(), "validation failed") {
 			t.Fatalf("validateJwt() error = %v, want validation failed", err)
 		}
@@ -458,7 +463,7 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 
 	t.Run("empty token", func(t *testing.T) {
 		validator := &jwtValidator{}
-		_, err := validator.validateJwt("")
+		_, _, err := validator.validateJwt("")
 		if err == nil || !strings.Contains(err.Error(), "jwt is required") {
 			t.Fatalf("validateJwt() error = %v, want jwt is required", err)
 		}
@@ -466,9 +471,26 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 
 	t.Run("uninitialized validator", func(t *testing.T) {
 		validator := &jwtValidator{}
-		_, err := validator.validateJwt(pretendString)
+		_, _, err := validator.validateJwt(pretendString)
 		if err == nil || !strings.Contains(err.Error(), "jwt validator is not properly initialized") {
 			t.Fatalf("validateJwt() error = %v, want jwt validator is not properly initialized", err)
+		}
+	})
+
+	t.Run("failed to get token expiry", func(t *testing.T) {
+		validator := &jwtValidator{
+			validateFn: func(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error) {
+				return &jwt.Token{
+					Claims: jwt.MapClaims{
+						"exp": "invalidExpiry",
+					},
+				}, nil
+			},
+		}
+
+		_, _, err := validator.validateJwt(pretendString)
+		if err == nil || !strings.Contains(err.Error(), "failed to get token expiry") {
+			t.Fatalf("validateJwt() error = %v, want failed to get token expiry", err)
 		}
 	})
 
@@ -495,7 +517,7 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 				}, nil
 			},
 		}
-		_, err := validator.validateJwt(pretendString)
+		_, _, err := validator.validateJwt(pretendString)
 		if err != nil {
 			t.Fatalf("validateJwt() error = %v", err)
 		}

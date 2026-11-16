@@ -630,7 +630,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "jwt validator is not configured")
 	}
 
-	token, err := s.jwtValidator.validateJwt(accessToken)
+	token, expiry, err := s.jwtValidator.validateJwt(accessToken)
 	if err != nil {
 		s.serverLogger.Warn("Failed to validate access token", "error", err)
 		return HandlerContext{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
@@ -640,6 +640,7 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 
 	handlerContext := HandlerContext{
 		Token:        token,
+		tokenExpiry:  expiry,
 		readScopes:   readScopes,
 		writeScopes:  writeScopes,
 		Metadata:     maps.Clone(transportContext.Metadata),
