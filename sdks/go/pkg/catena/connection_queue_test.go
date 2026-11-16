@@ -36,6 +36,7 @@ import (
 	"log/slog"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -990,4 +991,222 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		})
 	})
 
+	// The tests below are meant to be run with -race:
+	// go test -race -count=1 -v -run 'TestConnectionQueue_SweepExpiredConnections/Test_Race_Conditions' ./pkg/catena/
+	t.Run("Test Race Conditions", func(t *testing.T) {
+		raceStart := time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC)
+
+		// runConcurrently releases every function at the same moment and waits for all of them.
+		runConcurrently := func(funcs ...func()) {
+			var ready, done sync.WaitGroup
+			start := make(chan struct{})
+			ready.Add(len(funcs))
+			done.Add(len(funcs))
+
+			for _, fn := range funcs {
+				go func(fn func()) {
+					defer done.Done()
+					ready.Done()
+					<-start
+					fn()
+				}(fn)
+			}
+
+			ready.Wait()
+			close(start)
+			done.Wait()
+		}
+
+		// waitForCleanup waits for every shutdown goroutine spawned by the sweep.
+		waitForCleanup := func(t *testing.T, cq *connectionQueue) {
+			t.Helper()
+
+			finished := make(chan struct{})
+
+			go func() {
+				cq.expiryCleanupWg.Wait()
+				close(finished)
+			}()
+
+			select {
+			case <-finished:
+			case <-time.After(2 * time.Second):
+				t.Fatal("expiry cleanup goroutines did not finish")
+			}
+		}
+
+		readState := func(cq *connectionQueue, conn *Connection) (ConnectionCloseReason, time.Time) {
+			cq.mu.Lock()
+			defer cq.mu.Unlock()
+			return conn.closeReason, conn.Expiry
+		}
+
+		// The client disconnects (deregisters) at the same time a sweep
+		// marks the connection to be expired.
+		t.Run("deregister racing with the sweep", func(t *testing.T) {
+			for i := 0; i < 200; i++ {
+				clock := newManualClock(raceStart)
+				cq := newConnectionQueueWithOptions(0, nil,
+					WithClock(clock.Now),
+					WithExpirySweepInterval(0),
+				).(*connectionQueue)
+
+				var releases atomic.Int32
+				conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{
+					tokenExpiry: clock.Now().Add(time.Minute),
+					ctxCancel:   func() { releases.Add(1) },
+				}, nil)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("iteration %d: register: %v", i, res)
+				}
+				clock.Advance(2 * time.Minute)
+
+				swept := -1
+				runConcurrently(
+					func() { swept = cq.sweepExpiredConnections() },
+					func() { cq.deregisterConnection(conn.ID) },
+				)
+
+				if swept != 0 && swept != 1 {
+					t.Fatalf("iteration %d: sweep = %d, want 0 or 1", i, swept)
+				}
+				waitForCleanup(t, cq)
+
+				if cq.connectionCount() != 0 {
+					t.Fatalf("iteration %d: connection count = %d, want 0", i, cq.connectionCount())
+				}
+				if got := releases.Load(); got != 1 {
+					t.Fatalf("iteration %d: connection released %d times, want 1", i, got)
+				}
+			}
+		})
+
+		// A token refresh extends the expiry while the sweep is running
+		t.Run("setConnectionExpiry racing with the sweep", func(t *testing.T) {
+			for i := 0; i < 200; i++ {
+				clock := newManualClock(raceStart)
+				cq := newConnectionQueueWithOptions(0, nil,
+					WithClock(clock.Now),
+					WithExpirySweepInterval(0),
+				).(*connectionQueue)
+
+				conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("iteration %d: register: %v", i, res)
+				}
+				clock.Advance(2 * time.Minute)
+				newExpiry := clock.Now().Add(time.Hour)
+
+				var swept int
+				var extended bool
+				runConcurrently(
+					func() { swept = cq.sweepExpiredConnections() },
+					func() { extended = cq.setConnectionExpiry(conn, newExpiry) },
+				)
+
+				reason, expiry := readState(cq, conn)
+				if extended {
+					if swept != 0 || reason != CloseReasonNone {
+						t.Fatalf("iteration %d: refresh accepted but swept=%d reason=%s", i, swept, reason)
+					}
+					if !expiry.Equal(newExpiry) {
+						t.Fatalf("iteration %d: expiry = %v, want %v", i, expiry, newExpiry)
+					}
+
+					select {
+					case <-conn.Done:
+						t.Fatalf("iteration %d: connection with an accepted refresh was closed", i)
+					default:
+					}
+
+					cq.deregisterConnection(conn.ID)
+				} else {
+					if swept != 1 || reason != CloseReasonExpired {
+						t.Fatalf("iteration %d: refresh rejected but swept=%d reason=%s", i, swept, reason)
+					}
+
+					go func() {
+						<-conn.Done
+						cq.deregisterConnection(conn.ID)
+					}()
+				}
+
+				waitForCleanup(t, cq)
+
+				if cq.connectionCount() != 0 {
+					t.Fatalf("iteration %d: connection count = %d, want 0", i, cq.connectionCount())
+				}
+			}
+		})
+
+		// The queue is shut down while the sweep loop is expiring the connection
+		t.Run("shutdown racing with the sweep loop", func(t *testing.T) {
+			for i := 0; i < 100; i++ {
+				clock := newManualClock(raceStart)
+				cq := newConnectionQueueWithOptions(0, nil,
+					WithClock(clock.Now),
+					WithExpirySweepInterval(time.Millisecond),
+					WithExpiryGracePeriod(time.Second),
+				).(*connectionQueue)
+
+				conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("iteration %d: register: %v", i, res)
+				}
+
+				go func() {
+					<-conn.Done
+					cq.deregisterConnection(conn.ID)
+				}()
+
+				shutdownDone := make(chan struct{})
+				var raced sync.WaitGroup
+				raced.Add(2)
+				start := make(chan struct{})
+
+				// The clock advanced before the shutdown to expire the connection
+				// This is detected by the sweep loop that is running concurrently in the background
+				go func() {
+					defer raced.Done()
+					<-start
+					clock.Advance(2 * time.Minute)
+				}()
+
+				// The shutdown races with the sweep loop that is running
+				go func() {
+					defer raced.Done()
+					<-start
+
+					// Vary the delay so shutdown lands before, during and after a sweep tick.
+					time.Sleep(time.Duration(i%10) * 200 * time.Microsecond)
+
+					cq.shutdown(context.Background())
+					close(shutdownDone)
+				}()
+				close(start)
+
+				select {
+				case <-shutdownDone:
+				case <-time.After(2 * time.Second):
+					t.Fatalf("iteration %d: shutdown did not return", i)
+				}
+				raced.Wait()
+
+				reason, _ := readState(cq, conn)
+				if reason != CloseReasonExpired && reason != CloseReasonShutdown {
+					t.Fatalf("iteration %d: close reason = %s, want expired or shutdown", i, reason)
+				}
+
+				select {
+				case <-conn.Done:
+				default:
+					t.Fatalf("iteration %d: Done was not closed", i)
+				}
+				if cq.connectionCount() != 0 {
+					t.Fatalf("iteration %d: connection count = %d, want 0", i, cq.connectionCount())
+				}
+
+			}
+		})
+	})
 }
