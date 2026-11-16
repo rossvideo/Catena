@@ -1041,23 +1041,9 @@ func TestWithValue_StructVariant(t *testing.T) {
 	}
 }
 
-func TestWithValue_MismatchedType(t *testing.T) {
-	cp := NewParamInt32(0).WithValue("hello")
-	if cp.proto.GetValue().GetInt32Value() != 0 {
-		t.Error("expected mismatched WithValue to be a no-op")
-	}
-	p, err := cp.Build()
-	if !errors.Is(err, ErrInvalid) {
-		t.Fatal("expected error for builder with invalid value")
-	}
-	if p != (Param{}) {
-		t.Errorf("expected empty Param for builder with error, got %v", p)
-	}
-}
-
 func TestWithValue_InvalidInput(t *testing.T) {
-	cp := NewParamInt32(0).WithValue(struct{}{})
-	if cp.proto.GetValue().GetInt32Value() != 0 {
+	cp := NewParamInt32(1).WithValue(struct{}{})
+	if cp.proto.GetValue().GetInt32Value() != 1 {
 		t.Error("expected mismatched WithValue to be a no-op")
 	}
 	p, err := cp.Build()
@@ -1812,6 +1798,17 @@ func TestParamBuilder_BuildsValidParam(t *testing.T) {
 	}
 	if p.Proto.GetValue().GetInt32Value() != 42 {
 		t.Fatal("expected value 42, got", p.Proto.GetValue().GetInt32Value())
+	}
+}
+
+func TestParamBuilder_InvalidValue(t *testing.T) {
+	cp := NewParamInt32(1).WithValue("hello")
+	p, err := cp.Build()
+	if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), "value is not valid for param type:") {
+		t.Fatal("expected error for builder with invalid value")
+	}
+	if p != (Param{}) {
+		t.Errorf("expected empty Param, got %v", p)
 	}
 }
 
