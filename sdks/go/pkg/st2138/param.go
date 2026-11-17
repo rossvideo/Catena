@@ -33,7 +33,9 @@
  * @file param.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-05-11
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-11-17
  */
 
 package st2138
@@ -46,7 +48,10 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// Param wraps a protos.Param and exposes a fluent builder API.
+// Param wraps a protos.Param.
+// Proto is the underlying proto message; it may be read or replaced directly.
+// Param is a handle: copies share the same Proto, so methods that mutate it
+// (e.g. SetValue) use value receivers.
 type Param struct {
 	Proto *protos.Param
 }
@@ -490,7 +495,7 @@ func (cp *ParamBuilder) Clone() *ParamBuilder {
 
 // SetValue converts v to a proto value via ToProto, validates it against the
 // Param, and sets it.
-func (cp *Param) SetValue(v any) error {
+func (cp Param) SetValue(v any) error {
 	pv, err := ToProto(v)
 	if err != nil {
 		return err
@@ -504,7 +509,7 @@ func (cp *Param) SetValue(v any) error {
 
 // GetValue reads the current value and converts it to a native Go type via
 // FromProto. Returns (nil, nil) if no value is set.
-func (cp *Param) GetValue() (any, error) {
+func (cp Param) GetValue() (any, error) {
 	if cp.Proto.Value == nil {
 		return nil, nil
 	}
