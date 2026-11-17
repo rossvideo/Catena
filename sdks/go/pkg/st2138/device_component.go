@@ -63,18 +63,38 @@ func (c DeviceComponent) Wire() proto.Message {
 
 // ComponentKind identifies which device component GetComponent should return.
 // Mirrors protos.GetComponentPayload_ComponentKind for convenience.
-type ComponentKind = protos.GetComponentPayload_ComponentKind
+type ComponentKind protos.GetComponentPayload_ComponentKind
 
 // ComponentKind constants matching the proto enum.
 // ComponentKindUnused is not a valid request.
 const (
-	ComponentKindUnused       ComponentKind = protos.GetComponentPayload_UNUSED
-	ComponentKindParam        ComponentKind = protos.GetComponentPayload_PARAM
-	ComponentKindConstraint   ComponentKind = protos.GetComponentPayload_CONSTRAINT
-	ComponentKindMenu         ComponentKind = protos.GetComponentPayload_MENU
-	ComponentKindCommand      ComponentKind = protos.GetComponentPayload_COMMAND
-	ComponentKindLanguagePack ComponentKind = protos.GetComponentPayload_LANGUAGE_PACK
+	ComponentKindUnused       ComponentKind = ComponentKind(protos.GetComponentPayload_UNUSED)
+	ComponentKindParam        ComponentKind = ComponentKind(protos.GetComponentPayload_PARAM)
+	ComponentKindConstraint   ComponentKind = ComponentKind(protos.GetComponentPayload_CONSTRAINT)
+	ComponentKindMenu         ComponentKind = ComponentKind(protos.GetComponentPayload_MENU)
+	ComponentKindCommand      ComponentKind = ComponentKind(protos.GetComponentPayload_COMMAND)
+	ComponentKindLanguagePack ComponentKind = ComponentKind(protos.GetComponentPayload_LANGUAGE_PACK)
 )
+
+// Valid reports whether kind is one of the five addressable
+// component kinds. UNUSED and any other value are not valid kinds.
+func (ck ComponentKind) Valid() bool {
+	switch ck {
+	case ComponentKindParam,
+		ComponentKindConstraint,
+		ComponentKindMenu,
+		ComponentKindCommand,
+		ComponentKindLanguagePack:
+		return true
+	default:
+		return false
+	}
+}
+
+// String returns the string representation of the component kind.
+func (ck ComponentKind) String() string {
+	return protos.GetComponentPayload_ComponentKind(ck).String()
+}
 
 // ComponentDevice wraps a whole device model (or the top-level skeleton of
 // one) as a DeviceComponent chunk. The device's proto is referenced, not

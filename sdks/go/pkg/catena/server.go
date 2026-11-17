@@ -1018,21 +1018,6 @@ func (s *server) InvokeGetValueHandler(transportContext TransportContext, req Ge
 		})
 }
 
-// validComponentKind reports whether kind is one of the five addressable
-// component kinds. UNUSED and any other value are not valid requests.
-func validComponentKind(kind st2138.ComponentKind) bool {
-	switch kind {
-	case st2138.ComponentKindParam,
-		st2138.ComponentKindConstraint,
-		st2138.ComponentKindMenu,
-		st2138.ComponentKindCommand,
-		st2138.ComponentKindLanguagePack:
-		return true
-	default:
-		return false
-	}
-}
-
 // paramFromComponent extracts the Param from a kind-PARAM ComponentResponse.
 // A response that is not a param, or whose param proto is nil, is Internal:
 // the handler reported success without returning the requested component.
@@ -1049,7 +1034,7 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 		func(ctx HandlerContext) (st2138.ComponentResponse, StatusResult) {
 			// Argument validation runs after the auth gate so an unauthorized
 			// caller only ever sees a security error, never a validation hint.
-			if !validComponentKind(req.Kind) {
+			if !req.Kind.Valid() {
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInvalidArgument, "invalid component kind")
 			}
 			if result := ValidateFqoid(req.Oid); result.IsError() {
