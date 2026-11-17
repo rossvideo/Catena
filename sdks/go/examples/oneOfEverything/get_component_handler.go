@@ -30,7 +30,7 @@ func registerGetComponentHandlers(srv catena.Server, counter *CounterState, stat
 			case st2138.ComponentKindParam, st2138.ComponentKindConstraint, st2138.ComponentKindMenu, st2138.ComponentKindCommand:
 				return deviceComponent(req, counter, state)
 			default:
-				return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInvalidArgument, "invalid component kind")
+				return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "component not found: kind="+req.Kind.String())
 			}
 		})
 	}
@@ -68,7 +68,7 @@ func deviceComponent(req catena.GetComponentRequest, counter *CounterState, stat
 		}
 		return catena.Reply(st2138.ComponentResponseMenu(req.Oid, &st2138.Menu{Proto: menu}))
 	default:
-		return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInvalidArgument, "invalid component kind")
+		return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "component not found: kind="+req.Kind.String())
 	}
 }
 
@@ -92,7 +92,7 @@ func lookupNested(params map[string]*protos.Param, oid string) (*protos.Param, b
 	}
 
 	var current *protos.Param
-	for _, segment := range strings.Split(oid, "/") {
+	for segment := range strings.SplitSeq(oid, "/") {
 		p, ok := params[segment]
 		if !ok {
 			return nil, false
