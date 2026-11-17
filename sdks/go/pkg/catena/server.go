@@ -1054,11 +1054,30 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 					if scopeRes := ctx.RequireReadScope(st2138.ScopeMon); scopeRes.IsError() {
 						return st2138.ComponentResponse{}, scopeRes
 					}
-					param, res := productParamForOid(product, req.Oid)
-					if res.IsError() {
-						return st2138.ComponentResponse{}, res
+
+					var param *st2138.Param
+					var err error
+
+					if req.Oid == ProductOid {
+						param, err = ProductParam(product)
+						if err != nil {
+							return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "failed to build product param")
+						}
+						return st2138.ComponentResponseParam(req.Oid, param), StatusWithCode(StatusCodeOk, "")
 					}
-					return st2138.ComponentResponseParam(req.Oid, &param), StatusWithCode(StatusCodeOk, "")
+
+					field := strings.TrimPrefix(req.Oid, ProductOid+"/")
+					value, ok := ProductValues(product)[field]
+					if !ok {
+						return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+req.Oid)
+					}
+
+					pv, err := st2138.ToProto(value)
+					if err != nil {
+						return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "failed to convert product value: "+err.Error())
+					}
+					param = &st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}
+					return st2138.ComponentResponseParam(req.Oid, param), StatusWithCode(StatusCodeOk, "")
 				}
 			}
 
