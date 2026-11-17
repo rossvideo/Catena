@@ -537,7 +537,12 @@ func (s *catenaService) UpdateSubscriptions(req *protos.UpdateSubscriptionsPaylo
 	return status.Error(codes.Unimplemented, "UpdateSubscriptions not implemented")
 }
 
-// Connect establishes a streaming connection for push updates
+// Connect establishes a streaming connection for push updates.
+// The stream ends when the client disconnects, the server shuts the
+// connection down (Unavailable, "server shutting down"), or the connection's
+// token expires (Unauthenticated, "JWS token expired"). A token whose
+// effective expiry has already passed is rejected at registration and the
+// stream is not opened.
 func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerStreamingServer[protos.PushUpdates]) error {
 	// Register this connection with the runtime using this transport as owner.
 	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))

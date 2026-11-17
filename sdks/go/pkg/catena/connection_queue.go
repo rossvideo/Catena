@@ -52,8 +52,10 @@ import (
 type ConnectionCloseReason int32
 
 const (
+	// CloseReasonNone means the connection is still open.
 	CloseReasonNone ConnectionCloseReason = iota
 	CloseReasonShutdown
+	// CloseReasonExpired means the connection's token expiry has passed.
 	CloseReasonExpired
 
 	DefaultExpirySweepInterval = time.Second
@@ -73,11 +75,14 @@ func (r ConnectionCloseReason) String() string {
 	}
 }
 
-// Connection represents an active streaming connection (SSE or gRPC).
-// Each connection runs in its own goroutine and receives updates via the
-// Updates channel as proto PushUpdates messages. The Done channel is closed
-// by the connection queue when the connection must end, for server shutdown
-// or token expiry.
+// Connection is one active streaming connection (SSE or gRPC).
+//
+// Updates carries the PushUpdates that the transport writes to its stream.
+// The queue closes Done when the connection must end, either because the
+// server is shutting down or because its token expired. A transport must end
+// its stream when Done closes. It may read CloseReason after that to choose
+// the status it returns. Once the queue removes the connection, it sends no
+// further updates to it.
 type Connection struct {
 	ID             int
 	Updates        chan *protos.PushUpdates

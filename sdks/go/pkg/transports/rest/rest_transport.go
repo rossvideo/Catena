@@ -357,7 +357,11 @@ func (t *Transport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, up
 	return nil
 }
 
-// handleConnect handles GET /st2138-api/v1/connect (SSE streaming)
+// handleConnect handles GET /st2138-api/v1/connect (SSE streaming).
+// The stream ends when the client disconnects, the server shuts the
+// connection down, or the connection's token expires. Token expiry sends a
+// final SSE error event and then returns. A token whose effective expiry
+// has already passed is rejected at registration
 func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is GET
 	if r.Method != http.MethodGet {

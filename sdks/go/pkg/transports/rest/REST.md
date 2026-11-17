@@ -186,8 +186,9 @@ Connection lifecycle details:
 
 - On connect, the transport registers with the runtime via `RegisterTransportConnection(owner)`.
 - It then forwards each message from `connection.Updates` to the SSE stream.
-- It listens on `connection.Done` for server-driven shutdown/cleanup and exits the stream loop.
-- On disconnect/exit, it deregisters via `DeregisterConnection(connID)`.
+- The handler ends the stream when `connection.Done` is closed, and deregisters via `DeregisterConnection(connID)` when it exits. `Done` closes for server shutdown and for token expiry.
+- On token expiry the HTTP status is already `200`, so the handler writes one last SSE error event and ends the stream: `event: error` with `"code": 401`. In dev mode the message is `"JWS token expired"`; otherwise it is `"Unauthorized"`. Server shutdown ends the stream without that event.
+- A token whose effective expiry (`exp` plus the validator leeway) has already passed is rejected at registration with HTTP 401, and no event stream is started. A token still inside the leeway window is accepted and stays open until that effective expiry. With authorization disabled, the stream has no token expiry.
 
 Why owner is required for registration:
 

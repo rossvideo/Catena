@@ -123,8 +123,11 @@ Transport behavior:
 - The runtime returns `(connID, connection)`.
 - If the connection is not accepted (for example, too many active connections), `connID` is negative and the transport should reject the subscription.
 - The transport reads `connection.Updates` and propagates each update over its protocol stream (SSE or gRPC).
-- The transport monitors `connection.Done` to terminate streams when the server is shutting down or cleaning up that transport.
-- The transport calls `ServerRuntime.DeregisterConnection(connID)` when the stream ends.
+- The transport must end the stream when `connection.Done` is closed, for any reason: server shutdown, owner cleanup, or token expiry. It calls `DeregisterConnection(connID)` when the stream ends.
+- The transport may read `connection.CloseReason()` after `Done` is closed to choose the status it returns. `CloseReasonExpired` is token expiry. `CloseReasonShutdown` is server or transport shutdown. A transport that does not read the reason still ends the stream on `Done`.
+- With authorization enabled, the queue closes the connection when the token's effective expiry passes. That expiry is the token's `exp` plus the JWT validator's leeway, and it is fixed at registration. The transport does not read the token again.
+- A token whose effective expiry has already passed at registration is rejected with Unauthenticated (`"Token expired"`), and the stream is not opened. gRPC and REST map that status as described in their own docs. A token still inside the leeway window has a future effective expiry, so registration succeeds and the connection stays open until that time.
+- With authorization disabled, the connection has no expiry and is never closed for token expiry.
 
 Why `owner` is required:
 

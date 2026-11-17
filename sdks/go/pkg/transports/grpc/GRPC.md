@@ -125,8 +125,9 @@ Connection lifecycle details:
 
 - When a client calls `Connect`, the transport registers with `RegisterTransportConnection(owner)`.
 - The returned `connection.Updates` channel is the source of push updates to forward on the gRPC stream.
-- The returned `connection.Done` channel signals server-side shutdown/cleanup so the stream can exit gracefully.
-- The transport calls `DeregisterConnection(connID)` when the stream ends.
+- The transport ends the stream when `connection.Done` is closed, and calls `DeregisterConnection(connID)` when it does. `Done` closes for server shutdown and for token expiry.
+- On token expiry the RPC finishes with `UNAUTHENTICATED` `/ "JWS token expired"`.
+- A token whose effective expiry (`exp` plus the validator leeway) has already passed is rejected. With authorization disabled, Connect has no token expiry.
 
 Why owner is required:
 
