@@ -44,6 +44,7 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -74,6 +75,14 @@ type Transport struct {
 	extraAllowedHeaders []string
 	extraAllowedMethods []string
 	corsMaxAge          time.Duration
+
+	readTimeout       time.Duration
+	readHeaderTimeout time.Duration
+	writeTimeout      time.Duration
+	idleTimeout       time.Duration
+	maxHeaderBytes    int
+	maxBodyBytes      int
+	maxAssetBodyBytes int
 }
 
 var _ catena.Transport = (*Transport)(nil)
@@ -90,6 +99,13 @@ func NewTransport(cfg Options) *Transport {
 		extraAllowedHeaders: cfg.ExtraAllowedHeaders,
 		extraAllowedMethods: cfg.ExtraAllowedMethods,
 		corsMaxAge:          cfg.CorsMaxAge,
+		readTimeout:         cfg.ReadTimeout,
+		readHeaderTimeout:   cfg.ReadHeaderTimeout,
+		writeTimeout:        cfg.WriteTimeout,
+		idleTimeout:         cfg.IdleTimeout,
+		maxHeaderBytes:      cfg.MaxHeaderBytes,
+		maxBodyBytes:        cfg.MaxBodyBytes,
+		maxAssetBodyBytes:   cfg.MaxAssetBodyBytes,
 	}
 	t.registerRoutes()
 	return t
@@ -120,9 +136,14 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 	}
 
 	t.server = &http.Server{
-		Addr:      addr,
-		Handler:   t.withCORS(t.mux),
-		TLSConfig: tlsConfig,
+		Addr:              addr,
+		Handler:           t.createHttpHandler(),
+		TLSConfig:         tlsConfig,
+		ReadTimeout:       t.readTimeout,
+		ReadHeaderTimeout: t.readHeaderTimeout,
+		WriteTimeout:      t.writeTimeout,
+		IdleTimeout:       t.idleTimeout,
+		MaxHeaderBytes:    t.maxHeaderBytes,
 	}
 	t.runtime = runtime
 
@@ -231,6 +252,60 @@ func (t *Transport) writeHTTPResult(w http.ResponseWriter, result catena.StatusR
 	default:
 		w.WriteHeader(httpStatus)
 	}
+}
+
+// createHttpHandler creates a handler that is wrapped with CORS and a request body size limit
+func (t *Transport) createHttpHandler() http.Handler {
+	return t.withCORS(t.handlerWithRequestBodySizeLimit(t.mux))
+}
+
+// handlerWithRequestBodySizeLimit caps request bodies with the http.MaxBytesReader POST
+// and PUT asset routes are limited to MaxAssetBodyBytes. All other routes uses MaxBodyBytes
+// . A Zero limit allows no body, a negative limit leaves the body unlimited.
+func (t *Transport) handlerWithRequestBodySizeLimit(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bodySizeLimit := t.maxBodyBytes
+		if isAssetWriteEndpoint(r) {
+			bodySizeLimit = t.maxAssetBodyBytes
+		}
+
+		if bodySizeLimit >= 0 && r.Body != nil {
+			r.Body = http.MaxBytesReader(w, r.Body, int64(bodySizeLimit))
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// isAssetWrite checks if a request is a POST or PUT request for /st2138-api/v1/{slot}/asset/{fqoid...}.
+func isAssetWriteEndpoint(r *http.Request) bool {
+	if r.Method != http.MethodPost && r.Method != http.MethodPut {
+		return false
+	}
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	return len(parts) >= 4 && parts[0] == "st2138-api" && parts[1] == "v1" && parts[3] == "asset"
+}
+
+// writeError maps a request-parsing error onto one HTTP response.
+// *http.MaxBytesError is 413. A statusError sentinel uses the code it carries.
+// Anything else is 400. Dev mode writes err.Error(); otherwise the body is
+// the standard status text.
+func (t *Transport) writeError(w http.ResponseWriter, err error) {
+	status := http.StatusBadRequest
+
+	if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
+		status = http.StatusRequestEntityTooLarge
+	} else if se, ok := errors.AsType[*statusError](err); ok {
+		status = se.status
+	}
+
+	msg := http.StatusText(status)
+	if t.isDevMode() {
+		msg = err.Error()
+	}
+
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
 // writeHTTPMethodNotAllowed writes HTTP 405 with a JSON error body. Method
@@ -588,9 +663,9 @@ func (t *Transport) handleValueEndpoint(w http.ResponseWriter, r *http.Request, 
 	case http.MethodPut:
 		// Read request body
 		reqValue, err := ReadRequestJSON(r)
-		if err.Code != catena.StatusCodeOk {
+		if err != nil {
 			t.log.Error("failed to read request", "error", err)
-			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
+			t.writeError(w, err)
 			return
 		}
 
@@ -623,9 +698,9 @@ func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request,
 	}
 
 	entries, err := ReadMultiSetValuesRequestJSON(r)
-	if err.Code != catena.StatusCodeOk {
+	if err != nil {
 		t.log.Error("failed to read request", "error", err)
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid request body"))
+		t.writeError(w, err)
 		return
 	}
 
@@ -761,7 +836,7 @@ func (t *Transport) handleWriteAsset(
 	payload, err := ReadAssetRequestJSON(r)
 	if err != nil {
 		t.log.Error("failed to read asset request", "error", err)
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, err.Error()))
+		t.writeError(w, err)
 		return
 	}
 
@@ -913,7 +988,7 @@ func (t *Transport) handleLanguagePackEndpoint(w http.ResponseWriter, r *http.Re
 	case http.MethodPost, http.MethodPut:
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "failed to read request body"))
+			t.writeError(w, fmt.Errorf("failed to read request body: %w", err))
 			return
 		}
 
@@ -1003,16 +1078,14 @@ func (t *Transport) handleCommandEndpoint(w http.ResponseWriter, r *http.Request
 	r.Body.Close()
 	if err != nil {
 		t.log.Error("failed to read command payload", "error", err)
-		val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
-		t.writeHTTPResult(w, res, val)
+		t.writeError(w, fmt.Errorf("failed to read command payload: %w", err))
 		return
 	}
 	if len(body) > 0 {
 		reqValue, parseErr := parseValueJSON(r.Header.Get("Content-Type"), body)
-		if parseErr.IsError() {
+		if parseErr != nil {
 			t.log.Error("failed to read command payload", "error", parseErr)
-			val, res := catena.ReplyError[st2138.Value](catena.StatusCodeInvalidArgument, "invalid command payload")
-			t.writeHTTPResult(w, res, val)
+			t.writeError(w, parseErr)
 			return
 		}
 		var errProto error
