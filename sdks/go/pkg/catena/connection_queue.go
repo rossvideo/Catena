@@ -76,7 +76,8 @@ func (r ConnectionCloseReason) String() string {
 // Connection represents an active streaming connection (SSE or gRPC).
 // Each connection runs in its own goroutine and receives updates via the
 // Updates channel as proto PushUpdates messages. The Done channel is closed
-// by the ConnectionQueue to signal server-initiated shutdown.
+// by the connection queue when the connection must end, for server shutdown
+// or token expiry.
 type Connection struct {
 	ID             int
 	Updates        chan *protos.PushUpdates

@@ -409,7 +409,18 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 			t.log.Info("SSE client disconnected", "connID", conn.ID)
 			return
 		case <-conn.Done:
-			t.log.Info("SSE connection shut down by server", "connID", conn.ID)
+			if conn.CloseReason() == catena.CloseReasonExpired {
+
+				t.log.Info("SSE connection closed", "connID", conn.ID, "reason", conn.CloseReason())
+
+				result := catena.StatusWithCode(catena.StatusCodeUnauthenticated, "JWS token expired")
+
+				if err := writeSSEError(w, flusher, t.isDevMode(), result); err != nil {
+					t.log.Error("failed to send SSE token-expired event", "connID", conn.ID, "error", err)
+				}
+				return
+			}
+			t.log.Info("SSE connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
 			return
 		case update := <-conn.Updates:
 			if err := t.sendSSEEvent(w, flusher, update); err != nil {

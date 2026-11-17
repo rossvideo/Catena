@@ -57,6 +57,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -1586,6 +1587,87 @@ func TestTransport_Connect_Shutdown(t *testing.T) {
 	}
 	if st.Code() != codes.Unavailable {
 		t.Errorf("expected Unavailable code, got %v", st.Code())
+	}
+}
+
+func TestTransport_Connect_TokenExpired(t *testing.T) {
+	ctx := context.Background()
+	lis := bufconn.Listen(bufSize)
+	transport := NewTransport(config.GrpcOptions{Port: 1234, DisableHealth: true})
+
+	// A real server owns the connection, so the queue records the expiry close.
+	built, err := catena.NewServer(catena.ServerOptions{
+		AuthzEnabled: true,
+		JwtOptions: catena.JwtValidationOptions{
+			InsecureSkipSignatureValidation: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+
+	runtime, ok := built.(catena.ServerRuntime)
+	if !ok {
+		t.Fatal("server does not implement ServerRuntime")
+	}
+	transport.runtime = runtime
+	t.Cleanup(func() { built.Shutdown(context.Background()) })
+
+	go func() {
+		if err := transport.grpcServer.Serve(lis); err != nil {
+			t.Logf("server stopped: %v", err)
+		}
+	}()
+	t.Cleanup(func() {
+		transport.grpcServer.Stop()
+		lis.Close()
+	})
+	time.Sleep(10 * time.Millisecond)
+
+	exp := time.Now().Add(2 * time.Second)
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+		"scope": st2138.ScopeMon,
+		"exp":   exp.Unix(),
+	})
+	signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	if err != nil {
+		t.Fatalf("sign token: %v", err)
+	}
+
+	client, cleanupClient := setupGRPCClient(t, ctx, lis)
+	t.Cleanup(cleanupClient)
+
+	streamCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", signed))
+	stream, err := makeConnectRequest(t, client, streamCtx)
+	assertNoError(t, err)
+
+	errCh := make(chan error, 1)
+	go func() {
+		for {
+			_, recvErr := stream.Recv()
+			if recvErr != nil {
+				errCh <- recvErr
+				return
+			}
+		}
+	}()
+
+	var recvErr error
+	select {
+	case recvErr = <-errCh:
+	case <-time.After(6 * time.Second):
+		t.Fatal("timed out waiting for the connection to expire")
+	}
+
+	st, ok := status.FromError(recvErr)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got %v", recvErr)
+	}
+	if st.Code() != codes.Unauthenticated {
+		t.Errorf("expected Unauthenticated code, got %v", st.Code())
+	}
+	if st.Message() != "JWS token expired" {
+		t.Errorf("expected message %q, got %q", "JWS token expired", st.Message())
 	}
 }
 

@@ -53,6 +53,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -2404,6 +2405,66 @@ func TestTransport_Connect_ServerShutdown(t *testing.T) {
 
 	if runtime.RegisterCalls != runtime.DeregisterCalls {
 		t.Errorf("expected deregister calls to match register calls after server shutdown, got %d deregister calls and %d register calls", runtime.DeregisterCalls, runtime.RegisterCalls)
+	}
+}
+
+func TestTransport_Connect_TokenExpired(t *testing.T) {
+	transport := NewTransport(config.RestOptions{Port: 8080})
+
+	built, err := catena.NewServer(catena.ServerOptions{
+		AuthzEnabled: true,
+		IsDev:        true,
+		JwtOptions: catena.JwtValidationOptions{
+			InsecureSkipSignatureValidation: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+
+	runtime, ok := built.(catena.ServerRuntime)
+	if !ok {
+		t.Fatal("server does not implement ServerRuntime")
+	}
+	transport.runtime = runtime
+	t.Cleanup(func() { built.Shutdown(context.Background()) })
+
+	exp := time.Now().Add(2 * time.Second)
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+		"scope": st2138.ScopeMon,
+		"exp":   exp.Unix(),
+	})
+
+	signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	if err != nil {
+		t.Fatalf("sign token: %v", err)
+	}
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	req.Header.Set("Authorization", signed)
+	done := make(chan struct{})
+	go func() {
+		transport.handleConnect(rec, req)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(6 * time.Second):
+		t.Fatal("SSE handler did not return after token expiry")
+	}
+
+	assertStatus(t, rec, http.StatusOK)
+	body := rec.Body.String()
+	if !strings.Contains(body, "event: error\n") {
+		t.Fatalf("expected an SSE error event, got %q", body)
+	}
+	if !strings.Contains(body, `"code":401`) {
+		t.Errorf("expected unauthenticated status 401, got %q", body)
+	}
+	if !strings.Contains(body, "JWS token expired") {
+		t.Errorf("expected token-expired message, got %q", body)
 	}
 }
 

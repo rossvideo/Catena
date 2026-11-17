@@ -219,6 +219,8 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	return shutdownErr
 }
 
+const jwsTokenExpiredMessage = "JWS token expired"
+
 // sanitizeGRPCError replaces detailed error messages with generic status code
 // descriptions in production mode, matching the REST server's IsDev behavior.
 func (t *Transport) sanitizeGRPCError(err error) error {
@@ -233,6 +235,9 @@ func (t *Transport) sanitizeGRPCError(err error) error {
 	st, ok := status.FromError(err)
 	if !ok {
 		return status.Error(codes.Unknown, codes.Unknown.String())
+	}
+	if st.Code() == codes.Unauthenticated && st.Message() == jwsTokenExpiredMessage {
+		return err
 	}
 	return status.Error(st.Code(), st.Code().String())
 }
@@ -555,7 +560,11 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 			s.transport.log.Info("gRPC client disconnected", "connID", conn.ID)
 			return ctx.Err()
 		case <-conn.Done:
-			s.transport.log.Info("gRPC connection shut down by server", "connID", conn.ID)
+			if conn.CloseReason() == catena.CloseReasonExpired {
+				s.transport.log.Info("gRPC connection closed", "connID", conn.ID, "reason", conn.CloseReason())
+				return status.Error(codes.Unauthenticated, jwsTokenExpiredMessage)
+			}
+			s.transport.log.Info("gRPC connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
 			return status.Error(codes.Unavailable, "server shutting down")
 		case update := <-conn.Updates:
 			if err := stream.Send(update); err != nil {
