@@ -490,7 +490,7 @@ func (cp *ParamBuilder) Clone() *ParamBuilder {
 
 // SetValue converts v to a proto value via ToProto, validates it against the
 // Param, and sets it.
-func (cp *Param) SetValue(v any) error {
+func (cp Param) SetValue(v any) error {
 	pv, err := ToProto(v)
 	if err != nil {
 		return err
@@ -504,7 +504,7 @@ func (cp *Param) SetValue(v any) error {
 
 // GetValue reads the current value and converts it to a native Go type via
 // FromProto. Returns (nil, nil) if no value is set.
-func (cp *Param) GetValue() (any, error) {
+func (cp Param) GetValue() (any, error) {
 	if cp.Proto.Value == nil {
 		return nil, nil
 	}
