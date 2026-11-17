@@ -33,7 +33,9 @@
  * @file param.go
  * @copyright Copyright © 2026 Ross Video Ltd
  * @author Nelson Daniels (nelson.daniels@rossvideo.com)
- * @date 2026-05-11
+ * @author Keon Foster (keon.foster@rossvideo.com)
+ * @author Andrew Brown (andrew.brown@rossvideo.com)
+ * @date 2026-11-17
  */
 
 package st2138
@@ -46,7 +48,10 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// Param wraps a protos.Param and exposes a fluent builder API.
+// Param wraps a protos.Param.
+// Proto is the underlying proto message; it may be read or replaced directly.
+// Param is a handle: copies share the same Proto, so methods that mutate it
+// (e.g. SetValue) use value receivers.
 type Param struct {
 	Proto *protos.Param
 }
