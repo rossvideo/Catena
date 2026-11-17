@@ -832,10 +832,6 @@ func (t *Transport) handleComponentEndpoint(w http.ResponseWriter, r *http.Reque
 	}
 	kind := st2138.ComponentKind(protos.GetComponentPayload_ComponentKind_value[pathParts[0]])
 	oid := strings.Join(pathParts[1:], "/")
-	if oid == "" {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include oid"))
-		return
-	}
 
 	transportContext := t.retrieveMetadataFromRequest(r)
 	resp, result := t.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
