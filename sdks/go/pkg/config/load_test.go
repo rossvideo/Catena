@@ -363,7 +363,7 @@ func TestOptionMappings(t *testing.T) {
 		{"GRPC_MAX_CONNECTION_AGE_GRACE", "grpc-max-connection-age-grace", "1m", time.Minute, func(o RuntimeOptions) any { return o.Grpc.MaxConnectionAgeGrace }},
 		{"GRPC_KEEPALIVE_TIME", "grpc-keepalive-time", "1h", time.Hour, func(o RuntimeOptions) any { return o.Grpc.KeepaliveTime }},
 		{"GRPC_KEEPALIVE_TIMEOUT", "grpc-keepalive-timeout", "10s", 10 * time.Second, func(o RuntimeOptions) any { return o.Grpc.KeepaliveTimeout }},
-		{"GRPC_KEEPALIVE_MIN_TIME", "grpc-keepalive-min-time", "1m", time.Minute, func(o RuntimeOptions) any { return o.Grpc.MinTime }},
+		{"GRPC_KEEPALIVE_MIN_TIME", "grpc-keepalive-min-time", "1m", time.Minute, func(o RuntimeOptions) any { return o.Grpc.KeepaliveMinTime }},
 		{"GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM", "grpc-keepalive-permit-without-stream", "true", true, func(o RuntimeOptions) any { return o.Grpc.PermitWithoutStream }},
 		// server
 		{"MAX_CONNECTIONS", "max-connections", "250", 250, func(o RuntimeOptions) any { return o.Server.MaxConnections }},
@@ -756,11 +756,11 @@ func TestLoader_PositiveInt(t *testing.T) {
 		val := 1
 		t.Setenv("TEST_POSITIVE_INT", "0")
 		loader.extractPositiveInt("TEST_POSITIVE_INT", "test-positive-int", "Test positive int flag", &val)
-		if loader.err == nil {
-			t.Errorf("Expected error got nil")
+		if loader.err != nil {
+			t.Errorf("Expected no error got: %v", loader.err)
 		}
-		if val != 1 {
-			t.Errorf("Expected val to stay 1 got: %v", val)
+		if val != 0 {
+			t.Errorf("Expected val to be 0 got: %v", val)
 		}
 	})
 

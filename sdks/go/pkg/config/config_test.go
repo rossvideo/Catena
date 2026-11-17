@@ -70,7 +70,7 @@ func TestDefaultOptions(t *testing.T) {
 			MaxConnectionAgeGrace: 0,
 			KeepaliveTime:         2 * time.Hour,
 			KeepaliveTimeout:      20 * time.Second,
-			MinTime:               5 * time.Minute,
+			KeepaliveMinTime:      5 * time.Minute,
 			PermitWithoutStream:   false,
 		},
 		Server: ServerOptions{
@@ -121,7 +121,7 @@ func TestRuntimeOptions_LogValuer(t *testing.T) {
 			MaxConnectionAgeGrace: 3,
 			KeepaliveTime:         4,
 			KeepaliveTimeout:      5,
-			MinTime:               6,
+			KeepaliveMinTime:      6,
 			PermitWithoutStream:   true,
 		},
 		Server: ServerOptions{
