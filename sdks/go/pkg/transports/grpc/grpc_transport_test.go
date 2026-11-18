@@ -912,27 +912,26 @@ func TestTransport_GetComponent_Kinds(t *testing.T) {
 	}
 }
 
-func TestTransport_GetComponent_ForwardsUnusedKind(t *testing.T) {
+func TestTransport_GetComponent_InvalidKind(t *testing.T) {
 	ctx := context.Background()
-	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+	transport, _, lis, cleanup := setupTestTransport(t, []uint16{0})
 	defer cleanup()
 
-	// Kind rejection lives in the runtime. The transport must forward UNUSED
-	// unchanged and surface the status the runtime returns.
-	var got st2138.ComponentKind
-	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-		got = req.Kind
-		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid component kind")
+	srv, err := catena.NewServer(config.ServerOptions{})
+	if err != nil {
+		t.Fatalf("NewServer() failed: %v", err)
 	}
+	transport.runtime = srv.(catena.ServerRuntime)
+	srv.RegisterGetComponentHandler(0, func(catena.HandlerContext, catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		t.Error("handler must not run")
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	})
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
 	defer cleanup()
 
-	_, err := client.GetComponent(ctx, &protos.GetComponentPayload{Slot: 0, Oid: "brightness", Kind: protos.GetComponentPayload_UNUSED})
+	_, err = client.GetComponent(ctx, &protos.GetComponentPayload{Slot: 0, Oid: "brightness", Kind: protos.GetComponentPayload_UNUSED})
 	assertGRPCCode(t, err, codes.InvalidArgument, "unused kind")
-	if got != st2138.ComponentKindUnused {
-		t.Errorf("forwarded kind = %v, want UNUSED", got)
-	}
 }
 
 func TestTransport_GetComponent_NilResponse(t *testing.T) {

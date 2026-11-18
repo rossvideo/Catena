@@ -744,22 +744,18 @@ func TestTransport_GetComponent_InvalidKind(t *testing.T) {
 		"/st2138-api/v1/0/component/NOPE/brightness",
 	} {
 		t.Run(path, func(t *testing.T) {
-			transport, runtime := makeTestTransport(t)
-			called := false
-			var got st2138.ComponentKind
-			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-				called = true
-				got = req.Kind
-				return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid component kind")
+			transport := NewTransport(config.RestOptions{Port: 8080, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1, MaxAssetBodyBytes: -1})
+			srv, err := catena.NewServer(config.ServerOptions{})
+			if err != nil {
+				t.Fatalf("NewServer() failed: %v", err)
 			}
+			transport.runtime = srv.(catena.ServerRuntime)
+			srv.RegisterGetComponentHandler(0, func(catena.HandlerContext, catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+				t.Error("handler must not run")
+				return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			})
 			rec := makeRequest(t, transport, http.MethodGet, path, "")
 			assertStatus(t, rec, ToHTTPStatus(catena.StatusCodeInvalidArgument))
-			if !called {
-				t.Error("handler was not called")
-			}
-			if got != st2138.ComponentKindUnused {
-				t.Errorf("expected kind UNUSED, got %v", got)
-			}
 		})
 	}
 }
