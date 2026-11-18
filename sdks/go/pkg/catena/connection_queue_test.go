@@ -446,6 +446,44 @@ func TestConnectionQueue_Shutdown_RejectsNewConnections(t *testing.T) {
 	}
 }
 
+func TestConnectionQueue_Shutdown_StopsExpirySweeper(t *testing.T) {
+	// shutdown waits for the sweeper to exit, so a sweeper that never stops would
+	// hang it. Run it with a timeout so a leak fails the test instead.
+	shutdownWithin := func(t *testing.T, cq *connectionQueue) {
+		t.Helper()
+		done := make(chan struct{})
+
+		go func() {
+			cq.shutdown(context.Background())
+			close(done)
+		}()
+
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Fatal("shutdown did not return, the sweeper may not have stopped")
+		}
+	}
+
+	t.Run("sweeper exits when the queue shuts down", func(t *testing.T) {
+		cq := newConnectionQueueWithOptions(0, nil, withExpirySweepInterval(5*time.Millisecond)).(*connectionQueue)
+
+		select {
+		case <-cq.expirySweeperDone:
+			t.Fatal("sweeper should be running before shutdown")
+		default:
+		}
+
+		shutdownWithin(t, cq)
+
+		select {
+		case <-cq.expirySweeperDone:
+		default:
+			t.Fatal("sweeper is still running after shutdown")
+		}
+	})
+}
+
 func TestConnectionQueue_ShutdownOwner(t *testing.T) {
 	cq := newConnectionQueue(0, nil)
 	ownerA := &stubTransport{tb: t}
@@ -1206,6 +1244,73 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 					t.Fatalf("iteration %d: connection count = %d, want 0", i, cq.connectionCount())
 				}
 
+			}
+		})
+
+		t.Run("shutdownOwner racing with the sweep", func(t *testing.T) {
+			for i := 0; i < 200; i++ {
+				clock := newManualClock(raceStart)
+				cq := newConnectionQueueWithOptions(0, nil,
+					withClock(clock.Now),
+					withExpirySweepInterval(0),
+				).(*connectionQueue)
+
+				ownerA := &stubTransport{tb: t}
+				ownerB := &stubTransport{tb: t}
+
+				var releases atomic.Int32
+				connA, res := cq.registerOwnedConnection(ownerA, HandlerContext{
+					tokenExpiry: clock.Now().Add(time.Minute),
+					ctxCancel:   func() { releases.Add(1) },
+				}, nil)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("iteration %d: register owner A: %v", i, res)
+				}
+				connB, res := cq.registerOwnedConnection(ownerB, HandlerContext{}, nil)
+				if res.Code != StatusCodeOk {
+					t.Fatalf("iteration %d: register owner B: %v", i, res)
+				}
+
+				go func() {
+					<-connA.Done
+					cq.deregisterConnection(connA.ID)
+				}()
+
+				clock.Advance(2 * time.Minute)
+
+				runConcurrently(
+					func() { cq.sweepExpiredConnections() },
+					func() { cq.shutdownOwner(context.Background(), ownerA) },
+				)
+				waitForCleanup(t, cq)
+
+				reasonA, _ := readState(cq, connA)
+				if reasonA != CloseReasonExpired && reasonA != CloseReasonShutdown {
+					t.Fatalf("iteration %d: close reason = %s, want expired or shutdown", i, reasonA)
+				}
+				select {
+				case <-connA.Done:
+				default:
+					t.Fatalf("iteration %d: Done was not closed", i)
+				}
+				if got := releases.Load(); got != 1 {
+					t.Fatalf("iteration %d: connection released %d times, want 1", i, got)
+				}
+
+				// A seperately owned connection is left as is
+				if cq.connectionCount() != 1 {
+					t.Fatalf("iteration %d: connection count = %d, want 1 (owner B)", i, cq.connectionCount())
+				}
+				if reasonB, _ := readState(cq, connB); reasonB != CloseReasonNone {
+					t.Fatalf("iteration %d: owner B close reason = %s, want none", i, reasonB)
+				}
+				select {
+				case <-connB.Done:
+					t.Fatalf("iteration %d: owner B connection was closed", i)
+				default:
+				}
+
+				cq.deregisterConnection(connB.ID)
 			}
 		})
 	})
