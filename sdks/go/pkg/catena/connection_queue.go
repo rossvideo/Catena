@@ -54,10 +54,13 @@ type ConnectionCloseReason int32
 const (
 	// CloseReasonNone means the connection is still open.
 	CloseReasonNone ConnectionCloseReason = iota
+	// CloseReasonShutdown means the connection was shut down by the server.
 	CloseReasonShutdown
 	// CloseReasonExpired means the connection's token expiry has passed.
 	CloseReasonExpired
+)
 
+const (
 	defaultExpirySweepInterval = time.Second
 	defaultExpiryGracePeriod   = 5 * time.Second
 )

@@ -330,7 +330,7 @@ func classifyDiscoveryError(ctx context.Context, err error) error {
 }
 
 // getTokenExpiry returns the token's effective expiry. This also takes into
-// account the leeway option. If the token has no expiry, the current time is returned
+// account the leeway option. On account of an error a zero time is returned
 func (v *jwtValidator) getTokenExpiry(token *jwt.Token) (time.Time, error) {
 	if token == nil || token.Claims == nil {
 		return time.Time{}, fmt.Errorf("token or claims are required")
