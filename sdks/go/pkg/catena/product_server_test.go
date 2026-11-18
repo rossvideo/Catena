@@ -288,7 +288,7 @@ func TestServer_GetValue_NonProductCallsHandler(t *testing.T) {
 }
 
 func invokeProductComponent(srv *server, oid string, kind st2138.ComponentKind) (st2138.ComponentResponse, StatusResult) {
-	return srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: oid, Kind: kind})
+	return srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Fqoid: oid, Kind: kind})
 }
 
 // TestServer_GetComponent_Product verifies product/* GetComponent requests with
@@ -297,7 +297,7 @@ func TestServer_GetComponent_Product(t *testing.T) {
 	srv := newTestServer(t, false)
 	srv.RegisterProductStruct(0, testProduct())
 	srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
-		t.Errorf("business-logic GetComponent should not be called for %q", req.Oid)
+		t.Errorf("business-logic GetComponent should not be called for %q", req.Fqoid)
 		return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 	})
 
@@ -368,7 +368,7 @@ func TestServer_GetComponent_NoProductRegistered(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return st2138.ComponentResponseParam(req.Oid, &p), StatusWithCode(StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &p), StatusWithCode(StatusCodeOk, "")
 	})
 
 	_, res := invokeProductComponent(srv, "product", st2138.ComponentKindParam)
@@ -388,8 +388,8 @@ func TestServer_GetComponent_ProductOtherKindFallsThrough(t *testing.T) {
 	called := false
 	srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 		called = true
-		if req.Kind != st2138.ComponentKindMenu || req.Oid != "product" {
-			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		if req.Kind != st2138.ComponentKindMenu || req.Fqoid != "product" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 		return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "no menu")
 	})
@@ -606,11 +606,11 @@ func TestServer_GetComponent_ProductScope(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
 			srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
-				t.Errorf("business-logic GetComponent should not be called for %q", req.Oid)
+				t.Errorf("business-logic GetComponent should not be called for %q", req.Fqoid)
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 			})
 			mockInvokeGateFn(t, srv, EndpointGetComponent, false, monScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: oid, Kind: st2138.ComponentKindParam})
+			_, res := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Fqoid: oid, Kind: st2138.ComponentKindParam})
 			if res.Code != StatusCodeOk {
 				t.Fatalf("expected OK, got %v: %s", res.Code, res.Error)
 			}
@@ -620,11 +620,11 @@ func TestServer_GetComponent_ProductScope(t *testing.T) {
 			srv := newTestServer(t, true)
 			srv.RegisterProductStruct(0, testProduct())
 			srv.RegisterGetComponentHandler(0, func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
-				t.Errorf("business-logic GetComponent should not be called for %q", req.Oid)
+				t.Errorf("business-logic GetComponent should not be called for %q", req.Fqoid)
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "should not happen")
 			})
 			mockInvokeGateFn(t, srv, EndpointGetComponent, false, nonMonScopeContext(), StatusWithCode(StatusCodeOk, ""))
-			_, res := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: oid, Kind: st2138.ComponentKindParam})
+			_, res := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Fqoid: oid, Kind: st2138.ComponentKindParam})
 			if res.Code != StatusCodePermissionDenied {
 				t.Fatalf("expected PERMISSION_DENIED, got %v: %s", res.Code, res.Error)
 			}

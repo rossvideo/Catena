@@ -10,23 +10,23 @@ import (
 
 // registerGetComponentHandlers wires GetComponent for every slot. GetComponent
 // returns one device component (param, constraint, menu, command, or
-// language pack) for a single oid. The on-the-wire GetParam route is served by
+// language pack) for a single fqoid. The on-the-wire GetParam route is served by
 // this same handler with kind PARAM.
 //
 // Rather than maintaining a separate switch per slot, each handler rebuilds the
 // slot's device definition via buildDeviceDefinition and looks the requested
-// oid up inside the kind's namespace. This keeps GetComponent in lockstep with
+// fqoid up inside the kind's namespace. This keeps GetComponent in lockstep with
 // GetDevice: a component can never drift between the two endpoints because both
 // come from one source. Language packs live in the shared language store, which
 // also backs the language-pack endpoints.
 func registerGetComponentHandlers(srv catena.Server, counter *CounterState, state *ExampleState, languages *LanguageStore) {
 	for _, slot := range slotList {
 		srv.RegisterGetComponentHandler(slot, func(ctx catena.HandlerContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-			ctx.Logger().Info("GetComponent", "slot", req.Slot, "oid", req.Oid, "kind", req.Kind)
+			ctx.Logger().Info("GetComponent", "slot", req.Slot, "fqoid", req.Fqoid, "kind", req.Kind)
 
 			switch req.Kind {
 			case st2138.ComponentKindLanguagePack:
-				return languagePackComponent(languages, req.Slot, req.Oid)
+				return languagePackComponent(languages, req.Slot, req.Fqoid)
 			case st2138.ComponentKindParam, st2138.ComponentKindConstraint, st2138.ComponentKindMenu, st2138.ComponentKindCommand:
 				return deviceComponent(req, counter, state)
 			default:
@@ -44,29 +44,29 @@ func deviceComponent(req catena.GetComponentRequest, counter *CounterState, stat
 
 	switch req.Kind {
 	case st2138.ComponentKindParam:
-		param, found := lookupNested(device.Proto.GetParams(), req.Oid)
+		param, found := lookupNested(device.Proto.GetParams(), req.Fqoid)
 		if !found {
-			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "param not found: "+req.Oid)
+			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "param not found: "+req.Fqoid)
 		}
-		return catena.Reply(st2138.ComponentResponseParam(req.Oid, &st2138.Param{Proto: param}))
+		return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, &st2138.Param{Proto: param}))
 	case st2138.ComponentKindCommand:
-		command, found := lookupNested(device.Proto.GetCommands(), req.Oid)
+		command, found := lookupNested(device.Proto.GetCommands(), req.Fqoid)
 		if !found {
-			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "command not found: "+req.Oid)
+			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "command not found: "+req.Fqoid)
 		}
-		return catena.Reply(st2138.ComponentResponseCommand(req.Oid, &st2138.Param{Proto: command}))
+		return catena.Reply(st2138.ComponentResponseCommand(req.Fqoid, &st2138.Param{Proto: command}))
 	case st2138.ComponentKindConstraint:
-		constraint, found := device.Proto.GetConstraints()[req.Oid]
+		constraint, found := device.Proto.GetConstraints()[req.Fqoid]
 		if !found {
-			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "constraint not found: "+req.Oid)
+			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "constraint not found: "+req.Fqoid)
 		}
-		return catena.Reply(st2138.ComponentResponseConstraint(req.Oid, &st2138.Constraint{Proto: constraint}))
+		return catena.Reply(st2138.ComponentResponseConstraint(req.Fqoid, &st2138.Constraint{Proto: constraint}))
 	case st2138.ComponentKindMenu:
-		menu, found := lookupMenu(device.Proto.GetMenuGroups(), req.Oid)
+		menu, found := lookupMenu(device.Proto.GetMenuGroups(), req.Fqoid)
 		if !found {
-			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "menu not found: "+req.Oid)
+			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "menu not found: "+req.Fqoid)
 		}
-		return catena.Reply(st2138.ComponentResponseMenu(req.Oid, &st2138.Menu{Proto: menu}))
+		return catena.Reply(st2138.ComponentResponseMenu(req.Fqoid, &st2138.Menu{Proto: menu}))
 	default:
 		return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "component not found: kind="+req.Kind.String())
 	}

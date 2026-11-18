@@ -1301,8 +1301,8 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 		paramCalled := 0
 		srv.getComponentHandlers[7] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 			paramCalled++
-			if req.Slot != 7 || req.Oid != "test/param" || req.Kind != st2138.ComponentKindParam {
-				t.Errorf("unexpected args slot=%d oid=%q kind=%v", req.Slot, req.Oid, req.Kind)
+			if req.Slot != 7 || req.Fqoid != "test/param" || req.Kind != st2138.ComponentKindParam {
+				t.Errorf("unexpected args slot=%d fqoid=%q kind=%v", req.Slot, req.Fqoid, req.Kind)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetComponent handler")
@@ -1311,7 +1311,7 @@ func TestServer_InvokeGetValueHandler(t *testing.T) {
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
-			return Reply(st2138.ComponentResponseParam(req.Oid, &p))
+			return Reply(st2138.ComponentResponseParam(req.Fqoid, &p))
 		}
 
 		actual, status := srv.InvokeGetValueHandler(validTestTransportContext(nil), GetValueRequest{Slot: 7, Fqoid: "test/param"})
@@ -1529,8 +1529,8 @@ func TestServer_InvokeGetComponentHandler(t *testing.T) {
 			if req.Slot != 22 {
 				t.Errorf("expected slot 22, got %d", req.Slot)
 			}
-			if req.Oid != "test/param" || req.Kind != st2138.ComponentKindParam {
-				t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+			if req.Fqoid != "test/param" || req.Kind != st2138.ComponentKindParam {
+				t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the handler")
@@ -1538,7 +1538,7 @@ func TestServer_InvokeGetComponentHandler(t *testing.T) {
 			return Reply(expected)
 		}
 
-		actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Oid: "test/param", Kind: st2138.ComponentKindParam})
+		actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Fqoid: "test/param", Kind: st2138.ComponentKindParam})
 
 		if handlerCalled != 1 {
 			t.Errorf("expected handler to be called once, got %d", handlerCalled)
@@ -1562,7 +1562,7 @@ func TestServer_InvokeGetComponentHandler(t *testing.T) {
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeOk, "")
 			}
 
-			actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Oid: "test/param", Kind: kind})
+			actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Fqoid: "test/param", Kind: kind})
 			if handlerCalled != 0 {
 				t.Errorf("kind %v: handler must not run", kind)
 			}
@@ -1579,7 +1579,7 @@ func TestServer_InvokeGetComponentHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetComponent, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		_, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Oid: "missing", Kind: st2138.ComponentKindMenu})
+		_, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Fqoid: "missing", Kind: st2138.ComponentKindMenu})
 		if status.Code != StatusCodeNotFound {
 			t.Errorf("expected NotFound, got %v", status.Code)
 		}
@@ -1589,7 +1589,7 @@ func TestServer_InvokeGetComponentHandler(t *testing.T) {
 		srv := newTestServer(t, true)
 		mockInvokeGateFn(t, srv, EndpointGetComponent, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
-		actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Oid: "/invalid/fqoid", Kind: st2138.ComponentKindParam})
+		actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Fqoid: "/invalid/fqoid", Kind: st2138.ComponentKindParam})
 		if !status.IsError() {
 			t.Errorf("expected error status, got %v", status)
 		}
@@ -2216,8 +2216,8 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		paramCalled := 0
 		srv.getComponentHandlers[4] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
 			paramCalled++
-			if req.Slot != 4 || req.Oid != "volume" || req.Kind != st2138.ComponentKindParam {
-				t.Errorf("unexpected args slot=%d oid=%q kind=%v", req.Slot, req.Oid, req.Kind)
+			if req.Slot != 4 || req.Fqoid != "volume" || req.Kind != st2138.ComponentKindParam {
+				t.Errorf("unexpected args slot=%d fqoid=%q kind=%v", req.Slot, req.Fqoid, req.Kind)
 			}
 			if ctx.Token != knownCtx.Token {
 				t.Error("expected the gate's handler context to be passed through to the GetComponent handler")
@@ -2226,7 +2226,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
-			return Reply(st2138.ComponentResponseParam(req.Oid, &volume))
+			return Reply(st2138.ComponentResponseParam(req.Fqoid, &volume))
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2260,14 +2260,14 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		mockInvokeGateFn(t, srv, EndpointParamInfo, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
 
 		srv.getComponentHandlers[4] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
-			if req.Kind != st2138.ComponentKindParam || req.Oid != "cfg" {
-				t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+			if req.Kind != st2138.ComponentKindParam || req.Fqoid != "cfg" {
+				t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 			}
 			p, err := st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).Build()
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
-			return Reply(st2138.ComponentResponseParam(req.Oid, &p))
+			return Reply(st2138.ComponentResponseParam(req.Fqoid, &p))
 		}
 
 		stream := &sliceStream[st2138.ParamInfo]{}
@@ -2430,7 +2430,7 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 					*handlerCalled = true
 					return Reply(st2138.ComponentResponse{})
 				})
-				_, status := srv.InvokeGetComponentHandler(invalidContext, GetComponentRequest{Slot: 0, Oid: "test/param", Kind: st2138.ComponentKindParam})
+				_, status := srv.InvokeGetComponentHandler(invalidContext, GetComponentRequest{Slot: 0, Fqoid: "test/param", Kind: st2138.ComponentKindParam})
 				return status
 			},
 		},
@@ -2856,7 +2856,7 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 					*handlerCalled = true
 					return Reply(st2138.ComponentResponse{})
 				})
-				_, status := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Oid: "test/param", Kind: st2138.ComponentKindParam})
+				_, status := srv.InvokeGetComponentHandler(TransportContext{}, GetComponentRequest{Slot: 0, Fqoid: "test/param", Kind: st2138.ComponentKindParam})
 				return status
 			},
 		},

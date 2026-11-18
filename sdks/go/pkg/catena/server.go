@@ -1002,7 +1002,7 @@ func (s *server) InvokeGetValueHandler(transportContext TransportContext, req Ge
 			// this is the normal path on every request, so it must not spam Info.
 			if hasComponent {
 				s.serverLogger.Debug("GetValue not registered; deriving from GetComponent handler", "slot", req.Slot, "fqoid", req.Fqoid)
-				resp, res := componentHandler(ctx, GetComponentRequest{Slot: req.Slot, Oid: req.Fqoid, Kind: st2138.ComponentKindParam})
+				resp, res := componentHandler(ctx, GetComponentRequest{Slot: req.Slot, Fqoid: req.Fqoid, Kind: st2138.ComponentKindParam})
 				if res.IsError() {
 					return st2138.Value{}, res
 				}
@@ -1037,7 +1037,7 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 			if !req.Kind.Valid() {
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInvalidArgument, "invalid component kind")
 			}
-			if result := ValidateFqoid(req.Oid); result.IsError() {
+			if result := ValidateFqoid(req.Fqoid); result.IsError() {
 				return st2138.ComponentResponse{}, result
 			}
 
@@ -1049,7 +1049,7 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 			// serves product/*. When no product struct is registered, product/*
 			// falls through to the business-logic handler, which does its own scoping.
 			// Other kinds are not the product param and always fall through.
-			if req.Kind == st2138.ComponentKindParam && isProductOid(req.Oid) {
+			if req.Kind == st2138.ComponentKindParam && isProductOid(req.Fqoid) {
 				if product, has := s.productForSlot(req.Slot); has {
 					if scopeRes := ctx.RequireReadScope(st2138.ScopeMon); scopeRes.IsError() {
 						return st2138.ComponentResponse{}, scopeRes
@@ -1058,18 +1058,18 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 					var param *st2138.Param
 					var err error
 
-					if req.Oid == ProductOid {
+					if req.Fqoid == ProductOid {
 						param, err = ProductParam(product)
 						if err != nil {
 							return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "failed to build product param")
 						}
-						return st2138.ComponentResponseParam(req.Oid, param), StatusWithCode(StatusCodeOk, "")
+						return st2138.ComponentResponseParam(req.Fqoid, param), StatusWithCode(StatusCodeOk, "")
 					}
 
-					field := strings.TrimPrefix(req.Oid, ProductOid+"/")
+					field := strings.TrimPrefix(req.Fqoid, ProductOid+"/")
 					value, ok := ProductValues(product)[field]
 					if !ok {
-						return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+req.Oid)
+						return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+req.Fqoid)
 					}
 
 					pv, err := st2138.ToProto(value)
@@ -1077,7 +1077,7 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 						return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "failed to convert product value: "+err.Error())
 					}
 					param = &st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}
-					return st2138.ComponentResponseParam(req.Oid, param), StatusWithCode(StatusCodeOk, "")
+					return st2138.ComponentResponseParam(req.Fqoid, param), StatusWithCode(StatusCodeOk, "")
 				}
 			}
 
@@ -1087,7 +1087,7 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 
 			if !ok {
 				s.serverLogger.Warn("no handler registered for slot", "endpoint", EndpointGetComponent, "slot", req.Slot)
-				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "component "+req.Oid+" not found at slot "+strconv.Itoa(int(req.Slot)))
+				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "component "+req.Fqoid+" not found at slot "+strconv.Itoa(int(req.Slot)))
 			}
 			return handler(ctx, req)
 		})
@@ -1263,7 +1263,7 @@ func (s *server) InvokeParamInfoHandler(transportContext TransportContext, req P
 			// must not spam Info.
 			if hasComponent && req.OidPrefix != "" {
 				s.serverLogger.Debug("ParamInfo not registered; deriving from GetComponent handler", "slot", req.Slot, "oidPrefix", req.OidPrefix)
-				resp, res := componentHandler(ctx, GetComponentRequest{Slot: req.Slot, Oid: req.OidPrefix, Kind: st2138.ComponentKindParam})
+				resp, res := componentHandler(ctx, GetComponentRequest{Slot: req.Slot, Fqoid: req.OidPrefix, Kind: st2138.ComponentKindParam})
 				if res.IsError() {
 					return struct{}{}, res
 				}

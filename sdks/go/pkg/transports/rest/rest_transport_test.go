@@ -156,14 +156,14 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
 				runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 					assertContext(t, ctx)
-					if req.Kind != st2138.ComponentKindParam || req.Oid != "brightness" {
-						t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+					if req.Kind != st2138.ComponentKindParam || req.Fqoid != "brightness" {
+						t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 					}
 					param, err := st2138.NewParamInt32(42).Build()
 					if err != nil {
 						t.Fatalf("expected no error for builder with valid value, got %v", err)
 					}
-					return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
+					return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -564,8 +564,8 @@ func TestTransport_GetParam_Route(t *testing.T) {
 	handlerCalled := false
 	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 		handlerCalled = true
-		if req.Kind != st2138.ComponentKindParam || req.Oid != "text_box" {
-			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "text_box" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 		param, err := st2138.NewParamString("Hello, World!").
 			WithName(st2138.PolyglotText{"en": "Text Box", "es": "Caja de Texto"}).
@@ -573,7 +573,7 @@ func TestTransport_GetParam_Route(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/text_box", "")
@@ -595,15 +595,15 @@ func TestTransport_GetParam_NestedFqoid(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-		if req.Kind != st2138.ComponentKindParam || req.Oid != "parent/child" {
-			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "parent/child" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 
 		param, err := st2138.NewParamInt32(7).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/parent/child", "")
@@ -644,8 +644,8 @@ func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-		if req.Kind != st2138.ComponentKindParam || req.Oid != "zero" {
-			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "zero" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 		param, err := st2138.NewParamInt32(0).
 			WithName(st2138.PolyglotText{"en": "Zero"}).
@@ -653,7 +653,7 @@ func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/zero", "")
@@ -670,15 +670,15 @@ func TestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-		if req.Kind != st2138.ComponentKindParam || req.Oid != "empty" {
-			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "empty" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 		param, err := st2138.NewParamString("").
 			WithName(st2138.PolyglotText{"en": "Empty"}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/empty", "")
@@ -722,8 +722,8 @@ func TestTransport_GetComponent_Kinds(t *testing.T) {
 		t.Run(tt.kind.String(), func(t *testing.T) {
 			transport, runtime := makeTestTransport(t)
 			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-				if req.Kind != tt.kind || req.Oid != tt.oid {
-					t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+				if req.Kind != tt.kind || req.Fqoid != tt.oid {
+					t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 				}
 				return tt.respond, catena.StatusWithCode(catena.StatusCodeOk, "")
 			}

@@ -89,18 +89,18 @@ type GetValueRequest struct {
 type GetValueHandler func(ctx HandlerContext, req GetValueRequest) (st2138.Value, StatusResult)
 
 // GetComponentRequest carries the arguments of a GetComponent request.
-// Oid is the component id at device scope, resolved within Kind. For
-// ComponentKindLanguagePack it carries the language code (e.g. "es"), not an oid.
+// Fqoid is the component id at device scope, resolved within Kind. For
+// ComponentKindLanguagePack it carries the language code (e.g. "es"), not an fqoid.
 type GetComponentRequest struct {
-	Slot uint16
-	Oid  string
-	Kind st2138.ComponentKind
+	Slot  uint16
+	Fqoid string
+	Kind  st2138.ComponentKind
 }
 
 // GetComponentHandler returns a single device component (param, constraint,
-// menu, command, or language pack) at oid for a slot, selected by kind. It
+// menu, command, or language pack) at fqoid for a slot, selected by kind. It
 // returns the component with an Ok status, or a zero ComponentResponse with an
-// error status (e.g. StatusCodeNotFound for an unknown oid). ComponentKindUnused
+// error status (e.g. StatusCodeNotFound for an unknown fqoid). ComponentKindUnused
 // is not a valid request; the SDK rejects it with StatusCodeInvalidArgument
 // before the handler runs.
 //

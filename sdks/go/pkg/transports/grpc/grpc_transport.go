@@ -491,9 +491,9 @@ func (s *catenaService) GetParam(ctx context.Context, req *protos.GetParamPayloa
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	resp, result := s.transport.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
-		Slot: slot,
-		Oid:  fqoid,
-		Kind: st2138.ComponentKindParam,
+		Slot:  slot,
+		Fqoid: fqoid,
+		Kind:  st2138.ComponentKindParam,
 	})
 	if result.IsError() {
 		s.transport.log.Error("GetParam handler error", "slot", slot, "fqoid", fqoid, "error", result.Error)
@@ -515,22 +515,22 @@ func (s *catenaService) GetComponent(ctx context.Context, req *protos.GetCompone
 		return nil, status.Error(ToGRPCCode(err.Code), err.Error)
 	}
 
-	oid := normalizeFqoid(req.GetOid())
+	fqoid := normalizeFqoid(req.GetOid())
 	kind := st2138.ComponentKind(req.GetKind())
-	s.transport.log.Debug("GetComponent", "slot", slot, "oid", oid, "kind", kind)
+	s.transport.log.Debug("GetComponent", "slot", slot, "fqoid", fqoid, "kind", kind)
 
 	transportContext := s.transport.retrieveMetadataFromContext(ctx)
 	resp, result := s.transport.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
-		Slot: slot,
-		Oid:  oid,
-		Kind: kind,
+		Slot:  slot,
+		Fqoid: fqoid,
+		Kind:  kind,
 	})
 	if result.IsError() {
-		s.transport.log.Error("GetComponent handler error", "slot", slot, "oid", oid, "kind", kind, "error", result.Error)
+		s.transport.log.Error("GetComponent handler error", "slot", slot, "fqoid", fqoid, "kind", kind, "error", result.Error)
 		return nil, status.Error(ToGRPCCode(result.Code), result.Error)
 	}
 	if resp.Proto == nil {
-		s.transport.log.Error("GetComponent returned nil response", "slot", slot, "oid", oid, "kind", kind)
+		s.transport.log.Error("GetComponent returned nil response", "slot", slot, "fqoid", fqoid, "kind", kind)
 		return nil, status.Error(codes.Internal, "component returned nil")
 	}
 

@@ -237,14 +237,14 @@ func registerAuthz(srv catena.Server) {
 			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "component not found")
 		}
 		if ctx.HasReadScope(st2138.ScopeMon) {
-			switch req.Oid {
+			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
 					userAccessParam, err := makeUserAccess(ctx)
 					if err != nil {
 						return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make user access param")
 					}
-					return catena.Reply(st2138.ComponentResponseParam(req.Oid, &userAccessParam))
+					return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, &userAccessParam))
 				}
 			case claims:
 				if ctx.AuthzEnabled() {
@@ -252,7 +252,7 @@ func registerAuthz(srv catena.Server) {
 					if err != nil {
 						return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make claims param")
 					}
-					return catena.Reply(st2138.ComponentResponseParam(req.Oid, &claimsParam))
+					return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, &claimsParam))
 				}
 			case authzStatus:
 				if !ctx.AuthzEnabled() {
@@ -260,14 +260,14 @@ func registerAuthz(srv catena.Server) {
 					if authzStatusParam == nil {
 						return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make authz status param")
 					}
-					return catena.Reply(st2138.ComponentResponseParam(req.Oid, authzStatusParam))
+					return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, authzStatusParam))
 				}
 			case rolesTable:
 				rolesTableParam, err := makeRolesTable()
 				if err != nil {
 					return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make roles table param")
 				}
-				return catena.Reply(st2138.ComponentResponseParam(req.Oid, &rolesTableParam))
+				return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, &rolesTableParam))
 			}
 		}
 		return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "component not found")

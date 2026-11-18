@@ -729,8 +729,8 @@ func TestTransport_GetParam_Success(t *testing.T) {
 	handlerCalled := false
 	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 		handlerCalled = true
-		if req.Kind != st2138.ComponentKindParam || req.Oid != "counter" {
-			t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "counter" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 		param, err := st2138.NewParamInt32(21).
 			WithName(st2138.PolyglotText{"en": "Counter"}).
@@ -739,7 +739,7 @@ func TestTransport_GetParam_Success(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return st2138.ComponentResponseParam(req.Oid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	client, cleanup := setupGRPCClient(t, ctx, lis)
@@ -896,8 +896,8 @@ func TestTransport_GetComponent_Kinds(t *testing.T) {
 			defer cleanup()
 
 			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
-				if req.Kind != st2138.ComponentKind(tt.kind) || req.Oid != tt.oid {
-					t.Errorf("unexpected args oid=%q kind=%v", req.Oid, req.Kind)
+				if req.Kind != st2138.ComponentKind(tt.kind) || req.Fqoid != tt.oid {
+					t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 				}
 				return tt.respond, catena.StatusWithCode(catena.StatusCodeOk, "")
 			}

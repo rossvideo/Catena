@@ -139,7 +139,7 @@ func (s *StubServerRuntime) InvokeGetComponentHandler(ctx catena.TransportContex
 	if s.GetComponentFn != nil {
 		return s.GetComponentFn(ctx, req)
 	}
-	s.panicf("GetComponent handler not implemented in stubServerRuntime for slot %d, oid %s, kind %s", req.Slot, req.Oid, req.Kind)
+	s.panicf("GetComponent handler not implemented in stubServerRuntime for slot %d, fqoid %s, kind %s", req.Slot, req.Fqoid, req.Kind)
 	return st2138.ComponentResponse{}, catena.StatusResult{Code: catena.StatusCodeInternal, Error: "GetComponent handler not implemented"}
 }
 

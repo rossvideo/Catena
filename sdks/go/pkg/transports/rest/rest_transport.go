@@ -789,9 +789,9 @@ func (t *Transport) handleParamEndpoint(w http.ResponseWriter, r *http.Request, 
 
 	transportContext := t.retrieveMetadataFromRequest(r)
 	resp, result := t.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
-		Slot: slot,
-		Oid:  fqoid,
-		Kind: st2138.ComponentKindParam,
+		Slot:  slot,
+		Fqoid: fqoid,
+		Kind:  st2138.ComponentKindParam,
 	})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
@@ -827,7 +827,7 @@ func (t *Transport) handleComponentEndpoint(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if len(pathParts) < 2 {
-		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include kind and oid"))
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "request must include kind and fqoid"))
 		return
 	}
 	kind := st2138.ComponentKind(protos.GetComponentPayload_ComponentKind_value[pathParts[0]])
@@ -835,9 +835,9 @@ func (t *Transport) handleComponentEndpoint(w http.ResponseWriter, r *http.Reque
 
 	transportContext := t.retrieveMetadataFromRequest(r)
 	resp, result := t.runtime.InvokeGetComponentHandler(transportContext, catena.GetComponentRequest{
-		Slot: slot,
-		Oid:  oid,
-		Kind: kind,
+		Slot:  slot,
+		Fqoid: oid,
+		Kind:  kind,
 	})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
