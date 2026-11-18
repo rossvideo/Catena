@@ -151,9 +151,12 @@ func TestProductDeviceStream(t *testing.T) {
 	})
 
 	t.Run("strips product from a device chunk without mon scope", func(t *testing.T) {
-		pb := st2138.NewParamStruct(ProductValues(testProduct())).
+		pb := st2138.NewParamStruct().
 			WithReadOnly(true).
 			WithAccessScope(st2138.ScopeMon)
+		for k, v := range ProductValues(testProduct()) {
+			pb.WithParam(k, st2138.NewParamString(v.(string)))
+		}
 		device, err := st2138.NewDevice(0).WithParam(ProductOid, pb).Build()
 		if err != nil {
 			t.Fatalf("NewDevice(0).WithParam(ProductOid, pb).Build() failed: %v", err)

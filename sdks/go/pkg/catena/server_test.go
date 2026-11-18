@@ -2263,7 +2263,10 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 			if req.Kind != st2138.ComponentKindParam || req.Fqoid != "cfg" {
 				t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 			}
-			p, err := st2138.NewParamStruct(map[string]any{"number": int32(1), "text": "hi"}).Build()
+			p, err := st2138.NewParamStruct().
+				WithParam("number", st2138.NewParamInt32(1)).
+				WithParam("text", st2138.NewParamString("hi")).
+				Build()
 			if err != nil {
 				t.Fatalf("expected no error for builder with valid value, got %v", err)
 			}
