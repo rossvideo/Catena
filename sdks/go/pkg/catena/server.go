@@ -1054,11 +1054,7 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 					if scopeRes := ctx.RequireReadScope(st2138.ScopeMon); scopeRes.IsError() {
 						return st2138.ComponentResponse{}, scopeRes
 					}
-					param, res := productParamForOid(product, req.Fqoid)
-					if res.IsError() {
-						return st2138.ComponentResponse{}, res
-					}
-					return st2138.ComponentResponseParam(req.Fqoid, &param), StatusWithCode(StatusCodeOk, "")
+					return productParamForOid(product, req.Fqoid)
 				}
 			}
 

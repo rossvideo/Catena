@@ -170,26 +170,26 @@ func productValueForOid(p ProductStruct, fqoid string) (st2138.Value, StatusResu
 // productParamForOid resolves a product FQOID to a Param: the whole struct for
 // "product", or a single STRING field descriptor (with its value) for
 // "product/<field>".
-func productParamForOid(p ProductStruct, fqoid string) (st2138.Param, StatusResult) {
+func productParamForOid(p ProductStruct, fqoid string) (st2138.ComponentResponse, StatusResult) {
 	if fqoid == ProductOid {
 		param, err := ProductParam(p)
 		if err != nil {
-			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "failed to build product param")
+			return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "failed to build product param")
 		}
-		return *param, StatusWithCode(StatusCodeOk, "")
+		return st2138.ComponentResponseParam(fqoid, param), StatusWithCode(StatusCodeOk, "")
 	}
 
 	field := strings.TrimPrefix(fqoid, ProductOid+"/")
 	value, ok := ProductValues(p)[field]
 	if !ok {
-		return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+fqoid)
+		return st2138.ComponentResponse{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+fqoid)
 	}
 
 	pv, err := st2138.ToProto(value)
 	if err != nil {
-		return st2138.Param{}, StatusWithCode(StatusCodeInternal, "failed to convert product value: "+err.Error())
+		return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInternal, "failed to convert product value: "+err.Error())
 	}
-	return st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}, StatusWithCode(StatusCodeOk, "")
+	return st2138.ComponentResponseParam(fqoid, &st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}), StatusWithCode(StatusCodeOk, "")
 }
 
 // productParamInfosForOid builds ParamInfo responses for a product FQOID by
