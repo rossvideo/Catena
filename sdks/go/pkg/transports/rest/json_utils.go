@@ -214,6 +214,52 @@ func WriteProtoJSON(w http.ResponseWriter, msg proto.Message, statusCode int) er
 	return writeErr
 }
 
+// statusError is an unexported sentinel for a request-parse failure. status is
+// the HTTP code writeError maps the sentinel to. Wrap it with %w when the
+// failure has extra detail so errors.Is still matches the sentinel.
+type statusError struct {
+	status int
+	msg    string
+}
+
+func (e *statusError) Error() string { return e.msg }
+
+var (
+	errMissingContentType   = &statusError{status: http.StatusBadRequest, msg: "missing Content-Type header"}
+	errInvalidContentType   = &statusError{status: http.StatusBadRequest, msg: "invalid content type"}
+	errUnsupportedMediaType = &statusError{status: http.StatusUnsupportedMediaType, msg: "unsupported content type"}
+	errReadBody             = &statusError{status: http.StatusBadRequest, msg: "failed to read request body"}
+	errMalformedBody        = &statusError{status: http.StatusBadRequest, msg: "failed to unmarshal request body"}
+	errInvalidValue         = &statusError{status: http.StatusBadRequest, msg: "invalid value"}
+)
+
+// validateJSONContentType checks that contentType is application/json. A
+// missing, unparsable, or unsupported type is returned as the matching
+// sentinel, with the header value kept in the error chain.
+func validateJSONContentType(contentType string) error {
+	if contentType == "" {
+		return errMissingContentType
+	}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return fmt.Errorf("%w: %s: %w", errInvalidContentType, contentType, err)
+	}
+	if mediaType != "application/json" {
+		return fmt.Errorf("%w: %s, expected application/json", errUnsupportedMediaType, mediaType)
+	}
+	return nil
+}
+
+// readRequestBody reads r.Body and classifies a read failure as errReadBody (400)
+// The cause of the error is wrapped
+func readRequestBody(r *http.Request) ([]byte, error) {
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", errReadBody, err)
+	}
+	return data, nil
+}
+
 // ReadAssetRequestJSON reads and unmarshals a JSON request body into a
 // protos.ExternalObjectPayload (the inverse of MarshalAssetJSON). It validates
 // the Content-Type header and returns an error if it's not application/json.
@@ -232,9 +278,9 @@ func ReadAssetRequestJSON(r *http.Request) (*protos.ExternalObjectPayload, error
 		return nil, fmt.Errorf("unsupported content type: %s, expected application/json", mediaType)
 	}
 
-	data, err := io.ReadAll(r.Body)
+	data, err := readRequestBody(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read request body: %w", err)
+		return nil, err
 	}
 
 	payload := &protos.ExternalObjectPayload{}
@@ -248,12 +294,12 @@ func ReadAssetRequestJSON(r *http.Request) (*protos.ExternalObjectPayload, error
 
 // ReadRequestJSON reads and unmarshals a JSON request body into a protos.Value.
 // It validates the Content-Type header and returns an error if it's not application/json.
-func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
+func ReadRequestJSON(r *http.Request) (*protos.Value, error) {
 	defer r.Body.Close()
 
-	data, err := io.ReadAll(r.Body)
+	data, err := readRequestBody(r)
 	if err != nil {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
+		return nil, err
 	}
 	return parseValueJSON(r.Header.Get("Content-Type"), data)
 }
@@ -262,25 +308,18 @@ func ReadRequestJSON(r *http.Request) (*protos.Value, catena.StatusResult) {
 // into a protos.Value. It is split out of ReadRequestJSON so callers that must
 // treat an empty body specially (the command endpoint accepts an empty body as
 // "no value" per ST 2138) can inspect the body before deciding to parse it.
-func parseValueJSON(contentType string, data []byte) (*protos.Value, catena.StatusResult) {
-	if contentType == "" {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "missing Content-Type header"}
-	}
-	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
-	}
-	if mediaType != "application/json" {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
+func parseValueJSON(contentType string, data []byte) (*protos.Value, error) {
+	if err := validateJSONContentType(contentType); err != nil {
+		return nil, err
 	}
 
 	v := &protos.Value{}
 	if err := (protojson.UnmarshalOptions{
 		DiscardUnknown: true,
 	}).Unmarshal(data, v); err != nil {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to unmarshal request body: %v", err)}
+		return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
 	}
-	return v, catena.StatusResult{Code: catena.StatusCodeOk}
+	return v, nil
 }
 
 // ReadMultiSetValuesRequestJSON reads and unmarshals a SetValues request body of
@@ -288,44 +327,36 @@ func parseValueJSON(contentType string, data []byte) (*protos.Value, catena.Stat
 // of catena.SetValueEntry. The body is parsed directly into a
 // protos.MultiSetValuePayload; the body's slot field (if present) is ignored
 // since the slot is taken from the request path.
-func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, catena.StatusResult) {
+func ReadMultiSetValuesRequestJSON(r *http.Request) ([]catena.SetValueEntry, error) {
 	defer r.Body.Close()
 
-	contentType := r.Header.Get("Content-Type")
-	if contentType == "" {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: "missing Content-Type header"}
-	}
-	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid content type: %s", contentType)}
-	}
-	if mediaType != "application/json" {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("unsupported content type: %s, expected application/json", mediaType)}
+	if err := validateJSONContentType(r.Header.Get("Content-Type")); err != nil {
+		return nil, err
 	}
 
-	data, err := io.ReadAll(r.Body)
+	data, err := readRequestBody(r)
 	if err != nil {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to read request body: %v", err)}
+		return nil, err
 	}
 
 	payload := &protos.MultiSetValuePayload{}
 	if err := (protojson.UnmarshalOptions{
 		DiscardUnknown: true,
 	}).Unmarshal(data, payload); err != nil {
-		return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("failed to unmarshal request body: %v", err)}
+		return nil, fmt.Errorf("%w: %w", errMalformedBody, err)
 	}
 
 	entries := make([]catena.SetValueEntry, 0, len(payload.GetValues()))
 	for i, sv := range payload.GetValues() {
 		nativeValue, convErr := st2138.FromProto(sv.GetValue())
 		if convErr != nil {
-			return nil, catena.StatusResult{Code: catena.StatusCodeInvalidArgument, Error: fmt.Sprintf("invalid value at index %d: %v", i, convErr)}
+			return nil, fmt.Errorf("%w at index %d: %w", errInvalidValue, i, convErr)
 		}
 
 		entries = append(entries, catena.SetValueEntry{Fqoid: sv.GetOid(), Value: nativeValue})
 	}
 
-	return entries, catena.StatusResult{Code: catena.StatusCodeOk}
+	return entries, nil
 }
 
 // --- Device JSON cleanup via fastjson AST ---

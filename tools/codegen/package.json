@@ -28,15 +28,15 @@
   "homepage": "https://github.com/rossvideo/Catena#readme",
   "dependencies": {
     "ajv": "^8.20.0",
-    "ajv-formats": "^2.1.1",
-    "commander": "^15.0.0",
+    "ajv-formats": "^3.0.1",
+    "commander": "^15.1.0",
     "json-source-map": "^0.6.1",
     "protobufjs": "^7.6.6",
     "smpte-validator": "file:../../smpte/tools",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^13.2.1",
+    "@cucumber/cucumber": "^13.3.0",
     "jest": "^30.5.2",
     "jest-junit": "^17.0.0"
   }
