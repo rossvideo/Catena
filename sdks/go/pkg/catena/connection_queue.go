@@ -257,6 +257,7 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 
 	// Check if the token has expired already
 	expiry := handlerContext.tokenExpiry
+	handlerContext.tokenExpiry = time.Time{} // clear the token expiry to avoid keeping duplicates
 	if !expiry.IsZero() && !cq.now().Before(expiry) {
 		return nil, StatusWithCode(StatusCodeUnauthenticated, "Token expired")
 	}
