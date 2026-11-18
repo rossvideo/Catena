@@ -59,7 +59,7 @@ func TestNewConnectionQueueWithOptions_InjectedClock(t *testing.T) {
 	frozenClock := time.Date(2026, 11, 11, 12, 0, 0, 0, time.UTC)
 
 	t.Run("accepts token that expires after the injected clock", func(t *testing.T) {
-		cq := newConnectionQueueWithOptions(0, nil, WithClock(func() time.Time { return frozenClock })).(*connectionQueue)
+		cq := newConnectionQueueWithOptions(0, nil, withClock(func() time.Time { return frozenClock })).(*connectionQueue)
 		owner := &stubTransport{tb: t}
 
 		valid := HandlerContext{tokenExpiry: frozenClock.Add(time.Second)}
@@ -73,7 +73,7 @@ func TestNewConnectionQueueWithOptions_InjectedClock(t *testing.T) {
 	})
 
 	t.Run("rejects token expired before the injected clock", func(t *testing.T) {
-		cq := newConnectionQueueWithOptions(0, nil, WithClock(func() time.Time { return frozenClock }))
+		cq := newConnectionQueueWithOptions(0, nil, withClock(func() time.Time { return frozenClock }))
 		owner := &stubTransport{tb: t}
 
 		expired := HandlerContext{tokenExpiry: frozenClock.Add(-time.Second)}
@@ -94,7 +94,7 @@ func TestConnectionQueue_Options(t *testing.T) {
 	t.Run("applies clock, sweep interval, and grace period", func(t *testing.T) {
 		frozen := time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC)
 		grace := 250 * time.Millisecond
-		cq := newConnectionQueueWithOptions(0, nil, WithClock(func() time.Time { return frozen }), WithExpirySweepInterval(0), WithExpiryGracePeriod(grace)).(*connectionQueue)
+		cq := newConnectionQueueWithOptions(0, nil, withClock(func() time.Time { return frozen }), withExpirySweepInterval(0), withExpiryGracePeriod(grace)).(*connectionQueue)
 
 		if !cq.now().Equal(frozen) {
 			t.Errorf("clock = %v, want %v", cq.now(), frozen)
@@ -109,7 +109,7 @@ func TestConnectionQueue_Options(t *testing.T) {
 
 	t.Run("ignores a nil option", func(t *testing.T) {
 		grace := time.Millisecond
-		cq := newConnectionQueueWithOptions(0, nil, nil, WithExpirySweepInterval(0), WithExpiryGracePeriod(grace)).(*connectionQueue)
+		cq := newConnectionQueueWithOptions(0, nil, nil, withExpirySweepInterval(0), withExpiryGracePeriod(grace)).(*connectionQueue)
 
 		if cq.expirySweepInterval != 0 {
 			t.Errorf("sweep interval = %v, want 0", cq.expirySweepInterval)
@@ -120,15 +120,15 @@ func TestConnectionQueue_Options(t *testing.T) {
 	})
 
 	t.Run("does not start the sweeper when the interval is zero", func(t *testing.T) {
-		cq := newConnectionQueueWithOptions(3, nil, WithExpirySweepInterval(0)).(*connectionQueue)
+		cq := newConnectionQueueWithOptions(3, nil, withExpirySweepInterval(0)).(*connectionQueue)
 
 		select {
 		case <-cq.expirySweeperDone:
 		default:
 			t.Fatal("sweeper done channel should be closed when the sweep interval is zero")
 		}
-		if cq.expiryGracePeriod != DefaultExpiryGracePeriod {
-			t.Errorf("grace period = %v, want default %v", cq.expiryGracePeriod, DefaultExpiryGracePeriod)
+		if cq.expiryGracePeriod != defaultExpiryGracePeriod {
+			t.Errorf("grace period = %v, want default %v", cq.expiryGracePeriod, defaultExpiryGracePeriod)
 		}
 		if cq.maxConnections != 3 {
 			t.Errorf("max connections = %d, want 3", cq.maxConnections)
@@ -369,7 +369,7 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 
 	t.Run("skips expired connection", func(t *testing.T) {
 		now := time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC)
-		cq := newConnectionQueueWithOptions(0, nil, WithClock(func() time.Time { return now }))
+		cq := newConnectionQueueWithOptions(0, nil, withClock(func() time.Time { return now }))
 		owner := &stubTransport{tb: t}
 
 		expiredConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: now.Add(time.Minute)}, nil)
@@ -766,9 +766,9 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 	t.Run("removes only expired connections", func(t *testing.T) {
 		clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
 		cq := newConnectionQueueWithOptions(0, nil,
-			WithClock(clock.Now),
-			WithExpirySweepInterval(0),
-			WithExpiryGracePeriod(time.Second),
+			withClock(clock.Now),
+			withExpirySweepInterval(0),
+			withExpiryGracePeriod(time.Second),
 		).(*connectionQueue)
 		t.Cleanup(func() { stopConnectionQueue(cq) })
 		owner := &stubTransport{tb: t}
@@ -824,8 +824,8 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 	t.Run("skips connections while the queue is shutting down", func(t *testing.T) {
 		clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
 		cq := newConnectionQueueWithOptions(0, nil,
-			WithClock(clock.Now),
-			WithExpirySweepInterval(0),
+			withClock(clock.Now),
+			withExpirySweepInterval(0),
 		).(*connectionQueue)
 		t.Cleanup(func() { stopConnectionQueue(cq) })
 
@@ -880,8 +880,8 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 	t.Run("sweeps expired connections from the ticker loop", func(t *testing.T) {
 		clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
 		cq := newConnectionQueueWithOptions(0, nil,
-			WithClock(clock.Now),
-			WithExpirySweepInterval(10*time.Millisecond),
+			withClock(clock.Now),
+			withExpirySweepInterval(10*time.Millisecond),
 		).(*connectionQueue)
 		t.Cleanup(func() { stopConnectionQueue(cq) })
 		owner := &stubTransport{tb: t}
@@ -920,8 +920,8 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		t.Run("token expiry is shortened", func(t *testing.T) {
 			clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
 			cq := newConnectionQueueWithOptions(0, nil,
-				WithClock(clock.Now),
-				WithExpirySweepInterval(10*time.Millisecond),
+				withClock(clock.Now),
+				withExpirySweepInterval(10*time.Millisecond),
 			).(*connectionQueue)
 			t.Cleanup(func() { stopConnectionQueue(cq) })
 
@@ -951,8 +951,8 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		t.Run("token expiry is extended", func(t *testing.T) {
 			clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
 			cq := newConnectionQueueWithOptions(0, nil,
-				WithClock(clock.Now),
-				WithExpirySweepInterval(10*time.Millisecond),
+				withClock(clock.Now),
+				withExpirySweepInterval(10*time.Millisecond),
 			).(*connectionQueue)
 			t.Cleanup(func() { stopConnectionQueue(cq) })
 
@@ -1047,8 +1047,8 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 			for i := 0; i < 200; i++ {
 				clock := newManualClock(raceStart)
 				cq := newConnectionQueueWithOptions(0, nil,
-					WithClock(clock.Now),
-					WithExpirySweepInterval(0),
+					withClock(clock.Now),
+					withExpirySweepInterval(0),
 				).(*connectionQueue)
 
 				var releases atomic.Int32
@@ -1086,8 +1086,8 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 			for i := 0; i < 200; i++ {
 				clock := newManualClock(raceStart)
 				cq := newConnectionQueueWithOptions(0, nil,
-					WithClock(clock.Now),
-					WithExpirySweepInterval(0),
+					withClock(clock.Now),
+					withExpirySweepInterval(0),
 				).(*connectionQueue)
 
 				conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
@@ -1144,9 +1144,9 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 			for i := 0; i < 100; i++ {
 				clock := newManualClock(raceStart)
 				cq := newConnectionQueueWithOptions(0, nil,
-					WithClock(clock.Now),
-					WithExpirySweepInterval(time.Millisecond),
-					WithExpiryGracePeriod(time.Second),
+					withClock(clock.Now),
+					withExpirySweepInterval(time.Millisecond),
+					withExpiryGracePeriod(time.Second),
 				).(*connectionQueue)
 
 				conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)

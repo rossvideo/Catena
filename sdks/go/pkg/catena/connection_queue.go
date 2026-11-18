@@ -58,8 +58,8 @@ const (
 	// CloseReasonExpired means the connection's token expiry has passed.
 	CloseReasonExpired
 
-	DefaultExpirySweepInterval = time.Second
-	DefaultExpiryGracePeriod   = 5 * time.Second
+	defaultExpirySweepInterval = time.Second
+	defaultExpiryGracePeriod   = 5 * time.Second
 )
 
 func (r ConnectionCloseReason) String() string {
@@ -142,19 +142,19 @@ var _ connectionQueueInterface = (*connectionQueue)(nil)
 
 type connectionQueueOptions func(*connectionQueue)
 
-func WithClock(now func() time.Time) connectionQueueOptions {
+func withClock(now func() time.Time) connectionQueueOptions {
 	return func(cq *connectionQueue) {
 		cq.now = now
 	}
 }
 
-func WithExpirySweepInterval(interval time.Duration) connectionQueueOptions {
+func withExpirySweepInterval(interval time.Duration) connectionQueueOptions {
 	return func(cq *connectionQueue) {
 		cq.expirySweepInterval = interval
 	}
 }
 
-func WithExpiryGracePeriod(gracePeriod time.Duration) connectionQueueOptions {
+func withExpiryGracePeriod(gracePeriod time.Duration) connectionQueueOptions {
 	return func(cq *connectionQueue) {
 		cq.expiryGracePeriod = gracePeriod
 	}
@@ -171,8 +171,8 @@ func newConnectionQueueWithOptions(maxConnections int, log *slog.Logger, options
 		connections:          make(map[int]*Connection),
 		maxConnections:       maxConnections,
 		now:                  time.Now,
-		expirySweepInterval:  DefaultExpirySweepInterval,
-		expiryGracePeriod:    DefaultExpiryGracePeriod,
+		expirySweepInterval:  defaultExpirySweepInterval,
+		expiryGracePeriod:    defaultExpiryGracePeriod,
 		expirySweeperStopped: make(chan struct{}),
 		expirySweeperDone:    make(chan struct{}),
 	}
