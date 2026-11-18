@@ -115,13 +115,9 @@ func ComponentDevice(device *Device) DeviceComponent {
 // oid locates the param within device["params"] (RFC 6901 JSON pointer, e.g.
 // "monitor" or "monitor/eq").
 func ComponentParam(oid string, param *Param) DeviceComponent {
-	var protoParam *protos.Param
-	if param != nil {
-		protoParam = param.Proto
-	}
 	return DeviceComponent{
 		Proto: &protos.DeviceComponent{
-			Kind: populateDeviceComponentKind[*protos.DeviceComponent_Param](oid, protoParam),
+			Kind: &protos.DeviceComponent_Param{Param: componentParam(oid, param)},
 		},
 	}
 }
@@ -129,13 +125,9 @@ func ComponentParam(oid string, param *Param) DeviceComponent {
 // ComponentConstraint wraps one shared constraint as a DeviceComponent chunk.
 // oid is relative to the device's top-level constraints object.
 func ComponentConstraint(oid string, constraint *Constraint) DeviceComponent {
-	var protoConstraint *protos.Constraint
-	if constraint != nil {
-		protoConstraint = constraint.Proto
-	}
 	return DeviceComponent{
 		Proto: &protos.DeviceComponent{
-			Kind: populateDeviceComponentKind[*protos.DeviceComponent_SharedConstraint](oid, protoConstraint),
+			Kind: &protos.DeviceComponent_SharedConstraint{SharedConstraint: componentConstraint(oid, constraint)},
 		},
 	}
 }
@@ -144,13 +136,9 @@ func ComponentConstraint(oid string, constraint *Constraint) DeviceComponent {
 // menu relative to the device's top-level menu-groups object as
 // "menu-group-name/menu-name", e.g. "status/vendor_info".
 func ComponentMenu(oid string, menu *Menu) DeviceComponent {
-	var protoMenu *protos.Menu
-	if menu != nil {
-		protoMenu = menu.Proto
-	}
 	return DeviceComponent{
 		Proto: &protos.DeviceComponent{
-			Kind: populateDeviceComponentKind[*protos.DeviceComponent_Menu](oid, protoMenu),
+			Kind: &protos.DeviceComponent_Menu{Menu: componentMenu(oid, menu)},
 		},
 	}
 }
@@ -158,13 +146,9 @@ func ComponentMenu(oid string, menu *Menu) DeviceComponent {
 // ComponentCommand wraps one command descriptor as a DeviceComponent chunk.
 // oid locates the command within device["commands"].
 func ComponentCommand(oid string, command *Param) DeviceComponent {
-	var protoCommand *protos.Param
-	if command != nil {
-		protoCommand = command.Proto
-	}
 	return DeviceComponent{
 		Proto: &protos.DeviceComponent{
-			Kind: populateDeviceComponentKind[*protos.DeviceComponent_Command](oid, protoCommand),
+			Kind: &protos.DeviceComponent_Command{Command: componentCommand(oid, command)},
 		},
 	}
 }
@@ -176,7 +160,7 @@ func ComponentCommand(oid string, command *Param) DeviceComponent {
 func ComponentLanguagePack(language, name string, words map[string]string) DeviceComponent {
 	return DeviceComponent{
 		Proto: &protos.DeviceComponent{
-			Kind: populateComponentLanguagePack[*protos.DeviceComponent_LanguagePack](language, name, words),
+			Kind: &protos.DeviceComponent_LanguagePack{LanguagePack: componentLanguagePack(language, name, words)},
 		},
 	}
 }
@@ -192,13 +176,9 @@ type ComponentResponse struct {
 // ComponentResponseParam wraps one parameter descriptor as a ComponentResponse.
 // oid locates the param within device["params"].
 func ComponentResponseParam(oid string, param *Param) ComponentResponse {
-	var protoParam *protos.Param
-	if param != nil {
-		protoParam = param.Proto
-	}
 	return ComponentResponse{
 		Proto: &protos.ComponentResponse{
-			Kind: populateDeviceComponentKind[*protos.ComponentResponse_Param](oid, protoParam),
+			Kind: &protos.ComponentResponse_Param{Param: componentParam(oid, param)},
 		},
 	}
 }
@@ -206,13 +186,9 @@ func ComponentResponseParam(oid string, param *Param) ComponentResponse {
 // ComponentResponseConstraint wraps one shared constraint as a ComponentResponse.
 // oid is relative to the device's top-level constraints object.
 func ComponentResponseConstraint(oid string, constraint *Constraint) ComponentResponse {
-	var protoConstraint *protos.Constraint
-	if constraint != nil {
-		protoConstraint = constraint.Proto
-	}
 	return ComponentResponse{
 		Proto: &protos.ComponentResponse{
-			Kind: populateDeviceComponentKind[*protos.ComponentResponse_SharedConstraint](oid, protoConstraint),
+			Kind: &protos.ComponentResponse_SharedConstraint{SharedConstraint: componentConstraint(oid, constraint)},
 		},
 	}
 }
@@ -221,13 +197,9 @@ func ComponentResponseConstraint(oid string, constraint *Constraint) ComponentRe
 // the menu relative to the device's top-level menu-groups object as
 // "menu-group-name/menu-name".
 func ComponentResponseMenu(oid string, menu *Menu) ComponentResponse {
-	var protoMenu *protos.Menu
-	if menu != nil {
-		protoMenu = menu.Proto
-	}
 	return ComponentResponse{
 		Proto: &protos.ComponentResponse{
-			Kind: populateDeviceComponentKind[*protos.ComponentResponse_Menu](oid, protoMenu),
+			Kind: &protos.ComponentResponse_Menu{Menu: componentMenu(oid, menu)},
 		},
 	}
 }
@@ -235,13 +207,9 @@ func ComponentResponseMenu(oid string, menu *Menu) ComponentResponse {
 // ComponentResponseCommand wraps one command descriptor as a ComponentResponse.
 // oid locates the command within device["commands"].
 func ComponentResponseCommand(oid string, command *Param) ComponentResponse {
-	var protoCommand *protos.Param
-	if command != nil {
-		protoCommand = command.Proto
-	}
 	return ComponentResponse{
 		Proto: &protos.ComponentResponse{
-			Kind: populateDeviceComponentKind[*protos.ComponentResponse_Command](oid, protoCommand),
+			Kind: &protos.ComponentResponse_Command{Command: componentCommand(oid, command)},
 		},
 	}
 }
@@ -253,72 +221,51 @@ func ComponentResponseCommand(oid string, command *Param) ComponentResponse {
 func ComponentResponseLanguagePack(language, name string, words map[string]string) ComponentResponse {
 	return ComponentResponse{
 		Proto: &protos.ComponentResponse{
-			Kind: populateComponentLanguagePack[*protos.ComponentResponse_LanguagePack](language, name, words),
+			Kind: &protos.ComponentResponse_LanguagePack{LanguagePack: componentLanguagePack(language, name, words)},
 		},
 	}
 }
 
-// createComponentKind builds the kind for a DeviceComponent or a
-// ComponentResponse. K selects which message's kind wrapper to return, for
-// example *protos.DeviceComponent_Param or *protos.ComponentResponse_Param.
-func populateDeviceComponentKind[K any](oid string, component any) K {
-	var kind any
-	switch any(*new(K)).(type) {
-	case *protos.DeviceComponent_Param:
-		kind = &protos.DeviceComponent_Param{
-			Param: &protos.DeviceComponent_ComponentParam{Oid: oid, Param: component.(*protos.Param)},
-		}
-	case *protos.ComponentResponse_Param:
-		kind = &protos.ComponentResponse_Param{
-			Param: &protos.DeviceComponent_ComponentParam{Oid: oid, Param: component.(*protos.Param)},
-		}
-	case *protos.DeviceComponent_SharedConstraint:
-		kind = &protos.DeviceComponent_SharedConstraint{
-			SharedConstraint: &protos.DeviceComponent_ComponentConstraint{Oid: oid, Constraint: component.(*protos.Constraint)},
-		}
-	case *protos.ComponentResponse_SharedConstraint:
-		kind = &protos.ComponentResponse_SharedConstraint{
-			SharedConstraint: &protos.DeviceComponent_ComponentConstraint{Oid: oid, Constraint: component.(*protos.Constraint)},
-		}
-	case *protos.DeviceComponent_Menu:
-		kind = &protos.DeviceComponent_Menu{
-			Menu: &protos.DeviceComponent_ComponentMenu{Oid: oid, Menu: component.(*protos.Menu)},
-		}
-	case *protos.ComponentResponse_Menu:
-		kind = &protos.ComponentResponse_Menu{
-			Menu: &protos.DeviceComponent_ComponentMenu{Oid: oid, Menu: component.(*protos.Menu)},
-		}
-	case *protos.DeviceComponent_Command:
-		kind = &protos.DeviceComponent_Command{
-			Command: &protos.DeviceComponent_ComponentCommand{Oid: oid, Command: component.(*protos.Param)},
-		}
-	case *protos.ComponentResponse_Command:
-		kind = &protos.ComponentResponse_Command{
-			Command: &protos.DeviceComponent_ComponentCommand{Oid: oid, Command: component.(*protos.Param)},
-		}
+// componentParam builds a DeviceComponent_ComponentParam from an oid and param.
+func componentParam(oid string, param *Param) *protos.DeviceComponent_ComponentParam {
+	var protoParam *protos.Param
+	if param != nil {
+		protoParam = param.Proto
 	}
-	return kind.(K)
+	return &protos.DeviceComponent_ComponentParam{Oid: oid, Param: protoParam}
 }
 
-// populateComponentLanguagePack builds the kind for a language pack ComponentResponse or DeviceComponent.
-func populateComponentLanguagePack[K any](language, name string, words map[string]string) K {
-	var kind any
-	var inner = &protos.DeviceComponent_ComponentLanguagePack{
-		Language: language,
-		LanguagePack: &protos.LanguagePack{
-			Name:  name,
-			Words: words,
-		},
+// componentConstraint builds a DeviceComponent_ComponentConstraint from an oid and constraint.
+func componentConstraint(oid string, constraint *Constraint) *protos.DeviceComponent_ComponentConstraint {
+	var protoConstraint *protos.Constraint
+	if constraint != nil {
+		protoConstraint = constraint.Proto
 	}
-	switch any(*new(K)).(type) {
-	case *protos.ComponentResponse_LanguagePack:
-		kind = &protos.ComponentResponse_LanguagePack{
-			LanguagePack: inner,
-		}
-	case *protos.DeviceComponent_LanguagePack:
-		kind = &protos.DeviceComponent_LanguagePack{
-			LanguagePack: inner,
-		}
+	return &protos.DeviceComponent_ComponentConstraint{Oid: oid, Constraint: protoConstraint}
+}
+
+// componentMenu builds a DeviceComponent_ComponentMenu from an oid and menu.
+func componentMenu(oid string, menu *Menu) *protos.DeviceComponent_ComponentMenu {
+	var protoMenu *protos.Menu
+	if menu != nil {
+		protoMenu = menu.Proto
 	}
-	return kind.(K)
+	return &protos.DeviceComponent_ComponentMenu{Oid: oid, Menu: protoMenu}
+}
+
+// componentCommand builds a DeviceComponent_ComponentCommand from an oid and command.
+func componentCommand(oid string, command *Param) *protos.DeviceComponent_ComponentCommand {
+	var protoCommand *protos.Param
+	if command != nil {
+		protoCommand = command.Proto
+	}
+	return &protos.DeviceComponent_ComponentCommand{Oid: oid, Command: protoCommand}
+}
+
+// componentLanguagePack builds a DeviceComponent_ComponentLanguagePack from a language, name, and words map.
+func componentLanguagePack(language, name string, words map[string]string) *protos.DeviceComponent_ComponentLanguagePack {
+	return &protos.DeviceComponent_ComponentLanguagePack{
+		Language:     language,
+		LanguagePack: &protos.LanguagePack{Name: name, Words: words},
+	}
 }
