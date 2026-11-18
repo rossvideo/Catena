@@ -301,7 +301,7 @@ All options can be configured via env and CLI.
 
 ### gRPC Transport
 
-Message size, concurrent-stream, and keepalive settings are passed straight through to grpc-go. The grpc-go docs are authoritative for zero values and library defaults. Negative durations are rejected from the environment and flags, and `MaxConnectionAge` below 10ns is rejected.
+Message size, concurrent-stream, and keepalive settings are passed straight through to grpc-go. The grpc-go docs are authoritative for zero values and library defaults. Negative durations are rejected from the environment and flags. The gRPC transport also rejects a `MaxConnectionAge` below 10ns, including a negative value set in code. Zero is allowed.
 
 - `PREFIX_GRPC_PORT` <-> `--grpc-port`
 - `PREFIX_GRPC_REFLECTION` <-> `--grpc-reflection`

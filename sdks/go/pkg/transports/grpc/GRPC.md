@@ -54,7 +54,7 @@ Behavior:
 
 Message size, concurrent-stream, and keepalive settings on `Options` are passed straight through to grpc-go as `grpc.ServerOption`s. The [grpc-go server](https://pkg.go.dev/google.golang.org/grpc) and [keepalive](https://pkg.go.dev/google.golang.org/grpc/keepalive) docs are authoritative for how a value is applied, including zero and the library defaults.
 
-Negative durations are rejected from the environment and flags. `MaxConnectionAge` values from 1ns through 9ns are also rejected: grpc-go's connection-age jitter panics on them, and that panic kills the process when a client connects. `NewTransport` records that failure and `Start` returns it.
+Negative durations are rejected from the environment and flags. `NewTransport` also rejects a `MaxConnectionAge` that is negative or from 1ns through 9ns, including a value set in code: grpc-go's connection-age jitter panics on those values, and that panic kills the process when a client connects. Zero is allowed. `NewTransport` records that failure and `Start` returns it.
 
 ```go
 opts := grpc.DefaultOptions()

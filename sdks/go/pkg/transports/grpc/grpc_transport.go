@@ -86,8 +86,8 @@ type Transport struct {
 }
 
 // minMaxConnectionAge is the smallest positive MaxConnectionAge grpc-go can
-// apply. maxConnectionAge adds a random jitter to the connection age using a
-// call to rand.Int64N(), which panics when maxConnectionAge is less than 10ns.
+// apply. Zero is left alone. Any other age under 10ns, including a negative ones
+// reaches rand.Int64N() and panics when a client connects
 const minMaxConnectionAge = 10 * time.Nanosecond
 
 var _ catena.Transport = (*Transport)(nil)
@@ -106,8 +106,8 @@ func NewTransport(cfg Options) *Transport {
 	}
 	transport.catenaService.transport = transport
 
-	if cfg.MaxConnectionAge > 0 && cfg.MaxConnectionAge < minMaxConnectionAge {
-		transport.initErr = fmt.Errorf("gRPC MaxConnectionAge %s is below %s: grpc-go's connection-age jitter panics for ages under 10ns", cfg.MaxConnectionAge, minMaxConnectionAge)
+	if cfg.MaxConnectionAge != 0 && cfg.MaxConnectionAge < minMaxConnectionAge {
+		transport.initErr = fmt.Errorf("gRPC MaxConnectionAge %s must be 0 or at least %s: grpc-go's connection-age jitter panics for any other age under 10ns", cfg.MaxConnectionAge, minMaxConnectionAge)
 		return transport
 	}
 
