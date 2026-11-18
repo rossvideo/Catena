@@ -215,6 +215,45 @@ func TestComponentKindConstants(t *testing.T) {
 	}
 }
 
+func TestComponentKind_Valid(t *testing.T) {
+	for _, kind := range []ComponentKind{
+		ComponentKindParam,
+		ComponentKindConstraint,
+		ComponentKindMenu,
+		ComponentKindCommand,
+		ComponentKindLanguagePack,
+	} {
+		if !kind.Valid() {
+			t.Errorf("expected %v to be valid", kind)
+		}
+	}
+	for _, kind := range []ComponentKind{
+		ComponentKindUnused,
+		ComponentKind(999),
+	} {
+		if kind.Valid() {
+			t.Errorf("expected %v to be invalid", kind)
+		}
+	}
+}
+
+func TestComponentKind_String(t *testing.T) {
+	for _, kind := range []ComponentKind{
+		ComponentKindParam,
+		ComponentKindConstraint,
+		ComponentKindMenu,
+		ComponentKindCommand,
+		ComponentKindLanguagePack,
+		ComponentKindUnused,
+		ComponentKind(999),
+	} {
+		exp := protos.GetComponentPayload_ComponentKind(kind).String()
+		if got := kind.String(); got != exp {
+			t.Errorf("expected %v.String to be %v, got %v", kind, exp, got)
+		}
+	}
+}
+
 func TestDeviceComponent_Wire(t *testing.T) {
 	device, err := NewDevice(1).Build()
 	if err != nil {
