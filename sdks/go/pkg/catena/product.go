@@ -167,6 +167,31 @@ func productValueForOid(p ProductStruct, fqoid string) (st2138.Value, StatusResu
 	return Reply(value)
 }
 
+// productParamForOid resolves a product FQOID to a Param: the whole struct for
+// "product", or a single STRING field descriptor (with its value) for
+// "product/<field>".
+func productParamForOid(p ProductStruct, fqoid string) (st2138.Param, StatusResult) {
+	if fqoid == ProductOid {
+		param, err := ProductParam(p)
+		if err != nil {
+			return st2138.Param{}, StatusWithCode(StatusCodeInternal, "failed to build product param")
+		}
+		return *param, StatusWithCode(StatusCodeOk, "")
+	}
+
+	field := strings.TrimPrefix(fqoid, ProductOid+"/")
+	value, ok := ProductValues(p)[field]
+	if !ok {
+		return st2138.Param{}, StatusWithCode(StatusCodeNotFound, "parameter not found: "+fqoid)
+	}
+
+	pv, err := st2138.ToProto(value)
+	if err != nil {
+		return st2138.Param{}, StatusWithCode(StatusCodeInternal, "failed to convert product value: "+err.Error())
+	}
+	return st2138.Param{Proto: &protos.Param{Type: protos.ParamType_STRING, Value: pv}}, StatusWithCode(StatusCodeOk, "")
+}
+
 // productParamInfosForOid builds ParamInfo responses for a product FQOID by
 // reusing the standard params-subtree walker over the SDK-built product param.
 func productParamInfosForOid(p ProductStruct, oidPrefix string, recursive bool, stream Stream[st2138.ParamInfo]) StatusResult {
