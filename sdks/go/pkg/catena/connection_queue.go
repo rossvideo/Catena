@@ -88,8 +88,8 @@ type Connection struct {
 	Updates        chan *protos.PushUpdates
 	Done           chan struct{}
 	HandlerContext HandlerContext
-	Expiry         time.Time
 	owner          Transport
+	expiry         time.Time
 	closeReason    ConnectionCloseReason
 }
 
@@ -208,6 +208,15 @@ func (cq *connectionQueue) setConnectionExpiry(conn *Connection, expiry time.Tim
 	return cq.setConnectionExpiryWithMutexHeld(conn, expiry)
 }
 
+// getConnectionExpiry returns the connection's current expiry. A zero time means
+// the connection never expires. It takes cq.mu so do not call it with the
+// mutex already held
+func (cq *connectionQueue) getConnectionExpiry(conn *Connection) time.Time {
+	cq.mu.Lock()
+	defer cq.mu.Unlock()
+	return conn.expiry
+}
+
 // setConnectionExpiryWithMutexHeld sets the expiry time for a connection.
 // The caller must hold cq.mu. If cq.mu is not held at the call site, use SetConnectionExpiry instead.
 // Using this function without holding the mutex can lead to race conditions.
@@ -222,7 +231,7 @@ func (cq *connectionQueue) setConnectionExpiryWithMutexHeld(conn *Connection, ex
 		return false
 	}
 
-	conn.Expiry = expiry
+	conn.expiry = expiry
 	return true
 }
 
@@ -299,7 +308,7 @@ func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scope string
 
 	now := cq.now()
 	for connID, conn := range cq.connections {
-		if !conn.Expiry.IsZero() && !now.Before(conn.Expiry) {
+		if !conn.expiry.IsZero() && !now.Before(conn.expiry) {
 			continue // skips the expired connections
 		}
 		if isValueUpdate(update) && scope != "" && !conn.HandlerContext.HasReadScope(scope) {
@@ -346,7 +355,7 @@ func (cq *connectionQueue) sweepExpiredConnections() int {
 	var expiredConnections []*Connection
 	if !cq.shuttingDown {
 		for _, conn := range cq.connections {
-			if conn.Expiry.IsZero() || now.Before(conn.Expiry) {
+			if conn.expiry.IsZero() || now.Before(conn.expiry) {
 				continue
 			}
 

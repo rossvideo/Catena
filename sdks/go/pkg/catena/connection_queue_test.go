@@ -59,7 +59,7 @@ func TestNewConnectionQueueWithOptions_InjectedClock(t *testing.T) {
 	frozenClock := time.Date(2026, 11, 11, 12, 0, 0, 0, time.UTC)
 
 	t.Run("accepts token that expires after the injected clock", func(t *testing.T) {
-		cq := newConnectionQueueWithOptions(0, nil, WithClock(func() time.Time { return frozenClock }))
+		cq := newConnectionQueueWithOptions(0, nil, WithClock(func() time.Time { return frozenClock })).(*connectionQueue)
 		owner := &stubTransport{tb: t}
 
 		valid := HandlerContext{tokenExpiry: frozenClock.Add(time.Second)}
@@ -67,8 +67,8 @@ func TestNewConnectionQueueWithOptions_InjectedClock(t *testing.T) {
 		if res.Code != StatusCodeOk || conn == nil {
 			t.Fatalf("injected clock should accept a token that expires after now, got conn=%v res=%v", conn, res)
 		}
-		if !conn.Expiry.Equal(valid.tokenExpiry) {
-			t.Errorf("expiry = %v, want %v", conn.Expiry, valid.tokenExpiry)
+		if got := cq.getConnectionExpiry(conn); !got.Equal(valid.tokenExpiry) {
+			t.Errorf("expiry = %v, want %v", got, valid.tokenExpiry)
 		}
 	})
 
@@ -233,7 +233,7 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 
 func TestConnectionQueue_RegisterOwnedConnection_ExpiredToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		cq := newConnectionQueue(0, nil)
+		cq := newConnectionQueue(0, nil).(*connectionQueue)
 		owner := &stubTransport{tb: t}
 
 		valid := HandlerContext{tokenExpiry: time.Now().Add(time.Hour)}
@@ -241,8 +241,8 @@ func TestConnectionQueue_RegisterOwnedConnection_ExpiredToken(t *testing.T) {
 		if res.Code != StatusCodeOk || conn == nil {
 			t.Fatalf("unexpired token should register, got conn=%v res=%v", conn, res)
 		}
-		if !conn.Expiry.Equal(valid.tokenExpiry) {
-			t.Errorf("expiry = %v, want %v", conn.Expiry, valid.tokenExpiry)
+		if got := cq.getConnectionExpiry(conn); !got.Equal(valid.tokenExpiry) {
+			t.Errorf("expiry = %v, want %v", got, valid.tokenExpiry)
 		}
 	})
 
@@ -646,8 +646,8 @@ func TestConnectionQueue_SetConnectionExpiryWithMutexHeld(t *testing.T) {
 		if !ok {
 			t.Fatal("expected setConnectionExpiryWithMutexHeld to succeed")
 		}
-		if !conn.Expiry.Equal(expiry) {
-			t.Errorf("expiry = %v, want %v", conn.Expiry, expiry)
+		if got := cq.getConnectionExpiry(conn); !got.Equal(expiry) {
+			t.Errorf("expiry = %v, want %v", got, expiry)
 		}
 	})
 
@@ -662,8 +662,8 @@ func TestConnectionQueue_SetConnectionExpiryWithMutexHeld(t *testing.T) {
 		if ok {
 			t.Fatal("expected setConnectionExpiryWithMutexHeld to fail for an unregistered connection")
 		}
-		if !conn.Expiry.IsZero() {
-			t.Errorf("expiry = %v, want zero", conn.Expiry)
+		if got := cq.getConnectionExpiry(conn); !got.IsZero() {
+			t.Errorf("expiry = %v, want zero", got)
 		}
 	})
 
@@ -684,8 +684,8 @@ func TestConnectionQueue_SetConnectionExpiryWithMutexHeld(t *testing.T) {
 		if ok {
 			t.Fatal("expected setConnectionExpiryWithMutexHeld to fail for a closing connection")
 		}
-		if !conn.Expiry.IsZero() {
-			t.Errorf("expiry = %v, want zero", conn.Expiry)
+		if got := cq.getConnectionExpiry(conn); !got.IsZero() {
+			t.Errorf("expiry = %v, want zero", got)
 		}
 	})
 }
@@ -702,8 +702,8 @@ func TestConnectionQueue_SetConnectionExpiry(t *testing.T) {
 		if !cq.setConnectionExpiry(conn, expiry) {
 			t.Fatal("expected setConnectionExpiry to succeed")
 		}
-		if !conn.Expiry.Equal(expiry) {
-			t.Errorf("expiry = %v, want %v", conn.Expiry, expiry)
+		if got := cq.getConnectionExpiry(conn); !got.Equal(expiry) {
+			t.Errorf("expiry = %v, want %v", got, expiry)
 		}
 	})
 
@@ -715,8 +715,8 @@ func TestConnectionQueue_SetConnectionExpiry(t *testing.T) {
 		if cq.setConnectionExpiry(conn, expiry) {
 			t.Fatal("expected setConnectionExpiry to fail for an unregistered connection")
 		}
-		if !conn.Expiry.IsZero() {
-			t.Errorf("expiry = %v, want zero", conn.Expiry)
+		if got := cq.getConnectionExpiry(conn); !got.IsZero() {
+			t.Errorf("expiry = %v, want zero", got)
 		}
 	})
 }
@@ -1038,7 +1038,7 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		readState := func(cq *connectionQueue, conn *Connection) (ConnectionCloseReason, time.Time) {
 			cq.mu.Lock()
 			defer cq.mu.Unlock()
-			return conn.closeReason, conn.Expiry
+			return conn.closeReason, conn.expiry
 		}
 
 		// The client disconnects (deregisters) at the same time a sweep
