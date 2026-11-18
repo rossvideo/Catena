@@ -2815,48 +2815,88 @@ func TestTransport_DefaultOptions_StreamLargeAsset(t *testing.T) {
 	}
 }
 
-// TestTransport_MaxConnectionsAge_DoesNotReapActiveConnection verifies that a Connect
-// stream survives the connection reaching MaxConnectionAge. This should not reap
-// the connection because the default MaxConnectionAgeGrace is 0 (unlimited grace period).
-func TestTransport_MaxConnectionsAge_DoesNotReapActiveConnection(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+func TestTransport_MaxConnectionAge(t *testing.T) {
+	t.Run("below jitter floor", func(t *testing.T) {
+		opts := testOptions(0)
+		opts.MaxConnectionAge = minMaxConnectionAge - 1*time.Nanosecond
 
-	const age = 50 * time.Millisecond
-	const wait = age + 150*time.Millisecond
-	opts := DefaultOptions()
-	opts.MaxConnectionAge = age
-	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0}, withTestTransportOptions(opts))
-	defer cleanup()
-
-	connection := transporttest.MakeTestConnection(1)
-	runtime.WithConnection(connection)
-
-	client, clientCleanup := setupGRPCClient(t, ctx, lis)
-	defer clientCleanup()
-
-	stream, err := makeConnectRequest(t, client, ctx)
-	assertNoError(t, err)
-
-	push := func(v int32) {
-		t.Helper()
-
-		connection.Updates <- &protos.PushUpdates{
-			Slot: 0,
-			Kind: &protos.PushUpdates_Value{
-				Value: &protos.PushUpdates_PushValue{
-					Oid:   "device.param1",
-					Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: v}},
-				},
-			},
+		transport := NewTransport(opts)
+		if transport.initErr == nil {
+			t.Fatal("expected initErr to be set")
+		}
+		if transport.grpcServer != nil {
+			t.Fatal("expected no server to be created")
 		}
 
-		assertInt32Value(t, assertPushUpdateValue(t, receivePushUpdate(t, stream), 0, "device.param1"), v)
-	}
+		runtime := transporttest.MakeStubServerRuntime(t)
+		err := transport.Start(context.Background(), runtime)
+		if err == nil {
+			t.Fatal("expected Start to return the MaxConnectionAge error, got nil")
+		}
+		if !strings.Contains(err.Error(), "MaxConnectionAge") {
+			t.Fatalf("expected MaxConnectionAge error, got %v", err)
+		}
 
-	push(1)
-	time.Sleep(wait)
-	push(2)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := transport.Shutdown(ctx); err != nil {
+			t.Errorf("expected Shutdown to be a no-op, got: %v", err)
+		}
+	})
+
+	t.Run("at jitter boundary succeeds", func(t *testing.T) {
+		opts := testOptions(0)
+		opts.MaxConnectionAge = minMaxConnectionAge
+
+		transport := NewTransport(opts)
+		if transport.initErr != nil {
+			t.Fatalf("unexpected initErr: %v", transport.initErr)
+		}
+		if transport.grpcServer != nil {
+			transport.grpcServer.Stop()
+		}
+	})
+
+	t.Run("does not reap active connection", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		const age = 50 * time.Millisecond
+		const wait = age + 150*time.Millisecond
+		opts := DefaultOptions()
+		opts.MaxConnectionAge = age
+		_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0}, withTestTransportOptions(opts))
+		defer cleanup()
+
+		connection := transporttest.MakeTestConnection(1)
+		runtime.WithConnection(connection)
+
+		client, clientCleanup := setupGRPCClient(t, ctx, lis)
+		defer clientCleanup()
+
+		stream, err := makeConnectRequest(t, client, ctx)
+		assertNoError(t, err)
+
+		push := func(v int32) {
+			t.Helper()
+
+			connection.Updates <- &protos.PushUpdates{
+				Slot: 0,
+				Kind: &protos.PushUpdates_Value{
+					Value: &protos.PushUpdates_PushValue{
+						Oid:   "device.param1",
+						Value: &protos.Value{Kind: &protos.Value_Int32Value{Int32Value: v}},
+					},
+				},
+			}
+
+			assertInt32Value(t, assertPushUpdateValue(t, receivePushUpdate(t, stream), 0, "device.param1"), v)
+		}
+
+		push(1)
+		time.Sleep(wait)
+		push(2)
+	})
 }
 
 // TestTransport_MaxConnectionIdle_DoesNotReapActiveConnection verifies that

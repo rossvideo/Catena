@@ -294,6 +294,8 @@ All options can be configured via env and CLI.
 
 ### gRPC Transport
 
+Message size, concurrent-stream, and keepalive settings are passed straight through to grpc-go. The grpc-go docs are authoritative for zero values and library defaults. Negative durations are rejected from the environment and flags, and `MaxConnectionAge` below 10ns is rejected.
+
 - `PREFIX_GRPC_PORT` <-> `--grpc-port`
 - `PREFIX_GRPC_REFLECTION` <-> `--grpc-reflection`
 - `PREFIX_GRPC_DISABLE_HEALTH` <-> `--grpc-disable-health` (the standard `grpc.health.v1` service is enabled unless this is set)
@@ -302,18 +304,16 @@ All options can be configured via env and CLI.
 - `PREFIX_GRPC_TLS_KEY_FILE` <-> `--grpc-tls-key-file`
 - `PREFIX_GRPC_TLS_CLIENT_CA_FILE` <-> `--grpc-tls-client-ca-file`
 - `PREFIX_GRPC_TLS_MUTUAL_AUTH` <-> `--grpc-tls-mutual-auth`
-- `PREFIX_GRPC_MAX_RECV_MSG_SIZE` <-> `--grpc-max-recv-msg-size` (bytes, must be > 0; default 4 MiB)
-- `PREFIX_GRPC_MAX_SEND_MSG_SIZE` <-> `--grpc-max-send-msg-size` (bytes, must be > 0; default 4 MiB)
-- `PREFIX_GRPC_MAX_CONCURRENT_STREAMS` <-> `--grpc-max-concurrent-streams` (in-flight RPCs per connection; 0 unlimited; default 100).
-- `PREFIX_GRPC_MAX_CONNECTION_IDLE` <-> `--grpc-max-connection-idle` (Go duration; 0 disables; negative rejected; default `15m`)
-- `PREFIX_GRPC_MAX_CONNECTION_AGE` <-> `--grpc-max-connection-age` (Go duration; 0 disables; negative rejected; default 0 so long-lived streams are not severed)
-- `PREFIX_GRPC_MAX_CONNECTION_AGE_GRACE` <-> `--grpc-max-connection-age-grace` (Go duration; 0 for unlimited; negative rejected)
-- `PREFIX_GRPC_KEEPALIVE_TIME` <-> `--grpc-keepalive-time` (Go duration; 0 is ignored and grpc-go uses 2h; values negative rejected; default `2h`)
-- `PREFIX_GRPC_KEEPALIVE_TIMEOUT` <-> `--grpc-keepalive-timeout` (Go duration; 0 is ignored and grpc-go uses 20s; negative rejected; default `20s`)
-- `PREFIX_GRPC_KEEPALIVE_MIN_TIME` <-> `--grpc-keepalive-min-time` (Go duration; 0 is ignored and grpc-go uses 5m; negative rejected; default `5m`)
-- `PREFIX_GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM` <-> `--grpc-keepalive-permit-without-stream` (default false; false closes the connection when a client pings with no active RPCs)
-
-See the gRPC transport's `GRPC.md` for how these limits interact with streaming RPCs.
+- `PREFIX_GRPC_MAX_RECV_MSG_SIZE` <-> `--grpc-max-recv-msg-size` (bytes; default 4 MiB)
+- `PREFIX_GRPC_MAX_SEND_MSG_SIZE` <-> `--grpc-max-send-msg-size` (bytes; default 4 MiB)
+- `PREFIX_GRPC_MAX_CONCURRENT_STREAMS` <-> `--grpc-max-concurrent-streams` (in-flight RPCs per connection; default 100)
+- `PREFIX_GRPC_MAX_CONNECTION_IDLE` <-> `--grpc-max-connection-idle` (Go duration; default `15m`)
+- `PREFIX_GRPC_MAX_CONNECTION_AGE` <-> `--grpc-max-connection-age` (Go duration; default 0)
+- `PREFIX_GRPC_MAX_CONNECTION_AGE_GRACE` <-> `--grpc-max-connection-age-grace` (Go duration; default 0)
+- `PREFIX_GRPC_KEEPALIVE_TIME` <-> `--grpc-keepalive-time` (Go duration; default `2h`)
+- `PREFIX_GRPC_KEEPALIVE_TIMEOUT` <-> `--grpc-keepalive-timeout` (Go duration; default `20s`)
+- `PREFIX_GRPC_KEEPALIVE_MIN_TIME` <-> `--grpc-keepalive-min-time` (Go duration; default `5m`)
+- `PREFIX_GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM` <-> `--grpc-keepalive-permit-without-stream` (default false)
 
 ### Server
 

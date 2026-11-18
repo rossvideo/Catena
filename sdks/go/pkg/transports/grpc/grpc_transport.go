@@ -49,6 +49,7 @@ import (
 	"maps"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -77,18 +78,25 @@ type Transport struct {
 	tlsEnabled bool
 	// healthServer is nil when the health service is disabled.
 	healthServer *health.Server
-	// initErr records a construction-time failure (e.g. invalid TLS config).
-	// grpc.Creds must be supplied when the server is created, but NewTransport
-	// cannot return an error, so the error is surfaced from Start instead.
+	// initErr records a construction-time failure (invalid TLS config, or a
+	// MaxConnectionAge grpc-go cannot apply). NewTransport cannot return an
+	// error, so the error is surfaced from Start instead.
+
 	initErr error
 }
+
+// minMaxConnectionAge is the smallest positive MaxConnectionAge grpc-go can
+// apply. maxConnectionAge adds a random jitter to the connection age using a
+// call to rand.Int64N(), which panics when maxConnectionAge is less than 10ns.
+const minMaxConnectionAge = 10 * time.Nanosecond
 
 var _ catena.Transport = (*Transport)(nil)
 
 // NewTransport creates a new gRPC transport with the given configuration.
 //
-// If the TLS configuration is invalid, the returned transport is unusable and
-// Start will return the configuration error.
+// If the TLS configuration is invalid, or MaxConnectionAge is too small for
+// grpc-go to apply, the returned transport is unusable and Start returns
+// that error.
 func NewTransport(cfg Options) *Transport {
 	transport := &Transport{
 		catenaService: &catenaService{},
@@ -97,6 +105,11 @@ func NewTransport(cfg Options) *Transport {
 		log:           slog.New(slog.DiscardHandler),
 	}
 	transport.catenaService.transport = transport
+
+	if cfg.MaxConnectionAge > 0 && cfg.MaxConnectionAge < minMaxConnectionAge {
+		transport.initErr = fmt.Errorf("gRPC MaxConnectionAge %s is below %s: grpc-go's connection-age jitter panics for ages under 10ns", cfg.MaxConnectionAge, minMaxConnectionAge)
+		return transport
+	}
 
 	serverOpts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(transport.unaryInterceptor),
@@ -114,7 +127,7 @@ func NewTransport(cfg Options) *Transport {
 		}),
 
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
-			MinTime:             cfg.MinTime,
+			MinTime:             cfg.KeepaliveMinTime,
 			PermitWithoutStream: cfg.PermitWithoutStream,
 		}),
 	}
@@ -149,7 +162,7 @@ func (t *Transport) Start(ctx context.Context, runtime catena.ServerRuntime) err
 	t.log = runtime.Logger().With("component", "grpc-transport")
 
 	if t.initErr != nil {
-		t.log.Error("gRPC Transport TLS configuration error", "error", t.initErr)
+		t.log.Error("gRPC transport configuration error", "error", t.initErr)
 		return t.initErr
 	}
 
