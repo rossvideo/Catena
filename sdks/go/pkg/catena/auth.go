@@ -329,6 +329,17 @@ func classifyDiscoveryError(ctx context.Context, err error) error {
 	return backoff.Permanent(doErr)
 }
 
+// requiredClaimNames are the Catena access-token claims that are always required.
+// azp and client_id are a separate "at least one" rule. sid is optional.
+var requiredClaimNames = []string{
+	"iss",
+	"sub",
+	"aud",
+	"iat",
+	"jti",
+	"scope",
+}
+
 // ValidateJWT verifies a JWT signature against the provided JWKS URL.
 // It fetches, caches, and auto-refreshes the JWKS as needed.
 func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
@@ -338,8 +349,15 @@ func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
 		return nil, fmt.Errorf("jwt is required")
 	}
 
-	// build the parser options based on the validator options.
-	parseOptions := []jwt.ParserOption{jwt.WithValidMethods(v.signingMethods())}
+	// Signature verification is the only check InsecureSkipSignatureValidation turns off.
+	// Time-window checks stay on in both modes. iss and aud values are compared
+	// only when Issuer and Audience are configured; their presence is always required.
+	parseOptions := []jwt.ParserOption{
+		jwt.WithValidMethods(v.signingMethods()),
+		jwt.WithExpirationRequired(),
+		jwt.WithNotBeforeRequired(),
+		jwt.WithIssuedAt(),
+	}
 	if v.options.Issuer != "" {
 		parseOptions = append(parseOptions, jwt.WithIssuer(v.options.Issuer))
 	}
@@ -361,8 +379,101 @@ func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("validate jwt: %w", err)
 	}
+	if err := validateRequiredClaims(token); err != nil {
+		return nil, fmt.Errorf("validate jwt: %w", err)
+	}
 
 	return token, nil
+}
+
+// validateRequiredClaims checks claim presence and shape. Value checks for exp,
+// nbf, and a future iat are done by the parser options in validateJwt, which
+// also apply Leeway. WithIssuedAt does not require iat to be present, so that
+// check lives here along with the claims the library cannot require.
+func validateRequiredClaims(token *jwt.Token) error {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims == nil {
+		return fmt.Errorf("invalid claims type %T", token.Claims)
+	}
+	for _, name := range requiredClaimNames {
+		var err error
+		switch name {
+		case "sub", "jti":
+			_, err = stringClaim(claims, name, true, false)
+		case "iss", "scope":
+			_, err = stringClaim(claims, name, true, true)
+		case "aud":
+			err = requireAudience(claims)
+		case "iat":
+			date, err := claims.GetIssuedAt()
+			if err != nil {
+				return fmt.Errorf("invalid claim iat: %w", err)
+			}
+			if date == nil {
+				return fmt.Errorf("missing required claim: iat")
+			}
+		default:
+			err = fmt.Errorf("unhandled required claim %q", name)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	// At least one of azp and client_id. A present claim must be a non-empty string.
+	azp, err := stringClaim(claims, "azp", false, false)
+	if err != nil {
+		return err
+	}
+	clientID, err := stringClaim(claims, "client_id", false, false)
+	if err != nil {
+		return err
+	}
+	if !azp && !clientID {
+		return fmt.Errorf("missing required claim: azp or client_id")
+	}
+	// sid is optional, non-empty string.
+	_, err = stringClaim(claims, "sid", false, false)
+	return err
+}
+
+// stringClaim reads a string claim. required makes an absent claim an error.
+// emptyOK allows "" as a valid value (scope and iss). The bool reports whether
+// a valid value was present.
+func stringClaim(claims jwt.MapClaims, name string, required, emptyOK bool) (bool, error) {
+	raw, ok := claims[name]
+	if !ok {
+		if required {
+			return false, fmt.Errorf("missing required claim: %s", name)
+		}
+		return false, nil
+	}
+	value, isString := raw.(string)
+	if !isString {
+		return false, fmt.Errorf("invalid claim %s: expected string", name)
+	}
+	if value == "" && !emptyOK {
+		return false, fmt.Errorf("invalid claim %s: empty", name)
+	}
+	return true, nil
+}
+
+// requireAudience checks that the audience claim is present and valid.
+func requireAudience(claims jwt.MapClaims) error {
+	raw, ok := claims["aud"]
+	if !ok {
+		return fmt.Errorf("missing required claim: aud")
+	}
+	_, err := claims.GetAudience()
+	if err != nil {
+		return fmt.Errorf("invalid claim aud: %w", err)
+	}
+	// GetAudience treats some wrong types as absent, so the raw value is checked too.
+	switch raw.(type) {
+	case string, []string, []any:
+	default:
+		return fmt.Errorf("invalid claim aud: expected string or array of strings")
+	}
+	return nil
 }
 
 // validateClaims parses the JWT without validating the signature, and validates the claims based on the provided parser options.
@@ -397,8 +508,12 @@ func (v *jwtValidator) validateSignatureAndClaims(tokenString string, parseOptio
 }
 
 // extractTokenScopes extracts the scopes from the token and returns them as a map of strings.
-// The map is keyed by the scope name and the value is a struct{} to act as a set in Go
+// The map is keyed by the scope name and the value is a struct{} to act as a set in Go.
 // The function returns the read and write scopes as separate maps.
+//
+// validateJwt rejects a missing or non-string scope before the request path
+// reaches this function. The fallbacks below stay so a direct caller still
+// gets empty sets instead of panicking.
 func extractTokenScopes(token *jwt.Token) (map[string]struct{}, map[string]struct{}) {
 	readScopes := make(map[string]struct{})
 	writeScopes := make(map[string]struct{})
