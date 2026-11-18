@@ -113,6 +113,7 @@ type connectionQueue struct {
 	expiryCleanupWg      sync.WaitGroup
 	expirySweeperStopped chan struct{}
 	expirySweeperDone    chan struct{}
+	expirySweeperStarted bool
 	stopOnce             sync.Once
 }
 
@@ -193,13 +194,19 @@ func newConnectionQueueWithOptions(maxConnections int, log *slog.Logger, options
 		opt(cq)
 	}
 
-	if cq.expirySweepInterval > 0 {
-		go cq.expirySweepLoop()
-	} else {
-		close(cq.expirySweeperDone)
-	}
-
 	return cq
+}
+
+// startExpirySweeper launches the sweeper goroutine the first time it is
+// needed. The caller must hold cq.mu. It does nothing once the queue is
+// shutting down, which is what lets shutdown know no sweeper can appear after
+// it has looked.
+func (cq *connectionQueue) startExpirySweeper() {
+	if cq.expirySweeperStarted || cq.shuttingDown || cq.expirySweepInterval <= 0 {
+		return
+	}
+	cq.expirySweeperStarted = true
+	go cq.expirySweepLoop()
 }
 
 // setConnectionExpiry sets the expiry time for a connection.
@@ -235,6 +242,11 @@ func (cq *connectionQueue) setConnectionExpiryWithMutexHeld(conn *Connection, ex
 	}
 
 	conn.expiry = expiry
+	if !expiry.IsZero() {
+		// This is the only place an expiry is written, so it is also the only
+		// place the sweeper needs to be started from.
+		cq.startExpirySweeper()
+	}
 	return true
 }
 
@@ -385,8 +397,18 @@ func (cq *connectionQueue) sweepExpiredConnections() int {
 	return len(expiredConnections)
 }
 
+// stopExpirySweeper stops the sweeper if it was started and waits for it to exit
 func (cq *connectionQueue) stopExpirySweeper() {
-	cq.stopOnce.Do(func() { close(cq.expirySweeperStopped) })
+	cq.mu.Lock()
+	started := cq.expirySweeperStarted
+	cq.mu.Unlock()
+
+	cq.stopOnce.Do(func() {
+		close(cq.expirySweeperStopped)
+		if !started {
+			close(cq.expirySweeperDone)
+		}
+	})
 	<-cq.expirySweeperDone
 }
 
@@ -394,9 +416,6 @@ func (cq *connectionQueue) stopExpirySweeper() {
 // Each connection's goroutine will receive the signal via the Done channel,
 // exit its event loop, and deregister itself.
 func (cq *connectionQueue) shutdown(ctx context.Context) {
-
-	cq.stopExpirySweeper()
-
 	cq.mu.Lock()
 	cq.shuttingDown = true
 	conns := make([]*Connection, 0, len(cq.connections))
@@ -404,6 +423,8 @@ func (cq *connectionQueue) shutdown(ctx context.Context) {
 		conns = append(conns, conn)
 	}
 	cq.mu.Unlock()
+
+	cq.stopExpirySweeper()
 
 	var wg sync.WaitGroup
 	for _, conn := range conns {

@@ -44,6 +44,41 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
+// manualClock is a connection-queue clock the sweeper can read while a test moves it forward.
+type manualClock struct {
+	mu  sync.Mutex
+	now time.Time
+}
+
+func newManualClock(now time.Time) *manualClock {
+	return &manualClock{now: now}
+}
+
+func (c *manualClock) Now() time.Time {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.now
+}
+
+func (c *manualClock) Advance(d time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.now = c.now.Add(d)
+}
+
+// stopQueueOnCleanup shuts the queue down when the test ends. The sweeper
+// goroutine starts once a connection has an expiry, so a test that sets one
+// would otherwise leave it running. A connection the test still owns is force-closed
+// after the short deadline.
+func stopQueueOnCleanup(t *testing.T, cq connectionQueueInterface) {
+	t.Helper()
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+		defer cancel()
+		cq.shutdown(ctx)
+	})
+}
+
 func TestNewConnectionQueue(t *testing.T) {
 	cq := newConnectionQueue(10, nil)
 
@@ -60,6 +95,7 @@ func TestNewConnectionQueueWithOptions_InjectedClock(t *testing.T) {
 
 	t.Run("accepts token that expires after the injected clock", func(t *testing.T) {
 		cq := newConnectionQueueWithOptions(0, nil, withClock(func() time.Time { return frozenClock })).(*connectionQueue)
+		stopQueueOnCleanup(t, cq)
 		owner := &stubTransport{tb: t}
 
 		valid := HandlerContext{tokenExpiry: frozenClock.Add(time.Second)}
@@ -121,11 +157,18 @@ func TestConnectionQueue_Options(t *testing.T) {
 
 	t.Run("does not start the sweeper when the interval is zero", func(t *testing.T) {
 		cq := newConnectionQueueWithOptions(3, nil, withExpirySweepInterval(0)).(*connectionQueue)
+		stopQueueOnCleanup(t, cq)
 
-		select {
-		case <-cq.expirySweeperDone:
-		default:
-			t.Fatal("sweeper done channel should be closed when the sweep interval is zero")
+		_, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: time.Now().Add(time.Hour)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+
+		cq.mu.Lock()
+		started := cq.expirySweeperStarted
+		cq.mu.Unlock()
+		if started {
+			t.Fatal("sweeper should not start when the sweep interval is zero")
 		}
 		if cq.expiryGracePeriod != defaultExpiryGracePeriod {
 			t.Errorf("grace period = %v, want default %v", cq.expiryGracePeriod, defaultExpiryGracePeriod)
@@ -234,6 +277,7 @@ func TestConnectionQueue_MaxConnections(t *testing.T) {
 func TestConnectionQueue_RegisterOwnedConnection_ExpiredToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		stopQueueOnCleanup(t, cq)
 		owner := &stubTransport{tb: t}
 
 		valid := HandlerContext{tokenExpiry: time.Now().Add(time.Hour)}
@@ -368,20 +412,27 @@ func TestConnectionQueue_NotifyUpdate(t *testing.T) {
 	})
 
 	t.Run("skips expired connection", func(t *testing.T) {
-		now := time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC)
-		cq := newConnectionQueueWithOptions(0, nil, withClock(func() time.Time { return now }))
+		clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
+
+		cq := newConnectionQueueWithOptions(0, nil, withClock(clock.Now), withExpirySweepInterval(0)).(*connectionQueue)
 		owner := &stubTransport{tb: t}
 
-		expiredConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: now.Add(time.Minute)}, nil)
-		if res.Code != StatusCodeOk {
-			t.Fatalf("registerOwnedConnection: %v", res)
-		}
-		liveConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: now.Add(time.Hour)}, nil)
+		expiredConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("registerOwnedConnection: %v", res)
 		}
 
-		now = now.Add(2 * time.Minute) // the first connection is now expired, the second connection is still alive
+		liveConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: clock.Now().Add(time.Hour)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+		t.Cleanup(func() {
+			cq.deregisterConnection(expiredConnection.ID)
+			cq.deregisterConnection(liveConnection.ID)
+			cq.shutdown(context.Background())
+		})
+
+		clock.Advance(2 * time.Minute) // the first connection is now expired, the second connection is still alive
 
 		cq.notifyUpdate(&protos.PushUpdates{
 			Slot: 0,
@@ -465,8 +516,29 @@ func TestConnectionQueue_Shutdown_StopsExpirySweeper(t *testing.T) {
 		}
 	}
 
+	// deregisterOnDone plays the transport: it removes the connection once Done closes.
+	deregisterOnDone := func(cq *connectionQueue, conn *Connection) {
+		go func() {
+			<-conn.Done
+			cq.deregisterConnection(conn.ID)
+		}()
+	}
+
+	sweeperStarted := func(cq *connectionQueue) bool {
+		cq.mu.Lock()
+		defer cq.mu.Unlock()
+		return cq.expirySweeperStarted
+	}
+
 	t.Run("sweeper exits when the queue shuts down", func(t *testing.T) {
 		cq := newConnectionQueueWithOptions(0, nil, withExpirySweepInterval(5*time.Millisecond)).(*connectionQueue)
+
+		// The sweeper starts once a connection has an expiry.
+		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: time.Now().Add(time.Hour)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+		deregisterOnDone(cq, conn)
 
 		select {
 		case <-cq.expirySweeperDone:
@@ -481,6 +553,61 @@ func TestConnectionQueue_Shutdown_StopsExpirySweeper(t *testing.T) {
 		default:
 			t.Fatal("sweeper is still running after shutdown")
 		}
+	})
+
+	t.Run("sweeper starts only once a connection has an expiry", func(t *testing.T) {
+		cq := newConnectionQueueWithOptions(0, nil, withExpirySweepInterval(5*time.Millisecond)).(*connectionQueue)
+
+		if sweeperStarted(cq) {
+			t.Fatal("sweeper should not start before any connection registers")
+		}
+
+		noExpiry, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+		deregisterOnDone(cq, noExpiry)
+		if sweeperStarted(cq) {
+			t.Fatal("sweeper should not start for a connection without an expiry")
+		}
+
+		withExpiry, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: time.Now().Add(time.Hour)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+		deregisterOnDone(cq, withExpiry)
+		if !sweeperStarted(cq) {
+			t.Fatal("sweeper should start once a connection has an expiry")
+		}
+
+		shutdownWithin(t, cq)
+		select {
+		case <-cq.expirySweeperDone:
+		default:
+			t.Fatal("sweeper is still running after shutdown")
+		}
+	})
+
+	t.Run("setting an expiry on an existing connection starts the sweeper", func(t *testing.T) {
+		cq := newConnectionQueueWithOptions(0, nil, withExpirySweepInterval(5*time.Millisecond)).(*connectionQueue)
+
+		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("registerOwnedConnection: %v", res)
+		}
+		deregisterOnDone(cq, conn)
+		if sweeperStarted(cq) {
+			t.Fatal("sweeper should not start for a connection without an expiry")
+		}
+
+		if !cq.setConnectionExpiry(conn, time.Now().Add(time.Hour)) {
+			t.Fatal("expected setConnectionExpiry to succeed")
+		}
+		if !sweeperStarted(cq) {
+			t.Fatal("sweeper should start when an expiry is set on an existing connection")
+		}
+
+		shutdownWithin(t, cq)
 	})
 }
 
@@ -672,6 +799,7 @@ func TestConnection_RecordCloseReason(t *testing.T) {
 func TestConnectionQueue_SetConnectionExpiryWithMutexHeld(t *testing.T) {
 	t.Run("sets expiry on registered connection", func(t *testing.T) {
 		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		stopQueueOnCleanup(t, cq)
 		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("registerOwnedConnection: %v", res)
@@ -731,6 +859,7 @@ func TestConnectionQueue_SetConnectionExpiryWithMutexHeld(t *testing.T) {
 func TestConnectionQueue_SetConnectionExpiry(t *testing.T) {
 	t.Run("sets expiry on registered connection", func(t *testing.T) {
 		cq := newConnectionQueue(0, nil).(*connectionQueue)
+		stopQueueOnCleanup(t, cq)
 		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{}, nil)
 		if res.Code != StatusCodeOk {
 			t.Fatalf("registerOwnedConnection: %v", res)
@@ -757,28 +886,6 @@ func TestConnectionQueue_SetConnectionExpiry(t *testing.T) {
 			t.Errorf("expiry = %v, want zero", got)
 		}
 	})
-}
-
-// manualClock is a connection-queue clock the sweeper can read while a test moves it forward.
-type manualClock struct {
-	mu  sync.Mutex
-	now time.Time
-}
-
-func newManualClock(now time.Time) *manualClock {
-	return &manualClock{now: now}
-}
-
-func (c *manualClock) Now() time.Time {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.now
-}
-
-func (c *manualClock) Advance(d time.Duration) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.now = c.now.Add(d)
 }
 
 func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
@@ -1244,6 +1351,48 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 					t.Fatalf("iteration %d: connection count = %d, want 0", i, cq.connectionCount())
 				}
 
+			}
+		})
+
+		t.Run("registration racing with shutdown does not leave a sweeper behind", func(t *testing.T) {
+			for i := 0; i < 200; i++ {
+				cq := newConnectionQueueWithOptions(0, nil,
+					withExpirySweepInterval(time.Millisecond),
+					withExpiryGracePeriod(time.Second),
+				).(*connectionQueue)
+
+				var registered *Connection
+				runConcurrently(
+					func() {
+						// Create and register a connection that would start the sweeper
+						time.Sleep(time.Duration(i%10) * 100 * time.Microsecond)
+						conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, HandlerContext{tokenExpiry: time.Now().Add(time.Minute)}, nil)
+
+						if res.Code == StatusCodeOk {
+							registered = conn
+							go func() {
+								<-conn.Done
+								cq.deregisterConnection(conn.ID)
+							}()
+						}
+					},
+					func() { cq.shutdown(context.Background()) },
+				)
+
+				select {
+				case <-cq.expirySweeperDone:
+				default:
+					t.Fatalf("iteration %d: sweeper done channel is not closed after shutdown", i)
+				}
+
+				// A connection that registered in time must have been closed by the shutdown.
+				if registered != nil {
+					select {
+					case <-registered.Done:
+					case <-time.After(2 * time.Second):
+						t.Fatalf("iteration %d: registered connection was not closed by shutdown", i)
+					}
+				}
 			}
 		})
 
