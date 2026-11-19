@@ -273,6 +273,13 @@ func (s *ExampleState) sampleStructVariantArrayValue() []st2138.StructVariantVal
 	return s.sampleStructVariantArray
 }
 
+// extractAssetFqoid is the id clients use to fetch an embedded file. The filename
+// stays in the payload's file-name metadata; the id drops the extension
+// because an fqoid cannot contain '.'.
+func extractAssetFqoid(id string) string {
+	return strings.ReplaceAll(id, ".", "_")
+}
+
 func sortedAssetIDs(assets *sync.Map) []string {
 	var ids []string
 	assets.Range(func(key, _ any) bool {
@@ -355,23 +362,24 @@ func main() {
 		os.Exit(1)
 	}
 	for id, payload := range payloads {
-		assets.Store(id, storedAsset{payload: payload, cachable: true})
+		assets.Store(extractAssetFqoid(id), storedAsset{payload: payload, cachable: true})
 	}
 	assetIDs := sortedAssetIDs(assets)
 
 	// --- Handler registration ---
 	// Each register* function wires one Catena endpoint family. Transports call
 	// these through the SDK runtime; you do not implement HTTP/gRPC routing here.
+	languages := NewLanguageStore(slotList)
 	registerAccessHandler(srv)                                           // EndpointAccess gate
 	registerProductStructs(srv, state)                                   // SDK-managed product per slot
 	registerDeviceHandlers(srv, counter, state)                          // GetDevice → buildDeviceDefinition
 	registerValueHandlers(srv, counter, state)                           // GetValue / SetValue
-	registerGetParamHandlers(srv, counter, state)                        // GetParam
+	registerGetComponentHandlers(srv, counter, state, languages)         // GetComponent (also serves GetParam)
 	registerCommandHandler(srv, counter, broadcastRunning, counterScope) // ExecuteCommand
 	registerAssetHandlers(srv, assets)                                   // ExternalObjectRequest
 	registerParamInfoHandlers(srv, counter, state)                       // ParamInfoRequest
 	registerLanguagesHandlers(srv)                                       // ListLanguages
-	registerLanguagePackHandlers(srv)                                    // LanguagePackRequest / AddLanguage / Update / Delete
+	registerLanguagePackHandlers(srv, languages)                         // LanguagePackRequest / AddLanguage / Update / Delete
 	registerHeartbeatHandlers(srv, state)                                // periodic BroadcastUpdate
 
 	srv.StartHeartbeat(5 * time.Second)

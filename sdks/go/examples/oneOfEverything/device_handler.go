@@ -33,7 +33,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	// Slot 0: hand-rolled chunking. First the device skeleton (slot metadata,
 	// scopes, and menu-group shells), then one chunk per menu, param, and
 	// command. The chunks are built from the same slotZero* pieces
-	// buildDeviceDefinition composes (the GetParam / ParamInfo handlers use
+	// buildDeviceDefinition composes (the GetComponent / ParamInfo handlers use
 	// it), so the two views of slot 0 cannot drift apart. ComponentConstraint
 	// and ComponentLanguagePack constructors exist for the other component
 	// kinds.
@@ -171,7 +171,7 @@ func slotZeroCommands() map[string]*st2138.ParamBuilder {
 
 // buildDeviceDefinition returns the descriptor for one slot. It is a function
 // (not a static YAML file) so every param's value field reflects live state at
-// GetDevice time. The GetParam and ParamInfo handlers call this for every slot;
+// GetDevice time. The GetComponent and ParamInfo handlers call this for every slot;
 // the GetDevice handler calls it for slots 1 and 2 (slot 0's GetDevice streams
 // the same slotZero* pieces directly, see registerDeviceHandlers). Keep param
 // OIDs in sync with value_handlers and param_info_handler.
@@ -317,12 +317,9 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithName(st2138.PolyglotText{"en": "Muted"})).
 			WithParam("device_name", st2138.NewParamString(deviceName).
 				WithName(st2138.PolyglotText{"en": "Device Name"})).
-			// NewParamStruct auto-creates the valueless "number" and "text"
-			// field descriptors from the values map.
-			WithParam("struct_example", st2138.NewParamStruct(map[string]any{
-				"number": structNumber,
-				"text":   structText,
-			}).
+			WithParam("struct_example", st2138.NewParamStruct().
+				WithParam("number", st2138.NewParamInt32(structNumber)).
+				WithParam("text", st2138.NewParamString(structText)).
 				WithName(st2138.PolyglotText{"en": "Struct Example"})).
 			WithParam("sample_float", st2138.NewParamFloat32(sampleFloat).
 				WithName(st2138.PolyglotText{"en": "Sample Float"})).
@@ -336,18 +333,21 @@ func buildDeviceDefinition(slot uint16, counter *CounterState, state *ExampleSta
 				WithName(st2138.PolyglotText{"en": "Sample Binary"})).
 			// Valueless NewParamX() calls build sub-param descriptors without
 			// dummy values; the actual values live in the parent param's value.
-			WithParam("sample_struct_variant", st2138.NewParamStructVariant(sampleStructVariant).
+			WithParam("sample_struct_variant", st2138.NewParamStructVariant().
 				WithName(st2138.PolyglotText{"en": "Sample Struct Variant"}).
 				WithParam("int_kind", st2138.NewParamInt32()).
-				WithParam("string_kind", st2138.NewParamString())).
-			WithParam("sample_struct_array", st2138.NewParamStructArray(sampleStructArray).
+				WithParam("string_kind", st2138.NewParamString()).
+				WithValue(sampleStructVariant)).
+			WithParam("sample_struct_array", st2138.NewParamStructArray().
 				WithName(st2138.PolyglotText{"en": "Sample Struct Array"}).
 				WithParam("label", st2138.NewParamString()).
-				WithParam("count", st2138.NewParamInt32())).
-			WithParam("sample_struct_variant_array", st2138.NewParamStructVariantArray(sampleStructVariantArray).
+				WithParam("count", st2138.NewParamInt32()).
+				WithValue(sampleStructArray)).
+			WithParam("sample_struct_variant_array", st2138.NewParamStructVariantArray().
 				WithName(st2138.PolyglotText{"en": "Sample Struct Variant Array"}).
 				WithParam("int_kind", st2138.NewParamInt32()).
-				WithParam("string_kind", st2138.NewParamString())).
+				WithParam("string_kind", st2138.NewParamString()).
+				WithValue(sampleStructVariantArray)).
 			WithMenuGroup("status", st2138.NewMenuGroup().
 				WithName(st2138.PolyglotText{"en": "Status"}).
 				WithOrder(0).

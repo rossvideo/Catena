@@ -50,6 +50,41 @@ Behavior:
 - Clients must then dial with TLS credentials, e.g. `grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{...}))`; plaintext (insecure) clients will fail to connect.
 - Env/CLI configuration: `{PREFIX}_GRPC_TLS_ENABLED`, `{PREFIX}_GRPC_TLS_CERT_FILE`, `{PREFIX}_GRPC_TLS_KEY_FILE`, `{PREFIX}_GRPC_TLS_CLIENT_CA_FILE`, `{PREFIX}_GRPC_TLS_MUTUAL_AUTH` (flags `--grpc-tls-*`).
 
+## Resource Limits and Keepalive
+
+Message size, concurrent-stream, and keepalive settings on `Options` are passed straight through to grpc-go as `grpc.ServerOption`s. The [grpc-go server](https://pkg.go.dev/google.golang.org/grpc) and [keepalive](https://pkg.go.dev/google.golang.org/grpc/keepalive) docs are authoritative for how a value is applied, including zero and the library defaults.
+
+Negative durations are rejected from the environment and flags. `NewTransport` also rejects a `MaxConnectionAge` that is negative or from 1ns through 9ns, including a value set in code: grpc-go's connection-age jitter panics on those values, and that panic kills the process when a client connects. Zero is allowed. `NewTransport` records that failure and `Start` returns it.
+
+```go
+opts := grpc.DefaultOptions()
+opts.MaxRecvMsgSize = 8 << 20             // accept requests up to 8 MiB
+opts.MaxConcurrentStreams = 100           // in-flight RPCs allowed on one connection
+opts.MaxConnectionIdle = 30 * time.Minute // reap unused connections after 30m
+grpcTransport := grpc.NewTransport(opts)
+```
+
+Options:
+
+- `MaxRecvMsgSize` (default 4 MiB): largest message the server accepts.
+- `MaxSendMsgSize` (default 4 MiB): largest message the server sends.
+- `MaxConcurrentStreams` (default 100): in-flight RPCs allowed on one client connection.
+- `MaxConnectionIdle` (default 15m): closes connections that have had no active RPCs for this long.
+- `MaxConnectionAge` (default 0): longest a connection may stay open.
+- `MaxConnectionAgeGrace` (default 0): how long RPCs already open may continue after `MaxConnectionAge`.
+- `KeepaliveTime` (default 2h): how long a connection may be quiet before the server pings the client.
+- `KeepaliveTimeout` (default 20s): how long the server waits for a ping ack before closing the connection.
+- `KeepaliveMinTime` (default 5m): minimum interval allowed between client keepalive pings.
+- `PermitWithoutStream` (default false): allow client keepalive pings on connections with no active RPCs.
+
+Behaviour:
+
+- Always start from `grpc.DefaultOptions()` (or `config.InitOptions`) and change individual fields. The values are passed through unchanged.
+- `MaxSendMsgSize` limits each message, not each stream. Handlers that stream large assets through `ExternalObjectRequest`, or large device models through `DeviceRequest`, must split them into chunks that each fit within the limit. An oversized chunk fails the RPC with `ResourceExhausted`.
+- `MaxConnectionAge` and `MaxConnectionAgeGrace` default to 0 so long-lived `Connect` streams and in-progress `ExternalObjectRequest` transfers are not cut off.
+
+Env/CLI configuration: `{PREFIX}_GRPC_MAX_RECV_MSG_SIZE`, `{PREFIX}_GRPC_MAX_SEND_MSG_SIZE`, `{PREFIX}_GRPC_MAX_CONCURRENT_STREAMS`, `{PREFIX}_GRPC_MAX_CONNECTION_IDLE`, `{PREFIX}_GRPC_MAX_CONNECTION_AGE`, `{PREFIX}_GRPC_MAX_CONNECTION_AGE_GRACE`, `{PREFIX}_GRPC_KEEPALIVE_TIME`, `{PREFIX}_GRPC_KEEPALIVE_TIMEOUT`, `{PREFIX}_GRPC_KEEPALIVE_MIN_TIME`, `{PREFIX}_GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM` (flags `--grpc-max-*` / `--grpc-keepalive-*`).
+
 ## Implemented RPCs
 
 Implemented against shared runtime handlers:
@@ -57,7 +92,8 @@ Implemented against shared runtime handlers:
 - `GetPopulatedSlots`
 - `DeviceRequest` (server-streaming response)
 - `GetValue`
-- `GetParam`
+- `GetParam` (forwarded to GetComponent with kind PARAM)
+- `GetComponent`
 - `SetValue`
 - `MultiSetValue`
 - `ExternalObjectRequest` (server-streaming response)
@@ -80,7 +116,8 @@ RPC methods invoke the same handlers registered on `catena.Server`:
 
 - `DeviceRequest` -> `RegisterGetDeviceHandler`
 - `GetValue` -> `RegisterGetValueHandler`
-- `GetParam` -> `RegisterGetParamHandler`
+- `GetParam` -> `RegisterGetComponentHandler` (invoked with kind PARAM; the response is unwrapped to the param)
+- `GetComponent` -> `RegisterGetComponentHandler`
 - `SetValue` / `MultiSetValue` -> `RegisterSetValueHandler` (the handler receives `[]SetValueEntry`; `SetValue` delivers a one-element slice, `MultiSetValue` delivers the full slice for atomic application)
 - `ExternalObjectRequest` -> `RegisterReadAssetHandler`
 - `ExecuteCommand` -> `RegisterExecuteCommandHandler`

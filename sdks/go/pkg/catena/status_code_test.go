@@ -232,6 +232,7 @@ func TestResponseType_Constraint(t *testing.T) {
 	var _ func(st2138.Value) (st2138.Value, StatusResult) = Reply[st2138.Value]
 	var _ func(st2138.Device) (st2138.Device, StatusResult) = Reply[st2138.Device]
 	var _ func(st2138.Asset) (st2138.Asset, StatusResult) = Reply[st2138.Asset]
+	var _ func(st2138.ComponentResponse) (st2138.ComponentResponse, StatusResult) = Reply[st2138.ComponentResponse]
 }
 
 func TestReplyError_AllStatusCodes(t *testing.T) {

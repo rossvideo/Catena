@@ -58,7 +58,7 @@ func corsHandler(t *testing.T, opts config.RestOptions) (*Transport, http.Handle
 	stub := transporttest.MakeStubServerRuntime(t)
 	stub.Dev = true
 	transport.runtime = stub
-	return transport, transport.withCORS(transport.mux)
+	return transport, transport.createHttpHandler()
 }
 
 func TestCORS_DisabledByDefault(t *testing.T) {

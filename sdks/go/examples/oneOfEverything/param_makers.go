@@ -5,16 +5,19 @@ import (
 )
 
 // Shared param makers are the single source of truth for slot 0's params. The
-// device descriptor (device_handler.go) passes each maker to WithParam; GetParam
-// (get_param_handler.go) rebuilds that same device definition and reads the
-// requested OID back out of it. Because both endpoints trace back to these
-// makers, a param can never drift between GetDevice and GetParam.
+// device descriptor (device_handler.go) passes each maker to WithParam; GetComponent
+// (get_component_handler.go) rebuilds that same device definition and reads the
+// requested fqoid back out of it. Because both endpoints trace back to these
+// makers, a param can never drift between GetDevice and GetComponent.
 
-// dashboardUIGridOid is the asset id of the custom DashBoard panel shipped in
-// static/; dashboardUIValue is the external-object URI DashBoard dereferences
-// to download it (see asset_handler.go).
-const dashboardUIGridOid = "oneOfEverything.grid"
-const dashboardUIValue = "eo://" + dashboardUIGridOid
+// dashboardUIGridFile is the embedded DashBoard panel. Its fqoid cannot keep
+// the '.' in the filename, so dashboardUIGridOid is that path encoded by
+// extractAssetFqoid dashboardUIValue is the external-object URI DashBoard
+// dereferences to download it (see asset_handler.go).
+const dashboardUIGridFile = "oneOfEverything.grid"
+
+var dashboardUIGridOid = extractAssetFqoid(dashboardUIGridFile)
+var dashboardUIValue = "eo://" + dashboardUIGridOid
 
 // makeDashboardUIParam builds the slot 0 "dashboard_UI" param (STRING,
 // read-only). The well-known oid alias 0xFF0E is how DashBoard finds a
