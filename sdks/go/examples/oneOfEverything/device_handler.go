@@ -33,7 +33,7 @@ func registerDeviceHandlers(srv catena.Server, counter *CounterState, state *Exa
 	// Slot 0: hand-rolled chunking. First the device skeleton (slot metadata,
 	// scopes, and menu-group shells), then one chunk per menu, param, and
 	// command. The chunks are built from the same slotZero* pieces
-	// buildDeviceDefinition composes (the GetParam / ParamInfo handlers use
+	// buildDeviceDefinition composes (the GetComponent / ParamInfo handlers use
 	// it), so the two views of slot 0 cannot drift apart. ComponentConstraint
 	// and ComponentLanguagePack constructors exist for the other component
 	// kinds.
@@ -171,7 +171,7 @@ func slotZeroCommands() map[string]*st2138.ParamBuilder {
 
 // buildDeviceDefinition returns the descriptor for one slot. It is a function
 // (not a static YAML file) so every param's value field reflects live state at
-// GetDevice time. The GetParam and ParamInfo handlers call this for every slot;
+// GetDevice time. The GetComponent and ParamInfo handlers call this for every slot;
 // the GetDevice handler calls it for slots 1 and 2 (slot 0's GetDevice streams
 // the same slotZero* pieces directly, see registerDeviceHandlers). Keep param
 // OIDs in sync with value_handlers and param_info_handler.
