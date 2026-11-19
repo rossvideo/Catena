@@ -2645,6 +2645,33 @@ func (w *sseStartedWriter) Flush() {
 	w.once.Do(func() { close(w.started) })
 }
 
+func TestHandleConnect_DropsUpdateAfterDone(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	for attempt := 1; attempt <= 64; attempt++ {
+		connection := transporttest.MakeTestConnection(attempt)
+		runtime.WithConnection(connection)
+		connection.Updates <- &protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{
+				Value: &protos.PushUpdates_PushValue{Oid: "should-drop"},
+			},
+		}
+		close(connection.Done)
+
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+		transport.handleConnect(rec, req)
+
+		if strings.Contains(rec.Body.String(), "should-drop") {
+			t.Errorf("attempt %d: expected the buffered update to be dropped, got %q", attempt, rec.Body.String())
+		}
+	}
+	if runtime.RegisterCalls != runtime.DeregisterCalls {
+		t.Errorf("expected deregister calls to match register calls, got %d deregister calls and %d register calls", runtime.DeregisterCalls, runtime.RegisterCalls)
+	}
+}
+
 func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 	rec := httptest.NewRecorder()

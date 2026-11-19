@@ -1768,6 +1768,50 @@ func TestTransport_Connect_Shutdown(t *testing.T) {
 	}
 }
 
+// connectTestStream is a ServerStreamingServer whose Send returns sendErr.
+type connectTestStream struct {
+	grpc.ServerStream
+	ctx     context.Context
+	sendErr error
+	sent    int
+}
+
+func (s *connectTestStream) Context() context.Context { return s.ctx }
+
+func (s *connectTestStream) Send(*protos.PushUpdates) error {
+	s.sent++
+	return s.sendErr
+}
+
+func TestTransport_Connect_DropsUpdateAfterDone(t *testing.T) {
+	transport := NewTransport(testOptions(0))
+	runtime := transporttest.MakeStubServerRuntime(t)
+	transport.runtime = runtime
+
+	for attempt := 1; attempt <= 64; attempt++ {
+		connection := transporttest.MakeTestConnection(attempt)
+		runtime.WithConnection(connection)
+		connection.Updates <- &protos.PushUpdates{Slot: 1}
+		close(connection.Done)
+
+		stream := &connectTestStream{ctx: context.Background()}
+		err := transport.catenaService.Connect(&protos.ConnectPayload{}, stream)
+		st, ok := status.FromError(err)
+		if !ok {
+			t.Fatalf("attempt %d: expected gRPC status error, got %v", attempt, err)
+		}
+		if st.Code() != codes.Unavailable {
+			t.Errorf("attempt %d: expected Unavailable code, got %v", attempt, st.Code())
+		}
+		if st.Message() != "server shutting down" {
+			t.Errorf("attempt %d: expected message %q, got %q", attempt, "server shutting down", st.Message())
+		}
+		if stream.sent != 0 {
+			t.Errorf("attempt %d: expected the update to be dropped, Send was called %d times", attempt, stream.sent)
+		}
+	}
+}
+
 func TestTransport_Connect_TokenExpired(t *testing.T) {
 	ctx := context.Background()
 	lis := bufconn.Listen(bufSize)
