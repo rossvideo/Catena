@@ -379,18 +379,18 @@ func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
 	if err != nil {
 		return nil, fmt.Errorf("validate jwt: %w", err)
 	}
-	if err := validateRequiredClaims(token); err != nil {
+	if err := enforceRequiredClaims(token); err != nil {
 		return nil, fmt.Errorf("validate jwt: %w", err)
 	}
 
 	return token, nil
 }
 
-// validateRequiredClaims checks claim presence and shape. Value checks for exp,
+// enforceRequiredClaims checks claim presence and shape. Value checks for exp,
 // nbf, and a future iat are done by the parser options in validateJwt, which
 // also apply Leeway. WithIssuedAt does not require iat to be present, so that
 // check lives here along with the claims the library cannot require.
-func validateRequiredClaims(token *jwt.Token) error {
+func enforceRequiredClaims(token *jwt.Token) error {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || claims == nil {
 		return fmt.Errorf("invalid claims type %T", token.Claims)
@@ -399,11 +399,11 @@ func validateRequiredClaims(token *jwt.Token) error {
 		var err error
 		switch name {
 		case "sub", "jti":
-			_, err = stringClaim(claims, name, true, false)
+			_, err = enforceStringClaim(claims, name, true, false)
 		case "iss", "scope":
-			_, err = stringClaim(claims, name, true, true)
+			_, err = enforceStringClaim(claims, name, true, true)
 		case "aud":
-			err = requireAudience(claims)
+			err = enforceAudience(claims)
 		case "iat":
 			date, err := claims.GetIssuedAt()
 			if err != nil {
@@ -420,11 +420,11 @@ func validateRequiredClaims(token *jwt.Token) error {
 		}
 	}
 	// At least one of azp and client_id. A present claim must be a non-empty string.
-	azp, err := stringClaim(claims, "azp", false, false)
+	azp, err := enforceStringClaim(claims, "azp", false, false)
 	if err != nil {
 		return err
 	}
-	clientID, err := stringClaim(claims, "client_id", false, false)
+	clientID, err := enforceStringClaim(claims, "client_id", false, false)
 	if err != nil {
 		return err
 	}
@@ -432,14 +432,14 @@ func validateRequiredClaims(token *jwt.Token) error {
 		return fmt.Errorf("missing required claim: azp or client_id")
 	}
 	// sid is optional, non-empty string.
-	_, err = stringClaim(claims, "sid", false, false)
+	_, err = enforceStringClaim(claims, "sid", false, false)
 	return err
 }
 
-// stringClaim reads a string claim. required makes an absent claim an error.
+// enforceStringClaim reads a string claim. required makes an absent claim an error.
 // emptyOK allows "" as a valid value (scope and iss). The bool reports whether
 // a valid value was present.
-func stringClaim(claims jwt.MapClaims, name string, required, emptyOK bool) (bool, error) {
+func enforceStringClaim(claims jwt.MapClaims, name string, required, emptyOK bool) (bool, error) {
 	raw, ok := claims[name]
 	if !ok {
 		if required {
@@ -457,8 +457,8 @@ func stringClaim(claims jwt.MapClaims, name string, required, emptyOK bool) (boo
 	return true, nil
 }
 
-// requireAudience checks that the audience claim is present and valid.
-func requireAudience(claims jwt.MapClaims) error {
+// enforceAudience checks that the audience claim is present and valid.
+func enforceAudience(claims jwt.MapClaims) error {
 	raw, ok := claims["aud"]
 	if !ok {
 		return fmt.Errorf("missing required claim: aud")
