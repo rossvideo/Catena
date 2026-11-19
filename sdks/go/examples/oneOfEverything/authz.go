@@ -80,13 +80,14 @@ func registerAuthz(srv catena.Server) {
 		} else {
 			accessMap["adm"] = "---\n---"
 		}
-		return st2138.NewParamStruct(accessMap).
+		return st2138.NewParamStruct().
 			WithReadOnly(true).
 			WithName(st2138.PolyglotText{"en": "Scopes"}).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Monitor"})).
 			WithParam("op", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Operate"})).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Configure"})).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Administer"})).
+			WithValue(accessMap).
 			Build()
 	}
 
@@ -99,13 +100,14 @@ func registerAuthz(srv catena.Server) {
 			{"role": "producer", "mon": "Read\nWrite", "op": "Read\n---", "cfg": "Read\n---", "adm": "---\n---"},
 			{"role": "tech-director", "mon": "Read\nWrite", "op": "Read\nWrite", "cfg": "Read\nWrite", "adm": "Read\n---"},
 		}
-		return st2138.NewParamStructArray(roles).
+		return st2138.NewParamStructArray().
 			WithReadOnly(true).
 			WithParam("role", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Role"})).
 			WithParam("mon", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Monitor"})).
 			WithParam("op", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Operate"})).
 			WithParam("cfg", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Configure"})).
 			WithParam("adm", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Administer"})).
+			WithValue(roles).
 			Build()
 	}
 
@@ -125,11 +127,12 @@ func registerAuthz(srv catena.Server) {
 				}
 			}
 		}
-		return st2138.NewParamStructArray(valMap).
+		return st2138.NewParamStructArray().
 			WithReadOnly(true).
 			WithName(st2138.PolyglotText{"en": "JWT Claims"}).
 			WithParam("key", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Key"})).
 			WithParam("value", st2138.NewParamString().WithName(st2138.PolyglotText{"en": "Value"})).
+			WithValue(valMap).
 			Build()
 	}
 
@@ -232,42 +235,45 @@ func registerAuthz(srv catena.Server) {
 		return catena.StatusOk()
 	})
 
-	srv.RegisterGetParamHandler(authzSlot, func(ctx catena.HandlerContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	srv.RegisterGetComponentHandler(authzSlot, func(ctx catena.HandlerContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam {
+			return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "component not found")
+		}
 		if ctx.HasReadScope(st2138.ScopeMon) {
 			switch req.Fqoid {
 			case userAccess:
 				if ctx.AuthzEnabled() {
 					userAccessParam, err := makeUserAccess(ctx)
 					if err != nil {
-						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make user access param")
+						return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make user access param")
 					}
-					return catena.Reply(userAccessParam)
+					return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, &userAccessParam))
 				}
 			case claims:
 				if ctx.AuthzEnabled() {
 					claimsParam, err := makeClaims(ctx)
 					if err != nil {
-						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make claims param")
+						return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make claims param")
 					}
-					return catena.Reply(claimsParam)
+					return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, &claimsParam))
 				}
 			case authzStatus:
 				if !ctx.AuthzEnabled() {
 					authzStatusParam := makeAuthzStatus(ctx)
 					if authzStatusParam == nil {
-						return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make authz status param")
+						return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make authz status param")
 					}
-					return catena.Reply(*authzStatusParam)
+					return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, authzStatusParam))
 				}
 			case rolesTable:
 				rolesTableParam, err := makeRolesTable()
 				if err != nil {
-					return catena.ReplyError[st2138.Param](catena.StatusCodeInternal, "failed to make roles table param")
+					return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeInternal, "failed to make roles table param")
 				}
-				return catena.Reply(rolesTableParam)
+				return catena.Reply(st2138.ComponentResponseParam(req.Fqoid, &rolesTableParam))
 			}
 		}
-		return catena.ReplyError[st2138.Param](catena.StatusCodeNotFound, "param not found")
+		return catena.ReplyError[st2138.ComponentResponse](catena.StatusCodeNotFound, "component not found")
 	})
 
 	srv.RegisterGetValueHandler(authzSlot, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {

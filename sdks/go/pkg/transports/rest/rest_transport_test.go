@@ -41,6 +41,7 @@
 package rest
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -62,7 +63,7 @@ import (
 )
 
 func makeTestTransport(tb testing.TB) (*Transport, *transporttest.StubServerRuntime) {
-	transport := NewTransport(config.RestOptions{Port: 8080})
+	transport := NewTransport(config.RestOptions{Port: 8080, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1, MaxAssetBodyBytes: -1})
 	stubRuntime := transporttest.MakeStubServerRuntime(tb)
 	stubRuntime.Dev = true
 	transport.runtime = stubRuntime
@@ -154,13 +155,16 @@ func TestTransport_PropagatesTransportContext(t *testing.T) {
 		{
 			name: "get param",
 			setup: func(t *testing.T, runtime *transporttest.StubServerRuntime) {
-				runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+				runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 					assertContext(t, ctx)
+					if req.Kind != st2138.ComponentKindParam || req.Fqoid != "brightness" {
+						t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
+					}
 					param, err := st2138.NewParamInt32(42).Build()
 					if err != nil {
 						t.Fatalf("expected no error for builder with valid value, got %v", err)
 					}
-					return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+					return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 				}
 			},
 			run: func(t *testing.T, transport *Transport) {
@@ -559,10 +563,10 @@ func TestTransport_GetParam_Route(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
 	handlerCalled := false
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
 		handlerCalled = true
-		if req.Fqoid != "text_box" {
-			t.Errorf("expected fqoid 'text_box', got %s", req.Fqoid)
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "text_box" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 		param, err := st2138.NewParamString("Hello, World!").
 			WithName(st2138.PolyglotText{"en": "Text Box", "es": "Caja de Texto"}).
@@ -570,7 +574,7 @@ func TestTransport_GetParam_Route(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/text_box", "")
@@ -578,6 +582,10 @@ func TestTransport_GetParam_Route(t *testing.T) {
 	assertContentType(t, rec, "application/json")
 	if !handlerCalled {
 		t.Error("registered handler was not called")
+	}
+	body := rec.Body.String()
+	if !strings.HasPrefix(strings.TrimSpace(body), `{"oid":`) {
+		t.Errorf("GetParam body should be an unwrapped component_param, got %s", body)
 	}
 	assertBodyContains(t, rec, `"oid":"text_box"`)
 	assertBodyContains(t, rec, `"string_value":"Hello, World!"`)
@@ -587,16 +595,16 @@ func TestTransport_GetParam_Route(t *testing.T) {
 func TestTransport_GetParam_NestedFqoid(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
-		if req.Fqoid != "parent/child" {
-			t.Errorf("expected fqoid 'parent/child', got %s", req.Fqoid)
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "parent/child" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
 		}
 
 		param, err := st2138.NewParamInt32(7).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/parent/child", "")
@@ -619,8 +627,11 @@ func TestTransport_GetParam_MethodNotAllowed(t *testing.T) {
 func TestTransport_GetParam_HandlerError(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
-		return st2138.Param{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam {
+			t.Errorf("expected kind PARAM, got %v", req.Kind)
+		}
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeNotFound, "param not found")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/missing", "")
@@ -633,14 +644,17 @@ func TestTransport_GetParam_HandlerError(t *testing.T) {
 func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "zero" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
+		}
 		param, err := st2138.NewParamInt32(0).
 			WithName(st2138.PolyglotText{"en": "Zero"}).
 			WithConstraint(st2138.NewConstraintInt32Range(0, 100, 1)).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/zero", "")
@@ -656,18 +670,124 @@ func TestTransport_GetParam_EmitsZeroValues(t *testing.T) {
 func TestTransport_GetParam_EmitsEmptyStringValue(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 
-	runtime.GetParamFn = func(ctx catena.TransportContext, req catena.GetParamRequest) (st2138.Param, catena.StatusResult) {
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		if req.Kind != st2138.ComponentKindParam || req.Fqoid != "empty" {
+			t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
+		}
 		param, err := st2138.NewParamString("").
 			WithName(st2138.PolyglotText{"en": "Empty"}).Build()
 		if err != nil {
 			t.Fatalf("expected no error for builder with valid value, got %v", err)
 		}
-		return param, catena.StatusWithCode(catena.StatusCodeOk, "")
+		return st2138.ComponentResponseParam(req.Fqoid, &param), catena.StatusWithCode(catena.StatusCodeOk, "")
 	}
 
 	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/param/empty", "")
 	assertStatus(t, rec, http.StatusOK)
 	assertBodyContains(t, rec, `"string_value":""`)
+}
+
+func TestTransport_GetComponent_Kinds(t *testing.T) {
+	param, err := st2138.NewParamInt32(42).Build()
+	if err != nil {
+		t.Fatalf("NewParamInt32(42).Build() failed: %v", err)
+	}
+	constraint, err := st2138.NewConstraintInt32Range(0, 100, 1).Build()
+	if err != nil {
+		t.Fatalf("NewConstraintInt32Range(0, 100, 1).Build() failed: %v", err)
+	}
+	menu, err := st2138.NewMenu().WithParamOids("brightness").Build()
+	if err != nil {
+		t.Fatalf("NewMenu().WithParamOids('brightness').Build() failed: %v", err)
+	}
+	command, err := st2138.NewParamEmpty().Build()
+	if err != nil {
+		t.Fatalf("NewParamEmpty().Build() failed: %v", err)
+	}
+
+	tests := []struct {
+		kind    st2138.ComponentKind
+		oid     string
+		path    string
+		respond st2138.ComponentResponse
+		want    string
+	}{
+		{st2138.ComponentKindParam, "parent/child", "/st2138-api/v1/0/component/PARAM/parent/child", st2138.ComponentResponseParam("parent/child", &param), `"oid":"parent/child"`},
+		{st2138.ComponentKindConstraint, "range", "/st2138-api/v1/0/component/CONSTRAINT/range", st2138.ComponentResponseConstraint("range", &constraint), `"min_value":0`},
+		{st2138.ComponentKindMenu, "status/main", "/st2138-api/v1/0/component/MENU/status/main", st2138.ComponentResponseMenu("status/main", &menu), `"menu"`},
+		{st2138.ComponentKindCommand, "reset", "/st2138-api/v1/0/component/COMMAND/reset", st2138.ComponentResponseCommand("reset", &command), `"command"`},
+		{st2138.ComponentKindLanguagePack, "es", "/st2138-api/v1/0/component/LANGUAGE_PACK/es", st2138.ComponentResponseLanguagePack("es", "Spanish", map[string]string{"greeting": "Hola"}), `"language":"es"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.kind.String(), func(t *testing.T) {
+			transport, runtime := makeTestTransport(t)
+			runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+				if req.Kind != tt.kind || req.Fqoid != tt.oid {
+					t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
+				}
+				return tt.respond, catena.StatusWithCode(catena.StatusCodeOk, "")
+			}
+
+			rec := makeRequest(t, transport, http.MethodGet, tt.path, "")
+			assertStatus(t, rec, http.StatusOK)
+			assertContentType(t, rec, "application/json")
+			assertBodyContains(t, rec, tt.want)
+		})
+	}
+}
+
+func TestTransport_GetComponent_InvalidKind(t *testing.T) {
+	for _, path := range []string{
+		"/st2138-api/v1/0/component/UNUSED/brightness",
+		"/st2138-api/v1/0/component/param/brightness",
+		"/st2138-api/v1/0/component/NOPE/brightness",
+	} {
+		t.Run(path, func(t *testing.T) {
+			transport := NewTransport(config.RestOptions{Port: 8080, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1, MaxAssetBodyBytes: -1})
+			srv, err := catena.NewServer(config.ServerOptions{})
+			if err != nil {
+				t.Fatalf("NewServer() failed: %v", err)
+			}
+			transport.runtime = srv.(catena.ServerRuntime)
+			srv.RegisterGetComponentHandler(0, func(catena.HandlerContext, catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+				t.Error("handler must not run")
+				return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			})
+			rec := makeRequest(t, transport, http.MethodGet, path, "")
+			assertStatus(t, rec, ToHTTPStatus(catena.StatusCodeInvalidArgument))
+		})
+	}
+}
+
+func TestTransport_GetComponent_MissingOid(t *testing.T) {
+	transport, _ := makeTestTransport(t)
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/component/PARAM", "")
+	assertStatus(t, rec, http.StatusBadRequest)
+}
+
+func TestTransport_GetComponent_MethodNotAllowed(t *testing.T) {
+	transport, _ := makeTestTransport(t)
+	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/component/PARAM/brightness", "")
+	assertStatus(t, rec, http.StatusMethodNotAllowed)
+}
+
+func TestTransport_GetComponent_HandlerError(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeNotFound, "component not found")
+	}
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/component/MENU/missing", "")
+	assertStatus(t, rec, http.StatusNotFound)
+}
+
+func TestTransport_GetComponent_NilResponse(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+	runtime.GetComponentFn = func(ctx catena.TransportContext, req catena.GetComponentRequest) (st2138.ComponentResponse, catena.StatusResult) {
+		return st2138.ComponentResponse{}, catena.StatusWithCode(catena.StatusCodeOk, "")
+	}
+	rec := makeRequest(t, transport, http.MethodGet, "/st2138-api/v1/0/component/PARAM/brightness", "")
+	assertStatus(t, rec, http.StatusInternalServerError)
 }
 
 func TestTransport_SetValue_Route(t *testing.T) {
@@ -706,10 +826,10 @@ func TestTransport_SetValue_InvalidContentType(t *testing.T) {
 
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness",
 		`{"int32_value": 42}`, map[string]string{"Content-Type": "text/plain"})
-	assertStatus(t, rec, http.StatusBadRequest)
-	errMsg := assertHasError(t, rec)
-	if errMsg != "invalid request body" {
-		t.Errorf("expected error 'invalid request body', got %s", errMsg)
+	assertStatus(t, rec, http.StatusUnsupportedMediaType)
+	const expectedErrorMessage = "unsupported content type: text/plain, expected application/json"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
 	}
 	if handlerCalled {
 		t.Error("registered handler should not have been called")
@@ -782,9 +902,10 @@ func TestTransport_SetValues_InvalidContentType(t *testing.T) {
 
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/values",
 		`{"values":[]}`, map[string]string{"Content-Type": "text/plain"})
-	assertStatus(t, rec, http.StatusBadRequest)
-	if errMsg := assertHasError(t, rec); errMsg != "invalid request body" {
-		t.Errorf("expected error 'invalid request body', got %s", errMsg)
+	assertStatus(t, rec, http.StatusUnsupportedMediaType)
+	const expectedErrorMessage = "unsupported content type: text/plain, expected application/json"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
 	}
 	if handlerCalled {
 		t.Error("handler should not have been called")
@@ -795,6 +916,10 @@ func TestTransport_SetValues_MalformedBody(t *testing.T) {
 	transport, _ := makeTestTransport(t)
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", `{"values": not-json}`)
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "failed to unmarshal request body:"
+	if errorMsg := assertHasError(t, rec); !strings.HasPrefix(errorMsg, expectedErrorMessage) {
+		t.Errorf("expected error prefix %q, got %q", expectedErrorMessage, errorMsg)
+	}
 }
 
 func TestTransport_SetValues_FromProtoError(t *testing.T) {
@@ -802,6 +927,10 @@ func TestTransport_SetValues_FromProtoError(t *testing.T) {
 	body := `{"values":[{"oid":"param","value":{"struct_variant_value":{"variant_name":"test"}}}]}`
 	rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "invalid value at index 0: failed to convert struct variant value: nil Value: invalid argument"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
+	}
 }
 
 func TestTransport_SetValues_MethodNotAllowed(t *testing.T) {
@@ -1076,6 +1205,10 @@ func TestTransport_CreateAsset_InvalidBody(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", "{ not valid json")
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "failed to unmarshal request body:"
+	if errorMsg := assertHasError(t, rec); !strings.HasPrefix(errorMsg, expectedErrorMessage) {
+		t.Errorf("expected error prefix %q, got %q", expectedErrorMessage, errorMsg)
+	}
 	if handlerCalled {
 		t.Error("handler should not be called with invalid body")
 	}
@@ -1093,6 +1226,10 @@ func TestTransport_UpdateAsset_MissingContentType(t *testing.T) {
 	// No Content-Type header set.
 	rec := makeRequestWithHeaders(t, transport, http.MethodPut, "/st2138-api/v1/0/asset/logo", assetRequestBody, nil)
 	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "missing Content-Type header"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
+	}
 	if handlerCalled {
 		t.Error("handler should not be called without Content-Type")
 	}
@@ -1272,12 +1409,20 @@ func TestTransport_ExecuteCommand(t *testing.T) {
 		rec := httptest.NewRecorder()
 		transport.mux.ServeHTTP(rec, req)
 		assertStatus(t, rec, http.StatusBadRequest)
+		const expectedErrorMessage = "failed to read command payload: simulated read error"
+		if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+			t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
+		}
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
 		transport, _ := makeTestTransport(t)
 		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/test", `{invalid json}`)
 		assertStatus(t, rec, http.StatusBadRequest)
+		const expectedErrorMessage = "failed to unmarshal request body:"
+		if errorMsg := assertHasError(t, rec); !strings.HasPrefix(errorMsg, expectedErrorMessage) {
+			t.Errorf("expected error prefix %q, got %q", expectedErrorMessage, errorMsg)
+		}
 	})
 
 	t.Run("FromProtoError", func(t *testing.T) {
@@ -3057,8 +3202,10 @@ func TestTransport_LanguagePackInvalidJSON(t *testing.T) {
 
 	rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", `{invalid json}`)
 
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected status 400, got %d: %s", rec.Code, rec.Body.String())
+	assertStatus(t, rec, http.StatusBadRequest)
+	const expectedErrorMessage = "invalid language pack request body"
+	if errorMsg := assertHasError(t, rec); errorMsg != expectedErrorMessage {
+		t.Errorf("expected error %q, got %q", expectedErrorMessage, errorMsg)
 	}
 }
 
@@ -3079,5 +3226,395 @@ func TestTransport_LanguagePackUnsupportedMethod(t *testing.T) {
 
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected status 405, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestTransport_NewTransport_MaxBodyBytes(t *testing.T) {
+
+	const commandBody = `{"string_value":"x"}`
+
+	newTransportWithCommandHandler := func(t *testing.T, maxBodyBytes int, dev bool) (*Transport, *bool) {
+		t.Helper()
+
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: maxBodyBytes, MaxAssetBodyBytes: -1})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = dev
+		transport.runtime = runtime
+
+		handlerCalled := false
+		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
+			handlerCalled = true
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		return transport, &handlerCalled
+	}
+
+	t.Run("accepts a body exactly at the limit", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, len(commandBody), true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called when the body is exactly at the limit")
+		}
+	})
+
+	t.Run("rejects a body over the size limit", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, len(commandBody)-1, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the body is one byte over the limit")
+		}
+	})
+
+	t.Run("allows an empty body when the limit is zero", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, 0, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", "")
+
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called for an empty body when the limit is zero")
+		}
+	})
+
+	t.Run("rejects a non-empty body when the limit is zero", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, 0, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the limit is zero and the body is non-empty")
+		}
+	})
+
+	t.Run("accepts a large body when the limit is negative", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, -1, true)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusOK)
+		if !*handlerCalled {
+			t.Error("handler should be called when the limit is negative")
+		}
+	})
+
+	t.Run("standard phrase outside of dev mode", func(t *testing.T) {
+		transport, handlerCalled := newTransportWithCommandHandler(t, len(commandBody)-1, false)
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, http.StatusText(http.StatusRequestEntityTooLarge))
+		assertBodyNotContains(t, rec, "request body too large")
+		if *handlerCalled {
+			t.Error("handler should not be called when the body exceeds the limit")
+		}
+	})
+}
+
+func TestTransport_NewTransport_MaxAssetBodyBytes(t *testing.T) {
+	const commandBody = `{"string_value":"x"}`
+
+	newTransport := func(t *testing.T, maxBodyBytes, maxAssetBodyBytes int) (*Transport, *transporttest.StubServerRuntime) {
+		t.Helper()
+
+		transport := NewTransport(config.RestOptions{
+			Port:              8080,
+			MaxBodyBytes:      maxBodyBytes,
+			MaxAssetBodyBytes: maxAssetBodyBytes,
+		})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+		return transport, runtime
+	}
+
+	t.Run("accepts an asset body above the general limit", func(t *testing.T) {
+		transport, runtime := newTransport(t, 0, len(assetRequestBody))
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusNoContent)
+		if !handlerCalled {
+			t.Error("handler should be called when the asset body is within MaxAssetBodyBytes")
+		}
+	})
+
+	t.Run("rejects an asset body over the asset limit", func(t *testing.T) {
+		transport, runtime := newTransport(t, len(assetRequestBody), len(assetRequestBody)-1)
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called when the body exceeds MaxAssetBodyBytes")
+		}
+	})
+
+	t.Run("keeps the general limit on other routes", func(t *testing.T) {
+		transport, runtime := newTransport(t, len(commandBody)-1, len(assetRequestBody))
+		handlerCalled := false
+		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
+			handlerCalled = true
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process", commandBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("command handler should not be called when the body exceeds MaxBodyBytes")
+		}
+	})
+
+	t.Run("rejects a non-empty body when the asset limit is zero", func(t *testing.T) {
+		transport, runtime := newTransport(t, len(assetRequestBody), 0)
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called when MaxAssetBodyBytes is zero and the body is non-empty")
+		}
+	})
+
+	t.Run("accepts a body when the asset limit is negative", func(t *testing.T) {
+		transport, runtime := newTransport(t, 0, -1)
+		handlerCalled := false
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", assetRequestBody)
+
+		assertStatus(t, rec, http.StatusNoContent)
+		if !handlerCalled {
+			t.Error("handler should be called when MaxAssetBodyBytes is negative")
+		}
+	})
+}
+
+func TestTransport_RequestBodyTooLargeRoutes(t *testing.T) {
+	const body = `{"int32_value":42,"name":"padding so the body is over the limit"}`
+
+	newTransport := func(t *testing.T) (*Transport, *transporttest.StubServerRuntime) {
+		t.Helper()
+
+		transport := NewTransport(config.RestOptions{Port: 8080, MaxBodyBytes: 8, MaxAssetBodyBytes: 8})
+		runtime := transporttest.MakeStubServerRuntime(t)
+		runtime.Dev = true
+		transport.runtime = runtime
+
+		return transport, runtime
+	}
+
+	t.Run("SetValue endpoint", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/value/brightness", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("SetValues endpoint", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.SetValueFn = func(ctx catena.TransportContext, req catena.SetValueRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPut, "/st2138-api/v1/0/values", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("Asset write endpoints", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.CreateAssetFn = func(ctx catena.TransportContext, req catena.CreateAssetRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/asset/logo", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("LanguagePackPost write endpoints", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.AddLanguageFn = func(ctx catena.TransportContext, req catena.CreateLanguagePackRequest) catena.StatusResult {
+			handlerCalled = true
+			return catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/language-pack/fr", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+
+	t.Run("CommandStream", func(t *testing.T) {
+		transport, runtime := newTransport(t)
+		handlerCalled := false
+
+		runtime.CommandFn = func(ctx catena.TransportContext, req catena.ExecuteCommandRequest) ([]st2138.CommandResponse, catena.StatusResult) {
+			handlerCalled = true
+			return []st2138.CommandResponse{st2138.CommandNoResponse()}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}
+		rec := makeRequest(t, transport, http.MethodPost, "/st2138-api/v1/0/command/process/stream", body)
+
+		assertStatus(t, rec, http.StatusRequestEntityTooLarge)
+		assertBodyContains(t, rec, "request body too large")
+		if handlerCalled {
+			t.Error("handler should not be called")
+		}
+	})
+}
+
+func TestTransport_Connect_SurvivesWriteTimeout(t *testing.T) {
+	runtime := transporttest.MakeStubServerRuntime(t)
+	connection := transporttest.MakeTestConnection(1)
+	runtime.WithConnection(connection)
+	runtime.ShutdownTransportConnsFn = func(ctx context.Context, got catena.Transport) {
+		select {
+		case connection.Done <- struct{}{}:
+		default:
+		}
+	}
+
+	// Creates and starts the transport
+	transport := NewTransport(config.RestOptions{
+		Port:              0,
+		ReadTimeout:       50 * time.Millisecond,
+		ReadHeaderTimeout: 50 * time.Millisecond,
+		WriteTimeout:      0,
+		IdleTimeout:       50 * time.Millisecond,
+		MaxBodyBytes:      0,
+	})
+	if err := transport.Start(context.Background(), runtime); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := transport.Shutdown(ctx); err != nil {
+			t.Errorf("Shutdown: %v", err)
+		}
+	})
+
+	// Make and send the HTTP request
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	transportURL := fmt.Sprintf("http://127.0.0.1:%d%s", transport.listener.Addr().(*net.TCPAddr).Port, "/st2138-api/v1/connect")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, transportURL, nil)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("GET connect: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Read and verify the response header
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+	if got := resp.Header.Get("Content-Type"); got != "text/event-stream" {
+		t.Fatalf("expected Content-Type text/event-stream, got %q", got)
+	}
+
+	// Read the response body in a goroutine
+	frame := make(chan string, 1)
+	readErr := make(chan error, 1)
+	go func() {
+		reader := bufio.NewReader(resp.Body)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				readErr <- err
+				return
+			}
+			if strings.HasPrefix(line, "data: ") {
+				frame <- line
+				return
+			}
+		}
+	}()
+
+	// Push an update to the connection
+	time.Sleep(200 * time.Millisecond)
+	connection.Updates <- &protos.PushUpdates{
+		Kind: &protos.PushUpdates_SlotsAdded{
+			SlotsAdded: &protos.SlotList{Slots: []uint32{0, 1}},
+		},
+	}
+
+	// Wait for the update to be received and verify it contains the expected data
+	// and the connection is not closed due to a timeout.
+	select {
+	// An event was received
+	case frameData := <-frame:
+		if !strings.Contains(frameData, "slots_added") {
+			t.Errorf("expected slots_added in the SSE frame, got %q", frameData)
+		}
+	// The connection was closed
+	case err := <-readErr:
+		t.Fatalf("SSE connection closed before the event: %v", err)
+
+	// The timeout was reached
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for the SSE frame")
 	}
 }

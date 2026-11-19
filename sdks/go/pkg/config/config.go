@@ -96,9 +96,33 @@ type RestOptions struct {
 	// Assigned in code only; not loaded from the environment or flags.
 	// Nil leaves the transport's default 404.
 	Fallback http.HandlerFunc `env:"-" flag:"-"`
+	// ReadTimeout is the maximum duration for reading the entire request, including the body.
+	ReadTimeout time.Duration `env:"REST_READ_TIMEOUT" flag:"rest-read-timeout"`
+	// ReadHeaderTimeout is the maximum duration for reading the request headers only.
+	ReadHeaderTimeout time.Duration `env:"REST_READ_HEADER_TIMEOUT" flag:"rest-read-header-timeout"`
+	// WriteTimeout is the maximum duration before timing out writes of the response. Zero means no timeout.
+	WriteTimeout time.Duration `env:"REST_WRITE_TIMEOUT" flag:"rest-write-timeout"`
+	// IdleTimeout is the maximum amount of time to wait for the next request when keep-alives are enabled.
+	IdleTimeout time.Duration `env:"REST_IDLE_TIMEOUT" flag:"rest-idle-timeout"`
+	// MaxHeaderBytes is the maximum number of bytes in the HTTP header.
+	MaxHeaderBytes int `env:"REST_MAX_HEADER_BYTES" flag:"rest-max-header-bytes"`
+	// MaxBodyBytes is the maximum request body size in bytes.
+	// Zero allows no body. Negative disables the limit (unlimited).
+	MaxBodyBytes int `env:"REST_MAX_BODY_BYTES" flag:"rest-max-body-bytes"`
+	// MaxAssetBodyBytes is the maximum request body size for external-object
+	// uploads. Zero allows no body. Negative disables the limit (unlimited).
+	MaxAssetBodyBytes int `env:"REST_MAX_ASSET_BODY_BYTES" flag:"rest-max-asset-body-bytes"`
 }
 
 // GrpcOptions configures the gRPC transport.
+//
+// Message size, concurrent-stream, and keepalive fields are passed straight
+// through to grpc-go. The grpc-go docs are authoritative for how a value is
+// applied, including zero and the library defaults:
+// https://pkg.go.dev/google.golang.org/grpc and
+// https://pkg.go.dev/google.golang.org/grpc/keepalive.
+//
+// Negative durations are rejected from the environment and flags.
 type GrpcOptions struct {
 	// Port is the TCP port the gRPC server listens on (default 6254).
 	Port int `env:"GRPC_PORT" flag:"grpc-port"`
@@ -111,6 +135,27 @@ type GrpcOptions struct {
 	DisableHealth bool `env:"GRPC_DISABLE_HEALTH" flag:"grpc-disable-health"`
 	// TLS configures optional TLS for the gRPC listener (env: GRPC_TLS_*).
 	TLS TLSOptions
+
+	// MaxRecvMsgSize is the largest message in bytes the server will accept (default 4 MiB).
+	MaxRecvMsgSize int `env:"GRPC_MAX_RECV_MSG_SIZE" flag:"grpc-max-recv-msg-size"`
+	// MaxSendMsgSize is the largest message in bytes the server will send (default 4 MiB).
+	MaxSendMsgSize int `env:"GRPC_MAX_SEND_MSG_SIZE" flag:"grpc-max-send-msg-size"`
+	// MaxConcurrentStreams limits in-flight RPCs on a single client connection (default 100).
+	MaxConcurrentStreams uint32 `env:"GRPC_MAX_CONCURRENT_STREAMS" flag:"grpc-max-concurrent-streams"`
+	// MaxConnectionIdle closes connections that have had no active RPCs for this duration (default 15m).
+	MaxConnectionIdle time.Duration `env:"GRPC_MAX_CONNECTION_IDLE" flag:"grpc-max-connection-idle"`
+	// MaxConnectionAge closes connections after this duration regardless of activity (default 0).
+	MaxConnectionAge time.Duration `env:"GRPC_MAX_CONNECTION_AGE" flag:"grpc-max-connection-age"`
+	// MaxConnectionAgeGrace is how long in-flight RPCs may continue after MaxConnectionAge (default 0).
+	MaxConnectionAgeGrace time.Duration `env:"GRPC_MAX_CONNECTION_AGE_GRACE" flag:"grpc-max-connection-age-grace"`
+	// KeepaliveTime is how long a connection may be idle before the server pings the client (default 2h).
+	KeepaliveTime time.Duration `env:"GRPC_KEEPALIVE_TIME" flag:"grpc-keepalive-time"`
+	// KeepaliveTimeout is how long the server waits for a keepalive ping ack before closing the connection (default 20s).
+	KeepaliveTimeout time.Duration `env:"GRPC_KEEPALIVE_TIMEOUT" flag:"grpc-keepalive-timeout"`
+	// KeepaliveMinTime is the minimum interval a client may send keepalive pings (default 5m).
+	KeepaliveMinTime time.Duration `env:"GRPC_KEEPALIVE_MIN_TIME" flag:"grpc-keepalive-min-time"`
+	// PermitWithoutStream allows client keepalive pings on connections with no active RPCs (default false).
+	PermitWithoutStream bool `env:"GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM" flag:"grpc-keepalive-permit-without-stream"`
 }
 
 type ServerOptions struct {
@@ -263,11 +308,31 @@ func DefaultRestOptions() RestOptions {
 		ExtraAllowedMethods: nil,              // fixed REST method set; extension unlikely
 		CorsMaxAge:          10 * time.Minute, // preflight cache; only used once CORS is enabled
 		Fallback:            nil,
+		ReadTimeout:         15 * time.Second,
+		ReadHeaderTimeout:   10 * time.Second,
+		WriteTimeout:        0,
+		IdleTimeout:         120 * time.Second,
+		MaxHeaderBytes:      1 << 20,
+		MaxBodyBytes:        1 << 20,
+		MaxAssetBodyBytes:   1 << 20,
 	}
 }
 
 func DefaultGrpcOptions() GrpcOptions {
-	return GrpcOptions{Port: 6254, Reflection: false}
+	return GrpcOptions{
+		Port:                  6254,
+		Reflection:            false,
+		MaxRecvMsgSize:        4 << 20,
+		MaxSendMsgSize:        4 << 20,
+		MaxConcurrentStreams:  100,
+		MaxConnectionIdle:     15 * time.Minute,
+		MaxConnectionAge:      0, // avoid severing long-lived connections
+		MaxConnectionAgeGrace: 0,
+		KeepaliveTime:         2 * time.Hour,
+		KeepaliveTimeout:      20 * time.Second,
+		KeepaliveMinTime:      5 * time.Minute, // ping-flood guard
+		PermitWithoutStream:   false,
+	}
 }
 
 func DefaultServerOptions() ServerOptions {
@@ -353,6 +418,13 @@ func (o RestOptions) LogValue() slog.Value {
 		slog.Any("extra_allowed_headers", o.ExtraAllowedHeaders),
 		slog.Any("extra_allowed_methods", o.ExtraAllowedMethods),
 		slog.Duration("cors_max_age", o.CorsMaxAge),
+		slog.Duration("read_timeout", o.ReadTimeout),
+		slog.Duration("read_header_timeout", o.ReadHeaderTimeout),
+		slog.Duration("write_timeout", o.WriteTimeout),
+		slog.Duration("idle_timeout", o.IdleTimeout),
+		slog.Int("max_header_bytes", o.MaxHeaderBytes),
+		slog.Int("max_body_bytes", o.MaxBodyBytes),
+		slog.Int("max_asset_body_bytes", o.MaxAssetBodyBytes),
 	)
 }
 
@@ -362,6 +434,16 @@ func (o GrpcOptions) LogValue() slog.Value {
 		slog.Bool("reflection", o.Reflection),
 		slog.Bool("disable_health", o.DisableHealth),
 		slog.Any("tls", o.TLS),
+		slog.Int("max_recv_msg_size", o.MaxRecvMsgSize),
+		slog.Int("max_send_msg_size", o.MaxSendMsgSize),
+		slog.Uint64("max_concurrent_streams", uint64(o.MaxConcurrentStreams)),
+		slog.Duration("max_connection_idle", o.MaxConnectionIdle),
+		slog.Duration("max_connection_age", o.MaxConnectionAge),
+		slog.Duration("max_connection_age_grace", o.MaxConnectionAgeGrace),
+		slog.Duration("keepalive_time", o.KeepaliveTime),
+		slog.Duration("keepalive_timeout", o.KeepaliveTimeout),
+		slog.Duration("keepalive_min_time", o.KeepaliveMinTime),
+		slog.Bool("keepalive_permit_without_stream", o.PermitWithoutStream),
 	)
 }
 

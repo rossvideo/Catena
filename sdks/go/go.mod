@@ -3,7 +3,7 @@ module github.com/rossvideo/catena/sdks/go
 go 1.26.6
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.9.1
+	github.com/MicahParks/keyfunc/v3 v3.9.2
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/dlclark/regexp2 v1.12.0
 	github.com/golang-jwt/jwt/v5 v5.3.1

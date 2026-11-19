@@ -172,6 +172,13 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractStringSlice("REST_EXTRA_ALLOWED_HEADERS", "rest-extra-allowed-headers", "Additional CORS allowed headers (unioned with SDK baselines)", &opts.Rest.ExtraAllowedHeaders).
 		extractStringSlice("REST_EXTRA_ALLOWED_METHODS", "rest-extra-allowed-methods", "Additional CORS allowed methods (unioned with SDK baselines)", &opts.Rest.ExtraAllowedMethods).
 		extractPositiveDuration("REST_CORS_MAX_AGE", "rest-cors-max-age", "CORS preflight Max-Age duration (e.g. 10m, 600s). Defaults to seconds if no unit is specified.", &opts.Rest.CorsMaxAge).
+		extractPositiveDuration("REST_READ_TIMEOUT", "rest-read-timeout", "Maximum duration for reading the entire request, including the body. Zero means no timeout. Defaults to seconds if no unit is specified.", &opts.Rest.ReadTimeout).
+		extractPositiveDuration("REST_READ_HEADER_TIMEOUT", "rest-read-header-timeout", "Maximum duration for reading request headers. Zero falls back to the read timeout. Defaults to seconds if no unit is specified.", &opts.Rest.ReadHeaderTimeout).
+		extractPositiveDuration("REST_WRITE_TIMEOUT", "rest-write-timeout", "Maximum duration before timing out response writes. Zero means no timeout. Defaults to seconds if no unit is specified.", &opts.Rest.WriteTimeout).
+		extractPositiveDuration("REST_IDLE_TIMEOUT", "rest-idle-timeout", "Maximum time to wait for the next request on keep-alive connections. Zero falls back to the read timeout. Defaults to seconds if no unit is specified.", &opts.Rest.IdleTimeout).
+		extractInt("REST_MAX_HEADER_BYTES", "rest-max-header-bytes", "Maximum size of request headers in bytes. Zero or negative uses the net/http default (1 MiB)", &opts.Rest.MaxHeaderBytes).
+		extractInt("REST_MAX_BODY_BYTES", "rest-max-body-bytes", "Maximum request body size in bytes. Zero allows no body. Negative disables the limit", &opts.Rest.MaxBodyBytes).
+		extractInt("REST_MAX_ASSET_BODY_BYTES", "rest-max-asset-body-bytes", "Maximum asset upload body size in bytes. Zero allows no body. Negative disables the limit", &opts.Rest.MaxAssetBodyBytes).
 		extractInt("GRPC_PORT", "grpc-port", "Port the gRPC transport listens on", &opts.Grpc.Port).
 		extractBool("GRPC_REFLECTION", "grpc-reflection", "Enable gRPC server reflection", &opts.Grpc.Reflection).
 		extractBool("GRPC_DISABLE_HEALTH", "grpc-disable-health", "Disable the standard gRPC health service (grpc.health.v1), which is otherwise enabled", &opts.Grpc.DisableHealth).
@@ -180,8 +187,18 @@ func InitOptions(appName string, args []string, initOpts ...InitOption) (Runtime
 		extractString("GRPC_TLS_KEY_FILE", "grpc-tls-key-file", "Path to the PEM server private key for the gRPC transport", &opts.Grpc.TLS.KeyFile).
 		extractString("GRPC_TLS_CLIENT_CA_FILE", "grpc-tls-client-ca-file", "Path to the PEM client CA bundle for gRPC mutual TLS", &opts.Grpc.TLS.ClientCAFile).
 		extractBool("GRPC_TLS_MUTUAL_AUTH", "grpc-tls-mutual-auth", "Require and verify client certificates on the gRPC transport (mTLS)", &opts.Grpc.TLS.MutualAuth).
+		extractPositiveInt("GRPC_MAX_RECV_MSG_SIZE", "grpc-max-recv-msg-size", "Maximum gRPC message size in bytes the server accepts", &opts.Grpc.MaxRecvMsgSize).
+		extractPositiveInt("GRPC_MAX_SEND_MSG_SIZE", "grpc-max-send-msg-size", "Maximum gRPC message size in bytes the server sends", &opts.Grpc.MaxSendMsgSize).
+		extractUint32("GRPC_MAX_CONCURRENT_STREAMS", "grpc-max-concurrent-streams", "Maximum in-flight gRPC RPCs per connection", &opts.Grpc.MaxConcurrentStreams).
+		extractPositiveDuration("GRPC_MAX_CONNECTION_IDLE", "grpc-max-connection-idle", "Close gRPC connections with no active RPCs after this duration", &opts.Grpc.MaxConnectionIdle).
+		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE", "grpc-max-connection-age", "Close gRPC connections after this duration regardless of activity", &opts.Grpc.MaxConnectionAge).
+		extractPositiveDuration("GRPC_MAX_CONNECTION_AGE_GRACE", "grpc-max-connection-age-grace", "How long in-flight gRPC RPCs may continue after max connection age", &opts.Grpc.MaxConnectionAgeGrace).
+		extractPositiveDuration("GRPC_KEEPALIVE_TIME", "grpc-keepalive-time", "How long a gRPC connection may be idle before the server pings the client", &opts.Grpc.KeepaliveTime).
+		extractPositiveDuration("GRPC_KEEPALIVE_TIMEOUT", "grpc-keepalive-timeout", "How long the gRPC server waits for a keepalive ping ack before closing the connection", &opts.Grpc.KeepaliveTimeout).
+		extractPositiveDuration("GRPC_KEEPALIVE_MIN_TIME", "grpc-keepalive-min-time", "Minimum interval allowed between client gRPC keepalive pings", &opts.Grpc.KeepaliveMinTime).
+		extractBool("GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM", "grpc-keepalive-permit-without-stream", "Allow client gRPC keepalive pings when there are no active RPCs", &opts.Grpc.PermitWithoutStream).
 		//server options
-		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of concurrent connections", &opts.Server.MaxConnections).
+		extractInt("MAX_CONNECTIONS", "max-connections", "Maximum number of Connect and REST SSE subscriptions", &opts.Server.MaxConnections).
 		extractBool("DEV_MODE", "dev", "Enable development mode", &opts.Server.IsDev).
 		extractBool("AUTHZ", "authz", "Enable authorization checks (requires auth). Use --authz=false to disable", &opts.Server.AuthzEnabled).
 		// JWT validation options
@@ -314,6 +331,16 @@ func (l *configLoader) extractInt(envName, cliName, usage string, val *int) *con
 	return l
 }
 
+func (l *configLoader) extractPositiveInt(envName, cliName, usage string, val *int) *configLoader {
+	loadParser(l, envName, cliName, usage, val, parsePositiveInt)
+	return l
+}
+
+func (l *configLoader) extractUint32(envName, cliName, usage string, val *uint32) *configLoader {
+	loadParser(l, envName, cliName, usage, val, parseUint32)
+	return l
+}
+
 func (l *configLoader) extractString(envName, cliName, usage string, val *string) *configLoader {
 	// dummy passthrough parser func
 	loadParser(l, envName, cliName, usage, val, func(s string) (string, error) {
@@ -335,6 +362,27 @@ func (l *configLoader) extractDuration(envName, cliName, usage string, val *time
 func (l *configLoader) extractPositiveDuration(envName, cliName, usage string, val *time.Duration) *configLoader {
 	loadParser(l, envName, cliName, usage, val, parsePositiveDuration)
 	return l
+}
+
+// parsePositiveInt parses an int that must be greater than or equal to zero.
+func parsePositiveInt(s string) (int, error) {
+	v, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil {
+		return 0, err
+	}
+
+	if v < 0 {
+		return 0, fmt.Errorf("%s is not a valid positive integer", s)
+	}
+	return v, nil
+}
+
+func parseUint32(s string) (uint32, error) {
+	v, err := strconv.ParseUint(strings.TrimSpace(s), 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(v), nil
 }
 
 // parseStringSlice comma-splits, trims, and drops empty tokens so "" and

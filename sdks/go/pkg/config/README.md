@@ -290,9 +290,18 @@ All options can be configured via env and CLI.
 - `PREFIX_REST_EXTRA_ALLOWED_HEADERS` <-> `--rest-extra-allowed-headers`
 - `PREFIX_REST_EXTRA_ALLOWED_METHODS` <-> `--rest-extra-allowed-methods`
 - `PREFIX_REST_CORS_MAX_AGE` <-> `--rest-cors-max-age` (Go duration, e.g. `10m`)
+- `PREFIX_REST_READ_TIMEOUT` <-> `--rest-read-timeout` (Go duration, default `15s`; zero means no timeout)
+- `PREFIX_REST_READ_HEADER_TIMEOUT` <-> `--rest-read-header-timeout` (Go duration, default `10s`; zero falls back to the read timeout)
+- `PREFIX_REST_WRITE_TIMEOUT` <-> `--rest-write-timeout` (Go duration, default `0`; zero means no timeout)
+- `PREFIX_REST_IDLE_TIMEOUT` <-> `--rest-idle-timeout` (Go duration, default `120s`; zero falls back to the read timeout)
+- `PREFIX_REST_MAX_HEADER_BYTES` <-> `--rest-max-header-bytes` (default `1048576`; zero uses the `net/http` default)
+- `PREFIX_REST_MAX_BODY_BYTES` <-> `--rest-max-body-bytes` (zero allows no body; negative disables the limit)
+- `PREFIX_REST_MAX_ASSET_BODY_BYTES` <-> `--rest-max-asset-body-bytes` (asset POST/PUT only; zero allows no body; negative disables the limit)
 - `RestOptions.Fallback` (`http.HandlerFunc`) is code-only. It is not an environment variable or flag; assign it in code before constructing the REST transport. Nil leaves the transport's default 404.
 
 ### gRPC Transport
+
+Message size, concurrent-stream, and keepalive settings are passed straight through to grpc-go. The grpc-go docs are authoritative for zero values and library defaults. Negative durations are rejected from the environment and flags. The gRPC transport also rejects a `MaxConnectionAge` below 10ns, including a negative value set in code. Zero is allowed.
 
 - `PREFIX_GRPC_PORT` <-> `--grpc-port`
 - `PREFIX_GRPC_REFLECTION` <-> `--grpc-reflection`
@@ -302,6 +311,16 @@ All options can be configured via env and CLI.
 - `PREFIX_GRPC_TLS_KEY_FILE` <-> `--grpc-tls-key-file`
 - `PREFIX_GRPC_TLS_CLIENT_CA_FILE` <-> `--grpc-tls-client-ca-file`
 - `PREFIX_GRPC_TLS_MUTUAL_AUTH` <-> `--grpc-tls-mutual-auth`
+- `PREFIX_GRPC_MAX_RECV_MSG_SIZE` <-> `--grpc-max-recv-msg-size` (bytes; default 4 MiB)
+- `PREFIX_GRPC_MAX_SEND_MSG_SIZE` <-> `--grpc-max-send-msg-size` (bytes; default 4 MiB)
+- `PREFIX_GRPC_MAX_CONCURRENT_STREAMS` <-> `--grpc-max-concurrent-streams` (in-flight RPCs per connection; default 100)
+- `PREFIX_GRPC_MAX_CONNECTION_IDLE` <-> `--grpc-max-connection-idle` (Go duration; default `15m`)
+- `PREFIX_GRPC_MAX_CONNECTION_AGE` <-> `--grpc-max-connection-age` (Go duration; default 0)
+- `PREFIX_GRPC_MAX_CONNECTION_AGE_GRACE` <-> `--grpc-max-connection-age-grace` (Go duration; default 0)
+- `PREFIX_GRPC_KEEPALIVE_TIME` <-> `--grpc-keepalive-time` (Go duration; default `2h`)
+- `PREFIX_GRPC_KEEPALIVE_TIMEOUT` <-> `--grpc-keepalive-timeout` (Go duration; default `20s`)
+- `PREFIX_GRPC_KEEPALIVE_MIN_TIME` <-> `--grpc-keepalive-min-time` (Go duration; default `5m`)
+- `PREFIX_GRPC_KEEPALIVE_PERMIT_WITHOUT_STREAM` <-> `--grpc-keepalive-permit-without-stream` (default false)
 
 ### Server
 

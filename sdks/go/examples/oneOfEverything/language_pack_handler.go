@@ -78,8 +78,7 @@ func (s *LanguageStore) Delete(slot uint16, language string) bool {
 // registerLanguagePackHandlers wires the language-pack endpoints for each slot.
 // get + add are exercised by both gRPC and REST; update + delete are REST-only
 // since the gRPC service has no such RPCs.
-func registerLanguagePackHandlers(srv catena.Server) {
-	languages := NewLanguageStore(slotList)
+func registerLanguagePackHandlers(srv catena.Server, languages *LanguageStore) {
 	for _, slot := range slotList {
 		srv.RegisterReadLanguagePackHandler(slot, func(ctx catena.HandlerContext, req catena.ReadLanguagePackRequest) (catena.LanguagePack, catena.StatusResult) {
 			ctx.Logger().Info("LanguagePackRequest", "slot", req.Slot, "language", req.Language)
