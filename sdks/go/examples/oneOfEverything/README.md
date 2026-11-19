@@ -21,12 +21,12 @@ Add `--use-grpc` to also listen for gRPC. At least one transport must be enabled
 The **Authorize** button offers three ways to send a bearer token. A leading `Bearer ` is stripped. The token is kept for this browser tab and sent on every Catena request, including the live update stream.
 
 1. Paste an access token and choose **Apply**.
-2. **Generate Unsigned Token** builds an unsigned JWT for the scope you pick. Use this when signature validation is off.
+2. **Generate Unsigned Token** builds an unsigned JWT for the scope you pick. Use this when signature validation is off. The token includes the claims the server requires: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat`, `jti`, `scope`, and `azp`.
 3. **Sign in with Keycloak** opens the keycloak realm's login page and applies the signed access token for the account you use. The scope checkboxes do not apply to this token.
 
 ## Authorization without Keycloak
 
-Signature validation stays on unless you pass `--jwt-insecure-skip-signature-validation`. To run the example without Keycloak, pass that flag:
+Signature validation stays on unless you pass `--jwt-insecure-skip-signature-validation`. That flag turns off the signature check only. The server still requires every claim listed above, and still rejects a token whose `exp`, `nbf`, or `iat` is outside the allowed window. To run the example without Keycloak, pass that flag:
 
 ```bash
 go run . --use-rest --jwt-insecure-skip-signature-validation
