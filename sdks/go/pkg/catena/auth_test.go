@@ -444,14 +444,6 @@ func signTestToken(t *testing.T, method jwt.SigningMethod, key any, claims jwt.M
 	return signed
 }
 
-func mustSignNoneToken(claims jwt.MapClaims) string {
-	signed, err := jwt.NewWithClaims(jwt.SigningMethodNone, claims).SignedString(jwt.UnsafeAllowNoneSignatureType)
-	if err != nil {
-		panic(err)
-	}
-	return signed
-}
-
 const testHMACSecret = "secret"
 
 type jwtTestMode struct {
