@@ -1551,6 +1551,40 @@ func TestServer_InvokeGetComponentHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("SuccessWithLanguagePack", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		knownCtx := HandlerContext{Token: &jwt.Token{Raw: "known"}}
+		mockInvokeGateFn(t, srv, EndpointGetComponent, false, knownCtx, StatusWithCode(StatusCodeOk, ""))
+
+		expected := st2138.ComponentResponseLanguagePack("en", "catena", map[string]string{"word": "hello"})
+		handlerCalled := 0
+		srv.getComponentHandlers[22] = func(ctx HandlerContext, req GetComponentRequest) (st2138.ComponentResponse, StatusResult) {
+			handlerCalled++
+			if req.Slot != 22 {
+				t.Errorf("expected slot 22, got %d", req.Slot)
+			}
+			if req.Fqoid != "en" || req.Kind != st2138.ComponentKindLanguagePack {
+				t.Errorf("unexpected args fqoid=%q kind=%v", req.Fqoid, req.Kind)
+			}
+			if ctx.Token != knownCtx.Token {
+				t.Error("expected the gate's handler context to be passed through to the handler")
+			}
+			return Reply(expected)
+		}
+
+		actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Fqoid: "en", Kind: st2138.ComponentKindLanguagePack})
+
+		if handlerCalled != 1 {
+			t.Errorf("expected handler to be called once, got %d", handlerCalled)
+		}
+		if status.IsError() {
+			t.Errorf("expected OK status, got %v", status)
+		}
+		if !proto.Equal(actual.Proto, expected.Proto) {
+			t.Errorf("expected value %v, got %v", expected, actual)
+		}
+	})
+
 	t.Run("RejectsInvalidKind", func(t *testing.T) {
 		for _, kind := range []st2138.ComponentKind{st2138.ComponentKindUnused, st2138.ComponentKind(99)} {
 			srv := newTestServer(t, true)
@@ -1595,6 +1629,22 @@ func TestServer_InvokeGetComponentHandler(t *testing.T) {
 		}
 		if status.Error != "invalid fqoid: /invalid/fqoid" {
 			t.Errorf("expected error message 'invalid fqoid: /invalid/fqoid', got %q", status.Error)
+		}
+		if actual.Proto != nil {
+			t.Errorf("expected empty response, got %v", actual)
+		}
+	})
+
+	t.Run("InvalidLanguageCode", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetComponent, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+		actual, status := srv.InvokeGetComponentHandler(validTestTransportContext(nil), GetComponentRequest{Slot: 22, Fqoid: "test/param", Kind: st2138.ComponentKindLanguagePack})
+		if !status.IsError() {
+			t.Errorf("expected error status, got %v", status)
+		}
+		if status.Error != "invalid language code: test/param" {
+			t.Errorf("expected error message 'invalid language code: test/param', got %q", status.Error)
 		}
 		if actual.Proto != nil {
 			t.Errorf("expected empty response, got %v", actual)
