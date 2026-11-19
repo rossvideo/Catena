@@ -3013,6 +3013,90 @@ func TestServer_DeregisterConnection_Passthrough(t *testing.T) {
 	}
 }
 
+func TestServer_RegisterTransportConnection_TokenExpiry(t *testing.T) {
+	getTokenString := func(t *testing.T, exp time.Time) string {
+		t.Helper()
+		token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+			"scope": st2138.ScopeMon,
+			"exp":   float64(exp.Unix()),
+		})
+		signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+		if err != nil {
+			t.Fatalf("sign token: %v", err)
+		}
+		return signed
+	}
+
+	// Creates a new server with with authz enabled and the given leeway
+	newServerWithLeeway := func(t *testing.T, leeway time.Duration) *server {
+		t.Helper()
+		built, err := NewServer(ServerOptions{
+			AuthzEnabled: true,
+			JwtOptions: JwtValidationOptions{
+				InsecureSkipSignatureValidation: true,
+				Leeway:                          leeway,
+			},
+		})
+		if err != nil {
+			t.Fatalf("NewServer: %v", err)
+		}
+		srv := built.(*server)
+		t.Cleanup(func() { srv.Shutdown(context.Background()) })
+		return srv
+	}
+
+	t.Run("authz enabled stores token expiry", func(t *testing.T) {
+		exp := time.Now().Add(time.Hour).UTC().Truncate(time.Second)
+		srv := newServerWithLeeway(t, 0)
+
+		conn, status := srv.RegisterTransportConnection(nil, TransportContext{AccessToken: getTokenString(t, exp)})
+		if status.Code != StatusCodeOk {
+			t.Fatalf("register: code %v (%s)", status.Code, status.Error)
+		}
+		t.Cleanup(func() { srv.DeregisterConnection(conn.ID) })
+
+		got := srv.connectionQueue.(*connectionQueue).getConnectionExpiry(conn)
+		if !got.Equal(exp) {
+			t.Fatalf("expiry = %v, want %v", got, exp)
+		}
+	})
+
+	t.Run("authz enabled adds the validator leeway", func(t *testing.T) {
+		leeway := 30 * time.Second
+		exp := time.Now().Add(time.Hour).UTC().Truncate(time.Second)
+		srv := newServerWithLeeway(t, leeway)
+
+		conn, status := srv.RegisterTransportConnection(nil, TransportContext{AccessToken: getTokenString(t, exp)})
+		if status.Code != StatusCodeOk {
+			t.Fatalf("register: code %v (%s)", status.Code, status.Error)
+		}
+		t.Cleanup(func() { srv.DeregisterConnection(conn.ID) })
+
+		want := exp.Add(leeway)
+		got := srv.connectionQueue.(*connectionQueue).getConnectionExpiry(conn)
+		if !got.Equal(want) {
+			t.Fatalf("expiry = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("authz disabled does not store token expiry", func(t *testing.T) {
+		exp := time.Now().Add(time.Hour).UTC().Truncate(time.Second)
+		srv := newTestServer(t, false)
+		t.Cleanup(func() { srv.Shutdown(context.Background()) })
+
+		conn, status := srv.RegisterTransportConnection(nil, TransportContext{AccessToken: getTokenString(t, exp)})
+		if status.Code != StatusCodeOk {
+			t.Fatalf("register: code %v (%s)", status.Code, status.Error)
+		}
+		t.Cleanup(func() { srv.DeregisterConnection(conn.ID) })
+
+		got := srv.connectionQueue.(*connectionQueue).getConnectionExpiry(conn)
+		if !got.IsZero() {
+			t.Fatalf("expiry = %v, want zero", got)
+		}
+	})
+}
+
 func TestServer_RegisterTransportConnection_Passthrough(t *testing.T) {
 	called := false
 	transport := &stubTransport{tb: t}

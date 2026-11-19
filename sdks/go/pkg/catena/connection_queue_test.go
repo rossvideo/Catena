@@ -966,6 +966,57 @@ func TestConnectionQueue_SweepExpiredConnections(t *testing.T) {
 		cq.deregisterConnection(permanentConnection.ID)
 	})
 
+	t.Run("force deregisters a connection that ignores Done", func(t *testing.T) {
+		clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
+		cq := newConnectionQueueWithOptions(0, nil,
+			withClock(clock.Now),
+			withExpirySweepInterval(0),
+			withExpiryGracePeriod(20*time.Millisecond),
+		).(*connectionQueue)
+		t.Cleanup(func() { stopConnectionQueue(cq) })
+		owner := &stubTransport{tb: t}
+
+		// Nothing reads Done or deregisters. Removal has to grace-period in the watchdog go routine
+		shortLivedConnection, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("register ignored connection: %v", res)
+		}
+
+		longLivedConnection, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+		if res.Code != StatusCodeOk {
+			t.Fatalf("register live connection: %v", res)
+		}
+
+		clock.Advance(2 * time.Minute)
+		if got := cq.sweepExpiredConnections(); got != 1 {
+			t.Fatalf("sweep = %d, want 1", got)
+		}
+		waitForCount(t, cq, 1)
+
+		// The short-lived connection is expired and force-deregistered
+		if shortLivedConnection.CloseReason() != CloseReasonExpired {
+			t.Errorf("close reason = %s, want expired", shortLivedConnection.CloseReason())
+		}
+
+		cq.notifyUpdate(&protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{Value: &protos.PushUpdates_PushValue{Oid: "p"}},
+		}, "")
+
+		if len(shortLivedConnection.Updates) != 0 {
+			t.Error("force-deregistered connection received an update")
+		}
+
+		// The long-lived connection is not expired and still receives updates
+		select {
+		case <-longLivedConnection.Updates:
+		default:
+			t.Fatal("live connection did not receive the update")
+		}
+
+		cq.deregisterConnection(longLivedConnection.ID)
+	})
+
 	t.Run("skips connections while the queue is shutting down", func(t *testing.T) {
 		clock := newManualClock(time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC))
 		cq := newConnectionQueueWithOptions(0, nil,

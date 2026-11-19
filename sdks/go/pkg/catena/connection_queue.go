@@ -49,6 +49,8 @@ import (
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
+// ConnectionCloseReason is why the queue closed a connection. CloseReasonNone
+// means the connection is still open.
 type ConnectionCloseReason int32
 
 const (
@@ -128,6 +130,8 @@ type connectionQueueInterface interface {
 	connectionCount() int
 }
 
+// CloseReason reports why the queue closed this connection. Read it after Done
+// is closed: the queue writes the reason before closing Done
 func (c *Connection) CloseReason() ConnectionCloseReason {
 	return c.closeReason
 }
