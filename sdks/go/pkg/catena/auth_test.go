@@ -416,6 +416,17 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 	})
 }
 
+var requiredClaims = []string{
+	"iss",
+	"sub",
+	"aud",
+	"exp",
+	"nbf",
+	"iat",
+	"jti",
+	"scope",
+}
+
 // conformantClaims returns a claim set that satisfies the Catena access-token
 // rules: every always-required claim, azp, client_id set, and sid omitted.
 func conformantClaims(scope string) jwt.MapClaims {
@@ -531,7 +542,7 @@ func testCatenaClaims(t *testing.T, mode jwtTestMode) {
 		testValidClaims(t, mode, claims)
 	})
 
-	for _, name := range requiredClaimNames {
+	for _, name := range requiredClaims {
 		t.Run("missing "+name, func(t *testing.T) {
 			claims := conformantClaims("st2138:op")
 			delete(claims, name)
