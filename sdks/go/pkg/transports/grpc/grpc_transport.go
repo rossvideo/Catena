@@ -622,19 +622,32 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 
 	// Listen for updates and client disconnect
 	ctx := stream.Context()
+
+	closeStream := func() error {
+		if conn.CloseReason() == catena.CloseReasonExpired {
+			s.transport.log.Info("gRPC connection closed", "connID", conn.ID, "reason", conn.CloseReason())
+			return status.Error(codes.Unauthenticated, jwsTokenExpiredMessage)
+		}
+		s.transport.log.Info("gRPC connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
+		return status.Error(codes.Unavailable, "server shutting down")
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			s.transport.log.Info("gRPC client disconnected", "connID", conn.ID)
 			return ctx.Err()
 		case <-conn.Done:
-			if conn.CloseReason() == catena.CloseReasonExpired {
-				s.transport.log.Info("gRPC connection closed", "connID", conn.ID, "reason", conn.CloseReason())
-				return status.Error(codes.Unauthenticated, jwsTokenExpiredMessage)
-			}
-			s.transport.log.Info("gRPC connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
-			return status.Error(codes.Unavailable, "server shutting down")
+			return closeStream()
 		case update := <-conn.Updates:
+
+			// Drop buffered updates that arrive after Done has closed.
+			select {
+			case <-conn.Done:
+				return closeStream()
+			default:
+			}
+
 			if err := stream.Send(update); err != nil {
 				s.transport.log.Error("failed to send update", "connID", conn.ID, "error", err)
 				return err

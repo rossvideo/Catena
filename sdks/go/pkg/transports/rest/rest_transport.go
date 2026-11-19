@@ -482,23 +482,33 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	// Each connection's goroutine listens for setValue updates and server shutdown signals
 	ctx := r.Context()
+	endStream := func() {
+		if conn.CloseReason() == catena.CloseReasonExpired {
+			t.log.Info("SSE connection closed", "connID", conn.ID, "reason", conn.CloseReason())
+			result := catena.StatusWithCode(catena.StatusCodeUnauthenticated, "JWS token expired")
+			if err := writeSSEError(w, flusher, t.isDevMode(), result); err != nil {
+				t.log.Error("failed to send SSE token-expired event", "connID", conn.ID, "error", err)
+			}
+			return
+		}
+		t.log.Info("SSE connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			t.log.Info("SSE client disconnected", "connID", conn.ID)
 			return
 		case <-conn.Done:
-			if conn.CloseReason() == catena.CloseReasonExpired {
-				t.log.Info("SSE connection closed", "connID", conn.ID, "reason", conn.CloseReason())
-				result := catena.StatusWithCode(catena.StatusCodeUnauthenticated, "JWS token expired")
-				if err := writeSSEError(w, flusher, t.isDevMode(), result); err != nil {
-					t.log.Error("failed to send SSE token-expired event", "connID", conn.ID, "error", err)
-				}
-				return
-			}
-			t.log.Info("SSE connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
+			endStream()
 			return
 		case update := <-conn.Updates:
+			// Drop buffered updates that arrive after Done has closed.
+			select {
+			case <-conn.Done:
+				endStream()
+				return
+			default:
+			}
 			if err := t.sendSSEEvent(w, flusher, update); err != nil {
 				t.log.Error("failed to send SSE event", "connID", conn.ID, "error", err)
 				return
