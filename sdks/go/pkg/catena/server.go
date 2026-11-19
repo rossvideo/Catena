@@ -1037,8 +1037,14 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 			if !req.Kind.Valid() {
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInvalidArgument, "invalid component kind")
 			}
-			if result := ValidateFqoid(req.Fqoid); result.IsError() {
-				return st2138.ComponentResponse{}, result
+			if req.Kind == st2138.ComponentKindLanguagePack {
+				if result := ValidateLanguageCode(req.Fqoid); result.IsError() {
+					return st2138.ComponentResponse{}, result
+				}
+			} else {
+				if result := ValidateFqoid(req.Fqoid); result.IsError() {
+					return st2138.ComponentResponse{}, result
+				}
 			}
 
 			// The SDK owns product/* only for kind PARAM, and only when a product
