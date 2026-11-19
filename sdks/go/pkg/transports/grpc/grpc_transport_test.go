@@ -1771,7 +1771,9 @@ func TestTransport_Connect_Shutdown(t *testing.T) {
 func TestTransport_Connect_TokenExpired(t *testing.T) {
 	ctx := context.Background()
 	lis := bufconn.Listen(bufSize)
-	transport := NewTransport(config.GrpcOptions{Port: 1234, DisableHealth: true})
+	opts := testOptions(1234)
+	opts.DisableHealth = true
+	transport := NewTransport(opts)
 
 	// A real server owns the connection, so the queue records the expiry close.
 	built, err := catena.NewServer(catena.ServerOptions{
