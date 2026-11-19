@@ -570,7 +570,8 @@ function escapeHtml(text) {
 // =====================================================================
 
 let demoConfig = {
-    jwtIssuer: ''
+    jwtIssuer: '',
+    jwtAudience: ''
 };
 
 async function loadDemoConfig() {
@@ -674,13 +675,16 @@ function buildDemoToken() {
     const now = Math.floor(Date.now() / 1000);
 
     const claims = {
+        iss: demoConfig.jwtIssuer || 'catena-demo',
         sub: 'demo-user',
-        scope: selectedScope(),
-        iat: now - 30,
+        aud: demoConfig.jwtAudience || 'catena-demo',
         exp: now + 3600,
+        nbf: now - 30,
+        iat: now - 30,
+        jti: crypto.randomUUID(),
+        scope: selectedScope(),
+        azp: KEYCLOAK_CLIENT_ID,
     };
-    // --jwt-issuer makes the iss claim mandatory, even when the signature is not checked.
-    if (demoConfig.jwtIssuer) claims.iss = demoConfig.jwtIssuer;
 
     const headerJSON = JSON.stringify({ alg: 'none', typ: 'JWT' });
     const payloadJSON = JSON.stringify(claims);
