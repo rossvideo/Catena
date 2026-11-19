@@ -60,6 +60,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -1764,6 +1765,133 @@ func TestTransport_Connect_Shutdown(t *testing.T) {
 	}
 	if st.Code() != codes.Unavailable {
 		t.Errorf("expected Unavailable code, got %v", st.Code())
+	}
+}
+
+// connectTestStream is a ServerStreamingServer whose Send returns sendErr.
+type connectTestStream struct {
+	grpc.ServerStream
+	ctx     context.Context
+	sendErr error
+	sent    int
+}
+
+func (s *connectTestStream) Context() context.Context { return s.ctx }
+
+func (s *connectTestStream) Send(*protos.PushUpdates) error {
+	s.sent++
+	return s.sendErr
+}
+
+func TestTransport_Connect_DropsUpdateAfterDone(t *testing.T) {
+	transport := NewTransport(testOptions(0))
+	runtime := transporttest.MakeStubServerRuntime(t)
+	transport.runtime = runtime
+
+	for attempt := 1; attempt <= 64; attempt++ {
+		connection := transporttest.MakeTestConnection(attempt)
+		runtime.WithConnection(connection)
+		connection.Updates <- &protos.PushUpdates{Slot: 1}
+		close(connection.Done)
+
+		stream := &connectTestStream{ctx: context.Background()}
+		err := transport.catenaService.Connect(&protos.ConnectPayload{}, stream)
+		st, ok := status.FromError(err)
+		if !ok {
+			t.Fatalf("attempt %d: expected gRPC status error, got %v", attempt, err)
+		}
+		if st.Code() != codes.Unavailable {
+			t.Errorf("attempt %d: expected Unavailable code, got %v", attempt, st.Code())
+		}
+		if st.Message() != "server shutting down" {
+			t.Errorf("attempt %d: expected message %q, got %q", attempt, "server shutting down", st.Message())
+		}
+		if stream.sent != 0 {
+			t.Errorf("attempt %d: expected the update to be dropped, Send was called %d times", attempt, stream.sent)
+		}
+	}
+}
+
+func TestTransport_Connect_TokenExpired(t *testing.T) {
+	ctx := context.Background()
+	lis := bufconn.Listen(bufSize)
+	opts := testOptions(1234)
+	opts.DisableHealth = true
+	transport := NewTransport(opts)
+
+	// A real server owns the connection, so the queue records the expiry close.
+	built, err := catena.NewServer(catena.ServerOptions{
+		AuthzEnabled: true,
+		JwtOptions: catena.JwtValidationOptions{
+			InsecureSkipSignatureValidation: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+
+	runtime, ok := built.(catena.ServerRuntime)
+	if !ok {
+		t.Fatal("server does not implement ServerRuntime")
+	}
+	transport.runtime = runtime
+	t.Cleanup(func() { built.Shutdown(context.Background()) })
+
+	go func() {
+		if err := transport.grpcServer.Serve(lis); err != nil {
+			t.Logf("server stopped: %v", err)
+		}
+	}()
+	t.Cleanup(func() {
+		transport.grpcServer.Stop()
+		lis.Close()
+	})
+	time.Sleep(10 * time.Millisecond)
+
+	exp := time.Now().Add(2 * time.Second)
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+		"scope": st2138.ScopeMon,
+		"exp":   exp.Unix(),
+	})
+	signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	if err != nil {
+		t.Fatalf("sign token: %v", err)
+	}
+
+	client, cleanupClient := setupGRPCClient(t, ctx, lis)
+	t.Cleanup(cleanupClient)
+
+	streamCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", signed))
+	stream, err := makeConnectRequest(t, client, streamCtx)
+	assertNoError(t, err)
+
+	errCh := make(chan error, 1)
+	go func() {
+		for {
+			_, recvErr := stream.Recv()
+			if recvErr != nil {
+				errCh <- recvErr
+				return
+			}
+		}
+	}()
+
+	var recvErr error
+	select {
+	case recvErr = <-errCh:
+	case <-time.After(6 * time.Second):
+		t.Fatal("timed out waiting for the connection to expire")
+	}
+
+	st, ok := status.FromError(recvErr)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got %v", recvErr)
+	}
+	if st.Code() != codes.Unauthenticated {
+		t.Errorf("expected Unauthenticated code, got %v", st.Code())
+	}
+	if st.Message() != "JWS token expired" {
+		t.Errorf("expected message %q, got %q", "JWS token expired", st.Message())
 	}
 }
 

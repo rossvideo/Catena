@@ -332,6 +332,7 @@ Message size, concurrent-stream, and keepalive settings are passed straight thro
 
 - `PREFIX_JWT_ISSUER` <-> `--jwt-issuer`
 - `PREFIX_JWT_AUDIENCE` <-> `--jwt-audience`
+- `PREFIX_JWT_LEEWAY` <-> `--jwt-leeway`
 - `PREFIX_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION` <-> `--jwt-insecure-skip-signature-validation`
 - `PREFIX_JWT_STARTUP_RETRY_MAX_ELAPSED` <--> `jwt-startup-retry-max-elapsed`
 
