@@ -51,6 +51,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -2574,43 +2575,74 @@ func TestTransport_Connect_TokenExpired(t *testing.T) {
 	transport.runtime = runtime
 	t.Cleanup(func() { built.Shutdown(context.Background()) })
 
-	exp := time.Now().Add(2 * time.Second)
-	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
-		"scope": st2138.ScopeMon,
-		"exp":   exp.Unix(),
-	})
+	const maxAttempts = 3
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		exp := time.Now().Add(3 * time.Second)
+		token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+			"scope": st2138.ScopeMon,
+			"exp":   exp.Unix(),
+		})
 
-	signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
-	if err != nil {
-		t.Fatalf("sign token: %v", err)
-	}
+		signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+		if err != nil {
+			t.Fatalf("sign token: %v", err)
+		}
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
-	req.Header.Set("Authorization", signed)
-	done := make(chan struct{})
-	go func() {
-		transport.handleConnect(rec, req)
-		close(done)
-	}()
+		rec := &sseStartedWriter{ResponseRecorder: httptest.NewRecorder(), started: make(chan struct{})}
+		req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+		req.Header.Set("Authorization", signed)
+		done := make(chan struct{})
+		go func() {
+			transport.handleConnect(rec, req)
+			close(done)
+		}()
 
-	select {
-	case <-done:
-	case <-time.After(6 * time.Second):
-		t.Fatal("SSE handler did not return after token expiry")
-	}
+		select {
+		case <-rec.started:
+		case <-done:
+			// Rejected before the stream opened, so the token expired before
+			// registration. Try again with a fresh token.
+			if attempt == maxAttempts {
+				t.Fatalf("handler rejected token before SSE stream opened: status=%d body=%q", rec.Code, rec.Body.String())
+			}
+			continue
+		case <-time.After(10 * time.Second):
+			t.Fatal("timed out waiting for the SSE stream to open")
+		}
 
-	assertStatus(t, rec, http.StatusOK)
-	body := rec.Body.String()
-	if !strings.Contains(body, "event: error\n") {
-		t.Fatalf("expected an SSE error event, got %q", body)
+		// The stream is open. Wait for the connection to close on expiry.
+		select {
+		case <-done:
+		case <-time.After(10 * time.Second):
+			t.Fatal("SSE handler did not return after token expiry")
+		}
+
+		assertStatus(t, rec.ResponseRecorder, http.StatusOK)
+		body := rec.Body.String()
+		if !strings.Contains(body, "event: error\n") {
+			t.Fatalf("expected an SSE error event, got %q", body)
+		}
+		if !strings.Contains(body, `"code":401`) {
+			t.Errorf("expected unauthenticated status 401, got %q", body)
+		}
+		if !strings.Contains(body, "JWS token expired") {
+			t.Errorf("expected token-expired message, got %q", body)
+		}
+		return
 	}
-	if !strings.Contains(body, `"code":401`) {
-		t.Errorf("expected unauthenticated status 401, got %q", body)
-	}
-	if !strings.Contains(body, "JWS token expired") {
-		t.Errorf("expected token-expired message, got %q", body)
-	}
+}
+
+// sseStartedWriter closes started on the first Flush. handleConnect only
+// flushes after it has accepted the token and written HTTP 200.
+type sseStartedWriter struct {
+	*httptest.ResponseRecorder
+	started chan struct{}
+	once    sync.Once
+}
+
+func (w *sseStartedWriter) Flush() {
+	w.ResponseRecorder.Flush()
+	w.once.Do(func() { close(w.started) })
 }
 
 func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
