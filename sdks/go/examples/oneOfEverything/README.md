@@ -40,6 +40,16 @@ Use a Keycloak realm that is already running. Pass its issuer URL, the realm URL
 
 The realm needs a public client named `oneofeverything` and a redirect URI of `http://localhost:9080/*`. Tokens should be signed with ES256, which is what the SDK accepts by default. The server loads the signing keys from the issuer's OpenID Connect discovery document (`/.well-known/openid-configuration`).
 
+A default Keycloak access token includes `jti`, `azp`, and `sid`. It does not include `client_id`; `azp` is enough. It also does not include `nbf`, which the server requires. Add a client protocol mapper so the access token carries one:
+
+- Mapper type: Hardcoded claim
+- Token Claim Name: `nbf`
+- Claim value: `1` (a non-zero past timestamp; `0` is treated as missing)
+- Claim JSON Type: long
+- Add to access token: on
+
+If you set `--jwt-audience`, it must match the token's `aud`. Leave it unset to accept whatever audience the realm issues.
+
 Start the example:
 
 ```bash
