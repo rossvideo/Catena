@@ -645,7 +645,7 @@ h1 {
 .asset-modal.auth-modal.open { display: flex; }
 
 .auth-modal-content {
-    width: min(92vw, 480px);
+    width: min(92vw, 560px);
 }
 
 .auth-modal-body {
@@ -775,6 +775,74 @@ h1 {
     background: var(--border);
     margin: 0.15rem 0;
 }
+.auth-menu {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+}
+
+.auth-menu + .auth-menu { margin-top: 0.15rem; }
+
+.auth-menu summary {
+    cursor: pointer;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    list-style: none;
+}
+
+.auth-menu summary::-webkit-details-marker { display: none; }
+
+.auth-menu summary::before {
+    content: '▸';
+    display: inline-block;
+    width: 0.7rem;
+    margin-right: 0.35rem;
+}
+
+.auth-menu[open] summary::before { content: '▾'; }
+
+.auth-menu-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0 0.7rem 0.7rem;
+}
+
+.claim-grid {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.4rem 0.6rem;
+    align-items: center;
+}
+
+.claim-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+}
+
+.claim-input {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+}
+
+.claim-input:focus { border-color: var(--accent); }
+
+.claim-input::placeholder { color: var(--text-muted); }
+
+.auth-menu-body > .btn { width: 100%; }
+
 .scope-grid {
     display: grid;
     grid-template-columns: 1fr 4.75rem 4.75rem;

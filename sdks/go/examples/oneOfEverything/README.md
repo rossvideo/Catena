@@ -21,8 +21,8 @@ Add `--use-grpc` to also listen for gRPC. At least one transport must be enabled
 The **Authorize** button offers three ways to send a bearer token. A leading `Bearer ` is stripped. The token is kept for this browser tab and sent on every Catena request, including the live update stream.
 
 1. Paste an access token and choose **Apply**.
-2. **Generate Unsigned Token** builds an unsigned JWT for the scope you pick. Use this when signature validation is off. The token includes the claims the server requires: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat`, `jti`, `scope`, and `azp`.
-3. **Sign in with Keycloak** opens the keycloak realm's login page and applies the signed access token for the account you use. The scope checkboxes do not apply to this token.
+2. **Generate Unsigned Token** builds an unsigned JWT from the **Scopes** and **Claims** menus. Use this when signature validation is off. A blank claim is left out of the token. A blank `jti` still gets a new id on each token. `exp`, `nbf`, and `iat` are seconds from the moment the token is generated. The defaults are the claims the server requires: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat`, `jti`, `scope`, and `azp`. `client_id` and `sid` start blank.
+3. **Sign in with Keycloak** opens the keycloak realm's login page and applies the signed access token for the account you use. The Scopes and Claims menus do not apply to this token.
 
 ## Authorization without Keycloak
 
@@ -32,7 +32,7 @@ Signature validation stays on unless you pass `--jwt-insecure-skip-signature-val
 go run . --use-rest --jwt-insecure-skip-signature-validation
 ```
 
-In the page, open **Authorize**, check the scopes you want, and choose **Generate unsigned**. The token is applied for this browser tab.
+In the page, open **Authorize**, set the scopes and claims you want, and choose **Generate unsigned**. An empty claim is left out of the token. The token is applied for this browser tab.
 
 ## Sign in with Keycloak
 
