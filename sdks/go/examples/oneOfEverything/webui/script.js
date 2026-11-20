@@ -570,7 +570,8 @@ function escapeHtml(text) {
 // =====================================================================
 
 let demoConfig = {
-    jwtIssuer: ''
+    jwtIssuer: '',
+    jwtAudience: ''
 };
 
 async function loadDemoConfig() {
@@ -578,9 +579,55 @@ async function loadDemoConfig() {
         const res = await fetch('/demo-config');
         if (!res.ok) return;
         Object.assign(demoConfig, await res.json());
+        fillIssuerAudienceDefaults();
     } catch (e) {
         console.error('demo-config error:', e);
     }
+}
+
+// Static fallbacks written into the claim fields. A field still holding one of
+// these is replaced when /demo-config returns an issuer or audience.
+const STATIC_CLAIM_ISSUER = 'catena-demo';
+const STATIC_CLAIM_AUDIENCE = 'catena-demo';
+
+function defaultClaimValues() {
+    return {
+        iss: demoConfig.jwtIssuer || STATIC_CLAIM_ISSUER,
+        sub: 'demo-user',
+        aud: demoConfig.jwtAudience || STATIC_CLAIM_AUDIENCE,
+        exp: '3600',
+        nbf: '-30',
+        iat: '-30',
+        jti: '',
+        azp: KEYCLOAK_CLIENT_ID,
+        client_id: '',
+        sid: '',
+    };
+}
+
+function claimInput(name) {
+    return document.querySelector(`#authModal [data-claim="${name}"]`);
+}
+
+function applyClaimDefaults() {
+    const defaults = defaultClaimValues();
+    Object.entries(defaults).forEach(([name, value]) => {
+        const input = claimInput(name);
+        if (input) input.value = value;
+    });
+}
+
+function fillIssuerAudienceDefaults() {
+    const iss = claimInput('iss');
+    const aud = claimInput('aud');
+    if (iss && iss.value === STATIC_CLAIM_ISSUER) iss.value = demoConfig.jwtIssuer || STATIC_CLAIM_ISSUER;
+    if (aud && aud.value === STATIC_CLAIM_AUDIENCE) aud.value = demoConfig.jwtAudience || STATIC_CLAIM_AUDIENCE;
+}
+
+function resetScopeDefaults() {
+    document.querySelectorAll('#authModal input[type="checkbox"][data-scope]').forEach(box => {
+        box.checked = true;
+    });
 }
 
 // Session storage for the token and the in-progress Keycloak login.
@@ -668,19 +715,39 @@ function refreshAfterAuthChange() {
     fetchAssets();
 }
 
-// Generate unsigned token for the demo with the selected scopes
+function claimValue(name) {
+    const input = claimInput(name);
+    return input ? input.value.trim() : '';
+}
+
+// Build an unsigned token from the Scopes and Claims menus.
+// Returns { token } or { error }. A blank string or time field is omitted.
+// A blank jti still gets a new id. exp, nbf, and iat are seconds from now.
 function buildDemoToken() {
-
     const now = Math.floor(Date.now() / 1000);
+    const claims = {};
 
-    const claims = {
-        sub: 'demo-user',
-        scope: selectedScope(),
-        iat: now - 30,
-        exp: now + 3600,
-    };
-    // --jwt-issuer makes the iss claim mandatory, even when the signature is not checked.
-    if (demoConfig.jwtIssuer) claims.iss = demoConfig.jwtIssuer;
+    ['iss', 'sub', 'aud'].forEach(name => {
+        const value = claimValue(name);
+        if (value !== '') claims[name] = value;
+    });
+
+    for (const name of ['exp', 'nbf', 'iat']) {
+        const raw = claimValue(name);
+        if (raw === '') continue;
+        if (!/^-?\d+$/.test(raw)) {
+            return { error: name + ' must be an integer number of seconds.' };
+        }
+        claims[name] = now + Number(raw);
+    }
+
+    claims.jti = claimValue('jti') || crypto.randomUUID();
+    claims.scope = selectedScope();
+
+    ['azp', 'client_id', 'sid'].forEach(name => {
+        const value = claimValue(name);
+        if (value !== '') claims[name] = value;
+    });
 
     const headerJSON = JSON.stringify({ alg: 'none', typ: 'JWT' });
     const payloadJSON = JSON.stringify(claims);
@@ -688,7 +755,7 @@ function buildDemoToken() {
     const header = bytesToBase64Url(new TextEncoder().encode(headerJSON));
     const payload = bytesToBase64Url(new TextEncoder().encode(payloadJSON));
 
-    return header + '.' + payload + '.';
+    return { token: header + '.' + payload + '.' };
 }
 
 function keycloakBrowserIssuer() {
@@ -823,11 +890,18 @@ function bindAuthUI() {
         refreshAfterAuthChange();
     });
 
+    document.getElementById('resetScopesBtn').addEventListener('click', resetScopeDefaults);
+    document.getElementById('resetClaimsBtn').addEventListener('click', applyClaimDefaults);
+
     document.getElementById('generateTokenBtn').addEventListener('click', () => {
-        const token = buildDemoToken();
-        document.getElementById('tokenInput').value = token;
-        setToken(token);
-    
+        const result = buildDemoToken();
+        if (result.error) {
+            setAuthStatus(result.error, true);
+            return;
+        }
+        document.getElementById('tokenInput').value = result.token;
+        setToken(result.token);
+
         closeAuthModal();
         refreshAfterAuthChange();
     });

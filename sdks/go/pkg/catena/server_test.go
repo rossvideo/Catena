@@ -106,19 +106,22 @@ func assertAllEndpointsCovered(t *testing.T, covered []EndpointType, excluded ..
 
 func makeTestJwtToken(t *testing.T, scopes []string) string {
 	t.Helper()
-	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
-		"scope": strings.Join(scopes, " "),
-	})
-	signedToken, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
-	if err != nil {
-		t.Fatalf("Failed to sign JWT token: %v", err)
-	}
-	return signedToken
+	return signTestToken(t, jwt.SigningMethodNone, jwt.UnsafeAllowNoneSignatureType, conformantClaims(strings.Join(scopes, " ")))
 }
 
-const validTestJWT = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InJlYWQgd3JpdGUgYWxsIHN0MjEzODpvcDp3In0."
-const validTestJWTWithoutExecuteCommandScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InJlYWQgd3JpdGUgYWxsIn0."
-const validTestJWTWithCfgScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InN0MjEzODpjZmcifQ."
+func signNoneToken(claims jwt.MapClaims) string {
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodNone, claims).SignedString(jwt.UnsafeAllowNoneSignatureType)
+	if err != nil {
+		panic(err)
+	}
+	return signed
+}
+
+var (
+	validTestJWT                           = signNoneToken(conformantClaims("read write all st2138:op:w"))
+	validTestJWTWithoutExecuteCommandScope = signNoneToken(conformantClaims("read write all"))
+	validTestJWTWithCfgScope               = signNoneToken(conformantClaims("st2138:cfg"))
+)
 
 func newTestServer(t *testing.T, authzEnabled bool) *server {
 	t.Helper()
@@ -127,8 +130,9 @@ func newTestServer(t *testing.T, authzEnabled bool) *server {
 		MaxConnections: 100,
 		AuthzEnabled:   authzEnabled,
 		JwtOptions: JwtValidationOptions{
-			// leave everything else unset for testing which will disable all claims checking
-			InsecureSkipSignatureValidation: true, // skip signature validation for testing
+			// Signature verification is off so tests can use unsigned tokens.
+			// Required-claim checks still run.
+			InsecureSkipSignatureValidation: true,
 		},
 	})
 	if err != nil {
@@ -209,8 +213,9 @@ func TestServer_IsDev(t *testing.T) {
 func TestServer_ParseTransportContext(t *testing.T) {
 	t.Run("ParsesTokenAndMetadata", func(t *testing.T) {
 		srv := newTestServer(t, true)
+		token := validTestJWT
 		ctx, status := srv.parseTransportContext(TransportContext{
-			AccessToken: "Bearer " + validTestJWT,
+			AccessToken: "Bearer " + token,
 			Metadata:    map[string][]string{"scope": {"read"}},
 		})
 
@@ -220,8 +225,8 @@ func TestServer_ParseTransportContext(t *testing.T) {
 		if ctx.Token == nil {
 			t.Fatal("expected parsed JWT token")
 		}
-		if ctx.Token.Raw != validTestJWT {
-			t.Errorf("expected token raw value %q, got %q", validTestJWT, ctx.Token.Raw)
+		if ctx.Token.Raw != token {
+			t.Errorf("expected token raw value %q, got %q", token, ctx.Token.Raw)
 		}
 		if !ctx.HasReadScope("all") {
 			t.Errorf("expected parsed token read scopes to include all, got %v", ctx.readScopes)
@@ -281,6 +286,38 @@ func TestServer_ParseTransportContext(t *testing.T) {
 					t.Fatalf("expected no token on parse failure, got %v", ctx.Token)
 				}
 			})
+		}
+	})
+
+	t.Run("MissingClaimLogsAndStaysGeneric", func(t *testing.T) {
+		var buf bytes.Buffer
+		log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		built, err := NewServer(ServerOptions{
+			MaxConnections: 100,
+			AuthzEnabled:   true,
+			Logger:         log,
+			JwtOptions: JwtValidationOptions{
+				InsecureSkipSignatureValidation: true,
+			},
+		})
+		if err != nil {
+			t.Fatalf("NewServer() error = %v", err)
+		}
+		srv := built.(*server)
+
+		claims := conformantClaims("st2138:op")
+		delete(claims, "jti")
+		_, status := srv.parseTransportContext(TransportContext{
+			AccessToken: signTestToken(t, jwt.SigningMethodNone, jwt.UnsafeAllowNoneSignatureType, claims),
+		})
+		if status.Code != StatusCodeUnauthenticated {
+			t.Fatalf("expected UNAUTHENTICATED, got %v", status)
+		}
+		if status.Error != "invalid access token" {
+			t.Fatalf("expected generic client message, got %q", status.Error)
+		}
+		if !strings.Contains(buf.String(), "jti") {
+			t.Fatalf("expected server log to name the failing claim, got %s", buf.String())
 		}
 	})
 }

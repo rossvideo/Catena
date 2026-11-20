@@ -21,24 +21,34 @@ Add `--use-grpc` to also listen for gRPC. At least one transport must be enabled
 The **Authorize** button offers three ways to send a bearer token. A leading `Bearer ` is stripped. The token is kept for this browser tab and sent on every Catena request, including the live update stream.
 
 1. Paste an access token and choose **Apply**.
-2. **Generate Unsigned Token** builds an unsigned JWT for the scope you pick. Use this when signature validation is off.
-3. **Sign in with Keycloak** opens the keycloak realm's login page and applies the signed access token for the account you use. The scope checkboxes do not apply to this token.
+2. **Generate Unsigned Token** builds an unsigned JWT from the **Scopes** and **Claims** menus. Use this when signature validation is off. A blank claim is left out of the token. A blank `jti` still gets a new id on each token. `exp`, `nbf`, and `iat` are seconds from the moment the token is generated. The defaults are the claims the server requires: `iss`, `sub`, `aud`, `exp`, `nbf`, `iat`, `jti`, `scope`, and `azp`. `client_id` and `sid` start blank.
+3. **Sign in with Keycloak** opens the keycloak realm's login page and applies the signed access token for the account you use. The Scopes and Claims menus do not apply to this token.
 
 ## Authorization without Keycloak
 
-Signature validation stays on unless you pass `--jwt-insecure-skip-signature-validation`. To run the example without Keycloak, pass that flag:
+Signature validation stays on unless you pass `--jwt-insecure-skip-signature-validation`. That flag turns off the signature check only. The server still requires every claim listed above, and still rejects a token whose `exp`, `nbf`, or `iat` is outside the allowed window. To run the example without Keycloak, pass that flag:
 
 ```bash
 go run . --use-rest --jwt-insecure-skip-signature-validation
 ```
 
-In the page, open **Authorize**, check the scopes you want, and choose **Generate unsigned**. The token is applied for this browser tab.
+In the page, open **Authorize**, set the scopes and claims you want, and choose **Generate unsigned**. An empty claim is left out of the token. The token is applied for this browser tab.
 
 ## Sign in with Keycloak
 
 Use a Keycloak realm that is already running. Pass its issuer URL, the realm URL Keycloak publishes (for example `--jwt-issuer=https://keycloak.example.com/realms/catena`). That URL is the `iss` claim the server expects, and the address the browser opens for login.
 
 The realm needs a public client named `oneofeverything` and a redirect URI of `http://localhost:9080/*`. Tokens should be signed with ES256, which is what the SDK accepts by default. The server loads the signing keys from the issuer's OpenID Connect discovery document (`/.well-known/openid-configuration`).
+
+A default Keycloak access token includes `jti`, `azp`, and `sid`. It does not include `client_id`; `azp` is enough. It also does not include `nbf`, which the server requires. Add a client protocol mapper so the access token carries one:
+
+- Mapper type: Hardcoded claim
+- Token Claim Name: `nbf`
+- Claim value: `1` (a non-zero past timestamp; `0` is treated as missing)
+- Claim JSON Type: long
+- Add to access token: on
+
+If you set `--jwt-audience`, it must match the token's `aud`. Leave it unset to accept whatever audience the realm issues.
 
 Start the example:
 

@@ -171,19 +171,28 @@ type ServerOptions struct {
 	Logger *slog.Logger `env:"-"`
 }
 
-// JwtValidationOptions controls optional claim validation and HTTP behavior.
+// JwtValidationOptions controls JWT validation and JWKS discovery.
+//
+// When authorization is enabled, every access token must include iss, sub, aud,
+// exp, nbf, iat, jti, and scope, plus at least one of azp and client_id.
+// sid may be omitted; when present it must be a non-empty string. scope must be
+// a string and may be empty. jti is checked for presence only, not as a UUID.
+// Those presence and type checks always run, regardless of signature validation.
 type JwtValidationOptions struct {
 	// AllowedAlgs specifies which signing algorithms are allowed. If empty, defaults to ES256.
 	AllowedAlgs []string
-	// Audience used to validate the "aud" claim. Optional.
+	// Audience is the expected aud value. When empty, aud must still be present
+	// but any value is accepted. aud may be a string or an array of strings.
 	Audience string `env:"JWT_AUDIENCE" flag:"jwt-audience"`
-	// Issuer used to validate the "iss" claim and discover the JWKS endpoint if InsecureSkipSignatureValidation is false.
-	// Required when InsecureSkipSignatureValidation is false (default behavior).
+	// Issuer is the expected iss value, and used to discover the JWKS endpoint when
+	// signature validation is enabled. When empty, iss must still be present but any
+	// value is accepted. Required when InsecureSkipSignatureValidation is false (default behavior).
 	Issuer string `env:"JWT_ISSUER" flag:"jwt-issuer"`
-	// Leeway allows some clock skew when validating "exp", "nbf", and "iat" claims. Optional.
+	// Leeway is the clock skew allowed when validating "exp", "nbf", and "iat" claims. Optional.
 	Leeway time.Duration
-	// InsecureSkipSignatureValidation disables JWT signature verification, validating claims only
-	// Zero value (false) means that signatures are being validated, non-zero value (true) means validation is being skipped
+	// InsecureSkipSignatureValidation disables JWT signature verification only.
+	// Claim presence, claim types, and the exp, nbf, and iat checks stay on.
+	// Zero value (false) means that signatures are being validated, non-zero value (true) means validation is being skipped.
 	InsecureSkipSignatureValidation bool `env:"JWT_INSECURE_SKIP_SIGNATURE_VALIDATION" flag:"jwt-insecure-skip-signature-validation"`
 	// StartupRetryMaxElapsed bounds JWT JWKS discovery retries during startup. Zero disables retrying and attempts once. Negative values are retried indefinitely.
 	StartupRetryMaxElapsedTime time.Duration `env:"JWT_STARTUP_RETRY_MAX_ELAPSED" flag:"jwt-startup-retry-max-elapsed"`
