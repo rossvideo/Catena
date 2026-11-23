@@ -142,7 +142,9 @@ func setupTestTransport(t *testing.T, slots []uint16, opts ...testTransportOptio
 	runtime.Slots = slots
 	transport.runtime = runtime
 
+	served := make(chan struct{})
 	go func() {
+		defer close(served)
 		if err := transport.grpcServer.Serve(lis); err != nil {
 			t.Logf("server stopped: %v", err)
 		}
@@ -158,6 +160,7 @@ func setupTestTransport(t *testing.T, slots []uint16, opts ...testTransportOptio
 		// GracefulStop() waits for active streams which causes deadlocks in tests
 		transport.grpcServer.Stop()
 		lis.Close()
+		<-served
 	}
 
 	return transport, runtime, lis, cleanup
@@ -1904,7 +1907,9 @@ func TestTransport_Connect_TokenExpired(t *testing.T) {
 	transport.runtime = runtime
 	t.Cleanup(func() { built.Shutdown(context.Background()) })
 
+	served := make(chan struct{})
 	go func() {
+		defer close(served)
 		if err := transport.grpcServer.Serve(lis); err != nil {
 			t.Logf("server stopped: %v", err)
 		}
@@ -1912,6 +1917,7 @@ func TestTransport_Connect_TokenExpired(t *testing.T) {
 	t.Cleanup(func() {
 		transport.grpcServer.Stop()
 		lis.Close()
+		<-served
 	})
 	time.Sleep(10 * time.Millisecond)
 
