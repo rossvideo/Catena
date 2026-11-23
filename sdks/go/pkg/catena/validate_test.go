@@ -40,6 +40,8 @@ package catena
 
 import (
 	"testing"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 func TestValidateSlot(t *testing.T) {
@@ -242,6 +244,116 @@ func TestValidateLanguageCode(t *testing.T) {
 				result := ValidateLanguageCode(tt.code)
 				if result.Code != StatusCodeInvalidArgument {
 					t.Errorf("ValidateLanguageCode(%q) = %v, want InvalidArgument", tt.code, result.Code)
+				}
+			})
+		}
+	})
+}
+
+func TestValidateDetailLevel(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		levels := []st2138.DetailLevel{
+			st2138.DetailLevelFull,
+			st2138.DetailLevelSubscriptions,
+			st2138.DetailLevelMinimal,
+			st2138.DetailLevelCommands,
+			st2138.DetailLevelNone,
+			st2138.DetailLevelUnset,
+		}
+		for _, level := range levels {
+			result := ValidateDetailLevel(level)
+			if result.Code != StatusCodeOk {
+				t.Errorf("ValidateDetailLevel(%d) = %v, %s", level, result.Code, result.Error)
+			}
+		}
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		levels := []st2138.DetailLevel{-1, 6, 99}
+		for _, level := range levels {
+			result := ValidateDetailLevel(level)
+			if result.Code != StatusCodeInvalidArgument {
+				t.Errorf("ValidateDetailLevel(%d) = %v, want InvalidArgument", level, result.Code)
+			}
+			if result.Error == "" {
+				t.Errorf("ValidateDetailLevel(%d) returned empty error message", level)
+			}
+		}
+	})
+}
+
+func TestValidateDetailLevelString(t *testing.T) {
+	t.Run("valid names", func(t *testing.T) {
+		tests := []struct {
+			input string
+			want  st2138.DetailLevel
+		}{
+			{"FULL", st2138.DetailLevelFull},
+			{"SUBSCRIPTIONS", st2138.DetailLevelSubscriptions},
+			{"MINIMAL", st2138.DetailLevelMinimal},
+			{"COMMANDS", st2138.DetailLevelCommands},
+			{"NONE", st2138.DetailLevelNone},
+			{"UNSET", st2138.DetailLevelUnset},
+		}
+		for _, tt := range tests {
+			t.Run(tt.input, func(t *testing.T) {
+				result, res := ValidateDetailLevelString(tt.input)
+				if res.Code != StatusCodeOk {
+					t.Errorf("ValidateDetailLevelString(%q) = %v, %s", tt.input, res.Code, res.Error)
+				}
+				if result != tt.want {
+					t.Errorf("ValidateDetailLevelString(%q) = %d, want %d", tt.input, result, tt.want)
+				}
+			})
+		}
+	})
+
+	t.Run("valid int string", func(t *testing.T) {
+		tests := []struct {
+			input string
+			want  st2138.DetailLevel
+		}{
+			{"0", st2138.DetailLevelFull},
+			{"1", st2138.DetailLevelSubscriptions},
+			{"2", st2138.DetailLevelMinimal},
+			{"3", st2138.DetailLevelCommands},
+			{"4", st2138.DetailLevelNone},
+			{"5", st2138.DetailLevelUnset},
+		}
+		for _, tt := range tests {
+			t.Run(tt.input, func(t *testing.T) {
+				result, res := ValidateDetailLevelString(tt.input)
+				if res.Code != StatusCodeOk {
+					t.Errorf("ValidateDetailLevelString(%q) = %v, %s", tt.input, res.Code, res.Error)
+				}
+				if result != tt.want {
+					t.Errorf("ValidateDetailLevelString(%q) = %d, want %d", tt.input, result, tt.want)
+				}
+			})
+		}
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		tests := []struct {
+			name  string
+			input string
+		}{
+			{name: "empty", input: ""},
+			{name: "lowercase name", input: "minimal"},
+			{name: "unknown name", input: "BOGUS"},
+			{name: "out-of-range int", input: "6"},
+			{name: "negative int", input: "-1"},
+			{name: "int overflows int32", input: "4294967298"},
+			{name: "non-integer number", input: "1.5"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				result, res := ValidateDetailLevelString(tt.input)
+				if res.Code != StatusCodeInvalidArgument {
+					t.Errorf("ValidateDetailLevelString(%q) = %v, want InvalidArgument", tt.input, res.Code)
+				}
+				if result != 0 {
+					t.Errorf("expected result 0 on error, got %v", result)
 				}
 			})
 		}
