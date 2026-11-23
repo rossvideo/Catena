@@ -741,7 +741,7 @@ function buildDemoToken() {
         claims[name] = now + Number(raw);
     }
 
-    claims.jti = claimValue('jti') || crypto.randomUUID();
+    claims.jti = claimValue('jti') || bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)));
     claims.scope = selectedScope();
 
     ['azp', 'client_id', 'sid'].forEach(name => {

@@ -788,7 +788,7 @@ h1 {
     padding: 0.55rem 0.7rem;
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--text-dim);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     list-style: none;
@@ -837,9 +837,11 @@ h1 {
     outline: none;
 }
 
-.claim-input:focus { border-color: var(--accent); }
+.claim-input:focus { border-color: var(--text-dim); }
 
-.claim-input::placeholder { color: var(--text-muted); }
+.auth-menu summary,
+.claim-input::placeholder { color: var(--text-dim); }
+.claim-input::placeholder { opacity: 1; }
 
 .auth-menu-body > .btn { width: 100%; }
 
