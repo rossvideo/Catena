@@ -354,6 +354,7 @@ func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
 	// only when Issuer and Audience are configured; their presence is always required.
 	parseOptions := []jwt.ParserOption{
 		jwt.WithValidMethods(v.signingMethods()),
+		jwt.WithJSONNumber(),
 		jwt.WithExpirationRequired(),
 		jwt.WithNotBeforeRequired(),
 		jwt.WithIssuedAt(),

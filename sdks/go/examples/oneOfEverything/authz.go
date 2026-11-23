@@ -31,6 +31,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -117,8 +118,11 @@ func registerAuthz(srv catena.Server) {
 			claims, ok := ctx.Token.Claims.(jwt.MapClaims)
 			if ok {
 				for k, v := range claims {
-					if sec, ok := v.(float64); ok && (k == "exp" || k == "iat") {
-						v = time.Unix(int64(sec), 0).UTC().Format(time.RFC3339)
+					// The validator decodes numbers as json.Number so a zero date survives.
+					if num, ok := v.(json.Number); ok && (k == "exp" || k == "iat") {
+						if sec, err := num.Float64(); err == nil {
+							v = time.Unix(int64(sec), 0).UTC().Format(time.RFC3339)
+						}
 					}
 					valMap = append(valMap, map[string]any{
 						"key":   k,

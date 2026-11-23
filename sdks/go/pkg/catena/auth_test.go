@@ -667,6 +667,26 @@ func testCatenaClaims(t *testing.T, mode jwtTestMode) {
 		requireJWTError(t, err, "audience")
 	})
 
+	// A zero date is the Unix epoch. Decoding numbers as json.Number keeps it
+	// from being read as a missing claim.
+	t.Run("nbf of zero", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["nbf"] = float64(0)
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("iat of zero", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["iat"] = float64(0)
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("exp of zero is expired", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["exp"] = float64(0)
+		testInvalidClaims(t, mode, claims, "expired")
+	})
+
 	now := time.Now()
 	validExp := now.Add(time.Hour)
 	validNbf := now.Add(-time.Hour)
@@ -780,9 +800,9 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 				if tokenString != pretendString {
 					t.Fatalf("validateFn got tokenString = %q, want %q", tokenString, pretendString)
 				}
-				// valid methods, exp, nbf, iat, plus issuer, audience, and leeway.
-				if len(parseOptions) != 7 {
-					t.Fatalf("validateFn got %d parseOptions, want 7", len(parseOptions))
+				// valid methods, exp, nbf, iat, JSON numbers, plus issuer, audience, and leeway.
+				if len(parseOptions) != 8 {
+					t.Fatalf("validateFn got %d parseOptions, want 8", len(parseOptions))
 				}
 				return &jwt.Token{Claims: claims}, nil
 			},

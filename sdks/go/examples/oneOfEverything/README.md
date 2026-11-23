@@ -44,7 +44,7 @@ A default Keycloak access token includes `jti`, `azp`, and `sid`. It does not in
 
 - Mapper type: Hardcoded claim
 - Token Claim Name: `nbf`
-- Claim value: `1` (a non-zero past timestamp; `0` is treated as missing)
+- Claim value: `1` (any past Unix timestamp works, including `0`, the Unix epoch)
 - Claim JSON Type: long
 - Add to access token: on
 
