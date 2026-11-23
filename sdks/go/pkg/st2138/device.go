@@ -40,6 +40,10 @@
 package st2138
 
 import (
+	"fmt"
+	"math"
+	"strconv"
+
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -58,6 +62,80 @@ const (
 	DetailLevelNone          DetailLevel = protos.Device_NONE
 	DetailLevelUnset         DetailLevel = protos.Device_UNSET
 )
+
+// IsValidDetailLevel reports whether l is a defined protos.Device_DetailLevel value.
+func IsValidDetailLevel(l DetailLevel) bool {
+	_, ok := protos.Device_DetailLevel_name[int32(l)]
+	return ok
+}
+
+// ParseDetailLevel converts v into a DetailLevel. Accepted inputs are:
+//   - a string holding a proto enum name, matched case-sensitively (e.g. "MINIMAL"),
+//     or a decimal integer string (e.g. "2")
+//   - any Go integer type, including DetailLevel itself
+//
+// Any other type, unknown name, or integer outside the defined enum values
+// returns an error wrapping ErrInvalid. On error the returned DetailLevel is
+// DetailLevelFull.
+func ParseDetailLevel(v any) (DetailLevel, error) {
+	switch x := v.(type) {
+	case string:
+		if n, ok := protos.Device_DetailLevel_value[x]; ok {
+			return DetailLevel(n), nil
+		}
+		n, err := strconv.ParseInt(x, 10, 32)
+		if err != nil {
+			return DetailLevelFull, fmt.Errorf("unknown detail level: %q: %w", x, ErrInvalid)
+		}
+		return detailLevelFromInt64(n)
+	case DetailLevel:
+		return detailLevelFromInt64(int64(x))
+	case int:
+		return detailLevelFromInt64(int64(x))
+	case int8:
+		return detailLevelFromInt64(int64(x))
+	case int16:
+		return detailLevelFromInt64(int64(x))
+	case int32:
+		return detailLevelFromInt64(int64(x))
+	case int64:
+		return detailLevelFromInt64(x)
+	case uint:
+		return detailLevelFromUint64(uint64(x))
+	case uint8:
+		return detailLevelFromUint64(uint64(x))
+	case uint16:
+		return detailLevelFromUint64(uint64(x))
+	case uint32:
+		return detailLevelFromUint64(uint64(x))
+	case uint64:
+		return detailLevelFromUint64(x)
+	default:
+		return DetailLevelFull, fmt.Errorf("unsupported detail level type: %T: %w", v, ErrInvalid)
+	}
+}
+
+// detailLevelFromInt64 range-checks n against int32 before converting, so a
+// value outside the int32 range cannot wrap into a defined enum value.
+func detailLevelFromInt64(n int64) (DetailLevel, error) {
+	if n < math.MinInt32 || n > math.MaxInt32 {
+		return DetailLevelFull, fmt.Errorf("detail level out of range: %d: %w", n, ErrInvalid)
+	}
+	l := DetailLevel(n)
+	if !IsValidDetailLevel(l) {
+		return DetailLevelFull, fmt.Errorf("invalid detail level: %d: %w", n, ErrInvalid)
+	}
+	return l, nil
+}
+
+// detailLevelFromUint64 handles unsigned input. Values above MaxInt32 are
+// rejected before conversion to int64.
+func detailLevelFromUint64(n uint64) (DetailLevel, error) {
+	if n > math.MaxInt32 {
+		return DetailLevelFull, fmt.Errorf("detail level out of range: %d: %w", n, ErrInvalid)
+	}
+	return detailLevelFromInt64(int64(n))
+}
 
 // Device wraps protos.Device and exposes a fluent builder API.
 // Proto is the underlying proto message; it may be read or replaced directly.

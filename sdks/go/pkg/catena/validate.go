@@ -46,6 +46,8 @@ import (
 	"strconv"
 
 	"github.com/dlclark/regexp2"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
 
 var (
@@ -72,6 +74,30 @@ func ValidateSlotString(slot string) (uint16, StatusResult) {
 		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
 	}
 	return ValidateSlot(uint32(slotInt))
+}
+
+// ValidateDetailLevel reports whether level is a defined DetailLevel value.
+// Values such as UNSET are valid and are returned unchanged by the caller.
+func ValidateDetailLevel(level st2138.DetailLevel) StatusResult {
+	if !st2138.IsValidDetailLevel(level) {
+		return StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid detail level: %d", int32(level)))
+	}
+	return StatusWithCode(StatusCodeOk, "")
+}
+
+// ValidateDetailLevelString parses s as a detail level name (e.g. "MINIMAL") or
+// integer (e.g. "2") and validates it, for use with the REST Detail-Level
+// header. On error the returned DetailLevel is the zero value, mirroring
+// ValidateSlotString.
+func ValidateDetailLevelString(s string) (st2138.DetailLevel, StatusResult) {
+	level, err := st2138.ParseDetailLevel(s)
+	if err != nil {
+		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid detail level string: %s", s))
+	}
+	if res := ValidateDetailLevel(level); res.Code != StatusCodeOk {
+		return 0, res
+	}
+	return level, StatusWithCode(StatusCodeOk, "")
 }
 
 // ValidateFqoid reports whether fqoid matches fqoidPattern. An empty string is
