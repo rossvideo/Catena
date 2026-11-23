@@ -692,6 +692,7 @@ func TestParseDetailLevel(t *testing.T) {
 			{"int just past UNSET", int(6)},
 			{"int negative", int(-1)},
 			{"int32 negative", int32(-1)},
+			{"int64 max", int64(^uint64(0) >> 1)},
 			{"uint32 max", uint32(^uint32(0))},
 			{"uint64 max", ^uint64(0)},
 		}
