@@ -1812,6 +1812,42 @@ func TestTransport_Connect_DropsUpdateAfterDone(t *testing.T) {
 	}
 }
 
+func TestTransport_Connect_DropsUpdateAfterExpiry(t *testing.T) {
+	transport := NewTransport(testOptions(0))
+	runtime := transporttest.MakeStubServerRuntime(t)
+	transport.runtime = runtime
+
+	connection := transporttest.MakeTestConnectionPastExpiry(1)
+	runtime.WithConnection(connection)
+	connection.Updates <- &protos.PushUpdates{Slot: 1}
+
+	select {
+	case <-connection.Done:
+		t.Fatal("Done closed before the update was read")
+	default:
+	}
+
+	stream := &connectTestStream{ctx: context.Background()}
+	err := transport.catenaService.Connect(&protos.ConnectPayload{}, stream)
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got %v", err)
+	}
+	if st.Code() != codes.Unauthenticated {
+		t.Errorf("expected Unauthenticated code, got %v", st.Code())
+	}
+	if st.Message() != "JWS token expired" {
+		t.Errorf("expected message %q, got %q", "JWS token expired", st.Message())
+	}
+	if stream.sent != 0 {
+		t.Errorf("expected the update to be dropped, Send was called %d times", stream.sent)
+	}
+	if len(connection.Updates) != 0 {
+		t.Errorf("expected the buffered update to be consumed, %d still queued", len(connection.Updates))
+	}
+}
+
 func TestTransport_Connect_TokenExpired(t *testing.T) {
 	ctx := context.Background()
 	lis := bufconn.Listen(bufSize)

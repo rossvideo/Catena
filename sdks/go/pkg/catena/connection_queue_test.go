@@ -126,6 +126,59 @@ func TestNewConnectionQueueWithOptions_InjectedClock(t *testing.T) {
 	})
 }
 
+func TestConnection_EffectiveExpiryPassedBeforeSweep(t *testing.T) {
+	clock := newManualClock(time.Date(2026, 11, 20, 9, 0, 0, 0, time.UTC))
+	cq := newConnectionQueueWithOptions(0, nil, withClock(clock.Now), withExpirySweepInterval(0)).(*connectionQueue)
+	stopQueueOnCleanup(t, cq)
+	owner := &stubTransport{tb: t}
+
+	t.Run("passes once the queue clock reaches expiry and leaves Done open", func(t *testing.T) {
+		conn, res := cq.registerOwnedConnection(owner, HandlerContext{tokenExpiry: clock.Now().Add(time.Minute)}, nil)
+		if res.Code != StatusCodeOk || conn == nil {
+			t.Fatalf("register: %v", res)
+		}
+		if conn.EffectiveExpiryPassed() {
+			t.Fatal("expiry has not passed")
+		}
+
+		clock.Advance(2 * time.Minute)
+		if !conn.EffectiveExpiryPassed() {
+			t.Fatal("expected effective expiry to have passed")
+		}
+		select {
+		case <-conn.Done:
+			t.Fatal("Done closed before the sweep")
+		default:
+		}
+		if conn.CloseReason() != CloseReasonNone {
+			t.Errorf("close reason = %s, want none until the sweep", conn.CloseReason())
+		}
+
+		conn.Updates <- &protos.PushUpdates{Slot: 1}
+		if len(conn.Updates) != 1 {
+			t.Fatalf("buffered updates = %d, want 1 still queued for the transport", len(conn.Updates))
+		}
+	})
+
+	t.Run("zero expiry does not pass", func(t *testing.T) {
+		conn, res := cq.registerOwnedConnection(owner, HandlerContext{}, nil)
+		if res.Code != StatusCodeOk || conn == nil {
+			t.Fatalf("register: %v", res)
+		}
+		clock.Advance(time.Hour)
+		if conn.EffectiveExpiryPassed() {
+			t.Fatal("a connection with no expiry must not expire")
+		}
+	})
+
+	t.Run("connection the queue did not create does not report expiry", func(t *testing.T) {
+		conn := &Connection{Done: make(chan struct{}), Updates: make(chan *protos.PushUpdates, 1)}
+		if conn.EffectiveExpiryPassed() {
+			t.Fatal("a connection the queue did not create must not report expiry")
+		}
+	})
+}
+
 func TestConnectionQueue_Options(t *testing.T) {
 	t.Run("applies clock, sweep interval, and grace period", func(t *testing.T) {
 		frozen := time.Date(2026, time.November, 11, 12, 0, 0, 0, time.UTC)

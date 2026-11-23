@@ -153,19 +153,6 @@ func (c *Connection) EffectiveExpiryPassed() bool {
 	return !c.expiry.IsZero() && !c.queue.now().Before(c.expiry)
 }
 
-// MarkEffectiveExpiryPassed moves this connection's effective expiry just
-// before the queue clock and leaves Done open. Tests use it to consume a
-// buffered update in the window before the next expiry sweep. A connection
-// the queue did not create gets a clock fixed at the time of the call.
-func (c *Connection) MarkEffectiveExpiryPassed() {
-	if c.queue == nil {
-		c.queue = &connectionQueue{now: time.Now}
-	}
-	c.queue.mu.Lock()
-	defer c.queue.mu.Unlock()
-	c.expiry = c.queue.now().Add(-time.Nanosecond)
-}
-
 // recordCloseReason records reason if the connection is not already closing.
 // The caller must hold cq.mu. It returns false when a reason was already set.
 func (c *Connection) recordCloseReason(reason ConnectionCloseReason) bool {

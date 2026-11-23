@@ -2672,6 +2672,44 @@ func TestHandleConnect_DropsUpdateAfterDone(t *testing.T) {
 	}
 }
 
+func TestHandleConnect_DropsUpdateAfterExpiry(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	connection := transporttest.MakeTestConnectionPastExpiry(1)
+	runtime.WithConnection(connection)
+	connection.Updates <- &protos.PushUpdates{
+		Slot: 0,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{Oid: "should-drop"},
+		},
+	}
+
+	select {
+	case <-connection.Done:
+		t.Fatal("Done closed before the update was read")
+	default:
+	}
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	transport.handleConnect(rec, req)
+
+	assertStatus(t, rec, http.StatusOK)
+	body := rec.Body.String()
+	if strings.Contains(body, "should-drop") {
+		t.Errorf("expected the buffered update to be dropped, got %q", body)
+	}
+	if !strings.Contains(body, "event: error\n") {
+		t.Errorf("expected an SSE error event, got %q", body)
+	}
+	if !strings.Contains(body, "JWS token expired") {
+		t.Errorf("expected token-expired message, got %q", body)
+	}
+	if len(connection.Updates) != 0 {
+		t.Errorf("expected the buffered update to be consumed, %d still queued", len(connection.Updates))
+	}
+}
+
 func TestHandleConnect_UpdateEventWriteFailure(t *testing.T) {
 	transport, runtime := makeTestTransport(t)
 	rec := httptest.NewRecorder()
