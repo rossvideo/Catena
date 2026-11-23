@@ -86,14 +86,17 @@ func (r ConnectionCloseReason) String() string {
 // The queue closes Done when the connection must end, either because the
 // server is shutting down or because its token expired. A transport must end
 // its stream when Done closes. It may read CloseReason after that to choose
-// the status it returns. Once the queue removes the connection, it sends no
-// further updates to it.
+// the status it returns. Done stays open until the next expiry sweep, so a
+// transport must also drop a buffered update when EffectiveExpiryPassed
+// reports that the queue clock is at or past the token's effective expiry.
+// Once the queue removes the connection, it sends no further updates to it.
 type Connection struct {
 	ID             int
 	Updates        chan *protos.PushUpdates
 	Done           chan struct{}
 	HandlerContext HandlerContext
 	owner          Transport
+	queue          *connectionQueue
 	expiry         time.Time
 	closeReason    ConnectionCloseReason
 }
@@ -134,6 +137,33 @@ type connectionQueueInterface interface {
 // is closed: the queue writes the reason before closing Done
 func (c *Connection) CloseReason() ConnectionCloseReason {
 	return c.closeReason
+}
+
+// EffectiveExpiryPassed reports whether the queue clock is at or past this
+// connection's effective token expiry. A zero expiry never expires, and a
+// connection the queue did not create reports false. Done stays open until
+// the next sweep, so a transport must consult this before writing a buffered
+// update.
+func (c *Connection) EffectiveExpiryPassed() bool {
+	if c.queue == nil {
+		return false
+	}
+	c.queue.mu.Lock()
+	defer c.queue.mu.Unlock()
+	return !c.expiry.IsZero() && !c.queue.now().Before(c.expiry)
+}
+
+// MarkEffectiveExpiryPassed moves this connection's effective expiry just
+// before the queue clock and leaves Done open. Tests use it to consume a
+// buffered update in the window before the next expiry sweep. A connection
+// the queue did not create gets a clock fixed at the time of the call.
+func (c *Connection) MarkEffectiveExpiryPassed() {
+	if c.queue == nil {
+		c.queue = &connectionQueue{now: time.Now}
+	}
+	c.queue.mu.Lock()
+	defer c.queue.mu.Unlock()
+	c.expiry = c.queue.now().Add(-time.Nanosecond)
 }
 
 // recordCloseReason records reason if the connection is not already closing.
@@ -289,6 +319,7 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		Done:           make(chan struct{}),
 		HandlerContext: handlerContext,
 		owner:          owner,
+		queue:          cq,
 	}
 	cq.connections[cq.nextConnID] = conn
 	cq.setConnectionExpiryWithMutexHeld(conn, expiry)

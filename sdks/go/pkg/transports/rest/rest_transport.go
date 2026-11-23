@@ -436,7 +436,9 @@ func (t *Transport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, up
 // The stream ends when the client disconnects, the server shuts the
 // connection down, or the connection's token expires. Token expiry sends a
 // final SSE error event and then returns. A token whose effective expiry
-// has already passed is rejected at registration
+// has already passed is rejected at registration. A buffered update is not
+// sent once that expiry has passed, even while Done is still open waiting
+// for the next sweep.
 func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is GET
 	if r.Method != http.MethodGet {
@@ -483,8 +485,8 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Each connection's goroutine listens for setValue updates and server shutdown signals
 	ctx := r.Context()
 	endStream := func() {
-		if conn.CloseReason() == catena.CloseReasonExpired {
-			t.log.Info("SSE connection closed", "connID", conn.ID, "reason", conn.CloseReason())
+		if conn.EffectiveExpiryPassed() || conn.CloseReason() == catena.CloseReasonExpired {
+			t.log.Info("SSE connection closed", "connID", conn.ID, "reason", catena.CloseReasonExpired)
 			result := catena.StatusWithCode(catena.StatusCodeUnauthenticated, "JWS token expired")
 			if err := writeSSEError(w, flusher, t.isDevMode(), result); err != nil {
 				t.log.Error("failed to send SSE token-expired event", "connID", conn.ID, "error", err)
@@ -502,6 +504,11 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 			endStream()
 			return
 		case update := <-conn.Updates:
+
+			if conn.EffectiveExpiryPassed() {
+				endStream()
+				return
+			}
 			// Drop buffered updates that arrive after Done has closed.
 			select {
 			case <-conn.Done:
