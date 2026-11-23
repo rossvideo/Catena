@@ -2692,7 +2692,35 @@ func TestHandleConnect_DropsUpdateAfterExpiry(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
-	transport.handleConnect(rec, req)
+	done := make(chan struct{})
+	go func() {
+		transport.handleConnect(rec, req)
+		close(done)
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for len(connection.Updates) != 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("timed out waiting for the buffered update to be consumed")
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	// The sweeper owns closing the connection, so handleConnect keeps waiting
+	// for Done even though the update was dropped.
+	select {
+	case <-done:
+		t.Fatal("handleConnect returned before the sweep")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	transporttest.SimulateExpirySweep(connection)
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("handleConnect did not return after the sweep")
+	}
 
 	assertStatus(t, rec, http.StatusOK)
 	body := rec.Body.String()

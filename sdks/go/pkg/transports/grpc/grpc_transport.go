@@ -606,7 +606,8 @@ func (s *catenaService) UpdateSubscriptions(req *protos.UpdateSubscriptionsPaylo
 // token expires (Unauthenticated, "JWS token expired"). A token whose
 // effective expiry has already passed is rejected at registration and the
 // stream is not opened. A buffered update is not sent once that expiry has
-// passed, even while Done is still open waiting for the next sweep.
+// passed, even while Done is still open waiting for the next sweep, which
+// then ends the stream.
 func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerStreamingServer[protos.PushUpdates]) error {
 	// Register this connection with the runtime using this transport as owner.
 	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
@@ -625,7 +626,7 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 	ctx := stream.Context()
 
 	closeStream := func() error {
-		if conn.EffectiveExpiryPassed() || conn.CloseReason() == catena.CloseReasonExpired {
+		if conn.CloseReason() == catena.CloseReasonExpired {
 			s.transport.log.Info("gRPC connection closed", "connID", conn.ID, "reason", catena.CloseReasonExpired)
 			return status.Error(codes.Unauthenticated, jwsTokenExpiredMessage)
 		}
@@ -642,14 +643,17 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 			return closeStream()
 		case update := <-conn.Updates:
 
-			if conn.EffectiveExpiryPassed() {
-				return closeStream()
-			}
 			// Drop buffered updates that arrive after Done has closed.
 			select {
 			case <-conn.Done:
 				return closeStream()
 			default:
+			}
+
+			// Drop the update if the effective expiry has passed. The responsibility
+			// for handling the expiry is on the sweeper
+			if conn.EffectiveExpiryPassed() {
+				continue
 			}
 
 			if err := stream.Send(update); err != nil {

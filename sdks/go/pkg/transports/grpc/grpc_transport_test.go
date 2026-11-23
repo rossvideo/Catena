@@ -1828,7 +1828,35 @@ func TestTransport_Connect_DropsUpdateAfterExpiry(t *testing.T) {
 	}
 
 	stream := &connectTestStream{ctx: context.Background()}
-	err := transport.catenaService.Connect(&protos.ConnectPayload{}, stream)
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- transport.catenaService.Connect(&protos.ConnectPayload{}, stream)
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for len(connection.Updates) != 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("timed out waiting for the buffered update to be consumed")
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	// The sweeper owns closing the connection, so Connect keeps waiting for
+	// Done even though the update was dropped.
+	select {
+	case err := <-errCh:
+		t.Fatalf("Connect returned before the sweep: %v", err)
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	transporttest.SimulateExpirySweep(connection)
+
+	var err error
+	select {
+	case err = <-errCh:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Connect did not return after the sweep")
+	}
 
 	st, ok := status.FromError(err)
 	if !ok {
@@ -1842,6 +1870,9 @@ func TestTransport_Connect_DropsUpdateAfterExpiry(t *testing.T) {
 	}
 	if stream.sent != 0 {
 		t.Errorf("expected the update to be dropped, Send was called %d times", stream.sent)
+	}
+	if len(connection.Updates) != 0 {
+		t.Errorf("expected the buffered update to be consumed, %d still queued", len(connection.Updates))
 	}
 	if len(connection.Updates) != 0 {
 		t.Errorf("expected the buffered update to be consumed, %d still queued", len(connection.Updates))

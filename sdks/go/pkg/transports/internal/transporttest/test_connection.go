@@ -62,6 +62,25 @@ func MakeTestConnectionPastExpiry(id int) *catena.Connection {
 	return conn
 }
 
+// MakeTestConnectionShutdownAfterExpiry returns a connection whose effective
+// expiry has passed and whose Done is closed with a recorded shutdown reason,
+// as happens when the server shuts down before the expiry sweeper runs.
+func MakeTestConnectionShutdownAfterExpiry(id int) *catena.Connection {
+	conn := MakeTestConnectionPastExpiry(id)
+	connValue := reflect.ValueOf(conn).Elem()
+	setUnexported(connValue.FieldByName("closeReason"), reflect.ValueOf(catena.CloseReasonShutdown))
+	close(conn.Done)
+	return conn
+}
+
+// SimulateExpirySweep does to conn what the expiry sweeper does: it records the
+// expired close reason and closes Done.
+func SimulateExpirySweep(conn *catena.Connection) {
+	connValue := reflect.ValueOf(conn).Elem()
+	setUnexported(connValue.FieldByName("closeReason"), reflect.ValueOf(catena.CloseReasonExpired))
+	close(conn.Done)
+}
+
 func setUnexported(field, value reflect.Value) {
 	reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Set(value)
 }
