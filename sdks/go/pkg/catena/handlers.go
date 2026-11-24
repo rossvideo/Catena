@@ -53,8 +53,18 @@ import "github.com/rossvideo/catena/sdks/go/pkg/st2138"
 // see them; otherwise product/* requests fall through to the handler.
 
 // GetDeviceRequest carries the arguments of a GetDevice request.
+// Language is the optional language code the client asked for ("" when not
+// provided); when set it is guaranteed to be well-formed, but the SDK does not
+// know which languages are supported, so the handler decides what to do with
+// an unknown code. DetailLevel is how much of the device model the client
+// asked for; it is FULL when not provided, and UNSET is passed through as-is.
+// SubscribedOids lists the oids the client subscribes to; it is nil when not
+// provided and is always nil for REST requests, which do not support it.
 type GetDeviceRequest struct {
-	Slot uint16
+	Slot           uint16
+	Language       string
+	DetailLevel    st2138.DetailLevel
+	SubscribedOids []string
 }
 
 // DeviceHandler streams the device model for a slot (GetDevice /

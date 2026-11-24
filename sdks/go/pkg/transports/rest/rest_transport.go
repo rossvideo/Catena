@@ -715,9 +715,14 @@ func (t *Transport) handleValuesEndpoint(w http.ResponseWriter, r *http.Request,
 // handler streams DeviceComponent chunks; they are assembled back into one
 // complete device for the single JSON response.
 func (t *Transport) handleGetDevice(w http.ResponseWriter, r *http.Request, slot uint16) {
+	req, res := deviceRequestFromHTTP(r, slot)
+	if res.IsError() {
+		t.writeHTTPStatusResult(w, res)
+		return
+	}
 	device, result := resolveUnary(&deviceAggregateStream{}, "device",
 		func(stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-			return t.runtime.InvokeGetDeviceHandler(t.retrieveMetadataFromRequest(r), catena.GetDeviceRequest{Slot: slot}, stream)
+			return t.runtime.InvokeGetDeviceHandler(t.retrieveMetadataFromRequest(r), req, stream)
 		})
 	if result.IsError() {
 		t.writeHTTPStatusResult(w, result)
@@ -731,11 +736,41 @@ func (t *Transport) handleGetDevice(w http.ResponseWriter, r *http.Request, slot
 // DeviceComponent chunk the handler sends as one Server-Sent Events frame. See
 // streamSSE for the shared SSE semantics.
 func (t *Transport) streamDeviceRequest(w http.ResponseWriter, r *http.Request, slot uint16) {
+	// Parse before streamSSE so a bad header is answered with a plain 400
+	// rather than after any SSE headers have been committed.
+	req, res := deviceRequestFromHTTP(r, slot)
+	if res.IsError() {
+		t.writeHTTPStatusResult(w, res)
+		return
+	}
 	streamSSE(t, w, r, marshalDeviceComponentWire,
 		func(stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
-			return t.runtime.InvokeGetDeviceHandler(t.retrieveMetadataFromRequest(r), catena.GetDeviceRequest{Slot: slot}, stream)
+			return t.runtime.InvokeGetDeviceHandler(t.retrieveMetadataFromRequest(r), req, stream)
 		},
 		"endpoint", "device", "slot", slot)
+}
+
+// deviceRequestFromHTTP builds the GetDeviceRequest for the unary and
+// streaming device endpoints from the optional Language-Code and Detail-Level
+// headers. A missing Detail-Level is FULL and a missing Language-Code is "".
+// SubscribedOids is never set: REST does not support it. The only check made
+// here is that Detail-Level can be parsed into the enum; a value that cannot
+// is reported as InvalidArgument (HTTP 400). Whether the parsed level and the
+// language code are acceptable is decided by the server after authorization.
+func deviceRequestFromHTTP(r *http.Request, slot uint16) (catena.GetDeviceRequest, catena.StatusResult) {
+	req := catena.GetDeviceRequest{
+		Slot:        slot,
+		Language:    r.Header.Get("Language-Code"),
+		DetailLevel: st2138.DetailLevelFull,
+	}
+	if raw := r.Header.Get("Detail-Level"); raw != "" {
+		level, err := st2138.ParseDetailLevel(raw)
+		if err != nil {
+			return catena.GetDeviceRequest{}, catena.StatusWithCode(catena.StatusCodeInvalidArgument, "invalid Detail-Level header: "+raw)
+		}
+		req.DetailLevel = level
+	}
+	return req, catena.StatusWithCode(catena.StatusCodeOk, "")
 }
 
 // handleAssetEndpoint dispatches /st2138-api/v1/{slot}/asset/{fqoid} across
