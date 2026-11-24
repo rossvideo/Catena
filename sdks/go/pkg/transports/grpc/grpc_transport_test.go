@@ -541,7 +541,7 @@ func TestTransport_DeviceRequest_InvalidSlot(t *testing.T) {
 }
 
 // TestTransport_DeviceRequest_PassesFields verifies language, detail_level and
-// subscribed_oids reach the handler unchanged, and that omitted values map to
+// subscribed_oids reach the handler unchanged (oids normalized), and that omitted values map to
 // the defaults (FULL, "", nil). The transport does not validate them.
 func TestTransport_DeviceRequest_PassesFields(t *testing.T) {
 	tests := []struct {
