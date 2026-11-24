@@ -1240,6 +1240,90 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 			t.Errorf("expected no chunks delivered after shutdown, got %d", len(stream.Items))
 		}
 	})
+
+	t.Run("PassesFieldsThrough", func(t *testing.T) {
+		tests := []struct {
+			name string
+			req  GetDeviceRequest
+		}{
+			{"AllSet", GetDeviceRequest{Slot: 11, Language: "es", DetailLevel: st2138.DetailLevelMinimal, SubscribedOids: []string{"/a", "/b"}}},
+			{"RegionalLanguage", GetDeviceRequest{Slot: 11, Language: "en-US"}},
+			{"UnknownButWellFormedLanguage", GetDeviceRequest{Slot: 11, Language: "xx"}},
+			{"UnsetPassedAsIs", GetDeviceRequest{Slot: 11, DetailLevel: st2138.DetailLevelUnset}},
+			{"Defaults", GetDeviceRequest{Slot: 11}},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				srv := newTestServer(t, true)
+				mockInvokeGateFn(t, srv, EndpointGetDevice, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+
+				var got GetDeviceRequest
+				called := false
+				srv.getDeviceHandlers[11] = func(_ HandlerContext, req GetDeviceRequest, _ Stream[st2138.DeviceComponent]) StatusResult {
+					called = true
+					got = req
+					return StatusWithCode(StatusCodeOk, "")
+				}
+
+				res := srv.InvokeGetDeviceHandler(validTestTransportContext(nil), tt.req, &sliceStream[st2138.DeviceComponent]{})
+				if res.IsError() {
+					t.Fatalf("unexpected error: %v", res)
+				}
+				if !called {
+					t.Fatal("expected handler to be called")
+				}
+				if got.Slot != tt.req.Slot || got.Language != tt.req.Language || got.DetailLevel != tt.req.DetailLevel {
+					t.Errorf("handler got %+v, want %+v", got, tt.req)
+				}
+				if len(got.SubscribedOids) != len(tt.req.SubscribedOids) {
+					t.Errorf("handler got SubscribedOids %v, want %v", got.SubscribedOids, tt.req.SubscribedOids)
+				}
+			})
+		}
+	})
+
+	t.Run("RejectsInvalidArguments", func(t *testing.T) {
+		tests := []struct {
+			name string
+			req  GetDeviceRequest
+		}{
+			{"DetailLevelTooLarge", GetDeviceRequest{Slot: 11, DetailLevel: 99}},
+			{"DetailLevelNegative", GetDeviceRequest{Slot: 11, DetailLevel: -1}},
+			{"LanguageWord", GetDeviceRequest{Slot: 11, Language: "english"}},
+			{"LanguageUppercase", GetDeviceRequest{Slot: 11, Language: "EN"}},
+			{"LanguageBadRegion", GetDeviceRequest{Slot: 11, Language: "en-us"}},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				srv := newTestServer(t, true)
+				mockInvokeGateFn(t, srv, EndpointGetDevice, false, HandlerContext{}, StatusWithCode(StatusCodeOk, ""))
+				srv.getDeviceHandlers[11] = func(HandlerContext, GetDeviceRequest, Stream[st2138.DeviceComponent]) StatusResult {
+					t.Error("handler must not be called for an invalid request")
+					return StatusWithCode(StatusCodeOk, "")
+				}
+
+				res := srv.InvokeGetDeviceHandler(validTestTransportContext(nil), tt.req, &sliceStream[st2138.DeviceComponent]{})
+				if res.Code != StatusCodeInvalidArgument {
+					t.Errorf("expected InvalidArgument, got %v", res)
+				}
+			})
+		}
+	})
+
+	t.Run("AuthorizationCheckedBeforeValidation", func(t *testing.T) {
+		srv := newTestServer(t, true)
+		mockInvokeGateFn(t, srv, EndpointGetDevice, false, HandlerContext{}, StatusWithCode(StatusCodePermissionDenied, "denied"))
+		srv.getDeviceHandlers[11] = func(HandlerContext, GetDeviceRequest, Stream[st2138.DeviceComponent]) StatusResult {
+			t.Error("handler must not be called when authorization fails")
+			return StatusWithCode(StatusCodeOk, "")
+		}
+
+		res := srv.InvokeGetDeviceHandler(validTestTransportContext(nil),
+			GetDeviceRequest{Slot: 11, DetailLevel: 99, Language: "english"}, &sliceStream[st2138.DeviceComponent]{})
+		if res.Code != StatusCodePermissionDenied {
+			t.Errorf("expected the authorization error to win over validation, got %v", res)
+		}
+	})
 }
 
 func TestServer_InvokeGetValueHandler(t *testing.T) {

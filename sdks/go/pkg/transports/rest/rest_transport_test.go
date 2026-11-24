@@ -398,6 +398,81 @@ func TestTransport_GetDevice_EmptyStream(t *testing.T) {
 	assertStatus(t, rec, http.StatusInternalServerError)
 }
 
+// TestTransport_DeviceRequest_Headers verifies the Language-Code and
+// Detail-Level headers reach the handler on both the unary and streaming
+// device endpoints, that SubscribedOids is never set, and that missing headers
+// map to the defaults.
+func TestTransport_DeviceRequest_Headers(t *testing.T) {
+	paths := map[string]string{
+		"Unary":  "/st2138-api/v1/0",
+		"Stream": "/st2138-api/v1/0/stream",
+	}
+	tests := []struct {
+		name         string
+		headers      map[string]string
+		wantLanguage string
+		wantLevel    st2138.DetailLevel
+	}{
+		{"Missing", nil, "", st2138.DetailLevelFull},
+		{"LanguageOnly", map[string]string{"Language-Code": "fr"}, "fr", st2138.DetailLevelFull},
+		{"LevelByName", map[string]string{"Detail-Level": "MINIMAL"}, "", st2138.DetailLevelMinimal},
+		{"LevelByNumber", map[string]string{"Detail-Level": "3"}, "", st2138.DetailLevelCommands},
+		{"UnsetPassedAsIs", map[string]string{"Detail-Level": "UNSET"}, "", st2138.DetailLevelUnset},
+		{"Both", map[string]string{"Language-Code": "en-US", "Detail-Level": "NONE"}, "en-US", st2138.DetailLevelNone},
+	}
+	for pathName, path := range paths {
+		for _, tt := range tests {
+			t.Run(pathName+"/"+tt.name, func(t *testing.T) {
+				transport, runtime := makeTestTransport(t)
+
+				called := false
+				runtime.GetDeviceFn = func(_ catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
+					called = true
+					if req.Language != tt.wantLanguage {
+						t.Errorf("Language = %q, want %q", req.Language, tt.wantLanguage)
+					}
+					if req.DetailLevel != tt.wantLevel {
+						t.Errorf("DetailLevel = %v, want %v", req.DetailLevel, tt.wantLevel)
+					}
+					if req.SubscribedOids != nil {
+						t.Errorf("SubscribedOids = %v, want nil", req.SubscribedOids)
+					}
+					device, err := st2138.NewDevice(req.Slot).Build()
+					if err != nil {
+						t.Fatalf("unexpected builder error: %v", err)
+					}
+					return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+
+				rec := makeRequestWithHeaders(t, transport, http.MethodGet, path, "", tt.headers)
+				assertStatus(t, rec, http.StatusOK)
+				if !called {
+					t.Error("handler was not called")
+				}
+			})
+		}
+	}
+}
+
+// TestTransport_DeviceRequest_InvalidDetailLevelHeader verifies an unparseable
+// Detail-Level is rejected with 400 before the handler runs.
+func TestTransport_DeviceRequest_InvalidDetailLevelHeader(t *testing.T) {
+	for _, path := range []string{"/st2138-api/v1/0", "/st2138-api/v1/0/stream"} {
+		for _, value := range []string{"bogus", "99", "-1"} {
+			t.Run(path+"/"+value, func(t *testing.T) {
+				transport, runtime := makeTestTransport(t)
+				runtime.GetDeviceFn = func(catena.TransportContext, catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
+					t.Error("handler must not be called for an invalid Detail-Level")
+					return nil, catena.StatusWithCode(catena.StatusCodeOk, "")
+				}
+
+				rec := makeRequestWithHeaders(t, transport, http.MethodGet, path, "", map[string]string{"Detail-Level": value})
+				assertStatus(t, rec, http.StatusBadRequest)
+			})
+		}
+	}
+}
+
 func TestTransport_DeviceStream(t *testing.T) {
 	t.Run("StreamRoute", func(t *testing.T) {
 		transport, runtime := makeTestTransport(t)
