@@ -669,6 +669,7 @@ func TestParseDetailLevel(t *testing.T) {
 			{"uint16", uint16(2)},
 			{"uint32", uint32(2)},
 			{"uint64", uint64(2)},
+			{"uintptr", uintptr(2)},
 			{"DetailLevel", DetailLevelMinimal},
 		}
 		for _, tt := range tests {

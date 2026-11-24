@@ -110,6 +110,8 @@ func ParseDetailLevel(v any) (DetailLevel, error) {
 		return detailLevelFromUint64(uint64(x))
 	case uint64:
 		return detailLevelFromUint64(x)
+	case uintptr:
+		return detailLevelFromUint64(uint64(x))
 	default:
 		return DetailLevelFull, fmt.Errorf("unsupported detail level type: %T: %w", v, ErrInvalid)
 	}
