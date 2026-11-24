@@ -1246,7 +1246,7 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 			name string
 			req  GetDeviceRequest
 		}{
-			{"AllSet", GetDeviceRequest{Slot: 11, Language: "es", DetailLevel: st2138.DetailLevelMinimal, SubscribedOids: []string{"/a", "/b"}}},
+			{"AllSet", GetDeviceRequest{Slot: 11, Language: "es", DetailLevel: st2138.DetailLevelMinimal, SubscribedOids: []string{"a", "b"}}},
 			{"RegionalLanguage", GetDeviceRequest{Slot: 11, Language: "en-US"}},
 			{"UnknownButWellFormedLanguage", GetDeviceRequest{Slot: 11, Language: "xx"}},
 			{"UnsetPassedAsIs", GetDeviceRequest{Slot: 11, DetailLevel: st2138.DetailLevelUnset}},
@@ -1275,8 +1275,12 @@ func TestServer_InvokeGetDeviceHandler(t *testing.T) {
 				if got.Slot != tt.req.Slot || got.Language != tt.req.Language || got.DetailLevel != tt.req.DetailLevel {
 					t.Errorf("handler got %+v, want %+v", got, tt.req)
 				}
-				if len(got.SubscribedOids) != len(tt.req.SubscribedOids) {
-					t.Errorf("handler got SubscribedOids %v, want %v", got.SubscribedOids, tt.req.SubscribedOids)
+				if len(tt.req.SubscribedOids) > 0 {
+					for _, oid := range tt.req.SubscribedOids {
+						if !slices.Contains(got.SubscribedOids, oid) {
+							t.Errorf("handler got SubscribedOids %v, want %v", got.SubscribedOids, tt.req.SubscribedOids)
+						}
+					}
 				}
 			})
 		}

@@ -561,7 +561,7 @@ func TestTransport_DeviceRequest_PassesFields(t *testing.T) {
 				Slot:           0,
 				Language:       "es",
 				DetailLevel:    st2138.DetailLevelMinimal,
-				SubscribedOids: []string{"/a", "/b"},
+				SubscribedOids: []string{"a", "b"},
 			},
 		},
 		{
@@ -602,10 +602,10 @@ func TestTransport_DeviceRequest_PassesFields(t *testing.T) {
 				t.Errorf("got language=%q detail=%v, want language=%q detail=%v",
 					got.Language, got.DetailLevel, tt.want.Language, tt.want.DetailLevel)
 			}
-			if len(got.SubscribedOids) != len(tt.want.SubscribedOids) {
+			if len(got.SubscribedOids) != len(tt.want.SubscribedOids) || tt.name == "Defaults" && got.SubscribedOids != nil {
 				t.Fatalf("got SubscribedOids %v, want %v", got.SubscribedOids, tt.want.SubscribedOids)
 			}
-			for i := range got.SubscribedOids {
+			for i := range tt.want.SubscribedOids {
 				if got.SubscribedOids[i] != tt.want.SubscribedOids[i] {
 					t.Errorf("SubscribedOids[%d] = %q, want %q", i, got.SubscribedOids[i], tt.want.SubscribedOids[i])
 				}
