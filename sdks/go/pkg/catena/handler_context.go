@@ -74,6 +74,7 @@ type HandlerContext struct {
 	authzEnabled bool
 	ctx          context.Context
 	tokenExpiry  time.Time
+	identity     connectionIdentity
 	// ctxCancel tears down ctx and unregisters its shutdown watcher. The gate
 	// builds ctx and stashes cancel here; whoever owns the end of the request
 	// (invokeHandler's defer, GetSlots, or a torn-down streaming Connection)

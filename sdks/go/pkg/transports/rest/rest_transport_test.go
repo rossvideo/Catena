@@ -2579,6 +2579,8 @@ func TestTransport_Connect_TokenExpired(t *testing.T) {
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		exp := time.Now().Add(3 * time.Second)
 		token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+			"sub":   "test-user",
+			"azp":   "test-client",
 			"scope": st2138.ScopeMon,
 			"exp":   exp.Unix(),
 		})

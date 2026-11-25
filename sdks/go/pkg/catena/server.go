@@ -1348,6 +1348,16 @@ func (s *server) RegisterTransportConnection(transport Transport, transportConte
 		return nil, res
 	}
 
+	if s.authzEnabled {
+		identity, err := deriveConnectionIdentity(handlerContext.Token)
+		if err != nil {
+			s.serverLogger.Error("invalid access token, failed to derive connection identity", "error", err)
+			handlerContext.release()
+			return nil, StatusWithCode(StatusCodeUnauthenticated, "invalid access token, failed to derive connection identity")
+		}
+		handlerContext.identity = identity
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

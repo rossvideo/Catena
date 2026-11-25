@@ -116,9 +116,9 @@ func makeTestJwtToken(t *testing.T, scopes []string) string {
 	return signedToken
 }
 
-const validTestJWT = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InJlYWQgd3JpdGUgYWxsIHN0MjEzODpvcDp3In0."
+const validTestJWT = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJhenAiOiJ0ZXN0LWNsaWVudCIsInNjb3BlIjoicmVhZCB3cml0ZSBhbGwgc3QyMTM4Om9wOncifQ."
 const validTestJWTWithoutExecuteCommandScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InJlYWQgd3JpdGUgYWxsIn0."
-const validTestJWTWithCfgScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJzY29wZSI6InN0MjEzODpjZmcifQ."
+const validTestJWTWithCfgScope = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJhenAiOiJ0ZXN0LWNsaWVudCIsInNjb3BlIjoic3QyMTM4OmNmZyJ9."
 
 func newTestServer(t *testing.T, authzEnabled bool) *server {
 	t.Helper()
@@ -3192,6 +3192,8 @@ func TestServer_RegisterTransportConnection_TokenExpiry(t *testing.T) {
 	getTokenString := func(t *testing.T, exp time.Time) string {
 		t.Helper()
 		token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+			"sub":   "test-user",
+			"azp":   "test-client",
 			"scope": st2138.ScopeMon,
 			"exp":   float64(exp.Unix()),
 		})
@@ -3336,6 +3338,33 @@ func TestServer_RegisterTransportConnection_Failed(t *testing.T) {
 	}
 	if conn != nil {
 		t.Errorf("expected nil connection on registration failure, got %+v", conn)
+	}
+}
+
+func TestServer_RegisterTransportConnection_IdentityDerivationFailed(t *testing.T) {
+	// A valid token that carries no sid, sub or azp/client_id cannot yield a connection identity
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{"scope": st2138.ScopeMon}).
+		SignedString(jwt.UnsafeAllowNoneSignatureType)
+	if err != nil {
+		t.Fatalf("sign token: %v", err)
+	}
+
+	srv := newTestServer(t, true)
+	srv.connectionQueue = &stubConnectionQueue{
+		tb: t,
+		registerOwnedFn: func(any, HandlerContext, *protos.PushUpdates) (*Connection, StatusResult) {
+			t.Error("connection must not be registered when identity derivation fails")
+			return nil, StatusResult{Code: StatusCodeOk}
+		},
+	}
+
+	conn, status := srv.RegisterTransportConnection(nil, TransportContext{AccessToken: signed})
+
+	if status.Code != StatusCodeUnauthenticated {
+		t.Errorf("expected StatusCodeUnauthenticated, got %v", status.Code)
+	}
+	if conn != nil {
+		t.Errorf("expected nil connection, got %+v", conn)
 	}
 }
 
