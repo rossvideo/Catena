@@ -641,14 +641,55 @@ func (s *server) parseTransportContext(transportContext TransportContext) (Handl
 // resolveHandlerContext builds a HandlerContext for an incoming request.
 // When authorization is disabled, JWT validation is skipped so clients are not
 // required to send an access token.
+//
+// The request-received time is stamped first, before any JWT validation,
+// so token validation time is not counted as transit time. The Request-Start
+// header is parsed here too, so both values are set once for every transport
+// and authorization mode.
 func (s *server) resolveHandlerContext(transportContext TransportContext) (HandlerContext, StatusResult) {
+	received := time.Now()
+
+	var handlerContext HandlerContext
 	if !s.authzEnabled {
-		return HandlerContext{
+		handlerContext = HandlerContext{
 			Metadata:     maps.Clone(transportContext.Metadata),
 			authzEnabled: false,
-		}, StatusWithCode(StatusCodeOk, "")
+		}
+	} else {
+		var res StatusResult
+		handlerContext, res = s.parseTransportContext(transportContext)
+		if res.IsError() {
+			return handlerContext, res
+		}
 	}
-	return s.parseTransportContext(transportContext)
+
+	handlerContext.requestReceived = received
+	handlerContext.requestStart, handlerContext.requestStartPresent = s.parseRequestStart(transportContext.Metadata)
+	return handlerContext, StatusWithCode(StatusCodeOk, "")
+}
+
+// requestStartHeader is the name of the optional header carrying the time the
+// client sent the request.
+const requestStartHeader = "Request-Start"
+
+// parseRequestStart looks up the Request-Start header in metadata and parses
+// it. The lookup is case-insensitive because REST header keys are canonicalized
+// (Request-Start) while gRPC metadata keys are lowercase (request-start). A
+// missing header and an invalid one are both reported as absent; an invalid
+// value is logged at debug level and never rejects the request.
+func (s *server) parseRequestStart(metadata map[string][]string) (time.Time, bool) {
+	for key, values := range metadata {
+		if !strings.EqualFold(key, requestStartHeader) || len(values) == 0 {
+			continue
+		}
+		start, res := ValidateRequestStart(values[0])
+		if res.IsError() {
+			s.serverLogger.Debug("Ignoring invalid Request-Start header", "value", values[0], "error", res.Error)
+			return time.Time{}, false
+		}
+		return start, true
+	}
+	return time.Time{}, false
 }
 
 func (s *server) isAccessAllowed(endpointType EndpointType, handlerContext HandlerContext) bool {

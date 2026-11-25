@@ -44,6 +44,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/dlclark/regexp2"
 )
@@ -72,6 +73,26 @@ func ValidateSlotString(slot string) (uint16, StatusResult) {
 		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid slot string: %s", slot))
 	}
 	return ValidateSlot(uint32(slotInt))
+}
+
+// ValidateRequestStart parses the value of the Request-Start header: a
+// non-negative base-10 integer of milliseconds since the Unix epoch. It returns
+// the corresponding time and Ok, or the zero time and
+// StatusCodeInvalidArgument when the value is empty, non-numeric, overflows
+// int64, or is negative.
+func ValidateRequestStart(value string) (time.Time, StatusResult) {
+	if value == "" {
+		return time.Time{}, StatusWithCode(StatusCodeInvalidArgument, "request-start is required")
+	}
+
+	millis, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return time.Time{}, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid request-start: %s", value))
+	}
+	if millis < 0 {
+		return time.Time{}, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("request-start must not be negative: %s", value))
+	}
+	return time.UnixMilli(millis), StatusWithCode(StatusCodeOk, "")
 }
 
 // ValidateFqoid reports whether fqoid matches fqoidPattern. An empty string is
