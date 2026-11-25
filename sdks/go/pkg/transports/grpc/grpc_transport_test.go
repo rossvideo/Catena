@@ -3107,3 +3107,43 @@ func TestTransport_MaxConnectionIdle_DoesNotReapActiveConnection(t *testing.T) {
 		t.Fatal("connection was not reaped after the Connect stream ended")
 	}
 }
+
+// A request carrying request-start metadata reaches the handler with the parsed
+// start time and a server-stamped received time. This needs a real server
+// because the stub runtime only sees the raw TransportContext.
+func TestTransport_RequestStartReachesHandler(t *testing.T) {
+	ctx := context.Background()
+	transport, _, lis, cleanup := setupTestTransport(t, []uint16{0})
+	defer cleanup()
+
+	srv, err := catena.NewServer(config.ServerOptions{})
+	if err != nil {
+		t.Fatalf("NewServer() failed: %v", err)
+	}
+	transport.runtime = srv.(catena.ServerRuntime)
+
+	const startMillis = int64(1700000000123)
+	var gotStart, gotReceived time.Time
+	var gotPresent bool
+	value, _ := st2138.ToValue(int32(42))
+	srv.RegisterGetValueHandler(0, func(ctx catena.HandlerContext, req catena.GetValueRequest) (st2138.Value, catena.StatusResult) {
+		gotStart, gotPresent = ctx.RequestStart()
+		gotReceived = ctx.RequestReceived()
+		return catena.Reply(value)
+	})
+
+	client, cleanupClient := setupGRPCClient(t, ctx, lis)
+	defer cleanupClient()
+
+	callCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("request-start", fmt.Sprint(startMillis)))
+	if _, err := makeGetValueRequest(t, client, callCtx, 0, "brightness"); err != nil {
+		t.Fatalf("GetValue failed: %v", err)
+	}
+
+	if !gotPresent || !gotStart.Equal(time.UnixMilli(startMillis)) {
+		t.Errorf("expected parsed start %v, got %v (present=%v)", time.UnixMilli(startMillis), gotStart, gotPresent)
+	}
+	if gotReceived.IsZero() {
+		t.Error("expected non-zero received time")
+	}
+}

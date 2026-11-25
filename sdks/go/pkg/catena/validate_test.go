@@ -40,7 +40,43 @@ package catena
 
 import (
 	"testing"
+	"time"
 )
+
+func TestValidateRequestStart(t *testing.T) {
+	tests := []struct {
+		name     string
+		value    string
+		wantCode StatusCode
+		want     time.Time
+	}{
+		{name: "valid", value: "1700000000123", wantCode: StatusCodeOk, want: time.UnixMilli(1700000000123)},
+		{name: "zero", value: "0", wantCode: StatusCodeOk, want: time.UnixMilli(0)},
+		{name: "max int64", value: "9223372036854775807", wantCode: StatusCodeOk, want: time.UnixMilli(9223372036854775807)},
+		{name: "empty", value: "", wantCode: StatusCodeInvalidArgument},
+		{name: "non-numeric", value: "abc", wantCode: StatusCodeInvalidArgument},
+		{name: "fractional", value: "1.5", wantCode: StatusCodeInvalidArgument},
+		{name: "negative", value: "-1", wantCode: StatusCodeInvalidArgument},
+		{name: "overflow", value: "9223372036854775808", wantCode: StatusCodeInvalidArgument},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, status := ValidateRequestStart(tt.value)
+			if status.Code != tt.wantCode {
+				t.Fatalf("expected code %v, got %v", tt.wantCode, status)
+			}
+			if tt.wantCode == StatusCodeOk {
+				if !got.Equal(tt.want) {
+					t.Errorf("expected %v, got %v", tt.want, got)
+				}
+				return
+			}
+			if !got.IsZero() {
+				t.Errorf("expected zero time on error, got %v", got)
+			}
+		})
+	}
+}
 
 func TestValidateSlot(t *testing.T) {
 
