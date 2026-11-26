@@ -40,6 +40,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 	"github.com/rossvideo/catena/sdks/go/pkg/st2138"
 )
@@ -885,6 +886,158 @@ func TestConnectionQueue_SetConnectionExpiry(t *testing.T) {
 		if got := cq.getConnectionExpiry(conn); !got.IsZero() {
 			t.Errorf("expiry = %v, want zero", got)
 		}
+	})
+}
+
+func TestConnectionQueue_RefreshConnections(t *testing.T) {
+	start := time.Date(2026, time.November, 25, 12, 0, 0, 0, time.UTC)
+	identityA := connectionIdentity{sid: "session-a"}
+	identityB := connectionIdentity{sid: "session-b"}
+	oldToken := &jwt.Token{Raw: "old-token"}
+	newToken := &jwt.Token{Raw: "new-token"}
+
+	// newQueue returns a queue driven by a manual clock with the sweeper disabled
+	// so the tests control exactly when expiry is evaluated.
+	newQueue := func(t *testing.T) (*connectionQueue, *manualClock) {
+		t.Helper()
+
+		clock := newManualClock(start)
+
+		cq := newConnectionQueueWithOptions(0, nil, withClock(clock.Now), withExpirySweepInterval(0), withExpiryGracePeriod(time.Second)).(*connectionQueue)
+		stopQueueOnCleanup(t, cq)
+
+		return cq, clock
+	}
+
+	register := func(t *testing.T, cq *connectionQueue, identity connectionIdentity, expiry time.Time) *Connection {
+		t.Helper()
+
+		hc := HandlerContext{
+			Token:       oldToken,
+			readScopes:  map[string]struct{}{"old:r": {}},
+			writeScopes: map[string]struct{}{"old:w": {}},
+			identity:    identity,
+			tokenExpiry: expiry,
+		}
+
+		conn, res := cq.registerOwnedConnection(&stubTransport{tb: t}, hc, nil)
+		if res.Code != StatusCodeOk || conn == nil {
+			t.Fatalf("registerOwnedConnection: conn=%v res=%v", conn, res)
+		}
+
+		return conn
+	}
+
+	// assertUnchanged fails if the connection no longer has its original expiry and token.
+	assertUnchanged := func(t *testing.T, cq *connectionQueue, conn *Connection, wantExpiry time.Time) {
+		t.Helper()
+
+		cq.mu.Lock()
+		expiry := conn.expiry
+		hc := conn.HandlerContext
+		cq.mu.Unlock()
+
+		if !expiry.Equal(wantExpiry) {
+			t.Errorf("expiry = %v, want unchanged %v", expiry, wantExpiry)
+		}
+		if hc.Token != oldToken {
+			t.Error("token should be unchanged")
+		}
+	}
+
+	refreshed := HandlerContext{
+		Token:       newToken,
+		readScopes:  map[string]struct{}{"new:r": {}},
+		writeScopes: map[string]struct{}{"new:w": {}},
+	}
+
+	t.Run("refreshes matching connections", func(t *testing.T) {
+		cq, clock := newQueue(t)
+		first := register(t, cq, identityA, clock.Now().Add(time.Minute))
+		second := register(t, cq, identityA, clock.Now().Add(2*time.Minute))
+		otherExpiry := clock.Now().Add(3 * time.Minute)
+		other := register(t, cq, identityB, otherExpiry)
+
+		newExpiry := clock.Now().Add(time.Hour)
+		if got := cq.refreshConnections(identityA, newExpiry, refreshed); got != 2 {
+			t.Fatalf("refreshConnections = %d, want 2", got)
+		}
+		for i, conn := range []*Connection{first, second} {
+
+			cq.mu.Lock()
+			expiry := conn.expiry
+			cq.mu.Unlock()
+
+			if !expiry.Equal(newExpiry) {
+				t.Errorf("connection %d expiry = %v, want %v", i, expiry, newExpiry)
+			}
+		}
+		assertUnchanged(t, cq, other, otherExpiry)
+	})
+
+	t.Run("returns zero for an empty identity", func(t *testing.T) {
+		cq, clock := newQueue(t)
+
+		originalExpiry := clock.Now().Add(time.Minute)
+		conn := register(t, cq, connectionIdentity{}, originalExpiry)
+
+		if got := cq.refreshConnections(connectionIdentity{}, clock.Now().Add(time.Hour), refreshed); got != 0 {
+			t.Fatalf("refreshConnections = %d, want 0", got)
+		}
+		assertUnchanged(t, cq, conn, originalExpiry)
+	})
+
+	t.Run("returns zero while the queue is shutting down", func(t *testing.T) {
+		cq, clock := newQueue(t)
+		originalExpiry := clock.Now().Add(time.Minute)
+		conn := register(t, cq, identityA, originalExpiry)
+
+		cq.mu.Lock()
+		cq.shuttingDown = true
+		cq.mu.Unlock()
+
+		if got := cq.refreshConnections(identityA, clock.Now().Add(time.Hour), refreshed); got != 0 {
+			t.Fatalf("refreshConnections = %d, want 0", got)
+		}
+		assertUnchanged(t, cq, conn, originalExpiry)
+	})
+
+	t.Run("returns zero when no connection matches the identity", func(t *testing.T) {
+		cq, clock := newQueue(t)
+		originalExpiry := clock.Now().Add(time.Minute)
+		conn := register(t, cq, identityA, originalExpiry)
+
+		if got := cq.refreshConnections(identityB, clock.Now().Add(time.Hour), refreshed); got != 0 {
+			t.Fatalf("refreshConnections = %d, want 0", got)
+		}
+		assertUnchanged(t, cq, conn, originalExpiry)
+	})
+
+	t.Run("returns zero for a connection that has already expired", func(t *testing.T) {
+		cq, clock := newQueue(t)
+		originalExpiry := clock.Now().Add(time.Minute)
+		conn := register(t, cq, identityA, originalExpiry)
+
+		clock.Advance(2 * time.Minute)
+		if got := cq.refreshConnections(identityA, clock.Now().Add(time.Hour), refreshed); got != 0 {
+			t.Fatalf("refreshConnections = %d, want 0", got)
+		}
+		assertUnchanged(t, cq, conn, originalExpiry)
+	})
+
+	t.Run("returns zero for a connection that is already closing", func(t *testing.T) {
+		cq, clock := newQueue(t)
+		originalExpiry := clock.Now().Add(time.Minute)
+		conn := register(t, cq, identityA, originalExpiry)
+
+		cq.mu.Lock()
+		conn.recordCloseReason(CloseReasonShutdown)
+		cq.mu.Unlock()
+
+		if got := cq.refreshConnections(identityA, clock.Now().Add(time.Hour), refreshed); got != 0 {
+			t.Fatalf("refreshConnections = %d, want 0", got)
+		}
+		assertUnchanged(t, cq, conn, originalExpiry)
 	})
 }
 

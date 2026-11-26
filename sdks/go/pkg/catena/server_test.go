@@ -3095,6 +3095,7 @@ type stubConnectionQueue struct {
 	setMaxFn        func(max int)
 	registerOwnedFn func(owner any, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult)
 	deregisterFn    func(connID int)
+	refreshFn       func(identity connectionIdentity, expiry time.Time, refreshed HandlerContext) int
 	notifyFn        func(update *protos.PushUpdates, scope string)
 	shutdownFn      func(ctx context.Context)
 	shutdownOwnerFn func(ctx context.Context, owner any)
@@ -3124,6 +3125,14 @@ func (s *stubConnectionQueue) deregisterConnection(connID int) {
 	} else {
 		s.tb.Fatalf("deregisterConnection called on stubConnectionQueue without deregisterFn defined")
 	}
+}
+
+func (s *stubConnectionQueue) refreshConnections(identity connectionIdentity, expiry time.Time, refreshed HandlerContext) int {
+	if s.refreshFn != nil {
+		return s.refreshFn(identity, expiry, refreshed)
+	}
+	s.tb.Fatalf("refreshConnections called on stubConnectionQueue without refreshFn defined")
+	return 0
 }
 
 func (s *stubConnectionQueue) notifyUpdate(update *protos.PushUpdates, scope string) {

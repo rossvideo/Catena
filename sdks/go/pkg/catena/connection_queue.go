@@ -96,6 +96,7 @@ type Connection struct {
 	owner          Transport
 	expiry         time.Time
 	closeReason    ConnectionCloseReason
+	identity       connectionIdentity
 }
 
 // connectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
@@ -123,6 +124,7 @@ type connectionQueueInterface interface {
 	setMaxConnections(max int)
 	registerOwnedConnection(owner Transport, handlerContext HandlerContext, initialUpdate *protos.PushUpdates) (*Connection, StatusResult)
 	deregisterConnection(connID int)
+	refreshConnections(identity connectionIdentity, expiry time.Time, refreshed HandlerContext) int
 	notifyUpdate(update *protos.PushUpdates, scope string)
 	shutdown(ctx context.Context)
 	shutdownOwner(ctx context.Context, owner Transport)
@@ -273,7 +275,9 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 
 	// Check if the token has expired already
 	expiry := handlerContext.tokenExpiry
+	identity := handlerContext.identity
 	handlerContext.tokenExpiry = time.Time{} // clear the token expiry to avoid keeping duplicates
+	handlerContext.identity = connectionIdentity{}
 	if !expiry.IsZero() && !cq.now().Before(expiry) {
 		return nil, StatusWithCode(StatusCodeUnauthenticated, "Token expired")
 	}
@@ -289,6 +293,7 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		Done:           make(chan struct{}),
 		HandlerContext: handlerContext,
 		owner:          owner,
+		identity:       identity,
 	}
 	cq.connections[cq.nextConnID] = conn
 	cq.setConnectionExpiryWithMutexHeld(conn, expiry)
@@ -317,6 +322,49 @@ func (cq *connectionQueue) deregisterConnection(connID int) {
 		cq.cond.Broadcast()
 		cq.log.Info("Streaming connection unregistered", "connID", connID, "remaining", len(cq.connections))
 	}
+}
+
+// refreshConnections extends the life of every live connections whose identity matches the provided identity
+// and returns how many connections were refreshed. The tokens of the refreshed connections are updated
+// with the new token and write scopes
+func (cq *connectionQueue) refreshConnections(identity connectionIdentity, expiry time.Time, refreshed HandlerContext) int {
+
+	if identity == (connectionIdentity{}) {
+		return 0
+	}
+
+	cq.mu.Lock()
+	defer cq.mu.Unlock()
+
+	// Does not refresh if the queue is shutting down
+	if cq.shuttingDown {
+		return 0
+	}
+
+	now := cq.now()
+	matched := 0
+	for _, conn := range cq.connections {
+		if conn.identity != identity {
+			continue
+		}
+
+		// Expired connection
+		if !conn.expiry.IsZero() && !now.Before(conn.expiry) {
+			continue
+		}
+
+		// Set the new expiry
+		if !cq.setConnectionExpiryWithMutexHeld(conn, expiry) {
+			continue
+		}
+
+		// Update handler context
+		conn.HandlerContext.Token = refreshed.Token
+		conn.HandlerContext.readScopes = refreshed.readScopes
+		conn.HandlerContext.writeScopes = refreshed.writeScopes
+		matched++
+	}
+	return matched
 }
 
 // notifyUpdate sends a PushUpdates message to all connected clients.
