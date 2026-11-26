@@ -62,7 +62,9 @@ func main() {
     // Register handlers once. All registered transports share this runtime.
     // catena.DeviceComponentsForRequest chunks a whole device into
     // DeviceComponent stream sends; a small model could equally be sent as a
-    // single st2138.ComponentDevice chunk.
+    // single st2138.ComponentDevice chunk. req also carries the client's
+    // Language, DetailLevel and SubscribedOids (never set over REST) so the
+    // handler can tailor the model.
     srv.RegisterGetDeviceHandler(0, func(ctx catena.HandlerContext, req catena.GetDeviceRequest, stream catena.Stream[st2138.DeviceComponent]) catena.StatusResult {
         return catena.DeviceComponentsForRequest(st2138.NewDevice(req.Slot), stream)
     })

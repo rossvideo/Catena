@@ -94,7 +94,7 @@ func TestCORS_Preflight(t *testing.T) {
 	assertHeaderNotPresent(t, rec, "Access-Control-Allow-Credentials")
 	assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Methods"), "GET", "POST", "PUT", "DELETE", "OPTIONS")
 	assertCSVContains(t, rec.Header().Get("Access-Control-Allow-Headers"),
-		"Content-Type", "Authorization", "Accept", "Language", "Detail-Level", "Request-Start", "X-Tenant-Id")
+		"Content-Type", "Authorization", "Accept", "Language-Code", "Detail-Level", "Request-Start", "X-Tenant-Id")
 }
 
 func TestCORS_Preflight_NegativeMaxAge(t *testing.T) {

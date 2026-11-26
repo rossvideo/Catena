@@ -941,6 +941,18 @@ func (s *server) InvokeGetDeviceHandler(transportContext TransportContext, req G
 	_, res := invokeHandler(s, transportContext, EndpointGetDevice, false, s.getDeviceHandlers, req.Slot,
 		"No device defined at slot",
 		func(handler DeviceHandler, ctx HandlerContext) (struct{}, StatusResult) {
+			// Validation runs here, after the authorization gate, so callers who
+			// are not authorized never learn whether their arguments were valid.
+			if result := ValidateDetailLevel(req.DetailLevel); result.IsError() {
+				return struct{}{}, result
+			}
+			// An empty language means "not provided"; only the format of a
+			// supplied code is checked.
+			if req.Language != "" {
+				if result := ValidateLanguageCode(req.Language); result.IsError() {
+					return struct{}{}, result
+				}
+			}
 			out := stream
 			// Only touch the handler's chunks when the SDK manages the product for
 			// this slot; otherwise deliver whatever the business logic produces

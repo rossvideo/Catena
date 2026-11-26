@@ -540,6 +540,80 @@ func TestTransport_DeviceRequest_InvalidSlot(t *testing.T) {
 	}
 }
 
+// TestTransport_DeviceRequest_PassesFields verifies language, detail_level and
+// subscribed_oids reach the handler unchanged (oids normalized), and that omitted values map to
+// the defaults (FULL, "", nil). The transport does not validate them.
+func TestTransport_DeviceRequest_PassesFields(t *testing.T) {
+	tests := []struct {
+		name    string
+		payload *protos.DeviceRequestPayload
+		want    catena.GetDeviceRequest
+	}{
+		{
+			name: "AllSet",
+			payload: &protos.DeviceRequestPayload{
+				Slot:           0,
+				Language:       "es",
+				DetailLevel:    protos.Device_MINIMAL,
+				SubscribedOids: []string{"/a", "/b"},
+			},
+			want: catena.GetDeviceRequest{
+				Slot:           0,
+				Language:       "es",
+				DetailLevel:    st2138.DetailLevelMinimal,
+				SubscribedOids: []string{"a", "b"},
+			},
+		},
+		{
+			name:    "UnsetPassedAsIs",
+			payload: &protos.DeviceRequestPayload{Slot: 0, DetailLevel: protos.Device_UNSET},
+			want:    catena.GetDeviceRequest{Slot: 0, DetailLevel: st2138.DetailLevelUnset},
+		},
+		{
+			name:    "Defaults",
+			payload: &protos.DeviceRequestPayload{Slot: 0},
+			want:    catena.GetDeviceRequest{Slot: 0, DetailLevel: st2138.DetailLevelFull},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+			defer cleanup()
+
+			var got catena.GetDeviceRequest
+			runtime.GetDeviceFn = func(_ catena.TransportContext, req catena.GetDeviceRequest) ([]st2138.DeviceComponent, catena.StatusResult) {
+				got = req
+				device, err := st2138.NewDevice(req.Slot).WithDetailLevel(st2138.DetailLevelFull).Build()
+				if err != nil {
+					t.Fatalf("unexpected builder error: %v", err)
+				}
+				return []st2138.DeviceComponent{st2138.ComponentDevice(&device)}, catena.StatusWithCode(catena.StatusCodeOk, "")
+			}
+
+			client, cleanup := setupGRPCClient(t, ctx, lis)
+			defer cleanup()
+
+			stream, err := client.DeviceRequest(ctx, tt.payload)
+			assertNoError(t, err)
+			receiveDeviceComponent(t, stream)
+
+			if got.Slot != tt.want.Slot || got.Language != tt.want.Language || got.DetailLevel != tt.want.DetailLevel {
+				t.Errorf("got language=%q detail=%v, want language=%q detail=%v",
+					got.Language, got.DetailLevel, tt.want.Language, tt.want.DetailLevel)
+			}
+			if len(got.SubscribedOids) != len(tt.want.SubscribedOids) || tt.name == "Defaults" && got.SubscribedOids != nil {
+				t.Fatalf("got SubscribedOids %v, want %v", got.SubscribedOids, tt.want.SubscribedOids)
+			}
+			for i := range tt.want.SubscribedOids {
+				if got.SubscribedOids[i] != tt.want.SubscribedOids[i] {
+					t.Errorf("SubscribedOids[%d] = %q, want %q", i, got.SubscribedOids[i], tt.want.SubscribedOids[i])
+				}
+			}
+		})
+	}
+}
+
 func TestTransport_DeviceRequest_HandlerError(t *testing.T) {
 	ctx := context.Background()
 	_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})

@@ -359,7 +359,16 @@ func (s *catenaService) DeviceRequest(req *protos.DeviceRequestPayload, stream g
 	transportContext := s.transport.retrieveMetadataFromContext(stream.Context())
 
 	adapter := &grpcStream[st2138.DeviceComponent]{ss: stream}
-	res := s.transport.runtime.InvokeGetDeviceHandler(transportContext, catena.GetDeviceRequest{Slot: slot}, adapter)
+	var subscribedOids []string
+	for _, oid := range req.SubscribedOids {
+		subscribedOids = append(subscribedOids, normalizeFqoid(oid))
+	}
+	res := s.transport.runtime.InvokeGetDeviceHandler(transportContext, catena.GetDeviceRequest{
+		Slot:           slot,
+		Language:       req.Language,
+		DetailLevel:    req.DetailLevel,
+		SubscribedOids: subscribedOids,
+	}, adapter)
 	if res.IsError() {
 		s.transport.log.Error("DeviceRequest handler error", "slot", slot, "error", res.Error)
 		return status.Error(ToGRPCCode(res.Code), res.Error)
