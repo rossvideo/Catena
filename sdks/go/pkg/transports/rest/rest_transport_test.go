@@ -3622,7 +3622,7 @@ func TestTransport_Connect_SurvivesWriteTimeout(t *testing.T) {
 // A request carrying Request-Start reaches the handler with the parsed start
 // time and a server-stamped received time.
 func TestTransport_RequestStartReachesHandler(t *testing.T) {
-	transport := NewTransport(config.RestOptions{Port: 8080, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1, MaxAssetBodyBytes: -1})
+	transport := NewTransport(config.RestOptions{Port: 0, WriteTimeout: 1 * time.Second, MaxBodyBytes: -1, MaxAssetBodyBytes: -1})
 	srv, err := catena.NewServer(config.ServerOptions{})
 	if err != nil {
 		t.Fatalf("NewServer() failed: %v", err)
