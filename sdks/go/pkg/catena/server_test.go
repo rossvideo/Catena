@@ -2298,7 +2298,7 @@ func TestServer_InvokeParamInfoHandler(t *testing.T) {
 		if info.GetOid() != "volume" {
 			t.Errorf("derived oid = %q, want %q", info.GetOid(), "volume")
 		}
-		if info.GetType() != st2138.ParamTypeInt32 {
+		if st2138.ParamType(info.GetType()) != st2138.ParamTypeInt32 {
 			t.Errorf("derived type = %v, want INT32", info.GetType())
 		}
 	})

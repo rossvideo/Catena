@@ -63,25 +63,30 @@ type UndefinedValue int32
 
 // ParamType represents the type of a parameter value
 // Mirrors protos.ParamType for convenience
-type ParamType = protos.ParamType
+type ParamType protos.ParamType
 
 // ParamType constants matching the proto enum
 const (
-	ParamTypeUndefined          ParamType = protos.ParamType_UNDEFINED
-	ParamTypeEmpty              ParamType = protos.ParamType_EMPTY
-	ParamTypeInt32              ParamType = protos.ParamType_INT32
-	ParamTypeFloat32            ParamType = protos.ParamType_FLOAT32
-	ParamTypeString             ParamType = protos.ParamType_STRING
-	ParamTypeStruct             ParamType = protos.ParamType_STRUCT
-	ParamTypeStructVariant      ParamType = protos.ParamType_STRUCT_VARIANT
-	ParamTypeInt32Array         ParamType = protos.ParamType_INT32_ARRAY
-	ParamTypeFloat32Array       ParamType = protos.ParamType_FLOAT32_ARRAY
-	ParamTypeStringArray        ParamType = protos.ParamType_STRING_ARRAY
-	ParamTypeBinary             ParamType = protos.ParamType_BINARY
-	ParamTypeStructArray        ParamType = protos.ParamType_STRUCT_ARRAY
-	ParamTypeStructVariantArray ParamType = protos.ParamType_STRUCT_VARIANT_ARRAY
-	ParamTypeData               ParamType = protos.ParamType_DATA
+	ParamTypeUndefined          ParamType = ParamType(protos.ParamType_UNDEFINED)
+	ParamTypeEmpty              ParamType = ParamType(protos.ParamType_EMPTY)
+	ParamTypeInt32              ParamType = ParamType(protos.ParamType_INT32)
+	ParamTypeFloat32            ParamType = ParamType(protos.ParamType_FLOAT32)
+	ParamTypeString             ParamType = ParamType(protos.ParamType_STRING)
+	ParamTypeStruct             ParamType = ParamType(protos.ParamType_STRUCT)
+	ParamTypeStructVariant      ParamType = ParamType(protos.ParamType_STRUCT_VARIANT)
+	ParamTypeInt32Array         ParamType = ParamType(protos.ParamType_INT32_ARRAY)
+	ParamTypeFloat32Array       ParamType = ParamType(protos.ParamType_FLOAT32_ARRAY)
+	ParamTypeStringArray        ParamType = ParamType(protos.ParamType_STRING_ARRAY)
+	ParamTypeBinary             ParamType = ParamType(protos.ParamType_BINARY)
+	ParamTypeStructArray        ParamType = ParamType(protos.ParamType_STRUCT_ARRAY)
+	ParamTypeStructVariantArray ParamType = ParamType(protos.ParamType_STRUCT_VARIANT_ARRAY)
+	ParamTypeData               ParamType = ParamType(protos.ParamType_DATA)
 )
+
+// String returns the string representation of the param type.
+func (pt ParamType) String() string {
+	return protos.ParamType(pt).String()
+}
 
 // ToValue converts v into a Value with its own deep-copied backing data.
 //

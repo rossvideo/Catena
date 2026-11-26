@@ -43,6 +43,8 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/proto"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestNewDevice_Basic(t *testing.T) {
@@ -308,7 +310,7 @@ func TestDevice_WithCommands(t *testing.T) {
 	if !ok {
 		t.Fatal("expected 'reboot' command")
 	}
-	if reboot.GetType() != ParamTypeEmpty {
+	if ParamType(reboot.GetType()) != ParamTypeEmpty {
 		t.Errorf("expected type EMPTY, got %v", reboot.GetType())
 	}
 }

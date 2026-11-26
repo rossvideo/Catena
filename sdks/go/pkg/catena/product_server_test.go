@@ -320,7 +320,7 @@ func TestServer_GetComponent_Product(t *testing.T) {
 		t.Fatalf("product/name: expected OK, got %v: %s", res.Code, res.Error)
 	}
 	param = resp.Proto.GetParam().GetParam()
-	if param.GetType() != st2138.ParamTypeString {
+	if st2138.ParamType(param.GetType()) != st2138.ParamTypeString {
 		t.Errorf("product/name type = %v, want STRING", param.GetType())
 	}
 	if got := param.GetValue().GetStringValue(); got != "Camera" {
