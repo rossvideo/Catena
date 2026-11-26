@@ -71,6 +71,7 @@ type StubServerRuntime struct {
 	UpdateLanguageFn         func(ctx catena.TransportContext, req catena.UpdateLanguagePackRequest) catena.StatusResult
 	DeleteLanguageFn         func(ctx catena.TransportContext, req catena.DeleteLanguagePackRequest) catena.StatusResult
 	RegisterTransportConnFn  func(transport catena.Transport, ctx catena.TransportContext) (*catena.Connection, catena.StatusResult)
+	RefreshTokenFn           func(ctx catena.TransportContext, reason string) (catena.RefreshTokenResult, catena.StatusResult)
 	DeregisterConnFn         func(connID int)
 	ShutdownTransportConnsFn func(ctx context.Context, transport catena.Transport)
 	RegisterCalls            int
@@ -270,6 +271,14 @@ func (s *StubServerRuntime) RegisterTransportConnection(transport catena.Transpo
 	}
 	s.panicf("RegisterTransportConnection not implemented in stubServerRuntime")
 	return nil, catena.StatusResult{Code: catena.StatusCodeInternal}
+}
+
+func (s *StubServerRuntime) RefreshToken(ctx catena.TransportContext, reason string) (catena.RefreshTokenResult, catena.StatusResult) {
+	if s.RefreshTokenFn != nil {
+		return s.RefreshTokenFn(ctx, reason)
+	}
+	s.panicf("RefreshToken not implemented in stubServerRuntime")
+	return catena.RefreshTokenResult{}, catena.StatusResult{Code: catena.StatusCodeInternal}
 }
 
 func (s *StubServerRuntime) DeregisterConnection(connID int) {

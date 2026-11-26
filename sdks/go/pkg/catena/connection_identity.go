@@ -51,6 +51,18 @@ type connectionIdentity struct {
 	clientId string
 }
 
+// kind returns the kind of connection identity
+func (id connectionIdentity) kind() string {
+	switch {
+	case id.sid != "":
+		return "sid"
+	case id.sub != "" && id.clientId != "":
+		return "sub"
+	default:
+		return "unknown"
+	}
+}
+
 // deriveConnectionIdentity derives the connection identity from a JWT token.
 // It returns a connectionIdentity using the token claims. The sid is used if
 // available, otherwise sub and clientId are used

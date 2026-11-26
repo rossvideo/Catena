@@ -813,8 +813,9 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 	}
 
 	// Every EndpointType must have a Register* path exercised above.
-	// EndpointGetSlots and EndpointConnect are server-driven endpoints with no
-	// per-slot Register* method, so they are explicitly out of scope here.
+	// EndpointGetSlots, EndpointConnect and EndpointRefreshToken are
+	// server-driven endpoints with no per-slot Register* method, so they are
+	// explicitly out of scope here.
 	covered := make([]EndpointType, 0, len(tests))
 	for _, tt := range tests {
 		if tt.notAnEndpoint {
@@ -822,7 +823,7 @@ func TestServer_RegisterEndpoint(t *testing.T) {
 		}
 		covered = append(covered, tt.endpoint)
 	}
-	assertAllEndpointsCovered(t, covered, EndpointGetSlots, EndpointConnect)
+	assertAllEndpointsCovered(t, covered, EndpointGetSlots, EndpointConnect, EndpointRefreshToken)
 
 	for _, tt := range tests {
 		var name string
@@ -2609,6 +2610,13 @@ func TestServer_InvokeEndpointsRouteThroughGate(t *testing.T) {
 				return status
 			},
 		},
+		{
+			endpoint: EndpointRefreshToken,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				_, status := srv.RefreshToken(invalidContext, "test")
+				return status
+			},
+		},
 	}
 
 	covered := make([]EndpointType, 0, len(tests))
@@ -2695,6 +2703,7 @@ func TestServer_StreamingEndpointsUseShutdownStream(t *testing.T) {
 			},
 		},
 		{endpoint: EndpointConnect},
+		{endpoint: EndpointRefreshToken},
 		{endpoint: EndpointListLanguages},
 		{endpoint: EndpointReadLanguagePack},
 		{endpoint: EndpointCreateLanguagePack},
@@ -3052,6 +3061,18 @@ func TestServer_AuthzDisabledAllowsRequestsWithoutToken(t *testing.T) {
 				return status
 			},
 		},
+		{
+			// authz disabled: RefreshToken returns immediately, with no gate,
+			// access handler or token check, and reports the client as connected.
+			endpoint: EndpointRefreshToken,
+			invoke: func(srv *server, handlerCalled *bool) StatusResult {
+				result, status := srv.RefreshToken(TransportContext{}, "test")
+				if !result.Connected || result.Expiry != 0 {
+					t.Fatalf("RefreshToken: expected {Connected: true, Expiry: 0}, got %+v", result)
+				}
+				return status
+			},
+		},
 	}
 
 	endpoints := []EndpointType{}
@@ -3375,6 +3396,163 @@ func TestServer_RegisterTransportConnection_IdentityDerivationFailed(t *testing.
 	if conn != nil {
 		t.Errorf("expected nil connection, got %+v", conn)
 	}
+}
+
+func TestServer_RefreshToken(t *testing.T) {
+	type refreshEnv struct {
+		srv   *server
+		cq    *connectionQueue
+		clock *manualClock
+	}
+
+	newEnv := func(t *testing.T, leeway time.Duration, log *slog.Logger) *refreshEnv {
+		t.Helper()
+
+		built, err := NewServer(ServerOptions{
+			AuthzEnabled: true,
+			Logger:       log,
+			JwtOptions: JwtValidationOptions{
+				InsecureSkipSignatureValidation: true,
+				Leeway:                          leeway,
+			},
+		})
+
+		if err != nil {
+			t.Fatalf("NewServer: %v", err)
+		}
+
+		srv := built.(*server)
+		t.Cleanup(srv.ctxCancel)
+
+		clock := newManualClock(time.Now())
+		cq := newConnectionQueueWithOptions(100, log, withClock(clock.Now), withExpirySweepInterval(0), withExpiryGracePeriod(time.Second)).(*connectionQueue)
+		stopQueueOnCleanup(t, cq)
+		srv.connectionQueue = cq
+
+		return &refreshEnv{srv: srv, cq: cq, clock: clock}
+	}
+
+	connect := func(t *testing.T, env *refreshEnv, token string) *Connection {
+		t.Helper()
+
+		conn, status := env.srv.RegisterTransportConnection(nil, TransportContext{AccessToken: token})
+		if !status.IsOk() || conn == nil {
+			t.Fatalf("RegisterTransportConnection: conn=%v status=%+v", conn, status)
+		}
+
+		t.Cleanup(func() { env.srv.DeregisterConnection(conn.ID) })
+		return conn
+	}
+
+	// userClaims builds claims for a "sub + azp" identity. A zero exp omits the claim.
+	userClaims := func(sub, scope string, exp time.Time) jwt.MapClaims {
+		claims := jwt.MapClaims{"sub": sub, "azp": "test-client", "scope": scope}
+
+		if !exp.IsZero() {
+			claims["exp"] = float64(exp.Unix())
+		}
+
+		return claims
+	}
+
+	sign := func(t *testing.T, claims jwt.MapClaims) string {
+		t.Helper()
+
+		signed, err := jwt.NewWithClaims(jwt.SigningMethodNone, claims).SignedString(jwt.UnsafeAllowNoneSignatureType)
+
+		if err != nil {
+			t.Fatalf("sign token: %v", err)
+		}
+
+		return signed
+	}
+
+	// forbiddenQueue returns a queue that fails the test if refreshConnections is
+	// reached, proving a rejected request never gets that far.
+	forbiddenQueue := func(t *testing.T) *stubConnectionQueue {
+		return &stubConnectionQueue{
+			tb: t,
+			refreshFn: func(connectionIdentity, time.Time, HandlerContext) int {
+				t.Error("refreshConnections must not be called for a rejected request")
+				return 0
+			},
+		}
+	}
+
+	t.Run("authz disabled returns connected without checking the token", func(t *testing.T) {
+		srv := newTestServer(t, false)
+
+		result, status := srv.RefreshToken(TransportContext{AccessToken: ""}, "test")
+		if !status.IsOk() {
+			t.Fatalf("status = %+v, want OK", status)
+		}
+		if want := (RefreshTokenResult{Connected: true}); result != want {
+			t.Fatalf("result = %+v, want %+v", result, want)
+		}
+	})
+
+	t.Run("gate rejection returns its status", func(t *testing.T) {
+		env := newEnv(t, 0, nil)
+		env.srv.connectionQueue = forbiddenQueue(t)
+		env.srv.RegisterAccessHandler(func(EndpointType, HandlerContext) bool { return false })
+
+		result, status := env.srv.RefreshToken(TransportContext{AccessToken: sign(t, userClaims("alice", st2138.ScopeMon, time.Now().Add(time.Hour)))}, "test")
+
+		if status.Code != StatusCodePermissionDenied {
+			t.Fatalf("status.Code = %v (%s), want PermissionDenied", status.Code, status.Error)
+		}
+		if result != (RefreshTokenResult{}) {
+			t.Fatalf("result = %+v, want the zero result", result)
+		}
+	})
+
+	t.Run("identity derivation failure returns Unauthenticated", func(t *testing.T) {
+		env := newEnv(t, 0, nil)
+		env.srv.connectionQueue = forbiddenQueue(t)
+
+		// a valid, unexpired token with a read scope but no sid, sub or client id
+		token := sign(t, jwt.MapClaims{"scope": st2138.ScopeMon, "exp": float64(time.Now().Add(time.Hour).Unix())})
+		result, status := env.srv.RefreshToken(TransportContext{AccessToken: token}, "test")
+
+		if status.Code != StatusCodeUnauthenticated {
+			t.Fatalf("status.Code = %v (%s), want Unauthenticated", status.Code, status.Error)
+		}
+		if result != (RefreshTokenResult{}) {
+			t.Fatalf("result = %+v, want the zero result", result)
+		}
+	})
+
+	t.Run("no matching connection returns not connected", func(t *testing.T) {
+		env := newEnv(t, 0, nil)
+		exp := time.Now().Add(time.Hour).Truncate(time.Second)
+		connect(t, env, sign(t, userClaims("bob", st2138.ScopeMon, exp)))
+
+		result, status := env.srv.RefreshToken(TransportContext{AccessToken: sign(t, userClaims("alice", st2138.ScopeMon, exp))}, "test")
+		if !status.IsOk() {
+			t.Fatalf("status = %+v, want OK", status)
+		}
+		if result != (RefreshTokenResult{}) {
+			t.Fatalf("result = %+v, want {Connected: false, Expiry: 0}", result)
+		}
+	})
+
+	t.Run("success returns connected with the raw exp claim", func(t *testing.T) {
+		const leeway = 30 * time.Second
+		env := newEnv(t, leeway, nil)
+		exp := time.Now().Add(time.Hour).Truncate(time.Second)
+
+		connect(t, env, sign(t, userClaims("alice", st2138.ScopeMon, exp.Add(-time.Minute))))
+
+		result, status := env.srv.RefreshToken(TransportContext{AccessToken: sign(t, userClaims("alice", st2138.ScopeMon, exp))}, "test")
+		if !status.IsOk() {
+			t.Fatalf("status = %+v, want OK", status)
+		}
+
+		if want := (RefreshTokenResult{Connected: true, Expiry: uint64(exp.Unix())}); result != want {
+			t.Fatalf("result = %+v, want %+v", result, want)
+		}
+	})
+
 }
 
 func TestServer_SetMaxConnections_Passthrough(t *testing.T) {

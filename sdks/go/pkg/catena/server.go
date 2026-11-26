@@ -76,6 +76,7 @@ const (
 	EndpointDeleteLanguagePack
 	EndpointConnect
 	EndpointListLanguages
+	EndpointRefreshToken
 
 	// endpointTypeMax is a sentinel that must always be last. Add new endpoint
 	// types above it. It is not a real endpoint; it bounds the enumeration so
@@ -122,6 +123,8 @@ func (e EndpointType) String() string {
 		return "Connect"
 	case EndpointListLanguages:
 		return "ListLanguages"
+	case EndpointRefreshToken:
+		return "RefreshToken"
 	default:
 		return "Unknown"
 	}
@@ -354,6 +357,14 @@ type Server interface {
 	StopHeartbeat()
 }
 
+// RefreshTokenResult is the result of a token refresh operation
+// Connected indicates whether the connection was successfully refressed for at least one connection
+// Expiry is the new token's expiry time.
+type RefreshTokenResult struct {
+	Connected bool
+	Expiry    uint64
+}
+
 // interface of funcs that Transports use to interact with the server without circular imports
 type ServerRuntime interface {
 	IsDev() bool
@@ -374,6 +385,7 @@ type ServerRuntime interface {
 	InvokeUpdateLanguagePackHandler(transportContext TransportContext, req UpdateLanguagePackRequest) StatusResult
 	InvokeDeleteLanguagePackHandler(transportContext TransportContext, req DeleteLanguagePackRequest) StatusResult
 	RegisterTransportConnection(transport Transport, transportContext TransportContext) (*Connection, StatusResult)
+	RefreshToken(transportContext TransportContext, reason string) (RefreshTokenResult, StatusResult)
 	ShutdownTransportConnections(ctx context.Context, transport Transport)
 	DeregisterConnection(connID int)
 	Logger() *slog.Logger
@@ -1384,6 +1396,40 @@ func (s *server) RegisterTransportConnection(transport Transport, transportConte
 		return nil, res
 	}
 	return conn, res
+}
+
+func (s *server) RefreshToken(transportContext TransportContext, reason string) (RefreshTokenResult, StatusResult) {
+
+	if !s.authzEnabled {
+		return RefreshTokenResult{Connected: true}, StatusWithCode(StatusCodeOk, "")
+	}
+
+	handlerContext, res := s.invokeGateFn(transportContext, EndpointRefreshToken, false)
+	if res.IsError() {
+		return RefreshTokenResult{}, res
+	}
+	defer handlerContext.release()
+
+	identity, err := deriveConnectionIdentity(handlerContext.Token)
+	if err != nil {
+		s.serverLogger.Error("Failed to derive connection identity", "error", err)
+		return RefreshTokenResult{}, StatusWithCode(StatusCodeUnauthenticated, "invalid access token")
+	}
+
+	matched := s.connectionQueue.refreshConnections(identity, handlerContext.tokenExpiry, handlerContext)
+
+	handlerContext.Logger().Info("Token refresh processed", "reason", reason, "identityKind", identity.kind(), "matched", matched)
+
+	if matched == 0 {
+		return RefreshTokenResult{Connected: false}, StatusWithCode(StatusCodeOk, "")
+	}
+
+	var rawExp uint64
+	if exp, err := handlerContext.Token.Claims.GetExpirationTime(); err == nil && exp != nil && exp.Unix() > 0 {
+		rawExp = uint64(exp.Unix())
+	}
+
+	return RefreshTokenResult{Connected: true, Expiry: rawExp}, StatusWithCode(StatusCodeOk, "")
 }
 
 // ShutdownTransportConnections allows transports to signal

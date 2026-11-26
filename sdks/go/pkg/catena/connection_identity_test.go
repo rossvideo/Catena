@@ -159,3 +159,23 @@ func TestDeriveConnectionIdentity(t *testing.T) {
 		}
 	})
 }
+
+func TestConnectionIdentity_Kind(t *testing.T) {
+	t.Run("sid when a session id is set", func(t *testing.T) {
+		if got := (connectionIdentity{sid: "session-1"}).kind(); got != "sid" {
+			t.Errorf("kind() = %q, want %q", got, "sid")
+		}
+	})
+
+	t.Run("sub when sub and client id are set", func(t *testing.T) {
+		if got := (connectionIdentity{sub: "user-1", clientId: "client-1"}).kind(); got != "sub" {
+			t.Errorf("kind() = %q, want %q", got, "sub")
+		}
+	})
+
+	t.Run("unknown when the identity is empty", func(t *testing.T) {
+		if got := (connectionIdentity{}).kind(); got != "unknown" {
+			t.Errorf("kind() = %q, want %q", got, "unknown")
+		}
+	})
+}
