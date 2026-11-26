@@ -50,22 +50,27 @@ import (
 
 // DetailLevel represents how much of the device model to deliver
 // Mirrors protos.Device_DetailLevel for convenience
-type DetailLevel = protos.Device_DetailLevel
+type DetailLevel protos.Device_DetailLevel
 
 // DetailLevel constants matching the proto enum
 const (
-	DetailLevelFull          DetailLevel = protos.Device_FULL
-	DetailLevelSubscriptions DetailLevel = protos.Device_SUBSCRIPTIONS
-	DetailLevelMinimal       DetailLevel = protos.Device_MINIMAL
-	DetailLevelCommands      DetailLevel = protos.Device_COMMANDS
-	DetailLevelNone          DetailLevel = protos.Device_NONE
-	DetailLevelUnset         DetailLevel = protos.Device_UNSET
+	DetailLevelFull          DetailLevel = DetailLevel(protos.Device_FULL)
+	DetailLevelSubscriptions DetailLevel = DetailLevel(protos.Device_SUBSCRIPTIONS)
+	DetailLevelMinimal       DetailLevel = DetailLevel(protos.Device_MINIMAL)
+	DetailLevelCommands      DetailLevel = DetailLevel(protos.Device_COMMANDS)
+	DetailLevelNone          DetailLevel = DetailLevel(protos.Device_NONE)
+	DetailLevelUnset         DetailLevel = DetailLevel(protos.Device_UNSET)
 )
 
-// IsValidDetailLevel reports whether l is a defined protos.Device_DetailLevel value.
-func IsValidDetailLevel(l DetailLevel) bool {
+// IsValid reports whether l is a defined protos.Device_DetailLevel value.
+func (l DetailLevel) IsValid() bool {
 	_, ok := protos.Device_DetailLevel_name[int32(l)]
 	return ok
+}
+
+// String returns the string representation of the detail level.
+func (l DetailLevel) String() string {
+	return protos.Device_DetailLevel(l).String()
 }
 
 // ParseDetailLevel converts s into a DetailLevel. Accepted inputs are
@@ -80,7 +85,7 @@ func ParseDetailLevel(s string) (DetailLevel, error) {
 		return DetailLevelFull, fmt.Errorf("unknown detail level: %q: %w", s, ErrInvalid)
 	}
 	dl := DetailLevel(n)
-	if !IsValidDetailLevel(dl) {
+	if !dl.IsValid() {
 		return DetailLevelFull, fmt.Errorf("detail level out of range: %d: %w", n, ErrInvalid)
 	}
 	return dl, nil
@@ -202,7 +207,7 @@ func (db *DeviceBuilder) WithDetailLevel(level DetailLevel) *DeviceBuilder {
 	if db.err != nil {
 		return db
 	}
-	db.proto.DetailLevel = level
+	db.proto.DetailLevel = protos.Device_DetailLevel(level)
 	return db
 }
 

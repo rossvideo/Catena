@@ -92,7 +92,7 @@ func paramDisplayName(param *protos.Param) st2138.PolyglotText {
 
 func paramArrayLength(param *protos.Param) uint32 {
 	value := param.GetValue()
-	switch param.GetType() {
+	switch st2138.ParamType(param.GetType()) {
 	case st2138.ParamTypeInt32Array:
 		return uint32(len(value.GetInt32ArrayValues().GetInts()))
 	case st2138.ParamTypeFloat32Array:
@@ -109,7 +109,7 @@ func paramArrayLength(param *protos.Param) uint32 {
 }
 
 func newParamInfoFromDescriptor(oid string, param *protos.Param) st2138.ParamInfo {
-	return st2138.NewParamInfo(oid, paramDisplayName(param), param.GetType(), param.GetTemplateOid(), paramArrayLength(param))
+	return st2138.NewParamInfo(oid, paramDisplayName(param), st2138.ParamType(param.GetType()), param.GetTemplateOid(), paramArrayLength(param))
 }
 
 // ParamInfosFromParam streams ParamInfo responses for oid from a single Param

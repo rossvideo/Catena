@@ -1393,8 +1393,22 @@ func TestFromProto_CopiesProtoData(t *testing.T) {
 	}
 }
 
+func TestParamType_String(t *testing.T) {
+	for _, pt := range []ParamType{
+		ParamTypeUndefined, ParamTypeEmpty, ParamTypeInt32, ParamTypeFloat32,
+		ParamTypeString, ParamTypeStruct, ParamTypeStructVariant,
+		ParamTypeInt32Array, ParamTypeFloat32Array, ParamTypeStringArray,
+		ParamTypeBinary, ParamTypeStructArray, ParamTypeStructVariantArray,
+		ParamTypeData, ParamType(999),
+	} {
+		if got, want := pt.String(), protos.ParamType(pt).String(); got != want {
+			t.Errorf("ParamType(%d).String() = %q, want %q", int32(pt), got, want)
+		}
+	}
+}
+
 func TestParamTypeConstants(t *testing.T) {
-	// Verify ParamType constants are properly aliased
+	// Verify ParamType constants match the proto enum values
 	tests := []struct {
 		name     string
 		pt       ParamType

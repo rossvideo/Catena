@@ -57,7 +57,7 @@ type ParamInfo struct {
 func NewParamInfo(oid string, name PolyglotText, paramType ParamType, templateOid string, arrayLength uint32) ParamInfo {
 	info := &protos.ParamInfo{
 		Oid:         oid,
-		Type:        paramType,
+		Type:        protos.ParamType(paramType),
 		TemplateOid: templateOid,
 	}
 	info.Name = name.Proto()
@@ -86,7 +86,7 @@ func (p ParamInfo) GetOid() string {
 
 // GetParamType returns the parameter's type, or UNDEFINED if unset.
 func (p ParamInfo) GetParamType() ParamType {
-	return p.Proto.GetInfo().GetType()
+	return ParamType(p.Proto.GetInfo().GetType())
 }
 
 // GetTemplateOid returns the template OID, or "" if unset.

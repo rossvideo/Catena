@@ -215,7 +215,7 @@ func TestComponentKindConstants(t *testing.T) {
 	}
 }
 
-func TestComponentKind_Valid(t *testing.T) {
+func TestComponentKind_IsValid(t *testing.T) {
 	for _, kind := range []ComponentKind{
 		ComponentKindParam,
 		ComponentKindConstraint,
@@ -223,7 +223,7 @@ func TestComponentKind_Valid(t *testing.T) {
 		ComponentKindCommand,
 		ComponentKindLanguagePack,
 	} {
-		if !kind.Valid() {
+		if !kind.IsValid() {
 			t.Errorf("expected %v to be valid", kind)
 		}
 	}
@@ -231,7 +231,7 @@ func TestComponentKind_Valid(t *testing.T) {
 		ComponentKindUnused,
 		ComponentKind(999),
 	} {
-		if kind.Valid() {
+		if kind.IsValid() {
 			t.Errorf("expected %v to be invalid", kind)
 		}
 	}

@@ -428,6 +428,39 @@ func TestConstraintBuilder_CloneAlreadyBuilt(t *testing.T) {
 	}
 }
 
+func TestAlarmSeverity_String(t *testing.T) {
+	for _, s := range []AlarmSeverity{
+		AlarmSeverityInfo,
+		AlarmSeverityWarning,
+		AlarmSeveritySevere,
+		AlarmSeverityUnknown,
+		AlarmSeverityRefused,
+		AlarmSeverity(999),
+	} {
+		if got, want := s.String(), protos.Alarm_Severity(s).String(); got != want {
+			t.Errorf("AlarmSeverity(%d).String() = %q, want %q", int32(s), got, want)
+		}
+	}
+}
+
+func TestConstraintType_String(t *testing.T) {
+	for _, ct := range []ConstraintType{
+		ConstraintTypeUndefined,
+		ConstraintTypeIntRange,
+		ConstraintTypeFloatRange,
+		ConstraintTypeIntChoice,
+		ConstraintTypeStringChoice,
+		ConstraintTypeStringStringChoice,
+		ConstraintTypeAlarmTable,
+		ConstraintTypeFormattedString,
+		ConstraintType(999),
+	} {
+		if got, want := ct.String(), protos.Constraint_ConstraintType(ct).String(); got != want {
+			t.Errorf("ConstraintType(%d).String() = %q, want %q", int32(ct), got, want)
+		}
+	}
+}
+
 func TestAlarmSeverityConstants(t *testing.T) {
 	tests := []struct {
 		got  AlarmSeverity
@@ -440,7 +473,7 @@ func TestAlarmSeverityConstants(t *testing.T) {
 		{AlarmSeverityRefused, protos.Alarm_REFUSED},
 	}
 	for _, tt := range tests {
-		if tt.got != tt.want {
+		if protos.Alarm_Severity(tt.got) != tt.want {
 			t.Errorf("severity mismatch: got %v, want %v", tt.got, tt.want)
 		}
 	}

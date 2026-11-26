@@ -43,6 +43,8 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/proto"
+
+	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
 func TestNewDevice_Basic(t *testing.T) {
@@ -308,7 +310,7 @@ func TestDevice_WithCommands(t *testing.T) {
 	if !ok {
 		t.Fatal("expected 'reboot' command")
 	}
-	if reboot.GetType() != ParamTypeEmpty {
+	if ParamType(reboot.GetType()) != ParamTypeEmpty {
 		t.Errorf("expected type EMPTY, got %v", reboot.GetType())
 	}
 }
@@ -578,7 +580,7 @@ func TestDeviceBuilder_CloneAlreadyBuilt(t *testing.T) {
 	}
 }
 
-func TestIsValidDetailLevel(t *testing.T) {
+func TestDetailLevel_IsValid(t *testing.T) {
 	tests := []struct {
 		name  string
 		level DetailLevel
@@ -596,10 +598,26 @@ func TestIsValidDetailLevel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsValidDetailLevel(tt.level); got != tt.want {
-				t.Errorf("IsValidDetailLevel(%d) = %v, want %v", tt.level, got, tt.want)
+			if got := tt.level.IsValid(); got != tt.want {
+				t.Errorf("DetailLevel(%d).IsValid() = %v, want %v", tt.level, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestDetailLevel_String(t *testing.T) {
+	for _, level := range []DetailLevel{
+		DetailLevelFull,
+		DetailLevelSubscriptions,
+		DetailLevelMinimal,
+		DetailLevelCommands,
+		DetailLevelNone,
+		DetailLevelUnset,
+		DetailLevel(99),
+	} {
+		if got, want := level.String(), protos.Device_DetailLevel(level).String(); got != want {
+			t.Errorf("DetailLevel(%d).String() = %q, want %q", int32(level), got, want)
+		}
 	}
 }
 
