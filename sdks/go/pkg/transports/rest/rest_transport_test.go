@@ -51,9 +51,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -2549,6 +2551,190 @@ func TestTransport_Connect_ServerShutdown(t *testing.T) {
 
 	if runtime.RegisterCalls != runtime.DeregisterCalls {
 		t.Errorf("expected deregister calls to match register calls after server shutdown, got %d deregister calls and %d register calls", runtime.DeregisterCalls, runtime.RegisterCalls)
+	}
+}
+
+func TestTransport_Connect_TokenExpired(t *testing.T) {
+	transport := NewTransport(config.RestOptions{Port: 8080})
+
+	built, err := catena.NewServer(catena.ServerOptions{
+		AuthzEnabled: true,
+		IsDev:        true,
+		JwtOptions: catena.JwtValidationOptions{
+			InsecureSkipSignatureValidation: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+
+	runtime, ok := built.(catena.ServerRuntime)
+	if !ok {
+		t.Fatal("server does not implement ServerRuntime")
+	}
+	transport.runtime = runtime
+	t.Cleanup(func() { built.Shutdown(context.Background()) })
+
+	const maxAttempts = 3
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		exp := time.Now().Add(3 * time.Second)
+		token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+			"scope": st2138.ScopeMon,
+			"exp":   exp.Unix(),
+		})
+
+		signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+		if err != nil {
+			t.Fatalf("sign token: %v", err)
+		}
+
+		rec := &sseStartedWriter{ResponseRecorder: httptest.NewRecorder(), started: make(chan struct{})}
+		req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+		req.Header.Set("Authorization", signed)
+		done := make(chan struct{})
+		go func() {
+			transport.handleConnect(rec, req)
+			close(done)
+		}()
+
+		select {
+		case <-rec.started:
+		case <-done:
+			// Rejected before the stream opened, so the token expired before
+			// registration. Try again with a fresh token.
+			if attempt == maxAttempts {
+				t.Fatalf("handler rejected token before SSE stream opened: status=%d body=%q", rec.Code, rec.Body.String())
+			}
+			continue
+		case <-time.After(10 * time.Second):
+			t.Fatal("timed out waiting for the SSE stream to open")
+		}
+
+		// The stream is open. Wait for the connection to close on expiry.
+		select {
+		case <-done:
+		case <-time.After(10 * time.Second):
+			t.Fatal("SSE handler did not return after token expiry")
+		}
+
+		assertStatus(t, rec.ResponseRecorder, http.StatusOK)
+		body := rec.Body.String()
+		if !strings.Contains(body, "event: error\n") {
+			t.Fatalf("expected an SSE error event, got %q", body)
+		}
+		if !strings.Contains(body, `"code":401`) {
+			t.Errorf("expected unauthenticated status 401, got %q", body)
+		}
+		if !strings.Contains(body, "JWS token expired") {
+			t.Errorf("expected token-expired message, got %q", body)
+		}
+		return
+	}
+}
+
+// sseStartedWriter closes started on the first Flush. handleConnect only
+// flushes after it has accepted the token and written HTTP 200.
+type sseStartedWriter struct {
+	*httptest.ResponseRecorder
+	started chan struct{}
+	once    sync.Once
+}
+
+func (w *sseStartedWriter) Flush() {
+	w.ResponseRecorder.Flush()
+	w.once.Do(func() { close(w.started) })
+}
+
+func TestHandleConnect_DropsUpdateAfterDone(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	for attempt := 1; attempt <= 64; attempt++ {
+		connection := transporttest.MakeTestConnection(attempt)
+		runtime.WithConnection(connection)
+		connection.Updates <- &protos.PushUpdates{
+			Slot: 0,
+			Kind: &protos.PushUpdates_Value{
+				Value: &protos.PushUpdates_PushValue{Oid: "should-drop"},
+			},
+		}
+		close(connection.Done)
+
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+		transport.handleConnect(rec, req)
+
+		if strings.Contains(rec.Body.String(), "should-drop") {
+			t.Errorf("attempt %d: expected the buffered update to be dropped, got %q", attempt, rec.Body.String())
+		}
+	}
+	if runtime.RegisterCalls != runtime.DeregisterCalls {
+		t.Errorf("expected deregister calls to match register calls, got %d deregister calls and %d register calls", runtime.DeregisterCalls, runtime.RegisterCalls)
+	}
+}
+
+func TestHandleConnect_DropsUpdateAfterExpiry(t *testing.T) {
+	transport, runtime := makeTestTransport(t)
+
+	connection := transporttest.MakeTestConnectionPastExpiry(1)
+	runtime.WithConnection(connection)
+	connection.Updates <- &protos.PushUpdates{
+		Slot: 0,
+		Kind: &protos.PushUpdates_Value{
+			Value: &protos.PushUpdates_PushValue{Oid: "should-drop"},
+		},
+	}
+
+	select {
+	case <-connection.Done:
+		t.Fatal("Done closed before the update was read")
+	default:
+	}
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/st2138-api/v1/connect", nil)
+	done := make(chan struct{})
+	go func() {
+		transport.handleConnect(rec, req)
+		close(done)
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for len(connection.Updates) != 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("timed out waiting for the buffered update to be consumed")
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	// The sweeper owns closing the connection, so handleConnect keeps waiting
+	// for Done even though the update was dropped.
+	select {
+	case <-done:
+		t.Fatal("handleConnect returned before the sweep")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	transporttest.SimulateExpirySweep(connection)
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("handleConnect did not return after the sweep")
+	}
+
+	assertStatus(t, rec, http.StatusOK)
+	body := rec.Body.String()
+	if strings.Contains(body, "should-drop") {
+		t.Errorf("expected the buffered update to be dropped, got %q", body)
+	}
+	if !strings.Contains(body, "event: error\n") {
+		t.Errorf("expected an SSE error event, got %q", body)
+	}
+	if !strings.Contains(body, "JWS token expired") {
+		t.Errorf("expected token-expired message, got %q", body)
+	}
+	if len(connection.Updates) != 0 {
+		t.Errorf("expected the buffered update to be consumed, %d still queued", len(connection.Updates))
 	}
 }
 

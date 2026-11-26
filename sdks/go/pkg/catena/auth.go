@@ -73,7 +73,7 @@ type jwtValidator struct {
 }
 
 type jwtValidatorInterface interface {
-	validateJwt(tokenString string) (*jwt.Token, error)
+	validateJwt(tokenString string) (*jwt.Token, time.Time, error)
 }
 
 // newJwtValidator creates a JWT validator based on the provided options.
@@ -329,13 +329,36 @@ func classifyDiscoveryError(ctx context.Context, err error) error {
 	return backoff.Permanent(doErr)
 }
 
+// getTokenExpiry returns the token's effective expiry. This also takes into
+// account the leeway option. On account of an error a zero time is returned
+func (v *jwtValidator) getTokenExpiry(token *jwt.Token) (time.Time, error) {
+	if token == nil || token.Claims == nil {
+		return time.Time{}, fmt.Errorf("token or claims are required")
+	}
+
+	expiry, err := token.Claims.GetExpirationTime()
+	if err != nil {
+		return time.Time{}, fmt.Errorf("unable to get expiration time: %w", err)
+	}
+	if expiry == nil {
+		return time.Time{}, nil
+	}
+
+	expiryTime := expiry.Time
+	if v.options.Leeway > 0 {
+		expiryTime = expiryTime.Add(v.options.Leeway)
+	}
+
+	return expiryTime, nil
+}
+
 // ValidateJWT verifies a JWT signature against the provided JWKS URL.
 // It fetches, caches, and auto-refreshes the JWKS as needed.
-func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
+func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, time.Time, error) {
 	// process the token string: trim whitespace and validate it's not empty
 	tokenString = strings.TrimSpace(tokenString)
 	if tokenString == "" {
-		return nil, fmt.Errorf("jwt is required")
+		return nil, time.Time{}, fmt.Errorf("jwt is required")
 	}
 
 	// build the parser options based on the validator options.
@@ -352,17 +375,22 @@ func (v *jwtValidator) validateJwt(tokenString string) (*jwt.Token, error) {
 
 	// quick check to make sure this was initialized properly
 	if v.validateFn == nil {
-		return nil, fmt.Errorf("jwt validator is not properly initialized")
+		return nil, time.Time{}, fmt.Errorf("jwt validator is not properly initialized")
 	}
 
 	// do the validation using the approprate function
 	// have the if up in the ctor means we don't have to check the options every time
 	token, err := v.validateFn(tokenString, parseOptions)
 	if err != nil {
-		return nil, fmt.Errorf("validate jwt: %w", err)
+		return nil, time.Time{}, fmt.Errorf("validate jwt: %w", err)
 	}
 
-	return token, nil
+	expiry, err := v.getTokenExpiry(token)
+	if err != nil {
+		return nil, time.Time{}, fmt.Errorf("failed to get token expiry: %w", err)
+	}
+
+	return token, expiry, nil
 }
 
 // validateClaims parses the JWT without validating the signature, and validates the claims based on the provided parser options.

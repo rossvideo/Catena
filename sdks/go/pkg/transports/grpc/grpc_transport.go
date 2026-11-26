@@ -249,6 +249,8 @@ func (t *Transport) Shutdown(ctx context.Context) error {
 	return shutdownErr
 }
 
+const jwsTokenExpiredMessage = "JWS token expired"
+
 // sanitizeGRPCError replaces detailed error messages with generic status code
 // descriptions in production mode, matching the REST server's IsDev behavior.
 func (t *Transport) sanitizeGRPCError(err error) error {
@@ -263,6 +265,9 @@ func (t *Transport) sanitizeGRPCError(err error) error {
 	st, ok := status.FromError(err)
 	if !ok {
 		return status.Error(codes.Unknown, codes.Unknown.String())
+	}
+	if st.Code() == codes.Unauthenticated && st.Message() == jwsTokenExpiredMessage {
+		return err
 	}
 	return status.Error(st.Code(), st.Code().String())
 }
@@ -595,7 +600,14 @@ func (s *catenaService) UpdateSubscriptions(req *protos.UpdateSubscriptionsPaylo
 	return status.Error(codes.Unimplemented, "UpdateSubscriptions not implemented")
 }
 
-// Connect establishes a streaming connection for push updates
+// Connect establishes a streaming connection for push updates.
+// The stream ends when the client disconnects, the server shuts the
+// connection down (Unavailable, "server shutting down"), or the connection's
+// token expires (Unauthenticated, "JWS token expired"). A token whose
+// effective expiry has already passed is rejected at registration and the
+// stream is not opened. A buffered update is not sent once that expiry has
+// passed, even while Done is still open waiting for the next sweep, which
+// then ends the stream.
 func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerStreamingServer[protos.PushUpdates]) error {
 	// Register this connection with the runtime using this transport as owner.
 	// Owner association allows targeted cleanup (ShutdownTransportConnections(owner))
@@ -612,15 +624,38 @@ func (s *catenaService) Connect(req *protos.ConnectPayload, stream grpc.ServerSt
 
 	// Listen for updates and client disconnect
 	ctx := stream.Context()
+
+	closeStream := func() error {
+		if conn.CloseReason() == catena.CloseReasonExpired {
+			s.transport.log.Info("gRPC connection closed", "connID", conn.ID, "reason", catena.CloseReasonExpired)
+			return status.Error(codes.Unauthenticated, jwsTokenExpiredMessage)
+		}
+		s.transport.log.Info("gRPC connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
+		return status.Error(codes.Unavailable, "server shutting down")
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			s.transport.log.Info("gRPC client disconnected", "connID", conn.ID)
 			return ctx.Err()
 		case <-conn.Done:
-			s.transport.log.Info("gRPC connection shut down by server", "connID", conn.ID)
-			return status.Error(codes.Unavailable, "server shutting down")
+			return closeStream()
 		case update := <-conn.Updates:
+
+			// Drop buffered updates that arrive after Done has closed.
+			select {
+			case <-conn.Done:
+				return closeStream()
+			default:
+			}
+
+			// Drop the update if the effective expiry has passed. The responsibility
+			// for handling the expiry is on the sweeper
+			if conn.EffectiveExpiryPassed() {
+				continue
+			}
+
 			if err := stream.Send(update); err != nil {
 				s.transport.log.Error("failed to send update", "connID", conn.ID, "error", err)
 				return err

@@ -60,6 +60,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/config"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -141,7 +142,9 @@ func setupTestTransport(t *testing.T, slots []uint16, opts ...testTransportOptio
 	runtime.Slots = slots
 	transport.runtime = runtime
 
+	served := make(chan struct{})
 	go func() {
+		defer close(served)
 		if err := transport.grpcServer.Serve(lis); err != nil {
 			t.Logf("server stopped: %v", err)
 		}
@@ -157,6 +160,7 @@ func setupTestTransport(t *testing.T, slots []uint16, opts ...testTransportOptio
 		// GracefulStop() waits for active streams which causes deadlocks in tests
 		transport.grpcServer.Stop()
 		lis.Close()
+		<-served
 	}
 
 	return transport, runtime, lis, cleanup
@@ -1764,6 +1768,203 @@ func TestTransport_Connect_Shutdown(t *testing.T) {
 	}
 	if st.Code() != codes.Unavailable {
 		t.Errorf("expected Unavailable code, got %v", st.Code())
+	}
+}
+
+// connectTestStream is a ServerStreamingServer whose Send returns sendErr.
+type connectTestStream struct {
+	grpc.ServerStream
+	ctx     context.Context
+	sendErr error
+	sent    int
+}
+
+func (s *connectTestStream) Context() context.Context { return s.ctx }
+
+func (s *connectTestStream) Send(*protos.PushUpdates) error {
+	s.sent++
+	return s.sendErr
+}
+
+func TestTransport_Connect_DropsUpdateAfterDone(t *testing.T) {
+	transport := NewTransport(testOptions(0))
+	runtime := transporttest.MakeStubServerRuntime(t)
+	transport.runtime = runtime
+
+	for attempt := 1; attempt <= 64; attempt++ {
+		connection := transporttest.MakeTestConnection(attempt)
+		runtime.WithConnection(connection)
+		connection.Updates <- &protos.PushUpdates{Slot: 1}
+		close(connection.Done)
+
+		stream := &connectTestStream{ctx: context.Background()}
+		err := transport.catenaService.Connect(&protos.ConnectPayload{}, stream)
+		st, ok := status.FromError(err)
+		if !ok {
+			t.Fatalf("attempt %d: expected gRPC status error, got %v", attempt, err)
+		}
+		if st.Code() != codes.Unavailable {
+			t.Errorf("attempt %d: expected Unavailable code, got %v", attempt, st.Code())
+		}
+		if st.Message() != "server shutting down" {
+			t.Errorf("attempt %d: expected message %q, got %q", attempt, "server shutting down", st.Message())
+		}
+		if stream.sent != 0 {
+			t.Errorf("attempt %d: expected the update to be dropped, Send was called %d times", attempt, stream.sent)
+		}
+	}
+}
+
+func TestTransport_Connect_DropsUpdateAfterExpiry(t *testing.T) {
+	transport := NewTransport(testOptions(0))
+	runtime := transporttest.MakeStubServerRuntime(t)
+	transport.runtime = runtime
+
+	connection := transporttest.MakeTestConnectionPastExpiry(1)
+	runtime.WithConnection(connection)
+	connection.Updates <- &protos.PushUpdates{Slot: 1}
+
+	select {
+	case <-connection.Done:
+		t.Fatal("Done closed before the update was read")
+	default:
+	}
+
+	stream := &connectTestStream{ctx: context.Background()}
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- transport.catenaService.Connect(&protos.ConnectPayload{}, stream)
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for len(connection.Updates) != 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("timed out waiting for the buffered update to be consumed")
+		}
+		time.Sleep(time.Millisecond)
+	}
+
+	// The sweeper owns closing the connection, so Connect keeps waiting for
+	// Done even though the update was dropped.
+	select {
+	case err := <-errCh:
+		t.Fatalf("Connect returned before the sweep: %v", err)
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	transporttest.SimulateExpirySweep(connection)
+
+	var err error
+	select {
+	case err = <-errCh:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Connect did not return after the sweep")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got %v", err)
+	}
+	if st.Code() != codes.Unauthenticated {
+		t.Errorf("expected Unauthenticated code, got %v", st.Code())
+	}
+	if st.Message() != "JWS token expired" {
+		t.Errorf("expected message %q, got %q", "JWS token expired", st.Message())
+	}
+	if stream.sent != 0 {
+		t.Errorf("expected the update to be dropped, Send was called %d times", stream.sent)
+	}
+	if len(connection.Updates) != 0 {
+		t.Errorf("expected the buffered update to be consumed, %d still queued", len(connection.Updates))
+	}
+	if len(connection.Updates) != 0 {
+		t.Errorf("expected the buffered update to be consumed, %d still queued", len(connection.Updates))
+	}
+}
+
+func TestTransport_Connect_TokenExpired(t *testing.T) {
+	ctx := context.Background()
+	lis := bufconn.Listen(bufSize)
+	opts := testOptions(1234)
+	opts.DisableHealth = true
+	transport := NewTransport(opts)
+
+	// A real server owns the connection, so the queue records the expiry close.
+	built, err := catena.NewServer(catena.ServerOptions{
+		AuthzEnabled: true,
+		JwtOptions: catena.JwtValidationOptions{
+			InsecureSkipSignatureValidation: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+
+	runtime, ok := built.(catena.ServerRuntime)
+	if !ok {
+		t.Fatal("server does not implement ServerRuntime")
+	}
+	transport.runtime = runtime
+	t.Cleanup(func() { built.Shutdown(context.Background()) })
+
+	served := make(chan struct{})
+	go func() {
+		defer close(served)
+		if err := transport.grpcServer.Serve(lis); err != nil {
+			t.Logf("server stopped: %v", err)
+		}
+	}()
+	t.Cleanup(func() {
+		transport.grpcServer.Stop()
+		lis.Close()
+		<-served
+	})
+	time.Sleep(10 * time.Millisecond)
+
+	exp := time.Now().Add(2 * time.Second)
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
+		"scope": st2138.ScopeMon,
+		"exp":   exp.Unix(),
+	})
+	signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	if err != nil {
+		t.Fatalf("sign token: %v", err)
+	}
+
+	client, cleanupClient := setupGRPCClient(t, ctx, lis)
+	t.Cleanup(cleanupClient)
+
+	streamCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", signed))
+	stream, err := makeConnectRequest(t, client, streamCtx)
+	assertNoError(t, err)
+
+	errCh := make(chan error, 1)
+	go func() {
+		for {
+			_, recvErr := stream.Recv()
+			if recvErr != nil {
+				errCh <- recvErr
+				return
+			}
+		}
+	}()
+
+	var recvErr error
+	select {
+	case recvErr = <-errCh:
+	case <-time.After(6 * time.Second):
+		t.Fatal("timed out waiting for the connection to expire")
+	}
+
+	st, ok := status.FromError(recvErr)
+	if !ok {
+		t.Fatalf("expected gRPC status error, got %v", recvErr)
+	}
+	if st.Code() != codes.Unauthenticated {
+		t.Errorf("expected Unauthenticated code, got %v", st.Code())
+	}
+	if st.Message() != "JWS token expired" {
+		t.Errorf("expected message %q, got %q", "JWS token expired", st.Message())
 	}
 }
 

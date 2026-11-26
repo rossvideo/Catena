@@ -432,7 +432,13 @@ func (t *Transport) sendSSEEvent(w http.ResponseWriter, flusher http.Flusher, up
 	return nil
 }
 
-// handleConnect handles GET /st2138-api/v1/connect (SSE streaming)
+// handleConnect handles GET /st2138-api/v1/connect (SSE streaming).
+// The stream ends when the client disconnects, the server shuts the
+// connection down, or the connection's token expires. Token expiry sends a
+// final SSE error event and then returns. A token whose effective expiry
+// has already passed is rejected at registration. A buffered update is not
+// sent once that expiry has passed, even while Done is still open waiting
+// for the next sweep, which then ends the stream.
 func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is GET
 	if r.Method != http.MethodGet {
@@ -478,15 +484,41 @@ func (t *Transport) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	// Each connection's goroutine listens for setValue updates and server shutdown signals
 	ctx := r.Context()
+	endStream := func() {
+		if conn.CloseReason() == catena.CloseReasonExpired {
+			t.log.Info("SSE connection closed", "connID", conn.ID, "reason", catena.CloseReasonExpired)
+			result := catena.StatusWithCode(catena.StatusCodeUnauthenticated, "JWS token expired")
+			if err := writeSSEError(w, flusher, t.isDevMode(), result); err != nil {
+				t.log.Error("failed to send SSE token-expired event", "connID", conn.ID, "error", err)
+			}
+			return
+		}
+		t.log.Info("SSE connection shut down by server", "connID", conn.ID, "reason", conn.CloseReason())
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			t.log.Info("SSE client disconnected", "connID", conn.ID)
 			return
 		case <-conn.Done:
-			t.log.Info("SSE connection shut down by server", "connID", conn.ID)
+			endStream()
 			return
 		case update := <-conn.Updates:
+
+			// Drop buffered updates that arrive after Done has closed.
+			select {
+			case <-conn.Done:
+				endStream()
+				return
+			default:
+			}
+
+			// Drop the update if the effective expiry has passed. The responsibility
+			// for handling the expiry is on the sweeper
+			if conn.EffectiveExpiryPassed() {
+				continue
+			}
+
 			if err := t.sendSSEEvent(w, flusher, update); err != nil {
 				t.log.Error("failed to send SSE event", "connID", conn.ID, "error", err)
 				return

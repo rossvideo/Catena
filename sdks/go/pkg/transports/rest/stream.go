@@ -115,9 +115,17 @@ func (s *restStream[T]) writeHeaders() {
 // otherwise it is generalized to the standard HTTP status text (a blank message
 // is omitted from the payload). It returns any write/flush error.
 func (s *restStream[T]) sendError(result catena.StatusResult) error {
+	return writeSSEError(s.w, s.flusher, s.devMode, result)
+}
+
+// writeSSEError writes a StatusResult as an SSE error event. Connect calls it
+// directly because that handler already owns the writer and has committed the
+// 200 headers. restStream.sendError uses the same helper so both paths emit
+// the same event.
+func writeSSEError(w http.ResponseWriter, flusher http.Flusher, devMode bool, result catena.StatusResult) error {
 	httpStatus := ToHTTPStatus(result.Code)
 	message := http.StatusText(httpStatus)
-	if s.devMode {
+	if devMode {
 		message = result.Error
 	}
 
@@ -131,10 +139,10 @@ func (s *restStream[T]) sendError(result catena.StatusResult) error {
 		return err
 	}
 
-	if _, err := fmt.Fprintf(s.w, "event: error\ndata: %s\n\n", data); err != nil {
+	if _, err := fmt.Fprintf(w, "event: error\ndata: %s\n\n", data); err != nil {
 		return err
 	}
-	s.flusher.Flush()
+	flusher.Flush()
 	return nil
 }
 

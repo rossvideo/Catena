@@ -31,6 +31,10 @@
 package transporttest
 
 import (
+	"reflect"
+	"time"
+	"unsafe"
+
 	"github.com/rossvideo/catena/sdks/go/pkg/catena"
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
@@ -41,4 +45,42 @@ func MakeTestConnection(id int) *catena.Connection {
 		Updates: make(chan *protos.PushUpdates, 10),
 		Done:    make(chan struct{}),
 	}
+}
+
+// MakeTestConnectionPastExpiry returns a connection whose effective expiry has
+// passed while Done is still open.
+func MakeTestConnectionPastExpiry(id int) *catena.Connection {
+	conn := MakeTestConnection(id)
+	expiredAt := time.Unix(0, 0)
+
+	connValue := reflect.ValueOf(conn).Elem()
+	setUnexported(connValue.FieldByName("expiry"), reflect.ValueOf(expiredAt))
+
+	queue := reflect.New(connValue.FieldByName("queue").Type().Elem())
+	setUnexported(queue.Elem().FieldByName("now"), reflect.ValueOf(func() time.Time { return expiredAt }))
+	setUnexported(connValue.FieldByName("queue"), queue)
+	return conn
+}
+
+// MakeTestConnectionShutdownAfterExpiry returns a connection whose effective
+// expiry has passed and whose Done is closed with a recorded shutdown reason,
+// as happens when the server shuts down before the expiry sweeper runs.
+func MakeTestConnectionShutdownAfterExpiry(id int) *catena.Connection {
+	conn := MakeTestConnectionPastExpiry(id)
+	connValue := reflect.ValueOf(conn).Elem()
+	setUnexported(connValue.FieldByName("closeReason"), reflect.ValueOf(catena.CloseReasonShutdown))
+	close(conn.Done)
+	return conn
+}
+
+// SimulateExpirySweep does to conn what the expiry sweeper does: it records the
+// expired close reason and closes Done.
+func SimulateExpirySweep(conn *catena.Connection) {
+	connValue := reflect.ValueOf(conn).Elem()
+	setUnexported(connValue.FieldByName("closeReason"), reflect.ValueOf(catena.CloseReasonExpired))
+	close(conn.Done)
+}
+
+func setUnexported(field, value reflect.Value) {
+	reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Set(value)
 }

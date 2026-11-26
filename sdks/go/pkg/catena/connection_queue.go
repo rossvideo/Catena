@@ -44,20 +44,61 @@ import (
 	"context"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
 )
 
-// Connection represents an active streaming connection (SSE or gRPC).
-// Each connection runs in its own goroutine and receives updates via the
-// Updates channel as proto PushUpdates messages. The Done channel is closed
-// by the ConnectionQueue to signal server-initiated shutdown.
+// ConnectionCloseReason is why the queue closed a connection. CloseReasonNone
+// means the connection is still open.
+type ConnectionCloseReason int32
+
+const (
+	// CloseReasonNone means the connection is still open.
+	CloseReasonNone ConnectionCloseReason = iota
+	// CloseReasonShutdown means the connection was shut down by the server.
+	CloseReasonShutdown
+	// CloseReasonExpired means the connection's token expiry has passed.
+	CloseReasonExpired
+)
+
+const (
+	defaultExpirySweepInterval = time.Second
+	defaultExpiryGracePeriod   = 5 * time.Second
+)
+
+func (r ConnectionCloseReason) String() string {
+	switch r {
+	case CloseReasonNone:
+		return "none"
+	case CloseReasonShutdown:
+		return "shutdown"
+	case CloseReasonExpired:
+		return "expired"
+	default:
+		return "unknown"
+	}
+}
+
+// Connection is one active streaming connection (SSE or gRPC).
+//
+// Updates carries the PushUpdates that the transport writes to its stream.
+// The queue closes Done when the connection must end, either because the
+// server is shutting down or because its token expired. A transport must end
+// its stream when Done closes. It may read CloseReason after that to choose
+// the status it returns. Done stays open until the next expiry sweep, so a
+// transport must also drop a buffered update when EffectiveExpiryPassed
+// reports that the queue clock is at or past the token's effective expiry.
+// Once the queue removes the connection, it sends no further updates to it.
 type Connection struct {
 	ID             int
 	Updates        chan *protos.PushUpdates
 	Done           chan struct{}
 	HandlerContext HandlerContext
 	owner          Transport
+	queue          *connectionQueue
+	expiry         time.Time
+	closeReason    ConnectionCloseReason
 }
 
 // connectionQueue manages streaming connections for both REST (SSE) and gRPC servers.
@@ -70,6 +111,15 @@ type connectionQueue struct {
 	shuttingDown   bool
 	cond           *sync.Cond
 	log            *slog.Logger
+
+	now                  func() time.Time
+	expirySweepInterval  time.Duration
+	expiryGracePeriod    time.Duration
+	expiryCleanupWg      sync.WaitGroup
+	expirySweeperStopped chan struct{}
+	expirySweeperDone    chan struct{}
+	expirySweeperStarted bool
+	stopOnce             sync.Once
 }
 
 type connectionQueueInterface interface {
@@ -83,22 +133,142 @@ type connectionQueueInterface interface {
 	connectionCount() int
 }
 
+// CloseReason reports why the queue closed this connection. Read it after Done
+// is closed: the queue writes the reason before closing Done
+func (c *Connection) CloseReason() ConnectionCloseReason {
+	return c.closeReason
+}
+
+// EffectiveExpiryPassed reports whether the queue clock is at or past this
+// connection's effective token expiry. A zero expiry never expires, and a
+// connection the queue did not create reports false. Done stays open until
+// the next sweep, so a transport must consult this before writing a buffered
+// update.
+func (c *Connection) EffectiveExpiryPassed() bool {
+	if c.queue == nil {
+		return false
+	}
+	c.queue.mu.Lock()
+	defer c.queue.mu.Unlock()
+	return !c.expiry.IsZero() && !c.queue.now().Before(c.expiry)
+}
+
+// recordCloseReason records reason if the connection is not already closing.
+// The caller must hold cq.mu. It returns false when a reason was already set.
+func (c *Connection) recordCloseReason(reason ConnectionCloseReason) bool {
+	if c.closeReason != CloseReasonNone {
+		return false
+	}
+	c.closeReason = reason
+	return true
+}
+
 var _ connectionQueueInterface = (*connectionQueue)(nil)
+
+type connectionQueueOptions func(*connectionQueue)
+
+func withClock(now func() time.Time) connectionQueueOptions {
+	return func(cq *connectionQueue) {
+		cq.now = now
+	}
+}
+
+func withExpirySweepInterval(interval time.Duration) connectionQueueOptions {
+	return func(cq *connectionQueue) {
+		cq.expirySweepInterval = interval
+	}
+}
+
+func withExpiryGracePeriod(gracePeriod time.Duration) connectionQueueOptions {
+	return func(cq *connectionQueue) {
+		cq.expiryGracePeriod = gracePeriod
+	}
+}
 
 // newConnectionQueue creates a new connection queue for streaming connections.
 // maxConnections sets the limit on simultaneous connections (0 = unlimited).
 func newConnectionQueue(maxConnections int, log *slog.Logger) connectionQueueInterface {
+	return newConnectionQueueWithOptions(maxConnections, log)
+}
+
+func newConnectionQueueWithOptions(maxConnections int, log *slog.Logger, options ...connectionQueueOptions) connectionQueueInterface {
 	cq := &connectionQueue{
-		connections:    make(map[int]*Connection),
-		maxConnections: maxConnections,
+		connections:          make(map[int]*Connection),
+		maxConnections:       maxConnections,
+		now:                  time.Now,
+		expirySweepInterval:  defaultExpirySweepInterval,
+		expiryGracePeriod:    defaultExpiryGracePeriod,
+		expirySweeperStopped: make(chan struct{}),
+		expirySweeperDone:    make(chan struct{}),
 	}
 	if log == nil {
 		cq.log = slog.New(slog.DiscardHandler)
 	} else {
 		cq.log = log.With("component", "connection-queue")
 	}
+
 	cq.cond = sync.NewCond(&cq.mu)
+	for _, opt := range options {
+		if opt == nil {
+			continue
+		}
+		opt(cq)
+	}
+
 	return cq
+}
+
+// startExpirySweeper launches the sweeper goroutine the first time it is
+// needed. The caller must hold cq.mu. It does nothing once the queue is
+// shutting down, which is what lets shutdown know no sweeper can appear after
+// it has looked.
+func (cq *connectionQueue) startExpirySweeper() {
+	if cq.expirySweeperStarted || cq.shuttingDown || cq.expirySweepInterval <= 0 {
+		return
+	}
+	cq.expirySweeperStarted = true
+	go cq.expirySweepLoop()
+}
+
+// setConnectionExpiry sets the expiry time for a connection.
+// Use if cq.mu is not already held at the call site. Using this function while holding the
+// mutex can lead to deadlocks
+func (cq *connectionQueue) setConnectionExpiry(conn *Connection, expiry time.Time) bool {
+	cq.mu.Lock()
+	defer cq.mu.Unlock()
+	return cq.setConnectionExpiryWithMutexHeld(conn, expiry)
+}
+
+// getConnectionExpiry returns the connection's current expiry. A zero time means
+// the connection never expires. It takes cq.mu so do not call it with the
+// mutex already held
+func (cq *connectionQueue) getConnectionExpiry(conn *Connection) time.Time {
+	cq.mu.Lock()
+	defer cq.mu.Unlock()
+	return conn.expiry
+}
+
+// setConnectionExpiryWithMutexHeld sets the expiry time for a connection.
+// The caller must hold cq.mu. If cq.mu is not held at the call site, use SetConnectionExpiry instead.
+// Using this function without holding the mutex can lead to race conditions.
+func (cq *connectionQueue) setConnectionExpiryWithMutexHeld(conn *Connection, expiry time.Time) bool {
+
+	// Checks if the connection is registered and not already closing
+	if registered, ok := cq.connections[conn.ID]; !ok || registered != conn {
+		return false
+	}
+
+	if conn.CloseReason() != CloseReasonNone {
+		return false
+	}
+
+	conn.expiry = expiry
+	if !expiry.IsZero() {
+		// This is the only place an expiry is written, so it is also the only
+		// place the sweeper needs to be started from.
+		cq.startExpirySweeper()
+	}
+	return true
 }
 
 // setMaxConnections updates the maximum number of connections allowed (0 = unlimited).
@@ -118,6 +288,13 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		return nil, StatusWithCode(StatusCodeInternal, "Server is shutting down")
 	}
 
+	// Check if the token has expired already
+	expiry := handlerContext.tokenExpiry
+	handlerContext.tokenExpiry = time.Time{} // clear the token expiry to avoid keeping duplicates
+	if !expiry.IsZero() && !cq.now().Before(expiry) {
+		return nil, StatusWithCode(StatusCodeUnauthenticated, "Token expired")
+	}
+
 	if cq.maxConnections > 0 && len(cq.connections) >= cq.maxConnections {
 		return nil, StatusWithCode(StatusCodeResourceExhausted, "Maximum connections reached")
 	}
@@ -129,8 +306,10 @@ func (cq *connectionQueue) registerOwnedConnection(owner Transport, handlerConte
 		Done:           make(chan struct{}),
 		HandlerContext: handlerContext,
 		owner:          owner,
+		queue:          cq,
 	}
 	cq.connections[cq.nextConnID] = conn
+	cq.setConnectionExpiryWithMutexHeld(conn, expiry)
 
 	// send the initial update if provided
 	if initialUpdate != nil {
@@ -165,7 +344,11 @@ func (cq *connectionQueue) notifyUpdate(update *protos.PushUpdates, scope string
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
 
+	now := cq.now()
 	for connID, conn := range cq.connections {
+		if !conn.expiry.IsZero() && !now.Before(conn.expiry) {
+			continue // skips the expired connections
+		}
 		if isValueUpdate(update) && scope != "" && !conn.HandlerContext.HasReadScope(scope) {
 			continue
 		}
@@ -185,6 +368,72 @@ func isValueUpdate(update *protos.PushUpdates) bool {
 	return ok
 }
 
+func (cq *connectionQueue) expirySweepLoop() {
+	defer close(cq.expirySweeperDone)
+
+	ticker := time.NewTicker(cq.expirySweepInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-cq.expirySweeperStopped:
+			return
+		case <-ticker.C:
+			cq.sweepExpiredConnections()
+		}
+	}
+
+}
+
+func (cq *connectionQueue) sweepExpiredConnections() int {
+	now := cq.now()
+
+	// Find all expired connections and mark them for cleanup
+	cq.mu.Lock()
+	var expiredConnections []*Connection
+	if !cq.shuttingDown {
+		for _, conn := range cq.connections {
+			if conn.expiry.IsZero() || now.Before(conn.expiry) {
+				continue
+			}
+
+			if !conn.recordCloseReason(CloseReasonExpired) {
+				continue
+			}
+
+			expiredConnections = append(expiredConnections, conn)
+			cq.expiryCleanupWg.Add(1)
+		}
+	}
+	cq.mu.Unlock()
+
+	for _, conn := range expiredConnections {
+		go func(c *Connection) {
+			defer cq.expiryCleanupWg.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), cq.expiryGracePeriod)
+			defer cancel()
+			cq.shutdownConnection(ctx, c)
+		}(conn)
+	}
+
+	return len(expiredConnections)
+}
+
+// stopExpirySweeper stops the sweeper if it was started and waits for it to exit
+func (cq *connectionQueue) stopExpirySweeper() {
+	cq.mu.Lock()
+	started := cq.expirySweeperStarted
+	cq.mu.Unlock()
+
+	cq.stopOnce.Do(func() {
+		close(cq.expirySweeperStopped)
+		if !started {
+			close(cq.expirySweeperDone)
+		}
+	})
+	<-cq.expirySweeperDone
+}
+
 // shutdown signals all connections to stop and waits for them to deregister.
 // Each connection's goroutine will receive the signal via the Done channel,
 // exit its event loop, and deregister itself.
@@ -197,6 +446,8 @@ func (cq *connectionQueue) shutdown(ctx context.Context) {
 	}
 	cq.mu.Unlock()
 
+	cq.stopExpirySweeper()
+
 	var wg sync.WaitGroup
 	for _, conn := range conns {
 		wg.Add(1)
@@ -206,6 +457,7 @@ func (cq *connectionQueue) shutdown(ctx context.Context) {
 		}(conn)
 	}
 	wg.Wait()
+	cq.expiryCleanupWg.Wait()
 
 	cq.log.Info("All streaming connections shut down")
 }
@@ -237,6 +489,7 @@ func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *C
 	defer cq.mu.Unlock()
 
 	// notify the connection to shut down by closing its Done channel
+	connection.recordCloseReason(CloseReasonShutdown)
 	select {
 	case <-connection.Done:
 	default:
@@ -250,6 +503,11 @@ func (cq *connectionQueue) shutdownConnection(ctx context.Context, connection *C
 		case <-ctx.Done():
 			cq.mu.Lock()
 			defer cq.mu.Unlock()
+
+			if registered, ok := cq.connections[connection.ID]; !ok || registered != connection {
+				return // the connection has been deregistered since the watchdog goroutine was started
+			}
+
 			cq.log.Warn("Connection did not shut down gracefully, forcing close", "connID", connection.ID)
 			delete(cq.connections, connection.ID)
 			connection.HandlerContext.release()

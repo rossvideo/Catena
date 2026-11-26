@@ -40,6 +40,7 @@ import (
 	"context"
 	"log/slog"
 	"slices"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -72,6 +73,7 @@ type HandlerContext struct {
 	Metadata     map[string][]string
 	authzEnabled bool
 	ctx          context.Context
+	tokenExpiry  time.Time
 	// ctxCancel tears down ctx and unregisters its shutdown watcher. The gate
 	// builds ctx and stashes cancel here; whoever owns the end of the request
 	// (invokeHandler's defer, GetSlots, or a torn-down streaming Connection)
