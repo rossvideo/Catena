@@ -577,3 +577,105 @@ func TestDeviceBuilder_CloneAlreadyBuilt(t *testing.T) {
 		t.Fatal("expected empty device for clone after Build(), got", c)
 	}
 }
+
+func TestIsValidDetailLevel(t *testing.T) {
+	tests := []struct {
+		name  string
+		level DetailLevel
+		want  bool
+	}{
+		{"FULL", DetailLevelFull, true},
+		{"SUBSCRIPTIONS", DetailLevelSubscriptions, true},
+		{"MINIMAL", DetailLevelMinimal, true},
+		{"COMMANDS", DetailLevelCommands, true},
+		{"NONE", DetailLevelNone, true},
+		{"UNSET", DetailLevelUnset, true},
+		{"negative", DetailLevel(-1), false},
+		{"just past UNSET", DetailLevel(6), false},
+		{"large", DetailLevel(99), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsValidDetailLevel(tt.level); got != tt.want {
+				t.Errorf("IsValidDetailLevel(%d) = %v, want %v", tt.level, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseDetailLevel(t *testing.T) {
+	t.Run("valid names", func(t *testing.T) {
+		tests := []struct {
+			input string
+			want  DetailLevel
+		}{
+			{"FULL", DetailLevelFull},
+			{"SUBSCRIPTIONS", DetailLevelSubscriptions},
+			{"MINIMAL", DetailLevelMinimal},
+			{"COMMANDS", DetailLevelCommands},
+			{"NONE", DetailLevelNone},
+			{"UNSET", DetailLevelUnset},
+		}
+		for _, tt := range tests {
+			t.Run(tt.input, func(t *testing.T) {
+				got, err := ParseDetailLevel(tt.input)
+				if err != nil {
+					t.Fatalf("ParseDetailLevel(%q) unexpected error: %v", tt.input, err)
+				}
+				if got != tt.want {
+					t.Errorf("ParseDetailLevel(%q) = %d, want %d", tt.input, got, tt.want)
+				}
+			})
+		}
+	})
+
+	t.Run("valid int strings", func(t *testing.T) {
+		tests := []struct {
+			input string
+			want  DetailLevel
+		}{
+			{"0", DetailLevelFull},
+			{"1", DetailLevelSubscriptions},
+			{"2", DetailLevelMinimal},
+			{"3", DetailLevelCommands},
+			{"4", DetailLevelNone},
+			{"5", DetailLevelUnset},
+		}
+		for _, tt := range tests {
+			t.Run(tt.input, func(t *testing.T) {
+				got, err := ParseDetailLevel(tt.input)
+				if err != nil {
+					t.Fatalf("ParseDetailLevel(%q) unexpected error: %v", tt.input, err)
+				}
+				if got != tt.want {
+					t.Errorf("ParseDetailLevel(%q) = %d, want %d", tt.input, got, tt.want)
+				}
+			})
+		}
+	})
+
+	t.Run("out-of-range and invalid int strings", func(t *testing.T) {
+		for _, input := range []string{"6", "-1", "4294967298", "99999999999999999999"} {
+			t.Run(input, func(t *testing.T) {
+				_, err := ParseDetailLevel(input)
+				if !errors.Is(err, ErrInvalid) {
+					t.Errorf("ParseDetailLevel(%q) error = %v, want ErrInvalid", input, err)
+				}
+			})
+		}
+	})
+
+	t.Run("invalid names", func(t *testing.T) {
+		for _, input := range []string{"minimal", "Minimal", "BOGUS", " MINIMAL", "MINIMAL ", "", "1.5"} {
+			t.Run(input, func(t *testing.T) {
+				got, err := ParseDetailLevel(input)
+				if !errors.Is(err, ErrInvalid) {
+					t.Errorf("ParseDetailLevel(%q) error = %v, want ErrInvalid", input, err)
+				}
+				if got != DetailLevelFull {
+					t.Errorf("ParseDetailLevel(%q) = %d on error, want %d", input, got, DetailLevelFull)
+				}
+			})
+		}
+	})
+}
