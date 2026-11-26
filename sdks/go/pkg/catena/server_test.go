@@ -3986,6 +3986,7 @@ func TestServer_ResolveHandlerContext_RequestTimes(t *testing.T) {
 			t.Run(fmt.Sprintf("authz=%v/%s", authzEnabled, tt.name), func(t *testing.T) {
 				srv := newTestServer(t, authzEnabled)
 
+				// Record before and after resolve times to compare and validate RequestReceived.
 				before := time.Now()
 				ctx, status := srv.resolveHandlerContext(validTestTransportContext(tt.metadata))
 				after := time.Now()
@@ -3997,9 +3998,11 @@ func TestServer_ResolveHandlerContext_RequestTimes(t *testing.T) {
 				if present != tt.wantPresent {
 					t.Fatalf("expected present=%v, got %v", tt.wantPresent, present)
 				}
+				// Valid request start times should be passed along and marked present.
 				if tt.wantPresent && !start.Equal(tt.wantStart) {
 					t.Errorf("expected start %v, got %v", tt.wantStart, start)
 				}
+				// Invalid or missing request start times should be marked absent and zeroed.
 				if !tt.wantPresent && !start.IsZero() {
 					t.Errorf("expected zero start when absent, got %v", start)
 				}

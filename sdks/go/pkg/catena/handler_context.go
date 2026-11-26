@@ -77,8 +77,8 @@ type HandlerContext struct {
 	Metadata     map[string][]string
 	authzEnabled bool
 	ctx          context.Context
-	// requestStart is the parsed Request-Start header; requestStartPresent is
-	// false when the header was missing or invalid.
+	// requestStart is the parsed Request-Start metadata; requestStartPresent is
+	// false when the metadata was missing or invalid.
 	requestStart        time.Time
 	requestStartPresent bool
 	// requestReceived is stamped by the server when it builds the context.
