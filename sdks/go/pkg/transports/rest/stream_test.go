@@ -338,7 +338,7 @@ func TestDeviceAggregateStream_MergesSecondDeviceChunk(t *testing.T) {
 	if !ok {
 		t.Fatal("expected an assembled device")
 	}
-	if got := device.Proto.GetDetailLevel(); got != st2138.DetailLevelMinimal {
+	if got := st2138.DetailLevel(device.Proto.GetDetailLevel()); got != st2138.DetailLevelMinimal {
 		t.Errorf("detail level = %v, want MINIMAL to survive the merge", got)
 	}
 	if !device.Proto.GetMultiSetEnabled() {
