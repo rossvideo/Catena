@@ -79,7 +79,7 @@ func ValidateSlotString(slot string) (uint16, StatusResult) {
 // ValidateDetailLevel reports whether level is a defined DetailLevel value.
 // Values such as UNSET are valid and are returned unchanged by the caller.
 func ValidateDetailLevel(level st2138.DetailLevel) StatusResult {
-	if !st2138.IsValidDetailLevel(level) {
+	if !level.IsValid() {
 		return StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid detail level: %d", int32(level)))
 	}
 	return StatusWithCode(StatusCodeOk, "")
