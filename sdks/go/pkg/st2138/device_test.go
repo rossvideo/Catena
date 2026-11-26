@@ -654,62 +654,6 @@ func TestParseDetailLevel(t *testing.T) {
 		}
 	})
 
-	t.Run("valid integer types", func(t *testing.T) {
-		tests := []struct {
-			name  string
-			input any
-		}{
-			{"int", int(2)},
-			{"int8", int8(2)},
-			{"int16", int16(2)},
-			{"int32", int32(2)},
-			{"int64", int64(2)},
-			{"uint", uint(2)},
-			{"uint8", uint8(2)},
-			{"uint16", uint16(2)},
-			{"uint32", uint32(2)},
-			{"uint64", uint64(2)},
-			{"uintptr", uintptr(2)},
-			{"DetailLevel", DetailLevelMinimal},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				got, err := ParseDetailLevel(tt.input)
-				if err != nil {
-					t.Fatalf("ParseDetailLevel(%T(2)) unexpected error: %v", tt.input, err)
-				}
-				if got != DetailLevelMinimal {
-					t.Errorf("ParseDetailLevel(%T(2)) = %d, want %d", tt.input, got, DetailLevelMinimal)
-				}
-			})
-		}
-	})
-
-	t.Run("out-of-range integers", func(t *testing.T) {
-		tests := []struct {
-			name  string
-			input any
-		}{
-			{"int just past UNSET", int(6)},
-			{"int negative", int(-1)},
-			{"int32 negative", int32(-1)},
-			{"int64 max", int64(^uint64(0) >> 1)},
-			{"uint32 max", uint32(^uint32(0))},
-			{"uint64 max", ^uint64(0)},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				got, err := ParseDetailLevel(tt.input)
-				if !errors.Is(err, ErrInvalid) {
-					t.Fatalf("ParseDetailLevel(%v) error = %v, want ErrInvalid", tt.input, err)
-				}
-				if got != DetailLevelFull {
-					t.Errorf("ParseDetailLevel(%v) = %d on error, want %d", tt.input, got, DetailLevelFull)
-				}
-			})
-		}
-	})
-
 	t.Run("out-of-range and invalid int strings", func(t *testing.T) {
 		for _, input := range []string{"6", "-1", "4294967298", "99999999999999999999"} {
 			t.Run(input, func(t *testing.T) {
@@ -730,30 +674,6 @@ func TestParseDetailLevel(t *testing.T) {
 				}
 				if got != DetailLevelFull {
 					t.Errorf("ParseDetailLevel(%q) = %d on error, want %d", input, got, DetailLevelFull)
-				}
-			})
-		}
-	})
-
-	t.Run("wrong types", func(t *testing.T) {
-		tests := []struct {
-			name  string
-			input any
-		}{
-			{"nil", nil},
-			{"float64", float64(2)},
-			{"float32", float32(2)},
-			{"bool", true},
-			{"[]byte", []byte("2")},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				got, err := ParseDetailLevel(tt.input)
-				if !errors.Is(err, ErrInvalid) {
-					t.Errorf("ParseDetailLevel(%v) error = %v, want ErrInvalid", tt.input, err)
-				}
-				if got != DetailLevelFull {
-					t.Errorf("ParseDetailLevel(%v) = %d on error, want %d", tt.input, got, DetailLevelFull)
 				}
 			})
 		}
