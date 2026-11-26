@@ -76,9 +76,9 @@ const (
 	ComponentKindLanguagePack ComponentKind = ComponentKind(protos.GetComponentPayload_LANGUAGE_PACK)
 )
 
-// Valid reports whether kind is one of the five addressable
+// IsValid reports whether kind is one of the five addressable
 // component kinds. UNUSED and any other value are not valid kinds.
-func (ck ComponentKind) Valid() bool {
+func (ck ComponentKind) IsValid() bool {
 	switch ck {
 	case ComponentKindParam,
 		ComponentKindConstraint,

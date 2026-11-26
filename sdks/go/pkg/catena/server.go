@@ -1034,7 +1034,7 @@ func (s *server) InvokeGetComponentHandler(transportContext TransportContext, re
 		func(ctx HandlerContext) (st2138.ComponentResponse, StatusResult) {
 			// Argument validation runs after the auth gate so an unauthorized
 			// caller only ever sees a security error, never a validation hint.
-			if !req.Kind.Valid() {
+			if !req.Kind.IsValid() {
 				return st2138.ComponentResponse{}, StatusWithCode(StatusCodeInvalidArgument, "invalid component kind")
 			}
 			if req.Kind == st2138.ComponentKindLanguagePack {
