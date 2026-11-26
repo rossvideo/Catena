@@ -84,7 +84,7 @@ func ParseDetailLevel(s string) (DetailLevel, error) {
 	if err != nil {
 		return DetailLevelFull, fmt.Errorf("unknown detail level: %q: %w", s, ErrInvalid)
 	}
-	if n < 0 || n >= int64(len(protos.Device_DetailLevel_name)) {
+	if _, ok := protos.Device_DetailLevel_name[int32(n)]; !ok {
 		return DetailLevelFull, fmt.Errorf("detail level out of range: %d: %w", n, ErrInvalid)
 	}
 	return DetailLevel(n), nil
