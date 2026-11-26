@@ -59,19 +59,24 @@ type ConstraintBuilder struct {
 
 // ConstraintType represents the type of a constraint
 // Mirrors protos.Constraint_ConstraintType for convenience
-type ConstraintType = protos.Constraint_ConstraintType
+type ConstraintType protos.Constraint_ConstraintType
 
 // ConstraintType constants matching the proto enum
 const (
-	ConstraintTypeUndefined          ConstraintType = protos.Constraint_UNDEFINED
-	ConstraintTypeIntRange           ConstraintType = protos.Constraint_INT_RANGE
-	ConstraintTypeFloatRange         ConstraintType = protos.Constraint_FLOAT_RANGE
-	ConstraintTypeIntChoice          ConstraintType = protos.Constraint_INT_CHOICE
-	ConstraintTypeStringChoice       ConstraintType = protos.Constraint_STRING_CHOICE
-	ConstraintTypeStringStringChoice ConstraintType = protos.Constraint_STRING_STRING_CHOICE
-	ConstraintTypeAlarmTable         ConstraintType = protos.Constraint_ALARM_TABLE
-	ConstraintTypeFormattedString    ConstraintType = protos.Constraint_FORMATTED_STRING
+	ConstraintTypeUndefined          ConstraintType = ConstraintType(protos.Constraint_UNDEFINED)
+	ConstraintTypeIntRange           ConstraintType = ConstraintType(protos.Constraint_INT_RANGE)
+	ConstraintTypeFloatRange         ConstraintType = ConstraintType(protos.Constraint_FLOAT_RANGE)
+	ConstraintTypeIntChoice          ConstraintType = ConstraintType(protos.Constraint_INT_CHOICE)
+	ConstraintTypeStringChoice       ConstraintType = ConstraintType(protos.Constraint_STRING_CHOICE)
+	ConstraintTypeStringStringChoice ConstraintType = ConstraintType(protos.Constraint_STRING_STRING_CHOICE)
+	ConstraintTypeAlarmTable         ConstraintType = ConstraintType(protos.Constraint_ALARM_TABLE)
+	ConstraintTypeFormattedString    ConstraintType = ConstraintType(protos.Constraint_FORMATTED_STRING)
 )
+
+// String returns the string representation of the constraint type.
+func (ct ConstraintType) String() string {
+	return protos.Constraint_ConstraintType(ct).String()
+}
 
 // --- Input types for constraint builders ---
 
@@ -89,15 +94,20 @@ type StringStringChoice struct {
 }
 
 // AlarmSeverity is the severity level of an alarm entry.
-type AlarmSeverity = protos.Alarm_Severity
+type AlarmSeverity protos.Alarm_Severity
 
 const (
-	AlarmSeverityInfo    AlarmSeverity = protos.Alarm_INFO
-	AlarmSeverityWarning AlarmSeverity = protos.Alarm_WARNING
-	AlarmSeveritySevere  AlarmSeverity = protos.Alarm_SEVERE
-	AlarmSeverityUnknown AlarmSeverity = protos.Alarm_UNKNOWN
-	AlarmSeverityRefused AlarmSeverity = protos.Alarm_REFUSED
+	AlarmSeverityInfo    AlarmSeverity = AlarmSeverity(protos.Alarm_INFO)
+	AlarmSeverityWarning AlarmSeverity = AlarmSeverity(protos.Alarm_WARNING)
+	AlarmSeveritySevere  AlarmSeverity = AlarmSeverity(protos.Alarm_SEVERE)
+	AlarmSeverityUnknown AlarmSeverity = AlarmSeverity(protos.Alarm_UNKNOWN)
+	AlarmSeverityRefused AlarmSeverity = AlarmSeverity(protos.Alarm_REFUSED)
 )
+
+// String returns the string representation of the alarm severity.
+func (as AlarmSeverity) String() string {
+	return protos.Alarm_Severity(as).String()
+}
 
 // AlarmEntry describes a single alarm in an alarm table constraint.
 type AlarmEntry struct {
@@ -329,7 +339,7 @@ func NewConstraintAlarmTable(alarms []AlarmEntry) *ConstraintBuilder {
 	for i, a := range alarms {
 		pbAlarms[i] = &protos.Alarm{
 			BitValue: a.BitValue,
-			Severity: a.Severity,
+			Severity: protos.Alarm_Severity(a.Severity),
 		}
 		pbAlarms[i].Description = a.Description.Proto()
 	}
