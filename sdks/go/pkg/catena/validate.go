@@ -94,9 +94,6 @@ func ValidateDetailLevelString(s string) (st2138.DetailLevel, StatusResult) {
 	if err != nil {
 		return 0, StatusWithCode(StatusCodeInvalidArgument, fmt.Sprintf("invalid detail level string: %s", s))
 	}
-	if res := ValidateDetailLevel(level); res.IsError() {
-		return 0, res
-	}
 	return level, StatusWithCode(StatusCodeOk, "")
 }
 

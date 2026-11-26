@@ -68,14 +68,9 @@ func IsValidDetailLevel(l DetailLevel) bool {
 	return ok
 }
 
-// ParseDetailLevel converts v into a DetailLevel. Accepted inputs are:
-//   - a string holding a proto enum name, matched case-sensitively (e.g. "MINIMAL"),
-//     or a decimal integer string (e.g. "2")
-//   - any Go integer type, including DetailLevel itself
-//
-// Any other type, unknown name, or integer outside the defined enum values
-// returns an error wrapping ErrInvalid. On error the returned DetailLevel is
-// DetailLevelFull.
+// ParseDetailLevel converts s into a DetailLevel. Accepted inputs are
+// a string holding a proto enum name, matched case-sensitively (e.g. "MINIMAL"),
+// or a decimal integer string (e.g. "2").
 func ParseDetailLevel(s string) (DetailLevel, error) {
 	if n, ok := protos.Device_DetailLevel_value[s]; ok {
 		return DetailLevel(n), nil
@@ -84,10 +79,11 @@ func ParseDetailLevel(s string) (DetailLevel, error) {
 	if err != nil {
 		return DetailLevelFull, fmt.Errorf("unknown detail level: %q: %w", s, ErrInvalid)
 	}
-	if _, ok := protos.Device_DetailLevel_name[int32(n)]; !ok {
+	dl := DetailLevel(n)
+	if !IsValidDetailLevel(dl) {
 		return DetailLevelFull, fmt.Errorf("detail level out of range: %d: %w", n, ErrInvalid)
 	}
-	return DetailLevel(n), nil
+	return dl, nil
 }
 
 // Device wraps protos.Device and exposes a fluent builder API.
