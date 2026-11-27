@@ -139,28 +139,72 @@
                 <div class="auth-divider"></div>
 
                 <div class="auth-field">
-                    <p class="auth-help">Unsigned token with the selected scopes. Only works when signature validation is off.</p>
-                    <div class="scope-grid">
-                        <span class="scope-corner"></span>
-                        <span class="scope-col">Read</span>
-                        <span class="scope-col">Write</span>
+                    <p class="auth-help">Unsigned token from the menus below. Only works when signature validation is off. A blank claim is left out of the token.</p>
+                    <details class="auth-menu" open>
+                        <summary>Scopes</summary>
+                        <div class="auth-menu-body">
+                            <div class="scope-grid">
+                                <span class="scope-corner"></span>
+                                <span class="scope-col">Read</span>
+                                <span class="scope-col">Write</span>
 
-                        <span class="scope-row">Monitor</span>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:mon" data-access="read" checked></label>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:mon" data-access="write" checked></label>
+                                <span class="scope-row">Monitor</span>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:mon" data-access="read" checked></label>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:mon" data-access="write" checked></label>
 
-                        <span class="scope-row">Operate</span>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:op" data-access="read" checked></label>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:op" data-access="write" checked></label>
+                                <span class="scope-row">Operate</span>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:op" data-access="read" checked></label>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:op" data-access="write" checked></label>
 
-                        <span class="scope-row">Configure</span>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:cfg" data-access="read" checked></label>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:cfg" data-access="write" checked></label>
+                                <span class="scope-row">Configure</span>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:cfg" data-access="read" checked></label>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:cfg" data-access="write" checked></label>
 
-                        <span class="scope-row">Administer</span>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:adm" data-access="read" checked></label>
-                        <label class="scope-check"><input type="checkbox" data-scope="st2138:adm" data-access="write" checked></label>
-                    </div>
+                                <span class="scope-row">Administer</span>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:adm" data-access="read" checked></label>
+                                <label class="scope-check"><input type="checkbox" data-scope="st2138:adm" data-access="write" checked></label>
+                            </div>
+                            <button type="button" class="btn" id="resetScopesBtn">Reset defaults</button>
+                        </div>
+                    </details>
+                    <details class="auth-menu">
+                        <summary>Claims</summary>
+                        <div class="auth-menu-body">
+                            <p class="auth-help">exp, nbf, and iat are seconds from the moment the token is generated. A blank jti gets a new id each time.</p>
+                            <div class="claim-grid">
+                                <label class="claim-label" for="claimIss">iss</label>
+                                <input class="claim-input" id="claimIss" data-claim="iss" type="text" value="catena-demo" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimSub">sub</label>
+                                <input class="claim-input" id="claimSub" data-claim="sub" type="text" value="demo-user" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimAud">aud</label>
+                                <input class="claim-input" id="claimAud" data-claim="aud" type="text" value="catena-demo" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimExp">exp</label>
+                                <input class="claim-input" id="claimExp" data-claim="exp" type="text" inputmode="numeric" value="3600" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimNbf">nbf</label>
+                                <input class="claim-input" id="claimNbf" data-claim="nbf" type="text" inputmode="numeric" value="-30" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimIat">iat</label>
+                                <input class="claim-input" id="claimIat" data-claim="iat" type="text" inputmode="numeric" value="-30" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimJti">jti</label>
+                                <input class="claim-input" id="claimJti" data-claim="jti" type="text" value="" placeholder="New id each token" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimAzp">azp</label>
+                                <input class="claim-input" id="claimAzp" data-claim="azp" type="text" value="oneofeverything" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimClientId">client_id</label>
+                                <input class="claim-input" id="claimClientId" data-claim="client_id" type="text" value="" spellcheck="false" autocomplete="off">
+
+                                <label class="claim-label" for="claimSid">sid</label>
+                                <input class="claim-input" id="claimSid" data-claim="sid" type="text" value="" spellcheck="false" autocomplete="off">
+                            </div>
+                            <button type="button" class="btn" id="resetClaimsBtn">Reset defaults</button>
+                        </div>
+                    </details>
                 </div>
                 <div class="auth-actions">
                     <button type="button" class="btn add" id="generateTokenBtn">Generate unsigned</button>

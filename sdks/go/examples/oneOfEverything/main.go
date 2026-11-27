@@ -397,7 +397,8 @@ func main() {
 			if r.URL.Path == "/demo-config" {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(map[string]any{
-					"jwtIssuer": strings.TrimSpace(options.Server.JwtOptions.Issuer),
+					"jwtIssuer":   strings.TrimSpace(options.Server.JwtOptions.Issuer),
+					"jwtAudience": strings.TrimSpace(options.Server.JwtOptions.Audience),
 				})
 				return
 			}

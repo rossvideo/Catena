@@ -330,6 +330,14 @@ Message size, concurrent-stream, and keepalive settings are passed straight thro
 
 ### JWT
 
+When authorization is enabled, an access token is rejected unless it carries `iss`, `sub`, `aud`, `exp`, `nbf`, `iat`, `jti`, and `scope`, and at least one of `azp` and `client_id`. `sid` may be omitted. `scope` must be a string and may be empty. `aud` may be a string or an array of strings. `jti` is not checked as a UUID. These presence and type checks always run. There is no option to turn one of them off.
+
+`exp` must not have passed, `nbf` must have been reached, and `iat` must not be in the future. `JwtValidationOptions.Leeway` applies to all three.
+
+`--jwt-issuer` and `--jwt-audience` compare `iss` and `aud` with those values when they are set. When they are left empty, the claims still have to be present.
+
+`--jwt-insecure-skip-signature-validation` turns off signature verification only. Time checks and the required-claim checks stay on.
+
 - `PREFIX_JWT_ISSUER` <-> `--jwt-issuer`
 - `PREFIX_JWT_AUDIENCE` <-> `--jwt-audience`
 - `PREFIX_JWT_INSECURE_SKIP_SIGNATURE_VALIDATION` <-> `--jwt-insecure-skip-signature-validation`

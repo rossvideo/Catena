@@ -416,31 +416,344 @@ func TestNewJwtValidator_Retry(t *testing.T) {
 	})
 }
 
+var requiredClaims = []string{
+	"iss",
+	"sub",
+	"aud",
+	"exp",
+	"nbf",
+	"iat",
+	"jti",
+	"scope",
+}
+
+// conformantClaims returns a claim set that satisfies the Catena access-token
+// rules: every always-required claim, azp, client_id set, and sid omitted.
+func conformantClaims(scope string) jwt.MapClaims {
+	issued := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	expires := time.Date(3005, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	return jwt.MapClaims{
+		"iss":       "https://issuer.example",
+		"sub":       "test-user",
+		"aud":       "catena-demo",
+		"exp":       float64(expires),
+		"nbf":       float64(issued),
+		"iat":       float64(issued),
+		"jti":       "test-jti",
+		"scope":     scope,
+		"azp":       "test-client",
+		"client_id": "test-client-id",
+	}
+}
+
+func signTestToken(t *testing.T, method jwt.SigningMethod, key any, claims jwt.MapClaims) string {
+	t.Helper()
+	signed, err := jwt.NewWithClaims(method, claims).SignedString(key)
+	if err != nil {
+		t.Fatalf("SignedString() error = %v", err)
+	}
+	return signed
+}
+
+const testHMACSecret = "secret"
+
+type jwtTestMode struct {
+	name     string
+	insecure bool
+	options  JwtValidationOptions
+}
+
+func insecureJWTMode() jwtTestMode {
+	return jwtTestMode{
+		name:     "skip signature",
+		insecure: true,
+		options:  JwtValidationOptions{InsecureSkipSignatureValidation: true},
+	}
+}
+
+func signedJWTMode() jwtTestMode {
+	return jwtTestMode{
+		name: "verify signature",
+		options: JwtValidationOptions{
+			AllowedAlgs: []string{jwt.SigningMethodHS256.Alg()},
+		},
+	}
+}
+
+func (m jwtTestMode) sign(t *testing.T, claims jwt.MapClaims) string {
+	t.Helper()
+	if m.insecure {
+		return signTestToken(t, jwt.SigningMethodNone, jwt.UnsafeAllowNoneSignatureType, claims)
+	}
+	return signTestToken(t, jwt.SigningMethodHS256, []byte(testHMACSecret), claims)
+}
+
+func (m jwtTestMode) validator(t *testing.T, mutate func(*JwtValidationOptions)) *jwtValidator {
+	t.Helper()
+	opts := m.options
+	if mutate != nil {
+		mutate(&opts)
+	}
+	v := &jwtValidator{options: opts}
+	if m.insecure {
+		v.validateFn = v.validateClaims
+		return v
+	}
+	v.keyfunc = func(*jwt.Token) (any, error) { return []byte(testHMACSecret), nil }
+	v.validateFn = v.validateSignatureAndClaims
+	return v
+}
+
+func requireJWTError(t *testing.T, err error, fragment string) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("validateJwt() error = nil, want failure mentioning %q", fragment)
+	}
+	if !strings.Contains(err.Error(), fragment) {
+		t.Fatalf("validateJwt() error = %v, want it to mention %q", err, fragment)
+	}
+}
+
+func testValidClaims(t *testing.T, mode jwtTestMode, claims jwt.MapClaims) {
+	t.Helper()
+	token := mode.sign(t, claims)
+	if _, err := mode.validator(t, nil).validateJwt(token); err != nil {
+		t.Fatalf("validateJwt() error = %v", err)
+	}
+}
+
+func testInvalidClaims(t *testing.T, mode jwtTestMode, claims jwt.MapClaims, fragment string) {
+	t.Helper()
+	token := mode.sign(t, claims)
+	_, err := mode.validator(t, nil).validateJwt(token)
+	requireJWTError(t, err, fragment)
+}
+
+func testCatenaClaims(t *testing.T, mode jwtTestMode) {
+	t.Helper()
+
+	t.Run("conformant token", func(t *testing.T) {
+		testValidClaims(t, mode, conformantClaims("st2138:op"))
+	})
+
+	t.Run("audience array", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["aud"] = []string{"catena-demo"}
+		testValidClaims(t, mode, claims)
+	})
+
+	for _, name := range requiredClaims {
+		t.Run("missing "+name, func(t *testing.T) {
+			claims := conformantClaims("st2138:op")
+			delete(claims, name)
+			testInvalidClaims(t, mode, claims, name)
+		})
+	}
+
+	t.Run("only azp", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		delete(claims, "client_id")
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("only client_id", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		delete(claims, "azp")
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("neither azp nor client_id", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		delete(claims, "azp")
+		delete(claims, "client_id")
+		testInvalidClaims(t, mode, claims, "azp or client_id")
+	})
+
+	t.Run("empty, but present azp", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["azp"] = ""
+		testInvalidClaims(t, mode, claims, "azp")
+	})
+
+	t.Run("empty, but present client_id", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["client_id"] = ""
+		testInvalidClaims(t, mode, claims, "client_id")
+	})
+
+	t.Run("without sid", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		delete(claims, "sid")
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("sid present", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["sid"] = "session-1"
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("empty, but present sid", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["sid"] = ""
+		testInvalidClaims(t, mode, claims, "sid")
+	})
+
+	t.Run("empty, but present sub", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["sub"] = ""
+		testInvalidClaims(t, mode, claims, "sub")
+	})
+
+	t.Run("empty, but present jti", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["jti"] = ""
+		testInvalidClaims(t, mode, claims, "jti")
+	})
+
+	t.Run("empty scope", func(t *testing.T) {
+		testValidClaims(t, mode, conformantClaims(""))
+	})
+
+	t.Run("wrong type scope", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["scope"] = []string{"st2138:op"}
+		testInvalidClaims(t, mode, claims, "scope")
+	})
+
+	t.Run("wrong type sub", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["sub"] = 1
+		testInvalidClaims(t, mode, claims, "sub")
+	})
+
+	t.Run("wrong type sid", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["sid"] = 1
+		testInvalidClaims(t, mode, claims, "sid")
+	})
+
+	t.Run("wrong type aud", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["aud"] = 1
+		testInvalidClaims(t, mode, claims, "aud")
+	})
+
+	t.Run("unconfigured issuer", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["iss"] = "https://other.example"
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("configured issuer mismatch", func(t *testing.T) {
+		token := mode.sign(t, conformantClaims("st2138:op"))
+		_, err := mode.validator(t, func(opts *JwtValidationOptions) {
+			opts.Issuer = "https://other.example"
+		}).validateJwt(token)
+		requireJWTError(t, err, "issuer")
+	})
+
+	t.Run("unconfigured audience", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["aud"] = "some-other-audience"
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("configured audience mismatch", func(t *testing.T) {
+		token := mode.sign(t, conformantClaims("st2138:op"))
+		_, err := mode.validator(t, func(opts *JwtValidationOptions) {
+			opts.Audience = "other-audience"
+		}).validateJwt(token)
+		requireJWTError(t, err, "audience")
+	})
+
+	// A zero date is the Unix epoch. Decoding numbers as json.Number keeps it
+	// from being read as a missing claim.
+	t.Run("nbf of zero", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["nbf"] = float64(0)
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("iat of zero", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["iat"] = float64(0)
+		testValidClaims(t, mode, claims)
+	})
+
+	t.Run("exp of zero is expired", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["exp"] = float64(0)
+		testInvalidClaims(t, mode, claims, "expired")
+	})
+
+	now := time.Now()
+	validExp := now.Add(time.Hour)
+	validNbf := now.Add(-time.Hour)
+	validIat := now.Add(-time.Hour)
+
+	timeCases := []struct {
+		name    string
+		exp     time.Time
+		nbf     time.Time
+		iat     time.Time
+		leeway  time.Duration
+		wantErr string
+	}{
+		{name: "expired", exp: now.Add(-time.Minute), nbf: validNbf, iat: validIat, wantErr: "expired"},
+		{name: "not yet valid", exp: validExp, nbf: now.Add(time.Minute), iat: validIat, wantErr: "not valid yet"},
+		{name: "future iat", exp: validExp, nbf: validNbf, iat: now.Add(time.Minute), wantErr: "used before issued"},
+		{name: "exp within leeway", exp: now.Add(-30 * time.Second), nbf: validNbf, iat: validIat, leeway: 2 * time.Minute},
+		{name: "exp outside leeway", exp: now.Add(-3 * time.Minute), nbf: validNbf, iat: validIat, leeway: 2 * time.Minute, wantErr: "expired"},
+		{name: "nbf within leeway", exp: validExp, nbf: now.Add(30 * time.Second), iat: validIat, leeway: 2 * time.Minute},
+		{name: "nbf outside leeway", exp: validExp, nbf: now.Add(3 * time.Minute), iat: validIat, leeway: 2 * time.Minute, wantErr: "not valid yet"},
+		{name: "iat within leeway", exp: validExp, nbf: validNbf, iat: now.Add(30 * time.Second), leeway: 2 * time.Minute},
+		{name: "iat outside leeway", exp: validExp, nbf: validNbf, iat: now.Add(3 * time.Minute), leeway: 2 * time.Minute, wantErr: "used before issued"},
+	}
+	for _, tc := range timeCases {
+		t.Run(tc.name, func(t *testing.T) {
+			claims := conformantClaims("st2138:op")
+			claims["exp"] = float64(tc.exp.Unix())
+			claims["nbf"] = float64(tc.nbf.Unix())
+			claims["iat"] = float64(tc.iat.Unix())
+			token := mode.sign(t, claims)
+			_, err := mode.validator(t, func(opts *JwtValidationOptions) {
+				opts.Leeway = tc.leeway
+			}).validateJwt(token)
+			if tc.wantErr == "" {
+				if err != nil {
+					t.Fatalf("validateJwt() error = %v", err)
+				}
+				return
+			}
+			requireJWTError(t, err, tc.wantErr)
+		})
+	}
+}
+
 func TestJwtValidator_validateJwt(t *testing.T) {
 	pretendString := "ThisIsNotARealTokenButWeCanPretend"
 	t.Run("success", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["foo"] = "bar"
 		validator := &jwtValidator{
 			validateFn: func(tokenString string, parseOptions []jwt.ParserOption) (*jwt.Token, error) {
 				if tokenString != pretendString {
 					t.Fatalf("validateFn got tokenString = %q, want %q", tokenString, pretendString)
 				}
-				return &jwt.Token{
-					Claims: jwt.MapClaims{
-						"foo": "bar",
-					},
-				}, nil
+				return &jwt.Token{Claims: claims}, nil
 			},
 		}
 		token, err := validator.validateJwt(pretendString)
 		if err != nil {
 			t.Fatalf("validateJwt() error = %v", err)
 		}
-		claims, ok := token.Claims.(jwt.MapClaims)
+		got, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			t.Fatalf("validateJwt() got claims of type %T, want jwt.MapClaims", token.Claims)
 		}
-		if claims["foo"] != "bar" {
-			t.Fatalf("validateJwt() got claims[\"foo\"] = %v, want \"bar\"", claims["foo"])
+		if got["foo"] != "bar" {
+			t.Fatalf("validateJwt() got claims[\"foo\"] = %v, want \"bar\"", got["foo"])
 		}
 	})
 
@@ -473,6 +786,9 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 	})
 
 	t.Run("with claims", func(t *testing.T) {
+		claims := conformantClaims("st2138:op")
+		claims["aud"] = "aud-a"
+		claims["iss"] = "issuer-a"
 		validator := &jwtValidator{
 			options: JwtValidationOptions{
 				AllowedAlgs: []string{jwt.SigningMethodHS256.Alg()},
@@ -484,15 +800,11 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 				if tokenString != pretendString {
 					t.Fatalf("validateFn got tokenString = %q, want %q", tokenString, pretendString)
 				}
-				if len(parseOptions) != 4 {
-					t.Fatalf("validateFn got %d parseOptions, want 3", len(parseOptions))
+				// valid methods, exp, nbf, iat, JSON numbers, plus issuer, audience, and leeway.
+				if len(parseOptions) != 8 {
+					t.Fatalf("validateFn got %d parseOptions, want 8", len(parseOptions))
 				}
-				return &jwt.Token{
-					Claims: jwt.MapClaims{
-						"foo": "bar",
-						"aud": "aud-a",
-					},
-				}, nil
+				return &jwt.Token{Claims: claims}, nil
 			},
 		}
 		_, err := validator.validateJwt(pretendString)
@@ -500,29 +812,32 @@ func TestJwtValidator_validateJwt(t *testing.T) {
 			t.Fatalf("validateJwt() error = %v", err)
 		}
 	})
+
+	for _, mode := range []jwtTestMode{insecureJWTMode(), signedJWTMode()} {
+		t.Run(mode.name, func(t *testing.T) {
+			testCatenaClaims(t, mode)
+		})
+	}
 }
 
 func TestJwtValidator_validateClaims(t *testing.T) {
 	validator := &jwtValidator{}
 
 	t.Run("success", func(t *testing.T) {
-		tokenString, err := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
-			"foo": "bar",
-		}).SignedString(jwt.UnsafeAllowNoneSignatureType)
-		if err != nil {
-			t.Fatalf("SignedString() error = %v", err)
-		}
+		claims := conformantClaims("st2138:op")
+		claims["foo"] = "bar"
+		tokenString := signTestToken(t, jwt.SigningMethodNone, jwt.UnsafeAllowNoneSignatureType, claims)
 
 		token, err := validator.validateClaims(tokenString, nil)
 		if err != nil {
 			t.Fatalf("validateClaims() error = %v", err)
 		}
-		claims, ok := token.Claims.(jwt.MapClaims)
+		got, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			t.Fatalf("validateClaims() got claims of type %T, want jwt.MapClaims", token.Claims)
 		}
-		if claims["foo"] != "bar" {
-			t.Fatalf("validateClaims() got claims[\"foo\"] = %v, want \"bar\"", claims["foo"])
+		if got["foo"] != "bar" {
+			t.Fatalf("validateClaims() got claims[\"foo\"] = %v, want \"bar\"", got["foo"])
 		}
 	})
 
@@ -534,13 +849,10 @@ func TestJwtValidator_validateClaims(t *testing.T) {
 	})
 
 	t.Run("missing claims", func(t *testing.T) {
-		tokenString, err := jwt.NewWithClaims(jwt.SigningMethodNone, jwt.MapClaims{
-			"foo": "Bar",
-		}).SignedString(jwt.UnsafeAllowNoneSignatureType)
-		if err != nil {
-			t.Fatalf("SignedString() error = %v", err)
-		}
-		_, err = validator.validateClaims(tokenString, []jwt.ParserOption{jwt.WithAudience("aud-a")})
+		claims := conformantClaims("st2138:op")
+		delete(claims, "aud")
+		tokenString := signTestToken(t, jwt.SigningMethodNone, jwt.UnsafeAllowNoneSignatureType, claims)
+		_, err := validator.validateClaims(tokenString, []jwt.ParserOption{jwt.WithAudience("aud-a")})
 		if err == nil || !strings.Contains(err.Error(), "token is missing required claim: aud") {
 			t.Fatalf("validateClaims() error = %v, want token is missing required claim: aud", err)
 		}
@@ -555,35 +867,27 @@ func TestJwtValidator_validateSignatureAndClaims(t *testing.T) {
 	}
 
 	t.Run("success", func(t *testing.T) {
-		tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"foo": "bar",
-		}).SignedString([]byte("secret"))
-		if err != nil {
-			t.Fatalf("SignedString() error = %v", err)
-		}
+		claims := conformantClaims("st2138:op")
+		claims["foo"] = "bar"
+		tokenString := signTestToken(t, jwt.SigningMethodHS256, []byte("secret"), claims)
 
 		token, err := validator.validateSignatureAndClaims(tokenString, nil)
 		if err != nil {
 			t.Fatalf("validateSignatureAndClaims() error = %v", err)
 		}
-		claims, ok := token.Claims.(jwt.MapClaims)
+		got, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			t.Fatalf("validateSignatureAndClaims() got claims of type %T, want jwt.MapClaims", token.Claims)
 		}
-		if claims["foo"] != "bar" {
-			t.Fatalf("validateSignatureAndClaims() got claims[\"foo\"] = %v, want \"bar\"", claims["foo"])
+		if got["foo"] != "bar" {
+			t.Fatalf("validateSignatureAndClaims() got claims[\"foo\"] = %v, want \"bar\"", got["foo"])
 		}
 	})
 
 	t.Run("invalid signature", func(t *testing.T) {
-		tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"foo": "bar",
-		}).SignedString([]byte("wrong secret"))
-		if err != nil {
-			t.Fatalf("SignedString() error = %v", err)
-		}
+		tokenString := signTestToken(t, jwt.SigningMethodHS256, []byte("wrong secret"), conformantClaims("st2138:op"))
 
-		_, err = validator.validateSignatureAndClaims(tokenString, nil)
+		_, err := validator.validateSignatureAndClaims(tokenString, nil)
 		if err == nil || !strings.Contains(err.Error(), "signature is invalid") {
 			t.Fatalf("validateSignatureAndClaims() error = %v, want signature is invalid", err)
 		}
@@ -591,13 +895,8 @@ func TestJwtValidator_validateSignatureAndClaims(t *testing.T) {
 
 	t.Run("keyfunc not initialized", func(t *testing.T) {
 		v := &jwtValidator{}
-		tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"foo": "bar",
-		}).SignedString([]byte("secret"))
-		if err != nil {
-			t.Fatalf("SignedString() error = %v", err)
-		}
-		_, err = v.validateSignatureAndClaims(tokenString, nil)
+		tokenString := signTestToken(t, jwt.SigningMethodHS256, []byte("secret"), conformantClaims("st2138:op"))
+		_, err := v.validateSignatureAndClaims(tokenString, nil)
 		if err == nil || !strings.Contains(err.Error(), "keyfunc is not initialized") {
 			t.Fatalf("validateSignatureAndClaims() error = %v, want keyfunc is not initialized", err)
 		}
