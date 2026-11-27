@@ -162,8 +162,8 @@ func (ctx HandlerContext) HasAnyReadScope() bool {
 }
 
 // RequestStart returns the time the client sent the request, parsed from the
-// Request-Start header (milliseconds since the Unix epoch). present is false
-// when the header was missing or invalid, in which case start is the zero time;
+// Request-Start metadata (milliseconds since the Unix epoch). present is false
+// when the metadata was missing or invalid, in which case start is the zero time;
 // an invalid value never causes the request to be rejected.
 func (ctx HandlerContext) RequestStart() (start time.Time, present bool) {
 	return ctx.requestStart, ctx.requestStartPresent

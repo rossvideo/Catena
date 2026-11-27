@@ -4012,7 +4012,7 @@ func TestServer_ResolveHandlerContext_RequestTimes(t *testing.T) {
 					t.Errorf("expected received time within [%v, %v], got %v", before, after, received)
 				}
 
-				// the raw header stays in Metadata
+				// the raw metadata stays in the context
 				if len(tt.metadata) != len(ctx.Metadata) {
 					t.Errorf("expected metadata to be preserved, got %v", ctx.Metadata)
 				}
@@ -4054,6 +4054,6 @@ func TestServer_InvalidRequestStart_LoggedAtDebug(t *testing.T) {
 		t.Fatalf("expected OK, got %v", status)
 	}
 	if buf.Len() != 0 {
-		t.Errorf("expected no log when header is absent, got %q", buf.String())
+		t.Errorf("expected no log when metadata is absent, got %q", buf.String())
 	}
 }
