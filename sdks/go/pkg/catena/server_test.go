@@ -3959,3 +3959,101 @@ func TestServer_LanguageHandlersValidation(t *testing.T) {
 		}
 	})
 }
+
+func TestServer_ResolveHandlerContext_RequestTimes(t *testing.T) {
+	const startMillis = int64(1700000000123)
+
+	tests := []struct {
+		name        string
+		metadata    map[string][]string
+		wantPresent bool
+		wantStart   time.Time
+	}{
+		{name: "absent", metadata: map[string][]string{"Other": {"x"}}},
+		{name: "nil metadata", metadata: nil},
+		{name: "valid", metadata: map[string][]string{"Request-Start": {"1700000000123"}}, wantPresent: true, wantStart: time.UnixMilli(startMillis)},
+		{name: "zero is present", metadata: map[string][]string{"Request-Start": {"0"}}, wantPresent: true, wantStart: time.UnixMilli(0)},
+		{name: "lowercase gRPC key", metadata: map[string][]string{"request-start": {"1700000000123"}}, wantPresent: true, wantStart: time.UnixMilli(startMillis)},
+		{name: "multiple values uses first", metadata: map[string][]string{"Request-Start": {"1700000000123", "5"}}, wantPresent: true, wantStart: time.UnixMilli(startMillis)},
+		{name: "empty values", metadata: map[string][]string{"Request-Start": {}}},
+		{name: "invalid non-numeric", metadata: map[string][]string{"Request-Start": {"abc"}}},
+		{name: "invalid negative", metadata: map[string][]string{"Request-Start": {"-5"}}},
+		{name: "invalid overflow", metadata: map[string][]string{"Request-Start": {"9223372036854775808"}}},
+	}
+
+	for _, authzEnabled := range []bool{false, true} {
+		for _, tt := range tests {
+			t.Run(fmt.Sprintf("authz=%v/%s", authzEnabled, tt.name), func(t *testing.T) {
+				srv := newTestServer(t, authzEnabled)
+
+				// Record before and after resolve times to compare and validate RequestReceived.
+				before := time.Now()
+				ctx, status := srv.resolveHandlerContext(validTestTransportContext(tt.metadata))
+				after := time.Now()
+				if status.Code != StatusCodeOk {
+					t.Fatalf("expected OK, got %v", status)
+				}
+
+				start, present := ctx.RequestStart()
+				if present != tt.wantPresent {
+					t.Fatalf("expected present=%v, got %v", tt.wantPresent, present)
+				}
+				// Valid request start times should be passed along and marked present.
+				if tt.wantPresent && !start.Equal(tt.wantStart) {
+					t.Errorf("expected start %v, got %v", tt.wantStart, start)
+				}
+				// Invalid or missing request start times should be marked absent and zeroed.
+				if !tt.wantPresent && !start.IsZero() {
+					t.Errorf("expected zero start when absent, got %v", start)
+				}
+
+				received := ctx.RequestReceived()
+				if received.Before(before) || received.After(after) {
+					t.Errorf("expected received time within [%v, %v], got %v", before, after, received)
+				}
+
+				// the raw metadata stays in the context
+				if len(tt.metadata) != len(ctx.Metadata) {
+					t.Errorf("expected metadata to be preserved, got %v", ctx.Metadata)
+				}
+			})
+		}
+	}
+}
+
+// A valid Request-Start never bypasses token validation.
+func TestServer_ResolveHandlerContext_InvalidTokenStillRejected(t *testing.T) {
+	srv := newTestServer(t, true)
+	_, status := srv.resolveHandlerContext(TransportContext{
+		AccessToken: "not-a-jwt",
+		Metadata:    map[string][]string{"Request-Start": {"1700000000123"}},
+	})
+	if status.Code != StatusCodeUnauthenticated {
+		t.Fatalf("expected UNAUTHENTICATED, got %v", status)
+	}
+}
+
+func TestServer_InvalidRequestStart_LoggedAtDebug(t *testing.T) {
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	srv, err := NewServer(ServerOptions{Logger: log})
+	if err != nil {
+		t.Fatalf("NewServer: %v", err)
+	}
+
+	s := srv.(*server)
+	if _, status := s.resolveHandlerContext(TransportContext{Metadata: map[string][]string{"Request-Start": {"abc"}}}); status.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v", status)
+	}
+	if !strings.Contains(buf.String(), `"level":"DEBUG"`) || !strings.Contains(buf.String(), "Request-Start") {
+		t.Errorf("expected debug log for invalid Request-Start, got %q", buf.String())
+	}
+
+	buf.Reset()
+	if _, status := s.resolveHandlerContext(TransportContext{}); status.Code != StatusCodeOk {
+		t.Fatalf("expected OK, got %v", status)
+	}
+	if buf.Len() != 0 {
+		t.Errorf("expected no log when metadata is absent, got %q", buf.String())
+	}
+}

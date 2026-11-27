@@ -40,6 +40,7 @@ import (
 	"context"
 	"log/slog"
 	"slices"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -61,6 +62,10 @@ type TransportContext struct {
 //     (HasReadScope/HasWriteScope/HasAnyReadScope/HasAnyWriteScope). When
 //     authorization is disabled these all return true.
 //   - read the request Metadata (for example, transport headers).
+//   - read the client's request-start time with RequestStart() and the time the
+//     server received the request with RequestReceived(), then compare them to
+//     measure transit time (for example, to reject requests that took too long
+//     to arrive).
 //   - respect cancellation and deadlines through Context() (see below),
 //     which matters most for long-running or streaming handlers.
 //
@@ -72,6 +77,12 @@ type HandlerContext struct {
 	Metadata     map[string][]string
 	authzEnabled bool
 	ctx          context.Context
+	// requestStart is the parsed Request-Start metadata; requestStartPresent is
+	// false when the metadata was missing or invalid.
+	requestStart        time.Time
+	requestStartPresent bool
+	// requestReceived is stamped by the server when it builds the context.
+	requestReceived time.Time
 	// ctxCancel tears down ctx and unregisters its shutdown watcher. The gate
 	// builds ctx and stashes cancel here; whoever owns the end of the request
 	// (invokeHandler's defer, GetSlots, or a torn-down streaming Connection)
@@ -148,6 +159,21 @@ func (ctx HandlerContext) HasAnyWriteScope() bool {
 // gate before the more specific HasReadScope check.
 func (ctx HandlerContext) HasAnyReadScope() bool {
 	return slices.ContainsFunc(catenaScopes, ctx.HasReadScope)
+}
+
+// RequestStart returns the time the client sent the request, parsed from the
+// Request-Start metadata (milliseconds since the Unix epoch). present is false
+// when the metadata was missing or invalid, in which case start is the zero time;
+// an invalid value never causes the request to be rejected.
+func (ctx HandlerContext) RequestStart() (start time.Time, present bool) {
+	return ctx.requestStart, ctx.requestStartPresent
+}
+
+// RequestReceived returns the time the server received the request. It is set
+// by the server (the client does not send it) before any token validation. It is
+// always set for contexts built by the server.
+func (ctx HandlerContext) RequestReceived() time.Time {
+	return ctx.requestReceived
 }
 
 // Context returns the context.Context for this request. It is Done when either
