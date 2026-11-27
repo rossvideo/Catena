@@ -601,6 +601,10 @@ func (t *Transport) registerRoutes() {
 	// Devices endpoint: GET /st2138-api/v1/devices (returns populated slots)
 	t.mux.HandleFunc("/st2138-api/v1/devices", t.handleGetPopulatedSlots)
 
+	// Access endpoint: GET /st2138-api/v1/access refreshes the token
+	// POST (RevokeAccess) is not implemented
+	t.mux.HandleFunc("/st2138-api/v1/access", t.handleAccess)
+
 	// Catch-all for 404 - must be registered last
 	t.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		t.log.Debug("Fallback handler", "path", r.URL.Path, "method", r.Method)
@@ -615,6 +619,35 @@ func (t *Transport) registerRoutes() {
 	t.mux.HandleFunc("/st2138-api/v1", func(w http.ResponseWriter, r *http.Request) {
 		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeNotFound, "endpoint not found"))
 	})
+}
+
+func (t *Transport) handleAccess(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		t.handleRefreshToken(w, r)
+	case http.MethodPost:
+		t.writeHTTPStatusResult(w, catena.StatusWithCode(catena.StatusCodeUnimplemented, "RevokeAccess not implemented"))
+	default:
+		t.writeHTTPMethodNotAllowed(w, "only GET and POST allowed")
+	}
+}
+
+func (t *Transport) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
+
+	reason := r.URL.Query().Get("reason")
+
+	transportContext := t.retrieveMetadataFromRequest(r)
+	result, res := t.runtime.RefreshToken(transportContext, reason)
+	if res.IsError() {
+		t.writeHTTPStatusResult(w, res)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		t.log.Error("failed to write refresh token response", "error", err)
+	}
 }
 
 // handleGetPopulatedSlots handles GET /st2138-api/v1/devices
