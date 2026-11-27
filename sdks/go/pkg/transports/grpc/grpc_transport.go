@@ -778,7 +778,17 @@ func (s *catenaService) ListLanguages(ctx context.Context, req *protos.Slot) (*p
 
 // RefreshToken refreshes an authentication token
 func (s *catenaService) RefreshToken(ctx context.Context, req *protos.RefreshTokenPayload) (*protos.ConnectionStatus, error) {
-	return nil, status.Error(codes.Unimplemented, "RefreshToken not implemented")
+	reason := req.GetReason()
+	s.transport.log.Debug("RefreshToken", "reason", reason)
+
+	transportContext := s.transport.retrieveMetadataFromContext(ctx)
+	result, res := s.transport.runtime.RefreshToken(transportContext, reason)
+	if res.IsError() {
+		s.transport.log.Error("RefreshToken error", "error", res.Error)
+		return nil, status.Error(ToGRPCCode(res.Code), res.Error)
+	}
+
+	return &protos.ConnectionStatus{Connected: result.Connected, Exp: result.Expiry}, nil
 }
 
 // RevokeAccess revokes access for a token

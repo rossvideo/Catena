@@ -2003,8 +2003,13 @@ func TestTransport_ErrorMessages_DevVsProd(t *testing.T) {
 		},
 		{
 			name:       "RefreshToken",
-			devMessage: "RefreshToken not implemented",
-			grpcCode:   codes.Unimplemented,
+			devMessage: "invalid access token",
+			grpcCode:   codes.Unauthenticated,
+			setupHandlers: func(runtime *transporttest.StubServerRuntime) {
+				runtime.RefreshTokenFn = func(ctx catena.TransportContext, reason string) (catena.RefreshTokenResult, catena.StatusResult) {
+					return catena.RefreshTokenResult{}, catena.StatusWithCode(catena.StatusCodeUnauthenticated, "invalid access token")
+				}
+			},
 			callEndpoint: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RefreshToken(ctx, &protos.RefreshTokenPayload{Reason: "test"})
 				return err
@@ -2251,15 +2256,6 @@ func TestTransport_UnimplementedEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name: "RefreshToken",
-			callFunc: func(client rpc.CatenaServiceClient, ctx context.Context) error {
-				_, err := client.RefreshToken(ctx, &protos.RefreshTokenPayload{
-					Reason: "test",
-				})
-				return err
-			},
-		},
-		{
 			name: "RevokeAccess",
 			callFunc: func(client rpc.CatenaServiceClient, ctx context.Context) error {
 				_, err := client.RevokeAccess(ctx, &protos.RevokeAccessPayload{
@@ -2283,6 +2279,65 @@ func TestTransport_UnimplementedEndpoints(t *testing.T) {
 			assertGRPCCode(t, err, codes.Unimplemented, "unimplemented endpoint")
 		})
 	}
+}
+
+// =============================================================================
+// Test: RefreshToken
+// =============================================================================
+
+func TestTransport_RefreshToken(t *testing.T) {
+	const accessToken = "Bearer refresh-token"
+
+	// call sets up a transport whose runtime RefreshToken is fn, then invokes
+	// the RPC with the access token in the outgoing metadata.
+	call := func(t *testing.T, fn func(catena.TransportContext, string) (catena.RefreshTokenResult, catena.StatusResult), reason string) (*protos.ConnectionStatus, error) {
+		t.Helper()
+
+		ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", accessToken))
+		_, runtime, lis, cleanup := setupTestTransport(t, []uint16{0})
+		runtime.RefreshTokenFn = fn
+		client, clientCleanup := setupGRPCClient(t, ctx, lis)
+
+		t.Cleanup(cleanup)
+		t.Cleanup(clientCleanup)
+		return client.RefreshToken(ctx, &protos.RefreshTokenPayload{Reason: reason})
+	}
+
+	t.Run("success passes token and reason and maps result", func(t *testing.T) {
+		var gotToken, gotReason string
+		resp, err := call(t, func(ctx catena.TransportContext, reason string) (catena.RefreshTokenResult, catena.StatusResult) {
+			gotToken = ctx.AccessToken
+			gotReason = reason
+			return catena.RefreshTokenResult{Connected: true, Expiry: 12345}, catena.StatusWithCode(catena.StatusCodeOk, "")
+		}, "token about to expire")
+
+		assertNoError(t, err)
+
+		if gotToken != accessToken {
+			t.Errorf("expected access token %q, got %q", accessToken, gotToken)
+		}
+		if gotReason != "token about to expire" {
+			t.Errorf("expected reason %q, got %q", "token about to expire", gotReason)
+		}
+		if !resp.GetConnected() {
+			t.Error("expected connected true")
+		}
+		if resp.GetExp() != 12345 {
+			t.Errorf("expected exp 1893456000, got %d", resp.GetExp())
+		}
+	})
+
+	t.Run("runtime error maps to gRPC code", func(t *testing.T) {
+		resp, err := call(t, func(catena.TransportContext, string) (catena.RefreshTokenResult, catena.StatusResult) {
+			return catena.RefreshTokenResult{}, catena.StatusWithCode(catena.StatusCodeUnauthenticated, "invalid access token")
+		}, "test")
+
+		assertGRPCCode(t, err, codes.Unauthenticated, "RefreshToken")
+
+		if resp != nil {
+			t.Errorf("expected nil response on error, got %v", resp)
+		}
+	})
 }
 
 // =============================================================================
