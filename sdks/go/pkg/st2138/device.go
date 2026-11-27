@@ -40,6 +40,9 @@
 package st2138
 
 import (
+	"fmt"
+	"strconv"
+
 	"google.golang.org/protobuf/proto"
 
 	"github.com/rossvideo/catena/sdks/go/pkg/protos"
@@ -58,6 +61,30 @@ const (
 	DetailLevelNone          DetailLevel = protos.Device_NONE
 	DetailLevelUnset         DetailLevel = protos.Device_UNSET
 )
+
+// IsValidDetailLevel reports whether l is a defined protos.Device_DetailLevel value.
+func IsValidDetailLevel(l DetailLevel) bool {
+	_, ok := protos.Device_DetailLevel_name[int32(l)]
+	return ok
+}
+
+// ParseDetailLevel converts s into a DetailLevel. Accepted inputs are
+// a string holding a proto enum name, matched case-sensitively (e.g. "MINIMAL"),
+// or a decimal integer string (e.g. "2").
+func ParseDetailLevel(s string) (DetailLevel, error) {
+	if n, ok := protos.Device_DetailLevel_value[s]; ok {
+		return DetailLevel(n), nil
+	}
+	n, err := strconv.ParseInt(s, 10, 32)
+	if err != nil {
+		return DetailLevelFull, fmt.Errorf("unknown detail level: %q: %w", s, ErrInvalid)
+	}
+	dl := DetailLevel(n)
+	if !IsValidDetailLevel(dl) {
+		return DetailLevelFull, fmt.Errorf("detail level out of range: %d: %w", n, ErrInvalid)
+	}
+	return dl, nil
+}
 
 // Device wraps protos.Device and exposes a fluent builder API.
 // Proto is the underlying proto message; it may be read or replaced directly.
